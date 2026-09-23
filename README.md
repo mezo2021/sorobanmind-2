@@ -1,10 +1,10 @@
-# 🧮 SorobanMind v2
+# 🧮 SorobanMind 2
 
 أكاديمية السوروبان الدولية — الإصدار 2.0
 منهج ياباني أصيل + محرك سوروبان حقيقي + تعليم تكيفي
 
 ## 🌐 الرابط
-https://mezo2021.github.io/sorobanmind-v2
+https://mezo2021.github.io/sorobanmind-2
 
 ## 🚀 التشغيل المحلي
 \`\`\`bash
