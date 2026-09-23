@@ -23,6 +23,22 @@ export type ProblemGeneratorType =
   | "add-subtract";
 
 /**
+ * الفئة المستهدفة.
+ */
+export type Category = "kids" | "teens";
+
+/**
+ * مجموعة المنهج.
+ */
+export type CurriculumGroup =
+  | "fundamentals"
+  | "japaneseRules"
+  | "expansion"
+  | "mental"
+  | "majorOps"
+  | "mastery";
+
+/**
  * مواصفات مولد المسائل.
  */
 export interface ProblemGeneratorSpec {
@@ -107,40 +123,65 @@ export interface LevelExam {
 }
 
 /**
- * مستوى كامل في المنهج.
+ * محتوى ثنائي اللغة.
+ */
+export interface LocalizedText {
+  ar: string;
+  en: string;
+}
+
+/**
+ * المستوى — يمثل كل من: L00-L20 + الإثراء (E1-E3).
+ *
+ * هذا النوع يجمع بين:
+ * - بنية GPT (Skills, mastery, prerequisites)
+ * - احتياجاتنا (i18n, category, group)
  */
 export interface CurriculumLevel {
+  /** المعرّف الفريد: 'L00'، 'L15'، 'E1'، ... */
   id: string;
+
+  /** الرقم التسلسلي (0-20 للمنهج، -1 للإثراء) */
   number: number;
-  name: string;
-  arabicName: string;
+
+  /** اسم المستوى (ثنائي اللغة) */
+  name: LocalizedText;
+
+  /** وصف المستوى */
+  description: LocalizedText;
+
+  /** المجموعة التي يتبعها */
+  group: CurriculumGroup | 'enrichment';
+
+  /** الفئة المستهدفة (kids أو teens أو both) */
+  category: Category | 'both';
+
+  /** المستويات السابقة المطلوبة (معرّفات) */
   prerequisites: string[];
+
+  /** مهارات المستوى */
   skills: Skill[];
+
+  /** اختبار نهاية المستوى */
   exam: LevelExam;
+
+  /** معلومات إضافية */
   metadata: {
     estimatedHours: number;
     targetAge: [number, number];
     japanAlignment?: string;
-    isBonus?: boolean;
+    isEnrichment?: boolean;
   };
+
+  /** الأيقونة (Lucide icon name) */
+  icon: string;
+
+  /** اللون (Tailwind gradient class) */
+  color: string;
 }
 
 /**
- * مسألة يولدها المحرك.
- */
-export interface Problem {
-  operands: number[];
-  operations: string[];
-  movement: MovementType;
-  expectedAnswer: number;
-  difficulty: number;
-  steps: SolveStep[];
-}
-
-/**
- * خطوة واحدة في حل المسألة على السوروبان.
- *
- * النصوص مترجمة عبر i18n: descriptionKey + descriptionParams.
+ * الخطوة الواحدة في حل المسألة على السوروبان.
  */
 export interface SolveStep {
   rod: number;
@@ -156,6 +197,18 @@ export interface SolveStep {
   rule: MovementType;
   descriptionKey: string;
   descriptionParams: Record<string, string | number>;
+}
+
+/**
+ * مسألة يولدها المحرك.
+ */
+export interface Problem {
+  operands: number[];
+  operations: string[];
+  movement: MovementType;
+  expectedAnswer: number;
+  difficulty: number;
+  steps: SolveStep[];
 }
 
 /**
@@ -206,3 +259,26 @@ export interface ExamResult {
 }
 
 export type SkillId = string;
+
+/**
+ * مستوى تقدم الطالب في المستوى.
+ */
+export type LevelStatus = "locked" | "available" | "inProgress" | "completed" | "mastered";
+
+/**
+ * فهرس المستوى مع حالة التقدم.
+ */
+export interface LevelSummary {
+  id: string;
+  number: number;
+  name: LocalizedText;
+  description: LocalizedText;
+  group: CurriculumGroup | 'enrichment';
+  category: Category | 'both';
+  icon: string;
+  color: string;
+  status: LevelStatus;
+  prerequisites: string[];
+  estimatedHours: number;
+  targetAge: [number, number];
+}
