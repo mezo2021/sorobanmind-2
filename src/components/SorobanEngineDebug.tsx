@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useT } from "../i18n/useTranslation";
 import type { TranslationKey } from "../i18n";
+import type { RodState } from "../curriculum/types";
 import {
   SorobanEngine,
   classifyAdd,
@@ -55,10 +56,7 @@ export function SorobanEngineDebug() {
     }
   })();
 
-  const renderRod = (
-    rod: { upper: 0 | 1; lower: number },
-    index: number,
-  ) => {
+  const renderRod = (rod: RodState, index: number) => {
     const value = rodValue(rod);
     return (
       <div
@@ -196,7 +194,9 @@ export function SorobanEngineDebug() {
       </div>
 
       <p className="text-center text-xs text-purple-400">
-        {lang === "ar" ? "اللغة الحالية: العربية" : "Current language: English"}
+        {lang === "ar"
+          ? "اللغة الحالية: العربية"
+          : "Current language: English"}
       </p>
     </div>
   );
