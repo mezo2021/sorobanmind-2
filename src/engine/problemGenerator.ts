@@ -9,7 +9,7 @@ import {
   getQuestionsByRule,
   bankQuestionToProblem,
   type BankQuestion
-} from "../data/bank";
+} from "../data/bank-linked";
 
 /**
  * مولد عشوائي قابل لإعادة الإنتاج.
