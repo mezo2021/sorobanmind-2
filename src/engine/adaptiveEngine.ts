@@ -3,7 +3,7 @@ import {
   evaluateBankAnswer,
   type BankQuestion,
   type QuestionEvaluation
-} from "../data/bank";
+} from "../data/bank-linked";
 
 import {
   createProgress,
