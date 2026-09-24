@@ -53,9 +53,7 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
   const [exampleIdx, setExampleIdx] = useState(0);
   const [solvedExamples, setSolvedExamples] = useState<number[]>([]);
   const [abacusValue, setAbacusValue] = useState(0);
-  const [feedback, setFeedback] = useState<"idle" | "correct" | "wrong">(
-    "idle",
-  );
+  const [feedback, setFeedback] = useState<"idle" | "correct" | "wrong">("idle");
   const [attempts, setAttempts] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [isReading, setIsReading] = useState(false);
@@ -70,9 +68,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
   const { speak, stop: stopSpeech, isSupported: ttsSupported } = useSpeech();
   const sorobana = useSorobanaVoice();
 
-  // ═══════════════════════════════════════════════
-  // إيقاف الصوت عند الخروج
-  // ═══════════════════════════════════════════════
   useEffect(() => {
     return () => {
       stopSpeech();
@@ -81,9 +76,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ═══════════════════════════════════════════════
-  // إعادة تعيين عند تغيير المثال
-  // ═══════════════════════════════════════════════
   useEffect(() => {
     setAbacusValue(0);
     setFeedback("idle");
@@ -114,9 +106,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
   const isSolved = solvedExamples.includes(exampleIdx);
   const allSolved = solvedExamples.length === content.examples.length;
 
-  // ═══════════════════════════════════════════════
-  // معالجات الصوت
-  // ═══════════════════════════════════════════════
   const handlePlayAudio = () => {
     if (isReading) {
       stopSpeech();
@@ -138,9 +127,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
     }
   };
 
-  // ═══════════════════════════════════════════════
-  // معالجات الاختبار
-  // ═══════════════════════════════════════════════
   const handleCheck = () => {
     if (!currentEx || feedback !== "idle") return;
 
@@ -185,18 +171,12 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
     if (onComplete) onComplete();
   };
 
-  // ═══════════════════════════════════════════════
-  // الرسم
-  // ═══════════════════════════════════════════════
   return (
     <div dir={dir} className="min-h-screen p-4 pb-40">
       <div className="max-w-2xl mx-auto">
-        {/* ═══ Header ═══ */}
+        {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={onBack}
-            className="btn-ghost !px-3 !py-2"
-          >
+          <button onClick={onBack} className="btn-ghost !px-3 !py-2">
             <ArrowRight className="w-5 h-5" />
           </button>
 
@@ -231,7 +211,7 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
           )}
         </div>
 
-        {/* ═══ القاعدة ═══ */}
+        {/* القاعدة */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -271,7 +251,7 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
           )}
         </motion.div>
 
-        {/* ═══ القصة ═══ */}
+        {/* القصة */}
         {content.storyAr && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -293,7 +273,7 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
           </motion.div>
         )}
 
-        {/* ═══ اختيار الوضع ═══ */}
+        {/* اختيار الوضع */}
         <div className="flex gap-2 mb-4 p-1 rounded-2xl bg-white/5 border border-white/10">
           <button
             onClick={() => setMode("watch")}
@@ -319,7 +299,7 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
           </button>
         </div>
 
-        {/* ═══ المثال الحالي ═══ */}
+        {/* المثال الحالي */}
         {currentEx && (
           <>
             <div className="flex items-center justify-between mb-2">
@@ -356,7 +336,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
               </p>
             </motion.div>
 
-            {/* ═══ السوروبان ═══ */}
             <div className="mb-4 flex justify-center">
               <Soroban2D5
                 key={`${exampleIdx}-${mode}`}
@@ -364,14 +343,11 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
                 autoBeadSize
                 interactive={mode === "try" && feedback === "idle" && !isSolved}
                 showValue={mode === "try"}
-                demoValue={
-                  mode === "watch" ? currentEx.answer : undefined
-                }
+                demoValue={mode === "watch" ? currentEx.answer : undefined}
                 onValueChange={setAbacusValue}
               />
             </div>
 
-            {/* ═══ التحكم ═══ */}
             {mode === "try" && !isSolved && (
               <div className="flex gap-2 mb-4">
                 <button
@@ -393,7 +369,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
               </div>
             )}
 
-            {/* ═══ ردّ الفعل ═══ */}
             <AnimatePresence>
               {feedback === "correct" && (
                 <motion.div
@@ -427,7 +402,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
               )}
             </AnimatePresence>
 
-            {/* ═══ أرني الإجابة ═══ */}
             {attempts >= 3 && !isSolved && !showAnswer && mode === "try" && (
               <button
                 onClick={() => setShowAnswer(true)}
@@ -458,7 +432,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
               </div>
             )}
 
-            {/* ═══ التنقل ═══ */}
             <div className="flex gap-2 mb-4">
               <button
                 onClick={handlePrev}
@@ -480,7 +453,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
           </>
         )}
 
-        {/* ═══ زر الإكمال ═══ */}
         {!lessonCompleted ? (
           <button
             onClick={handleComplete}
@@ -512,24 +484,25 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
         )}
       </div>
 
-      {/* ═══════════════════════════════════════════════
-          الرفيق — أسفل يسار
-          ═══════════════════════════════════════════════ */}
+      {/* ═══════ الرفيق — أسفل يمين (منخفض) ═══════ */}
       <FloatingCompanion
         playSound={(type) =>
-          playSound(type as "click" | "success" | "error" | "bead" | "whoosh" | "levelup")
+          playSound(
+            type as "click" | "success" | "error" | "bead" | "whoosh" | "levelup",
+          )
         }
         size={110}
         offsetBottom="1.5rem"
       />
 
-      {/* ═══════════════════════════════════════════════
-          سوروبانا — أسفل يمين
-          ═══════════════════════════════════════════════ */}
+      {/* ═══════ سوروبانا — أسفل يمين (مرتفع) ═══════ */}
       <SorobanaCompanion
-  isSpeaking={sorobana.isSpeaking}
-  onClick={handleSorobanaClick}
-  mode={mode}
-  variant={mode === "try" ? "pointing" : "main"}
-  offsetBottom="12rem"
-/>
+        isSpeaking={sorobana.isSpeaking}
+        onClick={handleSorobanaClick}
+        mode={mode}
+        variant={mode === "try" ? "pointing" : "main"}
+        offsetBottom="12rem"
+      />
+    </div>
+  );
+}
