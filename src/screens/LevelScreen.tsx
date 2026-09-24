@@ -22,8 +22,11 @@ import { useProgressStore } from "@/store/progressStore";
 import { getLevelContent } from "@/curriculum/levels";
 import { Soroban2D5 } from "@/components/soroban2d5/Soroban2D5";
 import { SorobanaCompanion } from "@/components/SorobanaCompanion";
+import { FloatingCompanion } from "@/components/FloatingCompanion";
 import { useSpeech } from "@/hooks/useSpeech";
 import { useSorobanaVoice } from "@/hooks/useSorobanaVoice";
+import { useSound } from "@/hooks/useSound";
+import { useGameStats } from "@/hooks/useGameStats";
 import type { LessonExample } from "@/curriculum/levels/types";
 
 type LessonMode = "watch" | "try";
@@ -60,6 +63,9 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
 
   const completeEnrichment = useProgressStore((s) => s.completeEnrichment);
   const addXP = useProgressStore((s) => s.addXP);
+
+  const { stats } = useGameStats();
+  const playSound = useSound(stats.soundEnabled);
 
   const { speak, stop: stopSpeech, isSupported: ttsSupported } = useSpeech();
   const sorobana = useSorobanaVoice();
@@ -506,7 +512,20 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
         )}
       </div>
 
-      {/* ═══ سوروبانا ═══ */}
+      {/* ═══════════════════════════════════════════════
+          الرفيق — أسفل يسار
+          ═══════════════════════════════════════════════ */}
+      <FloatingCompanion
+        playSound={(type) =>
+          playSound(type as "click" | "success" | "error" | "bead" | "whoosh" | "levelup")
+        }
+        size={110}
+        offsetBottom="1.5rem"
+      />
+
+      {/* ═══════════════════════════════════════════════
+          سوروبانا — أسفل يمين
+          ═══════════════════════════════════════════════ */}
       <SorobanaCompanion
         isSpeaking={sorobana.isSpeaking}
         onClick={handleSorobanaClick}
