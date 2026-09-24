@@ -10,7 +10,6 @@ import {
   XCircle,
   RotateCcw,
   Lightbulb,
-  BookOpen,
   Volume2,
   VolumeX,
   Sparkles,
@@ -21,9 +20,7 @@ import {
 import { useT } from "../i18n/useTranslation";
 import { useProgressStore } from "../store/progressStore";
 import { getLevelContent } from "../curriculum/levels";
-import { Soroban2D5 } from "../components/soroban2d5/Soroban2D5";
-import { useSpeech } from "../hooks/useSpeech";
-import type { LevelContent, LessonExample } from "../curriculum/levels/types";
+import type { LessonExample } from "../curriculum/levels/types";
 
 type LessonMode = "watch" | "try";
 
@@ -46,23 +43,12 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
   );
   const [attempts, setAttempts] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [isReading, setIsReading] = useState(false);
   const [lessonCompleted, setLessonCompleted] = useState(false);
 
   const completeEnrichment = useProgressStore((s) => s.completeEnrichment);
   const addXP = useProgressStore((s) => s.addXP);
-  const { speak, stop, isSpeaking, isSupported } = useSpeech();
 
-  // ═══════════════════════════════════════════════
-  // إيقاف الصوت عند الخروج
-  // ═══════════════════════════════════════════════
-  useEffect(() => {
-    return () => stop();
-  }, [stop]);
-
-  // ═══════════════════════════════════════════════
   // إعادة تعيين عند تغيير المثال
-  // ═══════════════════════════════════════════════
   useEffect(() => {
     setAbacusValue(0);
     setFeedback("idle");
@@ -98,18 +84,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
   // ═══════════════════════════════════════════════
   // معالجات
   // ═══════════════════════════════════════════════
-  const handlePlayAudio = () => {
-    if (isReading) {
-      stop();
-      setIsReading(false);
-      return;
-    }
-    setIsReading(true);
-    speak(content.audioTextAr, {
-      onEnd: () => setIsReading(false),
-    });
-  };
-
   const handleCheck = () => {
     if (!currentEx || feedback !== "idle") return;
 
@@ -151,24 +125,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
     if (onComplete) onComplete();
   };
 
-  // ═══════════════════════════════════════════════
-  // تحديد عدد الأعمدة
-  // ═══════════════════════════════════════════════
-  const getColumnsForValue = (value: number): number => {
-    if (value < 10) return 1;
-    if (value < 100) return 2;
-    if (value < 1000) return 3;
-    if (value < 10000) return 4;
-    return 5;
-  };
-
-  const columns = currentEx
-    ? Math.max(2, getColumnsForValue(currentEx.answer))
-    : 2;
-
-  // ═══════════════════════════════════════════════
-  // الرسم
-  // ═══════════════════════════════════════════════
   return (
     <div dir={dir} className="min-h-screen p-4 pb-24">
       <div className="max-w-2xl mx-auto">
@@ -194,22 +150,9 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
             </h1>
           </div>
 
-          {isSupported && (
-            <button
-              onClick={handlePlayAudio}
-              className={`p-2 rounded-full transition shrink-0 ${
-                isReading
-                  ? "bg-emerald-500/30 border border-emerald-400/50"
-                  : "bg-white/10 hover:bg-white/20"
-              }`}
-            >
-              {isReading ? (
-                <VolumeX className="w-5 h-5 text-emerald-300" />
-              ) : (
-                <Volume2 className="w-5 h-5 text-white/70" />
-              )}
-            </button>
-          )}
+          <div className="p-2 rounded-full bg-white/10">
+            <Volume2 className="w-5 h-5 text-white/40" />
+          </div>
         </div>
 
         {/* ═══ القاعدة ═══ */}
@@ -277,10 +220,7 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
         {/* ═══ اختيار الوضع ═══ */}
         <div className="flex gap-2 mb-4 p-1 rounded-2xl bg-white/5 border border-white/10">
           <button
-            onClick={() => {
-              setMode("watch");
-              stop();
-            }}
+            onClick={() => setMode("watch")}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${
               mode === "watch"
                 ? "bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg"
@@ -291,10 +231,7 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
             {t("learn.watch")}
           </button>
           <button
-            onClick={() => {
-              setMode("try");
-              stop();
-            }}
+            onClick={() => setMode("try")}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${
               mode === "try"
                 ? "bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg"
@@ -309,7 +246,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
         {/* ═══ المثال الحالي ═══ */}
         {currentEx && (
           <>
-            {/* رقم المثال + النقاط */}
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs text-white/50">
                 {t("learn.example", {
@@ -333,7 +269,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
               </div>
             </div>
 
-            {/* نص المسألة */}
             <motion.div
               key={exampleIdx}
               initial={{ opacity: 0, scale: 0.95 }}
@@ -345,34 +280,30 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
               </p>
             </motion.div>
 
-            {/* ═══ السوروبان ═══ */}
-            <div className="mb-4 flex justify-center">
-              <Soroban2D5
-                key={`${exampleIdx}-${mode}`}
-                columns={columns}
-                autoBeadSize
-                interactive={mode === "try" && feedback === "idle" && !isSolved}
-                showValue
-                demoValue={
-                  mode === "watch" ? currentEx.answer : undefined
-                }
-                onValueChange={setAbacusValue}
-              />
+            {/* المساحة المخصصة للسوروبان التفاعلي - سنضيفها لاحقاً */}
+            <div className="mb-4 p-6 rounded-2xl bg-purple-950/30 border border-purple-500/30 text-center">
+              <p className="text-sm text-purple-300 mb-2">
+                🎯 المساحة المخصصة لتمثيل الرقم
+              </p>
+              {mode === "watch" ? (
+                <p className="text-3xl font-black text-amber-300">
+                  {currentEx.answer}
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  <input
+                    type="number"
+                    value={abacusValue || ""}
+                    onChange={(e) => setAbacusValue(Number(e.target.value) || 0)}
+                    disabled={feedback !== "idle" || isSolved}
+                    placeholder="أدخل الإجابة"
+                    className="w-32 mx-auto block text-center text-3xl font-black bg-slate-800 border-2 border-purple-500/50 rounded-2xl px-4 py-3 text-white outline-none focus:border-amber-400 disabled:opacity-50"
+                    dir="ltr"
+                  />
+                </div>
+              )}
             </div>
 
-            {/* ═══ القيمة الحالية ═══ */}
-            {mode === "try" && (
-              <div className="text-center mb-4">
-                <span className="text-sm text-white/50">
-                  {t("practice.currentValue")}:{" "}
-                </span>
-                <span className="text-2xl font-bold text-amber-300">
-                  {abacusValue}
-                </span>
-              </div>
-            )}
-
-            {/* ═══ أزرار التحكم ═══ */}
             {mode === "try" && !isSolved && (
               <div className="flex gap-2 mb-4">
                 <button
@@ -394,7 +325,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
               </div>
             )}
 
-            {/* ═══ ردّ الفعل ═══ */}
             <AnimatePresence>
               {feedback === "correct" && (
                 <motion.div
@@ -428,7 +358,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
               )}
             </AnimatePresence>
 
-            {/* ═══ الإجابة (بعد ٣ محاولات) ═══ */}
             {attempts >= 3 && !isSolved && !showAnswer && mode === "try" && (
               <button
                 onClick={() => setShowAnswer(true)}
@@ -459,7 +388,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
               </div>
             )}
 
-            {/* ═══ التنقل ═══ */}
             <div className="flex gap-2 mb-4">
               <button
                 onClick={handlePrev}
@@ -481,7 +409,6 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
           </>
         )}
 
-        {/* ═══ زر الإكمال ═══ */}
         {!lessonCompleted ? (
           <button
             onClick={handleComplete}
@@ -505,9 +432,7 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
             <h2 className="text-xl font-black text-amber-300 mb-2">
               🎉 {t("curriculum.completed")}
             </h2>
-            <p className="text-sm text-white/70 mb-4">
-              +30 XP
-            </p>
+            <p className="text-sm text-white/70 mb-4">+30 XP</p>
             <button
               onClick={onBack}
               className="w-full py-3 rounded-xl bg-purple-600 text-white font-bold"
