@@ -527,12 +527,9 @@ export default function LevelScreen({ levelId, onBack, onComplete }: Props) {
           سوروبانا — أسفل يمين
           ═══════════════════════════════════════════════ */}
       <SorobanaCompanion
-        isSpeaking={sorobana.isSpeaking}
-        onClick={handleSorobanaClick}
-        mode={mode}
-        variant={mode === "try" ? "pointing" : "main"}
-        offsetBottom="2rem"
-      />
-    </div>
-  );
-}
+  isSpeaking={sorobana.isSpeaking}
+  onClick={handleSorobanaClick}
+  mode={mode}
+  variant={mode === "try" ? "pointing" : "main"}
+  offsetBottom="12rem"
+/>
