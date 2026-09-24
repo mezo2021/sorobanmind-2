@@ -45,8 +45,16 @@ export interface ProblemGeneratorSpec {
   /** نوع مولد المسألة */
   type: ProblemGeneratorType;
 
-  /** القيود التي يتحرك ضمنها المولد */
+  /** القيود المستخدمة أثناء التوليد */
   constraints: ProblemGeneratorConstraints;
+
+  /**
+   * بذرة عشوائية اختيارية.
+   *
+   * أبقيناها هنا أيضاً لأن problemGenerator.ts
+   * يستخدم spec.seed مباشرة.
+   */
+  seed?: number;
 }
 
 /**
@@ -62,23 +70,35 @@ export interface ProblemGeneratorConstraints {
   /** عدد الخانات المطلوبة */
   digits?: number;
 
-  /** نوع الحركة المطلوبة */
+  /** نوع حركة واحد محدد */
   movement?: MovementType;
-
-  /** درجة الصعوبة */
-  difficulty?: number;
-
-  /** بذرة عشوائية لإعادة إنتاج نفس النتائج */
-  seed?: number;
 
   /** أنواع الحركات المسموح بها */
   allowedMovements?: MovementType[];
+
+  /**
+   * اسم بديل مستخدم في problemGenerator.ts
+   * لقائمة أنواع الحركات.
+   */
+  movementTypes?: MovementType[];
+
+  /** درجة صعوبة المسألة */
+  difficulty?: number;
+
+  /** بذرة عشوائية لإعادة إنتاج النتائج */
+  seed?: number;
 
   /** عدد الحدود في المسألة */
   termsCount?: number;
 
   /** العمليات الحسابية المسموح بها */
   operations?: Array<"+" | "-" | "×" | "÷">;
+
+  /** الأرقام المسموح باستخدامها */
+  allowedNumbers?: number[];
+
+  /** المهارة المستهدفة */
+  skillId?: SkillId;
 }
 
 /**
@@ -91,7 +111,7 @@ export interface WorkedExample {
   /** العملية المستخدمة */
   operation: string;
 
-  /** خطوات الحل بالتسلسل */
+  /** خطوات الحل */
   steps: string[];
 
   /** الإجابة النهائية */
@@ -102,13 +122,13 @@ export interface WorkedExample {
  * خطأ شائع يقع فيه الطفل.
  */
 export interface CommonMistake {
-  /** الإجابة الخاطئة التي قد يعطيها الطفل */
+  /** الإجابة الخاطئة المحتملة */
   wrongAnswer: string;
 
   /** سبب الخطأ */
   whyWrong: string;
 
-  /** الحركة الصحيحة المطلوبة */
+  /** الحركة الصحيحة */
   correctMovement: string;
 }
 
@@ -142,36 +162,36 @@ export interface Skill {
   /** وصف المهارة */
   description: string;
 
-  /** المهارات التي يجب إتقانها مسبقاً */
+  /** المهارات السابقة المطلوبة */
   prerequisites: string[];
 
-  /** نوع الحركة السوروبانية الأساسية */
+  /** نوع الحركة الأساسية */
   movementType: MovementType;
 
-  /** معايير إتقان المهارة */
+  /** معايير الإتقان */
   mastery: MasteryCriteria;
 
-  /** مواصفات توليد مسائل المهارة */
+  /** مواصفات مولد المسائل */
   generator: ProblemGeneratorSpec;
 
-  /** المحتوى التعليمي الكامل للمهارة */
+  /** المحتوى التعليمي */
   content: {
     /** الهدف التعليمي */
     goal: string;
 
-    /** المعرفة التي يجب اكتسابها */
+    /** المعرفة المطلوبة */
     knowledge: string;
 
-    /** القاعدة الحسابية أو السوروبانية */
+    /** القاعدة */
     rule: string;
 
-    /** شرح مبسط للطفل */
+    /** الشرح المبسط للطفل */
     childExplanation: string;
 
-    /** حركة الأصابع المطلوبة */
+    /** حركة الأصابع */
     fingerMovement: string;
 
-    /** أمثلة محلولة */
+    /** الأمثلة المحلولة */
     examples: WorkedExample[];
 
     /** الأخطاء الشائعة */
@@ -183,19 +203,19 @@ export interface Skill {
  * اختبار نهاية المستوى.
  */
 export interface LevelExam {
-  /** المعرّف الفريد للاختبار */
+  /** معرّف الاختبار */
   id: string;
 
   /** مدة الاختبار بالثواني */
   durationSec: number;
 
-  /** عدد المسائل في الاختبار */
+  /** عدد المسائل */
   problemsCount: number;
 
-  /** نسبة النجاح المطلوبة من 0 إلى 100 */
+  /** نسبة النجاح المطلوبة */
   passingScore: number;
 
-  /** مواصفات توليد أسئلة الاختبار */
+  /** مولد أسئلة الاختبار */
   generator: ProblemGeneratorSpec;
 }
 
@@ -211,20 +231,13 @@ export interface LocalizedText {
 }
 
 /**
- * المستوى — يمثل كل من L00-L20 + الإثراء E1-E3.
- *
- * يجمع بين:
- * - بنية المنهج والمهارات
- * - معايير الإتقان
- * - المتطلبات السابقة
- * - التصنيف والفئات
- * - المحتوى ثنائي اللغة
+ * المستوى الكامل في المنهج.
  */
 export interface CurriculumLevel {
-  /** المعرّف الفريد: L00، L15، E1، ... */
+  /** معرّف المستوى */
   id: string;
 
-  /** الرقم التسلسلي للمستوى */
+  /** الرقم التسلسلي */
   number: number;
 
   /** اسم المستوى */
@@ -233,30 +246,30 @@ export interface CurriculumLevel {
   /** وصف المستوى */
   description: LocalizedText;
 
-  /** المجموعة التي يتبع لها المستوى */
+  /** المجموعة */
   group: CurriculumGroup | "enrichment";
 
   /** الفئة المستهدفة */
   category: Category | "both";
 
-  /** المستويات السابقة المطلوبة */
+  /** المتطلبات السابقة */
   prerequisites: string[];
 
   /** مهارات المستوى */
   skills: Skill[];
 
-  /** اختبار نهاية المستوى */
+  /** اختبار المستوى */
   exam: LevelExam;
 
-  /** معلومات إضافية عن المستوى */
+  /** معلومات إضافية */
   metadata: {
-    /** عدد الساعات التعليمية التقديرية */
+    /** الساعات التقديرية */
     estimatedHours: number;
 
-    /** الفئة العمرية المستهدفة */
+    /** العمر المستهدف */
     targetAge: [number, number];
 
-    /** مدى توافق المستوى مع المنهج الياباني */
+    /** التوافق مع المنهج الياباني */
     japanAlignment?: string;
 
     /** هل المستوى إثرائي */
@@ -271,10 +284,10 @@ export interface CurriculumLevel {
 }
 
 /**
- * الخطوة الواحدة في حل المسألة على السوروبان.
+ * خطوة واحدة في حل المسألة على السوروبان.
  */
 export interface SolveStep {
-  /** رقم العمود على السوروبان */
+  /** رقم العمود */
   rod: number;
 
   /** نوع الحركة */
@@ -287,75 +300,78 @@ export interface SolveStep {
     | "borrow"
     | "read";
 
-  /** عدد الخرزات المتحركة */
+  /** عدد الخرزات */
   count: number;
 
-  /** قاعدة الحركة المستخدمة */
+  /** قاعدة الحركة */
   rule: MovementType;
 
   /** مفتاح وصف الحركة */
   descriptionKey: string;
 
-  /** المعاملات المستخدمة في وصف الحركة */
+  /** معاملات وصف الحركة */
   descriptionParams: Record<string, string | number>;
 }
 
 /**
- * مسألة واحدة يولدها المحرك أو تأتي من بنك الأسئلة.
+ * مسألة واحدة.
  *
- * ملاحظة مهمة:
- * المسألة الواحدة تحتوي على عملية واحدة فقط،
- * لذلك نستخدم operation وليس operations.
+ * العملية هنا مفردة لأن كل Problem يمثل سؤالاً واحداً.
  */
 export interface Problem {
-  /** المعرّف الفريد للمسألة، إن كان موجوداً */
+  /** المعرّف الفريد للمسألة */
   id?: string;
 
-  /** المعاملات الداخلة في المسألة، مثل [3, 2] */
+  /** الأرقام الداخلة في المسألة */
   operands: number[];
 
   /**
    * العملية الفعلية للمسألة.
    *
    * العمليات الحسابية:
-   * + الجمع
-   * - الطرح
-   * × الضرب
-   * ÷ القسمة
+   * + جمع
+   * - طرح
+   * × ضرب
+   * ÷ قسمة
    *
-   * read لقراءة السوروبان
-   * build لبناء السوروبان
+   * read قراءة السوروبان
+   * build بناء السوروبان
    */
   operation: "+" | "-" | "×" | "÷" | "read" | "build";
 
-  /** نوع الحركة الحسابية المطلوبة */
+  /** نوع الحركة المطلوبة */
   movement: MovementType;
 
-  /** الإجابة الصحيحة المحسوبة مسبقاً */
+  /** الإجابة الصحيحة */
   expectedAnswer: number;
 
-  /** درجة صعوبة المسألة */
+  /** مستوى الصعوبة */
   difficulty: number;
 
-  /** خطوات الحل على السوروبان */
-  steps: SolveStep[];
+  /**
+   * خطوات الحل.
+   *
+   * اختيارية لأن بنك الأسئلة الحالي لا يرسلها
+   * في كل سؤال، بينما يمكن للمولد إنتاجها لاحقاً.
+   */
+  steps?: SolveStep[];
 
-  /** المهارة التي تقيسها المسألة */
+  /** المهارة التي يقيسها السؤال */
   skillId?: SkillId;
 
-  /** قاعدة السوروبان التي تستهدفها المسألة */
+  /** قاعدة السوروبان المستهدفة */
   ruleId?: string;
 
-  /** نص السؤال المعروض للطفل */
+  /** نص السؤال */
   question?: string;
 
-  /** شرح تعليمي يظهر عند الخطأ */
+  /** الشرح التعليمي */
   explanation?: string;
 
-  /** الزمن المستهدف لحل المسألة بالميلي ثانية */
+  /** الزمن المستهدف بالميلي ثانية */
   targetTimeMs?: number;
 
-  /** مصدر المسألة داخل بنك الأسئلة */
+  /** مصدر السؤال */
   source?: string;
 }
 
@@ -363,22 +379,20 @@ export interface Problem {
  * حالة عمود واحد على السوروبان.
  */
 export interface RodState {
-  /** الخرزة العلوية: إما غير مفعلة أو مفعلة */
+  /** الخرزة العلوية */
   upper: 0 | 1;
 
-  /** عدد الخرزات السفلية المفعلة */
+  /** عدد الخرزات السفلية */
   lower: 0 | 1 | 2 | 3 | 4;
 }
 
 /**
  * حالة السوروبان الكاملة.
- *
- * كل عنصر يمثل عموداً واحداً.
  */
 export type SorobanState = RodState[];
 
 /**
- * سجل تقدم الطفل في مهارة محددة.
+ * سجل تقدم الطفل في مهارة.
  */
 export interface SkillProgress {
   /** معرّف المهارة */
@@ -390,10 +404,10 @@ export interface SkillProgress {
   /** عدد الإجابات الصحيحة */
   correct: number;
 
-  /** عدد الإجابات الصحيحة المتتالية */
+  /** الإجابات الصحيحة المتتالية */
   consecutiveCorrect: number;
 
-  /** متوسط زمن الإجابة بالميلي ثانية */
+  /** متوسط زمن الإجابة */
   avgTimeMs: number;
 
   /** وقت الوصول إلى الإتقان */
@@ -401,13 +415,13 @@ export interface SkillProgress {
 }
 
 /**
- * محاولة واحدة من الطفل.
+ * محاولة واحدة.
  */
 export interface Attempt {
-  /** المهارة التي تم اختبارها */
+  /** المهارة المختبرة */
   skillId: string;
 
-  /** هل كانت الإجابة صحيحة */
+  /** هل الإجابة صحيحة */
   correct: boolean;
 
   /** زمن الإجابة بالميلي ثانية */
@@ -424,32 +438,29 @@ export interface ExamResult {
   /** معرّف الاختبار */
   examId: string;
 
-  /** عدد المسائل في الاختبار */
+  /** عدد المسائل */
   problemsCount: number;
 
   /** عدد الإجابات الصحيحة */
   correctAnswers: number;
 
-  /** النتيجة كنسبة مئوية */
+  /** النتيجة المئوية */
   score: number;
 
-  /** هل نجح الطفل */
+  /** هل تم اجتياز الاختبار */
   passed: boolean;
 
-  /** وقت إكمال الاختبار */
+  /** وقت الإكمال */
   completedAt: string;
 }
 
 /**
  * معرّف المهارة.
- *
- * استخدام string يسمح بإضافة مستويات ومهارات مستقبلية
- * دون تعديل هذا النوع.
  */
 export type SkillId = string;
 
 /**
- * حالة المستوى بالنسبة لتقدم الطالب.
+ * حالة المستوى.
  */
 export type LevelStatus =
   | "locked"
@@ -459,7 +470,7 @@ export type LevelStatus =
   | "mastered";
 
 /**
- * فهرس مختصر للمستوى مع حالة التقدم.
+ * ملخص المستوى مع حالة تقدم الطالب.
  */
 export interface LevelSummary {
   /** معرّف المستوى */
@@ -477,13 +488,13 @@ export interface LevelSummary {
   /** المجموعة */
   group: CurriculumGroup | "enrichment";
 
-  /** الفئة المستهدفة */
+  /** الفئة */
   category: Category | "both";
 
-  /** اسم الأيقونة */
+  /** الأيقونة */
   icon: string;
 
-  /** كلاس اللون */
+  /** اللون */
   color: string;
 
   /** حالة المستوى */
@@ -492,9 +503,9 @@ export interface LevelSummary {
   /** المتطلبات السابقة */
   prerequisites: string[];
 
-  /** عدد الساعات التقديرية */
+  /** الساعات التقديرية */
   estimatedHours: number;
 
-  /** الفئة العمرية المستهدفة */
+  /** العمر المستهدف */
   targetAge: [number, number];
 }
