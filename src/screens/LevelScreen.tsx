@@ -11,7 +11,6 @@ import {
   RotateCcw,
   Lightbulb,
   Volume2,
-  VolumeX,
   Sparkles,
   ChevronLeft,
   ChevronRight,
