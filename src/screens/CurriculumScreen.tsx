@@ -38,7 +38,7 @@ import {
   getLevelsByGroup,
   type LevelInfo,
 } from "../data/curriculum";
-import type { Category, CurriculumGroup } from "../curriculum/types";
+import type { Category } from "../curriculum/types";
 
 // ═══════════════════════════════════════════════
 // أيقونات المستويات
