@@ -1,5 +1,4 @@
 // src/components/SorobanaCompanion.tsx
-import { motion } from 'framer-motion';
 import mainImg from '@/assets/sorobana/sorobana-main.webp';
 import pointingImg from '@/assets/sorobana/sorobana-teaching-pointing.webp';
 
@@ -35,9 +34,10 @@ export function SorobanaCompanion({
   }
 
   const img = variant === 'pointing' ? pointingImg : mainImg;
+  const animationDuration = isSpeaking ? '0.8s' : '2.2s';
 
   return (
-    <motion.button
+    <button
       type="button"
       onClick={clickThrough ? undefined : onClick}
       aria-label="سوروبانا — المعلمة"
@@ -50,13 +50,10 @@ export function SorobanaCompanion({
         border: 'none',
         pointerEvents: clickThrough ? 'none' : 'auto',
         width: size,
+        animation: `sorobana-float ${animationDuration} ease-in-out infinite`,
       }}
-      initial={{ opacity: 0, x: 40 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ type: 'spring', stiffness: 200, damping: 22 }}
-      whileTap={clickThrough ? undefined : { scale: 0.95 }}
     >
-      <motion.img
+      <img
         src={img}
         alt="سوروبانا"
         className="w-full pointer-events-none"
@@ -66,16 +63,8 @@ export function SorobanaCompanion({
           filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.4))',
         }}
         draggable={false}
-        animate={{
-          y: isSpeaking ? [0, -6, 0, -6, 0] : [0, -12, 0],
-        }}
-        transition={{
-          duration: isSpeaking ? 0.8 : 2.2,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
       />
-    </motion.button>
+    </button>
   );
 }
 
