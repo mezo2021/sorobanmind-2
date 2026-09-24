@@ -272,7 +272,7 @@ export function HeroDashboard({
 
     // ✅ الحل — حدّث الحالة فوراً
     setExamPassed(true);
-    playSound('levelup');
+    playSound('click');
 
     // ✅ انتظر ثانية كاملة قبل إعادة التحميل
     setTimeout(() => window.location.reload(), 1000);
