@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useT } from "./i18n/useTranslation";
 import { useProgressStore } from "./store/progressStore";
+import { hasLevelContent } from "./curriculum/levels";
 import type { Category } from "./curriculum/types";
 
 // Screens
 import CategorySelectScreen from "./screens/CategorySelectScreen";
 import CurriculumScreen from "./screens/CurriculumScreen";
 import EnrichmentScreen from "./screens/EnrichmentScreen";
+import LevelScreen from "./screens/LevelScreen";
 import { SorobanEngineDebug } from "./components/SorobanEngineDebug";
 
 // ═══════════════════════════════════════════════
@@ -64,10 +66,14 @@ export default function App() {
   };
 
   const handleOpenLevel = (levelId: string) => {
-    // TODO: افتح شاشة المستوى
-    // حالياً: نفتح Debug كبديل
-    setActiveLevelId(levelId);
-    setScreen("debug");
+    if (hasLevelContent(levelId)) {
+      setActiveLevelId(levelId);
+      setScreen("level");
+    } else {
+      // مستوى بدون محتوى بعد → Debug
+      setActiveLevelId(levelId);
+      setScreen("debug");
+    }
   };
 
   const handleOpenEnrichment = () => {
@@ -81,6 +87,10 @@ export default function App() {
 
   const handleBackToCurriculum = () => {
     setScreen("curriculum");
+  };
+
+  const handleBackToCategory = () => {
+    setScreen("category-select");
   };
 
   // ═══════════════════════════════════════════════
@@ -131,7 +141,7 @@ export default function App() {
         >
           <CurriculumScreen
             category={category}
-            onBack={() => setScreen("category-select")}
+            onBack={handleBackToCategory}
             onOpenLevel={handleOpenLevel}
             onOpenEnrichment={handleOpenEnrichment}
           />
@@ -149,6 +159,20 @@ export default function App() {
             category={category}
             onBack={handleBackToCurriculum}
             onOpenModule={handleOpenEnrichmentModule}
+          />
+        </motion.div>
+      )}
+
+      {screen === "level" && activeLevelId && (
+        <motion.div
+          key="level"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <LevelScreen
+            levelId={activeLevelId}
+            onBack={handleBackToCurriculum}
           />
         </motion.div>
       )}
@@ -175,7 +199,9 @@ export default function App() {
               </h1>
               {activeLevelId && (
                 <p className="text-sm text-purple-200">
-                  المستوى: <span className="font-bold">{activeLevelId}</span> — قيد التطوير
+                  المستوى:{" "}
+                  <span className="font-bold">{activeLevelId}</span> — قيد
+                  التطوير
                 </p>
               )}
             </div>
