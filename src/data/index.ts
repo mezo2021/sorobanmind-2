@@ -2,10 +2,7 @@
 
 import type {
   LevelNode,
-  Quest,
-  PracticeQuestion,
-  ChainExercise,
-} from '../types';
+  import type { LevelNode, Quest, PracticeQuestion, ChainExercise } from '../types';
 
 // ═══════════════════════════════════════════════════════════
 // المستويات
