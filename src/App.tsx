@@ -1,3 +1,4 @@
+import '@/data/bank-linked';
 // src/App.tsx
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
