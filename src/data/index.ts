@@ -2,10 +2,13 @@
 
 import type {
   LevelNode,
-  import type { LevelNode, Quest, PracticeQuestion, ChainExercise } from '../types';
+  Quest,
+  PracticeQuestion,
+  ChainExercise,
+} from '../types';
 
 // ═══════════════════════════════════════════════════════════
-// المستويات
+// المستويات (10 مستويات)
 // ═══════════════════════════════════════════════════════════
 export const LEVELS: LevelNode[] = [
   { id: 0, name: 'Finger Math', nameAr: 'رياضيات الأصابع', status: 'available', icon: 'Hand', xpRequired: 0 },
@@ -21,7 +24,7 @@ export const LEVELS: LevelNode[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════
-// الدروس — من ملف منفصل
+// الدروس — تُستورد من ملف منفصل
 // ═══════════════════════════════════════════════════════════
 export { LEARN_MODULES } from './learnModules';
 
@@ -41,11 +44,18 @@ export const QUESTS: Quest[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════
-// أسئلة التدريب + السلاسل (فارغة حالياً)
+// أسئلة التدريب (فارغة)
 // ═══════════════════════════════════════════════════════════
 export const PRACTICE_QUESTIONS: PracticeQuestion[] = [];
+
+// ═══════════════════════════════════════════════════════════
+// تمارين السلاسل (فارغة)
+// ═══════════════════════════════════════════════════════════
 export const CHAIN_EXERCISES: ChainExercise[] = [];
 
+// ═══════════════════════════════════════════════════════════
+// Aliases للتوافق
+// ═══════════════════════════════════════════════════════════
 export const ADDITION_QUESTIONS = PRACTICE_QUESTIONS.filter((q) =>
   q.question.includes('+')
 );
