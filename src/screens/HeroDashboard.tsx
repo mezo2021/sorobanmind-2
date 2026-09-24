@@ -239,33 +239,47 @@ export function HeroDashboard({
   };
 
   const handleTestUnlock = () => {
-    try {
-      localStorage.setItem(
-        'soroban_exam_result',
-        JSON.stringify({ score: 100, passed: true, date: Date.now() }),
-      );
-      localStorage.setItem(
-        'soroban_exam2_result',
-        JSON.stringify({ score: 100, passed: true, date: Date.now() }),
-      );
-      const allLessons = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-      localStorage.setItem(
-        'soroban-completed-lessons',
-        JSON.stringify(allLessons),
-      );
-      localStorage.setItem(
-        'soroban_anzan_badges',
-        JSON.stringify({
-          master_addition: true,
-          master_multiplication: true,
-          master_division: true,
-          master_mixed: true,
-        }),
-      );
-      playSound('whoosh');
-      setTimeout(() => window.location.reload(), 300);
-    } catch { /* ignore */ }
-  };
+  try {
+    localStorage.setItem(
+      'soroban_exam_result',
+      JSON.stringify({ score: 100, passed: true, date: Date.now() }),
+    );
+    localStorage.setItem(
+      'soroban_exam2_result',
+      JSON.stringify({ score: 100, passed: true, date: Date.now() }),
+    );
+    localStorage.setItem(
+      'soroban-completed-lessons',
+      JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+    );
+    localStorage.setItem(
+      'soroban_anzan_badges',
+      JSON.stringify({
+        master_addition: true,
+        master_multiplication: true,
+        master_division: true,
+        master_mixed: true,
+      }),
+    );
+    localStorage.setItem(
+      'soroban_anzan_audio_badges',
+      JSON.stringify({
+        master_addition_audio: true,
+        master_multiplication_audio: true,
+        master_division_audio: true,
+      }),
+    );
+
+    // ✅ الحل — حدّث الحالة فوراً
+    setExamPassed(true);
+    playSound('levelup');
+
+    // ✅ انتظر ثانية كاملة قبل إعادة التحميل
+    setTimeout(() => window.location.reload(), 1000);
+  } catch (err) {
+    window.alert('خطأ: ' + String(err));
+  }
+};
 
   const handlePreviewCertificate = () => {
     try {
