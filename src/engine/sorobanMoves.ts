@@ -35,7 +35,8 @@ export function rodValue(rod: RodState): number {
 
 /**
  * حساب القيمة الكلية للسوروبان.
- * أقصى يسار = خانة الآحاد (نمط SorobanMind).
+ * أقصى يمين = خانة الآحاد (نقطة الآحاد).
+ * كل عمود نحو اليسار يمثّل منزلة أكبر (×10).
  */
 export function sorobanValue(state: SorobanState): number {
   let total = 0;
