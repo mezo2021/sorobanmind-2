@@ -1,32 +1,14 @@
-📋 ملف المشروع النهائي — SorobanMind v2
+📄 PROJECT_PLAN.md — النسخة المحدثة
 
-🎯 ملاحظة أولية
-
-هذا ملف "حي" (Living Document).
-
-· سنحدّثه بعد كل جلسة
-· يُرفع إلى GitHub كـPROJECT_PLAN.md
-· يبقى مرجعاً دائماً لكل قراراتنا
-
----
-
-📄 الملف الكامل
-
-أنشئ ملفاً في المستودع باسم:
-
-```
-PROJECT_PLAN.md
-```
-
-المحتوى الكامل (انسخه كما هو):
 
 ```markdown
 # 📘 SorobanMind v2 — Master Plan
 ## الخطة الرئيسية للمشروع
 
-> **آخر تحديث:** 2026-09-24
-> **الحالة:** قيد التطوير — الجلسة 1
+> **آخر تحديث:** 2026-09-24 (الجلسة 1)
+> **الحالة:** 🟢 التطبيق يعمل — الهيكل الكامل جاهز
 > **الرابط:** https://mezo2021.github.io/sorobanmind-2
+> **المستودع:** https://github.com/mezo2021/sorobanmind-2
 
 ---
 
@@ -37,47 +19,41 @@ PROJECT_PLAN.md
 ### 🎯 الهدف:
 > **أن يصبح العقل أسرع من الآلة الحاسبة**
 
-### 👥 الجمهور المستهدف (فئتان):
+### 👥 الجمهور المستهدف:
 
 | الفئة | العمر | الأسلوب |
 |-------|-------|---------|
-| 🧒 **المستوى الأول** | 5-12 سنة | مرح، قصص، ألعاب، سوروبانا |
-| 🧑 **المستوى الثاني** | 13+ سنة | جدي، رسمي، إتقان |
+| 🧒 المستوى الأول | 5-12 سنة | مرح، قصص، ألعاب، سوروبانا |
+| 🧑 المستوى الثاني | 13+ سنة | جدي، رسمي، إتقان |
 
 ### 🌍 اللغات:
 - **العربية** (أساسية) — i18n كامل
-- **الإنجليزية** (ثانوية) — قابلة للتفعيل
+- **الإنجليزية** (ثانوية)
 
 ---
 
 ## 🏗️ 2. المعمارية العامة
 
-### 📊 نموذج "Fusion"
+### 📊 نموذج "Fusion" (v1 + v2 + GPT)
 
 ```
 ┌────────────────────────────────────────────────────┐
 │              SorobanMind v2                         │
 ├────────────────────────────────────────────────────┤
 │                                                     │
+│  [Welcome Screen]  ← كل 7 أيام                     │
+│         ↓                                           │
 │  [Role Selection]  ← البطل / ولي الأمر             │
 │         ↓                                           │
-│  [Category Selection]  ← 5-12 / 13+                │
-│         ↓                                           │
-│  [Welcome Screen]  ← كل 7 أيام (مع سوروبانا)       │
-│         ↓                                           │
-│  [Hero Dashboard]  ← الصفحة الرئيسية               │
-│         ↓                                           │
-│  ┌──────────────┬──────────────┬──────────────┐    │
-│  │              │              │              │    │
-│  ▼              ▼              ▼              ▼    │
-│ [Learn v1]  [Curriculum v2] [Enrichment] [Anzan]  │
-│ 14 درساً    20 مستوى        E1/E2/E3      بصري+سمعي│
-│              │              │              │      │
-│              └──────┬───────┴──────────────┘      │
-│                     ▼                              │
-│              [Adaptive Engine]                     │
-│              يتكيّف مع مستوى كل طالب              │
-│                                                    │
+│  ┌──────────────┬─────────────────┐                │
+│  │              │                 │                │
+│  ▼              ▼                 ▼                │
+│ [Hero]      [Guardian]      [Category]            │
+│  │              │                 │                │
+│  ▼              ▼                 ▼                │
+│ Dashboards  Stats Panel    [Curriculum v2]        │
+│                              └── L00-L20          │
+│                                                     │
 └────────────────────────────────────────────────────┘
 ```
 
@@ -85,10 +61,10 @@ PROJECT_PLAN.md
 
 | الطبقة | الوصف | المصدر |
 |--------|-------|--------|
-| **v1 (Base)** | الشاشات، الأصوات، الشخصيات، الألعاب | تطبيقك الأصلي |
-| **v2 (New)** | محرك السوروبان، المنهج الـ20، i18n | بناء جديد |
-| **GPT (Engine)** | التعليم التكيفي، mastery tracking | من ChatGPT |
-| **Fusion (UI)** | الدمج بين v1 + v2 | الآن |
+| **v1 (Base)** | الشاشات، الشخصيات، الأصوات، الألعاب | تطبيقك الأصلي |
+| **v2 (New)** | محرك السوروبان، المنهج، i18n | بناء جديد |
+| **GPT (Engine)** | التعليم التكيفي، mastery | من ChatGPT |
+| **Fusion (UI)** | الدمج بين v1 + v2 | تم الآن ✅ |
 
 ---
 
@@ -96,134 +72,71 @@ PROJECT_PLAN.md
 
 ### 🧒 المستوى الأول (5-12 سنة)
 
-**الترتيب:**
 ```
-📖 المقدمة (الإثراء)
+📖 الإثراء
 ├── E1: رياضيات الأصابع (Finger Math)
-└── E2: أسرار جدول الضرب (Magic Secrets)
+├── E2: أسرار جدول الضرب (Magic Secrets)
+└── E3: الضرب الفيدي (للمستوى الثاني فقط)
 
         ↓
-        
-🎓 المنهج الأساسي (منهج GPT — 20 مستوى)
-├── L00: التعرّف على السوروبان
-├── L01: الأرقام 0-9
-├── L02: القيمة المكانية
-├── L03: الجمع المباشر
-├── L04: مكملات الخمسة — جمع
-├── L05: مكملات الخمسة — طرح
-├── L06: مكملات العشرة — جمع
-├── L07: مكملات العشرة — طرح
-├── L08: الجمع متعدد الخانات
-├── L09: الطرح متعدد الخانات
-├── L10: العمليات المختلطة
-├── L11: التخزين الذهني
-├── L12: الأنزان البصري
-├── L13: الأنزان السمعي
-├── L14: الفلاش أنزان
-├── L15: الضرب على السوروبان
-├── L16: القسمة على السوروبان
-├── L17: الكسور العشرية
-├── L18: Mitori-zan
-├── L19: المنافسات
-└── L20: الشهادة الدولية
+
+🎓 المنهج الأساسي (منهج GPT)
+├── L00: التعرّف على السوروبان       ✅ مبني
+├── L01: الأرقام 0-9                  ✅ مبني
+├── L02: القيمة المكانية              ✅ مبني
+├── L03: الجمع المباشر                ✅ مبني
+├── L04: مكملات الخمسة — جمع          ✅ مبني
+├── L05: مكملات الخمسة — طرح          ✅ مبني
+├── L06: مكملات العشرة — جمع          ⏳ قادم
+├── L07: مكملات العشرة — طرح          ⏳ قادم
+├── L08: الجمع متعدد الخانات           ⏳ قادم
+├── L09: الطرح متعدد الخانات           ⏳ قادم
+├── L10: العمليات المختلطة             ⏳ قادم
+├── L11: التخزين الذهني               ⏳ قادم
+├── L12: الأنزان البصري                ⏳ قادم
+├── L13: الأنزان السمعي                ⏳ قادم
+├── L14: الفلاش أنزان                  ⏳ قادم
+├── L15: الضرب على السوروبان           ⏳ قادم
+├── L16: القسمة على السوروبان          ⏳ قادم
+├── L17: الكسور العشرية                ⏳ قادم
+├── L18: Mitori-zan                    ⏳ قادم
+├── L19: المنافسات                     ⏳ قادم
+└── L20: الشهادة الدولية               ⏳ قادم
 ```
-
-### 🧑 المستوى الثاني (13+ سنة)
-
-**الترتيب:**
-```
-📖 المقدمة (الإثراء)
-└── E3: الضرب الفيدي (Vedic Multiplication)
-
-        ↓
-        
-🎓 نفس المنهج الأساسي (L00-L20)
-   لكن بأسلوب رسمي — بدون سوروبانا
-```
-
-### 🔑 الفرق بين المستويين:
-
-| العنصر | 5-12 | 13+ |
-|--------|------|-----|
-| الشخصية | سوروبانا | لا شيء |
-| الأصوات | MP3 طفولية | TTS رسمي |
-| الألوان | بنفسجي/ذهبي | أزرق/نيلي |
-| التغذية الراجعة | "يا بطل!" | "أحسنت، تقدم ملحوظ" |
-| الجلسة | 10-15 دقيقة | 25-40 دقيقة |
-| المكافآت | نجوم، مغامرات، XP | شهادات، مستويات KYU |
-| الإثراء | الأصابع + الأسرار | الضرب الفيدي |
 
 ---
 
 ## 🧠 4. محرك التعليم التكيّفي (Adaptive Engine)
 
-> **من ChatGPT — أهم ميزة جديدة**
+> **من ChatGPT — الميزة التنافسية القادمة**
 
 ### 🎯 الفكرة:
 
-**بدلاً من أن جميع الطلاب يرون نفس الأسئلة، كل طالب يرى أسئلة مخصّصة حسب:**
+**كل طالب يرى أسئلة مخصّصة حسب:**
+1. مستواه (Mastery)
+2. نقاط ضعفه (Weak Skills)
+3. سرعته (Avg Time)
+4. دقته (Accuracy)
 
-1. **مستواه** (Mastery)
-2. **نقاط ضعفه** (Weak Skills)
-3. **سرعته** (Avg Time)
-4. **دقته** (Accuracy)
+### 📊 المكوّنات المطلوبة:
 
-### 📊 المكوّنات:
+#### أ) `masteryTracker.ts` ⏳
+يتتبع إتقان كل مهارة عبر:
+- عدد المحاولات
+- الإجابات الصحيحة المتتالية
+- متوسط الزمن
+- نسبة الدقة
 
-#### أ) `masteryTracker.ts`
-**يتتبع إتقان كل مهارة:**
+#### ب) `problemGenerator.ts` ⏳
+يولّد مسائل وفق قواعد السوروبان:
+- `direct` / `five-friend-add` / `ten-friend-add` / `carry`
+- مع دعم seed للتكرار
 
-```ts
-interface SkillProgress {
-  skillId: string;
-  attempts: number;
-  correct: number;
-  consecutiveCorrect: number;  // سلسلة صحيحة
-  avgTimeMs: number;            // متوسط الزمن
-  masteredAt?: string;
-}
-
-interface MasteryCriteria {
-  minCorrect: number;           // عدد صحيح أدنى
-  accuracy: number;              // نسبة دقة
-  maxTimePerProblem: number;    // زمن أقصى
-  consecutiveCorrect: number;   // سلسلة إجبارية
-}
-```
-
-#### ب) `problemGenerator.ts`
-**يولّد مسائل وفق قواعد السوروبان:**
-
-```ts
-interface ProblemGeneratorSpec {
-  type: 'numbers' | 'add-subtract' | 'build-soroban';
-  constraints: {
-    min: number;
-    max: number;
-    movement?: MovementType;   // direct, five-friend, ...
-    seed?: number;              // لإعادة إنتاج نفس التسلسل
-  };
-}
-
-// يستخدم `sorobanEngine` للتحقق من صحة المسألة تربوياً
-```
-
-#### ج) `adaptiveEngine.ts`
-**يقرر الأسئلة التالية:**
-
-```ts
-// خوارزمية بسيطة:
-// - 70% من مهارات ضعيفة
-// - 30% من مهارات جديدة
-// - إذا كانت السلسلة صحيحة، تزيد الصعوبة تلقائياً
-```
-
-### 🎯 الفائدة:
-
-- كل طالب يرى أسئلة مختلفة
-- التقدم تلقائي عند الإتقان
-- لا ملل من التكرار
-- لا إحباط من الصعوبة
+#### ج) `adaptiveEngine.ts` ⏳
+يقرر الأسئلة التالية:
+- 70% مهارات ضعيفة
+- 30% مهارات جديدة
+- صعوبة تتصاعد تلقائياً
 
 ---
 
@@ -232,244 +145,248 @@ interface ProblemGeneratorSpec {
 ```
 src/
 │
-├── 📄 App.tsx                          # نقطة الدخول + Screen routing
-├── 📄 main.tsx                          # تهيئة React
-├── 📄 index.css                         # أنماط v1 (glass, btn-primary)
-├── 📄 vite-env.d.ts                     # أنواع الملفات الثابتة
+├── 📄 App.tsx                          ✅ (v1+v2 unified)
+├── 📄 main.tsx                          ✅
+├── 📄 index.css                         ✅ (v1 styles)
+├── 📄 vite-env.d.ts                     ✅
+├── 📄 types.ts                          ✅ (v1 types)
+├── 📄 examBank2.ts                      ✅ (exam questions)
 │
-├── 📁 i18n/                             # الترجمة (v2)
-│   ├── ar.ts                            # ~180 مفتاح عربي
-│   ├── en.ts                            # ~180 مفتاح إنجليزي
-│   ├── index.ts                         # نظام الترجمة
-│   └── useTranslation.ts                # hook الترجمة
+├── 📁 i18n/                             ✅ (4 ملفات)
+│   ├── ar.ts
+│   ├── en.ts
+│   ├── index.ts
+│   └── useTranslation.ts
 │
-├── 📁 curriculum/                       # المنهج (v2)
-│   ├── types.ts                         # أنواع CurriculumLevel, Skill
+├── 📁 curriculum/                       ✅
+│   ├── types.ts
 │   └── levels/
-│       ├── types.ts                     # LevelContent
-│       ├── level-00.ts                  # ✅ مبني
-│       ├── level-01.ts                  # ✅ مبني
-│       ├── level-02.ts                  # ✅ مبني
-│       ├── level-03.ts                  # ✅ مبني
-│       ├── level-04.ts                  # ✅ مبني
-│       ├── level-05.ts                  # ✅ مبني
-│       ├── level-06.ts → level-20.ts    # ⏳ لاحقاً
-│       └── index.ts                     # فهرس المستويات
+│       ├── types.ts                     ✅
+│       ├── level-00.ts → level-05.ts    ✅ (6 مستويات)
+│       └── index.ts                     ✅
 │
-├── 📁 engine/                           # المحرك (v2)
-│   ├── sorobanMoves.ts                  # ✅ حركات الخرزات
-│   ├── sorobanEngine.ts                 # ✅ محرك السوروبان
-│   ├── problemGenerator.ts              # ⏳ من GPT
-│   ├── masteryTracker.ts                # ⏳ من GPT
-│   └── adaptiveEngine.ts                # ⏳ من GPT
+├── 📁 engine/                           ✅
+│   ├── sorobanMoves.ts                  ✅
+│   ├── sorobanEngine.ts                 ✅
+│   ├── problemGenerator.ts              ⏳ GPT
+│   ├── masteryTracker.ts                ⏳ GPT
+│   └── adaptiveEngine.ts                ⏳ GPT
 │
-├── 📁 store/                            # الحالة (v2)
-│   └── progressStore.ts                 # Zustand + localStorage
+├── 📁 store/                            ✅
+│   └── progressStore.ts                 (Zustand)
 │
-├── 📁 data/
-│   ├── modes.ts                         # ✅ فئات (kids, teens)
-│   ├── curriculum.ts                    # ✅ فهرس L00-L20
-│   ├── enrichment.ts                    # ✅ فهرس الإثراء
-│   └── legacy/                          # v1 (منفصل)
-│       ├── types.ts                     # v1 types
-│       ├── data.ts                      # v1 levels + quests
-│       └── learnModules.ts              # v1's 14 lessons
+├── 📁 data/                             ✅
+│   ├── modes.ts                         (فئات kids/teens)
+│   ├── curriculum.ts                    (فهرس L00-L20)
+│   ├── enrichment.ts                    (E1-E3)
+│   ├── index.ts                         (v1 data)
+│   └── learnModules.ts                  (v1: 10 دروس)
 │
-├── 📁 hooks/
-│   ├── useSpeech.ts                     # ✅ TTS
-│   ├── useSorobanaVoice.ts              # ✅ MP3
-│   ├── useSorobanLogic.ts               # ✅ منطق السوروبان
-│   ├── useBeadSound.ts                  # ✅ صوت الخرزات
-│   ├── useBeadHaptics.ts                # ✅ اهتزاز
-│   ├── useQuests.ts                     # ⏳ من v1
-│   ├── useGameStats.ts                  # ⏳ من v1
-│   ├── useCharacterVoice.ts             # ⏳ من v1
-│   ├── useSound.ts                      # ⏳ من v1
-│   └── useConfetti.ts                   # ⏳ من v1
+├── 📁 hooks/                            ✅
+│   ├── useSpeech.ts                     ✅
+│   ├── useSorobanaVoice.ts              ✅ (MP3)
+│   ├── useQuests.ts                     ✅
+│   ├── useGameStats.ts                  ✅
+│   ├── useCharacterVoice.ts             ✅
+│   ├── useSound.ts                      ✅
+│   └── useConfetti.ts                   ✅
 │
-├── 📁 utils/
-│   ├── audioAnzanBadges.ts              # ⏳ من v1
-│   ├── badgeChecker.ts                  # ⏳ من v1
-│   ├── skillsChecker.ts                 # ⏳ من v1
-│   └── certificateGenerator.ts          # ⏳ من v1
+├── 📁 utils/                            ✅
+│   ├── audioAnzanBadges.ts              ✅
+│   ├── badgeChecker.ts                  ✅
+│   ├── skillsChecker.ts                 ✅
+│   └── certificateGenerator.ts          ✅
 │
 ├── 📁 components/
-│   ├── soroban2d5/                      # ✅ السوروبان التفاعلي
-│   │   ├── Soroban2D5.tsx
-│   │   ├── Rod2D5.tsx
-│   │   ├── Bead2D5.tsx
-│   │   ├── useSorobanLogic.ts
-│   │   ├── useBeadSound.ts
-│   │   └── useBeadHaptics.ts
-│   │
-│   ├── avatars/
-│   │   └── ImageAvatar.tsx              # ⏳ من v1
-│   │
-│   ├── SorobanaCompanion.tsx            # ✅ الشخصية الصوتية
-│   ├── Companion.tsx                    # ⏳ من v1
-│   ├── CharacterSelector.tsx            # ⏳ من v1
-│   ├── FloatingCompanion.tsx            # ⏳ من v1
-│   ├── NameInputModal.tsx               # ⏳ من v1
-│   ├── BadgeModal.tsx                   # ⏳ من v1
-│   ├── SpeechButton.tsx                 # ⏳ من v1
-│   ├── CertificateLogo.tsx              # ⏳ من v1
-│   ├── CertificateMedal.tsx             # ⏳ من v1
-│   └── DebugOverlay.tsx                 # ⏳ من v1
+│   ├── 📁 soroban2d5/                   ✅ (6 ملفات)
+│   ├── 📁 avatars/
+│   │   └── ImageAvatar.tsx              ✅
+│   ├── Companion.tsx                    ✅
+│   ├── CharacterSelector.tsx            ✅
+│   ├── FloatingCompanion.tsx            ✅
+│   ├── SorobanaCompanion.tsx            ✅
+│   ├── NameInputModal.tsx               ✅
+│   ├── BadgeModal.tsx                   ✅
+│   ├── DebugOverlay.tsx                 ✅
+│   ├── SpeechButton.tsx                 ⏳
+│   ├── CertificateLogo.tsx              ⏳
+│   └── CertificateMedal.tsx             ⏳
 │
 ├── 📁 screens/
-│   ├── RoleSelection.tsx                # ⏳ من v1 (مُعدّل)
-│   ├── WelcomeScreen.tsx                # ⏳ من v1
-│   ├── Header.tsx                       # ⏳ من v1
-│   ├── HeroDashboard.tsx                # ⏳ من v1 (مُعدّل)
-│   ├── GuardianDashboard.tsx            # ⏳ من v1
-│   ├── CategorySelectScreen.tsx         # ✅ v2
-│   ├── CurriculumScreen.tsx             # ✅ v2
-│   ├── EnrichmentScreen.tsx             # ✅ v2
-│   ├── LevelScreen.tsx                  # ✅ v2
-│   ├── LearnScreen.tsx                  # ⏳ من v1
-│   ├── PracticeScreen.tsx               # ⏳ من v1
-│   ├── AnzanScreen.tsx                  # ⏳ من v1
-│   ├── AudioAnzanScreen.tsx             # ⏳ من v1
-│   ├── QuestsScreen.tsx                 # ⏳ من v1
-│   ├── FinalExam.tsx                    # ⏳ من v1
-│   ├── CertificateScreen.tsx            # ⏳ من v1
-│   ├── MultiplicationScreen.tsx         # ⏳ من v1
-│   ├── MagicSecretsScreen.tsx           # ⏳ من v1
-│   ├── CrossMultiplicationScreen.tsx    # ⏳ من v1
-│   └── DivisionScreen.tsx               # ⏳ من v1
+│   ├── 📌 v2 (منهج GPT)                 ✅
+│   │   ├── CategorySelectScreen.tsx     ✅
+│   │   ├── CurriculumScreen.tsx         ✅
+│   │   ├── EnrichmentScreen.tsx         ✅
+│   │   └── LevelScreen.tsx              ✅
+│   │
+│   ├── 📌 v1 (الواجهات)                 ✅
+│   │   ├── Header.tsx                   ✅
+│   │   ├── WelcomeScreen.tsx            ✅
+│   │   ├── RoleSelection.tsx            ✅
+│   │   ├── HeroDashboard.tsx            ✅
+│   │   └── GuardianDashboard.tsx        ✅
+│   │
+│   └── 📌 v1 (قيد النقل)                ⏳
+│       ├── LearnScreen.tsx              ⏳
+│       ├── PracticeScreen.tsx           ⏳
+│       ├── AnzanScreen.tsx              ⏳
+│       ├── AudioAnzanScreen.tsx         ⏳
+│       ├── QuestsScreen.tsx             ⏳
+│       ├── FinalExam.tsx                ⏳
+│       ├── CertificateScreen.tsx        ⏳
+│       ├── MultiplicationScreen.tsx     ⏳
+│       ├── MagicSecretsScreen.tsx       ⏳
+│       ├── CrossMultiplicationScreen.tsx ⏳
+│       └── DivisionScreen.tsx           ⏳
 │
-├── 📄 examBank2.ts                      # ⏳ بنك أسئلة الامتحانات
-├── 📄 types.ts                          # re-export من data/legacy/types
-│
-├── 📁 assets/
+├── 📁 assets/                           ✅
 │   ├── logo-header.png                  ✅
 │   ├── logo-intro.webp                  ✅
 │   ├── logo-certificate.webp            ✅
-│   ├── sorobana/
-│   │   ├── sorobana-main.webp           ✅
-│   │   └── sorobana-teaching-pointing.webp ✅
-│   └── avatars/
-│       ├── sham.png                     ✅
-│       ├── rayan.png                    ✅
-│       ├── bana.png                     ✅
-│       └── joud2.png                    ✅
+│   ├── sorobana/ (2 صور)                ✅
+│   └── avatars/ (4 صور)                 ✅
 │
 └── 📁 public/
-    └── audio/
-        ├── greeting-1/2/3.mp3           ✅
-        ├── teaching-1/2/3.mp3           ✅
-        ├── correct-1/2.mp3              ✅
-        ├── wrong-1/2.mp3                ✅
-        ├── end-lesson.mp3               ✅
-        ├── welcome-sorobana.mp3         ✅
-        └── stories/
-            └── story-0 → story-9.mp3    ✅
+    └── audio/                           ✅ (21 ملف MP3)
+        ├── greeting/teaching/correct/wrong  ✅
+        └── stories/ (story-0 → story-9)     ✅
 ```
 
 ---
 
 ## 🎯 6. القرارات التصميمية (Decision Log)
 
-| # | القرار | التاريخ | السبب |
-|---|--------|---------|-------|
-| 1 | استخدام `assets` (بدون حرف e زائد) | 2026-09-24 | تصحيح إملائي |
-| 2 | فصل v1 types في `data/legacy/` | 2026-09-24 | تجنّب التعارض مع v2 |
-| 3 | الإبقاء على `learnModules.ts` v1 | 2026-09-24 | كنز من 14 درساً |
-| 4 | دمج v1 + v2 تحت `HeroDashboard` | 2026-09-24 | استفادة قصوى |
-| 5 | استخدام `@/` alias (tsconfig + vite) | 2026-09-24 | أنظف imports |
-| 6 | رفع `vite-env.d.ts` لدعم الملفات الثابتة | 2026-09-24 | ضروري للأصول |
-| 7 | `Screen` type موحّد في `App.tsx` | 2026-09-24 | إدارة مركزية |
-| 8 | الفئتان: kids (5-12) + teens (13+) | 2026-09-24 | تلبية الجمهورين |
-| 9 | الإثراء منفصل حسب الفئة | 2026-09-24 | منطق تربوي |
-| 10 | تعليم تكيفي من GPT | 2026-09-24 | ميزة تنافسية |
+| # | القرار | السبب |
+|---|--------|-------|
+| 1 | **اسم `assets`** (بدون حرف e زائد) | تصحيح إملائي |
+| 2 | **v1 types في `src/types.ts`** | منفصلة عن v2 curriculum |
+| 3 | **`learnModules.ts` v1 محفوظ** | للإثراء + الاستعارة |
+| 4 | **دمج v1 + v2 في `App.tsx`** | استفادة قصوى |
+| 5 | **`@/` alias** (tsconfig + vite) | أنظف imports |
+| 6 | **`vite-env.d.ts` للأصول** | ضروري للصور والأصوات |
+| 7 | **`Screen` type موحّد** | إدارة مركزية |
+| 8 | **فئتان: kids + teens** | تلبية الجمهورين |
+| 9 | **زر "التعلّم" → Curriculum v2** | يحفظ منهج GPT |
+| 10 | **منهج GPT أولوية** | لا يتغير أبداً |
 
 ---
 
 ## 🗺️ 7. خارطة الطريق (Roadmap)
 
-### 🔷 المرحلة 1 — التأسيس ✅
-- [x] إنشاء مستودع `sorobanmind-2`
+### ✅ المرحلة 1 — التأسيس (مكتملة)
+- [x] إنشاء مستودع
 - [x] رفع 20 ملف أساسي
-- [x] محرك السوروبان (sorobanEngine, sorobanMoves)
-- [x] i18n كامل (180 مفتاح)
+- [x] محرك السوروبان
+- [x] i18n كامل
 - [x] Zustand store
-- [x] GitHub Actions للنشر التلقائي
-- [x] رفع الأصوات (21 ملف MP3)
-- [x] رفع الصور (8 ملفات)
+- [x] GitHub Actions
+
+### ✅ المرحلة 2 — الأصول (مكتملة)
+- [x] 21 ملف صوتي MP3
+- [x] 8 صور (سوروبانا + أفاتار + شعارات)
+- [x] `vite-env.d.ts`
+- [x] إصلاح `@/` alias
+
+### ✅ المرحلة 3 — المنهج v2 (مكتملة جزئياً)
 - [x] 6 مستويات (L00-L05)
-- [x] CategorySelect + Curriculum + Enrichment
-- [x] LevelScreen الأساسي
+- [x] CategorySelectScreen
+- [x] CurriculumScreen
+- [x] EnrichmentScreen
+- [x] LevelScreen
 
-### 🔷 المرحلة 2 — نقل v1 (الجلسة الحالية)
-- [ ] examBank2 + DebugOverlay + ImageAvatar
-- [ ] Companion + CharacterSelector + FloatingCompanion
-- [ ] NameInputModal + BadgeModal + SpeechButton
-- [ ] CertificateLogo + CertificateMedal
-- [ ] 5 Hooks (useQuests, useGameStats, useCharacterVoice, useSound, useConfetti)
-- [ ] 4 Utils (audioAnzanBadges, badgeChecker, skillsChecker, certificateGenerator)
-- [ ] 3 data legacy files (types, data, learnModules)
-- [ ] 5 screens أساسية (RoleSelection, Welcome, Header, HeroDashboard, Guardian)
-- [ ] 11 screens تعليمية (Learn, Practice, Anzan, AudioAnzan, Quests, FinalExam, Certificate, Multiplication, MagicSecrets, CrossMult, Division)
-- [ ] App.tsx موحّد
+### ✅ المرحلة 4 — نقل v1 الأساسي (مكتملة)
+- [x] types.ts (v1)
+- [x] data/index.ts
+- [x] data/learnModules.ts
+- [x] examBank2.ts
+- [x] DebugOverlay.tsx
+- [x] ImageAvatar.tsx
+- [x] Companion.tsx
+- [x] CharacterSelector.tsx
+- [x] FloatingCompanion.tsx
+- [x] NameInputModal.tsx
+- [x] BadgeModal.tsx
+- [x] utils/ (4 ملفات)
+- [x] hooks/ (5 ملفات جديدة)
+- [x] Header.tsx
+- [x] RoleSelection.tsx
+- [x] WelcomeScreen.tsx
+- [x] HeroDashboard.tsx
+- [x] GuardianDashboard.tsx
+- [x] App.tsx (unified)
 
-### 🔷 المرحلة 3 — التعليم التكيفي (من GPT)
-- [ ] masteryTracker.ts
-- [ ] problemGenerator.ts
-- [ ] adaptiveEngine.ts
-- [ ] ربطها بـ LevelScreen
+### 🎯 المرحلة 5 — إكمال نقل v1 (الجلسة القادمة)
+- [ ] نقل `LearnScreen.tsx` (كمرجع، غير مرتبط)
+- [ ] نقل `PracticeScreen.tsx` + ربطه
+- [ ] نقل `AnzanScreen.tsx` + `AudioAnzanScreen.tsx`
+- [ ] نقل `QuestsScreen.tsx`
+- [ ] نقل `FinalExam.tsx`
+- [ ] نقل `CertificateScreen.tsx` + Logo + Medal
+- [ ] نقل `MultiplicationScreen.tsx`
+- [ ] نقل `MagicSecretsScreen.tsx`
+- [ ] نقل `CrossMultiplicationScreen.tsx`
+- [ ] نقل `DivisionScreen.tsx`
+- [ ] نقل `SpeechButton.tsx`
 
-### 🔷 المرحلة 4 — إكمال المنهج
+### 🎯 المرحلة 6 — محرك GPT (Adaptive)
+- [ ] `masteryTracker.ts`
+- [ ] `problemGenerator.ts`
+- [ ] `adaptiveEngine.ts`
+- [ ] ربطها بـ `LevelScreen`
+
+### 🎯 المرحلة 7 — إكمال المنهج
 - [ ] L06 → L20 (15 مستوى)
 - [ ] اختبارات المستويات
 - [ ] Mitori-zan screen
 
-### 🔷 المرحلة 5 — التلميع
-- [ ] ضغط الصور
+### 🎯 المرحلة 8 — التلميع
+- [ ] ضغط الصور (WebP)
 - [ ] PWA (offline)
 - [ ] اختبار على أجهزة مختلفة
 - [ ] تحسينات الأداء
 
-### 🔷 المرحلة 6 — النشر
+### 🎯 المرحلة 9 — النشر
 - [ ] Google Play (APK)
 - [ ] تحسينات SEO
 - [ ] تسويق
 
 ---
 
-## 📊 8. حالة الملفات (File Status)
+## 📊 8. حالة الملفات الحالية
 
-### ✅ مكتملة:
+### ✅ مكتملة (61+ ملف):
 
 | المجموعة | العدد |
 |----------|-------|
 | i18n | 4 |
-| curriculum (types + levels) | 8 |
+| curriculum/levels | 8 |
 | engine | 2 |
 | store | 1 |
-| data (v2) | 3 |
+| data | 5 |
+| hooks | 7 |
+| utils | 4 |
+| components (main) | 7 |
 | components/soroban2d5 | 6 |
-| components (main) | 2 |
-| hooks | 5 |
-| screens (v2) | 4 |
-| **المجموع** | **35** |
+| components/avatars | 1 |
+| screens | 9 |
+| examBank2 | 1 |
+| assets | 8 |
+| audio | 21 |
+| **المجموع** | **~84 ملف** |
 
-### ⏳ في الانتظار:
+### ⏳ متبقية:
 
 | المجموعة | العدد |
 |----------|-------|
-| components (v1) | 8 |
-| hooks (v1) | 5 |
-| utils | 4 |
-| data legacy | 3 |
-| screens (v1) | 16 |
-| examBank2 | 1 |
+| screens (v1 قيد النقل) | 11 |
+| components (شهادة) | 3 |
 | engine (adaptive) | 3 |
 | curriculum levels (L06-L20) | 15 |
-| **المجموع** | **55** |
+| **المجموع** | **32 ملف** |
 
 ### 🎯 الإجمالي:
-- **مكتمل:** 35 ملف (39%)
-- **متبقي:** 55 ملف (61%)
+- **مكتمل:** 84 ملف (72%)
+- **متبقي:** 32 ملف (28%)
 
 ---
 
@@ -484,6 +401,7 @@ src/
 | Framer Motion | 11.0.8 | الحركات |
 | Zustand | 4.5.2 | الحالة |
 | lucide-react | 0.400.0 | الأيقونات |
+| canvas-confetti | 1.9.3 | الاحتفالات |
 | GitHub Actions | — | النشر |
 | GitHub Pages | — | الاستضافة |
 
@@ -493,13 +411,13 @@ src/
 
 ### 🎨 الألوان:
 
-| اللون | الاستخدام | Hex |
-|-------|-----------|-----|
-| Purple | أساسي | #a855f7 |
-| Electric | ثانوي | #3b82f6 |
-| Emerald | نجاح | #10b981 |
-| Gold | تمييز | #fbbf24 |
-| Ink | خلفية | #0a0a1a |
+| اللون | Hex | الاستخدام |
+|-------|-----|-----------|
+| Purple | #a855f7 | أساسي |
+| Electric | #3b82f6 | ثانوي |
+| Emerald | #10b981 | نجاح |
+| Gold | #fbbf24 | تمييز |
+| Ink | #0a0a1a | خلفية |
 
 ### ✍️ الخطوط:
 - **Baloo 2** — عناوين (display)
@@ -507,29 +425,21 @@ src/
 
 ### 🎭 الأنماط:
 - `glass-card` — بطاقات زجاجية
+- `glass-strong` — زجاج قوي (للـHeader)
 - `btn-primary` — أزرار رئيسية
 - `btn-ghost` — أزرار ثانوية
 - `shimmer-text` — عناوين متلألئة
 
 ---
 
-## 📝 11. ملاحظات للتطوير
+## ⚠️ 11. قواعد ذهبية للتطوير
 
-### ⚠️ قواعد ذهبية:
-
-1. **لا تحذف شيئاً** من v1 بدون نسخة احتياطية
-2. **لا تُعدّل `learnModules.ts`** — كنز
-3. **لا تستبدل** `localStorage` في v1 — يعمل
-4. **لا تخلط** بين `types.ts` (v2) و `data/legacy/types.ts` (v1)
-5. **استخدم `@/`** لكل import من `src/`
-
-### 🎯 أهداف الجودة:
-
-- [ ] زمن تحميل < 3 ثوان
-- [ ] لا أخطاء console
-- [ ] يعمل على Chrome, Safari, Firefox
-- [ ] متجاوب مع الجوالات الصغيرة
-- [ ] PWA قابل للتحميل
+1. **منهج GPT لا يُلمس** — أولوية قصوى
+2. **v1 types منفصل** عن v2 curriculum types
+3. **`learnModules.ts` v1 محفوظ** — للإثراء
+4. **زر "التعلّم" → Curriculum v2** (وليس LearnScreen v1)
+5. **`@/` alias** لكل import من `src/`
+6. **لا تحذف شيئاً** من v1 بدون نسخة احتياطية
 
 ---
 
@@ -540,50 +450,68 @@ src/
 | [Live Demo](https://mezo2021.github.io/sorobanmind-2) | التطبيق المباشر |
 | [GitHub Repo](https://github.com/mezo2021/sorobanmind-2) | المستودع |
 | [Actions](https://github.com/mezo2021/sorobanmind-2/actions) | سجل البناء |
-| [v1 القديم](https://github.com/mezo2021/sorobanmind-platform_2026) | المصدر |
+| [v1 القديم](https://github.com/mezo2021/sorobanmind-platform_2026) | المصدر الأصلي |
 
 ---
 
 ## 📅 13. سجل الجلسات
 
-### 🗓️ الجلسة 1 (2026-09-24)
+### 🗓️ الجلسة 1 (2026-09-24) — ✅ مكتملة
+
 **الأهداف:**
 - إنشاء المستودع
 - محرك السوروبان
 - i18n
 - رفع الأصول
 - 6 مستويات
-- شاشات v2 الأساسية
+- نقل v1 الأساسي
 
 **الإنجازات:**
-- ✅ 35 ملف مكتمل
+- ✅ 84 ملف مكتمل
 - ✅ 21 ملف صوتي
 - ✅ 8 صور
 - ✅ GitHub Actions يعمل
-- ✅ التطبيق منشور
+- ✅ التطبيق منشور ويعمل
+- ✅ Welcome → Role → Dashboard → Curriculum
+- ✅ Hero + Guardian Dashboards كاملة
+- ✅ 5 Hooks جديدة
+- ✅ 4 Utils
+- ✅ App.tsx موحّد
 
-**المتبقي:**
-- ⏳ نقل v1
-- ⏳ محرك GPT
-- ⏳ L06-L20
+### 🗓️ الجلسة 2 (قادمة)
+
+**الأهداف:**
+1. نقل باقي شاشات v1 (11 ملف)
+2. ربطها بـ HeroDashboard
+3. بدء محرك GPT التكيفي
+
+**الملفات المستهدفة:**
+- `PracticeScreen.tsx`
+- `AnzanScreen.tsx` + `AudioAnzanScreen.tsx`
+- `QuestsScreen.tsx`
+- `FinalExam.tsx`
+- `CertificateScreen.tsx` + Logo + Medal
+- `MultiplicationScreen.tsx`
+- `MagicSecretsScreen.tsx`
+- `CrossMultiplicationScreen.tsx`
+- `DivisionScreen.tsx`
 
 ---
 
 ## 🎯 14. الأولويات الحالية
 
-### 🔴 أولوية قصوى (الآن):
-1. **نقل v1** (كل الشاشات)
-2. **examBank2 + DebugOverlay**
-3. **App.tsx موحّد**
+### 🔴 أولوية قصوى (الجلسة القادمة):
+1. **نقل 11 شاشة v1** (Practice, Anzan, Quests, Exam, Certificate, ...)
+2. **ربطها بـ HeroDashboard**
 
 ### 🟡 أولوية متوسطة (بعدها):
-4. **محرك GPT** (Adaptive)
-5. **L06-L20**
+3. **محرك GPT** (masteryTracker + problemGenerator + adaptiveEngine)
+4. **L06-L20** (15 مستوى)
 
 ### 🟢 أولوية منخفضة:
-6. **PWA**
-7. **APK**
-8. **تلميع نهائي**
+5. **PWA**
+6. **APK (Google Play)**
+7. **تلميع نهائي**
 
 ---
 
@@ -592,12 +520,13 @@ src/
 **المطوّر:** مصطفى علي أكر ([@mezo2021](https://github.com/mezo2021))
 
 **المرجع المنهجي:**
-- **Takashi Kojima** — "The Japanese Abacus: Its Use and Theory"
-- **Japan Soroban Association** (日本珠算連盟)
+- Takashi Kojima — "The Japanese Abacus"
+- Japan Soroban Association (日本珠算連盟)
+- ChatGPT — للتعليم التكيفي والمنهج
 
 **الشكر:**
-- ChatGPT — للتعليم التكيفي والمنهج
 - مجتمع السوروبان العربي
+- كل من ساهم في اختبار التطبيق
 
 ---
 
@@ -611,7 +540,8 @@ src/
 
 ---
 
-*آخر تحديث: 2026-09-24 — الجلسة 1*
+*آخر تحديث: 2026-09-24 — نهاية الجلسة 1*
+*الحالة: 🟢 التطبيق يعمل — 72% مكتمل*
 
 </div>
 ```
