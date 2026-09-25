@@ -6,7 +6,7 @@ import { useSound } from './hooks/useSound';
 import { useConfetti } from './hooks/useConfetti';
 import type { Screen as V1Screen, Role } from './types';
 import type { LevelId } from './store/progressStore';
-
+import PracticeScreen from './screens/PracticeScreen';
 // ═══ Screens ═══
 import WelcomeScreen from './screens/WelcomeScreen';
 import RoleSelection from './screens/RoleSelection';
@@ -344,7 +344,54 @@ export default function App() {
           />
         );
 
-      // ═══ Coming Soon ═══
+    // ═══ Practice (0-7) ═══
+case 'practice-0':
+case 'practice-1':
+case 'practice-2':
+case 'practice-3':
+case 'practice-4':
+case 'practice-5':
+case 'practice-6':
+case 'practice-7': {
+  const practiceNum = parseInt(
+    screen.replace('practice-', ''),
+    10,
+  );
+
+  return (
+    <PracticeScreen
+      levelNum={practiceNum}
+      onBack={() => handleBackToCategory(
+        practiceNum <= 3 ? 'kids' : 'teens',
+      )}
+      onComplete={(passed, score) => {
+        // حفظ النتيجة
+        if (passed) {
+          try {
+            const raw = localStorage.getItem(
+              'soroban_passed_practice',
+            );
+            const arr = raw ? JSON.parse(raw) : [];
+            if (!arr.includes(practiceNum)) {
+              arr.push(practiceNum);
+              localStorage.setItem(
+                'soroban_passed_practice',
+                JSON.stringify(arr),
+              );
+            }
+          } catch { /* ignore */ }
+        }
+      }}
+      playSound={handleSound}
+      onXP={(amount) => {
+        // يمكن إضافة XP
+        console.log('XP:', amount);
+      }}
+      burst={_burst}
+    />
+  );
+}
+  // ═══ Coming Soon ═══
       case 'practice':
       case 'anzan':
       case 'quests':
