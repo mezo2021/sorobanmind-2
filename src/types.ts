@@ -1,5 +1,5 @@
 // src/types.ts
-// v1 types — منفصل تماماً عن curriculum/types.ts (v2)
+// v1 types — يُبنى عليه المنهج الجديد (L0-L7)
 
 // ------------------------------------------------------------
 // الأدوار والشاشات
@@ -7,8 +7,49 @@
 export type Role = 'hero' | 'guardian' | null;
 
 export type Screen =
+  // الشاشات الأساسية
   | 'role'
+  | 'welcome'
   | 'hero-dashboard'
+  | 'guardian-dashboard'
+  // الأقسام
+  | 'category-kids'
+  | 'category-teens'
+  // المستويات (L0-L7)
+  | 'lesson-L0'
+  | 'lesson-L1'
+  | 'lesson-L2'
+  | 'lesson-L3'
+  | 'lesson-L4'
+  | 'lesson-L5'
+  | 'lesson-L6'
+  | 'lesson-L7'
+  // المسارات
+  | 'practice-0'
+  | 'practice-1'
+  | 'practice-2'
+  | 'practice-3'
+  | 'practice-4'
+  | 'practice-5'
+  | 'practice-6'
+  | 'practice-7'
+  | 'anzan-0'
+  | 'anzan-1'
+  | 'anzan-2'
+  | 'anzan-3'
+  | 'anzan-4'
+  | 'anzan-5'
+  | 'anzan-6'
+  | 'anzan-7'
+  // الامتحانات
+  | 'placement-test'
+  | 'category-exam-1'
+  | 'category-exam-2'
+  | 'certificate'
+  // الإثراء
+  | 'enrichment-1'
+  | 'enrichment-2'
+  // شاشات قديمة (للتوافق المؤقت)
   | 'learn'
   | 'practice'
   | 'anzan'
@@ -18,10 +59,43 @@ export type Screen =
   | 'secrets'
   | 'cross-multiplication'
   | 'division'
-  | 'certificate'
-  | 'guardian-dashboard'
-  | 'final-exam'
-  | 'welcome';
+  | 'final-exam';
+
+// ------------------------------------------------------------
+// الفئات والمستويات
+// ------------------------------------------------------------
+export type CategoryId = 'kids' | 'teens';
+
+export type LevelId =
+  | 'L0' | 'L1' | 'L2' | 'L3'
+  | 'L4' | 'L5' | 'L6' | 'L7';
+
+export interface CategoryInfo {
+  id: CategoryId;
+  titleAr: string;
+  titleEn: string;
+  ageRange: string;
+  description: string;
+  gradient: string;
+  icon: string;
+  levels: LevelId[];
+  screen: Screen;
+  examScreen: Screen;
+  enrichmentScreen: Screen;
+  enrichmentTitle: string;
+  enrichmentItems: string[];
+}
+
+export interface LevelCard {
+  id: LevelId;
+  number: number;
+  titleAr: string;
+  titleEn: string;
+  description: string;
+  icon: string;
+  gradient: string;
+  category: CategoryId;
+}
 
 // ------------------------------------------------------------
 // الشخصيات
@@ -198,8 +272,29 @@ export interface LevelNode {
 }
 
 // ------------------------------------------------------------
-// نظام التقدم
+// نظام التقدم (موسّع للمنهج الجديد)
 // ------------------------------------------------------------
+export interface UserProgress {
+  /** المستويات المفتوحة (L0-L7) */
+  unlockedLevels: LevelId[];
+  /** المستويات المُنجزة */
+  completedLevels: LevelId[];
+  /** تمرّن الذي نجح فيه (0-7) */
+  passedPractice: number[];
+  /** أنزان بصري الذي نجح فيه (0-7) */
+  passedAnzanVisual: number[];
+  /** أنزان سمعي الذي نجح فيه (0-7) */
+  passedAnzanAudio: number[];
+  /** هل نجح في امتحان القسم 1؟ */
+  categoryExam1Passed: boolean;
+  /** هل نجح في امتحان القسم 2؟ */
+  categoryExam2Passed: boolean;
+  /** آخر محاولة للـ Placement Test (timestamp) */
+  lastPlacementAttempt: number | null;
+  /** عدد محاولات Placement Test */
+  placementAttempts: number;
+}
+
 export interface StudentProgress {
   levelId: number;
   correctAnswers: number;
@@ -222,6 +317,29 @@ export const LEVEL_RULES: LevelUnlockRules = {
   MIN_CORRECT: 15,
   MAX_ATTEMPTS: 5,
 };
+
+// ------------------------------------------------------------
+// عتبات النجاح (المنهج الجديد)
+// ------------------------------------------------------------
+export const PASS_THRESHOLDS = {
+  /** تمرّن: 75% */
+  PRACTICE: 75,
+  /** أنزان بصري: 75% */
+  ANZAN_VISUAL: 75,
+  /** أنزان سمعي: 75% */
+  ANZAN_AUDIO: 75,
+  /** امتحان القسم 1: 80% */
+  CATEGORY_EXAM_1: 80,
+  /** امتحان القسم 2: 80% */
+  CATEGORY_EXAM_2: 80,
+  /** Placement Test للانتقال للقسم 2: 80% */
+  PLACEMENT_TO_TEENS: 80,
+  /** Placement Test للبدء من L0: 60% */
+  PLACEMENT_TO_KIDS: 60,
+} as const;
+
+/** مدة الانتظار قبل إعادة Placement Test (بالمللي ثانية) — 48 ساعة */
+export const PLACEMENT_COOLDOWN_MS = 48 * 60 * 60 * 1000;
 
 // ------------------------------------------------------------
 // المهام (Quests)
@@ -269,7 +387,7 @@ export interface PracticeQuestion {
 // ------------------------------------------------------------
 export interface ChainOperation {
   value: number;
-  operator: '+' | '-';
+  operator: '+' | '-' | '×' | '÷';
 }
 
 export interface ChainExercise {
