@@ -7,6 +7,8 @@ import type {
   LocalizedText,
 } from "../curriculum/types";
 
+import type { LevelId } from "../store/progressStore";
+
 /**
  * وصف مجموعة من المستويات.
  */
