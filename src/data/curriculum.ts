@@ -26,7 +26,7 @@ export interface CurriculumGroupInfo {
  * المحتوى الكامل في: src/curriculum/levels/level-XX.ts
  */
 export interface LevelInfo {
-  id: string;
+  id: LevelId;
   number: number;
   name: LocalizedText;
   description: LocalizedText;
