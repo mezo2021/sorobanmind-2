@@ -7,7 +7,7 @@
 // - عدّاد تصاعدي + توهج عند 60%
 // - زر "تحقق" دائم
 // - زر "التالي" يدوي
-// - تسجيل الضعف
+// - تسجيل الضعف + progressStore
 // ═══════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -20,6 +20,7 @@ import {
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
+import { useProgressStore } from '@/store/progressStore';
 
 import {
   getAnzanVisualQuestions,
@@ -35,7 +36,7 @@ type Phase = 'intro' | 'showing' | 'answering' | 'reveal' | 'result';
 type Mode = 'flash' | 'regular';
 
 interface AnzanScreenProps {
-  levelNum: number; // 0-7
+  levelNum: number;
   onBack: () => void;
   onComplete?: (passed: boolean, score: number) => void;
   playSound: (type: 'click' | 'success' | 'error' | 'whoosh' | 'levelup') => void;
@@ -49,8 +50,8 @@ interface AnzanScreenProps {
 
 const XP_PER_CORRECT = 5;
 const PASS_THRESHOLD = 75;
-const DISPLAY_MS_PER_TERM = 3000; // 3 ثواني لكل رقم في Flash
-const WARNING_RATIO = 0.6; // 60% للتوهج
+const DISPLAY_MS_PER_TERM = 3000;
+const WARNING_RATIO = 0.6;
 
 // ═══════════════════════════════════════════════════════════
 // أدوات
@@ -67,16 +68,10 @@ function getColumnsForValue(value: number): number {
   return 9;
 }
 
-/**
- * تحويل المعاملات إلى قائمة عرض:
- * - الأول بلا إشارة
- * - الباقي مع إشارته (+/-/×/÷)
- */
 function buildDisplayTerms(question: BankQuestion): string[] {
   const { operands, operation } = question;
 
   if (operation === "multiplication" || operation === "division") {
-    // عمليات: a × b
     const symbol = operation === "multiplication" ? "×" : "÷";
     return operands.map((op, i) => {
       if (i === 0) return String(op);
@@ -84,11 +79,10 @@ function buildDisplayTerms(question: BankQuestion): string[] {
     });
   }
 
-  // جمع/طرح: أول بلا إشارة، الباقي مع إشاراته
   return operands.map((op, i) => {
     if (i === 0) return String(op);
     if (op >= 0) return `+${op}`;
-    return String(op); // سالب مع - ضمنياً
+    return String(op);
   });
 }
 
@@ -116,6 +110,12 @@ export function AnzanScreen({
   const [savedTimeMs, setSavedTimeMs] = useState<number | null>(null);
 
   const sorobana = useSorobanaVoice();
+
+  // ✅ progressStore
+  const addXP = useProgressStore((s) => s.addXP);
+  const markAnzanVisualPassed = useProgressStore((s) => s.markAnzanVisualPassed);
+  const updateStreak = useProgressStore((s) => s.updateStreak);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const displayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -146,7 +146,6 @@ export function AnzanScreen({
     setElapsedMs(0);
     setSavedTimeMs(null);
 
-    // ابدأ العرض
     setPhase('showing');
     playSound('click');
   }, [levelNum, playSound]);
@@ -159,14 +158,11 @@ export function AnzanScreen({
     if (!currentQ) return;
 
     if (mode === 'regular') {
-      // Regular: انتقل مباشرة للإجابة
       setPhase('answering');
       return;
     }
 
-    // Flash: عرض التسلسل
     if (currentTermIdx >= displayTerms.length) {
-      // انتهى العرض → انتقل للإجابة
       setTimeout(() => setPhase('answering'), 300);
       return;
     }
@@ -182,7 +178,7 @@ export function AnzanScreen({
   }, [phase, currentTermIdx, displayTerms.length, mode]);
 
   // ═══════════════════════════════════════════════════════
-  // العدّاد التصاعدي
+  // العدّاد
   // ═══════════════════════════════════════════════════════
   useEffect(() => {
     if (phase !== 'answering') return;
@@ -192,7 +188,6 @@ export function AnzanScreen({
       setElapsedMs((ms) => {
         const next = ms + 100;
         if (next >= maxMs) {
-          // انتهى الوقت
           handleTimeout();
           return maxMs;
         }
@@ -239,6 +234,9 @@ export function AnzanScreen({
       playSound('success');
       sorobana.speakCorrect();
       onXP?.(XP_PER_CORRECT);
+      // ✅ progressStore
+      addXP(XP_PER_CORRECT);
+      updateStreak();
       burst?.(0.5, 0.5);
     } else {
       setFeedback('wrong');
@@ -248,7 +246,10 @@ export function AnzanScreen({
 
     setSavedTimeMs(timeMs);
     setPhase('reveal');
-  }, [currentQ, abacusValue, elapsedMs, feedback, playSound, sorobana, onXP, burst]);
+  }, [
+    currentQ, abacusValue, elapsedMs, feedback, playSound, sorobana,
+    onXP, burst, addXP, updateStreak,
+  ]);
 
   // ═══════════════════════════════════════════════════════
   // السؤال التالي
@@ -261,9 +262,14 @@ export function AnzanScreen({
     setSavedTimeMs(null);
 
     if (currentIdx + 1 >= questions.length) {
-      // انتهت الجلسة
       const finalScore = score;
       const passed = (finalScore / questions.length) * 100 >= PASS_THRESHOLD;
+
+      // ✅ تسجيل النجاح في progressStore
+      if (passed) {
+        markAnzanVisualPassed(levelNum);
+      }
+
       setPhase('result');
       playSound(passed ? 'levelup' : 'whoosh');
       onComplete?.(passed, finalScore);
@@ -272,7 +278,10 @@ export function AnzanScreen({
       setCurrentTermIdx(0);
       setPhase('showing');
     }
-  }, [currentIdx, questions.length, score, playSound, sorobana, onComplete]);
+  }, [
+    currentIdx, questions.length, score, levelNum,
+    playSound, sorobana, onComplete, markAnzanVisualPassed,
+  ]);
 
   // ═══════════════════════════════════════════════════════
   // المرحلة: intro
@@ -299,7 +308,6 @@ export function AnzanScreen({
           <Brain className="w-6 h-6 text-purple-300" />
         </div>
 
-        {/* Mode Selector */}
         <div className="flex gap-2 mb-5 bg-white/5 p-1 rounded-2xl">
           <button
             type="button"
@@ -329,7 +337,11 @@ export function AnzanScreen({
           className="glass-card p-6 mb-6"
         >
           <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-electric-500 flex items-center justify-center shadow-xl shadow-purple-500/40 mx-auto mb-4">
-            {mode === 'flash' ? <Zap className="w-10 h-10 text-white" /> : <Eye className="w-10 h-10 text-white" />}
+            {mode === 'flash' ? (
+              <Zap className="w-10 h-10 text-white" />
+            ) : (
+              <Eye className="w-10 h-10 text-white" />
+            )}
           </div>
 
           <h3 className="text-xl font-extrabold font-display text-white text-center mb-4">
@@ -403,7 +415,6 @@ export function AnzanScreen({
   if (phase === 'showing' && currentQ) {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto min-h-screen flex flex-col">
-        {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1">
             <h2 className="text-lg font-bold text-white">
@@ -415,7 +426,6 @@ export function AnzanScreen({
           </div>
         </div>
 
-        {/* Progress */}
         <div className="mb-6">
           <div className="h-2 rounded-full bg-white/10 overflow-hidden">
             <motion.div
@@ -425,7 +435,6 @@ export function AnzanScreen({
           </div>
         </div>
 
-        {/* Flash Display */}
         <div className="flex-1 flex items-center justify-center">
           <AnimatePresence mode="wait">
             {currentTermIdx < displayTerms.length ? (
@@ -475,7 +484,6 @@ export function AnzanScreen({
 
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
-        {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1">
             <h2 className="text-lg font-bold text-white">
@@ -500,7 +508,6 @@ export function AnzanScreen({
           </div>
         </div>
 
-        {/* Progress bar (الوقت) */}
         <div className="mb-5">
           <div className="h-2 rounded-full bg-white/10 overflow-hidden">
             <motion.div
@@ -515,7 +522,6 @@ export function AnzanScreen({
           </div>
         </div>
 
-        {/* Score */}
         <div className="flex items-center justify-center gap-2 mb-5">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           <span className="text-sm text-white/70 font-body">
@@ -523,7 +529,6 @@ export function AnzanScreen({
           </span>
         </div>
 
-        {/* Soroban */}
         <div className="glass-card p-5 mb-5">
           <div className="flex flex-col items-center gap-3">
             <Soroban2D5
