@@ -48,7 +48,24 @@ export {
   buildExam2,
 } from "./bank-exam";
 
-// ═══════════════════════════════════════════════════════════
+//
+export type {
+  PlacementQuestion,
+  PlacementResult,
+  LevelResult,
+} from "./placement-engine";
+
+export {
+  buildPlacementTest,
+  evaluatePlacementTest,
+  canTakePlacementTest,
+  getLevelName,
+  QUESTIONS_PER_LEVEL,
+  POINTS_PER_QUESTION,
+  POINTS_PER_LEVEL,
+  PASS_THRESHOLD,
+} from "./placement-engine";
+ ═══════════════════════════════════════════════════════════
 // البنك الأساسي (للتمرّن والأنزان)
 // ═══════════════════════════════════════════════════════════
 
