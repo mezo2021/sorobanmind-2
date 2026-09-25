@@ -3,10 +3,10 @@
 // 40 سؤالاً — 20 دقيقة — 200 نقطة
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  ArrowRight, ArrowLeft, Clock, Trophy, CheckCircle2, XCircle,
-  Target, Sparkles, Lock, Play, RotateCcw,
+  ArrowRight, Clock, Trophy, CheckCircle2, XCircle,
+  Target, Sparkles, Play,
 } from 'lucide-react';
 
 import {
@@ -15,7 +15,7 @@ import {
   getLevelName,
   type PlacementQuestion,
   type PlacementResult,
-} from '@/data/bank-v2/placement-engine';
+} from '@/data/bank-v2';
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -33,8 +33,7 @@ interface PlacementTestScreenProps {
 // الثوابت
 // ═══════════════════════════════════════════════════════════
 
-const TOTAL_TIME_SEC = 20 * 60; // 20 دقيقة
-const TOTAL_QUESTIONS = 40;
+const TOTAL_TIME_SEC = 20 * 60;
 
 // ═══════════════════════════════════════════════════════════
 // أدوات
@@ -48,13 +47,6 @@ function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-}
-
-function getColumnsForValue(value: number): number {
-  if (value < 100) return 2;
-  if (value < 1000) return 3;
-  if (value < 10000) return 4;
-  return 5;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -76,9 +68,7 @@ export function PlacementTestScreen({
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // ═══════════════════════════════════════════════════════
-  // بدء الامتحان
-  // ═══════════════════════════════════════════════════════
+  // ─── بدء الامتحان ───
   const startTest = useCallback(() => {
     const qs = buildPlacementTest();
     setQuestions(qs);
@@ -94,13 +84,10 @@ export function PlacementTestScreen({
     }, 300);
   }, [playSound]);
 
-  // ═══════════════════════════════════════════════════════
-  // العدّاد
-  // ═══════════════════════════════════════════════════════
+  // ─── العدّاد ───
   useEffect(() => {
     if (phase !== 'running') return;
     if (timeLeft <= 0) {
-      // انتهى الوقت — إنهاء الامتحان
       finishTest();
       return;
     }
@@ -109,9 +96,7 @@ export function PlacementTestScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, timeLeft]);
 
-  // ═══════════════════════════════════════════════════════
-  // إنهاء الامتحان
-  // ═══════════════════════════════════════════════════════
+  // ─── إنهاء الامتحان ───
   const finishTest = useCallback(() => {
     const res = evaluatePlacementTest(questions, answers);
     setResult(res);
@@ -119,9 +104,7 @@ export function PlacementTestScreen({
     playSound('levelup');
   }, [questions, answers, playSound]);
 
-  // ═══════════════════════════════════════════════════════
-  // الإجابة على السؤال
-  // ═══════════════════════════════════════════════════════
+  // ─── إجابة ───
   const submitAnswer = useCallback(
     (answer: number) => {
       if (!questions[currentIdx]) return;
@@ -137,7 +120,6 @@ export function PlacementTestScreen({
         setCurrentIdx(currentIdx + 1);
         setTimeout(() => inputRef.current?.focus(), 100);
       } else {
-        // آخر سؤال — إنهاء
         const res = evaluatePlacementTest(questions, newAnswers);
         setResult(res);
         setPhase('result');
