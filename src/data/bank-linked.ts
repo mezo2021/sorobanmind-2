@@ -128,7 +128,7 @@ function toUnified(q: BankQuestionV2, order: number): BankQuestion {
     difficulty: q.difficulty,
     // ✅ استخدام q.timing بدلاً من الحقول المسطحة
     expectedTimeMs: q.timing.answerMs,
-    maxTimeMs: q.timing.maxMs,
+maxTimeMs: q.timing.maxMs,
     explanation: q.explanation,
     tags: q.tags,
 
