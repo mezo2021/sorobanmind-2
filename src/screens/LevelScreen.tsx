@@ -364,7 +364,7 @@ export function LevelScreen({
           gradient={level.gradient}
           locked={false}
           completed={isLessonCompleted}
-          onClick={() => handleNav(`lesson-${levelId}` as Screen)}
+          onClick={() => handleNav(`audio-anzan-${level.anzanNum}` as Screen)}
           playSound={sound}
         />
 
