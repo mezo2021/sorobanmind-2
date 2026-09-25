@@ -1,15 +1,19 @@
 // src/screens/PlacementTestScreen.tsx
 // شاشة امتحان تحديد المستوى (Placement Test)
 // 40 سؤالاً — 20 دقيقة — 200 نقطة
-// ✅ يدعم نمط الأرقام (عربي / لاتيني) + إدخال حر
+// ✅ الإجابة على السوروبان
+// ✅ زر إنهاء + السابق + التالي
+// ✅ لا يوجد تقييم فوري (الانتقال فوري)
+// ✅ يدعم نمط الأرقام (عربي / لاتيني)
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight, Clock, Trophy, CheckCircle2, XCircle,
-  Target, Sparkles, Play, Type,
+  ArrowRight, ArrowLeft, Clock, Trophy, CheckCircle2, XCircle,
+  Target, Sparkles, Play, Type, LogOut,
 } from 'lucide-react';
 
+import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 
@@ -20,39 +24,6 @@ import {
   type PlacementQuestion,
   type PlacementResult,
 } from '@/data/bank-v2';
-
-// ═══════════════════════════════════════════════════════════
-// أدوات التحويل (آمنة من RTL)
-// ═══════════════════════════════════════════════════════════
-
-/**
- * فلترة الإدخال: يقبل فقط الأرقام (عربية أو لاتينية).
- * يستخدم Unicode escapes لتفادي مشكلة قلب الرموز في RTL.
- */
-function filterDigits(value: string): string {
-  // 0-9 (لاتينية) أو ٠-٩ (عربية)
-  return value.replace(/[^0-9\u0660-\u0669]/g, '');
-}
-
-/**
- * تحويل الأرقام العربية إلى لاتينية.
- * ٠ = \u0660 → 0
- * ٥ = \u0665 → 5
- */
-function arabicToLatin(value: string): string {
-  return value.replace(/[\u0660-\u0669]/g, (d) =>
-    String(d.charCodeAt(0) - 0x0660),
-  );
-}
-
-/**
- * تحويل نص إلى رقم (بغض النظر عن النمط).
- */
-function parseInput(value: string): number {
-  const latin = arabicToLatin(value);
-  const num = parseInt(latin, 10);
-  return Number.isFinite(num) ? num : 0;
-}
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -71,6 +42,7 @@ interface PlacementTestScreenProps {
 // ═══════════════════════════════════════════════════════════
 
 const TOTAL_TIME_SEC = 20 * 60;
+const LOW_SCORE_THRESHOLD = 7;
 
 // ═══════════════════════════════════════════════════════════
 // أدوات
@@ -80,6 +52,19 @@ function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+/**
+ * ✅ عدد الأعمدة حسب الناتج:
+ *   < 1000       → 3
+ *   < 1,000,000  → 6
+ *   ≥ 1,000,000  → 9
+ */
+function getColumnsForValue(value: number): number {
+  const abs = Math.abs(value);
+  if (abs < 1000) return 3;
+  if (abs < 1_000_000) return 6;
+  return 9;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -95,15 +80,18 @@ export function PlacementTestScreen({
   const [questions, setQuestions] = useState<PlacementQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Map<string, number>>(new Map());
-  const [userInput, setUserInput] = useState('');
+  const [abacusValue, setAbacusValue] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME_SEC);
   const [result, setResult] = useState<PlacementResult | null>(null);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ✅ نمط الأرقام
   const { style: numberStyle, toggleStyle } = useNumberStyleStore();
   const isArabic = numberStyle === 'arabic';
+
+  const currentQ = questions[currentIdx];
 
   // ─── بدء الامتحان ───
   const startTest = useCallback(() => {
@@ -111,66 +99,92 @@ export function PlacementTestScreen({
     setQuestions(qs);
     setCurrentIdx(0);
     setAnswers(new Map());
-    setUserInput('');
+    setAbacusValue(0);
     setTimeLeft(TOTAL_TIME_SEC);
+    setResult(null);
+    setShowEndConfirm(false);
     setPhase('running');
     playSound('click');
-
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 300);
   }, [playSound]);
 
   // ─── العدّاد ───
   useEffect(() => {
     if (phase !== 'running') return;
     if (timeLeft <= 0) {
-      finishTest();
+      // انتهى الوقت — إنهاء تلقائي
+      const res = evaluatePlacementTest(questions, answers);
+      setResult(res);
+      setPhase('result');
+      playSound('levelup');
       return;
     }
-    const t = setTimeout(() => setTimeLeft((x) => x - 1), 1000);
-    return () => clearTimeout(t);
+    timerRef.current = setTimeout(() => setTimeLeft((x) => x - 1), 1000);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, timeLeft]);
 
-  // ─── إنهاء الامتحان ───
-  const finishTest = useCallback(() => {
+  // ─── إنهاء الامتحان (مُعتمد) ───
+  const confirmEndExam = useCallback(() => {
     const res = evaluatePlacementTest(questions, answers);
     setResult(res);
+    setShowEndConfirm(false);
     setPhase('result');
     playSound('levelup');
   }, [questions, answers, playSound]);
 
-  // ─── إجابة ───
-  const submitAnswer = useCallback(
-    (answer: number) => {
-      if (!questions[currentIdx]) return;
-
-      const q = questions[currentIdx];
-      const newAnswers = new Map(answers);
-      newAnswers.set(q.placementId, answer);
-      setAnswers(newAnswers);
-      setUserInput('');
-      playSound('click');
-
-      if (currentIdx + 1 < questions.length) {
-        setCurrentIdx(currentIdx + 1);
-        setTimeout(() => inputRef.current?.focus(), 100);
-      } else {
-        const res = evaluatePlacementTest(questions, newAnswers);
-        setResult(res);
-        setPhase('result');
-        playSound('levelup');
+  // ─── التنقل ───
+  const goToQuestion = useCallback(
+    (idx: number) => {
+      if (idx < 0 || idx >= questions.length) return;
+      setCurrentIdx(idx);
+      const targetQ = questions[idx];
+      if (targetQ) {
+        // استعادة الإجابة إن وُجدت
+        setAbacusValue(answers.get(targetQ.placementId) ?? 0);
       }
     },
-    [currentIdx, questions, answers, playSound],
+    [questions, answers],
   );
 
-  // ─── معالجة الإدخال ───
-  const handleSubmit = useCallback(() => {
-    if (userInput === '') return;
-    submitAnswer(parseInput(userInput));
-  }, [userInput, submitAnswer]);
+  // ─── تحقق: حفظ الإجابة ثم الانتقال ───
+  const handleCheck = useCallback(() => {
+    if (!currentQ) return;
+
+    const newAnswers = new Map(answers);
+    newAnswers.set(currentQ.placementId, abacusValue);
+    setAnswers(newAnswers);
+    playSound('click');
+
+    // الانتقال للسؤال التالي
+    if (currentIdx + 1 < questions.length) {
+      const nextIdx = currentIdx + 1;
+      const nextQ = questions[nextIdx];
+      setCurrentIdx(nextIdx);
+      setAbacusValue(newAnswers.get(nextQ.placementId) ?? 0);
+    } else {
+      // آخر سؤال — إنهاء
+      const res = evaluatePlacementTest(questions, newAnswers);
+      setResult(res);
+      setPhase('result');
+      playSound('levelup');
+    }
+  }, [currentQ, currentIdx, questions, answers, abacusValue, playSound]);
+
+  // ─── السابق ───
+  const handlePrevious = useCallback(() => {
+    if (currentIdx === 0) return;
+    playSound('click');
+    goToQuestion(currentIdx - 1);
+  }, [currentIdx, goToQuestion, playSound]);
+
+  // ─── التالي ───
+  const handleNext = useCallback(() => {
+    if (currentIdx + 1 >= questions.length) return;
+    playSound('click');
+    goToQuestion(currentIdx + 1);
+  }, [currentIdx, questions.length, goToQuestion, playSound]);
 
   // ═══════════════════════════════════════════════════════
   // المرحلة: intro
@@ -258,26 +272,26 @@ export function PlacementTestScreen({
               <span className="text-gold-300 font-bold shrink-0">
                 {formatNumber(3, numberStyle)}.
               </span>
-              <p>{formatNumber(200, numberStyle)} نقطة كحد أقصى → {formatNumber(100, numberStyle)} درجة نهائية</p>
+              <p>الإجابة على السوروبان — مثّل الناتج على العداد</p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">
                 {formatNumber(4, numberStyle)}.
               </span>
-              <p>عتبة النجاح لكل مستوى: {formatNumber(80, numberStyle)}٪</p>
+              <p>يمكنك التنقل (السابق/التالي) في أي وقت</p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">
                 {formatNumber(5, numberStyle)}.
               </span>
-              <p>المستوى المُوصى به = أول مستوى ترسب فيه</p>
+              <p>لا يوجد تقييم فوري — ينتقل مباشرة للسؤال التالي</p>
             </div>
           </div>
 
           <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30">
             <p className="text-xs text-amber-200 font-body leading-relaxed">
-              💡 <strong>ملاحظة مهمة:</strong> هذا الامتحان يُحدد نقطة البداية المثالية لك.
-              كلما كانت إجاباتك أدق، كان مسارك التعليمي أفضل.
+              💡 <strong>ملاحظة:</strong> الأسئلة غير المُجابة تُحتسب صفراً.
+              يمكنك إنهاء الامتحان في أي وقت بزر "إنهاء الاختبار".
             </p>
           </div>
         </motion.div>
@@ -297,29 +311,28 @@ export function PlacementTestScreen({
   // ═══════════════════════════════════════════════════════
   // المرحلة: running
   // ═══════════════════════════════════════════════════════
-  if (phase === 'running') {
-    const q = questions[currentIdx];
-    if (!q) return null;
-
+  if (phase === 'running' && currentQ) {
     const progress = ((currentIdx + 1) / questions.length) * 100;
     const timeWarning = timeLeft <= 60;
+    const columns = getColumnsForValue(currentQ.correctAnswer);
+    const isLastQuestion = currentIdx === questions.length - 1;
+    const isFirstQuestion = currentIdx === 0;
 
-    // ✅ تنسيق السؤال حسب النمط
     const formattedPrompt = formatText(
-      q.prompt.replace(/ = ؟$/, ''),
+      currentQ.prompt.replace(/ = ؟$/, ''),
       numberStyle,
     );
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto min-h-screen flex flex-col">
+      <div dir="rtl" className="px-3 sm:px-6 py-4 max-w-2xl mx-auto min-h-screen flex flex-col">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1">
-            <h2 className="text-lg font-bold text-white">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-base font-bold text-white truncate">
               السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
-            <p className="text-xs text-white/50 font-body">
-              {getLevelName(q.levelId)} · {q.skillId}
+            <p className="text-[10px] text-white/50 font-body truncate">
+              {getLevelName(currentQ.levelId)} · {currentQ.skillId}
             </p>
           </div>
 
@@ -332,20 +345,20 @@ export function PlacementTestScreen({
             <Type className="w-4 h-4 text-white/70" />
           </button>
 
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${
+          <div className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl border ${
             timeWarning
               ? 'bg-red-500/20 border-red-500/50'
               : 'bg-white/5 border-white/10'
           }`}>
             <Clock className={`w-4 h-4 ${timeWarning ? 'text-red-300' : 'text-amber-300'}`} />
-            <span className={`font-bold font-mono ${timeWarning ? 'text-red-300' : 'text-white'}`}>
+            <span className={`font-bold font-mono text-sm ${timeWarning ? 'text-red-300' : 'text-white'}`}>
               {formatTime(timeLeft)}
             </span>
           </div>
         </div>
 
         {/* Progress */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="h-2 rounded-full bg-white/10 overflow-hidden">
             <motion.div
               className="h-full rounded-full bg-gradient-to-r from-gold-400 to-amber-600"
@@ -361,50 +374,129 @@ export function PlacementTestScreen({
             key={currentIdx}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="glass-card p-6 sm:p-8 w-full text-center mb-6"
+            className="glass-card p-4 sm:p-6 w-full text-center mb-4"
           >
-            {/* ✅ السؤال — يتبع النمط والاتجاه */}
             <p
-              className="text-4xl sm:text-5xl font-black font-display text-white mb-8"
+              className="text-3xl sm:text-4xl font-black font-display text-white mb-5"
               dir={isArabic ? 'rtl' : 'ltr'}
             >
               {formattedPrompt} = ؟
             </p>
 
-            <input
-              ref={inputRef}
-              type="text"
-              inputMode="numeric"
-              value={userInput}
-              onChange={(e) => {
-                // ✅ يقبل الأرقام العربية واللاتينية معاً
-                setUserInput(filterDigits(e.target.value));
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && userInput !== '') {
-                  handleSubmit();
-                }
-              }}
-              placeholder={isArabic ? 'أدخل الإجابة' : 'Enter answer'}
-              dir={isArabic ? 'rtl' : 'ltr'}
-              className="w-full bg-slate-800 border-2 border-gold-500/50 rounded-2xl px-4 py-4 text-center text-3xl font-bold text-white outline-none focus:border-gold-400 transition"
-            />
+            <div className="flex justify-center mb-3">
+              <Soroban2D5
+                key={`q-${currentQ.placementId}-${answers.get(currentQ.placementId) ?? 0}`}
+                columns={columns}
+                initialValue={answers.get(currentQ.placementId) ?? 0}
+                autoBeadSize={true}
+                interactive={true}
+                showValue={true}
+                onValueChange={setAbacusValue}
+              />
+            </div>
+          </motion.div>
+        </div>
 
+        {/* ──── أزرار التنقل ──── */}
+        <div className="space-y-2 mb-4">
+          <div className="grid grid-cols-3 gap-2">
+            {/* السابق */}
             <button
               type="button"
-              onClick={handleSubmit}
-              disabled={userInput === ''}
-              className="btn-primary w-full mt-4 disabled:opacity-40"
+              onClick={handlePrevious}
+              disabled={isFirstQuestion}
+              className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
-              <CheckCircle2 className="w-5 h-5" />
-              تأكيد الإجابة
+              <ArrowRight className="w-4 h-4" />
+              السابق
             </button>
-          </motion.div>
 
-          <p className="text-xs text-white/40 font-body text-center">
-            💡 لا توجد عقوبة على الخطأ — أجب بأسرع ما يمكن
-          </p>
+            {/* تحقق */}
+            <button
+              type="button"
+              onClick={handleCheck}
+              className="py-3 rounded-2xl bg-gradient-to-l from-gold-400 to-amber-600 text-white font-bold text-sm flex items-center justify-center gap-1.5 shadow-lg shadow-gold-500/30 hover:shadow-gold-500/50 transition"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              تحقق
+            </button>
+
+            {/* التالي */}
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={isLastQuestion}
+              className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition"
+            >
+              التالي
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* إنهاء الاختبار */}
+          <button
+            type="button"
+            onClick={() => { playSound('click'); setShowEndConfirm(true); }}
+            className="w-full py-2.5 rounded-2xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 font-bold text-xs flex items-center justify-center gap-2 transition"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            إنهاء الاختبار
+          </button>
         </div>
+
+        {/* ──── Modal: تأكيد الإنهاء ──── */}
+        <AnimatePresence>
+          {showEndConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+              onClick={() => setShowEndConfirm(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.85, opacity: 0, y: 30 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.85, opacity: 0, y: 30 }}
+                transition={{ type: 'spring', stiffness: 250, damping: 25 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-amber-500/30 text-center"
+                dir="rtl"
+              >
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center">
+                  <LogOut className="w-8 h-8 text-amber-300" />
+                </div>
+
+                <h3 className="text-xl font-extrabold font-display text-white mb-2">
+                  إنهاء الاختبار؟
+                </h3>
+
+                <p className="text-sm text-white/60 font-body mb-6 leading-relaxed">
+                  ستُحتسب الأسئلة غير المُجابة <span className="text-red-300 font-bold">صفراً</span>.
+                  <br />
+                  النتيجة النهائية = مجموع الإجابات الصحيحة فقط.
+                </p>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={confirmEndExam}
+                    className="flex-1 py-3 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white font-bold"
+                  >
+                    نعم، أنهِ الامتحان
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { playSound('click'); setShowEndConfirm(false); }}
+                    className="flex-1 py-3 rounded-2xl bg-white/10 text-white/80 font-bold"
+                  >
+                    متابعة
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -413,6 +505,10 @@ export function PlacementTestScreen({
   // المرحلة: result
   // ═══════════════════════════════════════════════════════
   if (phase === 'result' && result) {
+    const isLowScore = result.totalScore < LOW_SCORE_THRESHOLD;
+    const recommendedLevel = isLowScore ? 'L0' : result.recommendedLevel;
+    const isNewL0 = isLowScore && result.recommendedLevel !== 'L0';
+
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div
@@ -439,11 +535,17 @@ export function PlacementTestScreen({
             <div className="my-6">
               <p className="text-sm text-white/60 font-body mb-1">المستوى المُوصى به</p>
               <p className="text-5xl font-black font-display shimmer-text">
-                {result.recommendedLevel}
+                {recommendedLevel}
               </p>
               <p className="text-lg font-bold text-gold-300 font-body mt-1">
-                {getLevelName(result.recommendedLevel)}
+                {getLevelName(recommendedLevel)}
               </p>
+
+              {isNewL0 && (
+                <p className="text-xs text-amber-300 font-body mt-2 bg-amber-500/10 border border-amber-400/30 rounded-xl px-3 py-2 inline-block">
+                  📌 نوصي بالبدء من المستوى التمهيدي الجديد (L0)
+                </p>
+              )}
             </div>
 
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
@@ -530,12 +632,12 @@ export function PlacementTestScreen({
             type="button"
             onClick={() => {
               playSound('click');
-              onComplete(result.recommendedLevel, result.weakSkills);
+              onComplete(recommendedLevel, result.weakSkills);
             }}
             className="btn-primary w-full !py-4 !text-lg"
           >
             <Sparkles className="w-6 h-6" />
-            ابدأ من {result.recommendedLevel} — {getLevelName(result.recommendedLevel)}
+            ابدأ من {recommendedLevel} — {getLevelName(recommendedLevel)}
           </button>
 
           <button
