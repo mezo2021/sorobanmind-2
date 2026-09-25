@@ -1,7 +1,7 @@
 // src/screens/PlacementTestScreen.tsx
 // شاشة امتحان تحديد المستوى (Placement Test)
 // 40 سؤالاً — 20 دقيقة — 200 نقطة
-// ✅ يدعم نمط الأرقام (عربي / لاتيني)
+// ✅ يدعم نمط الأرقام (عربي / لاتيني) + إدخال حر
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
@@ -20,6 +20,39 @@ import {
   type PlacementQuestion,
   type PlacementResult,
 } from '@/data/bank-v2';
+
+// ═══════════════════════════════════════════════════════════
+// أدوات التحويل (آمنة من RTL)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * فلترة الإدخال: يقبل فقط الأرقام (عربية أو لاتينية).
+ * يستخدم Unicode escapes لتفادي مشكلة قلب الرموز في RTL.
+ */
+function filterDigits(value: string): string {
+  // 0-9 (لاتينية) أو ٠-٩ (عربية)
+  return value.replace(/[^0-9\u0660-\u0669]/g, '');
+}
+
+/**
+ * تحويل الأرقام العربية إلى لاتينية.
+ * ٠ = \u0660 → 0
+ * ٥ = \u0665 → 5
+ */
+function arabicToLatin(value: string): string {
+  return value.replace(/[\u0660-\u0669]/g, (d) =>
+    String(d.charCodeAt(0) - 0x0660),
+  );
+}
+
+/**
+ * تحويل نص إلى رقم (بغض النظر عن النمط).
+ */
+function parseInput(value: string): number {
+  const latin = arabicToLatin(value);
+  const num = parseInt(latin, 10);
+  return Number.isFinite(num) ? num : 0;
+}
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -132,6 +165,12 @@ export function PlacementTestScreen({
     },
     [currentIdx, questions, answers, playSound],
   );
+
+  // ─── معالجة الإدخال ───
+  const handleSubmit = useCallback(() => {
+    if (userInput === '') return;
+    submitAnswer(parseInput(userInput));
+  }, [userInput, submitAnswer]);
 
   // ═══════════════════════════════════════════════════════
   // المرحلة: intro
@@ -338,17 +377,12 @@ export function PlacementTestScreen({
               inputMode="numeric"
               value={userInput}
               onChange={(e) => {
-                // ✅ قبول الأرقام العربية واللاتينية
-                const cleaned = e.target.value.replace(/[^0-9٠-٩]/g, '');
-                setUserInput(cleaned);
+                // ✅ يقبل الأرقام العربية واللاتينية معاً
+                setUserInput(filterDigits(e.target.value));
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && userInput !== '') {
-                  // ✅ تحويل الإدخال إلى رقم
-                  const latin = userInput.replace(/[٠-٩]/g, (d) =>
-                    String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)),
-                  );
-                  submitAnswer(parseInt(latin, 10));
+                  handleSubmit();
                 }
               }}
               placeholder={isArabic ? 'أدخل الإجابة' : 'Enter answer'}
@@ -358,14 +392,7 @@ export function PlacementTestScreen({
 
             <button
               type="button"
-              onClick={() => {
-                if (userInput !== '') {
-                  const latin = userInput.replace(/[٠-٩]/g, (d) =>
-                    String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)),
-                  );
-                  submitAnswer(parseInt(latin, 10));
-                }
-              }}
+              onClick={handleSubmit}
               disabled={userInput === ''}
               className="btn-primary w-full mt-4 disabled:opacity-40"
             >
