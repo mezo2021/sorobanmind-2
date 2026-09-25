@@ -185,6 +185,17 @@ const CATEGORY_DATA: Record<CategoryId, CategoryData> = {
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
+function toArabicNumber(value: number | string): string {
+  return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+}
+
+/**
+ * ✅ قراءة التقدم من localStorage.
+ *
+ * مُوسَّع ليشمل:
+ *   - weakSkills (من Placement Test)
+ *   - recommendedLevel (من Placement Test)
+ */
 function loadProgress() {
   try {
     const completedRaw = localStorage.getItem('soroban_completed_levels');
@@ -203,7 +214,7 @@ function loadProgress() {
       passedAnzanAudio: anzanARaw ? JSON.parse(anzanARaw) : [],
       exam1Passed: exam1Raw ? JSON.parse(exam1Raw) : false,
       exam2Passed: exam2Raw ? JSON.parse(exam2Raw) : false,
-      // ✅ للتعليم التكيفي (C)
+      // ✅ جديد: للتعليم التكيفي
       weakSkills: weakSkillsRaw ? JSON.parse(weakSkillsRaw) : [],
       recommendedLevel: recommendedRaw || null,
     };
@@ -295,6 +306,10 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
   const isExamPassed = category === 'kids' ? progress.exam1Passed : progress.exam2Passed;
 
+  // ═══════════════════════════════════════════════════════
+  // Render Level Card
+  // ═══════════════════════════════════════════════════════
+
   const renderLevelCard = (level: LevelItem, idx: number) => {
     const Icon = level.icon;
     const unlocked = isLevelUnlocked(level.id, idx);
@@ -309,11 +324,18 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     const practiceNum = data.practiceRange[0] + idx;
     const anzanNum = data.anzanRange[0] + idx;
 
+    // ✅ المستوى المُوصى به من Placement Test
+    const isRecommended = progress.recommendedLevel === level.id;
+
     return (
       <div
         key={level.id}
         className={`glass-card p-4 sm:p-5 overflow-hidden transition-all ${
           !unlocked ? 'opacity-60' : ''
+        } ${
+          isRecommended
+            ? 'border-2 border-gold-400/60 shadow-lg shadow-gold-500/20'
+            : ''
         }`}
       >
         <div className="flex items-start gap-3 mb-3">
@@ -322,11 +344,16 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h4 className="text-base sm:text-lg font-extrabold font-display text-white">
                 {toArabicNumber(level.number)} — {level.titleAr}
               </h4>
               {completed && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
+              {isRecommended && (
+                <span className="px-2 py-0.5 rounded-lg bg-gold-400/30 text-gold-100 text-[10px] font-bold whitespace-nowrap">
+                  🎯 ابدأ هنا
+                </span>
+              )}
             </div>
             <p className="text-[10px] text-white/40 font-body">
               {level.titleEn}
@@ -339,6 +366,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
         {unlocked && (
           <div className="grid grid-cols-2 gap-2 mt-3">
+            {/* زر الدرس */}
             <button
               type="button"
               onClick={() => handleNav(`lesson-${level.id}` as Screen)}
@@ -352,6 +380,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               {completed ? 'مراجعة' : 'الدرس'}
             </button>
 
+            {/* زر تمرّن */}
             <button
               type="button"
               onClick={() => practiceUnlocked && handleNav(`practice-${practiceNum}` as Screen)}
@@ -368,6 +397,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               تمرّن {toArabicNumber(practiceNum)}
             </button>
 
+            {/* زر أنزان بصري */}
             <button
               type="button"
               onClick={() => anzanVUnlocked && handleNav(`anzan-${anzanNum}` as Screen)}
@@ -384,6 +414,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               أنزان بصري
             </button>
 
+            {/* زر أنزان سمعي */}
             <button
               type="button"
               onClick={() => anzanAUnlocked && handleNav(`audio-anzan-${anzanNum}` as Screen)}
