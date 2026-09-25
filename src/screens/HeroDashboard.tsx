@@ -2,9 +2,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import {
-  BookOpen, Dumbbell, Eye, Swords, Calculator, Lock,
   Sparkles, Flame, Brain, Zap, Palette, Trash2,
-  Unlock, X, Grid3X3, Wand2, Hash, Divide, FileText, Award,
+  Unlock, X, Award, Users, Trophy,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -58,121 +57,47 @@ const CHARACTER_INFO: Record<
   },
 };
 
-type ActionCard = {
+// ═══════════════════════════════════════════════════════════
+// بطاقتا القسمين
+// ═══════════════════════════════════════════════════════════
+
+interface CategoryCard {
   screen: Screen;
   title: string;
   titleEn: string;
+  ageRange: string;
   desc: string;
   icon: LucideIcon;
   gradient: string;
   glow: string;
-  requiresExam?: boolean;
-};
+  levels: string[];
+  levelsAr: string;
+}
 
-const ACTION_CARDS: ActionCard[] = [
+const CATEGORY_CARDS: CategoryCard[] = [
   {
-    screen: 'learn',
-    title: 'التعلّم',
-    titleEn: 'Learn',
-    desc: 'تعرّف على السوروبان وخرزاته',
-    icon: BookOpen,
-    gradient: 'from-purple-500 to-purple-700',
+    screen: 'category-kids',
+    title: 'الأبطال الصغار',
+    titleEn: 'Young Heroes',
+    ageRange: '٥ - ١٢ سنة',
+    desc: 'التأسيس: التعرّف على السوروبان، الأرقام، الجمع والطرح، الضرب والقسمة',
+    icon: Users,
+    gradient: 'from-emerald-500 to-teal-700',
+    glow: 'shadow-emerald-500/40',
+    levels: ['L0', 'L1', 'L2', 'L3'],
+    levelsAr: '٠ · ١ · ٢ · ٣',
+  },
+  {
+    screen: 'category-teens',
+    title: 'الأبطال الكبار',
+    titleEn: 'Champion Heroes',
+    ageRange: '١٣+ سنة',
+    desc: 'المتقدم: العمليات المركبة، الضرب والقسمة المتقدمة، الأعداد العشرية والجذور',
+    icon: Trophy,
+    gradient: 'from-purple-500 to-indigo-700',
     glow: 'shadow-purple-500/40',
-  },
-  {
-    screen: 'practice',
-    title: 'التدريب',
-    titleEn: 'Practice',
-    desc: 'تمارين تفاعلية لزيادة المهارة',
-    icon: Dumbbell,
-    gradient: 'from-electric-500 to-electric-700',
-    glow: 'shadow-electric-500/40',
-  },
-  {
-    screen: 'anzan',
-    title: 'التصور الذهني',
-    titleEn: 'Anzan Flash',
-    desc: 'أرقام تومض بسرعة وحلّها بذهنك',
-    icon: Eye,
-    gradient: 'from-emerald2-500 to-emerald2-700',
-    glow: 'shadow-emerald2-500/40',
-  },
-  {
-    screen: 'quests',
-    title: 'المغامرات',
-    titleEn: 'Quests',
-    desc: 'تحديات يومية ومكافآت ممتعة',
-    icon: Swords,
-    gradient: 'from-gold-400 to-gold-600',
-    glow: 'shadow-gold-500/40',
-  },
-  {
-    screen: 'soroban',
-    title: 'السوروبان',
-    titleEn: 'Interactive Soroban',
-    desc: 'العب بالعداد الياباني تفاعلياً',
-    icon: Calculator,
-    gradient: 'from-pink-500 to-purple-700',
-    glow: 'shadow-pink-500/40',
-  },
-  {
-    screen: 'multiplication',
-    title: 'درس الضرب',
-    titleEn: 'Multiplication',
-    desc: 'قواعد السوروبان والضرب الذهني',
-    icon: Grid3X3,
-    gradient: 'from-indigo-500 to-purple-700',
-    glow: 'shadow-indigo-500/40',
-    requiresExam: true,
-  },
-  {
-    screen: 'cross-multiplication',
-    title: 'الضرب التقاطعي',
-    titleEn: 'Cross Multiplication',
-    desc: 'درس متقدم: 2×2 حتى 5×2 و 3×3',
-    icon: Hash,
-    gradient: 'from-cyan-500 to-blue-700',
-    glow: 'shadow-cyan-500/40',
-    requiresExam: true,
-  },
-  {
-    screen: 'secrets',
-    title: 'الأسرار السحرية',
-    titleEn: 'Magic Secrets',
-    desc: 'حِيَل ذكية لجدول الضرب',
-    icon: Wand2,
-    gradient: 'from-amber-500 to-rose-600',
-    glow: 'shadow-amber-500/40',
-    requiresExam: true,
-  },
-  {
-    screen: 'division',
-    title: 'القسمة',
-    titleEn: 'Division',
-    desc: 'قسمة الأعداد على السوروبان',
-    icon: Divide,
-    gradient: 'from-blue-500 to-cyan-700',
-    glow: 'shadow-blue-500/40',
-    requiresExam: true,
-  },
-  {
-    screen: 'final-exam',
-    title: 'الامتحان النهائي',
-    titleEn: 'Final Exam',
-    desc: '٢٥ سؤالاً — ١٠٠ درجة',
-    icon: FileText,
-    gradient: 'from-gold-400 to-gold-600',
-    glow: 'shadow-gold-500/40',
-  },
-  {
-    screen: 'certificate',
-    title: 'شهادة الإتمام',
-    titleEn: 'Certificate',
-    desc: 'بعد اجتياز الامتحانين معاً',
-    icon: Award,
-    gradient: 'from-amber-400 to-yellow-600',
-    glow: 'shadow-amber-500/40',
-    requiresExam: true,
+    levels: ['L4', 'L5', 'L6', 'L7'],
+    levelsAr: '٤ · ٥ · ٦ · ٧',
   },
 ];
 
@@ -188,7 +113,7 @@ export function HeroDashboard({
   playSound,
   xp,
   streak,
-  earnedBadges,
+  earnedBadges: _earnedBadges,
 }: HeroDashboardProps) {
   const [companion, setCompanion] = useState<CharacterType>('sham');
   const [showSelector, setShowSelector] = useState(false);
@@ -233,67 +158,44 @@ export function HeroDashboard({
     onNavigate(screen);
   };
 
-  const canOpenCard = (card: ActionCard): boolean => {
-    if (card.requiresExam && !examPassed) return false;
-    return true;
-  };
-
   const handleTestUnlock = () => {
-  try {
-    localStorage.setItem(
-      'soroban_exam_result',
-      JSON.stringify({ score: 100, passed: true, date: Date.now() }),
-    );
-    localStorage.setItem(
-      'soroban_exam2_result',
-      JSON.stringify({ score: 100, passed: true, date: Date.now() }),
-    );
-    localStorage.setItem(
-      'soroban-completed-lessons',
-      JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-    );
-    localStorage.setItem(
-      'soroban_anzan_badges',
-      JSON.stringify({
-        master_addition: true,
-        master_multiplication: true,
-        master_division: true,
-        master_mixed: true,
-      }),
-    );
-    localStorage.setItem(
-      'soroban_anzan_audio_badges',
-      JSON.stringify({
-        master_addition_audio: true,
-        master_multiplication_audio: true,
-        master_division_audio: true,
-      }),
-    );
-
-    // ✅ الحل — حدّث الحالة فوراً
-    setExamPassed(true);
-    playSound('click');
-
-    // ✅ انتظر ثانية كاملة قبل إعادة التحميل
-    setTimeout(() => window.location.reload(), 1000);
-  } catch (err) {
-    window.alert('خطأ: ' + String(err));
-  }
-};
-
-  const handlePreviewCertificate = () => {
     try {
       localStorage.setItem(
         'soroban_exam_result',
-        JSON.stringify({ score: 85, passed: true, date: Date.now() }),
+        JSON.stringify({ score: 100, passed: true, date: Date.now() }),
       );
       localStorage.setItem(
         'soroban_exam2_result',
-        JSON.stringify({ score: 88, passed: true, date: Date.now() }),
+        JSON.stringify({ score: 100, passed: true, date: Date.now() }),
       );
-      playSound('whoosh');
-      onNavigate('certificate');
-    } catch { /* ignore */ }
+      localStorage.setItem(
+        'soroban-completed-lessons',
+        JSON.stringify(['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7']),
+      );
+      localStorage.setItem(
+        'soroban_anzan_badges',
+        JSON.stringify({
+          master_addition: true,
+          master_multiplication: true,
+          master_division: true,
+          master_mixed: true,
+        }),
+      );
+      localStorage.setItem(
+        'soroban_anzan_audio_badges',
+        JSON.stringify({
+          master_addition_audio: true,
+          master_multiplication_audio: true,
+          master_division_audio: true,
+        }),
+      );
+
+      setExamPassed(true);
+      playSound('click');
+      setTimeout(() => window.location.reload(), 800);
+    } catch (err) {
+      window.alert('خطأ: ' + String(err));
+    }
   };
 
   const handleReset = () => {
@@ -377,16 +279,6 @@ export function HeroDashboard({
 
           <button
             type="button"
-            onClick={handlePreviewCertificate}
-            className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-amber-500/20 border border-amber-400/50 text-amber-100 hover:bg-amber-500/30 transition-all text-xs font-bold font-body"
-            title="معاينة شهادة الإتمام (تجريبي)"
-          >
-            <Award className="w-4 h-4" />
-            <span>معاينة الشهادة</span>
-          </button>
-
-          <button
-            type="button"
             onClick={() => { playSound('click'); setShowResetConfirm(true); }}
             className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-red-500/10 border border-red-400/30 text-red-300 hover:bg-red-500/20 transition-all text-xs font-body"
           >
@@ -465,53 +357,67 @@ export function HeroDashboard({
         </div>
       </motion.div>
 
-      {/* MAIN ACTION CARDS */}
-      <div className="grid grid-cols-1 gap-3 sm:gap-4 mb-8">
-        {ACTION_CARDS.map((card, i) => {
-          const Icon = card.icon;
-          const isLocked = !canOpenCard(card);
+      {/* CATEGORY CARDS (2 بطاقات كبيرة) */}
+      <div className="mb-6">
+        <h3 className="text-lg font-bold text-white/80 font-display mb-3 text-center">
+          اختر قسمك
+        </h3>
 
-          return (
-            <motion.button
-              key={`${card.screen}-${i}`}
-              type="button"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06, type: 'spring', stiffness: 200, damping: 20 }}
-              whileHover={!isLocked ? { scale: 1.03, y: -4 } : {}}
-              whileTap={!isLocked ? { scale: 0.97 } : {}}
-              onClick={() => {
-                if (isLocked) { playSound('whoosh'); return; }
-                handleNav(card.screen);
-              }}
-              className={`group relative glass-card p-4 text-center overflow-hidden ${
-                isLocked ? 'opacity-70 cursor-not-allowed' : ''
-              }`}
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-15 transition-opacity duration-500`} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {CATEGORY_CARDS.map((card, i) => {
+            const Icon = card.icon;
 
-              <div className={`relative inline-flex w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br ${card.gradient} items-center justify-center shadow-xl ${card.glow} mb-2 ${
-                isLocked ? 'grayscale' : ''
-              }`}>
-                {isLocked ? (
-                  <Lock className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                ) : (
-                  <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                )}
-              </div>
+            return (
+              <motion.button
+                key={card.screen}
+                type="button"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.1, type: 'spring', stiffness: 200, damping: 20 }}
+                whileHover={{ scale: 1.02, y: -4 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleNav(card.screen)}
+                className="group relative glass-card p-5 sm:p-6 text-right overflow-hidden"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-15 transition-opacity duration-500`} />
 
-              <h3 className="text-sm sm:text-base font-extrabold font-display text-white mb-0.5">
-                {card.title}
-              </h3>
-              <p className="text-[9px] sm:text-[10px] text-white/40 font-body mb-1.5">
-                {card.titleEn}
-              </p>
-              <p className="text-[11px] sm:text-xs text-white/60 font-body leading-snug">
-                {isLocked ? '🔒 اجتز الامتحان النهائي لفتح هذا الدرس' : card.desc}
-              </p>
-            </motion.button>
-          );
-        })}
+                <div className="relative flex items-start gap-4">
+                  <div className={`shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br ${card.gradient} flex items-center justify-center shadow-xl ${card.glow}`}>
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xl font-black font-display text-white">
+                      {card.title}
+                    </h4>
+                    <p className="text-xs text-white/40 font-body">
+                      {card.titleEn}
+                    </p>
+                    <p className={`text-sm font-bold font-body mt-2 bg-gradient-to-l ${card.gradient} bg-clip-text text-transparent`}>
+                      {card.ageRange}
+                    </p>
+                    <p className="text-xs sm:text-sm text-white/60 font-body mt-2 leading-relaxed">
+                      {card.desc}
+                    </p>
+
+                    <div className="flex items-center gap-2 mt-3 flex-wrap">
+                      <span className="text-xs text-white/40 font-body">المستويات:</span>
+                      <span className="text-sm font-bold text-white/80 font-display">
+                        {card.levelsAr}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 self-center text-white/40 group-hover:text-white/80 transition-colors">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
 
       {/* CHARACTER SELECTOR MODAL */}
