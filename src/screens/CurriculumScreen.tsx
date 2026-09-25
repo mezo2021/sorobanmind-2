@@ -205,7 +205,7 @@ export default function CurriculumScreen({
                       level,
                       completedLevels,
                     )}
-                    onClick={() => onOpenLevel(level.id)}
+                    onClick={() => onOpenLevel(level.id as LevelId)}
                     index={idx}
                   />
                 ))}
