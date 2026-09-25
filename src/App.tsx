@@ -18,6 +18,7 @@ import Header from './screens/Header';
 import CategoryScreen from './screens/CategoryScreen';
 import LevelScreen from './screens/LevelScreen';
 import EnrichmentScreen from './screens/EnrichmentScreen';
+import PlacementTestScreen from './screens/PlacementTestScreen';
 
 // ═══ Debug ═══
 import { DebugOverlay } from './components/DebugOverlay';
@@ -27,7 +28,7 @@ type AppScreen = V1Screen | 'loading';
 
 // ═══ Constants ═══
 const WELCOME_STORAGE_KEY = 'soroban_welcome_seen';
-const WELCOME_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const WELCOME_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 
 // ═══ Helpers ═══
 function shouldShowWelcome(): boolean {
@@ -48,7 +49,7 @@ function markWelcomeSeen() {
   } catch { /* ignore */ }
 }
 
-// ═══ Coming Soon Placeholder ═══
+// ═══ Coming Soon ═══
 function ComingSoonScreen({
   onBack,
   title = 'قيد التطوير',
@@ -80,20 +81,18 @@ function ComingSoonScreen({
   );
 }
 
-// ═══ Title Helper for Coming Soon ═══
 function getComingSoonTitle(screen: string): string {
   const titles: Record<string, string> = {
-    'practice': 'تمرّن',
-    'anzan': 'أنزان',
-    'quests': 'المغامرات',
-    'soroban': 'السوروبان التفاعلي',
-    'multiplication': 'درس الضرب',
-    'secrets': 'الأسرار السحرية',
+    practice: 'تمرّن',
+    anzan: 'أنزان',
+    quests: 'المغامرات',
+    soroban: 'السوروبان التفاعلي',
+    multiplication: 'درس الضرب',
+    secrets: 'الأسرار السحرية',
     'cross-multiplication': 'الضرب التقاطعي',
-    'division': 'القسمة',
-    'certificate': 'الشهادة',
+    division: 'القسمة',
+    certificate: 'الشهادة',
     'final-exam': 'الامتحان النهائي',
-    'placement-test': 'اختبار تحديد المستوى',
     'category-exam-1': 'امتحان القسم الأول',
     'category-exam-2': 'امتحان القسم الثاني',
   };
@@ -109,7 +108,7 @@ export default function App() {
 
   const { stats, toggleSound } = useGameStats();
   const playSound = useSound(stats.soundEnabled);
-  const { burst } = useConfetti();
+  const { burst: _burst } = useConfetti();
 
   // ═══ Initialization ═══
   useEffect(() => {
@@ -179,6 +178,32 @@ export default function App() {
 
   const handleBackToCategory = (category: 'kids' | 'teens') => {
     setScreen(category === 'kids' ? 'category-kids' : 'category-teens');
+  };
+
+  // ═══ Placement Test Handler ═══
+  const handlePlacementComplete = (
+    recommendedLevel: string,
+    weakSkills: string[],
+  ) => {
+    // حفظ النتيجة
+    try {
+      localStorage.setItem(
+        'soroban_placement_result',
+        JSON.stringify({
+          recommendedLevel,
+          weakSkills,
+          date: Date.now(),
+        }),
+      );
+      localStorage.setItem(
+        'soroban_placement_last_attempt',
+        String(Date.now()),
+      );
+    } catch { /* ignore */ }
+
+    // الانتقال للقسم المناسب
+    const isKids = ['L0', 'L1', 'L2', 'L3'].includes(recommendedLevel);
+    setScreen(isKids ? 'category-kids' : 'category-teens');
   };
 
   // ═══ Loading Screen ═══
@@ -253,6 +278,16 @@ export default function App() {
           </>
         );
 
+      // ═══ Placement Test ═══
+      case 'placement-test':
+        return (
+          <PlacementTestScreen
+            onBack={handleBackToHero}
+            onComplete={handlePlacementComplete}
+            playSound={handleSound}
+          />
+        );
+
       // ═══ Categories ═══
       case 'category-kids':
         return (
@@ -272,7 +307,7 @@ export default function App() {
           />
         );
 
-      // ═══ Levels (L0-L7) ═══
+      // ═══ Levels ═══
       case 'lesson-L0':
       case 'lesson-L1':
       case 'lesson-L2':
@@ -304,12 +339,12 @@ export default function App() {
               handleBackToCategory(screen === 'enrichment-1' ? 'kids' : 'teens')
             }
             onOpenModule={() => {
-              /* TODO: open enrichment module */
+              /* TODO */
             }}
           />
         );
 
-      // ═══ Coming Soon (سيبني لاحقاً) ═══
+      // ═══ Coming Soon ═══
       case 'practice':
       case 'anzan':
       case 'quests':
@@ -320,7 +355,6 @@ export default function App() {
       case 'division':
       case 'certificate':
       case 'final-exam':
-      case 'placement-test':
       case 'category-exam-1':
       case 'category-exam-2':
         return (
@@ -349,7 +383,6 @@ export default function App() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Debug Overlay (dev only) */}
       {import.meta.env.DEV && <DebugOverlay />}
     </>
   );
