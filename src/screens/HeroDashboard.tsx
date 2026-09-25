@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import {
   Sparkles, Flame, Brain, Zap, Palette, Trash2,
-  Unlock, X, Award, Users, Trophy,
+  Unlock, X, Users, Trophy, Target,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -57,10 +57,6 @@ const CHARACTER_INFO: Record<
   },
 };
 
-// ═══════════════════════════════════════════════════════════
-// بطاقتا القسمين
-// ═══════════════════════════════════════════════════════════
-
 interface CategoryCard {
   screen: Screen;
   title: string;
@@ -70,7 +66,6 @@ interface CategoryCard {
   icon: LucideIcon;
   gradient: string;
   glow: string;
-  levels: string[];
   levelsAr: string;
 }
 
@@ -84,7 +79,6 @@ const CATEGORY_CARDS: CategoryCard[] = [
     icon: Users,
     gradient: 'from-emerald-500 to-teal-700',
     glow: 'shadow-emerald-500/40',
-    levels: ['L0', 'L1', 'L2', 'L3'],
     levelsAr: '٠ · ١ · ٢ · ٣',
   },
   {
@@ -96,7 +90,6 @@ const CATEGORY_CARDS: CategoryCard[] = [
     icon: Trophy,
     gradient: 'from-purple-500 to-indigo-700',
     glow: 'shadow-purple-500/40',
-    levels: ['L4', 'L5', 'L6', 'L7'],
     levelsAr: '٤ · ٥ · ٦ · ٧',
   },
 ];
@@ -159,57 +152,55 @@ export function HeroDashboard({
   };
 
   const handleTestUnlock = () => {
-  try {
-    // ✅ المفاتيح الجديدة (تطابق الشاشات الجديدة)
-    localStorage.setItem(
-      'soroban_completed_levels',
-      JSON.stringify(['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7']),
-    );
-    localStorage.setItem(
-      'soroban_passed_practice',
-      JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]),
-    );
-    localStorage.setItem(
-      'soroban_passed_anzan_visual',
-      JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]),
-    );
-    localStorage.setItem(
-      'soroban_passed_anzan_audio',
-      JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]),
-    );
-    localStorage.setItem('soroban_exam1_passed', JSON.stringify(true));
-    localStorage.setItem('soroban_exam2_passed', JSON.stringify(true));
+    try {
+      localStorage.setItem(
+        'soroban_completed_levels',
+        JSON.stringify(['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7']),
+      );
+      localStorage.setItem(
+        'soroban_passed_practice',
+        JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]),
+      );
+      localStorage.setItem(
+        'soroban_passed_anzan_visual',
+        JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]),
+      );
+      localStorage.setItem(
+        'soroban_passed_anzan_audio',
+        JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]),
+      );
+      localStorage.setItem('soroban_exam1_passed', JSON.stringify(true));
+      localStorage.setItem('soroban_exam2_passed', JSON.stringify(true));
 
-    // ✅ المفاتيح القديمة (للتوافق المؤقت)
-    localStorage.setItem(
-      'soroban_exam_result',
-      JSON.stringify({ score: 100, passed: true, date: Date.now() }),
-    );
-    localStorage.setItem(
-      'soroban_anzan_badges',
-      JSON.stringify({
-        master_addition: true,
-        master_multiplication: true,
-        master_division: true,
-        master_mixed: true,
-      }),
-    );
-    localStorage.setItem(
-      'soroban_anzan_audio_badges',
-      JSON.stringify({
-        master_addition_audio: true,
-        master_multiplication_audio: true,
-        master_division_audio: true,
-      }),
-    );
+      localStorage.setItem(
+        'soroban_exam_result',
+        JSON.stringify({ score: 100, passed: true, date: Date.now() }),
+      );
+      localStorage.setItem(
+        'soroban_anzan_badges',
+        JSON.stringify({
+          master_addition: true,
+          master_multiplication: true,
+          master_division: true,
+          master_mixed: true,
+        }),
+      );
+      localStorage.setItem(
+        'soroban_anzan_audio_badges',
+        JSON.stringify({
+          master_addition_audio: true,
+          master_multiplication_audio: true,
+          master_division_audio: true,
+        }),
+      );
 
-    setExamPassed(true);
-    playSound('click');
-    setTimeout(() => window.location.reload(), 800);
-  } catch (err) {
-    window.alert('خطأ: ' + String(err));
-  }
-};
+      setExamPassed(true);
+      playSound('click');
+      setTimeout(() => window.location.reload(), 800);
+    } catch (err) {
+      window.alert('خطأ: ' + String(err));
+    }
+  };
 
   const handleReset = () => {
     const keysToKeep = ['soroban_companion', 'soroban_child_name'];
@@ -370,7 +361,57 @@ export function HeroDashboard({
         </div>
       </motion.div>
 
-      {/* CATEGORY CARDS (2 بطاقات كبيرة) */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* PLACEMENT TEST CARD — جديد!                                */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="mb-6"
+      >
+        <motion.button
+          type="button"
+          whileHover={{ scale: 1.01, y: -3 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => handleNav('placement-test' as Screen)}
+          className="group relative glass-card p-5 sm:p-6 text-right overflow-hidden w-full border-2 border-gold-400/40"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-gold-400 to-amber-600 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
+          <div className="absolute -top-20 -right-20 w-48 h-48 bg-gold-500/30 blur-3xl" />
+
+          <div className="relative flex items-center gap-4">
+            <div className="shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-gold-400 to-amber-600 flex items-center justify-center shadow-xl shadow-gold-500/50">
+              <Target className="w-8 h-8 text-white" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className="text-xl font-black font-display text-white">
+                  امتحان تحديد المستوى
+                </h4>
+                <span className="px-2 py-0.5 rounded-lg bg-gold-400/30 text-gold-100 text-[10px] font-bold">
+                  جديد
+                </span>
+              </div>
+              <p className="text-xs text-white/60 font-body leading-relaxed">
+                ٤٠ سؤالاً — ٢٠ دقيقة — يحدد نقطة البداية المثالية
+              </p>
+              <p className="text-xs text-gold-300 font-body mt-1">
+                🎯 مفتوح دائماً
+              </p>
+            </div>
+
+            <div className="shrink-0 self-center text-gold-300 group-hover:text-gold-100 transition-colors">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </div>
+        </motion.button>
+      </motion.div>
+
+      {/* CATEGORY CARDS */}
       <div className="mb-6">
         <h3 className="text-lg font-bold text-white/80 font-display mb-3 text-center">
           اختر قسمك
@@ -386,7 +427,7 @@ export function HeroDashboard({
                 type="button"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.1, type: 'spring', stiffness: 200, damping: 20 }}
+                transition={{ delay: 0.15 + i * 0.1, type: 'spring', stiffness: 200, damping: 20 }}
                 whileHover={{ scale: 1.02, y: -4 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleNav(card.screen)}
