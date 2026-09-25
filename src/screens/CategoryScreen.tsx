@@ -187,10 +187,6 @@ function toArabicNumber(value: number | string): string {
   return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 }
 
-/**
- * قراءة حالة التقدم من localStorage.
- * (سنستبدله بـ progressStore لاحقاً)
- */
 function loadProgress() {
   try {
     const completedRaw = localStorage.getItem('soroban_completed_levels');
@@ -383,10 +379,10 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               أنزان بصري
             </button>
 
-            {/* زر أنزان سمعي */}
+            {/* زر أنزان سمعي — ✅ مُعدَّل ليرسل audio-anzan-N */}
             <button
               type="button"
-              onClick={() => anzanAUnlocked && handleNav(`anzan-${anzanNum}` as Screen)}
+              onClick={() => anzanAUnlocked && handleNav(`audio-anzan-${anzanNum}` as Screen)}
               disabled={!anzanAUnlocked}
               className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition ${
                 anzanAPassed
