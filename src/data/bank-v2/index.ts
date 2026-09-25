@@ -1,11 +1,6 @@
 // src/data/bank-v2/index.ts
-// بنك الأسئلة v2 — الموحّد
-// يجمع الأقسام الأربعة:
-//   - PART_01: L0-L1 (S1-S9)
-//   - PART_02: L2-L3 (S10-S15)
-//   - PART_03: L4-L5 (S16-S17)
-//   - PART_04: L6-L7 (S18-S20)
-// المجموع: ~585 سؤال
+// بنك الأسئلة v2 — الفهرس الموحّد
+// يجمع: bank-v2 الأقسام + bank-exam
 
 import type { BankQuestion } from "./types";
 import { createRng, shuffle } from "./types";
@@ -22,6 +17,7 @@ export type {
   BankQuestion,
   BankOperation,
   Difficulty,
+  QuestionTiming,
 } from "./types";
 
 export {
@@ -37,30 +33,34 @@ export {
   complementTo10,
   classifyAdd,
   classifySub,
+  getDefaultTiming,
+  adaptTiming,
+  applyAdaptiveSpeed,
 } from "./types";
 
+export type { ExamQuestion } from "./bank-exam";
+
+export {
+  EXAM_POOL_1,
+  EXAM_POOL_2,
+  EXAM_STATS,
+  buildExam1,
+  buildExam2,
+} from "./bank-exam";
+
 // ═══════════════════════════════════════════════════════════
-// البنك الموحّد
+// البنك الأساسي (للتمرّن والأنزان)
 // ═══════════════════════════════════════════════════════════
 
-/**
- * كل الأسئلة — مرتبة حسب المستوى ثم المهارة.
- */
 export const SOROBAN_BANK_V2: readonly BankQuestion[] = Object.freeze([
-  ...PART_01,  // L0-L1: S1-S9
-  ...PART_02,  // L2-L3: S10-S15
-  ...PART_03,  // L4-L5: S16-S17
-  ...PART_04,  // L6-L7: S18-S20
+  ...PART_01,
+  ...PART_02,
+  ...PART_03,
+  ...PART_04,
 ]);
 
-/**
- * عدد الأسئلة الكلي.
- */
 export const BANK_V2_SIZE = SOROBAN_BANK_V2.length;
 
-/**
- * إحصاءات البنك.
- */
 export const BANK_V2_STATS = {
   part01: PART_01.length,
   part02: PART_02.length,
@@ -73,37 +73,22 @@ export const BANK_V2_STATS = {
 // دوال الاستعلام الأساسية
 // ═══════════════════════════════════════════════════════════
 
-/**
- * الحصول على سؤال بالمعرّف.
- */
 export function getQuestionById(id: string): BankQuestion | undefined {
   return SOROBAN_BANK_V2.find((q) => q.id === id);
 }
 
-/**
- * الحصول على أسئلة مستوى.
- */
 export function getQuestionsByLevel(levelId: string): BankQuestion[] {
   return SOROBAN_BANK_V2.filter((q) => q.levelId === levelId);
 }
 
-/**
- * الحصول على أسئلة مهارة.
- */
 export function getQuestionsBySkill(skillId: string): BankQuestion[] {
   return SOROBAN_BANK_V2.filter((q) => q.skillId === skillId);
 }
 
-/**
- * الحصول على أسئلة حركة.
- */
 export function getQuestionsByMovement(movement: string): BankQuestion[] {
   return SOROBAN_BANK_V2.filter((q) => q.movement === movement);
 }
 
-/**
- * الحصول على أسئلة مستوى + مهارة (الأكثر استخداماً).
- */
 export function getQuestionsByLevelSkill(
   levelId: string,
   skillId: string,
@@ -114,27 +99,18 @@ export function getQuestionsByLevelSkill(
 }
 
 // ═══════════════════════════════════════════════════════════
-// فلترة شاملة
+// الفلترة الشاملة
 // ═══════════════════════════════════════════════════════════
 
 export interface BankFilterV2 {
-  /** مستوى واحد أو أكثر (L0-L7) */
   levelIds?: string[];
-  /** مهارة واحدة أو أكثر (S1-S20) */
   skillIds?: string[];
-  /** حركات محددة */
   movements?: string[];
-  /** صعوبات محددة (1-5) */
   difficulties?: number[];
-  /** عمليات محددة */
   operations?: string[];
-  /** أسئلة مستثناة */
   excludeIds?: string[];
 }
 
-/**
- * فلترة البنك.
- */
 export function filterBankV2(filter: BankFilterV2): BankQuestion[] {
   let result: BankQuestion[] = [...SOROBAN_BANK_V2];
 
@@ -142,27 +118,22 @@ export function filterBankV2(filter: BankFilterV2): BankQuestion[] {
     const set = new Set(filter.levelIds);
     result = result.filter((q) => set.has(q.levelId));
   }
-
   if (filter.skillIds?.length) {
     const set = new Set(filter.skillIds);
     result = result.filter((q) => set.has(q.skillId));
   }
-
   if (filter.movements?.length) {
     const set = new Set(filter.movements);
     result = result.filter((q) => set.has(q.movement));
   }
-
   if (filter.difficulties?.length) {
     const set = new Set(filter.difficulties);
     result = result.filter((q) => set.has(q.difficulty));
   }
-
   if (filter.operations?.length) {
     const set = new Set(filter.operations);
     result = result.filter((q) => set.has(q.operation));
   }
-
   if (filter.excludeIds?.length) {
     const set = new Set(filter.excludeIds);
     result = result.filter((q) => !set.has(q.id));
@@ -173,77 +144,78 @@ export function filterBankV2(filter: BankFilterV2): BankQuestion[] {
 
 /**
  * سحب عشوائي موزون.
- * يُستخدم في:
- *   - تمرّن
- *   - أنزان
- *   - امتحان 1 / 2
+ *
+ * @param filter معايير الفلترة
+ * @param count العدد المطلوب
+ * @param seed البذرة
+ * @param usedIds معرفات مستخدمة (لمنع التكرار في نفس الجلسة)
  */
 export function sampleFromBankV2(
   filter: BankFilterV2,
   count: number,
   seed = Date.now(),
+  usedIds: string[] = [],
 ): BankQuestion[] {
-  const pool = filterBankV2(filter);
+  // استثنِ المستخدم
+  const pool = filterBankV2({
+    ...filter,
+    excludeIds: [...(filter.excludeIds ?? []), ...usedIds],
+  });
+
   if (pool.length === 0) return [];
 
   const rng = createRng(seed);
   const shuffled = shuffle([...pool], rng);
-
   return shuffled.slice(0, Math.min(count, shuffled.length));
 }
 
 // ═══════════════════════════════════════════════════════════
-// دوال مساعدة لشاشات التمرّن والأنزان
+// دوال مساعدة للشاشات
 // ═══════════════════════════════════════════════════════════
 
 /**
- * تحديد المهارة من رقم تمرّن/أنزان (0-7).
- *
- * تربط رقم التمرّن (0-7) بمهاراته في المستوى.
+ * تحديد المهارات من رقم تمرّن (0-7).
  */
 export function getSkillsForPracticeNum(num: number): string[] {
   const map: Record<number, string[]> = {
-    0: ["S1", "S2"],                    // L0: تمثيل
-    1: ["S3", "S4", "S5", "S6", "S7", "S8", "S9"], // L1: جمع/طرح كامل
-    2: ["S10", "S11", "S12"],           // L2: الضرب
-    3: ["S13", "S14", "S15"],           // L3: القسمة
-    4: ["S16"],                          // L4: جمع/طرح متقدم
-    5: ["S17"],                          // L5: ضرب/قسمة متقدم
-    6: ["S18"],                          // L6: عشرية
-    7: ["S19", "S20"],                   // L7: جذور
+    0: ["S1", "S2"],
+    1: ["S3", "S4", "S5", "S6", "S7", "S8", "S9"],
+    2: ["S10", "S11", "S12"],
+    3: ["S13", "S14", "S15"],
+    4: ["S16"],
+    5: ["S17"],
+    6: ["S18"],
+    7: ["S19", "S20"],
   };
   return map[num] ?? [];
 }
 
 /**
- * الحصول على أسئلة تمرّن حسب رقم المستوى.
+ * أسئلة تمرّن حسب رقم المستوى (0-7).
  */
 export function getPracticeQuestions(
   num: number,
   count: number,
   seed = Date.now(),
+  usedIds: string[] = [],
 ): BankQuestion[] {
   const skills = getSkillsForPracticeNum(num);
   if (skills.length === 0) return [];
 
-  return sampleFromBankV2({ skillIds: skills }, count, seed);
+  return sampleFromBankV2({ skillIds: skills }, count, seed, usedIds);
 }
 
 /**
- * الحصول على أسئلة امتحان القسم.
+ * أسئلة أنزان حسب رقم المستوى (0-7).
  *
- * القسم 1: L0-L3 (S1-S15)
- * القسم 2: L4-L7 (S16-S20)
+ * يستخدم نفس منطق التمرّن لكن مع timing مناسب للأنزان.
  */
-export function getCategoryExamQuestions(
-  category: "category-1" | "category-2",
+export function getAnzanQuestions(
+  num: number,
   count: number,
   seed = Date.now(),
+  usedIds: string[] = [],
 ): BankQuestion[] {
-  const filter: BankFilterV2 =
-    category === "category-1"
-      ? { levelIds: ["L0", "L1", "L2", "L3"] }
-      : { levelIds: ["L4", "L5", "L6", "L7"] };
-
-  return sampleFromBankV2(filter, count, seed);
+  // نفس المصدر — الفرق في طريقة العرض
+  return getPracticeQuestions(num, count, seed, usedIds);
 }
