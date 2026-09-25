@@ -6,7 +6,7 @@ import { useSound } from './hooks/useSound';
 import { useConfetti } from './hooks/useConfetti';
 import type { Screen as V1Screen, Role } from './types';
 import type { LevelId } from './store/progressStore';
-import PracticeScreen from './screens/PracticeScreen';
+
 // ═══ Screens ═══
 import WelcomeScreen from './screens/WelcomeScreen';
 import RoleSelection from './screens/RoleSelection';
@@ -19,6 +19,9 @@ import CategoryScreen from './screens/CategoryScreen';
 import LevelScreen from './screens/LevelScreen';
 import EnrichmentScreen from './screens/EnrichmentScreen';
 import PlacementTestScreen from './screens/PlacementTestScreen';
+import PracticeScreen from './screens/PracticeScreen';
+import AnzanScreen from './screens/AnzanScreen';
+import AudioAnzanScreen from './screens/AudioAnzanScreen';
 
 // ═══ Debug ═══
 import { DebugOverlay } from './components/DebugOverlay';
@@ -83,8 +86,6 @@ function ComingSoonScreen({
 
 function getComingSoonTitle(screen: string): string {
   const titles: Record<string, string> = {
-    practice: 'تمرّن',
-    anzan: 'أنزان',
     quests: 'المغامرات',
     soroban: 'السوروبان التفاعلي',
     multiplication: 'درس الضرب',
@@ -185,7 +186,6 @@ export default function App() {
     recommendedLevel: string,
     weakSkills: string[],
   ) => {
-    // حفظ النتيجة
     try {
       localStorage.setItem(
         'soroban_placement_result',
@@ -201,7 +201,6 @@ export default function App() {
       );
     } catch { /* ignore */ }
 
-    // الانتقال للقسم المناسب
     const isKids = ['L0', 'L1', 'L2', 'L3'].includes(recommendedLevel);
     setScreen(isKids ? 'category-kids' : 'category-teens');
   };
@@ -307,7 +306,7 @@ export default function App() {
           />
         );
 
-      // ═══ Levels ═══
+      // ═══ Levels (L0-L7) ═══
       case 'lesson-L0':
       case 'lesson-L1':
       case 'lesson-L2':
@@ -344,56 +343,94 @@ export default function App() {
           />
         );
 
-    // ═══ Practice (0-7) ═══
-case 'practice-0':
-case 'practice-1':
-case 'practice-2':
-case 'practice-3':
-case 'practice-4':
-case 'practice-5':
-case 'practice-6':
-case 'practice-7': {
-  const practiceNum = parseInt(
-    screen.replace('practice-', ''),
-    10,
-  );
+      // ═══ Practice (0-7) ═══
+      case 'practice-0':
+      case 'practice-1':
+      case 'practice-2':
+      case 'practice-3':
+      case 'practice-4':
+      case 'practice-5':
+      case 'practice-6':
+      case 'practice-7': {
+        const practiceNum = parseInt(screen.replace('practice-', ''), 10);
 
-  return (
-    <PracticeScreen
-      levelNum={practiceNum}
-      onBack={() => handleBackToCategory(
-        practiceNum <= 3 ? 'kids' : 'teens',
-      )}
-      onComplete={(passed, score) => {
-        // حفظ النتيجة
-        if (passed) {
-          try {
-            const raw = localStorage.getItem(
-              'soroban_passed_practice',
-            );
-            const arr = raw ? JSON.parse(raw) : [];
-            if (!arr.includes(practiceNum)) {
-              arr.push(practiceNum);
-              localStorage.setItem(
-                'soroban_passed_practice',
-                JSON.stringify(arr),
-              );
+        return (
+          <PracticeScreen
+            levelNum={practiceNum}
+            onBack={() =>
+              handleBackToCategory(practiceNum <= 3 ? 'kids' : 'teens')
             }
-          } catch { /* ignore */ }
-        }
-      }}
-      playSound={handleSound}
-      onXP={(amount) => {
-        // يمكن إضافة XP
-        console.log('XP:', amount);
-      }}
-      burst={_burst}
-    />
-  );
-}
-  // ═══ Coming Soon ═══
-      case 'practice':
-      case 'anzan':
+            onComplete={(passed, _score) => {
+              if (passed) {
+                try {
+                  const raw = localStorage.getItem('soroban_passed_practice');
+                  const arr = raw ? JSON.parse(raw) : [];
+                  if (!arr.includes(practiceNum)) {
+                    arr.push(practiceNum);
+                    localStorage.setItem(
+                      'soroban_passed_practice',
+                      JSON.stringify(arr),
+                    );
+                  }
+                } catch { /* ignore */ }
+              }
+            }}
+            playSound={handleSound}
+            onXP={(amount) => console.log('XP:', amount)}
+            burst={_burst}
+          />
+        );
+      }
+
+      // ═══ Anzan بصري (0-7) ═══
+      case 'anzan-0':
+      case 'anzan-1':
+      case 'anzan-2':
+      case 'anzan-3':
+      case 'anzan-4':
+      case 'anzan-5':
+      case 'anzan-6':
+      case 'anzan-7': {
+        const anzanNum = parseInt(screen.replace('anzan-', ''), 10);
+
+        return (
+          <AnzanScreen
+            levelNum={anzanNum}
+            onBack={() =>
+              handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
+            }
+            playSound={handleSound}
+            onXP={(amount) => console.log('XP:', amount)}
+            burst={_burst}
+          />
+        );
+      }
+
+      // ═══ Anzan سمعي (0-7) ═══
+      case 'audio-anzan-0':
+      case 'audio-anzan-1':
+      case 'audio-anzan-2':
+      case 'audio-anzan-3':
+      case 'audio-anzan-4':
+      case 'audio-anzan-5':
+      case 'audio-anzan-6':
+      case 'audio-anzan-7': {
+        const anzanNum = parseInt(screen.replace('audio-anzan-', ''), 10);
+
+        return (
+          <AudioAnzanScreen
+            levelNum={anzanNum}
+            onBack={() =>
+              handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
+            }
+            playSound={handleSound}
+            onXP={(amount) => console.log('XP:', amount)}
+            burst={_burst}
+          />
+        );
+      }
+
+      // ═══ Coming Soon ═══
       case 'quests':
       case 'soroban':
       case 'multiplication':
