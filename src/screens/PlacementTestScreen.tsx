@@ -339,10 +339,7 @@ export function PlacementTestScreen({
               value={userInput}
               onChange={(e) => {
                 // ✅ قبول الأرقام العربية واللاتينية
-                const cleaned = e.target.value.replace(
-                  isArabic ? /[^٠-٩]/g : /[^0-9]/g,
-                  '',
-                );
+                const cleaned = e.target.value.replace(/[^0-9٠-٩]/g, '');
                 setUserInput(cleaned);
               }}
               onKeyDown={(e) => {
