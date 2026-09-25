@@ -165,9 +165,9 @@ export default function App() {
   };
 
   const handleOpenLevel = (levelId: string) => {
-    setActiveLevelId(levelId);
-    setScreen('level');
-  };
+  setActiveLevelId(levelId as LevelId);
+  setScreen('level');
+};
 
   const handleBackToCurriculum = () => {
     setScreen('curriculum');
