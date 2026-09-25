@@ -7,30 +7,23 @@ import { useConfetti } from './hooks/useConfetti';
 import type { Screen as V1Screen, Role } from './types';
 import type { LevelId } from './store/progressStore';
 
-// ═══ v1 Screens ═══
+// ═══ Screens ═══
 import WelcomeScreen from './screens/WelcomeScreen';
 import RoleSelection from './screens/RoleSelection';
 import HeroDashboard from './screens/HeroDashboard';
 import GuardianDashboard from './screens/GuardianDashboard';
 import Header from './screens/Header';
 
-// ═══ v2 Screens ═══
-import CategorySelectScreen from './screens/CategorySelectScreen';
-import CurriculumScreen from './screens/CurriculumScreen';
-import EnrichmentScreen from './screens/EnrichmentScreen';
+// ═══ Category + Level ═══
+import CategoryScreen from './screens/CategoryScreen';
 import LevelScreen from './screens/LevelScreen';
+import EnrichmentScreen from './screens/EnrichmentScreen';
 
 // ═══ Debug ═══
 import { DebugOverlay } from './components/DebugOverlay';
 
 // ═══ Types ═══
-type AppScreen =
-  | V1Screen
-  | 'category-select'
-  | 'curriculum'
-  | 'enrichment'
-  | 'level'
-  | 'loading';
+type AppScreen = V1Screen | 'loading';
 
 // ═══ Constants ═══
 const WELCOME_STORAGE_KEY = 'soroban_welcome_seen';
@@ -87,6 +80,26 @@ function ComingSoonScreen({
   );
 }
 
+// ═══ Title Helper for Coming Soon ═══
+function getComingSoonTitle(screen: string): string {
+  const titles: Record<string, string> = {
+    'practice': 'تمرّن',
+    'anzan': 'أنزان',
+    'quests': 'المغامرات',
+    'soroban': 'السوروبان التفاعلي',
+    'multiplication': 'درس الضرب',
+    'secrets': 'الأسرار السحرية',
+    'cross-multiplication': 'الضرب التقاطعي',
+    'division': 'القسمة',
+    'certificate': 'الشهادة',
+    'final-exam': 'الامتحان النهائي',
+    'placement-test': 'اختبار تحديد المستوى',
+    'category-exam-1': 'امتحان القسم الأول',
+    'category-exam-2': 'امتحان القسم الثاني',
+  };
+  return titles[screen] || 'قيد التطوير';
+}
+
 // ═══ Main App ═══
 export default function App() {
   const [screen, setScreen] = useState<AppScreen>('loading');
@@ -105,7 +118,6 @@ export default function App() {
 
   useEffect(() => {
     if (!ready) return;
-
     if (shouldShowWelcome()) {
       setScreen('welcome');
     } else {
@@ -138,11 +150,6 @@ export default function App() {
   };
 
   const handleNavigate = (target: AppScreen) => {
-    // ✅ توجيه زر "التعلّم" القديم إلى منهج GPT الجديد
-    if (target === 'learn') {
-      setScreen('curriculum');
-      return;
-    }
     setScreen(target);
   };
 
@@ -166,21 +173,12 @@ export default function App() {
   };
 
   const handleOpenLevel = (levelId: string) => {
-  setActiveLevelId(levelId as LevelId);
-  setScreen('level');
-};
-
-  const handleBackToCurriculum = () => {
-    setScreen('curriculum');
+    setActiveLevelId(levelId as LevelId);
+    setScreen(`lesson-${levelId}` as AppScreen);
   };
 
-  const handleOpenEnrichment = () => {
-    setScreen('enrichment');
-  };
-
-  const handleOpenEnrichmentModule = (_id: string) => {
-    // TODO: open enrichment lesson
-    console.log('Open enrichment module:', _id);
+  const handleBackToCategory = (category: 'kids' | 'teens') => {
+    setScreen(category === 'kids' ? 'category-kids' : 'category-teens');
   };
 
   // ═══ Loading Screen ═══
@@ -245,9 +243,7 @@ export default function App() {
             <GuardianDashboard
               onBack={handleBackToRole}
               playSound={handleSound}
-              childName={
-                localStorage.getItem('soroban_child_name') || 'البطل'
-              }
+              childName={localStorage.getItem('soroban_child_name') || 'البطل'}
               childXP={stats.xp}
               childStreak={stats.streak}
               childLevel={stats.level}
@@ -257,42 +253,63 @@ export default function App() {
           </>
         );
 
-      // ═══ v2 Curriculum Flow ═══
-      case 'category-select':
-        return <CategorySelectScreen onSelect={() => setScreen('curriculum')} />;
-
-      case 'curriculum':
+      // ═══ Categories ═══
+      case 'category-kids':
         return (
-          <CurriculumScreen
+          <CategoryScreen
             category="kids"
-            onBack={handleBackToHero}
-            onOpenLevel={handleOpenLevel}
-            onOpenEnrichment={handleOpenEnrichment}
+            onNavigate={(target) => handleNavigate(target as AppScreen)}
+            playSound={handleSound}
           />
         );
 
-      case 'enrichment':
+      case 'category-teens':
         return (
-          <EnrichmentScreen
-            category="kids"
-            onBack={handleBackToCurriculum}
-            onOpenModule={handleOpenEnrichmentModule}
+          <CategoryScreen
+            category="teens"
+            onNavigate={(target) => handleNavigate(target as AppScreen)}
+            playSound={handleSound}
           />
         );
 
-      case 'level':
-        if (!activeLevelId) {
-          setScreen('curriculum');
-          return null;
-        }
+      // ═══ Levels (L0-L7) ═══
+      case 'lesson-L0':
+      case 'lesson-L1':
+      case 'lesson-L2':
+      case 'lesson-L3':
+      case 'lesson-L4':
+      case 'lesson-L5':
+      case 'lesson-L6':
+      case 'lesson-L7': {
+        const levelId = screen.replace('lesson-', '') as LevelId;
+        const isKids = ['L0', 'L1', 'L2', 'L3'].includes(levelId);
+
         return (
           <LevelScreen
-            levelId={activeLevelId}
-            onBack={handleBackToCurriculum}
+            levelId={levelId}
+            onNavigate={(target) => handleNavigate(target as AppScreen)}
+            onBack={() => handleBackToCategory(isKids ? 'kids' : 'teens')}
+            playSound={handleSound}
+          />
+        );
+      }
+
+      // ═══ Enrichment ═══
+      case 'enrichment-1':
+      case 'enrichment-2':
+        return (
+          <EnrichmentScreen
+            category={screen === 'enrichment-1' ? 'kids' : 'teens'}
+            onBack={() =>
+              handleBackToCategory(screen === 'enrichment-1' ? 'kids' : 'teens')
+            }
+            onOpenModule={() => {
+              /* TODO: open enrichment module */
+            }}
           />
         );
 
-      // ═══ v1 Screens (قيد النقل) ═══
+      // ═══ Coming Soon (سيبني لاحقاً) ═══
       case 'practice':
       case 'anzan':
       case 'quests':
@@ -303,30 +320,13 @@ export default function App() {
       case 'division':
       case 'certificate':
       case 'final-exam':
+      case 'placement-test':
+      case 'category-exam-1':
+      case 'category-exam-2':
         return (
           <ComingSoonScreen
             onBack={handleBackToHero}
-            title={
-              screen === 'practice'
-                ? 'التدريب'
-                : screen === 'anzan'
-                  ? 'الأنزان'
-                  : screen === 'quests'
-                    ? 'المغامرات'
-                    : screen === 'soroban'
-                      ? 'السوروبان التفاعلي'
-                      : screen === 'multiplication'
-                        ? 'درس الضرب'
-                        : screen === 'secrets'
-                          ? 'الأسرار السحرية'
-                          : screen === 'cross-multiplication'
-                            ? 'الضرب التقاطعي'
-                            : screen === 'division'
-                              ? 'القسمة'
-                              : screen === 'certificate'
-                                ? 'الشهادة'
-                                : 'الامتحان النهائي'
-            }
+            title={getComingSoonTitle(screen)}
           />
         );
 
