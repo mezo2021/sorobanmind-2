@@ -65,9 +65,13 @@ export {
   PASS_THRESHOLD,
 } from "./placement-engine";
 
-// ═══════════════════════════════════════════════════════════
 // الإعدادات (Constants)
-// ═══════════════════════════════════════════════════════════
+
+export const PRACTICE_QUESTION_COUNT = 5;
+export const ANZAN_VISUAL_COUNT = 5;
+export const ANZAN_AUDIO_COUNT = 5;
+export const WEAK_SKILL_RATIO = 0.7;
+export const WEAK_SKILL_THRESHOLD = 50;
 
 export const PRACTICE_QUESTION_COUNT = 5;
 export const ANZAN_VISUAL_COUNT = 5;
