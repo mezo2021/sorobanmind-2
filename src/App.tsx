@@ -182,28 +182,59 @@ export default function App() {
   };
 
   // ═══ Placement Test Handler ═══
-  const handlePlacementComplete = (
-    recommendedLevel: string,
-    weakSkills: string[],
-  ) => {
-    try {
-      localStorage.setItem(
-        'soroban_placement_result',
-        JSON.stringify({
-          recommendedLevel,
-          weakSkills,
-          date: Date.now(),
-        }),
-      );
-      localStorage.setItem(
-        'soroban_placement_last_attempt',
-        String(Date.now()),
-      );
-    } catch { /* ignore */ }
+const handlePlacementComplete = (
+  recommendedLevel: string,
+  weakSkills: string[],
+) => {
+  try {
+    const LEVEL_ORDER = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7'];
+    const recommendedIdx = LEVEL_ORDER.indexOf(recommendedLevel);
 
-    const isKids = ['L0', 'L1', 'L2', 'L3'].includes(recommendedLevel);
-    setScreen(isKids ? 'category-kids' : 'category-teens');
-  };
+    // ✅ 1. المستويات السابقة → مكتملة (A)
+    const previousLevels = recommendedIdx > 0
+      ? LEVEL_ORDER.slice(0, recommendedIdx)
+      : [];
+
+    // ✅ 2. إضافة recommendedLevel أيضاً (C — يُفتح كـ "ابدأ")
+    const newCompletedLevels = [...previousLevels];
+
+    localStorage.setItem(
+      'soroban_completed_levels',
+      JSON.stringify(newCompletedLevels),
+    );
+
+    // ✅ 3. حفظ المهارات الضعيفة (C)
+    localStorage.setItem(
+      'soroban_placement_weak_skills',
+      JSON.stringify(weakSkills),
+    );
+
+    // ✅ 4. حفظ المستوى المُوصى به
+    localStorage.setItem(
+      'soroban_placement_recommended',
+      recommendedLevel,
+    );
+
+    // ✅ 5. حفظ النتيجة كاملة
+    localStorage.setItem(
+      'soroban_placement_result',
+      JSON.stringify({
+        recommendedLevel,
+        weakSkills,
+        date: Date.now(),
+      }),
+    );
+
+    // ✅ 6. حفظ آخر محاولة
+    localStorage.setItem(
+      'soroban_placement_last_attempt',
+      String(Date.now()),
+    );
+  } catch { /* ignore */ }
+
+  const isKids = ['L0', 'L1', 'L2', 'L3'].includes(recommendedLevel);
+  setScreen(isKids ? 'category-kids' : 'category-teens');
+};
 
   // ═══ Loading Screen ═══
   if (!ready || screen === 'loading') {
