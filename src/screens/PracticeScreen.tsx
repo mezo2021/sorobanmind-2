@@ -6,17 +6,16 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, CheckCircle2, Trophy, RotateCcw, XCircle,
-  Clock, BookOpen, AlertCircle,
+  Clock, BookOpen, AlertCircle, Play,
 } from 'lucide-react';
 
-import { Soroban2D5 } from './soroban2d5/Soroban2D5';
-import { SorobanaCompanion } from './SorobanaCompanion';
+import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
+import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 
 import {
   getPracticeQuestions,
   recordWeaknessAttempt,
-  PRACTICE_QUESTION_COUNT,
   type BankQuestion,
 } from '@/data/bank-v2';
 
@@ -40,7 +39,7 @@ interface PracticeScreenProps {
 // ═══════════════════════════════════════════════════════════
 
 const XP_PER_CORRECT = 5;
-const PASS_THRESHOLD = 75; // 75% للنجاح
+const PASS_THRESHOLD = 75;
 
 // ═══════════════════════════════════════════════════════════
 // أدوات
@@ -56,12 +55,6 @@ function getColumnsForValue(value: number): number {
   if (abs < 1000) return 3;
   if (abs < 10000) return 4;
   return 5;
-}
-
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -83,8 +76,6 @@ export function PracticeScreen({
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [sessionTime, setSessionTime] = useState(0);
-  const [usedIds, setUsedIds] = useState<string[]>([]);
 
   const sorobana = useSorobanaVoice();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -106,33 +97,25 @@ export function PracticeScreen({
     setAbacusValue(0);
     setFeedback('idle');
     setScore(0);
-    setUsedIds(qs.map((q) => q.id));
-
-    // التوقيت: من أول سؤال
-    const firstTiming = qs[0].timing;
-    setTimeLeft(Math.round(firstTiming.maxMs / 1000));
-    setSessionTime(0);
-
+    setTimeLeft(Math.round(qs[0].timing.maxMs / 1000));
     setPhase('running');
     playSound('click');
   }, [levelNum, playSound]);
 
   // ═══════════════════════════════════════════════════════
-  // العدّاد — لكل سؤال + الإجمالي
+  // العدّاد
   // ═══════════════════════════════════════════════════════
   useEffect(() => {
     if (phase !== 'running' || !currentQ) return;
     if (feedback !== 'idle') return;
 
     if (timeLeft <= 0) {
-      // انتهى الوقت → انتقال تلقائي
       handleTimeout();
       return;
     }
 
     timerRef.current = setTimeout(() => {
       setTimeLeft((t) => t - 1);
-      setSessionTime((s) => s + 1);
     }, 1000);
 
     return () => {
@@ -147,7 +130,6 @@ export function PracticeScreen({
   const handleTimeout = useCallback(() => {
     if (!currentQ) return;
 
-    // تسجيل الخطأ (بطيء)
     recordWeaknessAttempt(currentQ.skillId, false, currentQ.timing.maxMs);
     playSound('error');
     setFeedback('wrong');
@@ -166,7 +148,6 @@ export function PracticeScreen({
     const timeMs = (Math.round(currentQ.timing.maxMs / 1000) - timeLeft) * 1000;
     const isCorrect = abacusValue === currentQ.correctAnswer;
 
-    // تسجيل في bank-v2
     recordWeaknessAttempt(currentQ.skillId, isCorrect, timeMs);
 
     if (isCorrect) {
@@ -198,18 +179,16 @@ export function PracticeScreen({
       const newScore = wasCorrect ? score + 1 : score;
 
       if (currentIdx + 1 >= questions.length) {
-        // انتهت الجلسة
         const passed = (newScore / questions.length) * 100 >= PASS_THRESHOLD;
         setScore(newScore);
         setPhase('result');
         playSound(passed ? 'levelup' : 'whoosh');
         onComplete?.(passed, newScore);
       } else {
+        const nextQ = questions[currentIdx + 1];
         setCurrentIdx((i) => i + 1);
         setScore(newScore);
-        const nextQ = questions[currentIdx + 1];
         setTimeLeft(Math.round(nextQ.timing.maxMs / 1000));
-        setUsedIds((prev) => [...prev, nextQ.id]);
       }
     },
     [currentIdx, questions, score, playSound, sorobana, onComplete],
