@@ -1,20 +1,12 @@
 // src/data/bank-linked.ts
-// يربط البنوك الثلاثة:
-// 1) bank-supplement (180) — البنك التكميلي (جديد)
-// 2) bank-raw (200) — من الكتاب (خام)
-// 3) bank (500) — البرمجي المولّد
-//
-// ⚠️ ملاحظة: المستوى في bank المولّد (L01-L07)
-//    سيُعاد ترقيمه لاحقاً ليتوافق مع curriculum (L03-L16)
-//    عبر طبقة bridge داخل هذا الملف.
+// يربط البنوك الثلاثة + Bridge لترجمة L01-L07 → L0-L7
 
 import { SOROBAN_BANK as PROGRAMMATIC_BANK } from "./bank";
 import { adaptAllRawQuestions } from "./bank-adapter";
-import { SUPPLEMENT_BANK } from "./bank-supplement";
 import type { BankQuestion } from "./bank";
 
 // ═══════════════════════════════════════════════════════════
-// إعادة تصدير الأنواع والدوال المساعدة من bank.ts
+// إعادة تصدير الأنواع والدوال من bank.ts
 // ═══════════════════════════════════════════════════════════
 
 export type {
@@ -32,43 +24,40 @@ export {
 } from "./bank";
 
 // ═══════════════════════════════════════════════════════════
-// طبقة ترجمة المستويات (Bridge)
+// Bridge: ترجمة المستويات القديمة (L01-L07) → الجديدة (L0-L7)
 // ═══════════════════════════════════════════════════════════
-//
-// bank المولّد يستخدم ترقيماً قديماً (L01-L07)
-// curriculum يستخدم ترقيماً جديداً (L03-L16)
-//
-// هذه الخريطة تترجم المستوى القديم إلى المستوى الجديد
-// حتى تظهر أسئلة البنك المولّد في الدرس الصحيح.
 
+/**
+ * خريطة ترجمة مستوى bank.ts (القديم) → curriculum.ts (الجديد)
+ *
+ * bank.ts يستخدم L01-L07 (بصيغة قديمة)
+ * المنهج الجديد يستخدم L0-L7
+ */
 const LEVEL_BRIDGE: Record<string, string> = {
-  // bank.ts (قديم) → curriculum (جديد)
-  L01: "L03", // جمع/طرح مباشر → الجمع المباشر
-  L02: "L04", // أصدقاء 5 جمع → مكملات 5 جمع
-  L03: "L06", // أصدقاء 10 جمع → مكملات 10 جمع
-  L04: "L10", // قواعد مركبة → عمليات مختلطة
-  L05: "L08", // كبير/متعدد → جمع متعدد الخانات
-  L06: "L15", // ضرب → الضرب
-  L07: "L16", // قسمة → القسمة
+  // bank.ts (قديم) → المنهج الجديد
+  L01: "L1",  // جمع/طرح مباشر → L1
+  L02: "L1",  // أصدقاء 5 جمع → L1
+  L03: "L1",  // أصدقاء 10 جمع → L1
+  L04: "L4",  // قواعد مركبة → L4
+  L05: "L4",  // كبير/متعدد → L4
+  L06: "L2",  // الضرب → L2
+  L07: "L3",  // القسمة → L3
 };
 
 /**
- * ترجمة مستوى إلى المستوى المعياري في curriculum.
- * إذا لم يكن في الخريطة، يُعاد كما هو.
+ * ترجمة مستوى إلى المستوى المعياري الجديد.
  */
 function bridgeLevel(levelId: string): string {
   return LEVEL_BRIDGE[levelId] ?? levelId;
 }
 
 /**
- * تطبيق الجسر على سؤال واحد.
+ * تطبيق الجسر على سؤال.
  */
 function applyBridge(question: BankQuestion): BankQuestion {
   const bridged = bridgeLevel(question.levelId);
 
-  if (bridged === question.levelId) {
-    return question;
-  }
+  if (bridged === question.levelId) return question;
 
   return {
     ...question,
@@ -83,123 +72,74 @@ function applyBridge(question: BankQuestion): BankQuestion {
 // بناء البنوك الفرعية
 // ═══════════════════════════════════════════════════════════
 
-/** البنك التكميلي (180) — بدون ترجمة (مُصنَّف مسبقاً) */
-const SUPPLEMENT: BankQuestion[] = [...SUPPLEMENT_BANK];
-
-/** البنك الخام المحوّل (200) — بدون ترجمة */
+/** البنك الخام المحوَّل (200) */
 const RAW_BANK: BankQuestion[] = adaptAllRawQuestions();
 
-/** البنك المولّد (500) — مع ترجمة المستوى */
+/** البنك المولَّد (500) مع ترجمة المستوى */
 const BRIDGED_PROGRAMMATIC: BankQuestion[] = PROGRAMMATIC_BANK.map(applyBridge);
 
 // ═══════════════════════════════════════════════════════════
 // البنك الكامل الموحّد
 // ═══════════════════════════════════════════════════════════
-//
-// الأولوية (من الأعلى إلى الأقل):
-// 1) SUPPLEMENT (180) — أسئلة مخصّصة للفراغات
-// 2) RAW (200) — أسئلة من الكتاب
-// 3) PROGRAMMATIC (500) — أسئلة مولّدة
-//
-// المجموع = 880 سؤالاً
 
 export const SOROBAN_BANK: readonly BankQuestion[] = Object.freeze([
-  ...SUPPLEMENT,
   ...RAW_BANK,
   ...BRIDGED_PROGRAMMATIC,
 ]);
 
 /**
- * عدد الأسئلة الكلي في البنك الموحّد.
+ * عدد الأسئلة الكلي.
  */
 export const BANK_SIZE = SOROBAN_BANK.length;
 
 /**
- * إحصاءات البنك (للاختبار).
+ * إحصاءات البنك.
  */
 export const BANK_STATS = {
-  supplement: SUPPLEMENT.length,
   raw: RAW_BANK.length,
   programmatic: BRIDGED_PROGRAMMATIC.length,
   total: SOROBAN_BANK.length,
 } as const;
 
 // ═══════════════════════════════════════════════════════════
-// دوال الاستعلام (تعمل على البنك الكامل)
+// دوال الاستعلام
 // ═══════════════════════════════════════════════════════════
 
-/**
- * الحصول على سؤال بالمعرّف.
- */
 export function getQuestionById(id: string): BankQuestion | undefined {
   return SOROBAN_BANK.find((q) => q.id === id);
 }
 
-/**
- * الحصول على أسئلة مستوى معين.
- *
- * يعمل بعد تطبيق الجسر — أي بوحدات curriculum.
- */
 export function getQuestionsByLevel(levelId: string): BankQuestion[] {
   return SOROBAN_BANK.filter((q) => q.levelId === levelId);
 }
 
-/**
- * الحصول على أسئلة مهارة معينة.
- */
 export function getQuestionsBySkill(skillId: string): BankQuestion[] {
   return SOROBAN_BANK.filter((q) => q.skillId === skillId);
 }
 
-/**
- * الحصول على أسئلة قاعدة معينة.
- */
 export function getQuestionsByRule(ruleId: string): BankQuestion[] {
   return SOROBAN_BANK.filter((q) => q.ruleId === ruleId);
 }
 
-/**
- * الحصول على أسئلة حركة معينة.
- */
 export function getQuestionsByMovement(movement: string): BankQuestion[] {
   return SOROBAN_BANK.filter((q) => q.movement === movement);
 }
 
 // ═══════════════════════════════════════════════════════════
-// دوال مساعدة للفلترة المتقدمة
+// فلترة شاملة (لأقسام: تمرّن، أنزان، امتحان)
 // ═══════════════════════════════════════════════════════════
 
-/**
- * فلترة شاملة — للاستخدام في أقسام:
- * - تمرّن (Practice)
- * - أنزان (Anzan)
- * - امتحانات (Exams)
- */
 export interface BankFilter {
-  /** مستويات محددة */
   levelIds?: string[];
-
-  /** مهارات محددة */
   skillIds?: string[];
-
-  /** قواعد محددة */
   ruleIds?: string[];
-
-  /** حركات محددة */
   movements?: string[];
-
-  /** صعوبات محددة */
   difficulties?: number[];
-
-  /** أسئلة يجب استثناؤها */
   excludeIds?: string[];
-
-  /** مصدر محدد */
-  sources?: Array<"supplement" | "raw" | "programmatic">;
 }
 
 /**
- * فلترة البنك وفق معايير.
+ * فلترة البنك.
  */
 export function filterBank(filter: BankFilter): BankQuestion[] {
   let result: BankQuestion[] = [...SOROBAN_BANK];
@@ -239,7 +179,7 @@ export function filterBank(filter: BankFilter): BankQuestion[] {
 
 /**
  * سحب عشوائي موزون من البنك.
- * يُستخدم في الامتحانات.
+ * يُستخدم في الامتحانات والأنزان.
  */
 export function sampleFromBank(
   filter: BankFilter,
