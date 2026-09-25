@@ -1,13 +1,17 @@
 // src/screens/PlacementTestScreen.tsx
 // شاشة امتحان تحديد المستوى (Placement Test)
 // 40 سؤالاً — 20 دقيقة — 200 نقطة
+// ✅ يدعم نمط الأرقام (عربي / لاتيني)
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight, Clock, Trophy, CheckCircle2, XCircle,
-  Target, Sparkles, Play,
+  Target, Sparkles, Play, Type,
 } from 'lucide-react';
+
+import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { formatText, formatNumber } from '@/utils/numberStyle';
 
 import {
   buildPlacementTest,
@@ -39,10 +43,6 @@ const TOTAL_TIME_SEC = 20 * 60;
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
-function toArabicNumber(value: number | string): string {
-  return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
-}
-
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
@@ -67,6 +67,10 @@ export function PlacementTestScreen({
   const [result, setResult] = useState<PlacementResult | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // ✅ نمط الأرقام
+  const { style: numberStyle, toggleStyle } = useNumberStyleStore();
+  const isArabic = numberStyle === 'arabic';
 
   // ─── بدء الامتحان ───
   const startTest = useCallback(() => {
@@ -148,10 +152,41 @@ export function PlacementTestScreen({
               امتحان تحديد المستوى
             </h2>
             <p className="text-sm text-white/50 font-body">
-              اختبار شامل من ٤٠ سؤالاً
+              اختبار شامل من {formatNumber(40, numberStyle)} سؤالاً
             </p>
           </div>
           <Target className="w-6 h-6 text-gold-300" />
+        </div>
+
+        {/* ✅ زر تبديل نمط الأرقام */}
+        <div className="glass-card p-4 mb-6">
+          <p className="text-xs text-white/60 font-body mb-3 text-center">
+            اختر نمط الأرقام
+          </p>
+          <div className="flex gap-2 bg-white/5 p-1 rounded-2xl">
+            <button
+              type="button"
+              onClick={() => { playSound('click'); if (!isArabic) toggleStyle(); }}
+              className={`flex-1 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
+                isArabic
+                  ? 'bg-gradient-to-l from-emerald-500 to-teal-600 text-white shadow-lg'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <span className="text-2xl">١ ٢ ٣</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { playSound('click'); if (isArabic) toggleStyle(); }}
+              className={`flex-1 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
+                !isArabic
+                  ? 'bg-gradient-to-l from-blue-500 to-indigo-600 text-white shadow-lg'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <span className="text-2xl">3 2 1</span>
+            </button>
+          </div>
         </div>
 
         <motion.div
@@ -169,23 +204,33 @@ export function PlacementTestScreen({
 
           <div className="space-y-3 text-sm text-white/80 font-body">
             <div className="flex items-start gap-3">
-              <span className="text-gold-300 font-bold shrink-0">١.</span>
-              <p>٤٠ سؤالاً من كل المستويات (L0 → L7)</p>
+              <span className="text-gold-300 font-bold shrink-0">
+                {formatNumber(1, numberStyle)}.
+              </span>
+              <p>{formatNumber(40, numberStyle)} سؤالاً من كل المستويات (L0 → L7)</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-gold-300 font-bold shrink-0">٢.</span>
-              <p>الزمن الإجمالي: ٢٠ دقيقة فقط</p>
+              <span className="text-gold-300 font-bold shrink-0">
+                {formatNumber(2, numberStyle)}.
+              </span>
+              <p>الزمن الإجمالي: {formatNumber(20, numberStyle)} دقيقة فقط</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-gold-300 font-bold shrink-0">٣.</span>
-              <p>٢٠٠ نقطة كحد أقصى → ١٠٠ درجة نهائية</p>
+              <span className="text-gold-300 font-bold shrink-0">
+                {formatNumber(3, numberStyle)}.
+              </span>
+              <p>{formatNumber(200, numberStyle)} نقطة كحد أقصى → {formatNumber(100, numberStyle)} درجة نهائية</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-gold-300 font-bold shrink-0">٤.</span>
-              <p>عتبة النجاح لكل مستوى: ٨٠٪ (٢٠/٢٥ نقطة)</p>
+              <span className="text-gold-300 font-bold shrink-0">
+                {formatNumber(4, numberStyle)}.
+              </span>
+              <p>عتبة النجاح لكل مستوى: {formatNumber(80, numberStyle)}٪</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-gold-300 font-bold shrink-0">٥.</span>
+              <span className="text-gold-300 font-bold shrink-0">
+                {formatNumber(5, numberStyle)}.
+              </span>
               <p>المستوى المُوصى به = أول مستوى ترسب فيه</p>
             </div>
           </div>
@@ -220,18 +265,33 @@ export function PlacementTestScreen({
     const progress = ((currentIdx + 1) / questions.length) * 100;
     const timeWarning = timeLeft <= 60;
 
+    // ✅ تنسيق السؤال حسب النمط
+    const formattedPrompt = formatText(
+      q.prompt.replace(/ = ؟$/, ''),
+      numberStyle,
+    );
+
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto min-h-screen flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1">
             <h2 className="text-lg font-bold text-white">
-              السؤال {toArabicNumber(currentIdx + 1)} / {toArabicNumber(questions.length)}
+              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-xs text-white/50 font-body">
               {getLevelName(q.levelId)} · {q.skillId}
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={() => { playSound('click'); toggleStyle(); }}
+            className="p-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 transition"
+            title="تبديل نمط الأرقام"
+          >
+            <Type className="w-4 h-4 text-white/70" />
+          </button>
 
           <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${
             timeWarning
@@ -264,8 +324,12 @@ export function PlacementTestScreen({
             animate={{ opacity: 1, scale: 1 }}
             className="glass-card p-6 sm:p-8 w-full text-center mb-6"
           >
-            <p className="text-4xl sm:text-5xl font-black font-display text-white mb-8" dir="ltr">
-              {q.prompt.replace(/ = ؟$/, '')} = ؟
+            {/* ✅ السؤال — يتبع النمط والاتجاه */}
+            <p
+              className="text-4xl sm:text-5xl font-black font-display text-white mb-8"
+              dir={isArabic ? 'rtl' : 'ltr'}
+            >
+              {formattedPrompt} = ؟
             </p>
 
             <input
@@ -273,14 +337,25 @@ export function PlacementTestScreen({
               type="text"
               inputMode="numeric"
               value={userInput}
-              onChange={(e) => setUserInput(e.target.value.replace(/[^0-9]/g, ''))}
+              onChange={(e) => {
+                // ✅ قبول الأرقام العربية واللاتينية
+                const cleaned = e.target.value.replace(
+                  isArabic ? /[^٠-٩]/g : /[^0-9]/g,
+                  '',
+                );
+                setUserInput(cleaned);
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && userInput !== '') {
-                  submitAnswer(parseInt(userInput, 10));
+                  // ✅ تحويل الإدخال إلى رقم
+                  const latin = userInput.replace(/[٠-٩]/g, (d) =>
+                    String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)),
+                  );
+                  submitAnswer(parseInt(latin, 10));
                 }
               }}
-              placeholder="أدخل الإجابة"
-              dir="ltr"
+              placeholder={isArabic ? 'أدخل الإجابة' : 'Enter answer'}
+              dir={isArabic ? 'rtl' : 'ltr'}
               className="w-full bg-slate-800 border-2 border-gold-500/50 rounded-2xl px-4 py-4 text-center text-3xl font-bold text-white outline-none focus:border-gold-400 transition"
             />
 
@@ -288,7 +363,10 @@ export function PlacementTestScreen({
               type="button"
               onClick={() => {
                 if (userInput !== '') {
-                  submitAnswer(parseInt(userInput, 10));
+                  const latin = userInput.replace(/[٠-٩]/g, (d) =>
+                    String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)),
+                  );
+                  submitAnswer(parseInt(latin, 10));
                 }
               }}
               disabled={userInput === ''}
@@ -347,7 +425,7 @@ export function PlacementTestScreen({
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
               <p className="text-sm text-white/60 font-body">النتيجة الكلية</p>
               <p className="text-4xl font-black text-white font-display mt-1">
-                {toArabicNumber(result.totalScore)}٪
+                {formatNumber(result.totalScore, numberStyle)}٪
               </p>
             </div>
           </div>
@@ -381,7 +459,7 @@ export function PlacementTestScreen({
                   <span className={`text-xs font-bold ${
                     lvl.passed ? 'text-emerald-300' : 'text-red-300'
                   }`}>
-                    {toArabicNumber(lvl.correct)}/{toArabicNumber(lvl.total)} · {toArabicNumber(lvl.percentage)}٪
+                    {formatNumber(lvl.correct, numberStyle)}/{formatNumber(lvl.total, numberStyle)} · {formatNumber(lvl.percentage, numberStyle)}٪
                   </span>
                 </div>
                 <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
