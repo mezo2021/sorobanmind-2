@@ -1,7 +1,6 @@
 // src/screens/PracticeScreen.tsx
 // شاشة التمرين — 5 أسئلة من bank-v2
-// محاولة واحدة — انتقال تلقائي — تسجيل الضعف
-// ✅ يدعم نمط الأرقام (عربي / لاتيني)
+// ✅ يدعم نمط الأرقام + AdaptiveFeedback + Mastery Badges
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,8 +11,11 @@ import {
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
+import { AdaptiveFeedback, type SkillPerformance } from '@/components/AdaptiveFeedback';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
+import { useProgressStore } from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { useMasteryBadgesStore, classifySpeed } from '@/store/masteryBadgesStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 
 import {
@@ -35,6 +37,13 @@ interface PracticeScreenProps {
   playSound: (type: 'click' | 'success' | 'error' | 'whoosh' | 'levelup') => void;
   onXP?: (amount: number) => void;
   burst?: (x?: number, y?: number) => void;
+}
+
+interface PerfStats {
+  correct: number;
+  attempts: number;
+  totalTimeMs: number;
+  answerMs: number;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -74,13 +83,23 @@ export function PracticeScreen({
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [performances, setPerformances] = useState<SkillPerformance[]>([]);
 
   const sorobana = useSorobanaVoice();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const perfRef = useRef<Map<string, PerfStats>>(new Map());
+
+  // ✅ progressStore
+  const addXP = useProgressStore((s) => s.addXP);
+  const markPracticePassed = useProgressStore((s) => s.markPracticePassed);
+  const updateStreak = useProgressStore((s) => s.updateStreak);
 
   // ✅ نمط الأرقام
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic';
+
+  // ✅ شارات المهارات
+  const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
 
   const currentQ = questions[currentIdx];
 
@@ -94,11 +113,15 @@ export function PracticeScreen({
       return;
     }
 
+    // ✅ تصفير تتبّع الأداء
+    perfRef.current = new Map();
+
     setQuestions(qs);
     setCurrentIdx(0);
     setAbacusValue(0);
     setFeedback('idle');
     setScore(0);
+    setPerformances([]);
     setTimeLeft(Math.round(qs[0].timing.maxMs / 1000));
     setPhase('running');
     playSound('click');
@@ -126,17 +149,56 @@ export function PracticeScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, timeLeft, feedback, currentQ]);
 
+  // ═══════════════════════════════════════════════════════
+  // تسجيل الأداء (داخلي)
+  // ═══════════════════════════════════════════════════════
+  const trackPerformance = useCallback(
+    (isCorrect: boolean, timeMs: number) => {
+      if (!currentQ) return;
+
+      const skillId = currentQ.skillId;
+      const existing = perfRef.current.get(skillId) ?? {
+        correct: 0,
+        attempts: 0,
+        totalTimeMs: 0,
+        answerMs: currentQ.timing.answerMs,
+      };
+
+      existing.attempts += 1;
+      if (isCorrect) existing.correct += 1;
+      existing.totalTimeMs += timeMs;
+
+      perfRef.current.set(skillId, existing);
+
+      // ✅ شارة إذا قياسي
+      if (isCorrect) {
+        const cls = classifySpeed(timeMs, currentQ.timing.answerMs);
+        if (cls === 'mastery') {
+          awardBadge(skillId, timeMs, currentQ.timing.answerMs);
+        }
+      }
+    },
+    [currentQ, awardBadge],
+  );
+
+  // ═══════════════════════════════════════════════════════
+  // عند انتهاء الوقت
+  // ═══════════════════════════════════════════════════════
   const handleTimeout = useCallback(() => {
     if (!currentQ) return;
 
-    recordWeaknessAttempt(currentQ.skillId, false, currentQ.timing.maxMs);
+    const timeMs = currentQ.timing.maxMs;
+
+    recordWeaknessAttempt(currentQ.skillId, false, timeMs);
+    trackPerformance(false, timeMs);
+
     playSound('error');
     setFeedback('wrong');
     sorobana.speakWrong();
 
     setTimeout(() => nextQuestion(false), 1500);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQ, playSound, sorobana]);
+  }, [currentQ, playSound, sorobana, trackPerformance]);
 
   // ═══════════════════════════════════════════════════════
   // التحقق
@@ -148,6 +210,7 @@ export function PracticeScreen({
     const isCorrect = abacusValue === currentQ.correctAnswer;
 
     recordWeaknessAttempt(currentQ.skillId, isCorrect, timeMs);
+    trackPerformance(isCorrect, timeMs);
 
     if (isCorrect) {
       setScore((s) => s + 1);
@@ -155,6 +218,8 @@ export function PracticeScreen({
       playSound('success');
       sorobana.speakCorrect();
       onXP?.(XP_PER_CORRECT);
+      addXP(XP_PER_CORRECT);
+      updateStreak();
       burst?.(0.5, 0.5);
       setTimeout(() => nextQuestion(true), 1200);
     } else {
@@ -164,7 +229,26 @@ export function PracticeScreen({
       setTimeout(() => nextQuestion(false), 1500);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQ, abacusValue, timeLeft, feedback, playSound, sorobana, onXP, burst]);
+  }, [currentQ, abacusValue, timeLeft, feedback, playSound, sorobana, onXP, burst, addXP, updateStreak, trackPerformance]);
+
+  // ═══════════════════════════════════════════════════════
+  // بناء قائمة الأداء النهائية
+  // ═══════════════════════════════════════════════════════
+  const buildPerformances = useCallback((): SkillPerformance[] => {
+    const list: SkillPerformance[] = [];
+    perfRef.current.forEach((stats, skillId) => {
+      const avgTimeMs = stats.attempts === 0 ? 0 : stats.totalTimeMs / stats.attempts;
+      list.push({
+        skillId,
+        correct: stats.correct,
+        attempts: stats.attempts,
+        avgTimeMs,
+        answerMs: stats.answerMs,
+        speedClass: classifySpeed(avgTimeMs, stats.answerMs),
+      });
+    });
+    return list;
+  }, []);
 
   // ═══════════════════════════════════════════════════════
   // السؤال التالي
@@ -180,8 +264,14 @@ export function PracticeScreen({
       if (currentIdx + 1 >= questions.length) {
         const passed = (newScore / questions.length) * 100 >= PASS_THRESHOLD;
         setScore(newScore);
+        setPerformances(buildPerformances());
         setPhase('result');
         playSound(passed ? 'levelup' : 'whoosh');
+
+        if (passed) {
+          markPracticePassed(levelNum);
+        }
+
         onComplete?.(passed, newScore);
       } else {
         const nextQ = questions[currentIdx + 1];
@@ -190,7 +280,7 @@ export function PracticeScreen({
         setTimeLeft(Math.round(nextQ.timing.maxMs / 1000));
       }
     },
-    [currentIdx, questions, score, playSound, sorobana, onComplete],
+    [currentIdx, questions, score, playSound, sorobana, onComplete, buildPerformances, markPracticePassed, levelNum],
   );
 
   // ═══════════════════════════════════════════════════════
@@ -271,7 +361,7 @@ export function PracticeScreen({
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-200 font-body leading-relaxed">
-                الأسئلة البطيئة ستُعاد لاحقاً لضمان الإتقان الكامل.
+                💡 الإجابة بزمن قياسي (< ٥٠٪) تمنحك <strong>شارة المهارة</strong> 🏅
               </p>
             </div>
           </div>
@@ -297,18 +387,15 @@ export function PracticeScreen({
     const timeWarning = timeLeft <= 5;
     const columns = getColumnsForValue(currentQ.correctAnswer);
 
-    // ✅ السؤال بالنمط المختار
     const formattedPrompt = formatText(
       currentQ.prompt.replace(/ = ؟$/, ''),
       numberStyle,
     );
 
-    // ✅ الإجابة الصحيحة بالنمط المختار
     const formattedAnswer = formatNumber(currentQ.correctAnswer, numberStyle);
 
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
-        {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1">
             <h2 className="text-lg font-bold text-white">
@@ -341,7 +428,6 @@ export function PracticeScreen({
           </div>
         </div>
 
-        {/* Progress */}
         <div className="mb-6">
           <div className="h-2 rounded-full bg-white/10 overflow-hidden">
             <motion.div
@@ -352,7 +438,6 @@ export function PracticeScreen({
           </div>
         </div>
 
-        {/* Score */}
         <div className="flex items-center justify-center gap-2 mb-5">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           <span className="text-sm text-white/70 font-body">
@@ -360,7 +445,6 @@ export function PracticeScreen({
           </span>
         </div>
 
-        {/* Question Card */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIdx}
@@ -373,8 +457,6 @@ export function PracticeScreen({
             <p className="text-center text-white/40 font-body text-sm mb-3">
               مثّل الناتج على السوروبان
             </p>
-
-            {/* ✅ السؤال — يتبع النمط والاتجاه */}
             <p
               className="text-center text-4xl sm:text-5xl font-black font-display text-white mb-6"
               dir={isArabic ? 'rtl' : 'ltr'}
@@ -403,8 +485,6 @@ export function PracticeScreen({
               >
                 <XCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
                 <p className="text-sm text-white/70 mb-1">الإجابة الصحيحة:</p>
-
-                {/* ✅ الإجابة الصحيحة — تتبع النمط */}
                 <p
                   className="text-3xl font-black text-red-300 font-display"
                   dir={isArabic ? 'rtl' : 'ltr'}
@@ -464,11 +544,11 @@ export function PracticeScreen({
     const xpEarned = score * XP_PER_CORRECT;
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto space-y-5">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass-card p-6 mb-6 overflow-hidden relative"
+          className="glass-card p-6 overflow-hidden relative"
         >
           <div
             className={`absolute -top-24 -right-24 w-64 h-64 blur-3xl ${
@@ -525,6 +605,14 @@ export function PracticeScreen({
             </div>
           </div>
         </motion.div>
+
+        {/* ✅ ملاحظات التعليم التكيفي */}
+        {performances.length > 0 && (
+          <AdaptiveFeedback
+            performances={performances}
+            sectionLabel="تمرّن"
+          />
+        )}
 
         <div className="space-y-3">
           <button
