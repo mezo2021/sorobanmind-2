@@ -1,6 +1,6 @@
 // src/data/bank-v2/index.ts
 // بنك الأسئلة v2 — الفهرس الموحّد
-// يجمع: bank-v2 الأقسام + bank-exam
+// يجمع: bank-v2 الأقسام + bank-exam + منطق تتبّع الضعف
 
 import type { BankQuestion } from "./types";
 import { createRng, shuffle } from "./types";
@@ -156,7 +156,6 @@ export function sampleFromBankV2(
   seed = Date.now(),
   usedIds: string[] = [],
 ): BankQuestion[] {
-  // استثنِ المستخدم
   const pool = filterBankV2({
     ...filter,
     excludeIds: [...(filter.excludeIds ?? []), ...usedIds],
@@ -167,6 +166,173 @@ export function sampleFromBankV2(
   const rng = createRng(seed);
   const shuffled = shuffle([...pool], rng);
   return shuffled.slice(0, Math.min(count, shuffled.length));
+}
+
+// ═══════════════════════════════════════════════════════════
+// تتبّع الضعف (Weakness Tracking)
+// ═══════════════════════════════════════════════════════════
+//
+// يستخدم من: PracticeScreen + AnzanScreen
+//   - كل إجابة تُسجَّل هنا
+//   - الضعف يُحدَّد تلقائياً
+//   - يُحفظ في localStorage
+//
+
+const WEAK_SKILLS_KEY = "soroban_weak_skills_v2";
+
+export interface WeakSkillRecord {
+  /** معرّف المهارة (S3) */
+  skillId: string;
+  /** عدد المحاولات */
+  attempts: number;
+  /** الإجابات الصحيحة */
+  correct: number;
+  /** الإجابات الخاطئة */
+  wrong: number;
+  /** متوسط الزمن (ms) */
+  avgTimeMs: number;
+  /** آخر محاولة */
+  lastAttempt: number;
+  /** درجة الضعف (0-100) — الأعلى أضعف */
+  weaknessScore: number;
+}
+
+/**
+ * حساب درجة الضعف.
+ *
+ *   0   = متقن تماماً
+ *   100 = ضعيف جداً
+ */
+function computeWeaknessScore(record: {
+  attempts: number;
+  correct: number;
+  avgTimeMs: number;
+}): number {
+  if (record.attempts === 0) return 0;
+
+  const accuracy = record.correct / record.attempts; // 0-1
+  const accuracyPenalty = (1 - accuracy) * 60; // 0-60
+
+  // عقوبة الخطأ المتتالي (إذا أقل من 50%)
+  const streakPenalty = accuracy < 0.5 ? 20 : 0;
+
+  // عقوبة البطء
+  const timePenalty = record.avgTimeMs > 15000 ? 20 : 0;
+
+  return Math.min(100, accuracyPenalty + streakPenalty + timePenalty);
+}
+
+/**
+ * قراءة سجل الضعف.
+ */
+export function loadWeakSkills(): Record<string, WeakSkillRecord> {
+  try {
+    const raw = localStorage.getItem(WEAK_SKILLS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * حفظ سجل الضعف.
+ */
+function saveWeakSkills(data: Record<string, WeakSkillRecord>): void {
+  try {
+    localStorage.setItem(WEAK_SKILLS_KEY, JSON.stringify(data));
+  } catch { /* ignore */ }
+}
+
+/**
+ * تسجيل إجابة.
+ *
+ * ⚠️ يُستخدم في: تمرّن + أنزان (فقط)
+ * ❌ لا يُستخدم في الامتحان
+ */
+export function recordWeaknessAttempt(
+  skillId: string,
+  correct: boolean,
+  timeMs: number,
+): void {
+  const all = loadWeakSkills();
+  const current = all[skillId] ?? {
+    skillId,
+    attempts: 0,
+    correct: 0,
+    wrong: 0,
+    avgTimeMs: 0,
+    lastAttempt: 0,
+    weaknessScore: 0,
+  };
+
+  const newAttempts = current.attempts + 1;
+  const newCorrect = current.correct + (correct ? 1 : 0);
+  const newWrong = current.wrong + (correct ? 0 : 1);
+
+  // متوسط زمني تراكمي
+  const newAvgTime =
+    current.attempts === 0
+      ? timeMs
+      : Math.round(
+          (current.avgTimeMs * current.attempts + timeMs) / newAttempts,
+        );
+
+  const newWeakness = computeWeaknessScore({
+    attempts: newAttempts,
+    correct: newCorrect,
+    avgTimeMs: newAvgTime,
+  });
+
+  all[skillId] = {
+    skillId,
+    attempts: newAttempts,
+    correct: newCorrect,
+    wrong: newWrong,
+    avgTimeMs: newAvgTime,
+    lastAttempt: Date.now(),
+    weaknessScore: newWeakness,
+  };
+
+  saveWeakSkills(all);
+}
+
+/**
+ * الحصول على المهارات الضعيفة (مرتبة).
+ *
+ * يُستخدم في:
+ *   - adaptiveEngine (لتقديم أسئلة علاجية)
+ *   - لوحة ولي الأمر
+ */
+export function getWeakSkills(): WeakSkillRecord[] {
+  const all = loadWeakSkills();
+  return Object.values(all)
+    .filter((r) => r.attempts >= 3) // ← بعد 3 محاولات على الأقل
+    .sort((a, b) => b.weaknessScore - a.weaknessScore);
+}
+
+/**
+ * الحصول على المهارة الأضعف (للتدريب الفوري).
+ */
+export function getWeakestSkill(): WeakSkillRecord | null {
+  const weak = getWeakSkills();
+  return weak[0] ?? null;
+}
+
+/**
+ * الحصول على سجل مهارة محددة.
+ */
+export function getSkillWeakness(skillId: string): WeakSkillRecord | null {
+  const all = loadWeakSkills();
+  return all[skillId] ?? null;
+}
+
+/**
+ * تصفير سجل الضعف.
+ */
+export function clearWeakSkills(): void {
+  try {
+    localStorage.removeItem(WEAK_SKILLS_KEY);
+  } catch { /* ignore */ }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -192,6 +358,10 @@ export function getSkillsForPracticeNum(num: number): string[] {
 
 /**
  * أسئلة تمرّن حسب رقم المستوى (0-7).
+ *
+ * ⚙️ منطق خاص:
+ *   1. إذا كانت المهارة ضعيفة (weaknessScore ≥ 50) → تُعطى الأولوية
+ *   2. وإلا → عشوائي من المهارات
  */
 export function getPracticeQuestions(
   num: number,
@@ -202,13 +372,49 @@ export function getPracticeQuestions(
   const skills = getSkillsForPracticeNum(num);
   if (skills.length === 0) return [];
 
-  return sampleFromBankV2({ skillIds: skills }, count, seed, usedIds);
+  // ─── الخطوة 1: تحقق من الضعف ───
+  const weak = loadWeakSkills();
+  const weakInThisLevel = skills
+    .map((s) => weak[s])
+    .filter((r) => r && r.weaknessScore >= 50)
+    .sort((a, b) => (b?.weaknessScore ?? 0) - (a?.weaknessScore ?? 0));
+
+  const questions: BankQuestion[] = [];
+
+  // ─── الخطوة 2: 70% من المهارات الضعيفة ───
+  if (weakInThisLevel.length > 0) {
+    const weakCount = Math.ceil(count * 0.7);
+    const weakSkillIds = weakInThisLevel.map((r) => r!.skillId);
+
+    const weakQs = sampleFromBankV2(
+      { skillIds: weakSkillIds },
+      weakCount,
+      seed,
+      usedIds,
+    );
+    questions.push(...weakQs);
+  }
+
+  // ─── الخطوة 3: 30% من المهارات العادية ───
+  const remaining = count - questions.length;
+  if (remaining > 0) {
+    const usedSoFar = [...usedIds, ...questions.map((q) => q.id)];
+    const otherQs = sampleFromBankV2(
+      { skillIds: skills },
+      remaining,
+      seed + 1,
+      usedSoFar,
+    );
+    questions.push(...otherQs);
+  }
+
+  // خلط نهائي
+  const rng = createRng(seed + 2);
+  return shuffle(questions, rng);
 }
 
 /**
  * أسئلة أنزان حسب رقم المستوى (0-7).
- *
- * يستخدم نفس منطق التمرّن لكن مع timing مناسب للأنزان.
  */
 export function getAnzanQuestions(
   num: number,
@@ -216,6 +422,5 @@ export function getAnzanQuestions(
   seed = Date.now(),
   usedIds: string[] = [],
 ): BankQuestion[] {
-  // نفس المصدر — الفرق في طريقة العرض
   return getPracticeQuestions(num, count, seed, usedIds);
 }
