@@ -5,6 +5,7 @@ import { useSorobanLogic } from './useSorobanLogic';
 import { Rod2D5 } from './Rod2D5';
 import { useBeadSound } from './useBeadSound';
 import { useBeadHaptics } from './useBeadHaptics';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
 
 interface Soroban2D5Props {
   columns?: number;
@@ -84,6 +85,16 @@ function getAutoBeadSize(columns: number): number {
   return 24;
 }
 
+// ─── تحويل رقم حسب النمط ───
+const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+function formatByStyle(value: number, style: 'arabic' | 'latin'): string {
+  const str = String(value);
+  if (style === 'arabic') {
+    return str.replace(/[0-9]/g, (d) => ARABIC_DIGITS[Number(d)]);
+  }
+  return str;
+}
+
 export function Soroban2D5({
   columns = 4,
   initialValue = 0,
@@ -106,6 +117,10 @@ export function Soroban2D5({
 
   const playSound = useBeadSound();
   const vibrate = useBeadHaptics();
+
+  // ✅ نمط الأرقام من المتجر
+  const numberStyle = useNumberStyleStore((s) => s.style);
+  const isArabic = numberStyle === 'arabic';
 
   const responsiveSize = useResponsiveSize();
   const finalSize = size === 'auto' ? responsiveSize : size;
@@ -210,7 +225,7 @@ export function Soroban2D5({
 
           {displayOffset > 0 && (
             <p className="text-center text-[10px] text-amber-700 mt-1 font-body">
-              ✨ يتم عرض {visibleColumns} أعمدة (من أصل {columns})
+              ✨ يتم عرض {formatByStyle(visibleColumns, numberStyle)} أعمدة (من أصل {formatByStyle(columns, numberStyle)})
             </p>
           )}
         </div>
@@ -231,7 +246,7 @@ export function Soroban2D5({
       {showValue && (
         <AnimatePresence mode="popLayout">
           <motion.div
-            key={totalValue}
+            key={`${totalValue}-${numberStyle}`}
             initial={{ scale: 0.6, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.6, opacity: 0, y: -20 }}
@@ -241,15 +256,16 @@ export function Soroban2D5({
               fontFamily: 'monospace',
               textShadow: '0 4px 8px rgba(139,111,71,0.3)',
             }}
+            dir={isArabic ? 'rtl' : 'ltr'}
           >
-            {totalValue.toLocaleString('ar-EG')}
+            {formatByStyle(totalValue, numberStyle)}
           </motion.div>
         </AnimatePresence>
       )}
 
       <p className="text-[10px] sm:text-sm text-amber-700 text-center max-w-md px-2">
-        💡 اضغط على الخرزة لتفعيلها. الخرزة العلوية = <strong>5</strong>،
-        السفلية = <strong>1</strong>.
+        💡 اضغط على الخرزة لتفعيلها. الخرزة العلوية = <strong>{formatByStyle(5, numberStyle)}</strong>،
+        السفلية = <strong>{formatByStyle(1, numberStyle)}</strong>.
       </p>
     </div>
   );
