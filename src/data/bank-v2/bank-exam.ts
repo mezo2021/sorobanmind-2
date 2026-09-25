@@ -5,6 +5,7 @@
 // EXAM_2 (الكبار): 40 سؤالاً — من raw-05 → raw-07
 // ═══════════════════════════════════════════════════════════
 // معيار الاختيار: الأسئلة الأطول (عدد الحدود الأكبر)
+// لا يشمل: الأعداد السالبة (S7, S16 من raw القديمة)
 
 import { RAW_QUESTIONS_01 } from "../bank-raw/raw-01";
 import { RAW_QUESTIONS_02 } from "../bank-raw/raw-02";
@@ -46,7 +47,6 @@ export interface ExamQuestion {
  * حساب عدد الحدود في سؤال (عمليات + -).
  */
 function countTerms(question: string): number {
-  // نقسم على + أو - (مع تجاهل السالب في البداية)
   const clean = question.replace(/^[−-]/, "");
   const matches = clean.match(/[+\-−]/g);
   return (matches?.length ?? 0) + 1;
@@ -67,7 +67,7 @@ function parseResult(result: string): number {
 /**
  * استخراج العملية.
  */
-function detectOperation(q: string): "addition" | "subtraction" | "multiplication" | "division" | "read" {
+function detectOperation(q: string): string {
   if (/[√∛]/.test(q)) return "read";
   if (/÷/.test(q)) return "division";
   if (/[×x]/.test(q)) return "multiplication";
@@ -76,28 +76,33 @@ function detectOperation(q: string): "addition" | "subtraction" | "multiplicatio
 
 /**
  * تحديد المهارة من القسم.
+ *
+ * ⚠️ ملاحظة: حذفنا S7 و S16 (سالبة) — لن تُستخدم في الامتحانات.
  */
-function sectionToSkill(section: string): string {
+function sectionToSkill(section: string): string | null {
   const map: Record<string, string> = {
-    S1: "S3",
-    S2: "S5",
-    S3: "S7",
-    S4: "S9",
-    S5: "S10",
-    S6: "S13",
-    S7: "S21", // سالبة (جديد)
-    S8: "S18",
-    S9: "S19",
-    S10: "S20",
-    S11: "S16",
-    S12: "S16",
-    S13: "S17",
-    S14: "S17",
-    S15: "S18",
-    S16: "S21", // سالبة
-    S17: "S19",
+    // raw-01 → raw-04
+    S1: "S3",  // جمع/طرح مباشر
+    S2: "S5",  // أصدقاء 5
+    S3: "S7",  // أصدقاء 10
+    S4: "S9",  // قواعد مركبة
+    S5: "S10", // ضرب
+    S6: "S13", // قسمة
+    S7: null,  // ❌ سالبة — حُذف
+    S8: "S18", // عشرية
+    S9: "S19", // جذر تربيعي
+    S10: "S20", // جذر تكعيبي
+
+    // raw-05 → raw-07
+    S11: "S16", // جمع/طرح مركّب متقدم
+    S12: "S16", // متعدد الأرقام
+    S13: "S17", // ضرب متقدم
+    S14: "S17", // قسمة متقدمة
+    S15: "S18", // عشرية متقدمة
+    S16: null,  // ❌ سالبة متقدمة — حُذف
+    S17: "S19", // جذر متقدم
   };
-  return map[section] ?? "S3";
+  return map[section] ?? null;
 }
 
 /**
@@ -113,19 +118,21 @@ function skillToLevel(skillId: string): string {
   if (num === 17) return "L5";
   if (num === 18) return "L6";
   if (num === 19 || num === 20) return "L7";
-  if (num === 21) return "L4"; // سالبة → L4
   return "L1";
 }
 
 /**
  * تحويل RawQuestion → ExamQuestion.
+ * يرجع null إذا كان السؤال من قسم محذوف.
  */
 function rawToExam(
   raw: RawQuestion,
   prefix: "EX1" | "EX2",
   seq: number,
-): ExamQuestion {
+): ExamQuestion | null {
   const skillId = sectionToSkill(raw.section);
+  if (!skillId) return null; // قسم محذوف
+
   const levelId = skillToLevel(skillId);
   const termCount = countTerms(raw.question);
   const correctAnswer = parseResult(raw.result);
@@ -147,64 +154,85 @@ function rawToExam(
 }
 
 // ═══════════════════════════════════════════════════════════
-// EXAM_1 — من raw-01 → raw-04 (200 سؤال)
+// EXAM_1 — من raw-01 → raw-04
 // ═══════════════════════════════════════════════════════════
 
 function buildExamPool1(): ExamQuestion[] {
   const all: ExamQuestion[] = [];
   let seq = 1;
 
-  // raw-01: S1, S2, S3 (60 سؤال)
+  // raw-01: S1, S2, S3
   [...RAW_QUESTIONS_01].forEach((raw) => {
-    all.push(rawToExam(raw, "EX1", seq));
-    seq += 1;
+    const q = rawToExam(raw, "EX1", seq);
+    if (q) {
+      all.push(q);
+      seq += 1;
+    }
   });
 
-  // raw-02: S4, S5 (40 سؤال)
+  // raw-02: S4, S5
   [...RAW_QUESTIONS_02].forEach((raw) => {
-    all.push(rawToExam(raw, "EX1", seq));
-    seq += 1;
+    const q = rawToExam(raw, "EX1", seq);
+    if (q) {
+      all.push(q);
+      seq += 1;
+    }
   });
 
-  // raw-03: S6, S7 (40 سؤال)
+  // raw-03: S6 (S7 سالبة محذوفة)
   [...RAW_QUESTIONS_03].forEach((raw) => {
-    all.push(rawToExam(raw, "EX1", seq));
-    seq += 1;
+    const q = rawToExam(raw, "EX1", seq);
+    if (q) {
+      all.push(q);
+      seq += 1;
+    }
   });
 
-  // raw-04: S8, S9, S10 (60 سؤال)
+  // raw-04: S8, S9, S10
   [...RAW_QUESTIONS_04].forEach((raw) => {
-    all.push(rawToExam(raw, "EX1", seq));
-    seq += 1;
+    const q = rawToExam(raw, "EX1", seq);
+    if (q) {
+      all.push(q);
+      seq += 1;
+    }
   });
 
   return all;
 }
 
 // ═══════════════════════════════════════════════════════════
-// EXAM_2 — من raw-05 → raw-07 (200 سؤال)
+// EXAM_2 — من raw-05 → raw-07
 // ═══════════════════════════════════════════════════════════
 
 function buildExamPool2(): ExamQuestion[] {
   const all: ExamQuestion[] = [];
   let seq = 1;
 
-  // raw-05: S11, S12 (80 سؤال)
+  // raw-05: S11, S12
   [...RAW_QUESTIONS_05].forEach((raw) => {
-    all.push(rawToExam(raw, "EX2", seq));
-    seq += 1;
+    const q = rawToExam(raw, "EX2", seq);
+    if (q) {
+      all.push(q);
+      seq += 1;
+    }
   });
 
-  // raw-06: S13, S14 (80 سؤال)
+  // raw-06: S13, S14
   [...RAW_QUESTIONS_06].forEach((raw) => {
-    all.push(rawToExam(raw, "EX2", seq));
-    seq += 1;
+    const q = rawToExam(raw, "EX2", seq);
+    if (q) {
+      all.push(q);
+      seq += 1;
+    }
   });
 
-  // raw-07: S15, S16, S17 (40 سؤال)
+  // raw-07: S15, S17 (S16 سالبة محذوفة)
   [...RAW_QUESTIONS_07].forEach((raw) => {
-    all.push(rawToExam(raw, "EX2", seq));
-    seq += 1;
+    const q = rawToExam(raw, "EX2", seq);
+    if (q) {
+      all.push(q);
+      seq += 1;
+    }
   });
 
   return all;
@@ -214,10 +242,10 @@ function buildExamPool2(): ExamQuestion[] {
 // البنوك النهائية
 // ═══════════════════════════════════════════════════════════
 
-/** بنك الامتحان 1 — 200 سؤال */
+/** بنك الامتحان 1 */
 export const EXAM_POOL_1: readonly ExamQuestion[] = Object.freeze(buildExamPool1());
 
-/** بنك الامتحان 2 — 200 سؤال */
+/** بنك الامتحان 2 */
 export const EXAM_POOL_2: readonly ExamQuestion[] = Object.freeze(buildExamPool2());
 
 /** إحصاءات */
@@ -230,9 +258,6 @@ export const EXAM_STATS = {
 // دوال الاختيار
 // ═══════════════════════════════════════════════════════════
 
-/**
- * RNG قابل لإعادة الإنتاج.
- */
 function createRng(seed: number): () => number {
   let value = seed >>> 0;
   return (): number => {
@@ -244,9 +269,6 @@ function createRng(seed: number): () => number {
   };
 }
 
-/**
- * خلط مصفوفة.
- */
 function shuffle<T>(arr: T[], rng: () => number): T[] {
   const result = [...arr];
   for (let i = result.length - 1; i > 0; i -= 1) {
@@ -257,17 +279,14 @@ function shuffle<T>(arr: T[], rng: () => number): T[] {
 }
 
 /**
- * اختيار أسئلة الامتحان 1.
+ * اختيار أسئلة الامتحان 1 (20 سؤالاً).
  *
- * الطريقة:
- *   1. قسم الأسئلة حسب skillId
- *   2. من كل مهارة → اختر الأطول (termCount الأعلى) → خلط
- *   3. اختر 20 سؤالاً موزّعاً
+ * من كل مهارة → نختار الأسئلة الأطول (termCount الأعلى).
+ * المهارات المستهدفة: S3, S5, S7, S9, S10, S13, S18, S19, S20
  */
 export function buildExam1(seed = Date.now()): ExamQuestion[] {
   const rng = createRng(seed);
 
-  // تجميع حسب skillId
   const bySkill = new Map<string, ExamQuestion[]>();
   for (const q of EXAM_POOL_1) {
     const arr = bySkill.get(q.skillId) ?? [];
@@ -275,17 +294,19 @@ export function buildExam1(seed = Date.now()): ExamQuestion[] {
     bySkill.set(q.skillId, arr);
   }
 
-  // من كل مهارة → الأسئلة الأطول
   const selected: ExamQuestion[] = [];
-  const targetSkills = ["S3", "S5", "S7", "S9", "S10", "S13", "S18", "S19", "S20"];
+  const targetSkills = [
+    "S3", "S5", "S7", "S9",
+    "S10", "S13", "S18", "S19", "S20",
+  ];
 
   for (const skill of targetSkills) {
     const pool = bySkill.get(skill) ?? [];
     if (pool.length === 0) continue;
 
-    // ترتيب حسب عدد الحدود (تنازلي)
+    // ترتيب حسب عدد الحدود (تنازلي) → خذ 3 الأطول
     const sorted = [...pool].sort((a, b) => b.termCount - a.termCount);
-    const top = sorted.slice(0, Math.min(5, sorted.length));
+    const top = sorted.slice(0, Math.min(3, sorted.length));
     selected.push(...top);
   }
 
@@ -295,11 +316,9 @@ export function buildExam1(seed = Date.now()): ExamQuestion[] {
 }
 
 /**
- * اختيار أسئلة الامتحان 2.
+ * اختيار أسئلة الامتحان 2 (40 سؤالاً).
  *
- * الطريقة:
- *   1. من كل مهارة → اختر الأطول (termCount الأعلى)
- *   2. اختر 40 سؤالاً موزّعاً
+ * المهارات: S16, S17, S18, S19
  */
 export function buildExam2(seed = Date.now()): ExamQuestion[] {
   const rng = createRng(seed);
@@ -312,7 +331,7 @@ export function buildExam2(seed = Date.now()): ExamQuestion[] {
   }
 
   const selected: ExamQuestion[] = [];
-  const targetSkills = ["S16", "S17", "S18", "S19", "S21"];
+  const targetSkills = ["S16", "S17", "S18", "S19"];
 
   for (const skill of targetSkills) {
     const pool = bySkill.get(skill) ?? [];
