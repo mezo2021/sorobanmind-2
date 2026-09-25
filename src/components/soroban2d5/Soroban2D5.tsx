@@ -77,12 +77,20 @@ const SIZE_CONFIG = {
   },
 };
 
+/**
+ * ✅ حجم تلقائي محسّن:
+ *   3 أعمدة → كبير (46)
+ *   6 أعمدة → متوسط (28)
+ *   9 أعمدة → صغير (20)
+ */
 function getAutoBeadSize(columns: number): number {
-  if (columns <= 2) return 44;
-  if (columns === 3) return 38;
-  if (columns === 4) return 32;
-  if (columns === 5) return 28;
-  return 24;
+  if (columns <= 2) return 52;
+  if (columns <= 3) return 46;
+  if (columns <= 4) return 38;
+  if (columns <= 5) return 32;
+  if (columns <= 6) return 28;
+  if (columns <= 9) return 20;
+  return 16;
 }
 
 // ─── تحويل رقم حسب النمط ───
@@ -118,7 +126,7 @@ export function Soroban2D5({
   const playSound = useBeadSound();
   const vibrate = useBeadHaptics();
 
-  // ✅ نمط الأرقام من المتجر
+  // ✅ نمط الأرقام
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic';
 
@@ -126,8 +134,9 @@ export function Soroban2D5({
   const finalSize = size === 'auto' ? responsiveSize : size;
   const cfg = SIZE_CONFIG[finalSize];
 
+  // ✅ لا نقلّص الأعمدة على الجوال عند استخدام autoBeadSize
   const visibleColumns = (() => {
-    if (finalSize === 'sm' && columns > 4) {
+    if (!autoBeadSize && finalSize === 'sm' && columns > 4) {
       return Math.min(4, columns);
     }
     return columns;
@@ -225,7 +234,7 @@ export function Soroban2D5({
 
           {displayOffset > 0 && (
             <p className="text-center text-[10px] text-amber-700 mt-1 font-body">
-              ✨ يتم عرض {formatByStyle(visibleColumns, numberStyle)} أعمدة (من أصل {formatByStyle(columns, numberStyle)})
+              ✨ يتم عرض {formatByStyle(visibleColumns, numberStyle)} أعمدة
             </p>
           )}
         </div>
