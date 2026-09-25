@@ -1,23 +1,20 @@
 // src/data/bank-linked.ts
-// البنك الموحّد — يجمع:
-//   1) bank-v2 (البنك الجديد، ~585 سؤال)
-//   2) bank-raw المحوَّل (~200 سؤال خام)
-//
-// ⚠️ يوفر طبقة توافق مع المحرك القديم:
-//   - ruleId = skillId (لأننا حذفنا ruleId)
-//   - BankQuestion متوافق مع adaptiveEngine
+// البنك الموحّد — يجمع bank-v2 + bank-raw المحوَّل
+// يوفّر طبقة توافق مع المحرك القديم
 
-import { SOROBAN_BANK_V2 } from "./bank-v2";
-import type { BankQuestion as BankQuestionV2, BankOperation as BankOperationV2 } from "./bank-v2";
+import {
+  SOROBAN_BANK_V2,
+  type BankQuestion as BankQuestionV2,
+  type BankOperation as BankOperationV2,
+} from "./bank-v2";
 import { adaptAllRawQuestions } from "./bank-adapter";
 import type { Problem, MovementType } from "../curriculum/types";
 
 // ═══════════════════════════════════════════════════════════
-// الأنواع (متوافقة مع المحرك القديم)
+// الأنواع
 // ═══════════════════════════════════════════════════════════
 
 export type BankOperation = BankOperationV2;
-
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 
 export type PlaceValue =
@@ -35,13 +32,7 @@ export interface SorobanRule {
   skillId: string;
 }
 
-/**
- * BankQuestion الموحّد — يتوافق مع المحرك القديم.
- *
- * الحقول الأساسية من bank-v2 + حقول إضافية للتوافق.
- */
 export interface BankQuestion {
-  // ─── من bank-v2 ───
   id: string;
   levelId: string;
   skillId: string;
@@ -56,26 +47,16 @@ export interface BankQuestion {
   explanation?: string;
   tags?: string[];
 
-  // ─── حقول توافقية (مُشتقة) ───
-  /** = skillId (للتوافق مع adaptiveEngine) */
+  // حقول توافقية
   ruleId: string;
-  /** = levelId (للتوافق) */
   category: string;
-  /** ترتيب داخل المستوى */
   levelOrder: number;
-  /** عدد الخانات (محسوب) */
   digits: number;
-  /** الخانات المستخدمة (محسوب) */
   placeValues: PlaceValue[];
-  /** حمل؟ (محسوب) */
   hasCarry: boolean;
-  /** استلاف؟ (محسوب) */
   hasBorrow: boolean;
-  /** شرح الحركة (اختياري) */
   movementExplanation: string;
-  /** متطلبات سابقة (فارغة) */
   prerequisites: string[];
-  /** مصدر السؤال */
   sourceId?: string;
 }
 
@@ -87,12 +68,7 @@ export interface QuestionEvaluation {
   tooSlow: boolean;
   timeout: boolean;
   speedRatio: number;
-  issue:
-    | "none"
-    | "wrong-answer"
-    | "slow"
-    | "timeout"
-    | "wrong-and-slow";
+  issue: "none" | "wrong-answer" | "slow" | "timeout" | "wrong-and-slow";
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -137,11 +113,10 @@ function hasSubtractionBorrow(a: number, b: number): boolean {
 // ═══════════════════════════════════════════════════════════
 
 function toUnified(q: BankQuestionV2, order: number): BankQuestion {
-  const positiveOperands = q.operands.filter((n) => n >= 0);
-  const negativeOperands = q.operands.filter((n) => n < 0);
+  const positiveOperands = q.operands.filter((n: number) => n >= 0);
+  const negativeOperands = q.operands.filter((n: number) => n < 0);
 
   return {
-    // من bank-v2
     id: q.id,
     levelId: q.levelId,
     skillId: q.skillId,
@@ -151,8 +126,9 @@ function toUnified(q: BankQuestionV2, order: number): BankQuestion {
     correctAnswer: q.correctAnswer,
     movement: q.movement,
     difficulty: q.difficulty,
-    expectedTimeMs: q.expectedTimeMs,
-    maxTimeMs: q.maxTimeMs,
+    // ✅ استخدام q.timing بدلاً من الحقول المسطحة
+    expectedTimeMs: q.timing.answerMs,
+    maxTimeMs: q.timing.maxMs,
     explanation: q.explanation,
     tags: q.tags,
 
@@ -180,35 +156,23 @@ function toUnified(q: BankQuestionV2, order: number): BankQuestion {
 }
 
 // ═══════════════════════════════════════════════════════════
-// بناء البنك الموحّد
+// البنك الموحّد
 // ═══════════════════════════════════════════════════════════
 
-/** bank-v2 محوَّل */
 const V2_UNIFIED: BankQuestion[] = SOROBAN_BANK_V2.map((q, i) =>
   toUnified(q, i + 1),
 );
 
-/** bank-raw محوَّل (200 سؤال) */
-const RAW_UNIFIED: BankQuestion[] = adaptAllRawQuestions() as unknown as BankQuestion[];
+const RAW_UNIFIED: BankQuestion[] =
+  adaptAllRawQuestions() as unknown as BankQuestion[];
 
-/**
- * البنك الموحّد الكامل.
- *
- * الأولوية: bank-v2 (الجديد) ثم bank-raw
- */
 export const SOROBAN_BANK: readonly BankQuestion[] = Object.freeze([
   ...V2_UNIFIED,
   ...RAW_UNIFIED,
 ]);
 
-/**
- * عدد الأسئلة الكلي.
- */
 export const BANK_SIZE = SOROBAN_BANK.length;
 
-/**
- * إحصاءات البنك.
- */
 export const BANK_STATS = {
   v2: V2_UNIFIED.length,
   raw: RAW_UNIFIED.length,
@@ -216,7 +180,7 @@ export const BANK_STATS = {
 } as const;
 
 // ═══════════════════════════════════════════════════════════
-// دوال الاستعلام (متوافقة مع المحرك)
+// دوال الاستعلام
 // ═══════════════════════════════════════════════════════════
 
 export function getQuestionById(id: string): BankQuestion | undefined {
@@ -249,7 +213,7 @@ export function getQuestionsByLevelSkill(
 }
 
 // ═══════════════════════════════════════════════════════════
-// تحويل BankQuestion → Problem (للمحرك)
+// تحويل BankQuestion → Problem
 // ═══════════════════════════════════════════════════════════
 
 export function bankQuestionToProblem(question: BankQuestion): Problem {
@@ -282,7 +246,7 @@ export function bankQuestionToProblem(question: BankQuestion): Problem {
 }
 
 // ═══════════════════════════════════════════════════════════
-// تقييم إجابة الطفل
+// تقييم الإجابة
 // ═══════════════════════════════════════════════════════════
 
 export function evaluateBankAnswer(
@@ -319,7 +283,7 @@ export function evaluateBankAnswer(
 }
 
 // ═══════════════════════════════════════════════════════════
-// الفلترة المتقدمة
+// الفلترة
 // ═══════════════════════════════════════════════════════════
 
 export interface BankFilter {
@@ -362,9 +326,6 @@ export function filterBank(filter: BankFilter): BankQuestion[] {
   return result;
 }
 
-/**
- * سحب عشوائي موزون.
- */
 export function sampleFromBank(
   filter: BankFilter,
   count: number,
@@ -392,12 +353,9 @@ export function sampleFromBank(
 }
 
 // ═══════════════════════════════════════════════════════════
-// دوال مساعدة لتمرّن / أنزان / امتحانات
+// دوال مساعدة للشاشات
 // ═══════════════════════════════════════════════════════════
 
-/**
- * تحديد المهارات حسب رقم تمرّن (0-7).
- */
 export function getSkillsForPracticeNum(num: number): string[] {
   const map: Record<number, string[]> = {
     0: ["S1", "S2"],
@@ -412,9 +370,6 @@ export function getSkillsForPracticeNum(num: number): string[] {
   return map[num] ?? [];
 }
 
-/**
- * أسئلة تمرّن جاهزة.
- */
 export function getPracticeQuestions(
   num: number,
   count: number,
@@ -425,9 +380,6 @@ export function getPracticeQuestions(
   return sampleFromBank({ skillIds: skills }, count, seed);
 }
 
-/**
- * أسئلة امتحان القسم.
- */
 export function getCategoryExamQuestions(
   category: "category-1" | "category-2",
   count: number,
