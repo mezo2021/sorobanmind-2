@@ -39,6 +39,7 @@ import {
   type LevelInfo,
 } from "../data/curriculum";
 import type { Category } from "../curriculum/types";
+import type { LevelId } from "../store/progressStore";
 
 // ═══════════════════════════════════════════════
 // أيقونات المستويات
