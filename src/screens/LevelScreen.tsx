@@ -2,13 +2,15 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import {
-  ArrowRight, BookOpen, Lightbulb, Dumbbell, Eye, Volume2,
+  BookOpen, Lightbulb, Dumbbell, Eye, Volume2,
   Lock, CheckCircle2, Trophy, Play, Star,
   type LucideIcon,
 } from 'lucide-react';
 
 import type { Screen } from '@/types';
 import type { LevelId } from '@/store/progressStore';
+import Header from './Header';
+import { useGameStats } from '@/hooks/useGameStats';
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -197,12 +199,6 @@ function SectionCard({
             </div>
           )}
         </div>
-
-        {!locked && (
-          <div className="shrink-0 self-center text-white/40 group-hover:text-white/80 transition-colors">
-            <ArrowRight className="w-5 h-5 rotate-180" />
-          </div>
-        )}
       </div>
     </motion.button>
   );
@@ -218,10 +214,12 @@ export function LevelScreen({
   onBack,
   playSound,
 }: LevelScreenProps) {
-  // ✅ مزامنة آمنة للـ props الاختيارية
   const navigate = onNavigate || (() => {});
   const sound = playSound || (() => {});
   const back = onBack || (() => navigate('hero-dashboard'));
+
+  // ✅ لـ Header
+  const { stats, toggleSound } = useGameStats();
 
   const level = LEVELS_DATA[levelId];
   const [progress, setProgress] = useState(loadProgress());
@@ -230,7 +228,6 @@ export function LevelScreen({
     setProgress(loadProgress());
   }, [levelId]);
 
-  // ✅ حماية إذا كان levelId غير معروف
   if (!level) {
     return (
       <div dir="rtl" className="px-6 py-6 max-w-3xl mx-auto text-center">
@@ -265,7 +262,6 @@ export function LevelScreen({
   const isAnzanVisualPassed = progress.passedAnzanVisual.includes(level.anzanNum);
   const isAnzanAudioPassed = progress.passedAnzanAudio.includes(level.anzanNum);
 
-  // منطق القفل
   const practiceLocked = !isLessonCompleted;
   const anzanVisualLocked = !isPracticePassed;
   const anzanAudioLocked = !isAnzanVisualPassed;
@@ -275,17 +271,20 @@ export function LevelScreen({
       .filter(Boolean).length / 4) * 100;
 
   return (
-    <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          type="button"
-          onClick={goBack}
-          className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0"
-        >
-          <ArrowRight className="w-6 h-6" />
-        </button>
-        <div className="flex-1 min-w-0">
+    <>
+      {/* ✅ Header كامل */}
+      <Header
+        xp={stats.xp}
+        streak={stats.streak}
+        level={stats.level}
+        soundEnabled={stats.soundEnabled}
+        onToggleSound={toggleSound}
+        onHome={goBack}
+      />
+
+      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-3xl mx-auto">
+        {/* Level Title */}
+        <div className="mb-6">
           <div className="flex items-center gap-2 flex-wrap">
             <Star className="w-5 h-5 text-gold-300" />
             <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white truncate">
@@ -296,176 +295,155 @@ export function LevelScreen({
             {level.titleEn}
           </p>
         </div>
-      </div>
 
-      {/* Hero Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-card p-5 mb-6 overflow-hidden relative"
-      >
-        <div className={`absolute -top-20 -right-20 w-48 h-48 bg-gradient-to-br ${level.gradient} opacity-20 blur-3xl`} />
+        {/* Hero Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-5 mb-6 overflow-hidden relative"
+        >
+          <div className={`absolute -top-20 -right-20 w-48 h-48 bg-gradient-to-br ${level.gradient} opacity-20 blur-3xl`} />
 
-        <div className="relative">
-          <p className="text-sm text-white/70 font-body leading-relaxed mb-4">
-            {level.desc}
-          </p>
+          <div className="relative">
+            <p className="text-sm text-white/70 font-body leading-relaxed mb-4">
+              {level.desc}
+            </p>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-gold-300" />
-              <span className="text-xs text-white/60 font-body">التقدم:</span>
-              <span className="text-sm font-bold text-gold-300 font-display">
-                {toArabicNumber(Math.round(completionPct))}٪
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-gold-300" />
+                <span className="text-xs text-white/60 font-body">التقدم:</span>
+                <span className="text-sm font-bold text-gold-300 font-display">
+                  {toArabicNumber(Math.round(completionPct))}٪
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {isLessonCompleted && <span className="text-[10px] px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-200 font-bold">درس ✓</span>}
+                {isPracticePassed && <span className="text-[10px] px-2 py-1 rounded-lg bg-blue-500/20 text-blue-200 font-bold">تمرّن ✓</span>}
+                {isAnzanVisualPassed && <span className="text-[10px] px-2 py-1 rounded-lg bg-purple-500/20 text-purple-200 font-bold">بصري ✓</span>}
+                {isAnzanAudioPassed && <span className="text-[10px] px-2 py-1 rounded-lg bg-rose-500/20 text-rose-200 font-bold">سمعي ✓</span>}
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {isLessonCompleted && (
-                <span className="text-[10px] px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-200 font-bold">
-                  درس ✓
-                </span>
-              )}
-              {isPracticePassed && (
-                <span className="text-[10px] px-2 py-1 rounded-lg bg-blue-500/20 text-blue-200 font-bold">
-                  تمرّن ✓
-                </span>
-              )}
-              {isAnzanVisualPassed && (
-                <span className="text-[10px] px-2 py-1 rounded-lg bg-purple-500/20 text-purple-200 font-bold">
-                  بصري ✓
-                </span>
-              )}
-              {isAnzanAudioPassed && (
-                <span className="text-[10px] px-2 py-1 rounded-lg bg-rose-500/20 text-rose-200 font-bold">
-                  سمعي ✓
-                </span>
-              )}
+            <div className="mt-3 h-2 rounded-full bg-white/10 overflow-hidden">
+              <motion.div
+                className={`h-full rounded-full bg-gradient-to-r ${level.gradient}`}
+                initial={{ width: 0 }}
+                animate={{ width: `${completionPct}%` }}
+              />
             </div>
           </div>
+        </motion.div>
 
-          <div className="mt-3 h-2 rounded-full bg-white/10 overflow-hidden">
-            <motion.div
-              className={`h-full rounded-full bg-gradient-to-r ${level.gradient}`}
-              initial={{ width: 0 }}
-              animate={{ width: `${completionPct}%` }}
-            />
-          </div>
+        {/* Sections */}
+        <div className="space-y-3">
+          <SectionCard
+            title="📖 تعلّم"
+            subtitle="القصة + المفهوم + الأمثلة المحلولة"
+            icon={BookOpen}
+            gradient={level.gradient}
+            locked={false}
+            completed={isLessonCompleted}
+            onClick={() => handleNav(`lesson-${levelId}` as Screen)}
+            playSound={sound}
+          />
+
+          <SectionCard
+            title="💡 جرّب"
+            subtitle="أمثلة بدون حل — بلا مؤقّت"
+            icon={Lightbulb}
+            gradient="from-pink-500 to-rose-600"
+            locked={false}
+            completed={false}
+            onClick={() => handleNav(`lesson-${levelId}` as Screen)}
+            playSound={sound}
+          />
+
+          <SectionCard
+            title={`✏️ تمرّن ${toArabicNumber(level.practiceNum)}`}
+            subtitle={
+              practiceLocked
+                ? '🔒 يُفتح بعد إنهاء الدرس'
+                : isPracticePassed
+                  ? '✅ نجحت في هذا التمرّن'
+                  : 'أسئلة تكيفية من البنك'
+            }
+            icon={Dumbbell}
+            gradient="from-blue-500 to-cyan-700"
+            locked={practiceLocked}
+            completed={isPracticePassed}
+            onClick={() => handleNav(`practice-${level.practiceNum}` as Screen)}
+            playSound={sound}
+          />
+
+          <SectionCard
+            title="🧠 أنزان بصري"
+            subtitle={
+              anzanVisualLocked
+                ? '🔒 يُفتح بعد النجاح في تمرّن'
+                : isAnzanVisualPassed
+                  ? '✅ نجحت في الأنزان البصري'
+                  : 'أرقام تومض — احسب بذهنك'
+            }
+            icon={Eye}
+            gradient="from-purple-500 to-violet-700"
+            locked={anzanVisualLocked}
+            completed={isAnzanVisualPassed}
+            onClick={() => handleNav(`anzan-${level.anzanNum}` as Screen)}
+            playSound={sound}
+          />
+
+          <SectionCard
+            title="🎧 أنزان سمعي"
+            subtitle={
+              anzanAudioLocked
+                ? '🔒 يُفتح بعد النجاح في الأنزان البصري'
+                : isAnzanAudioPassed
+                  ? '✅ نجحت في الأنزان السمعي'
+                  : 'اسمع الأرقام واحسب ذهنياً'
+            }
+            icon={Volume2}
+            gradient="from-rose-500 to-pink-700"
+            locked={anzanAudioLocked}
+            completed={isAnzanAudioPassed}
+            onClick={() => handleNav(`audio-anzan-${level.anzanNum}` as Screen)}
+            playSound={sound}
+          />
         </div>
-      </motion.div>
 
-      {/* Sections */}
-      <div className="space-y-3">
-        {/* 📖 تعلّم */}
-        <SectionCard
-          title="📖 تعلّم"
-          subtitle="القصة + المفهوم + الأمثلة المحلولة"
-          icon={BookOpen}
-          gradient={level.gradient}
-          locked={false}
-          completed={isLessonCompleted}
-          onClick={() => handleNav(`audio-anzan-${level.anzanNum}` as Screen)}
-          playSound={sound}
-        />
-
-        {/* 💡 جرّب */}
-        <SectionCard
-          title="💡 جرّب"
-          subtitle="أمثلة بدون حل — بلا مؤقّت"
-          icon={Lightbulb}
-          gradient="from-pink-500 to-rose-600"
-          locked={false}
-          completed={false}
-          onClick={() => handleNav(`lesson-${levelId}` as Screen)}
-          playSound={sound}
-        />
-
-        {/* ✏️ تمرّن */}
-        <SectionCard
-          title={`✏️ تمرّن ${toArabicNumber(level.practiceNum)}`}
-          subtitle={
-            practiceLocked
-              ? '🔒 يُفتح بعد إنهاء الدرس'
-              : isPracticePassed
-                ? '✅ نجحت في هذا التمرّن'
-                : 'أسئلة تكيفية من البنك'
-          }
-          icon={Dumbbell}
-          gradient="from-blue-500 to-cyan-700"
-          locked={practiceLocked}
-          completed={isPracticePassed}
-          onClick={() => handleNav(`practice-${level.practiceNum}` as Screen)}
-          playSound={sound}
-        />
-
-        {/* 🧠 أنزان بصري */}
-        <SectionCard
-          title="🧠 أنزان بصري"
-          subtitle={
-            anzanVisualLocked
-              ? '🔒 يُفتح بعد النجاح في تمرّن'
-              : isAnzanVisualPassed
-                ? '✅ نجحت في الأنزان البصري'
-                : 'أرقام تومض — احسب بذهنك'
-          }
-          icon={Eye}
-          gradient="from-purple-500 to-violet-700"
-          locked={anzanVisualLocked}
-          completed={isAnzanVisualPassed}
-          onClick={() => handleNav(`anzan-${level.anzanNum}` as Screen)}
-          playSound={sound}
-        />
-
-        {/* 🎧 أنزان سمعي */}
-        <SectionCard
-          title="🎧 أنزان سمعي"
-          subtitle={
-            anzanAudioLocked
-              ? '🔒 يُفتح بعد النجاح في الأنزان البصري'
-              : isAnzanAudioPassed
-                ? '✅ نجحت في الأنزان السمعي'
-                : 'اسمع الأرقام واحسب ذهنياً'
-          }
-          icon={Volume2}
-          gradient="from-rose-500 to-pink-700"
-          locked={anzanAudioLocked}
-          completed={isAnzanAudioPassed}
-          onClick={() => handleNav(`anzan-${level.anzanNum}` as Screen)}
-          playSound={sound}
-        />
+        {/* نجاح كامل */}
+        {isLessonCompleted &&
+          isPracticePassed &&
+          isAnzanVisualPassed &&
+          isAnzanAudioPassed && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mt-6 glass-card p-5 text-center overflow-hidden relative"
+            >
+              <div className="absolute -top-20 -right-20 w-48 h-48 bg-gold-500/20 blur-3xl" />
+              <div className="relative">
+                <Trophy className="w-12 h-12 text-gold-300 mx-auto mb-3" />
+                <h3 className="text-lg font-extrabold font-display text-white mb-1">
+                  🎉 أتممت هذا المستوى!
+                </h3>
+                <p className="text-sm text-white/60 font-body mb-4">
+                  يمكنك الانتقال للمستوى التالي
+                </p>
+                <button
+                  type="button"
+                  onClick={goBack}
+                  className="btn-primary w-full"
+                >
+                  <Play className="w-5 h-5" />
+                  العودة إلى القسم
+                </button>
+              </div>
+            </motion.div>
+          )}
       </div>
-
-      {/* نجاح كامل */}
-      {isLessonCompleted &&
-        isPracticePassed &&
-        isAnzanVisualPassed &&
-        isAnzanAudioPassed && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mt-6 glass-card p-5 text-center overflow-hidden relative"
-          >
-            <div className="absolute -top-20 -right-20 w-48 h-48 bg-gold-500/20 blur-3xl" />
-            <div className="relative">
-              <Trophy className="w-12 h-12 text-gold-300 mx-auto mb-3" />
-              <h3 className="text-lg font-extrabold font-display text-white mb-1">
-                🎉 أتممت هذا المستوى!
-              </h3>
-              <p className="text-sm text-white/60 font-body mb-4">
-                يمكنك الانتقال للمستوى التالي
-              </p>
-              <button
-                type="button"
-                onClick={goBack}
-                className="btn-primary w-full"
-              >
-                <Play className="w-5 h-5" />
-                العودة إلى القسم
-              </button>
-            </div>
-          </motion.div>
-        )}
-    </div>
+    </>
   );
 }
 
