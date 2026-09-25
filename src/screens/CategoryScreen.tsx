@@ -2,12 +2,14 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import {
-  ArrowRight, Lock, CheckCircle2, BookOpen, Dumbbell, Eye,
+  Lock, CheckCircle2, BookOpen, Dumbbell, Eye,
   Volume2, Trophy, Sparkles, Play, Star,
   type LucideIcon,
 } from 'lucide-react';
 
 import type { Screen, CategoryId, LevelId } from '@/types';
+import Header from './Header';
+import { useGameStats } from '@/hooks/useGameStats';
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -224,6 +226,9 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   const data = CATEGORY_DATA[category];
   const [progress, setProgress] = useState(loadProgress());
 
+  // ✅ لـ Header
+  const { stats, toggleSound } = useGameStats();
+
   useEffect(() => {
     setProgress(loadProgress());
   }, [category]);
@@ -233,7 +238,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     onNavigate(screen);
   };
 
-  const goBack = () => {
+  const goHome = () => {
     playSound('click');
     onNavigate('hero-dashboard');
   };
@@ -331,7 +336,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
         {unlocked && (
           <div className="grid grid-cols-2 gap-2 mt-3">
-            {/* زر الدرس */}
             <button
               type="button"
               onClick={() => handleNav(`lesson-${level.id}` as Screen)}
@@ -345,7 +349,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               {completed ? 'مراجعة' : 'الدرس'}
             </button>
 
-            {/* زر تمرّن */}
             <button
               type="button"
               onClick={() => practiceUnlocked && handleNav(`practice-${practiceNum}` as Screen)}
@@ -362,7 +365,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               تمرّن {toArabicNumber(practiceNum)}
             </button>
 
-            {/* زر أنزان بصري */}
             <button
               type="button"
               onClick={() => anzanVUnlocked && handleNav(`anzan-${anzanNum}` as Screen)}
@@ -379,7 +381,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               أنزان بصري
             </button>
 
-            {/* زر أنزان سمعي — ✅ مُعدَّل ليرسل audio-anzan-N */}
             <button
               type="button"
               onClick={() => anzanAUnlocked && handleNav(`audio-anzan-${anzanNum}` as Screen)}
@@ -402,17 +403,20 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   };
 
   return (
-    <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          type="button"
-          onClick={goBack}
-          className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0"
-        >
-          <ArrowRight className="w-6 h-6" />
-        </button>
-        <div className="flex-1">
+    <>
+      {/* ✅ Header كامل */}
+      <Header
+        xp={stats.xp}
+        streak={stats.streak}
+        level={stats.level}
+        soundEnabled={stats.soundEnabled}
+        onToggleSound={toggleSound}
+        onHome={goHome}
+      />
+
+      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-4xl mx-auto">
+        {/* Title */}
+        <div className="mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white">
             {data.titleAr}
           </h2>
@@ -420,116 +424,116 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
             {data.ageRange} · {data.titleEn}
           </p>
         </div>
-      </div>
 
-      {/* Enrichment Section */}
-      {data.enrichment.length > 0 && (
+        {/* Enrichment Section */}
+        {data.enrichment.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="w-5 h-5 text-gold-300" />
+              <h3 className="text-lg font-bold text-white/80 font-display">
+                إثراء ممتع
+              </h3>
+              <span className="text-[10px] text-white/40 font-body">(مفتوح دائماً)</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {data.enrichment.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <motion.button
+                    key={item.screen}
+                    type="button"
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleNav(item.screen)}
+                    className="group relative glass-card p-4 text-right overflow-hidden flex items-center gap-3"
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-15 transition-opacity duration-500`} />
+                    <div className={`shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg`}>
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0 relative">
+                      <h4 className="text-sm font-bold font-display text-white">
+                        {item.title}
+                      </h4>
+                      <p className="text-[11px] text-white/50 font-body mt-0.5">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Lessons Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
           className="mb-6"
         >
           <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-5 h-5 text-gold-300" />
+            <BookOpen className="w-5 h-5 text-white/60" />
             <h3 className="text-lg font-bold text-white/80 font-display">
-              إثراء ممتع
+              المستويات
             </h3>
-            <span className="text-[10px] text-white/40 font-body">(مفتوح دائماً)</span>
+            <span className="text-[10px] text-white/40 font-body">
+              (متسلسلة — كل مستوى يُفتح بعد السابق)
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {data.enrichment.map((item) => {
-              const Icon = item.icon;
-              return (
-                <motion.button
-                  key={item.screen}
-                  type="button"
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleNav(item.screen)}
-                  className="group relative glass-card p-4 text-right overflow-hidden flex items-center gap-3"
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-15 transition-opacity duration-500`} />
-                  <div className={`shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg`}>
-                    <Icon className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0 relative">
-                    <h4 className="text-sm font-bold font-display text-white">
-                      {item.title}
-                    </h4>
-                    <p className="text-[11px] text-white/50 font-body mt-0.5">
-                      {item.desc}
-                    </p>
-                  </div>
-                </motion.button>
-              );
-            })}
+          <div className="space-y-4">
+            {data.levels.map((level, idx) => renderLevelCard(level, idx))}
           </div>
         </motion.div>
-      )}
 
-      {/* Lessons Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="mb-6"
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <BookOpen className="w-5 h-5 text-white/60" />
-          <h3 className="text-lg font-bold text-white/80 font-display">
-            المستويات
-          </h3>
-          <span className="text-[10px] text-white/40 font-body">
-            (متسلسلة — كل مستوى يُفتح بعد السابق)
-          </span>
-        </div>
+        {/* Exam Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="glass-card p-5 overflow-hidden relative"
+        >
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-gold-500/15 blur-3xl" />
 
-        <div className="space-y-4">
-          {data.levels.map((level, idx) => renderLevelCard(level, idx))}
-        </div>
-      </motion.div>
+          <div className="relative flex items-center gap-3">
+            <div className={`shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-xl shadow-gold-500/40 ${!isExamUnlocked() ? 'grayscale' : ''}`}>
+              {isExamUnlocked() ? <Trophy className="w-7 h-7 text-white" /> : <Lock className="w-7 h-7 text-white" />}
+            </div>
 
-      {/* Exam Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="glass-card p-5 overflow-hidden relative"
-      >
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-gold-500/15 blur-3xl" />
-
-        <div className="relative flex items-center gap-3">
-          <div className={`shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-xl shadow-gold-500/40 ${!isExamUnlocked() ? 'grayscale' : ''}`}>
-            {isExamUnlocked() ? <Trophy className="w-7 h-7 text-white" /> : <Lock className="w-7 h-7 text-white" />}
+            <div className="flex-1">
+              <h3 className="text-lg font-extrabold font-display text-white">
+                {data.examTitle}
+              </h3>
+              <p className="text-xs text-white/60 font-body mt-0.5">
+                {isExamUnlocked()
+                  ? isExamPassed
+                    ? '✅ نجحت في هذا الامتحان'
+                    : '🎯 جاهز للامتحان! بدرجة نجاح ٨٠٪'
+                  : '🔒 يُفتح بعد إتمام كل المستويات + تمرّن + أنزان'}
+              </p>
+            </div>
           </div>
 
-          <div className="flex-1">
-            <h3 className="text-lg font-extrabold font-display text-white">
-              {data.examTitle}
-            </h3>
-            <p className="text-xs text-white/60 font-body mt-0.5">
-              {isExamUnlocked()
-                ? isExamPassed
-                  ? '✅ نجحت في هذا الامتحان'
-                  : '🎯 جاهز للامتحان! بدرجة نجاح ٨٠٪'
-                : '🔒 يُفتح بعد إتمام كل المستويات + تمرّن + أنزان'}
-            </p>
-          </div>
-        </div>
-
-        {isExamUnlocked() && !isExamPassed && (
-          <button
-            type="button"
-            onClick={() => handleNav(data.examScreen)}
-            className="relative mt-4 w-full py-3 rounded-2xl bg-gradient-to-l from-gold-400 to-amber-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-gold-500/30 hover:shadow-gold-500/50 transition-shadow"
-          >
-            <Play className="w-5 h-5" />
-            ابدأ الامتحان
-          </button>
-        )}
-      </motion.div>
-    </div>
+          {isExamUnlocked() && !isExamPassed && (
+            <button
+              type="button"
+              onClick={() => handleNav(data.examScreen)}
+              className="relative mt-4 w-full py-3 rounded-2xl bg-gradient-to-l from-gold-400 to-amber-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-gold-500/30 hover:shadow-gold-500/50 transition-shadow"
+            >
+              <Play className="w-5 h-5" />
+              ابدأ الامتحان
+            </button>
+          )}
+        </motion.div>
+      </div>
+    </>
   );
 }
 
