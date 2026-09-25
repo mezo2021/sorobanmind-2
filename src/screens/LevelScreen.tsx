@@ -15,8 +15,9 @@ import type { Screen, LevelId } from '@/types';
 
 interface LevelScreenProps {
   levelId: LevelId;
-  onNavigate: (screen: Screen) => void;
-  playSound: (type: 'click' | 'whoosh') => void;
+  onNavigate?: (screen: Screen) => void;
+  onBack?: () => void;
+  playSound?: (type: 'click' | 'whoosh') => void;
 }
 
 interface LevelInfo {
