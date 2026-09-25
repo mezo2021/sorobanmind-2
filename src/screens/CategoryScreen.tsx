@@ -185,10 +185,6 @@ const CATEGORY_DATA: Record<CategoryId, CategoryData> = {
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
-function toArabicNumber(value: number | string): string {
-  return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
-}
-
 function loadProgress() {
   try {
     const completedRaw = localStorage.getItem('soroban_completed_levels');
@@ -197,6 +193,8 @@ function loadProgress() {
     const anzanARaw = localStorage.getItem('soroban_passed_anzan_audio');
     const exam1Raw = localStorage.getItem('soroban_exam1_passed');
     const exam2Raw = localStorage.getItem('soroban_exam2_passed');
+    const weakSkillsRaw = localStorage.getItem('soroban_placement_weak_skills');
+    const recommendedRaw = localStorage.getItem('soroban_placement_recommended');
 
     return {
       completedLevels: completedRaw ? JSON.parse(completedRaw) : [],
@@ -205,6 +203,9 @@ function loadProgress() {
       passedAnzanAudio: anzanARaw ? JSON.parse(anzanARaw) : [],
       exam1Passed: exam1Raw ? JSON.parse(exam1Raw) : false,
       exam2Passed: exam2Raw ? JSON.parse(exam2Raw) : false,
+      // ✅ للتعليم التكيفي (C)
+      weakSkills: weakSkillsRaw ? JSON.parse(weakSkillsRaw) : [],
+      recommendedLevel: recommendedRaw || null,
     };
   } catch {
     return {
@@ -214,6 +215,8 @@ function loadProgress() {
       passedAnzanAudio: [],
       exam1Passed: false,
       exam2Passed: false,
+      weakSkills: [],
+      recommendedLevel: null,
     };
   }
 }
