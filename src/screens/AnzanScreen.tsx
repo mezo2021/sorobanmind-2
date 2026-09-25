@@ -1,15 +1,6 @@
 // src/screens/AnzanScreen.tsx
 // شاشة الأنزان البصري (Flash + Regular)
-// ═══════════════════════════════════════════════════════════
-// - 5 أسئلة من bank-v2
-// - Flash Mode: الأرقام تظهر واحداً واحداً (3s/رقم)
-// - Regular Mode: السؤال كاملاً
-// - عدّاد تصاعدي + توهج عند 60%
-// - زر "تحقق" دائم
-// - زر "التالي" يدوي
-// - تسجيل الضعف + progressStore
-// - ✅ يدعم نمط الأرقام (عربي / لاتيني)
-// ═══════════════════════════════════════════════════════════
+// ✅ يدعم نمط الأرقام + AdaptiveFeedback + Mastery Badges
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,9 +11,11 @@ import {
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
+import { AdaptiveFeedback, type SkillPerformance } from '@/components/AdaptiveFeedback';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { useProgressStore } from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { useMasteryBadgesStore, classifySpeed } from '@/store/masteryBadgesStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 
 import {
@@ -47,6 +40,13 @@ interface AnzanScreenProps {
   burst?: (x?: number, y?: number) => void;
 }
 
+interface PerfStats {
+  correct: number;
+  attempts: number;
+  totalTimeMs: number;
+  answerMs: number;
+}
+
 // ═══════════════════════════════════════════════════════════
 // الثوابت
 // ═══════════════════════════════════════════════════════════
@@ -67,9 +67,6 @@ function getColumnsForValue(value: number): number {
   return 9;
 }
 
-/**
- * بناء تسلسل العرض (نصوص أرقام — بدون تنسيق).
- */
 function buildDisplayTerms(question: BankQuestion): string[] {
   const { operands, operation } = question;
 
@@ -110,6 +107,7 @@ export function AnzanScreen({
   const [score, setScore] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [savedTimeMs, setSavedTimeMs] = useState<number | null>(null);
+  const [performances, setPerformances] = useState<SkillPerformance[]>([]);
 
   const sorobana = useSorobanaVoice();
 
@@ -122,8 +120,12 @@ export function AnzanScreen({
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic';
 
+  // ✅ شارات المهارات
+  const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const displayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const perfRef = useRef<Map<string, PerfStats>>(new Map());
 
   const currentQ = questions[currentIdx];
   const maxMs = currentQ ? currentQ.timing.maxMs : 30000;
@@ -143,6 +145,8 @@ export function AnzanScreen({
       return;
     }
 
+    perfRef.current = new Map();
+
     setQuestions(qs);
     setCurrentIdx(0);
     setCurrentTermIdx(0);
@@ -151,6 +155,7 @@ export function AnzanScreen({
     setScore(0);
     setElapsedMs(0);
     setSavedTimeMs(null);
+    setPerformances([]);
 
     setPhase('showing');
     playSound('click');
@@ -208,6 +213,37 @@ export function AnzanScreen({
   }, [phase, feedback, maxMs]);
 
   // ═══════════════════════════════════════════════════════
+  // تسجيل الأداء
+  // ═══════════════════════════════════════════════════════
+  const trackPerformance = useCallback(
+    (isCorrect: boolean, timeMs: number) => {
+      if (!currentQ) return;
+
+      const skillId = currentQ.skillId;
+      const existing = perfRef.current.get(skillId) ?? {
+        correct: 0,
+        attempts: 0,
+        totalTimeMs: 0,
+        answerMs: currentQ.timing.answerMs,
+      };
+
+      existing.attempts += 1;
+      if (isCorrect) existing.correct += 1;
+      existing.totalTimeMs += timeMs;
+
+      perfRef.current.set(skillId, existing);
+
+      if (isCorrect) {
+        const cls = classifySpeed(timeMs, currentQ.timing.answerMs);
+        if (cls === 'mastery') {
+          awardBadge(skillId, timeMs, currentQ.timing.answerMs);
+        }
+      }
+    },
+    [currentQ, awardBadge],
+  );
+
+  // ═══════════════════════════════════════════════════════
   // انتهاء الوقت
   // ═══════════════════════════════════════════════════════
   const handleTimeout = useCallback(() => {
@@ -215,12 +251,13 @@ export function AnzanScreen({
     if (timerRef.current) clearInterval(timerRef.current);
 
     recordWeaknessAttempt(currentQ.skillId, false, maxMs);
+    trackPerformance(false, maxMs);
     playSound('error');
     setFeedback('wrong');
     setSavedTimeMs(maxMs);
     sorobana.speakWrong();
     setPhase('reveal');
-  }, [currentQ, feedback, maxMs, playSound, sorobana]);
+  }, [currentQ, feedback, maxMs, playSound, sorobana, trackPerformance]);
 
   // ═══════════════════════════════════════════════════════
   // التحقق
@@ -233,6 +270,7 @@ export function AnzanScreen({
     const timeMs = elapsedMs;
 
     recordWeaknessAttempt(currentQ.skillId, isCorrect, timeMs);
+    trackPerformance(isCorrect, timeMs);
 
     if (isCorrect) {
       setScore((s) => s + 1);
@@ -253,8 +291,27 @@ export function AnzanScreen({
     setPhase('reveal');
   }, [
     currentQ, abacusValue, elapsedMs, feedback, playSound, sorobana,
-    onXP, burst, addXP, updateStreak,
+    onXP, burst, addXP, updateStreak, trackPerformance,
   ]);
+
+  // ═══════════════════════════════════════════════════════
+  // بناء قائمة الأداء
+  // ═══════════════════════════════════════════════════════
+  const buildPerformances = useCallback((): SkillPerformance[] => {
+    const list: SkillPerformance[] = [];
+    perfRef.current.forEach((stats, skillId) => {
+      const avgTimeMs = stats.attempts === 0 ? 0 : stats.totalTimeMs / stats.attempts;
+      list.push({
+        skillId,
+        correct: stats.correct,
+        attempts: stats.attempts,
+        avgTimeMs,
+        answerMs: stats.answerMs,
+        speedClass: classifySpeed(avgTimeMs, stats.answerMs),
+      });
+    });
+    return list;
+  }, []);
 
   // ═══════════════════════════════════════════════════════
   // السؤال التالي
@@ -274,6 +331,7 @@ export function AnzanScreen({
         markAnzanVisualPassed(levelNum);
       }
 
+      setPerformances(buildPerformances());
       setPhase('result');
       playSound(passed ? 'levelup' : 'whoosh');
       onComplete?.(passed, finalScore);
@@ -284,7 +342,7 @@ export function AnzanScreen({
     }
   }, [
     currentIdx, questions.length, score, levelNum,
-    playSound, sorobana, onComplete, markAnzanVisualPassed,
+    playSound, sorobana, onComplete, markAnzanVisualPassed, buildPerformances,
   ]);
 
   // ═══════════════════════════════════════════════════════
@@ -464,7 +522,6 @@ export function AnzanScreen({
                 transition={{ duration: 0.3 }}
                 className="text-center"
               >
-                {/* ✅ الأرقام تتبع النمط */}
                 <p
                   className="text-7xl sm:text-9xl font-black font-display text-white"
                   dir={isArabic ? 'rtl' : 'ltr'}
@@ -623,7 +680,6 @@ export function AnzanScreen({
 
             <div className="my-6">
               <p className="text-sm text-white/60 font-body mb-1">الإجابة الصحيحة</p>
-              {/* ✅ الإجابة الصحيحة تتبع النمط */}
               <p
                 className="text-5xl font-black font-display text-white"
                 dir={isArabic ? 'rtl' : 'ltr'}
@@ -677,11 +733,11 @@ export function AnzanScreen({
     const xpEarned = score * XP_PER_CORRECT;
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto space-y-5">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass-card p-6 mb-6 overflow-hidden relative"
+          className="glass-card p-6 overflow-hidden relative"
         >
           <div className={`absolute -top-24 -right-24 w-64 h-64 blur-3xl ${
             passed ? 'bg-emerald-500/20' : 'bg-amber-500/20'
@@ -732,6 +788,14 @@ export function AnzanScreen({
             </div>
           </div>
         </motion.div>
+
+        {/* ✅ ملاحظات التعليم التكيفي */}
+        {performances.length > 0 && (
+          <AdaptiveFeedback
+            performances={performances}
+            sectionLabel="أنزان بصري"
+          />
+        )}
 
         <div className="space-y-3">
           <button
