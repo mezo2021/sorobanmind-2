@@ -1,6 +1,6 @@
 // src/data/bank-v2/index.ts
 // بنك الأسئلة v2 — الفهرس الموحّد
-// يجمع: bank-v2 الأقسام + bank-exam + منطق تتبّع الضعف
+// يجمع: bank-v2 + bank-exam + placement + منطق الضعف
 
 import type { BankQuestion } from "./types";
 import { createRng, shuffle } from "./types";
@@ -48,7 +48,6 @@ export {
   buildExam2,
 } from "./bank-exam";
 
-//
 export type {
   PlacementQuestion,
   PlacementResult,
@@ -65,8 +64,19 @@ export {
   POINTS_PER_LEVEL,
   PASS_THRESHOLD,
 } from "./placement-engine";
- ═══════════════════════════════════════════════════════════
-// البنك الأساسي (للتمرّن والأنزان)
+
+// ═══════════════════════════════════════════════════════════
+// الإعدادات (Constants)
+// ═══════════════════════════════════════════════════════════
+
+export const PRACTICE_QUESTION_COUNT = 5;
+export const ANZAN_VISUAL_COUNT = 5;
+export const ANZAN_AUDIO_COUNT = 5;
+export const WEAK_SKILL_RATIO = 0.7;
+export const WEAK_SKILL_THRESHOLD = 50;
+
+// ═══════════════════════════════════════════════════════════
+// البنك الأساسي
 // ═══════════════════════════════════════════════════════════
 
 export const SOROBAN_BANK_V2: readonly BankQuestion[] = Object.freeze([
@@ -87,7 +97,7 @@ export const BANK_V2_STATS = {
 } as const;
 
 // ═══════════════════════════════════════════════════════════
-// دوال الاستعلام الأساسية
+// دوال الاستعلام
 // ═══════════════════════════════════════════════════════════
 
 export function getQuestionById(id: string): BankQuestion | undefined {
@@ -116,7 +126,7 @@ export function getQuestionsByLevelSkill(
 }
 
 // ═══════════════════════════════════════════════════════════
-// الفلترة الشاملة
+// الفلترة
 // ═══════════════════════════════════════════════════════════
 
 export interface BankFilterV2 {
@@ -159,14 +169,6 @@ export function filterBankV2(filter: BankFilterV2): BankQuestion[] {
   return result;
 }
 
-/**
- * سحب عشوائي موزون.
- *
- * @param filter معايير الفلترة
- * @param count العدد المطلوب
- * @param seed البذرة
- * @param usedIds معرفات مستخدمة (لمنع التكرار في نفس الجلسة)
- */
 export function sampleFromBankV2(
   filter: BankFilterV2,
   count: number,
@@ -186,40 +188,21 @@ export function sampleFromBankV2(
 }
 
 // ═══════════════════════════════════════════════════════════
-// تتبّع الضعف (Weakness Tracking)
+// تتبّع الضعف
 // ═══════════════════════════════════════════════════════════
-//
-// يستخدم من: PracticeScreen + AnzanScreen
-//   - كل إجابة تُسجَّل هنا
-//   - الضعف يُحدَّد تلقائياً
-//   - يُحفظ في localStorage
-//
 
 const WEAK_SKILLS_KEY = "soroban_weak_skills_v2";
 
 export interface WeakSkillRecord {
-  /** معرّف المهارة (S3) */
   skillId: string;
-  /** عدد المحاولات */
   attempts: number;
-  /** الإجابات الصحيحة */
   correct: number;
-  /** الإجابات الخاطئة */
   wrong: number;
-  /** متوسط الزمن (ms) */
   avgTimeMs: number;
-  /** آخر محاولة */
   lastAttempt: number;
-  /** درجة الضعف (0-100) — الأعلى أضعف */
   weaknessScore: number;
 }
 
-/**
- * حساب درجة الضعف.
- *
- *   0   = متقن تماماً
- *   100 = ضعيف جداً
- */
 function computeWeaknessScore(record: {
   attempts: number;
   correct: number;
@@ -227,21 +210,14 @@ function computeWeaknessScore(record: {
 }): number {
   if (record.attempts === 0) return 0;
 
-  const accuracy = record.correct / record.attempts; // 0-1
-  const accuracyPenalty = (1 - accuracy) * 60; // 0-60
-
-  // عقوبة الخطأ المتتالي (إذا أقل من 50%)
+  const accuracy = record.correct / record.attempts;
+  const accuracyPenalty = (1 - accuracy) * 60;
   const streakPenalty = accuracy < 0.5 ? 20 : 0;
-
-  // عقوبة البطء
   const timePenalty = record.avgTimeMs > 15000 ? 20 : 0;
 
   return Math.min(100, accuracyPenalty + streakPenalty + timePenalty);
 }
 
-/**
- * قراءة سجل الضعف.
- */
 export function loadWeakSkills(): Record<string, WeakSkillRecord> {
   try {
     const raw = localStorage.getItem(WEAK_SKILLS_KEY);
@@ -251,21 +227,12 @@ export function loadWeakSkills(): Record<string, WeakSkillRecord> {
   }
 }
 
-/**
- * حفظ سجل الضعف.
- */
 function saveWeakSkills(data: Record<string, WeakSkillRecord>): void {
   try {
     localStorage.setItem(WEAK_SKILLS_KEY, JSON.stringify(data));
   } catch { /* ignore */ }
 }
 
-/**
- * تسجيل إجابة.
- *
- * ⚠️ يُستخدم في: تمرّن + أنزان (فقط)
- * ❌ لا يُستخدم في الامتحان
- */
 export function recordWeaknessAttempt(
   skillId: string,
   correct: boolean,
@@ -286,7 +253,6 @@ export function recordWeaknessAttempt(
   const newCorrect = current.correct + (correct ? 1 : 0);
   const newWrong = current.wrong + (correct ? 0 : 1);
 
-  // متوسط زمني تراكمي
   const newAvgTime =
     current.attempts === 0
       ? timeMs
@@ -313,39 +279,23 @@ export function recordWeaknessAttempt(
   saveWeakSkills(all);
 }
 
-/**
- * الحصول على المهارات الضعيفة (مرتبة).
- *
- * يُستخدم في:
- *   - adaptiveEngine (لتقديم أسئلة علاجية)
- *   - لوحة ولي الأمر
- */
 export function getWeakSkills(): WeakSkillRecord[] {
   const all = loadWeakSkills();
   return Object.values(all)
-    .filter((r) => r.attempts >= 3) // ← بعد 3 محاولات على الأقل
+    .filter((r) => r.attempts >= 3)
     .sort((a, b) => b.weaknessScore - a.weaknessScore);
 }
 
-/**
- * الحصول على المهارة الأضعف (للتدريب الفوري).
- */
 export function getWeakestSkill(): WeakSkillRecord | null {
   const weak = getWeakSkills();
   return weak[0] ?? null;
 }
 
-/**
- * الحصول على سجل مهارة محددة.
- */
 export function getSkillWeakness(skillId: string): WeakSkillRecord | null {
   const all = loadWeakSkills();
   return all[skillId] ?? null;
 }
 
-/**
- * تصفير سجل الضعف.
- */
 export function clearWeakSkills(): void {
   try {
     localStorage.removeItem(WEAK_SKILLS_KEY);
@@ -356,9 +306,6 @@ export function clearWeakSkills(): void {
 // دوال مساعدة للشاشات
 // ═══════════════════════════════════════════════════════════
 
-/**
- * تحديد المهارات من رقم تمرّن (0-7).
- */
 export function getSkillsForPracticeNum(num: number): string[] {
   const map: Record<number, string[]> = {
     0: ["S1", "S2"],
@@ -373,34 +320,25 @@ export function getSkillsForPracticeNum(num: number): string[] {
   return map[num] ?? [];
 }
 
-/**
- * أسئلة تمرّن حسب رقم المستوى (0-7).
- *
- * ⚙️ منطق خاص:
- *   1. إذا كانت المهارة ضعيفة (weaknessScore ≥ 50) → تُعطى الأولوية
- *   2. وإلا → عشوائي من المهارات
- */
 export function getPracticeQuestions(
   num: number,
-  count: number,
   seed = Date.now(),
   usedIds: string[] = [],
 ): BankQuestion[] {
+  const count = PRACTICE_QUESTION_COUNT;
   const skills = getSkillsForPracticeNum(num);
   if (skills.length === 0) return [];
 
-  // ─── الخطوة 1: تحقق من الضعف ───
   const weak = loadWeakSkills();
   const weakInThisLevel = skills
     .map((s) => weak[s])
-    .filter((r) => r && r.weaknessScore >= 50)
+    .filter((r) => r && r.weaknessScore >= WEAK_SKILL_THRESHOLD)
     .sort((a, b) => (b?.weaknessScore ?? 0) - (a?.weaknessScore ?? 0));
 
   const questions: BankQuestion[] = [];
 
-  // ─── الخطوة 2: 70% من المهارات الضعيفة ───
   if (weakInThisLevel.length > 0) {
-    const weakCount = Math.ceil(count * 0.7);
+    const weakCount = Math.ceil(count * WEAK_SKILL_RATIO);
     const weakSkillIds = weakInThisLevel.map((r) => r!.skillId);
 
     const weakQs = sampleFromBankV2(
@@ -412,7 +350,6 @@ export function getPracticeQuestions(
     questions.push(...weakQs);
   }
 
-  // ─── الخطوة 3: 30% من المهارات العادية ───
   const remaining = count - questions.length;
   if (remaining > 0) {
     const usedSoFar = [...usedIds, ...questions.map((q) => q.id)];
@@ -425,19 +362,22 @@ export function getPracticeQuestions(
     questions.push(...otherQs);
   }
 
-  // خلط نهائي
   const rng = createRng(seed + 2);
   return shuffle(questions, rng);
 }
 
-/**
- * أسئلة أنزان حسب رقم المستوى (0-7).
- */
-export function getAnzanQuestions(
+export function getAnzanVisualQuestions(
   num: number,
-  count: number,
   seed = Date.now(),
   usedIds: string[] = [],
 ): BankQuestion[] {
-  return getPracticeQuestions(num, count, seed, usedIds);
+  return getPracticeQuestions(num, seed, usedIds);
+}
+
+export function getAnzanAudioQuestions(
+  num: number,
+  seed = Date.now(),
+  usedIds: string[] = [],
+): BankQuestion[] {
+  return getPracticeQuestions(num, seed, usedIds);
 }
