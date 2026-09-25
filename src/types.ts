@@ -47,8 +47,8 @@ export type Screen =
   | 'audio-anzan-3'
   | 'audio-anzan-4'
   | 'audio-anzan-5'
- و| 'audio-anzan-6'
-| 'audio-anzan-7'
+  | 'audio-anzan-6'
+  | 'audio-anzan-7'
   // الامتحانات
   | 'placement-test'
   | 'category-exam-1'
@@ -283,23 +283,14 @@ export interface LevelNode {
 // نظام التقدم (موسّع للمنهج الجديد)
 // ------------------------------------------------------------
 export interface UserProgress {
-  /** المستويات المفتوحة (L0-L7) */
   unlockedLevels: LevelId[];
-  /** المستويات المُنجزة */
   completedLevels: LevelId[];
-  /** تمرّن الذي نجح فيه (0-7) */
   passedPractice: number[];
-  /** أنزان بصري الذي نجح فيه (0-7) */
   passedAnzanVisual: number[];
-  /** أنزان سمعي الذي نجح فيه (0-7) */
   passedAnzanAudio: number[];
-  /** هل نجح في امتحان القسم 1؟ */
   categoryExam1Passed: boolean;
-  /** هل نجح في امتحان القسم 2؟ */
   categoryExam2Passed: boolean;
-  /** آخر محاولة للـ Placement Test (timestamp) */
   lastPlacementAttempt: number | null;
-  /** عدد محاولات Placement Test */
   placementAttempts: number;
 }
 
@@ -330,23 +321,15 @@ export const LEVEL_RULES: LevelUnlockRules = {
 // عتبات النجاح (المنهج الجديد)
 // ------------------------------------------------------------
 export const PASS_THRESHOLDS = {
-  /** تمرّن: 75% */
   PRACTICE: 75,
-  /** أنزان بصري: 75% */
   ANZAN_VISUAL: 75,
-  /** أنزان سمعي: 75% */
   ANZAN_AUDIO: 75,
-  /** امتحان القسم 1: 80% */
   CATEGORY_EXAM_1: 80,
-  /** امتحان القسم 2: 80% */
   CATEGORY_EXAM_2: 80,
-  /** Placement Test للانتقال للقسم 2: 80% */
   PLACEMENT_TO_TEENS: 80,
-  /** Placement Test للبدء من L0: 60% */
   PLACEMENT_TO_KIDS: 60,
 } as const;
 
-/** مدة الانتظار قبل إعادة Placement Test (بالمللي ثانية) — 48 ساعة */
 export const PLACEMENT_COOLDOWN_MS = 48 * 60 * 60 * 1000;
 
 // ------------------------------------------------------------
