@@ -181,9 +181,10 @@ export function GuardianDashboard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ✅ التحديث الآن يُعيد تحميل الصفحة كاملاً (Refresh حقيقي)
   const handleRefresh = () => {
     playSound('click');
-    loadAllData();
+    window.location.reload();
   };
 
   const accuracy = practiceStats.totalProblems > 0
@@ -250,13 +251,14 @@ export function GuardianDashboard({
           <span className="hidden sm:inline">تبديل الدور</span>
         </button>
 
+        {/* ✅ زر تحديث الصفحة (Refresh حقيقي) */}
         <button
           onClick={handleRefresh}
           className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-500/15 border border-blue-400/30 text-blue-200 hover:bg-blue-500/25 transition-all text-sm font-body"
-          title="إعادة قراءة البيانات"
+          title="إعادة تحميل الصفحة"
         >
           <RefreshCw className="w-4 h-4" />
-          <span>تحديث البيانات</span>
+          <span>تحديث الصفحة</span>
         </button>
 
         {onShowWelcome && (
