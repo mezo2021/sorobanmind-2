@@ -8,6 +8,7 @@
 // - زر "تحقق" دائم
 // - زر "التالي" يدوي
 // - تسجيل الضعف + progressStore
+// - ✅ يدعم نمط الأرقام (عربي / لاتيني)
 // ═══════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -21,6 +22,8 @@ import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { useProgressStore } from '@/store/progressStore';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { formatText, formatNumber } from '@/utils/numberStyle';
 
 import {
   getAnzanVisualQuestions,
@@ -57,10 +60,6 @@ const WARNING_RATIO = 0.6;
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
-function toArabicNumber(value: number | string): string {
-  return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
-}
-
 function getColumnsForValue(value: number): number {
   const abs = Math.abs(value);
   if (abs < 1000) return 3;
@@ -68,6 +67,9 @@ function getColumnsForValue(value: number): number {
   return 9;
 }
 
+/**
+ * بناء تسلسل العرض (نصوص أرقام — بدون تنسيق).
+ */
 function buildDisplayTerms(question: BankQuestion): string[] {
   const { operands, operation } = question;
 
@@ -115,6 +117,10 @@ export function AnzanScreen({
   const addXP = useProgressStore((s) => s.addXP);
   const markAnzanVisualPassed = useProgressStore((s) => s.markAnzanVisualPassed);
   const updateStreak = useProgressStore((s) => s.updateStreak);
+
+  // ✅ نمط الأرقام
+  const numberStyle = useNumberStyleStore((s) => s.style);
+  const isArabic = numberStyle === 'arabic';
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const displayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -234,7 +240,6 @@ export function AnzanScreen({
       playSound('success');
       sorobana.speakCorrect();
       onXP?.(XP_PER_CORRECT);
-      // ✅ progressStore
       addXP(XP_PER_CORRECT);
       updateStreak();
       burst?.(0.5, 0.5);
@@ -265,7 +270,6 @@ export function AnzanScreen({
       const finalScore = score;
       const passed = (finalScore / questions.length) * 100 >= PASS_THRESHOLD;
 
-      // ✅ تسجيل النجاح في progressStore
       if (passed) {
         markAnzanVisualPassed(levelNum);
       }
@@ -302,7 +306,7 @@ export function AnzanScreen({
               الأنزان البصري
             </h2>
             <p className="text-sm text-white/50 font-body">
-              ٥ أسئلة من هذا المستوى
+              {formatNumber(5, numberStyle)} أسئلة من هذا المستوى
             </p>
           </div>
           <Brain className="w-6 h-6 text-purple-300" />
@@ -352,38 +356,52 @@ export function AnzanScreen({
             {mode === 'flash' ? (
               <>
                 <div className="flex items-start gap-3">
-                  <span className="text-purple-300 font-bold shrink-0">١.</span>
-                  <p>الأرقام تظهر <strong>واحداً واحداً</strong> (٣ ثوانٍ لكل رقم)</p>
+                  <span className="text-purple-300 font-bold shrink-0">
+                    {formatNumber(1, numberStyle)}.
+                  </span>
+                  <p>الأرقام تظهر <strong>واحداً واحداً</strong> ({formatNumber(3, numberStyle)} ثوانٍ لكل رقم)</p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="text-purple-300 font-bold shrink-0">٢.</span>
+                  <span className="text-purple-300 font-bold shrink-0">
+                    {formatNumber(2, numberStyle)}.
+                  </span>
                   <p>الرقم الأول بلا إشارة، والباقي مع إشاراته</p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="text-purple-300 font-bold shrink-0">٣.</span>
+                  <span className="text-purple-300 font-bold shrink-0">
+                    {formatNumber(3, numberStyle)}.
+                  </span>
                   <p>بعد آخر رقم → عدّاد الإجابة</p>
                 </div>
               </>
             ) : (
               <>
                 <div className="flex items-start gap-3">
-                  <span className="text-purple-300 font-bold shrink-0">١.</span>
+                  <span className="text-purple-300 font-bold shrink-0">
+                    {formatNumber(1, numberStyle)}.
+                  </span>
                   <p>السؤال يظهر <strong>كاملاً</strong></p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="text-purple-300 font-bold shrink-0">٢.</span>
+                  <span className="text-purple-300 font-bold shrink-0">
+                    {formatNumber(2, numberStyle)}.
+                  </span>
                   <p>لديك وقت أطول للإجابة</p>
                 </div>
               </>
             )}
 
             <div className="flex items-start gap-3">
-              <span className="text-purple-300 font-bold shrink-0">٤.</span>
+              <span className="text-purple-300 font-bold shrink-0">
+                {formatNumber(4, numberStyle)}.
+              </span>
               <p>زر "تحقق" متاح دائماً</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-purple-300 font-bold shrink-0">٥.</span>
-              <p>٥ نقاط خبرة لكل إجابة صحيحة</p>
+              <span className="text-purple-300 font-bold shrink-0">
+                {formatNumber(5, numberStyle)}.
+              </span>
+              <p>{formatNumber(5, numberStyle)} نقاط خبرة لكل إجابة صحيحة</p>
             </div>
           </div>
 
@@ -391,7 +409,7 @@ export function AnzanScreen({
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-200 font-body leading-relaxed">
-                💡 <strong>تحذير:</strong> سيُنبّهك العدّاد عند ٦٠٪ من الوقت.
+                💡 <strong>تحذير:</strong> سيُنبّهك العدّاد عند {formatNumber(60, numberStyle)}٪ من الوقت.
               </p>
             </div>
           </div>
@@ -418,7 +436,7 @@ export function AnzanScreen({
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1">
             <h2 className="text-lg font-bold text-white">
-              السؤال {toArabicNumber(currentIdx + 1)} / {toArabicNumber(questions.length)}
+              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-xs text-white/50 font-body">
               {currentQ.skillId} · {mode === 'flash' ? 'Flash' : 'Regular'}
@@ -446,14 +464,15 @@ export function AnzanScreen({
                 transition={{ duration: 0.3 }}
                 className="text-center"
               >
+                {/* ✅ الأرقام تتبع النمط */}
                 <p
                   className="text-7xl sm:text-9xl font-black font-display text-white"
-                  dir="ltr"
+                  dir={isArabic ? 'rtl' : 'ltr'}
                 >
-                  {displayTerms[currentTermIdx]}
+                  {formatText(displayTerms[currentTermIdx], numberStyle)}
                 </p>
                 <p className="text-sm text-white/40 font-body mt-4">
-                  {toArabicNumber(currentTermIdx + 1)} / {toArabicNumber(displayTerms.length)}
+                  {formatNumber(currentTermIdx + 1, numberStyle)} / {formatNumber(displayTerms.length, numberStyle)}
                 </p>
               </motion.div>
             ) : (
@@ -487,7 +506,7 @@ export function AnzanScreen({
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1">
             <h2 className="text-lg font-bold text-white">
-              السؤال {toArabicNumber(currentIdx + 1)} / {toArabicNumber(questions.length)}
+              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-xs text-white/50 font-body">
               مثّل الناتج على العداد
@@ -503,7 +522,7 @@ export function AnzanScreen({
           >
             <Clock className={`w-4 h-4 ${isWarning ? 'text-red-300' : 'text-amber-300'}`} />
             <span className={`font-bold font-mono ${isWarning ? 'text-red-200' : 'text-white'}`}>
-              {toArabicNumber((elapsedMs / 1000).toFixed(1))}s
+              {formatNumber((elapsedMs / 1000).toFixed(1), numberStyle)}s
             </span>
           </div>
         </div>
@@ -525,7 +544,7 @@ export function AnzanScreen({
         <div className="flex items-center justify-center gap-2 mb-5">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           <span className="text-sm text-white/70 font-body">
-            {toArabicNumber(score)} / {toArabicNumber(currentIdx + 1)}
+            {formatNumber(score, numberStyle)} / {formatNumber(currentIdx + 1, numberStyle)}
           </span>
         </div>
 
@@ -568,6 +587,7 @@ export function AnzanScreen({
   // ═══════════════════════════════════════════════════════
   if (phase === 'reveal' && currentQ) {
     const isCorrect = feedback === 'correct';
+    const formattedAnswer = formatNumber(currentQ.correctAnswer, numberStyle);
 
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
@@ -603,8 +623,12 @@ export function AnzanScreen({
 
             <div className="my-6">
               <p className="text-sm text-white/60 font-body mb-1">الإجابة الصحيحة</p>
-              <p className="text-5xl font-black font-display text-white">
-                {toArabicNumber(currentQ.correctAnswer)}
+              {/* ✅ الإجابة الصحيحة تتبع النمط */}
+              <p
+                className="text-5xl font-black font-display text-white"
+                dir={isArabic ? 'rtl' : 'ltr'}
+              >
+                {formattedAnswer}
               </p>
             </div>
 
@@ -615,8 +639,9 @@ export function AnzanScreen({
                   className={`text-xl font-bold font-mono ${
                     isCorrect ? 'text-emerald-300' : 'text-red-300'
                   }`}
+                  dir="ltr"
                 >
-                  {toArabicNumber((savedTimeMs / 1000).toFixed(1))}s
+                  {formatNumber((savedTimeMs / 1000).toFixed(1), numberStyle)}s
                 </p>
               </div>
             )}
@@ -624,7 +649,7 @@ export function AnzanScreen({
             {currentQ.explanation && (
               <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-400/30 text-right">
                 <p className="text-xs text-blue-200 font-body leading-relaxed">
-                  💡 {currentQ.explanation}
+                  💡 {formatText(currentQ.explanation, numberStyle)}
                 </p>
               </div>
             )}
@@ -686,20 +711,23 @@ export function AnzanScreen({
 
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
               <p className="text-sm text-white/60 font-body">النتيجة</p>
-              <p className="text-5xl font-black font-display text-white mt-1">
-                {toArabicNumber(score)} / {toArabicNumber(questions.length)}
+              <p
+                className="text-5xl font-black font-display text-white mt-1"
+                dir={isArabic ? 'rtl' : 'ltr'}
+              >
+                {formatNumber(score, numberStyle)} / {formatNumber(questions.length, numberStyle)}
               </p>
               <p className={`text-lg font-bold font-body mt-1 ${
                 passed ? 'text-emerald-300' : 'text-amber-300'
               }`}>
-                {toArabicNumber(percentage)}٪
+                {formatNumber(percentage, numberStyle)}٪
               </p>
             </div>
 
             <div className="p-3 rounded-2xl bg-gold-500/10 border border-gold-400/30">
               <p className="text-xs text-white/60 font-body">نقاط الخبرة</p>
               <p className="text-2xl font-black text-gold-300 font-display">
-                +{toArabicNumber(xpEarned)} XP
+                +{formatNumber(xpEarned, numberStyle)} XP
               </p>
             </div>
           </div>
