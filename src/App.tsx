@@ -90,7 +90,7 @@ function ComingSoonScreen({
 export default function App() {
   const [screen, setScreen] = useState<AppScreen>('loading');
   const [role, setRole] = useState<Role>(null);
-  const [activeLevelId, setActiveLevelId] = useState<string | null>(null);
+  const [activeLevelId, setActiveLevelId] = useState<LevelId | null>(null);
   const [ready, setReady] = useState(false);
 
   const { stats, toggleSound } = useGameStats();
