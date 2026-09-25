@@ -1,6 +1,7 @@
 // src/screens/PracticeScreen.tsx
 // شاشة التمرين — 5 أسئلة من bank-v2
 // محاولة واحدة — انتقال تلقائي — تسجيل الضعف
+// ✅ يدعم نمط الأرقام (عربي / لاتيني)
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +13,8 @@ import {
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { formatText, formatNumber } from '@/utils/numberStyle';
 
 import {
   getPracticeQuestions,
@@ -26,7 +29,7 @@ import {
 type Phase = 'intro' | 'running' | 'result';
 
 interface PracticeScreenProps {
-  levelNum: number; // 0-7
+  levelNum: number;
   onBack: () => void;
   onComplete?: (passed: boolean, score: number) => void;
   playSound: (type: 'click' | 'success' | 'error' | 'whoosh' | 'levelup') => void;
@@ -45,16 +48,11 @@ const PASS_THRESHOLD = 75;
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
-function toArabicNumber(value: number | string): string {
-  return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
-}
-
 function getColumnsForValue(value: number): number {
   const abs = Math.abs(value);
-  if (abs < 100) return 2;
   if (abs < 1000) return 3;
-  if (abs < 10000) return 4;
-  return 5;
+  if (abs < 1_000_000) return 6;
+  return 9;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -79,6 +77,10 @@ export function PracticeScreen({
 
   const sorobana = useSorobanaVoice();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ✅ نمط الأرقام
+  const numberStyle = useNumberStyleStore((s) => s.style);
+  const isArabic = numberStyle === 'arabic';
 
   const currentQ = questions[currentIdx];
 
@@ -124,9 +126,6 @@ export function PracticeScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, timeLeft, feedback, currentQ]);
 
-  // ═══════════════════════════════════════════════════════
-  // عند انتهاء الوقت
-  // ═══════════════════════════════════════════════════════
   const handleTimeout = useCallback(() => {
     if (!currentQ) return;
 
@@ -213,10 +212,10 @@ export function PracticeScreen({
           </button>
           <div className="flex-1">
             <h2 className="text-2xl font-extrabold font-display text-white">
-              تمرّن {toArabicNumber(levelNum)}
+              تمرّن {formatNumber(levelNum, numberStyle)}
             </h2>
             <p className="text-sm text-white/50 font-body">
-              ٥ أسئلة من هذا المستوى
+              {formatNumber(5, numberStyle)} أسئلة من هذا المستوى
             </p>
           </div>
           <BookOpen className="w-6 h-6 text-purple-300" />
@@ -237,24 +236,34 @@ export function PracticeScreen({
 
           <div className="space-y-3 text-sm text-white/80 font-body">
             <div className="flex items-start gap-3">
-              <span className="text-purple-300 font-bold shrink-0">١.</span>
-              <p>٥ أسئلة من مهارات هذا المستوى</p>
+              <span className="text-purple-300 font-bold shrink-0">
+                {formatNumber(1, numberStyle)}.
+              </span>
+              <p>{formatNumber(5, numberStyle)} أسئلة من مهارات هذا المستوى</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-purple-300 font-bold shrink-0">٢.</span>
+              <span className="text-purple-300 font-bold shrink-0">
+                {formatNumber(2, numberStyle)}.
+              </span>
               <p>محاولة واحدة فقط لكل سؤال</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-purple-300 font-bold shrink-0">٣.</span>
+              <span className="text-purple-300 font-bold shrink-0">
+                {formatNumber(3, numberStyle)}.
+              </span>
               <p>وقت محدد لكل سؤال — إذا انتهى ينتقل تلقائياً</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-purple-300 font-bold shrink-0">٤.</span>
-              <p>٪٧٥ للنّجاح (٤ من ٥)</p>
+              <span className="text-purple-300 font-bold shrink-0">
+                {formatNumber(4, numberStyle)}.
+              </span>
+              <p>{formatNumber(75, numberStyle)}٪ للنّجاح</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-purple-300 font-bold shrink-0">٥.</span>
-              <p>٥ نقاط خبرة لكل إجابة صحيحة</p>
+              <span className="text-purple-300 font-bold shrink-0">
+                {formatNumber(5, numberStyle)}.
+              </span>
+              <p>{formatNumber(5, numberStyle)} نقاط خبرة لكل إجابة صحيحة</p>
             </div>
           </div>
 
@@ -288,16 +297,25 @@ export function PracticeScreen({
     const timeWarning = timeLeft <= 5;
     const columns = getColumnsForValue(currentQ.correctAnswer);
 
+    // ✅ السؤال بالنمط المختار
+    const formattedPrompt = formatText(
+      currentQ.prompt.replace(/ = ؟$/, ''),
+      numberStyle,
+    );
+
+    // ✅ الإجابة الصحيحة بالنمط المختار
+    const formattedAnswer = formatNumber(currentQ.correctAnswer, numberStyle);
+
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1">
             <h2 className="text-lg font-bold text-white">
-              السؤال {toArabicNumber(currentIdx + 1)} / {toArabicNumber(questions.length)}
+              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-xs text-white/50 font-body">
-              {currentQ.skillId} · صعوبة {toArabicNumber(currentQ.difficulty)}
+              {currentQ.skillId} · صعوبة {formatNumber(currentQ.difficulty, numberStyle)}
             </p>
           </div>
 
@@ -318,7 +336,7 @@ export function PracticeScreen({
                 timeWarning ? 'text-red-300' : 'text-white'
               }`}
             >
-              {toArabicNumber(timeLeft)}
+              {formatNumber(timeLeft, numberStyle)}
             </span>
           </div>
         </div>
@@ -338,7 +356,7 @@ export function PracticeScreen({
         <div className="flex items-center justify-center gap-2 mb-5">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           <span className="text-sm text-white/70 font-body">
-            {toArabicNumber(score)} / {toArabicNumber(currentIdx + 1)}
+            {formatNumber(score, numberStyle)} / {formatNumber(currentIdx + 1, numberStyle)}
           </span>
         </div>
 
@@ -355,11 +373,13 @@ export function PracticeScreen({
             <p className="text-center text-white/40 font-body text-sm mb-3">
               مثّل الناتج على السوروبان
             </p>
+
+            {/* ✅ السؤال — يتبع النمط والاتجاه */}
             <p
               className="text-center text-4xl sm:text-5xl font-black font-display text-white mb-6"
-              dir="ltr"
+              dir={isArabic ? 'rtl' : 'ltr'}
             >
-              {currentQ.prompt.replace(/ = ؟$/, '')} = ؟
+              {formattedPrompt} = ؟
             </p>
 
             {feedback === 'correct' && (
@@ -383,8 +403,13 @@ export function PracticeScreen({
               >
                 <XCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
                 <p className="text-sm text-white/70 mb-1">الإجابة الصحيحة:</p>
-                <p className="text-3xl font-black text-red-300 font-display">
-                  {toArabicNumber(currentQ.correctAnswer)}
+
+                {/* ✅ الإجابة الصحيحة — تتبع النمط */}
+                <p
+                  className="text-3xl font-black text-red-300 font-display"
+                  dir={isArabic ? 'rtl' : 'ltr'}
+                >
+                  {formattedAnswer}
                 </p>
               </motion.div>
             )}
@@ -477,22 +502,25 @@ export function PracticeScreen({
 
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
               <p className="text-sm text-white/60 font-body">النتيجة</p>
-              <p className="text-5xl font-black font-display text-white mt-1">
-                {toArabicNumber(score)} / {toArabicNumber(questions.length)}
+              <p
+                className="text-5xl font-black font-display text-white mt-1"
+                dir={isArabic ? 'rtl' : 'ltr'}
+              >
+                {formatNumber(score, numberStyle)} / {formatNumber(questions.length, numberStyle)}
               </p>
               <p
                 className={`text-lg font-bold font-body mt-1 ${
                   passed ? 'text-emerald-300' : 'text-amber-300'
                 }`}
               >
-                {toArabicNumber(percentage)}٪
+                {formatNumber(percentage, numberStyle)}٪
               </p>
             </div>
 
             <div className="p-3 rounded-2xl bg-gold-500/10 border border-gold-400/30">
               <p className="text-xs text-white/60 font-body">نقاط الخبرة</p>
               <p className="text-2xl font-black text-gold-300 font-display">
-                +{toArabicNumber(xpEarned)} XP
+                +{formatNumber(xpEarned, numberStyle)} XP
               </p>
             </div>
           </div>
