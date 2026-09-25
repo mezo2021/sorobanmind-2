@@ -5,6 +5,7 @@ import { useGameStats } from './hooks/useGameStats';
 import { useSound } from './hooks/useSound';
 import { useConfetti } from './hooks/useConfetti';
 import type { Screen as V1Screen, Role } from './types';
+import type { LevelId } from './store/progressStore';
 
 // ═══ v1 Screens ═══
 import WelcomeScreen from './screens/WelcomeScreen';
