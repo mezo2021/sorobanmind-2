@@ -159,44 +159,57 @@ export function HeroDashboard({
   };
 
   const handleTestUnlock = () => {
-    try {
-      localStorage.setItem(
-        'soroban_exam_result',
-        JSON.stringify({ score: 100, passed: true, date: Date.now() }),
-      );
-      localStorage.setItem(
-        'soroban_exam2_result',
-        JSON.stringify({ score: 100, passed: true, date: Date.now() }),
-      );
-      localStorage.setItem(
-        'soroban-completed-lessons',
-        JSON.stringify(['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7']),
-      );
-      localStorage.setItem(
-        'soroban_anzan_badges',
-        JSON.stringify({
-          master_addition: true,
-          master_multiplication: true,
-          master_division: true,
-          master_mixed: true,
-        }),
-      );
-      localStorage.setItem(
-        'soroban_anzan_audio_badges',
-        JSON.stringify({
-          master_addition_audio: true,
-          master_multiplication_audio: true,
-          master_division_audio: true,
-        }),
-      );
+  try {
+    // ✅ المفاتيح الجديدة (تطابق الشاشات الجديدة)
+    localStorage.setItem(
+      'soroban_completed_levels',
+      JSON.stringify(['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7']),
+    );
+    localStorage.setItem(
+      'soroban_passed_practice',
+      JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]),
+    );
+    localStorage.setItem(
+      'soroban_passed_anzan_visual',
+      JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]),
+    );
+    localStorage.setItem(
+      'soroban_passed_anzan_audio',
+      JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]),
+    );
+    localStorage.setItem('soroban_exam1_passed', JSON.stringify(true));
+    localStorage.setItem('soroban_exam2_passed', JSON.stringify(true));
 
-      setExamPassed(true);
-      playSound('click');
-      setTimeout(() => window.location.reload(), 800);
-    } catch (err) {
-      window.alert('خطأ: ' + String(err));
-    }
-  };
+    // ✅ المفاتيح القديمة (للتوافق المؤقت)
+    localStorage.setItem(
+      'soroban_exam_result',
+      JSON.stringify({ score: 100, passed: true, date: Date.now() }),
+    );
+    localStorage.setItem(
+      'soroban_anzan_badges',
+      JSON.stringify({
+        master_addition: true,
+        master_multiplication: true,
+        master_division: true,
+        master_mixed: true,
+      }),
+    );
+    localStorage.setItem(
+      'soroban_anzan_audio_badges',
+      JSON.stringify({
+        master_addition_audio: true,
+        master_multiplication_audio: true,
+        master_division_audio: true,
+      }),
+    );
+
+    setExamPassed(true);
+    playSound('click');
+    setTimeout(() => window.location.reload(), 800);
+  } catch (err) {
+    window.alert('خطأ: ' + String(err));
+  }
+};
 
   const handleReset = () => {
     const keysToKeep = ['soroban_companion', 'soroban_child_name'];
