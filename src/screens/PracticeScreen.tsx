@@ -361,7 +361,7 @@ export function PracticeScreen({
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-200 font-body leading-relaxed">
-                💡 الإجابة بزمن قياسي (< ٥٠٪) تمنحك <strong>شارة المهارة</strong> 🏅
+                💡 الإجابة بزمن قياسي (أسرع من ٥٠٪) تمنحك <strong>شارة المهارة</strong> 🏅
               </p>
             </div>
           </div>
