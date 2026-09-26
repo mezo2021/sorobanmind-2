@@ -1,6 +1,6 @@
 // src/App.tsx
 import { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useGameStats } from './hooks/useGameStats';
 import { useSound } from './hooks/useSound';
 import { useConfetti } from './hooks/useConfetti';
@@ -490,17 +490,9 @@ export default function App() {
 
   return (
     <>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={screen}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          {renderScreen()}
-        </motion.div>
-      </AnimatePresence>
+      <div key={screen}>
+        {renderScreen()}
+      </div>
 
       {import.meta.env.DEV && <DebugOverlay />}
     </>
