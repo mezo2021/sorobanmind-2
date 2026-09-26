@@ -1,6 +1,6 @@
 // src/components/AdaptiveFeedback.tsx
 // مكوّن عرض ملاحظات التعليم التكيفي
-// (النسخة السابقة — بدون تصفية حسب المستوى)
+// ✅ فصل المهارات التاريخية حسب المستوى الحالي / مستويات أخرى
 
 import { motion } from "framer-motion";
 import {
@@ -32,12 +32,27 @@ export interface SkillPerformance {
 interface AdaptiveFeedbackProps {
   performances: SkillPerformance[];
   sectionLabel: string;
-  /** موجود للتوافق مع الشاشات — لكن لا يُستخدم حالياً */
+  /** رقم المستوى الحالي (0-7) — لفصل المهارات */
   levelNum?: number;
 }
 
 // ═══════════════════════════════════════════════════════════
-// أدوات مساعدة
+// خريطة المستوى → المهارات
+// ═══════════════════════════════════════════════════════════
+
+const LEVEL_SKILLS: Record<number, string[]> = {
+  0: ['S1', 'S2'],
+  1: ['S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9'],
+  2: ['S10', 'S11', 'S12'],
+  3: ['S13', 'S14', 'S15'],
+  4: ['S16'],
+  5: ['S17'],
+  6: ['S18'],
+  7: ['S19', 'S20'],
+};
+
+// ═══════════════════════════════════════════════════════════
+// أدوات
 // ═══════════════════════════════════════════════════════════
 
 function getSkillLabel(skillId: string): string {
@@ -66,6 +81,14 @@ function getSkillLabel(skillId: string): string {
   return map[skillId] ?? skillId;
 }
 
+/** معرفة المستوى من معرف المهارة */
+function getLevelOfSkill(skillId: string): number | null {
+  for (const [level, skills] of Object.entries(LEVEL_SKILLS)) {
+    if (skills.includes(skillId)) return Number(level);
+  }
+  return null;
+}
+
 // ═══════════════════════════════════════════════════════════
 // المكوّن
 // ═══════════════════════════════════════════════════════════
@@ -73,37 +96,51 @@ function getSkillLabel(skillId: string): string {
 export function AdaptiveFeedback({
   performances,
   sectionLabel,
+  levelNum,
 }: AdaptiveFeedbackProps) {
   const { style: numberStyle } = useNumberStyleStore();
   const hasBadge = useMasteryBadgesStore((s) => s.hasBadge);
   const allBadges = useMasteryBadgesStore((s) => s.getAllBadges);
 
-  // ─── تصنيف المهارات ───
+  // ─── تصنيف أداء هذه الجلسة ───
   const masteredSkills = performances.filter(
     (p) => p.speedClass === "mastery" && p.correct === p.attempts,
   );
 
   const acceptedSkills = performances.filter(
-    (p) =>
-      p.speedClass === "accepted" &&
-      p.correct === p.attempts,
+    (p) => p.speedClass === "accepted" && p.correct === p.attempts,
   );
 
   const weakSkills = performances.filter(
     (p) => p.speedClass === "slow" || p.correct < p.attempts,
   );
 
-  // ─── المهارات الضعيفة من البنك (تاريخياً) ───
+  // ─── المهارات الضعيفة تاريخياً ───
   const historicalWeak = loadWeakSkills();
-  const historicalWeakSkills = Object.values(historicalWeak)
+  const allHistoricalWeak = Object.values(historicalWeak)
     .filter((r) => r.weaknessScore >= 50)
     .sort((a, b) => b.weaknessScore - a.weaknessScore);
+
+  // ✅ فصل حسب المستوى
+  const currentLevelSkillIds = levelNum !== undefined
+    ? (LEVEL_SKILLS[levelNum] ?? [])
+    : null;
+
+  const historicalThisLevel = currentLevelSkillIds
+    ? allHistoricalWeak.filter((r) => currentLevelSkillIds.includes(r.skillId))
+    : [];
+
+  const historicalOtherLevels = currentLevelSkillIds
+    ? allHistoricalWeak.filter((r) => !currentLevelSkillIds.includes(r.skillId))
+    : allHistoricalWeak;
 
   // ─── إذا لا يوجد شيء — لا نعرض ───
   if (
     masteredSkills.length === 0 &&
     acceptedSkills.length === 0 &&
-    weakSkills.length === 0
+    weakSkills.length === 0 &&
+    historicalThisLevel.length === 0 &&
+    historicalOtherLevels.length === 0
   ) {
     return null;
   }
@@ -202,7 +239,7 @@ export function AdaptiveFeedback({
         </div>
       )}
 
-      {/* ─── المهارات الضعيفة ─── */}
+      {/* ─── المهارات الضعيفة (هذه الجلسة) ─── */}
       {weakSkills.length > 0 && (
         <div className="glass-card p-4 border border-amber-400/40 bg-amber-500/5">
           <div className="flex items-center gap-2 mb-3">
@@ -247,26 +284,70 @@ export function AdaptiveFeedback({
         </div>
       )}
 
-      {/* ─── المهارات الضعيفة تاريخياً ─── */}
-      {historicalWeakSkills.length > 0 && (
+      {/* ─── المهارات التاريخية — هذا المستوى ─── */}
+      {historicalThisLevel.length > 0 && (
         <div className="glass-card p-4 border border-red-400/30">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="w-4 h-4 text-red-300" />
             <h4 className="text-sm font-bold text-red-200 font-display">
-              📉 مهارات تحتاج مراجعة (من جلسات سابقة)
+              📉 مهارات هذا المستوى تحتاج مراجعة
             </h4>
+            {levelNum !== undefined && (
+              <span className="text-[9px] px-2 py-0.5 rounded bg-red-500/20 text-red-200 font-bold">
+                L{levelNum}
+              </span>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {historicalWeakSkills.slice(0, 8).map((r) => (
+            {historicalThisLevel.slice(0, 8).map((r) => (
               <span
                 key={r.skillId}
                 className="px-2.5 py-1 rounded-lg bg-red-500/20 border border-red-400/40 text-red-200 text-[10px] font-bold"
+                title={getSkillLabel(r.skillId)}
               >
                 {r.skillId} · {formatNumber(Math.round(r.weaknessScore), numberStyle)}%
               </span>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ─── المهارات التاريخية — مستويات أخرى ─── */}
+      {historicalOtherLevels.length > 0 && (
+        <div className="glass-card p-4 border border-purple-400/30 bg-purple-500/5">
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp className="w-4 h-4 text-purple-300" />
+            <h4 className="text-sm font-bold text-purple-200 font-display">
+              📚 مهارات من مستويات أخرى تحتاج مراجعة
+            </h4>
+            <span className="text-[9px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-200 font-bold">
+              مراجعة عامة
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {historicalOtherLevels.slice(0, 8).map((r) => {
+              const skillLevel = getLevelOfSkill(r.skillId);
+              return (
+                <span
+                  key={r.skillId}
+                  className="px-2.5 py-1 rounded-lg bg-purple-500/20 border border-purple-400/40 text-purple-200 text-[10px] font-bold flex items-center gap-1"
+                  title={getSkillLabel(r.skillId)}
+                >
+                  {r.skillId}
+                  {skillLevel !== null && (
+                    <span className="text-[8px] opacity-70">· L{skillLevel}</span>
+                  )}
+                  <span className="opacity-70">· {formatNumber(Math.round(r.weaknessScore), numberStyle)}%</span>
+                </span>
+              );
+            })}
+          </div>
+
+          <p className="text-[9px] text-purple-200/60 font-body mt-2">
+            💡 هذه مهارات من دروس سابقة — راجعها عند العودة لتلك المستويات.
+          </p>
         </div>
       )}
 
