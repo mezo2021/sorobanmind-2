@@ -26,6 +26,9 @@ import AudioAnzanScreen from './screens/AudioAnzanScreen';
 // ═══ Playground ═══
 import SorobanPlayground from './screens/SorobanPlayground';
 
+// ═══ Category Exam ═══
+import CategoryExamScreen from './screens/CategoryExamScreen';
+
 // ═══ Debug ═══
 import { DebugOverlay } from './components/DebugOverlay';
 
@@ -96,8 +99,6 @@ function getComingSoonTitle(screen: string): string {
     division: 'القسمة',
     certificate: 'الشهادة',
     'final-exam': 'الامتحان النهائي',
-    'category-exam-1': 'امتحان القسم الأول',
-    'category-exam-2': 'امتحان القسم الثاني',
   };
   return titles[screen] || 'قيد التطوير';
 }
@@ -323,6 +324,39 @@ export default function App() {
           />
         );
 
+      // ═══ Category Exam 1 (Kids) ═══
+      case 'category-exam-1':
+        return (
+          <CategoryExamScreen
+            category="kids"
+            onBack={() => handleBackToCategory('kids')}
+            onComplete={(passed, _score) => {
+              if (passed) {
+                try {
+                  localStorage.setItem('soroban_section2_unlocked', 'true');
+                } catch { /* ignore */ }
+                setScreen('category-teens');
+              } else {
+                setScreen('category-kids');
+              }
+            }}
+            playSound={handleSound}
+          />
+        );
+
+      // ═══ Category Exam 2 (Teens) ═══
+      case 'category-exam-2':
+        return (
+          <CategoryExamScreen
+            category="teens"
+            onBack={() => handleBackToCategory('teens')}
+            onComplete={(passed, _score) => {
+              setScreen(passed ? 'hero-dashboard' : 'category-teens');
+            }}
+            playSound={handleSound}
+          />
+        );
+
       // ═══ Categories ═══
       case 'category-kids':
         return (
@@ -474,8 +508,6 @@ export default function App() {
       case 'division':
       case 'certificate':
       case 'final-exam':
-      case 'category-exam-1':
-      case 'category-exam-2':
         return (
           <ComingSoonScreen
             onBack={handleBackToHero}
