@@ -151,8 +151,13 @@ export function HeroDashboard({
     onNavigate(screen);
   };
 
+  /**
+   * ✅ "فتح الكل" — يفتح الدروس والمسارات للمعاينة،
+   * لكن لا يُعلّم الامتحانات كـ"مُجتازة".
+   */
   const handleTestUnlock = () => {
     try {
+      // ✅ يُبقي: الدروس مفتوحة + المسارات مُجتازة
       localStorage.setItem(
         'soroban_completed_levels',
         JSON.stringify(['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7']),
@@ -169,39 +174,30 @@ export function HeroDashboard({
         'soroban_passed_anzan_audio',
         JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]),
       );
-      localStorage.setItem('soroban_exam1_passed', JSON.stringify(true));
-      localStorage.setItem('soroban_exam2_passed', JSON.stringify(true));
 
-      localStorage.setItem(
-        'soroban_exam_result',
-        JSON.stringify({ score: 100, passed: true, date: Date.now() }),
-      );
-      localStorage.setItem(
-        'soroban_anzan_badges',
-        JSON.stringify({
-          master_addition: true,
-          master_multiplication: true,
-          master_division: true,
-          master_mixed: true,
-        }),
-      );
-      localStorage.setItem(
-        'soroban_anzan_audio_badges',
-        JSON.stringify({
-          master_addition_audio: true,
-          master_multiplication_audio: true,
-          master_division_audio: true,
-        }),
-      );
+      // ❌ لا نضع: soroban_exam1_passed = true
+      // ❌ لا نضع: soroban_exam2_passed = true
+      // ❌ لا نضع: soroban_exam_result
+      // ❌ لا نضع: soroban_anzan_badges
+      // ❌ لا نضع: soroban_anzan_audio_badges
 
-      setExamPassed(true);
+      // ✅ تنظيف المفاتيح القديمة (لتصفير حالة الامتحانات)
+      localStorage.removeItem('soroban_exam1_passed');
+      localStorage.removeItem('soroban_exam2_passed');
+      localStorage.removeItem('soroban_exam_result');
+      localStorage.removeItem('soroban_anzan_badges');
+      localStorage.removeItem('soroban_anzan_audio_badges');
+
       playSound('click');
-      setTimeout(() => window.location.reload(), 800);
+      setTimeout(() => window.location.reload(), 500);
     } catch (err) {
       window.alert('خطأ: ' + String(err));
     }
   };
 
+  /**
+   * ✅ "تصفير" — يمسح كل شيء ما عدا الاسم والرفيق.
+   */
   const handleReset = () => {
     const keysToKeep = ['soroban_companion', 'soroban_child_name'];
     Object.keys(localStorage).forEach((key) => {
@@ -275,7 +271,7 @@ export function HeroDashboard({
             type="button"
             onClick={handleTestUnlock}
             className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-bold font-body"
-            title="فتح كل الدروس والامتحانات للاختبار"
+            title="فتح الدروس والمسارات فقط (لا الامتحانات)"
           >
             <Unlock className="w-4 h-4" />
             <span>فتح الكل</span>
@@ -361,9 +357,7 @@ export function HeroDashboard({
         </div>
       </motion.div>
 
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {/* PLACEMENT TEST CARD                                        */}
-      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* PLACEMENT TEST CARD */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -411,9 +405,7 @@ export function HeroDashboard({
         </motion.button>
       </motion.div>
 
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SOROBAN PLAYGROUND CARD — السوروبان التفاعلي               */}
-      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SOROBAN PLAYGROUND CARD */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
