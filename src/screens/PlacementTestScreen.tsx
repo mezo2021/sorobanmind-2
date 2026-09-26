@@ -5,12 +5,13 @@
 // ✅ زر إنهاء + السابق + التالي
 // ✅ لا يوجد تقييم فوري (الانتقال فوري)
 // ✅ يدعم نمط الأرقام (عربي / لاتيني)
+// ✅ الأعمدة = max(السلسلة، الناتج) + عرض بصري
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, ArrowLeft, Clock, Trophy, CheckCircle2, XCircle,
-  Target, Sparkles, Play, Type, LogOut,
+  Target, Sparkles, Play, Type, LogOut, Grid3X3,
 } from 'lucide-react';
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
@@ -55,16 +56,35 @@ function formatTime(seconds: number): string {
 }
 
 /**
- * ✅ عدد الأعمدة حسب الناتج:
- *   < 1000       → 3
- *   < 1,000,000  → 6
- *   ≥ 1,000,000  → 9
+ * ✅ حساب الأعمدة من max(السلسلة، الناتج)
+ * (بدل الاعتماد على الناتج فقط)
  */
-function getColumnsForValue(value: number): number {
-  const abs = Math.abs(value);
-  if (abs < 1000) return 3;
-  if (abs < 1_000_000) return 6;
-  return 9;
+function getColumnsForQuestion(question: PlacementQuestion): number {
+  const candidates: number[] = [Math.abs(question.correctAnswer)];
+  if (Array.isArray(question.operands)) {
+    question.operands.forEach((op: number) => {
+      candidates.push(Math.abs(op));
+    });
+  }
+  const maxAbs = Math.max(...candidates);
+
+  if (maxAbs < 1000) return 3;
+  if (maxAbs < 1_000_000) return 6;
+  if (maxAbs < 1_000_000_000) return 9;
+  return 13;
+}
+
+/** ✅ اسم وصفي لعدد الأعمدة */
+function getColumnsLabel(columns: number, isArabic: boolean): string {
+  const map: Record<number, { ar: string; en: string }> = {
+    3: { ar: '٣ أعمدة', en: '3 Columns' },
+    6: { ar: '٦ أعمدة', en: '6 Columns' },
+    9: { ar: '٩ أعمدة', en: '9 Columns' },
+    13: { ar: '١٣ عموداً', en: '13 Columns' },
+  };
+  const entry = map[columns];
+  if (!entry) return `${columns}`;
+  return isArabic ? entry.ar : entry.en;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -111,7 +131,6 @@ export function PlacementTestScreen({
   useEffect(() => {
     if (phase !== 'running') return;
     if (timeLeft <= 0) {
-      // انتهى الوقت — إنهاء تلقائي
       const res = evaluatePlacementTest(questions, answers);
       setResult(res);
       setPhase('result');
@@ -125,7 +144,7 @@ export function PlacementTestScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, timeLeft]);
 
-  // ─── إنهاء الامتحان (مُعتمد) ───
+  // ─── إنهاء الامتحان ───
   const confirmEndExam = useCallback(() => {
     const res = evaluatePlacementTest(questions, answers);
     setResult(res);
@@ -141,14 +160,13 @@ export function PlacementTestScreen({
       setCurrentIdx(idx);
       const targetQ = questions[idx];
       if (targetQ) {
-        // استعادة الإجابة إن وُجدت
         setAbacusValue(answers.get(targetQ.placementId) ?? 0);
       }
     },
     [questions, answers],
   );
 
-  // ─── تحقق: حفظ الإجابة ثم الانتقال ───
+  // ─── تحقق ───
   const handleCheck = useCallback(() => {
     if (!currentQ) return;
 
@@ -157,14 +175,12 @@ export function PlacementTestScreen({
     setAnswers(newAnswers);
     playSound('click');
 
-    // الانتقال للسؤال التالي
     if (currentIdx + 1 < questions.length) {
       const nextIdx = currentIdx + 1;
       const nextQ = questions[nextIdx];
       setCurrentIdx(nextIdx);
       setAbacusValue(newAnswers.get(nextQ.placementId) ?? 0);
     } else {
-      // آخر سؤال — إنهاء
       const res = evaluatePlacementTest(questions, newAnswers);
       setResult(res);
       setPhase('result');
@@ -211,7 +227,6 @@ export function PlacementTestScreen({
           <Target className="w-6 h-6 text-gold-300" />
         </div>
 
-        {/* ✅ زر تبديل نمط الأرقام */}
         <div className="glass-card p-4 mb-6">
           <p className="text-xs text-white/60 font-body mb-3 text-center">
             اختر نمط الأرقام
@@ -314,7 +329,7 @@ export function PlacementTestScreen({
   if (phase === 'running' && currentQ) {
     const progress = ((currentIdx + 1) / questions.length) * 100;
     const timeWarning = timeLeft <= 60;
-    const columns = getColumnsForValue(currentQ.correctAnswer);
+    const columns = getColumnsForQuestion(currentQ);  // ✅ max(السلسلة، الناتج)
     const isLastQuestion = currentIdx === questions.length - 1;
     const isFirstQuestion = currentIdx === 0;
 
@@ -376,6 +391,14 @@ export function PlacementTestScreen({
             animate={{ opacity: 1, scale: 1 }}
             className="glass-card p-4 sm:p-6 w-full text-center mb-4"
           >
+            {/* ✅ شارة عدد الأعمدة */}
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-400/30 text-purple-200 text-xs font-bold">
+                <Grid3X3 className="w-3.5 h-3.5" />
+                {getColumnsLabel(columns, isArabic)}
+              </span>
+            </div>
+
             <p
               className="text-3xl sm:text-4xl font-black font-display text-white mb-5"
               dir={isArabic ? 'rtl' : 'ltr'}
@@ -385,7 +408,7 @@ export function PlacementTestScreen({
 
             <div className="flex justify-center mb-3">
               <Soroban2D5
-                key={`q-${currentQ.placementId}-${answers.get(currentQ.placementId) ?? 0}`}
+                key={`q-${currentQ.placementId}-${answers.get(currentQ.placementId) ?? 0}-${columns}`}
                 columns={columns}
                 initialValue={answers.get(currentQ.placementId) ?? 0}
                 autoBeadSize={true}
@@ -400,7 +423,6 @@ export function PlacementTestScreen({
         {/* ──── أزرار التنقل ──── */}
         <div className="space-y-2 mb-4">
           <div className="grid grid-cols-3 gap-2">
-            {/* السابق */}
             <button
               type="button"
               onClick={handlePrevious}
@@ -411,7 +433,6 @@ export function PlacementTestScreen({
               السابق
             </button>
 
-            {/* تحقق */}
             <button
               type="button"
               onClick={handleCheck}
@@ -421,7 +442,6 @@ export function PlacementTestScreen({
               تحقق
             </button>
 
-            {/* التالي */}
             <button
               type="button"
               onClick={handleNext}
@@ -433,7 +453,6 @@ export function PlacementTestScreen({
             </button>
           </div>
 
-          {/* إنهاء الاختبار */}
           <button
             type="button"
             onClick={() => { playSound('click'); setShowEndConfirm(true); }}
@@ -444,7 +463,7 @@ export function PlacementTestScreen({
           </button>
         </div>
 
-        {/* ──── Modal: تأكيد الإنهاء ──── */}
+        {/* Modal: تأكيد الإنهاء */}
         <AnimatePresence>
           {showEndConfirm && (
             <motion.div
@@ -557,7 +576,6 @@ export function PlacementTestScreen({
           </div>
         </motion.div>
 
-        {/* تفصيل المستويات */}
         <div className="glass-card p-5 mb-6">
           <h3 className="text-sm font-bold text-amber-300 mb-4">📊 تفصيل المستويات</h3>
 
@@ -604,7 +622,6 @@ export function PlacementTestScreen({
           </div>
         </div>
 
-        {/* المهارات الضعيفة */}
         {result.weakSkills.length > 0 && (
           <div className="glass-card p-5 mb-6">
             <h3 className="text-sm font-bold text-amber-300 mb-3">
@@ -626,7 +643,6 @@ export function PlacementTestScreen({
           </div>
         )}
 
-        {/* أزرار */}
         <div className="space-y-3">
           <button
             type="button"
