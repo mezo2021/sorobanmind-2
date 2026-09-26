@@ -1,12 +1,20 @@
- PROJECT_PLAN.md المحدَّث — مشروع تطبيق 
+```text
+PROJECT_PLAN.md
+```
+
+```text
+https://github.com/mezo2021/sorobanmind-2/blob/main/PROJECT_PLAN.md
+```
 
 ---
+
+📝 الكود الكامل (استبدل الملف بالكامل):
 
 ```markdown
 # 📘 SorobanMind v2 — Master Plan
 
-> **آخر تحديث:** 2026-09-26 (الجلسة 5 — الشارات + التكيف قيد التنفيذ)
-> **الحالة:** 🟢 التطبيق يعمل + 20 مهارة + بنك v2 (~1080) + نمط الأرقام
+> **آخر تحديث:** 2026-09-26 (الجلسة 6 — الشارات + التكيف + الأنزان الكامل)
+> **الحالة:** 🟢 التطبيق يعمل + 20 مهارة + بنك v2 (~1080) + نمط الأرقام + شارات + أنزان كامل
 > **الرابط:** https://mezo2021.github.io/sorobanmind-2
 > **المستودع:** https://github.com/mezo2021/sorobanmind-2
 
@@ -51,7 +59,7 @@
 ↓
 ✏️ تمرّن (5 أسئلة تكيفية من البنك)
 ↓ نجاح 75%
-🧠 أنزان بصري (Flash)
+🧠 أنزان بصري (Flash / عادي)
 ↓ نجاح 75%
 🎧 أنزان سمعي (TTS)
 ↓ نجاح 75%
@@ -92,7 +100,7 @@ src/data/
 │   ├── part-04.ts               ← S18-S20 (70 سؤال)
 │   ├── bank-exam.ts             ← امتحانات 1 و 2 (~350)
 │   ├── placement-engine.ts      ← امتحان تحديد المستوى
-│   └── index.ts                 ← الواجهة الموحّدة
+│   └── index.ts                 ← الواجهة الموحّدة + منطق الضعف
 │
 ├── bank-raw/                    ← 400 سؤال خام
 │   ├── types.ts                 ← S1-S17
@@ -141,7 +149,7 @@ interface QuestionTiming {
 ✅ مقبول ≤ 75% من answerMs —
 🐢 بطيء 75% من answerMs —
 
-العدّاد: تصاعدي + توهج أحمر عند 60%.
+العدّاد: تصاعدي + توهج أحمر عند 70% (مُحدَّث من 60%).
 
 ---
 
@@ -152,17 +160,17 @@ interface QuestionTiming {
 ```
 
 src/
-├── utils/numberStyle.ts             ← 🆕 تحويل الأرقام
-├── store/numberStyleStore.ts        ← 🆕 Zustand Store
-├── components/NumberStyleToggle.tsx ← 🆕 زر التبديل
+├── utils/numberStyle.ts             ← تحويل الأرقام
+├── store/numberStyleStore.ts        ← Zustand Store
+├── components/NumberStyleToggle.tsx ← زر التبديل
 └── screens/Header.tsx               ← مُعدَّل (يحتوي الزر)
 
 ```
 
 🎯 الحالة:
 
-· ✅ تطبيق على: Header + Practice + Anzan + AudioAnzan + PlacementTest + CategoryScreen + LevelScreen + Soroban2D5
-· ⏳ قيد التطبيق: GuardianDashboard + SorobanPlayground
+· ✅ تطبيق على: Header + Practice + Anzan + AudioAnzan + PlacementTest + CategoryScreen + LevelScreen + Soroban2D5 + SorobanPlayground
+· ⏳ قيد التطبيق: GuardianDashboard
 
 ---
 
@@ -171,15 +179,17 @@ src/
 ```
 
 src/
-├── App.tsx                          ✅ (كل المسارات + audio-anzan)
+├── App.tsx                          ✅ (كل المسارات + soroban + بدون AnimatePresence)
 ├── types.ts                         ✅ (كل الشاشات)
 │
 ├── store/
 │   ├── progressStore.ts             ✅ (Zustand + persist)
-│   └── numberStyleStore.ts          ✅ (عربي/لاتيني)
+│   ├── numberStyleStore.ts          ✅ (عربي/لاتيني)
+│   └── masteryBadgesStore.ts        ✅ 🆕 (شارات المهارات)
 │
 ├── utils/
 │   ├── numberStyle.ts               ✅ (تحويل الأرقام)
+│   ├── arabicNumbers.ts             ✅ 🆕 (أرقام → كلمات عربية)
 │   ├── audioAnzanBadges.ts          ✅
 │   ├── badgeChecker.ts              ✅
 │   ├── certificateGenerator.ts      ✅
@@ -206,25 +216,34 @@ src/
 │   └── learnModules.ts              ✅ (v1)
 │
 ├── components/
-│   ├── NumberStyleToggle.tsx        ✅ 🆕
+│   ├── NumberStyleToggle.tsx        ✅
+│   ├── AdaptiveFeedback.tsx         ✅ 🆕 (ملاحظات التكيف)
 │   ├── Companion.tsx                ✅
 │   ├── CharacterSelector.tsx        ✅
 │   ├── DebugOverlay.tsx             ✅
+│   ├── BadgeModal.tsx               ✅
 │   ├── soroban2d5/                  ✅
+│   │   ├── Soroban2D5.tsx           ✅ (totalColumns prop)
+│   │   ├── Rod2D5.tsx               ✅ (أسماء عمودية + بدون تصفير)
+│   │   ├── Bead2D5.tsx              ✅
+│   │   ├── useSorobanLogic.ts       ✅
+│   │   ├── useBeadSound.ts          ✅
+│   │   └── useBeadHaptics.ts        ✅
 │   └── ...
 │
 ├── screens/                         ✅
 │   ├── WelcomeScreen.tsx            ✅
 │   ├── RoleSelection.tsx            ✅
-│   ├── HeroDashboard.tsx            ✅
-│   ├── GuardianDashboard.tsx        ✅
-│   ├── Header.tsx                   ✅ (مُحدَّث: 5 أزرار)
+│   ├── HeroDashboard.tsx            ✅ (بطاقة Playground + زر تحديث)
+│   ├── GuardianDashboard.tsx        ✅ (زر تحديث الصفحة)
+│   ├── Header.tsx                   ✅ (تحديث + خروج + نمط + صوت + رجوع)
 │   ├── CategoryScreen.tsx           ✅ (Header + recommended)
 │   ├── LevelScreen.tsx              ✅ (Header)
-│   ├── PracticeScreen.tsx           ✅ (bank-v2 + نمط)
-│   ├── AnzanScreen.tsx              ✅ (Flash + نمط)
-│   ├── AudioAnzanScreen.tsx         ✅ (TTS + نمط)
+│   ├── PracticeScreen.tsx           ✅ (تصاعدي + أعمدة + إنهاء + Adaptive)
+│   ├── AnzanScreen.tsx              ✅ (Flash 2s + عادي + أعمدة + إنهاء + Adaptive)
+│   ├── AudioAnzanScreen.tsx         ✅ (لفظ عربي + إنهاء + Adaptive)
 │   ├── PlacementTestScreen.tsx      ✅ (سوروبان + تنقل + إنهاء)
+│   ├── SorobanPlayground.tsx        ✅ 🆕 (3/6/9/13 عمود + زر Home)
 │   └── EnrichmentScreen.tsx         ✅ (قديم)
 │
 └── 🗑️ محذوف:
@@ -242,29 +261,49 @@ src/
 
 · 5 أسئلة من bank-v2
 · محاولة واحدة
-· زر "تحقق" دائم + زر "التالي" يدوي
-· عدّاد تصاعدي + توهج 60%
+· زر "تحقق" مفعّل دائماً + زر "التالي" يدوي
+· عدّاد تصاعدي + توهج 70%
+· زر "إنهاء" في أي لحظة
+· الأعمدة = max(السلسلة، الناتج)
 · تسجيل الضعف (recordWeaknessAttempt)
 · 5 XP لكل إجابة صحيحة
 · 75% للنجاح
+· ✅ AdaptiveFeedback
 · ✅ يدعم نمط الأرقام
 
 🧠 AnzanScreen (الأنزان البصري):
 
-· وضعان: Flash + Regular
-· Flash: الأرقام تظهر واحداً واحداً (3s)
-· Regular: السؤال كاملاً
-· عدّاد تصاعدي + توهج 60%
-· زر تحقق + يدوي
+· وضعان: Flash + عادي (بدل Regular)
+· Flash: 2 ثانية لكل رقم (بدل 3)
+· عادي: عرض السؤال كاملاً مكتوباً + TTS ("واحد وعشرون زائد ثلاثة، يساوي")
+· السؤال يبقى ظاهراً أثناء الإجابة في الوضع العادي
+· عدّاد تصاعدي + توهج 70%
+· زر "إنهاء" في أي لحظة
+· الأعمدة = max(السلسلة، الناتج)
+· زر "تحقق" + "التالي" يدوي
 · 5 أسئلة
+· ✅ AdaptiveFeedback
 · ✅ يدعم نمط الأرقام
 
 🎧 AudioAnzanScreen (الأنزان السمعي):
 
-· TTS يقرأ الأرقام (عربي)
+· TTS يقرأ الأرقام بالعربية (خمسة آلاف، ناقص أربعة)
 · بدون عرض بصري
 · زر "إعادة السمع" (مرة واحدة)
-· عدّاد تصاعدي + توهج 60%
+· زر "إنهاء" في أي لحظة
+· عدّاد تصاعدي + توهج 70%
+· الأعمدة = max(السلسلة، الناتج)
+· ✅ AdaptiveFeedback
+· ✅ يدعم نمط الأرقام
+
+🎮 SorobanPlayground (السوروبان التفاعلي) 🆕:
+
+· وضع حر — بلا أسئلة ولا مؤقت
+· اختيار الأعمدة: 3 / 6 / 9 / 13
+· حجم الخرزات تلقائي (3 كبير → 13 صغير)
+· أسماء المنازل عمودية عند 6+
+· زر 🏠 الرئيسية + 🔄 تحديث
+· زر "إعادة الكل" للتصفير
 · ✅ يدعم نمط الأرقام
 
 📝 PlacementTestScreen:
@@ -325,6 +364,7 @@ interface WeakSkillRecord {
 · recordWeaknessAttempt(skillId, correct, timeMs) — يُستدعى في كل إجابة
 · getPracticeQuestions(num) — يُعطي 70% للضعيف + 30% للعادي
 · getWeakSkills() — للوحة ولي الأمر
+· WEAK_SKILLS_KEY = "soroban_weak_skills_v2" — مفتاح localStorage
 
 ---
 
@@ -333,6 +373,22 @@ interface WeakSkillRecord {
 🎯 الفكرة:
 
 شارة لكل مهارة (S) يُتقنها الطفل بزمن قياسي.
+
+📁 الملفات:
+
+```
+
+src/
+├── store/masteryBadgesStore.ts      ← 🆕 (Zustand + persist)
+└── components/AdaptiveFeedback.tsx  ← 🆕 (عرض الملاحظات)
+
+```
+
+🎯 القاعدة:
+
+· 🏅 قياسي (≤ 50% من answerMs) → شارة فورية
+· ✅ مقبول (≤ 75%) → لا شارة
+· 🐢 بطيء (> 75%) → لا شارة
 
 📁 التخزين:
 
@@ -344,15 +400,17 @@ interface WeakSkillRecord {
 }
 ```
 
-🎯 القاعدة:
+🎯 الشارات المستقبلية (برونزية/فضية/ذهبية):
 
-· 🏅 قياسي (≤ 50% من answerMs) → شارة فورية
-· ✅ مقبول (≤ 75%) → لا شارة
-· 🐢 بطيء (> 75%) → لا شارة
+· 🥉 برونزية: 1 إجابة صحيحة بزمن قياسي
+· 🥈 فضية: 3 إجابات متتالية بزمن قياسي
+· 🥇 ذهبية: 5 إجابات متتالية بزمن قياسي
+· الشارة الأعلى تطرد الأدنى — لا نزول
+· ⏳ قيد التنفيذ
 
 🎁 العرض:
 
-· 🏆 في نهاية الجلسة
+· 🏆 في نهاية الجلسة (AdaptiveFeedback)
 · 📊 في صفحة القسم (زر "ملاحظاتي")
 · 👨‍👩‍👧 في صفحة ولي الأمر
 · 🎯 في قسم "المغامرات" (قادم)
@@ -367,9 +425,10 @@ interface WeakSkillRecord {
 
 · ✅ المهارات التي أتقنها (بزمن قياسي)
 · ⚠️ المهارات التي تحتاج تقوية
+· 📚 المهارات من مستويات أخرى
 · 💡 التوصيات العلاجية
 
-📋 الشكل:
+📋 الشكل الجديد (مع فصل المستويات):
 
 ```
 ╔══════════════════════════════════════════╗
@@ -378,24 +437,39 @@ interface WeakSkillRecord {
 ║                                          ║
 ║  ✅ مهارات أتقنتها (بزمن قياسي):         ║
 ║    🏅 S3 — جمع مباشر                     ║
-║    🏅 S5 — أصدقاء 5 جمع                  ║
 ║                                          ║
-║  ⚠️ مهارات تحتاج تقوية:                 ║
-║    📌 S4 — طرح مباشر (بطيء)              ║
-║    📌 S6 — أصدقاء 5 طرح (دقة منخفضة)    ║
+║  👍 مهارات جيدة (زمن مقبول):             ║
+║    ⏱️ S1 — تمثيل 0-9                     ║
 ║                                          ║
-║  💡 التوصية: أعد جلسة S4 و S6            ║
+║  ⚠️ مهارات تحتاج تقوية (هذه الجلسة):     ║
+║    🎯 S2 — القيمة المكانية (دقة منخفضة) ║
+║                                          ║
+║  📉 مهارات هذا المستوى تحتاج مراجعة:     ║
+║    [S2 · 80%]                            ║
+║                                          ║
+║  📚 مهارات من مستويات أخرى (L1):         ║
+║    [S6 · L1 · 80%]                       ║
+║                                          ║
 ╚══════════════════════════════════════════╝
 ```
 
-📁 الملفات المتوقعة:
+📁 الملفات المُطبَّقة:
 
 ```
+
 src/
-├── store/
-│   └── masteryBadgesStore.ts    ← 🆕 شارات المهارات
-└── components/
-    └── AdaptiveFeedback.tsx     ← 🆕 عرض الملاحظات
+├── store/masteryBadgesStore.ts      ← ✅
+└── components/AdaptiveFeedback.tsx  ← ✅ (مُستخدَم في 3 شاشات)
+
+```
+
+📁 الملفات المتوقعة (لاحقاً):
+
+```
+
+src/
+└── screens/CategoryExamScreen.tsx   ← 🎯 قادم
+
 ```
 
 ---
@@ -413,11 +487,13 @@ src/
 # الشاشة الحالة
 1 🏹 الضرب التقاطعي ✅ جاهز (من v1)
 
-🆕 السوروبان التفاعلي (قادم):
+🆕 السوروبان التفاعلي (SorobanPlayground):
 
-· 🎮 وضع حر — الطفل يلعب
-· 🔄 زر تحديث + رجوع
-· 🔤 نمط الأرقام (عربي/لاتيني)
+· ✅ مُنجَز — وضع حر (بلا أسئلة)
+· ✅ اختيار الأعمدة (3 / 6 / 9 / 13)
+· ✅ زر 🏠 الرئيسية + 🔄 تحديث
+· ✅ نمط الأرقام
+· ✅ الأسماء عمودية عند 6+
 
 ---
 
@@ -441,7 +517,7 @@ src/
 · progressStore + App + Hero + Category + Level
 · Practice + Anzan + Audio + Placement
 
-✅ الجلسة 5 — الأنزان + النمط + التكيف (اليوم)
+✅ الجلسة 5 — الأنزان + النمط + التكيف
 
 · Header بأزرار (تحديث/خروج/نمط)
 · نظام نمط الأرقام كاملاً
@@ -451,13 +527,27 @@ src/
 · CategoryScreen + LevelScreen + Header
 · Placement Result → فتح المستويات السابقة + weakSkills
 
-🎯 الجلسة 6 — الشارات والملاحظات التكيفية (قيد التنفيذ)
+✅ الجلسة 6 — الشارات والملاحظات التكيفية + الأنزان الكامل (اليوم)
 
-· masteryBadgesStore.ts
-· AdaptiveFeedback.tsx
-· ربط في Practice + Anzan + Audio
-· عرض في GuardianDashboard
-· قسم "المغامرات" (Badges)
+· masteryBadgesStore.ts ✅
+· AdaptiveFeedback.tsx ✅ (مع فصل المستويات)
+· ربط في Practice + Anzan + Audio ✅
+· عرض في GuardianDashboard ✅
+· SorobanPlayground.tsx ✅
+· زر 🏠 الرئيسية في Playground ✅
+· حل الشاشة السوداء (إزالة AnimatePresence) ✅
+· أسماء عمودية للأعمدة 6+ ✅
+· إزالة "تصفير" المزعج ✅
+· arabicNumbers.ts ✅ (أرقام → كلمات عربية)
+· Flash: 2s بدل 3s ✅
+· عادي: عرض السؤال كاملاً + TTS ✅
+· لفظ صحيح للأنزان السمعي (خمسة آلاف...) ✅
+· الأعمدة = max(السلسلة، الناتج) ✅
+· توهّج عند 70% ✅
+· زر "إنهاء" في كل الشاشات ✅
+· زر "تحقق" مفعّل دائماً + "التالي" يدوي ✅
+· تمرّن: عدّاد تصاعدي ✅
+· زر تحديث الصفحة في GuardianDashboard ✅
 
 🎯 الجلسة 7 — الامتحانات
 
@@ -467,7 +557,6 @@ src/
 🎯 الجلسة 8 — الإثراء
 
 · FingersScreen.tsx
-· SorobanPlayground.tsx
 · ربط MagicSecrets + CrossMultiplication
 
 🎯 الجلسة 9 — الدروس والمحتوى
@@ -485,19 +574,87 @@ src/
 📊 13. الإحصائيات
 
 المقياس القيمة
-الملفات المكتملة ~100
-الملفات المتبقية ~8
-نسبة الإنجاز ~90%
+الملفات المكتملة ~105
+الملفات المتبقية ~7
+نسبة الإنجاز ~92%
 أسئلة البنك ~1080
 المستويات 8 (L0-L7)
 المهارات 20 (S1-S20)
 الأقسام 2 (5-12 / 13+)
-الشاشات التفاعلية 4 + 2 (محدَّثة)
-أنظمة مساعدة 3 (نمط الأرقام + الشارات + التكيف)
+الشاشات التفاعلية 4 + 2 (Soroban Playground)
+أنظمة مساعدة 4 (نمط الأرقام + الشارات + التكيف + الأرقام العربية)
 
 ---
 
-🔗 14. روابط مهمة
+🎯 14. الميزات المُنجَزة بالتفصيل (الجلسة 6)
+
+🎮 SorobanPlayground (السوروبان التفاعلي):
+
+· ملف جديد src/screens/SorobanPlayground.tsx
+· بطاقة في HeroDashboard
+· مسار 'soroban' في App.tsx
+· اختيار الأعمدة (3 / 6 / 9 / 13)
+· حجم الخرزات تلقائي (3 كبير → 13 صغير)
+· زر 🏠 الرئيسية + 🔄 تحديث الصفحة
+· زر "إعادة الكل" (داخل Soroban2D5)
+· دعم نمط الأرقام
+
+🎨 تحسين Rod2D5:
+
+· إزالة زر "تصفير" تحت كل عمود (مزعج بصرياً)
+· أسماء عمودية (writing-mode: vertical-rl) عند 6+ أعمدة
+· حجم خط تكيّفي (7-10px حسب طول الاسم)
+· قائمة 13 منزلة كاملة: آحاد → تريليونات
+
+🔊 arabicNumbers.ts (جديد):
+
+· تحويل الأرقام إلى كلمات عربية
+· يدعم: آحاد، عشرات، مئات، آلاف، ملايين، مليارات، تريليونات
+· أمثلة:
+  · 234 → "مئتان وأربعة وثلاثون"
+  · 5000 → "خمسة آلاف"
+  · 5000 − 4500 → "خمسة آلاف، ناقص أربعة آلاف وخمسمئة"
+
+🧠 AnzanScreen (تحسينات):
+
+· Flash: 2 ثانية لكل رقم (بدل 3)
+· عادي: عرض السؤال كاملاً + TTS ("واحد وعشرون زائد ثلاثة، يساوي")
+· السؤال يبقى ظاهراً أثناء الإجابة (في الوضع العادي)
+· زر إنهاء في كل المراحل
+· توهّج 70%
+
+📖 PracticeScreen (تحسينات):
+
+· العدّاد تحوّل من تنازلي → تصاعدي
+· زر إنهاء
+· الأعمدة = max(السلسلة، الناتج)
+· AdaptiveFeedback مع levelNum
+
+🎧 AudioAnzanScreen (تحسينات):
+
+· لفظ عربي صحيح ("خمسة آلاف، ناقص أربعة آلاف")
+· زر إنهاء
+· توهّج 70%
+
+📊 AdaptiveFeedback (تحسين):
+
+· فصل المهارات حسب المستوى:
+  · مهارات هذا المستوى (أحمر)
+  · مهارات من مستويات أخرى (بنفسجي مع وسم L{n})
+
+🔄 App.tsx (إصلاح):
+
+· إزالة AnimatePresence (حل الشاشة السوداء)
+· إضافة مسار 'soroban'
+
+🛠️ Header + GuardianDashboard:
+
+· زر تحديث الصفحة (window.location.reload())
+· زر خروج (مع تأكيد)
+
+---
+
+🔗 15. روابط مهمة
 
 الرابط الوصف
 Live Demo التطبيق
@@ -506,7 +663,7 @@ Actions سجل البناء
 
 ---
 
-📞 15. ملاحظات المطوّر
+📞 16. ملاحظات المطوّر
 
 المطوّر: مصطفى علي أكر (@mezo2021)
 
@@ -524,10 +681,8 @@ Actions سجل البناء
 
 صُنع بحب لأطفال العالم العربي 🌍
 
-آخر تحديث: 2026-09-26 — بداية الجلسة 5
-الحالة: 🟢 التطبيق يعمل + بنك v2 (~1080 سؤال) — 90% مكتمل
+آخر تحديث: 2026-09-26 — نهاية الجلسة 6
+الحالة: 🟢 التطبيق يعمل + بنك v2 (~1080 سؤال) — 92% مكتمل
 
 </div>
 ```
-
----
