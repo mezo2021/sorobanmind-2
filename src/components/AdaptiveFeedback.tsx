@@ -1,7 +1,6 @@
 // src/components/AdaptiveFeedback.tsx
 // مكوّن عرض ملاحظات التعليم التكيفي
-// ✅ تصفية حسب المستوى الحالي (لا تظهر مهارات مستويات أخرى)
-// ✅ تشخيص دقيق: خطأ/بطء/استعجال
+// (النسخة السابقة — بدون تصفية حسب المستوى)
 
 import { motion } from "framer-motion";
 import {
@@ -30,30 +29,12 @@ export interface SkillPerformance {
   speedClass: "mastery" | "accepted" | "slow";
 }
 
-/** ✅ جديد: نوع الضعف */
-type WeaknessType = 'careless' | 'accuracy' | 'speed' | 'both' | 'none';
-
 interface AdaptiveFeedbackProps {
   performances: SkillPerformance[];
   sectionLabel: string;
-  /** ✅ جديد: رقم المستوى (0-7) للتصفية */
+  /** موجود للتوافق مع الشاشات — لكن لا يُستخدم حالياً */
   levelNum?: number;
 }
-
-// ═══════════════════════════════════════════════════════════
-// خريطة المستويات → المهارات
-// ═══════════════════════════════════════════════════════════
-
-const LEVEL_SKILLS: Record<number, string[]> = {
-  0: ['S1', 'S2'],
-  1: ['S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9'],
-  2: ['S10', 'S11', 'S12'],
-  3: ['S13', 'S14', 'S15'],
-  4: ['S16'],
-  5: ['S17'],
-  6: ['S18'],
-  7: ['S19', 'S20'],
-};
 
 // ═══════════════════════════════════════════════════════════
 // أدوات مساعدة
@@ -85,30 +66,6 @@ function getSkillLabel(skillId: string): string {
   return map[skillId] ?? skillId;
 }
 
-/** ✅ تشخيص نوع الضعف */
-function getWeaknessType(p: SkillPerformance): WeaknessType {
-  const hasAccuracyIssue = p.correct < p.attempts;
-  const hasSpeedIssue = p.speedClass === 'slow';
-  
-  if (hasAccuracyIssue && hasSpeedIssue) return 'both';
-  if (hasAccuracyIssue && !hasSpeedIssue) {
-    // خطأ + سريع = استعجال
-    return p.speedClass === 'mastery' ? 'careless' : 'accuracy';
-  }
-  if (!hasAccuracyIssue && hasSpeedIssue) return 'speed';
-  return 'none';
-}
-
-function getWeaknessHint(type: WeaknessType): string {
-  switch (type) {
-    case 'careless': return '⚡ استعجلت — ركّز قبل الإجابة';
-    case 'accuracy': return '🎯 أخطأت — أعد الدرس';
-    case 'speed': return '🐢 صحيح لكن بطيء — تدرّب على السرعة';
-    case 'both': return '📚 يحتاج مراجعة شاملة';
-    default: return '';
-  }
-}
-
 // ═══════════════════════════════════════════════════════════
 // المكوّن
 // ═══════════════════════════════════════════════════════════
@@ -116,7 +73,6 @@ function getWeaknessHint(type: WeaknessType): string {
 export function AdaptiveFeedback({
   performances,
   sectionLabel,
-  levelNum,
 }: AdaptiveFeedbackProps) {
   const { style: numberStyle } = useNumberStyleStore();
   const hasBadge = useMasteryBadgesStore((s) => s.hasBadge);
@@ -128,7 +84,9 @@ export function AdaptiveFeedback({
   );
 
   const acceptedSkills = performances.filter(
-    (p) => p.speedClass === "accepted" && p.correct === p.attempts,
+    (p) =>
+      p.speedClass === "accepted" &&
+      p.correct === p.attempts,
   );
 
   const weakSkills = performances.filter(
@@ -136,29 +94,16 @@ export function AdaptiveFeedback({
   );
 
   // ─── المهارات الضعيفة من البنك (تاريخياً) ───
-  // ✅ تصفية حسب المستوى الحالي فقط
-  const relevantSkillIds = levelNum !== undefined
-    ? (LEVEL_SKILLS[levelNum] ?? [])
-    : null;
-
   const historicalWeak = loadWeakSkills();
   const historicalWeakSkills = Object.values(historicalWeak)
-    .filter((r) => {
-      if (r.weaknessScore < 50) return false;
-      // لو لم يُحدَّد المستوى → نعرض الكل (سلوك قديم)
-      if (relevantSkillIds && !relevantSkillIds.includes(r.skillId)) {
-        return false;
-      }
-      return true;
-    })
+    .filter((r) => r.weaknessScore >= 50)
     .sort((a, b) => b.weaknessScore - a.weaknessScore);
 
   // ─── إذا لا يوجد شيء — لا نعرض ───
   if (
     masteredSkills.length === 0 &&
     acceptedSkills.length === 0 &&
-    weakSkills.length === 0 &&
-    historicalWeakSkills.length === 0
+    weakSkills.length === 0
   ) {
     return null;
   }
@@ -268,33 +213,26 @@ export function AdaptiveFeedback({
           </div>
 
           <div className="space-y-2">
-            {weakSkills.map((p) => {
-              const weaknessType = getWeaknessType(p);
-              const hint = getWeaknessHint(weaknessType);
-              return (
-                <div
-                  key={p.skillId}
-                  className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/30"
-                >
-                  <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4 text-amber-300 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-white">
-                        {p.skillId} — {getSkillLabel(p.skillId)}
-                      </p>
-                      <p className="text-[10px] text-amber-300">
-                        {p.correct}/{p.attempts} · {formatNumber(Math.round(p.avgTimeMs / 1000), numberStyle)}s
-                      </p>
-                    </div>
-                  </div>
-                  {hint && (
-                    <p className="text-[10px] text-amber-200 font-body mt-1.5 mr-6">
-                      {hint}
+            {weakSkills.map((p) => (
+              <div
+                key={p.skillId}
+                className="flex items-center justify-between p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/30"
+              >
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Target className="w-4 h-4 text-amber-300 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white">
+                      {p.skillId} — {getSkillLabel(p.skillId)}
                     </p>
-                  )}
+                    <p className="text-[10px] text-amber-300">
+                      {p.correct}/{p.attempts} · {formatNumber(Math.round(p.avgTimeMs / 1000), numberStyle)}s
+                      {p.speedClass === "slow" && " · بطيء"}
+                      {p.correct < p.attempts && " · دقة منخفضة"}
+                    </p>
+                  </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
 
           <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-400/20">
@@ -309,7 +247,7 @@ export function AdaptiveFeedback({
         </div>
       )}
 
-      {/* ─── المهارات الضعيفة تاريخياً (مُصفَّاة) ─── */}
+      {/* ─── المهارات الضعيفة تاريخياً ─── */}
       {historicalWeakSkills.length > 0 && (
         <div className="glass-card p-4 border border-red-400/30">
           <div className="flex items-center gap-2 mb-3">
@@ -317,11 +255,6 @@ export function AdaptiveFeedback({
             <h4 className="text-sm font-bold text-red-200 font-display">
               📉 مهارات تحتاج مراجعة (من جلسات سابقة)
             </h4>
-            {levelNum !== undefined && (
-              <span className="text-[9px] px-2 py-0.5 rounded bg-red-500/20 text-red-200 font-bold">
-                L{levelNum}
-              </span>
-            )}
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -329,7 +262,6 @@ export function AdaptiveFeedback({
               <span
                 key={r.skillId}
                 className="px-2.5 py-1 rounded-lg bg-red-500/20 border border-red-400/40 text-red-200 text-[10px] font-bold"
-                title={getSkillLabel(r.skillId)}
               >
                 {r.skillId} · {formatNumber(Math.round(r.weaknessScore), numberStyle)}%
               </span>
