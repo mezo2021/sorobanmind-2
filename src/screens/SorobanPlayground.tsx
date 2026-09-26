@@ -1,21 +1,14 @@
 // src/screens/SorobanPlayground.tsx
-// شاشة السوروبان التفاعلي — لعب حر بالمعداد
-// ✅ اختيار الأعمدة (3 / 6 / 9 / 13)
-// ✅ زر رجوع + زر تحديث الصفحة
-// ✅ يدعم نمط الأرقام (عربي / لاتيني) تلقائياً عبر Global Store
-// ✅ زر تصفير موجود داخل Soroban2D5
+// شاشة السوروبان التفاعلي
+// ✅ زر 🏠 الرئيسية بدل ↩ الرجوع
+// ✅ حل الشاشة السوداء: window.scrollTo + تأخير بسيط
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, RefreshCw, Sparkles, Grid3X3 } from 'lucide-react';
+import { ArrowRight, RefreshCw, Sparkles, Grid3X3, Home } from 'lucide-react';
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
-
-// ═══════════════════════════════════════════════════════════
-// الأنواع
-// ═══════════════════════════════════════════════════════════
 
 interface SorobanPlaygroundProps {
   onBack: () => void;
@@ -27,47 +20,14 @@ interface ColumnOption {
   labelAr: string;
   labelEn: string;
   rangeAr: string;
-  rangeEn: string;
 }
 
-// ═══════════════════════════════════════════════════════════
-// الثوابت
-// ═══════════════════════════════════════════════════════════
-
 const COLUMN_OPTIONS: ColumnOption[] = [
-  {
-    columns: 3,
-    labelAr: '٣ أعمدة',
-    labelEn: '3 Columns',
-    rangeAr: '٠ — ٩٩٩',
-    rangeEn: '0 — 999',
-  },
-  {
-    columns: 6,
-    labelAr: '٦ أعمدة',
-    labelEn: '6 Columns',
-    rangeAr: '٠ — ٩٩٩٩٩٩',
-    rangeEn: '0 — 999,999',
-  },
-  {
-    columns: 9,
-    labelAr: '٩ أعمدة',
-    labelEn: '9 Columns',
-    rangeAr: '٠ — ٩٩٩٩٩٩٩٩٩',
-    rangeEn: '0 — 999,999,999',
-  },
-  {
-    columns: 13,
-    labelAr: '١٣ عموداً',
-    labelEn: '13 Columns',
-    rangeAr: 'حتى تريليونات',
-    rangeEn: 'Up to Trillions',
-  },
+  { columns: 3, labelAr: '٣ أعمدة', labelEn: 'Columns 3', rangeAr: '٠ — ٩٩٩' },
+  { columns: 6, labelAr: '٦ أعمدة', labelEn: 'Columns 6', rangeAr: '٠ — ٩٩٩٩٩٩' },
+  { columns: 9, labelAr: '٩ أعمدة', labelEn: 'Columns 9', rangeAr: '٠ — ٩٩٩٩٩٩٩٩٩' },
+  { columns: 13, labelAr: '١٣ عموداً', labelEn: 'Columns 13', rangeAr: 'حتى تريليونات' },
 ];
-
-// ═══════════════════════════════════════════════════════════
-// الشاشة الرئيسية
-// ═══════════════════════════════════════════════════════════
 
 export function SorobanPlayground({
   onBack,
@@ -76,17 +36,18 @@ export function SorobanPlayground({
   const [selectedColumns, setSelectedColumns] = useState<number>(3);
   const [refreshKey, setRefreshKey] = useState<number>(0);
 
-  // ✅ نمط الأرقام
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic';
 
-  // ─── رجوع ───
-  const handleBack = () => {
+  // ─── 🏠 العودة للرئيسية ───
+  const handleHome = () => {
     playSound('click');
-    onBack();
+    // ✅ حل الشاشة السوداء
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    setTimeout(() => onBack(), 30);
   };
 
-  // ─── تحديث الصفحة ───
+  // ─── 🔄 تحديث الصفحة ───
   const handleRefresh = () => {
     playSound('click');
     window.location.reload();
@@ -96,7 +57,6 @@ export function SorobanPlayground({
   const handleColumnsChange = (columns: number) => {
     playSound('click');
     setSelectedColumns(columns);
-    // إعادة تركيب Soroban2D5 عبر تغيير المفتاح
     setRefreshKey((k) => k + 1);
   };
 
@@ -104,13 +64,14 @@ export function SorobanPlayground({
     <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-3xl mx-auto">
       {/* ═══ الشريط العلوي ═══ */}
       <div className="flex items-center gap-3 mb-6">
+        {/* ✅ زر الرئيسية 🏠 */}
         <button
           type="button"
-          onClick={handleBack}
-          title="رجوع"
+          onClick={handleHome}
+          title="الرئيسية"
           className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
         >
-          <ArrowRight className="w-6 h-6" />
+          <Home className="w-6 h-6 text-white" />
         </button>
 
         <div className="flex-1">
@@ -122,6 +83,7 @@ export function SorobanPlayground({
           </p>
         </div>
 
+        {/* ✅ زر تحديث 🔄 */}
         <button
           type="button"
           onClick={handleRefresh}
@@ -133,11 +95,7 @@ export function SorobanPlayground({
       </div>
 
       {/* ═══ بطاقة الترحيب ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-card p-5 mb-5 relative overflow-hidden"
-      >
+      <div className="glass-card p-5 mb-5 relative overflow-hidden">
         <div className="absolute -top-20 -right-20 w-48 h-48 bg-purple-500/20 blur-3xl" />
 
         <div className="relative flex items-center gap-3">
@@ -156,15 +114,10 @@ export function SorobanPlayground({
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* ═══ اختيار عدد الأعمدة ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        className="glass-card p-5 mb-5"
-      >
+      {/* ═══ اختيار الأعمدة ═══ */}
+      <div className="glass-card p-5 mb-5">
         <div className="flex items-center gap-2 mb-4">
           <Grid3X3 className="w-5 h-5 text-gold-300" />
           <div>
@@ -181,11 +134,9 @@ export function SorobanPlayground({
           {COLUMN_OPTIONS.map((opt) => {
             const isSelected = selectedColumns === opt.columns;
             return (
-              <motion.button
+              <button
                 key={opt.columns}
                 type="button"
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.97 }}
                 onClick={() => handleColumnsChange(opt.columns)}
                 className={`relative flex flex-col items-center justify-center gap-1 p-3 rounded-2xl border-2 transition-all ${
                   isSelected
@@ -193,7 +144,6 @@ export function SorobanPlayground({
                     : 'bg-white/5 border-white/10 hover:border-white/20'
                 }`}
               >
-                {/* العدد الكبير */}
                 <span
                   className={`text-2xl font-black font-display ${
                     isSelected ? 'text-white' : 'text-white/70'
@@ -203,7 +153,6 @@ export function SorobanPlayground({
                   {formatNumber(opt.columns, numberStyle)}
                 </span>
 
-                {/* الاسم العربي */}
                 <span
                   className={`text-[11px] font-bold font-body ${
                     isSelected ? 'text-purple-200' : 'text-white/50'
@@ -212,12 +161,10 @@ export function SorobanPlayground({
                   {opt.labelAr}
                 </span>
 
-                {/* الاسم الإنجليزي الصغير */}
                 <span className="text-[9px] text-white/40 font-body">
                   {opt.labelEn}
                 </span>
 
-                {/* المدى */}
                 <span
                   className={`text-[9px] font-body mt-0.5 ${
                     isSelected ? 'text-gold-300' : 'text-white/30'
@@ -227,29 +174,19 @@ export function SorobanPlayground({
                   {formatNumber(opt.rangeAr, numberStyle)}
                 </span>
 
-                {/* شارة مختار */}
                 {isSelected && (
-                  <motion.span
-                    layoutId="selected-column-badge"
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gold-400 text-gold-900 text-[10px] font-black flex items-center justify-center shadow-lg"
-                  >
+                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gold-400 text-gold-900 text-[10px] font-black flex items-center justify-center shadow-lg">
                     ✓
-                  </motion.span>
+                  </span>
                 )}
-              </motion.button>
+              </button>
             );
           })}
         </div>
-      </motion.div>
+      </div>
 
       {/* ═══ السوروبان ═══ */}
-      <motion.div
-        key={refreshKey}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-        className="glass-card p-4 sm:p-6 mb-5"
-      >
+      <div key={refreshKey} className="glass-card p-4 sm:p-6 mb-5">
         <div className="flex items-center justify-center">
           <Soroban2D5
             columns={selectedColumns}
@@ -258,7 +195,7 @@ export function SorobanPlayground({
             showValue={true}
           />
         </div>
-      </motion.div>
+      </div>
 
       {/* ═══ ملاحظة سفلية ═══ */}
       <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/30">
