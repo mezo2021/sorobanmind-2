@@ -60,13 +60,13 @@ function formatTime(seconds: number): string {
  * (بدل الاعتماد على الناتج فقط)
  */
 function getColumnsForQuestion(question: PlacementQuestion): number {
-  const candidates: number[] = [Math.abs(question.correctAnswer)];
-  if (Array.isArray(question.operands)) {
-    question.operands.forEach((op: number) => {
-      candidates.push(Math.abs(op));
-    });
-  }
-  const maxAbs = Math.max(...candidates);
+  // ✅ استخراج الأرقام من نص السؤال (لأن PlacementQuestion لا يحتوي على operands)
+  const nums = (question.prompt.match(/\d+/g) ?? []).map(Number);
+  const candidates: number[] = [
+    Math.abs(question.correctAnswer),
+    ...nums.map(Math.abs),
+  ];
+  const maxAbs = Math.max(...candidates, 0);
 
   if (maxAbs < 1000) return 3;
   if (maxAbs < 1_000_000) return 6;
