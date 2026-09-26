@@ -1,6 +1,6 @@
 // src/data/bank-v2/index.ts
 // بنك الأسئلة v2 — الفهرس الموحّد
-// يجمع: bank-v2 + bank-exam + placement + منطق الضعف
+// يجمع: bank-v2 + bank-exam + placement + منطق الضعف + امتحانات القسم
 
 import type { BankQuestion } from "./types";
 import { createRng, shuffle } from "./types";
@@ -301,7 +301,7 @@ export function clearWeakSkills(): void {
 }
 
 // ═══════════════════════════════════════════════════════════
-// دوال مساعدة للشاشات
+// دوال مساعدة للشاشات (تمرّن + أنزان)
 // ═══════════════════════════════════════════════════════════
 
 export function getSkillsForPracticeNum(num: number): string[] {
@@ -378,4 +378,104 @@ export function getAnzanAudioQuestions(
   usedIds: string[] = [],
 ): BankQuestion[] {
   return getPracticeQuestions(num, seed, usedIds);
+}
+
+// ═══════════════════════════════════════════════════════════
+// امتحانات القسم (Category Exams)
+// ═══════════════════════════════════════════════════════════
+
+/** ✅ عدد المنازل */
+function digitCount(value: number): number {
+  const abs = Math.abs(value);
+  if (abs === 0) return 1;
+  return String(abs).length;
+}
+
+/**
+ * ✅ اختيار الأصعب من البنك:
+ *   1. عدد الحدود (operands.length) — الأكثر = أصعب
+ *   2. الصعوبة (difficulty)
+ *   3. عدد المنازل (digitCount)
+ * ثم خلط طفيف لتنويع الأسئلة بين الجلسات.
+ */
+function pickHardest(
+  pool: BankQuestion[],
+  count: number,
+  rng: () => number,
+): BankQuestion[] {
+  if (pool.length === 0) return [];
+
+  const sorted = [...pool].sort((a, b) => {
+    // 1. عدد الحدود
+    const termDiff = b.operands.length - a.operands.length;
+    if (termDiff !== 0) return termDiff;
+
+    // 2. الصعوبة
+    const diffDiff = b.difficulty - a.difficulty;
+    if (diffDiff !== 0) return diffDiff;
+
+    // 3. عدد المنازل
+    return digitCount(b.correctAnswer) - digitCount(a.correctAnswer);
+  });
+
+  // خذ أعلى 3× من المطلوب، ثم اخلط واختر
+  const topPool = sorted.slice(0, Math.min(count * 3, sorted.length));
+  const shuffled = shuffle(topPool, rng);
+  return shuffled.slice(0, count);
+}
+
+/** توزيع Exam 1 (L0-L3) */
+const EXAM1_DISTRIBUTION: Record<string, number> = {
+  L0: 3,
+  L1: 7,
+  L2: 5,
+  L3: 5,
+};
+
+/** توزيع Exam 2 (L4-L7) */
+const EXAM2_DISTRIBUTION: Record<string, number> = {
+  L4: 10,
+  L5: 10,
+  L6: 10,
+  L7: 10,
+};
+
+export const EXAM1_QUESTION_COUNT = 20;
+export const EXAM2_QUESTION_COUNT = 40;
+export const EXAM1_TIME_SEC = 10 * 60;
+export const EXAM2_TIME_SEC = 20 * 60;
+export const EXAM_PASS_THRESHOLD = 80;
+export const EXAM_MAX_ATTEMPTS = 2;
+export const EXAM_COOLDOWN_MS = 48 * 60 * 60 * 1000;
+
+/**
+ * ✅ بناء امتحان القسم 1 (L0-L3) — 20 سؤالاً — الأصعب من كل مستوى.
+ */
+export function buildExam1Category(seed = Date.now()): BankQuestion[] {
+  const rng = createRng(seed);
+  const questions: BankQuestion[] = [];
+
+  for (const [levelId, count] of Object.entries(EXAM1_DISTRIBUTION)) {
+    const pool = filterBankV2({ levelIds: [levelId] });
+    if (pool.length === 0) continue;
+    questions.push(...pickHardest(pool, count, rng));
+  }
+
+  return shuffle(questions, rng);
+}
+
+/**
+ * ✅ بناء امتحان القسم 2 (L4-L7) — 40 سؤالاً — الأصعب من كل مستوى.
+ */
+export function buildExam2Category(seed = Date.now()): BankQuestion[] {
+  const rng = createRng(seed);
+  const questions: BankQuestion[] = [];
+
+  for (const [levelId, count] of Object.entries(EXAM2_DISTRIBUTION)) {
+    const pool = filterBankV2({ levelIds: [levelId] });
+    if (pool.length === 0) continue;
+    questions.push(...pickHardest(pool, count, rng));
+  }
+
+  return shuffle(questions, rng);
 }
