@@ -222,6 +222,7 @@ export function Soroban2D5({
                   state={state}
                   columnIndex={originalIdx}
                   displayOrder={displayOrder}
+                  totalColumns={displayedStates.length}
                   onToggleUpper={() => interactive && toggleUpper(originalIdx)}
                   onSetLower={(count) => interactive && setLower(originalIdx, count)}
                   onReset={() => interactive && resetColumn(originalIdx)}
