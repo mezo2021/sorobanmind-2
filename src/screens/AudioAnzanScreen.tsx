@@ -1,14 +1,15 @@
 // src/screens/AudioAnzanScreen.tsx
 // شاشة الأنزان السمعي
-// ✅ نمط الأرقام + AdaptiveFeedback + Mastery Badges
 // ✅ لفظ صوتي عربي صحيح (كلمات عربية)
-// ✅ إصلاح عدد الأعمدة (3/6/9) — يأخذ الأرقام الكبيرة في الحساب
+// ✅ إصلاح عدد الأعمدة (3/6/9)
+// ✅ توهّج عند 70% + زر إنهاء
+// ✅ AdaptiveFeedback + Mastery Badges
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight, ArrowLeft, CheckCircle2, XCircle, Clock,
-  Trophy, RotateCcw, Play, Volume2, AlertCircle,
+  Trophy, RotateCcw, Play, Volume2, AlertCircle, Square,
 } from 'lucide-react';
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
@@ -57,20 +58,12 @@ interface PerfStats {
 const XP_PER_CORRECT = 5;
 const PASS_THRESHOLD = 75;
 const DELAY_BETWEEN_TERMS_MS = 800;
-const WARNING_RATIO = 0.6;
+const WARNING_RATIO = 0.7; // ✅ 70%
 
 // ═══════════════════════════════════════════════════════════
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
-/**
- * ✅ إصلاح حرج: حساب الأعمدة من أكبر قيمة في السؤال
- * (وليس من الإجابة فقط).
- *
- * مثال:  5000 − 4500 = 500
- *   قبل: كان يعطي 3 أعمدة (500 فقط)
- *   بعد: يعطي 6 أعمدة (5000)
- */
 function getColumnsForQuestion(question: BankQuestion): number {
   const candidates: number[] = [
     Math.abs(question.correctAnswer),
@@ -84,15 +77,6 @@ function getColumnsForQuestion(question: BankQuestion): number {
   return 13;
 }
 
-/**
- * ✅ بناء تسلسل اللفظ الصوتي:
- *  - أول رقم: بلا إشارة
- *  - موجب لاحق: بلا "زائد" (مفهوم ضمنياً)
- *  - سالب لاحق: "ناقص X"
- *  - ضرب: "في X"
- *  - قسمة: "على X"
- *  - كل الأرقام تُلفظ ككلمات عربية
- */
 function buildSpeechSequence(question: BankQuestion): string[] {
   const { operands, operation } = question;
   const parts: string[] = [];
@@ -109,7 +93,6 @@ function buildSpeechSequence(question: BankQuestion): string[] {
     return parts;
   }
 
-  // جمع / طرح
   operands.forEach((op, i) => {
     if (i === 0) {
       parts.push(numberToArabicWords(op));
@@ -238,19 +221,13 @@ export function AudioAnzanScreen({
   const trackPerformance = useCallback(
     (isCorrect: boolean, timeMs: number) => {
       if (!currentQ) return;
-
       const skillId = currentQ.skillId;
       const existing = perfRef.current.get(skillId) ?? {
-        correct: 0,
-        attempts: 0,
-        totalTimeMs: 0,
-        answerMs: currentQ.timing.answerMs,
+        correct: 0, attempts: 0, totalTimeMs: 0, answerMs: currentQ.timing.answerMs,
       };
-
       existing.attempts += 1;
       if (isCorrect) existing.correct += 1;
       existing.totalTimeMs += timeMs;
-
       perfRef.current.set(skillId, existing);
 
       if (isCorrect) {
@@ -332,11 +309,8 @@ export function AudioAnzanScreen({
     perfRef.current.forEach((stats, skillId) => {
       const avgTimeMs = stats.attempts === 0 ? 0 : stats.totalTimeMs / stats.attempts;
       list.push({
-        skillId,
-        correct: stats.correct,
-        attempts: stats.attempts,
-        avgTimeMs,
-        answerMs: stats.answerMs,
+        skillId, correct: stats.correct, attempts: stats.attempts,
+        avgTimeMs, answerMs: stats.answerMs,
         speedClass: classifySpeed(avgTimeMs, stats.answerMs),
       });
     });
@@ -359,7 +333,6 @@ export function AudioAnzanScreen({
       const finalScore = score;
       const passed = (finalScore / questions.length) * 100 >= PASS_THRESHOLD;
       if (passed) markAnzanAudioPassed(levelNum);
-
       setPerformances(buildPerformances());
       setPhase('result');
       playSound(passed ? 'levelup' : 'whoosh');
@@ -371,6 +344,28 @@ export function AudioAnzanScreen({
   }, [
     currentIdx, questions.length, score, levelNum, playSound,
     sorobana, stopSpeech, onComplete, markAnzanAudioPassed, buildPerformances,
+  ]);
+
+  // ═══════════════════════════════════════════════════════
+  // زر إنهاء التدريب
+  // ═══════════════════════════════════════════════════════
+  const handleEnd = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    stopSpeech();
+    sorobana.stop();
+
+    const finalScore = score;
+    const passed = (finalScore / questions.length) * 100 >= PASS_THRESHOLD;
+
+    if (passed) markAnzanAudioPassed(levelNum);
+
+    setPerformances(buildPerformances());
+    setPhase('result');
+    playSound('whoosh');
+    onComplete?.(passed, finalScore);
+  }, [
+    score, questions.length, levelNum, playSound, stopSpeech,
+    sorobana, onComplete, markAnzanAudioPassed, buildPerformances,
   ]);
 
   // ═══════════════════════════════════════════════════════
@@ -413,7 +408,7 @@ export function AudioAnzanScreen({
           <div className="space-y-3 text-sm text-white/80 font-body">
             <div className="flex items-start gap-3">
               <span className="text-purple-300 font-bold shrink-0">{formatNumber(1, numberStyle)}.</span>
-              <p>ستسمع الأرقام <strong>واحداً واحداً</strong></p>
+              <p>ستسمع الأرقام <strong>واحداً واحداً</strong> بالعربية</p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-purple-300 font-bold shrink-0">{formatNumber(2, numberStyle)}.</span>
@@ -425,18 +420,18 @@ export function AudioAnzanScreen({
             </div>
             <div className="flex items-start gap-3">
               <span className="text-purple-300 font-bold shrink-0">{formatNumber(4, numberStyle)}.</span>
-              <p>يمكنك إعادة السمع <strong>مرة واحدة</strong></p>
+              <p>يمكنك إعادة السمع <strong>مرة واحدة</strong>، وإنهاء التدريب في أي لحظة</p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-purple-300 font-bold shrink-0">{formatNumber(5, numberStyle)}.</span>
-              <p>{formatNumber(5, numberStyle)} نقاط خبرة لكل إجابة</p>
+              <p>{formatNumber(5, numberStyle)} نقاط خبرة لكل إجابة صحيحة</p>
             </div>
           </div>
           <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30">
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-200 font-body">
-                💡 العدّاد يتوهج عند {formatNumber(60, numberStyle)}٪ من الوقت.
+                💡 العدّاد يتوهج عند {formatNumber(70, numberStyle)}٪ من الوقت.
               </p>
             </div>
           </div>
@@ -454,13 +449,22 @@ export function AudioAnzanScreen({
   if (phase === 'listening' && currentQ) {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto min-h-screen flex flex-col">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1">
-            <h2 className="text-lg font-bold text-white">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-white truncate">
               السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-xs text-white/50 font-body">{currentQ.skillId} · أنزان سمعي</p>
           </div>
+
+          <button
+            type="button"
+            onClick={handleEnd}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition"
+          >
+            <Square className="w-3.5 h-3.5" />
+            إنهاء
+          </button>
         </div>
 
         <div className="mb-6">
@@ -489,17 +493,26 @@ export function AudioAnzanScreen({
 
   // ═══ answering ═══
   if (phase === 'answering' && currentQ) {
-    // ✅ إصلاح حرج: الأعمدة من أكبر قيمة في السؤال
     const columns = getColumnsForQuestion(currentQ);
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1">
-            <h2 className="text-lg font-bold text-white">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-white truncate">
               السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-xs text-white/50 font-body">مثّل الناتج على العداد</p>
           </div>
+
+          <button
+            type="button"
+            onClick={handleEnd}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition"
+          >
+            <Square className="w-3.5 h-3.5" />
+            إنهاء
+          </button>
+
           <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
             isWarning ? 'bg-red-500/30 border-red-500/70 shadow-lg shadow-red-500/50 animate-pulse' : 'bg-white/5 border-white/10'
           }`}>
