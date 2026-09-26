@@ -1,6 +1,8 @@
 // src/screens/AudioAnzanScreen.tsx
 // شاشة الأنزان السمعي
-// ✅ يدعم نمط الأرقام (عربي / لاتيني) + AdaptiveFeedback + Mastery Badges
+// ✅ نمط الأرقام + AdaptiveFeedback + Mastery Badges
+// ✅ لفظ صوتي عربي صحيح (كلمات عربية)
+// ✅ إصلاح عدد الأعمدة (3/6/9) — يأخذ الأرقام الكبيرة في الحساب
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
@@ -18,6 +20,7 @@ import { useProgressStore } from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { useMasteryBadgesStore, classifySpeed } from '@/store/masteryBadgesStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
+import { numberToArabicWords } from '@/utils/arabicNumbers';
 
 import {
   getAnzanAudioQuestions,
@@ -60,30 +63,61 @@ const WARNING_RATIO = 0.6;
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
-function getColumnsForValue(value: number): number {
-  const abs = Math.abs(value);
-  if (abs < 1000) return 3;
-  if (abs < 1_000_000) return 6;
-  return 9;
+/**
+ * ✅ إصلاح حرج: حساب الأعمدة من أكبر قيمة في السؤال
+ * (وليس من الإجابة فقط).
+ *
+ * مثال:  5000 − 4500 = 500
+ *   قبل: كان يعطي 3 أعمدة (500 فقط)
+ *   بعد: يعطي 6 أعمدة (5000)
+ */
+function getColumnsForQuestion(question: BankQuestion): number {
+  const candidates: number[] = [
+    Math.abs(question.correctAnswer),
+    ...question.operands.map((op) => Math.abs(op)),
+  ];
+  const maxAbs = Math.max(...candidates);
+
+  if (maxAbs < 1000) return 3;
+  if (maxAbs < 1_000_000) return 6;
+  if (maxAbs < 1_000_000_000) return 9;
+  return 13;
 }
 
+/**
+ * ✅ بناء تسلسل اللفظ الصوتي:
+ *  - أول رقم: بلا إشارة
+ *  - موجب لاحق: بلا "زائد" (مفهوم ضمنياً)
+ *  - سالب لاحق: "ناقص X"
+ *  - ضرب: "في X"
+ *  - قسمة: "على X"
+ *  - كل الأرقام تُلفظ ككلمات عربية
+ */
 function buildSpeechSequence(question: BankQuestion): string[] {
   const { operands, operation } = question;
   const parts: string[] = [];
 
-  if (operation === "multiplication" || operation === "division") {
-    const symbol = operation === "multiplication" ? "ضرب" : "تقسيم";
-    operands.forEach((op, i) => {
-      if (i === 0) parts.push(String(op));
-      else parts.push(`${symbol} ${Math.abs(op)}`);
-    });
+  if (operation === "multiplication") {
+    parts.push(numberToArabicWords(operands[0]));
+    parts.push(`في ${numberToArabicWords(Math.abs(operands[1]))}`);
     return parts;
   }
 
+  if (operation === "division") {
+    parts.push(numberToArabicWords(operands[0]));
+    parts.push(`على ${numberToArabicWords(Math.abs(operands[1]))}`);
+    return parts;
+  }
+
+  // جمع / طرح
   operands.forEach((op, i) => {
-    if (i === 0) parts.push(String(op));
-    else if (op >= 0) parts.push(`زائد ${op}`);
-    else parts.push(`ناقص ${Math.abs(op)}`);
+    if (i === 0) {
+      parts.push(numberToArabicWords(op));
+    } else if (op >= 0) {
+      parts.push(numberToArabicWords(op));
+    } else {
+      parts.push(`ناقص ${numberToArabicWords(Math.abs(op))}`);
+    }
   });
 
   return parts;
@@ -114,11 +148,9 @@ export function AudioAnzanScreen({
   const markAnzanAudioPassed = useProgressStore((s) => s.markAnzanAudioPassed);
   const updateStreak = useProgressStore((s) => s.updateStreak);
 
-  // ✅ نمط الأرقام
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic';
 
-  // ✅ شارات المهارات
   const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -138,7 +170,6 @@ export function AudioAnzanScreen({
     const qs = getAnzanAudioQuestions(levelNum, Date.now(), []);
     if (qs.length === 0) { playSound('error'); return; }
 
-    // ✅ تصفير تتبّع الأداء
     perfRef.current = new Map();
 
     setQuestions(qs);
@@ -222,7 +253,6 @@ export function AudioAnzanScreen({
 
       perfRef.current.set(skillId, existing);
 
-      // ✅ شارة إذا زمن قياسي
       if (isCorrect) {
         const cls = classifySpeed(timeMs, currentQ.timing.answerMs);
         if (cls === 'mastery') {
@@ -459,7 +489,8 @@ export function AudioAnzanScreen({
 
   // ═══ answering ═══
   if (phase === 'answering' && currentQ) {
-    const columns = getColumnsForValue(currentQ.correctAnswer);
+    // ✅ إصلاح حرج: الأعمدة من أكبر قيمة في السؤال
+    const columns = getColumnsForQuestion(currentQ);
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-4">
@@ -615,7 +646,6 @@ export function AudioAnzanScreen({
           </div>
         </motion.div>
 
-        {/* ✅ ملاحظات التعليم التكيفي */}
         {performances.length > 0 && (
           <AdaptiveFeedback
             performances={performances}
