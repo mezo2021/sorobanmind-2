@@ -6,7 +6,6 @@ interface Rod2D5Props {
   state: BeadState;
   columnIndex: number;
   displayOrder: number;
-  /** ✅ جديد: عدد الأعمدة الكلي — لتحديد نمط الأسماء */
   totalColumns?: number;
   onToggleUpper: () => void;
   onSetLower: (count: number) => void;
@@ -15,43 +14,22 @@ interface Rod2D5Props {
   beadSize?: number;
 }
 
-// ═══════════════════════════════════════════════════════════
-// أسماء المنازل (13 منزلة)
-// ═══════════════════════════════════════════════════════════
-
 const COLUMN_LABELS: string[] = [
-  'آحاد',
-  'عشرات',
-  'مئات',
-  'آلاف',
-  'عشرات الآلاف',
-  'مئات الآلاف',
-  'ملايين',
-  'عشرات الملايين',
-  'مئات الملايين',
-  'مليارات',
-  'عشرات المليارات',
-  'مئات المليارات',
+  'آحاد', 'عشرات', 'مئات', 'آلاف',
+  'عشرات الآلاف', 'مئات الآلاف',
+  'ملايين', 'عشرات الملايين', 'مئات الملايين',
+  'مليارات', 'عشرات المليارات', 'مئات المليارات',
   'تريليونات',
 ];
 
-// ═══════════════════════════════════════════════════════════
-// حجم الخط التكيّفي (كلما طال الاسم، صغر الخط)
-// ═══════════════════════════════════════════════════════════
-
 function getLabelFontSize(text: string, isVertical: boolean): number {
-  if (!isVertical) return 13;
-
+  if (!isVertical) return 11;
   const len = text.length;
-  if (len >= 14) return 9;
-  if (len >= 11) return 10;
-  if (len >= 8) return 11;
-  return 12;
+  if (len >= 14) return 7;
+  if (len >= 11) return 8;
+  if (len >= 8) return 9;
+  return 10;
 }
-
-// ═══════════════════════════════════════════════════════════
-// المكوّن
-// ═══════════════════════════════════════════════════════════
 
 export function Rod2D5({
   state,
@@ -59,7 +37,7 @@ export function Rod2D5({
   totalColumns,
   onToggleUpper,
   onSetLower,
-  onReset,
+  onReset: _onReset,
   height = 440,
   beadSize = 44,
 }: Rod2D5Props) {
@@ -78,7 +56,6 @@ export function Rod2D5({
   const lowerAreaTop = beamY + 4;
   const lowerAreaBottom = rodHeight - beadHeight - 2;
 
-  // ✅ أسماء عمودية عند 6 أعمدة أو أكثر
   const isVertical = (totalColumns ?? 0) >= 6;
 
   const labelText =
@@ -92,7 +69,6 @@ export function Rod2D5({
       className="relative flex flex-col items-center"
       style={{ height, width: beadSize * 1.3 }}
     >
-      {/* ═══ القضيب ═══ */}
       <div
         style={{
           position: 'absolute',
@@ -108,7 +84,6 @@ export function Rod2D5({
         }}
       />
 
-      {/* ═══ الخرزة العلوية ═══ */}
       <div
         style={{
           position: 'absolute',
@@ -128,7 +103,6 @@ export function Rod2D5({
         />
       </div>
 
-      {/* ═══ العارضة الوسطى ═══ */}
       <div
         style={{
           position: 'absolute',
@@ -142,7 +116,6 @@ export function Rod2D5({
         }}
       />
 
-      {/* ═══ الخرزات السفلية ═══ */}
       {lowerBeads.map((idx) => {
         const isActive = idx < state.lower;
         const topActive = lowerAreaTop + idx * step;
@@ -177,26 +150,7 @@ export function Rod2D5({
         );
       })}
 
-      {/* ═══ زر التصفير ═══ */}
-      <button
-        type="button"
-        onClick={onReset}
-        className="absolute text-amber-700 hover:text-amber-900 underline whitespace-nowrap"
-        style={{
-          fontSize: 11,
-          bottom: 2,
-          left: '50%',
-          transform: 'translateX(-50%)',
-        }}
-        aria-label="إعادة تصفير العمود"
-      >
-        ↺ تصفير
-      </button>
-
-      {/* ═══ اسم المنزلة ═══
-          - 3 أعمدة: أفقي (كما كان)
-          - 6+ أعمدة: عمودي (writing-mode: vertical-rl)
-      */}
+      {/* اسم المنزلة فقط — لا يوجد زر تصفير */}
       <div
         className="absolute text-amber-800 font-bold"
         style={{
@@ -208,7 +162,7 @@ export function Rod2D5({
           textOrientation: 'mixed',
           lineHeight: 1.05,
           letterSpacing: isVertical ? 0 : 0.3,
-          whiteSpace: isVertical ? 'nowrap' : 'nowrap',
+          whiteSpace: 'nowrap',
           pointerEvents: 'none',
           textAlign: 'center',
         }}
