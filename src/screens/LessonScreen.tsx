@@ -99,6 +99,9 @@ export function LessonScreen({
   const [inputValue, setInputValue] = useState<string>('');
   const [choices, setChoices] = useState<number[]>([]);
 
+  // 🆕 حالة تسلسل — لسؤال sequence
+  const [sequencePicks, setSequencePicks] = useState<number[]>([]);
+
   // ─── حالة الصوت ───
   const [isReadingStory, setIsReadingStory] = useState(false);
 
@@ -180,16 +183,21 @@ export function LessonScreen({
     }
   }, [tab, tryIdx, currentTry?.id]);
 
+  // 🆕 إعادة تعيين تسلسل عند تغيير السؤال
+  useEffect(() => {
+    setSequencePicks([]);
+  }, [tryIdx]);
+
   // ─── 🆕 تفاعل مشترك مع الإجابة ───
   const reactToAnswer = (isCorrect: boolean, attempt: number) => {
     if (isCorrect) {
       playSound('success');
-      sorobana.speakCorrect();          // 🆕 صوت سوروبانا
-      showCompanionMsg('أحسنت! 🌟');     // 🆕 فقاعة
+      sorobana.speakCorrect();
+      showCompanionMsg('أحسنت! 🌟');
       setFeedback('correct');
     } else {
       playSound('error');
-      sorobana.speakWrong();             // 🆕 صوت سوروبانا
+      sorobana.speakWrong();
       if (attempt >= MAX_TRIES) {
         setFeedback('reveal');
       } else {
@@ -198,7 +206,7 @@ export function LessonScreen({
     }
   };
 
-  // ─── التحقق (read) ───
+  // ─── التحقق (read + compare) ───
   const handleCheckRead = (chosen: number) => {
     if (!currentTry || feedback === 'reveal') return;
     const isCorrect = chosen === currentTry.expectedValue;
@@ -232,10 +240,42 @@ export function LessonScreen({
     }
   };
 
+  // 🆕 التحقق (sequence) — يتحقق من كل ضغطة
+  const handleSequenceClick = (c: number) => {
+    if (!currentTry || !currentTry.choices || feedback === 'reveal') return;
+    if (sequencePicks.includes(c)) return;
+
+    const sorted = [...currentTry.choices].sort((a, b) => a - b);
+    const nextIndex = sequencePicks.length;
+
+    if (sorted[nextIndex] === c) {
+      // الضغطة صحيحة — نُكمل
+      const newPicks = [...sequencePicks, c];
+      setSequencePicks(newPicks);
+
+      if (newPicks.length === sorted.length) {
+        // اكتمل التسلسل بنجاح
+        const key = currentTry.id;
+        const attempt = (attempts[key] ?? 0) + 1;
+        setAttempts((a) => ({ ...a, [key]: attempt }));
+        setSolved((s) => new Set(s).add(key));
+        reactToAnswer(true, attempt);
+        setTimeout(() => advanceTry(), 1100);
+      }
+    } else {
+      // ضغطة خاطئة — تُحسب محاولة
+      const key = currentTry.id;
+      const attempt = (attempts[key] ?? 0) + 1;
+      setAttempts((a) => ({ ...a, [key]: attempt }));
+      reactToAnswer(false, attempt);
+    }
+  };
+
   const advanceTry = () => {
     setFeedback('idle');
     setAbacusValue(0);
     setInputValue('');
+    setSequencePicks([]);
     if (tryIdx + 1 >= totalTry) {
       // آخر سؤال
     } else {
@@ -545,6 +585,7 @@ export function LessonScreen({
                   {formatText(currentTry.prompt, numberStyle)}
                 </p>
 
+                {/* ──────── read ──────── */}
                 {currentTry.type === 'read' && (
                   <>
                     <div className="flex justify-center mb-4">
@@ -574,7 +615,8 @@ export function LessonScreen({
                   </>
                 )}
 
-                {currentTry.type === 'build' && (
+                {/* ──────── build + build-value ──────── */}
+                {(currentTry.type === 'build' || currentTry.type === 'build-value') && (
                   <>
                     <div className="flex justify-center mb-3">
                       <Soroban2D5
@@ -604,6 +646,57 @@ export function LessonScreen({
                         </button>
                       </div>
                     )}
+                  </>
+                )}
+
+                {/* ──────── 🆕 compare ──────── */}
+                {currentTry.type === 'compare' && currentTry.choices && (
+                  <div className="grid grid-cols-2 gap-4 max-w-md mx-auto mt-2">
+                    {currentTry.choices.map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => handleCheckRead(c)}
+                        disabled={feedback === 'correct' || feedback === 'reveal'}
+                        className="py-8 rounded-3xl bg-gradient-to-br from-electric-500/20 to-purple-500/20 border-4 border-white/20 text-white font-display font-black text-4xl hover:from-electric-500/30 hover:to-purple-500/30 hover:scale-105 active:scale-95 transition disabled:opacity-40 shadow-xl"
+                      >
+                        {formatNumber(c, numberStyle)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* ──────── 🆕 sequence ──────── */}
+                {currentTry.type === 'sequence' && currentTry.choices && (
+                  <>
+                    <div className="grid grid-cols-3 gap-3 max-w-md mx-auto mt-2">
+                      {currentTry.choices.map((c) => {
+                        const picked = sequencePicks.includes(c);
+                        return (
+                          <button
+                            key={c}
+                            onClick={() => handleSequenceClick(c)}
+                            disabled={
+                              picked ||
+                              feedback === 'correct' ||
+                              feedback === 'reveal'
+                            }
+                            className={`py-6 rounded-3xl border-4 font-display font-black text-3xl transition shadow-xl ${
+                              picked
+                                ? 'bg-emerald-500/30 border-emerald-400/60 text-emerald-200 scale-95'
+                                : 'bg-gradient-to-br from-gold-400/20 to-amber-500/20 border-white/20 text-white hover:from-gold-400/30 hover:to-amber-500/30 hover:scale-105 active:scale-95'
+                            } disabled:opacity-60`}
+                          >
+                            {formatNumber(c, numberStyle)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {sequencePicks.length > 0 &&
+                      sequencePicks.length < (currentTry.choices?.length ?? 0) && (
+                        <p className="text-center text-xs text-emerald-300 font-bold mt-3">
+                          ✓ اخترت {formatNumber(sequencePicks.length, numberStyle)} — تابع...
+                        </p>
+                      )}
                   </>
                 )}
               </div>
@@ -711,7 +804,7 @@ export function LessonScreen({
         </div>
       </div>
 
-      {/* ───── 🆕 فقاعة سوروبانا ───── */}
+      {/* ───── فقاعة سوروبانا ───── */}
       <AnimatePresence>
         {companionMsg && (
           <motion.div
