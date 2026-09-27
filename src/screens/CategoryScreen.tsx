@@ -68,16 +68,16 @@ const CATEGORY_DATA: Record<CategoryId, CategoryData> = {
     examTitle: 'الامتحان النهائي — القسم الأول',
     enrichment: [
       {
-        title: 'أسرار الضرب السحرية',
+        title: 'أسرار الضرب',
         desc: '٢٠ سراً لجدول الضرب',
-        screen: 'secrets',
+        screen: 'magic-secrets',
         icon: Sparkles,
         gradient: 'from-amber-500 to-rose-600',
       },
       {
         title: 'رياضيات الأصابع',
         desc: 'تعلّم الأعداد بأصابعك',
-        screen: 'enrichment-1',
+        screen: 'finger-math',
         icon: Star,
         gradient: 'from-pink-500 to-purple-600',
       },
@@ -96,8 +96,8 @@ const CATEGORY_DATA: Record<CategoryId, CategoryData> = {
         id: 'L1',
         number: 1,
         titleAr: 'الجمع والطرح',
-        desc: 'جمع وطرح بسيط + مكملات 5 + مكملات 10',
         titleEn: 'Add & Subtract',
+        desc: 'جمع وطرح بسيط + مكملات 5 + مكملات 10',
         icon: BookOpen,
         gradient: 'from-blue-500 to-cyan-700',
       },
@@ -189,13 +189,6 @@ function toArabicNumber(value: number | string): string {
   return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 }
 
-/**
- * ✅ قراءة التقدم من localStorage.
- *
- * مُوسَّع ليشمل:
- *   - weakSkills (من Placement Test)
- *   - recommendedLevel (من Placement Test)
- */
 function loadProgress() {
   try {
     const completedRaw = localStorage.getItem('soroban_completed_levels');
@@ -214,7 +207,6 @@ function loadProgress() {
       passedAnzanAudio: anzanARaw ? JSON.parse(anzanARaw) : [],
       exam1Passed: exam1Raw ? JSON.parse(exam1Raw) : false,
       exam2Passed: exam2Raw ? JSON.parse(exam2Raw) : false,
-      // ✅ جديد: للتعليم التكيفي
       weakSkills: weakSkillsRaw ? JSON.parse(weakSkillsRaw) : [],
       recommendedLevel: recommendedRaw || null,
     };
@@ -239,8 +231,6 @@ function loadProgress() {
 export function CategoryScreen({ category, onNavigate, playSound }: CategoryScreenProps) {
   const data = CATEGORY_DATA[category];
   const [progress, setProgress] = useState(loadProgress());
-
-  // ✅ لـ Header
   const { stats, toggleSound } = useGameStats();
 
   useEffect(() => {
@@ -306,10 +296,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
   const isExamPassed = category === 'kids' ? progress.exam1Passed : progress.exam2Passed;
 
-  // ═══════════════════════════════════════════════════════
-  // Render Level Card
-  // ═══════════════════════════════════════════════════════
-
   const renderLevelCard = (level: LevelItem, idx: number) => {
     const Icon = level.icon;
     const unlocked = isLevelUnlocked(level.id, idx);
@@ -324,7 +310,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     const practiceNum = data.practiceRange[0] + idx;
     const anzanNum = data.anzanRange[0] + idx;
 
-    // ✅ المستوى المُوصى به من Placement Test
     const isRecommended = progress.recommendedLevel === level.id;
 
     return (
@@ -366,7 +351,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
         {unlocked && (
           <div className="grid grid-cols-2 gap-2 mt-3">
-            {/* زر الدرس */}
             <button
               type="button"
               onClick={() => handleNav(`lesson-${level.id}` as Screen)}
@@ -380,7 +364,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               {completed ? 'مراجعة' : 'الدرس'}
             </button>
 
-            {/* زر تمرّن */}
             <button
               type="button"
               onClick={() => practiceUnlocked && handleNav(`practice-${practiceNum}` as Screen)}
@@ -397,7 +380,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               تمرّن {toArabicNumber(practiceNum)}
             </button>
 
-            {/* زر أنزان بصري */}
             <button
               type="button"
               onClick={() => anzanVUnlocked && handleNav(`anzan-${anzanNum}` as Screen)}
@@ -414,7 +396,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               أنزان بصري
             </button>
 
-            {/* زر أنزان سمعي */}
             <button
               type="button"
               onClick={() => anzanAUnlocked && handleNav(`audio-anzan-${anzanNum}` as Screen)}
@@ -438,7 +419,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
   return (
     <>
-      {/* ✅ Header كامل */}
       <Header
         xp={stats.xp}
         streak={stats.streak}
@@ -449,7 +429,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
       />
 
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-4xl mx-auto">
-        {/* Title */}
         <div className="mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white">
             {data.titleAr}
@@ -459,7 +438,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
           </p>
         </div>
 
-        {/* Enrichment Section */}
         {data.enrichment.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -505,7 +483,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
           </motion.div>
         )}
 
-        {/* Lessons Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -527,7 +504,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
           </div>
         </motion.div>
 
-        {/* Exam Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
