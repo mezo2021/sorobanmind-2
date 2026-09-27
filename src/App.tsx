@@ -1,512 +1,468 @@
-// src/App.tsx
-import { useEffect, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { useGameStats } from './hooks/useGameStats';
-import { useSound } from './hooks/useSound';
-import { useConfetti } from './hooks/useConfetti';
-import type { Screen as V1Screen, Role } from './types';
-import type { LevelId } from './store/progressStore';
+// src/screens/LevelTestScreen.tsx
+// اختبار نهاية المستوى — 10 أسئلة، 60 ثانية، 80% نجاح
 
-// ═══ Screens ═══
-import WelcomeScreen from './screens/WelcomeScreen';
-import RoleSelection from './screens/RoleSelection';
-import HeroDashboard from './screens/HeroDashboard';
-import GuardianDashboard from './screens/GuardianDashboard';
-import Header from './screens/Header';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Home, Clock, CheckCircle2, XCircle, Trophy, Play, RotateCcw } from 'lucide-react';
 
-// ═══ Category + Level ═══
-import CategoryScreen from './screens/CategoryScreen';
-import LevelScreen from './screens/LevelScreen';
-import EnrichmentScreen from './screens/EnrichmentScreen';
-import PlacementTestScreen from './screens/PlacementTestScreen';
-import PracticeScreen from './screens/PracticeScreen';
-import AnzanScreen from './screens/AnzanScreen';
-import AudioAnzanScreen from './screens/AudioAnzanScreen';
+import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { formatNumber } from '@/utils/numberStyle';
+import {
+  buildL0Test,
+  L0_TEST_TOTAL_SEC,
+  L0_TEST_PASS_THRESHOLD,
+  L0_TEST_COOLDOWN_MS,
+  L0_TEST_STORAGE_KEY,
+  L0_TEST_LAST_ATTEMPT_KEY,
+  type L0TestQuestion,
+} from '@/curriculum/lessons/L0/test-pool';
 
-// ═══ 🆕 Lessons + Test ═══
-import LearnScreen from './screens/LearnScreen';
-import LessonScreen from './screens/LessonScreen';
-import IntroductionScreen from './screens/IntroductionScreen';
-import LevelTestScreen from './screens/LevelTestScreen';
-
-// ═══ Playground ═══
-import SorobanPlayground from './screens/SorobanPlayground';
-
-// ═══ Category Exam ═══
-import CategoryExamScreen from './screens/CategoryExamScreen';
-
-// ═══ Debug ═══
-import { DebugOverlay } from './components/DebugOverlay';
-
-// ═══ Types ═══
-type AppScreen = V1Screen | 'loading' | `learn-${string}` | `level-test-${string}` | `lesson-view-${string}` | `intro-${string}`;
-
-// ═══ Constants ═══
-const WELCOME_STORAGE_KEY = 'soroban_welcome_seen';
-const WELCOME_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
-
-// ═══ Helpers ═══
-function shouldShowWelcome(): boolean {
-  try {
-    const raw = localStorage.getItem(WELCOME_STORAGE_KEY);
-    if (!raw) return true;
-    const lastSeen = parseInt(raw, 10);
-    if (isNaN(lastSeen)) return true;
-    return Date.now() - lastSeen > WELCOME_INTERVAL_MS;
-  } catch {
-    return true;
-  }
-}
-
-function markWelcomeSeen() {
-  try {
-    localStorage.setItem(WELCOME_STORAGE_KEY, String(Date.now()));
-  } catch { /* ignore */ }
-}
-
-// ═══ Coming Soon ═══
-function ComingSoonScreen({
-  onBack,
-  title = 'قيد التطوير',
-}: {
+interface LevelTestScreenProps {
+  levelId: string;
   onBack: () => void;
-  title?: string;
-}) {
-  return (
-    <div dir="rtl" className="min-h-screen flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-strong p-8 max-w-md w-full text-center"
-      >
-        <div className="w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-purple-500 to-electric-500 flex items-center justify-center shadow-xl">
-          <span className="text-4xl">🚧</span>
-        </div>
-        <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-          {title}
-        </h2>
-        <p className="text-white/60 font-body mb-6 leading-relaxed">
-          هذه الشاشة قيد التطوير حالياً — سنكملها في الجلسات القادمة
-        </p>
-        <button onClick={onBack} className="btn-primary w-full justify-center">
-          رجوع
-        </button>
-      </motion.div>
-    </div>
-  );
+  onPass: () => void;
+  playSound: (type: 'click' | 'success' | 'error' | 'bead' | 'whoosh' | 'levelup') => void;
 }
 
-function getComingSoonTitle(screen: string): string {
-  const titles: Record<string, string> = {
-    quests: 'المغامرات',
-    multiplication: 'درس الضرب',
-    secrets: 'الأسرار السحرية',
-    'cross-multiplication': 'الضرب التقاطعي',
-    division: 'القسمة',
-    certificate: 'الشهادة',
-    'final-exam': 'الامتحان النهائي',
-  };
-  return titles[screen] || 'قيد التطوير';
+type Phase = 'intro' | 'cooldown' | 'running' | 'result';
+
+function getColumns(value: number): number {
+  const abs = Math.abs(value);
+  if (abs < 10) return 1;
+  if (abs < 100) return 2;
+  if (abs < 1000) return 3;
+  if (abs < 10000) return 4;
+  return 6;
 }
 
-// ═══ Main App ═══
-export default function App() {
-  const [screen, setScreen] = useState<AppScreen>('loading');
-  const [role, setRole] = useState<Role>(null);
-  const [activeLevelId, setActiveLevelId] = useState<LevelId | null>(null);
-  const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
+function formatTime(sec: number): string {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
 
-  const { stats, toggleSound } = useGameStats();
-  const playSound = useSound(stats.soundEnabled);
-  const { burst: _burst } = useConfetti();
+function formatTimeLeft(ms: number): string {
+  const totalSec = Math.ceil(ms / 1000);
+  const hrs = Math.floor(totalSec / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  return hrs + ' ساعة و ' + mins + ' دقيقة';
+}
 
-  useEffect(() => { setReady(true); }, []);
+export function LevelTestScreen({
+  levelId,
+  onBack,
+  onPass,
+  playSound,
+}: LevelTestScreenProps) {
+  const { style: numberStyle } = useNumberStyleStore();
+  const isArabic = numberStyle === 'arabic';
+
+  const [phase, setPhase] = useState<Phase>('intro');
+  const [questions, setQuestions] = useState<L0TestQuestion[]>([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [answers, setAnswers] = useState<Map<string, number>>(new Map());
+  const [timeLeft, setTimeLeft] = useState(L0_TEST_TOTAL_SEC);
+  const [abacusValue, setAbacusValue] = useState(0);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [finalScore, setFinalScore] = useState(0);
+  const [finalPassed, setFinalPassed] = useState(false);
+  const [cooldownMs, setCooldownMs] = useState(0);
+
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const currentQ = questions[currentIdx];
 
   useEffect(() => {
-    if (!ready) return;
-    if (shouldShowWelcome()) {
-      setScreen('welcome');
-    } else {
-      setScreen('role');
-    }
-  }, [ready]);
-
-  const handleSound = useCallback(
-    (type: 'click' | 'success' | 'error' | 'bead' | 'whoosh' | 'levelup') => {
-      if (stats.soundEnabled) playSound(type);
-    },
-    [stats.soundEnabled, playSound],
-  );
-
-  const handleWelcomeStart = () => {
-    markWelcomeSeen();
-    handleSound('click');
-    setScreen('role');
-  };
-
-  const handleRoleSelect = (selectedRole: Role) => {
-    setRole(selectedRole);
-    if (selectedRole === 'hero') setScreen('hero-dashboard');
-    else if (selectedRole === 'guardian') setScreen('guardian-dashboard');
-  };
-
-  const handleNavigate = (target: AppScreen) => setScreen(target);
-
-  const handleSwitchToHero = () => {
-    setRole('hero');
-    setScreen('hero-dashboard');
-  };
-
-  const handleShowWelcome = () => setScreen('welcome');
-
-  const handleBackToRole = () => {
-    setRole(null);
-    setScreen('role');
-  };
-
-  const handleBackToHero = () => {
-    setRole('hero');
-    setScreen('hero-dashboard');
-  };
-
-  const handleBackToCategory = (category: 'kids' | 'teens') => {
-    setScreen(category === 'kids' ? 'category-kids' : 'category-teens');
-  };
-
-  // ═══ Placement Test Handler ═══
-  const handlePlacementComplete = (recommendedLevel: string, weakSkills: string[]) => {
     try {
-      const LEVEL_ORDER = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7'];
-      const recommendedIdx = LEVEL_ORDER.indexOf(recommendedLevel);
-      const previousLevels = recommendedIdx > 0 ? LEVEL_ORDER.slice(0, recommendedIdx) : [];
-      const newCompletedLevels = [...previousLevels];
+      const raw = localStorage.getItem(L0_TEST_LAST_ATTEMPT_KEY);
+      if (raw) {
+        const lastTime = parseInt(raw, 10);
+        if (!isNaN(lastTime)) {
+          const elapsed = Date.now() - lastTime;
+          const remaining = L0_TEST_COOLDOWN_MS - elapsed;
+          if (remaining > 0) {
+            setCooldownMs(remaining);
+            setPhase('cooldown');
+            return;
+          }
+        }
+      }
+    } catch { /* ignore */ }
+    setPhase('intro');
+  }, []);
 
-      localStorage.setItem('soroban_completed_levels', JSON.stringify(newCompletedLevels));
-      localStorage.setItem('soroban_placement_weak_skills', JSON.stringify(weakSkills));
-      localStorage.setItem('soroban_placement_recommended', recommendedLevel);
-      localStorage.setItem('soroban_placement_result', JSON.stringify({
-        recommendedLevel, weakSkills, date: Date.now(),
-      }));
-      localStorage.setItem('soroban_placement_last_attempt', String(Date.now()));
+  useEffect(() => {
+    if (phase !== 'cooldown') return;
+    const interval = setInterval(() => {
+      setCooldownMs((prev) => {
+        const next = prev - 1000;
+        if (next <= 0) {
+          clearInterval(interval);
+          setPhase('intro');
+          return 0;
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  const startTest = useCallback(() => {
+    const qs = buildL0Test();
+    setQuestions(qs);
+    setCurrentIdx(0);
+    setAnswers(new Map());
+    setAbacusValue(0);
+    setTimeLeft(L0_TEST_TOTAL_SEC);
+    setPhase('running');
+    playSound('click');
+  }, [playSound]);
+
+  const finalizeTest = useCallback((finalAnswers: Map<string, number>) => {
+    let correct = 0;
+    questions.forEach((q) => {
+      const ans = finalAnswers.get(q.id);
+      if (ans !== undefined && ans === q.expectedValue) correct += 1;
+    });
+    const score = Math.round((correct / questions.length) * 100);
+    const passed = score >= L0_TEST_PASS_THRESHOLD;
+
+    setFinalScore(score);
+    setFinalPassed(passed);
+
+    try {
+      localStorage.setItem(L0_TEST_LAST_ATTEMPT_KEY, String(Date.now()));
+      if (passed) {
+        const raw = localStorage.getItem(L0_TEST_STORAGE_KEY);
+        const arr: string[] = raw ? JSON.parse(raw) : [];
+        if (!arr.includes(levelId)) {
+          arr.push(levelId);
+          localStorage.setItem(L0_TEST_STORAGE_KEY, JSON.stringify(arr));
+        }
+        const rawLvls = localStorage.getItem('soroban_completed_levels');
+        const levels: string[] = rawLvls ? JSON.parse(rawLvls) : [];
+        if (!levels.includes(levelId)) {
+          levels.push(levelId);
+          localStorage.setItem('soroban_completed_levels', JSON.stringify(levels));
+        }
+      }
     } catch { /* ignore */ }
 
-    const isKids = ['L0', 'L1', 'L2', 'L3'].includes(recommendedLevel);
-    setScreen(isKids ? 'category-kids' : 'category-teens');
-  };
+    setPhase('result');
+    playSound(passed ? 'levelup' : 'whoosh');
+  }, [questions, levelId, playSound]);
 
-  // ═══ Loading ═══
-  if (!ready || screen === 'loading') {
+  useEffect(() => {
+    if (phase !== 'running') return;
+    if (timeLeft <= 0) {
+      finalizeTest(answers);
+      return;
+    }
+    timerRef.current = setTimeout(() => setTimeLeft((x) => x - 1), 1000);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [phase, timeLeft, answers, finalizeTest]);
+
+  const submitAnswer = useCallback((value: number) => {
+    if (!currentQ) return;
+    const newAnswers = new Map(answers);
+    newAnswers.set(currentQ.id, value);
+    setAnswers(newAnswers);
+    setAbacusValue(0);
+    playSound('click');
+
+    if (currentIdx + 1 < questions.length) {
+      setCurrentIdx(currentIdx + 1);
+    } else {
+      finalizeTest(newAnswers);
+    }
+  }, [currentQ, currentIdx, questions, answers, finalizeTest, playSound]);
+
+  const handleChoice = useCallback((chosen: number) => {
+    submitAnswer(chosen);
+  }, [submitAnswer]);
+
+  const handleCheckBuild = useCallback(() => {
+    submitAnswer(abacusValue);
+  }, [abacusValue, submitAnswer]);
+
+  const confirmEnd = useCallback(() => {
+    setShowEndConfirm(false);
+    finalizeTest(answers);
+  }, [answers, finalizeTest]);
+
+  // ═══ Cooldown ═══
+  if (phase === 'cooldown') {
     return (
-      <div dir="rtl" className="min-h-screen flex items-center justify-center">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-          <div className="text-5xl mb-4">🧮</div>
-          <p className="text-xl text-amber-400 font-bold">جاري التحميل...</p>
+      <div dir="rtl" className="min-h-screen px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <button onClick={() => { playSound('click'); onBack(); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
+            <Home className="w-6 h-6 text-white" />
+          </button>
+          <h2 className="text-xl font-extrabold text-white">اختبار {levelId}</h2>
+        </div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-6 border-2 border-amber-400/40">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-3xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center">
+            <Clock className="w-10 h-10 text-amber-300" />
+          </div>
+          <h3 className="text-xl font-extrabold text-white text-center mb-3">انتظر قليلا</h3>
+          <p className="text-sm text-white/70 text-center leading-relaxed mb-4">
+            يمكنك إعادة الاختبار بعد ٢٤ ساعة من المحاولة الأخيرة.
+          </p>
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30 text-center">
+            <p className="text-xs text-amber-200 mb-1">الوقت المتبقي</p>
+            <p className="text-2xl font-black text-amber-100">{formatTimeLeft(cooldownMs)}</p>
+          </div>
         </motion.div>
       </div>
     );
   }
 
-  // ═══ Screen Renderer ═══
-  const renderScreen = () => {
-    // ─── 🆕 learn-X (LearnScreen) ───
-    if (screen.startsWith('learn-')) {
-      const levelId = screen.replace('learn-', '') as LevelId;
-      const isKids = ['L0', 'L1', 'L2', 'L3'].includes(levelId);
+  // ═══ Intro ═══
+  if (phase === 'intro') {
+    return (
+      <div dir="rtl" className="min-h-screen px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <button onClick={() => { playSound('click'); onBack(); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20">
+            <Home className="w-6 h-6 text-white" />
+          </button>
+          <div className="flex-1">
+            <h2 className="text-2xl font-extrabold text-white">اختبار {levelId}</h2>
+            <p className="text-sm text-white/50">تحدي نهاية المستوى</p>
+          </div>
+          <Trophy className="w-6 h-6 text-gold-300" />
+        </div>
 
-      return (
-        <LearnScreen
-          levelId={levelId}
-          onBack={() => handleBackToCategory(isKids ? 'kids' : 'teens')}
-          onOpenLesson={(lessonId) => {
-            setActiveLessonId(lessonId);
-            // لو كان الدرس نظري (L0-intro) → IntroductionScreen
-            // غيره → LessonScreen
-            if (lessonId.endsWith('-intro')) {
-              setScreen(`intro-${lessonId}` as AppScreen);
-            } else {
-              setScreen(`lesson-view-${lessonId}` as AppScreen);
-            }
-          }}
-          playSound={handleSound}
-        />
-      );
-    }
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-6 mb-6">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-gold-400 to-amber-600 flex items-center justify-center shadow-xl mx-auto mb-4">
+            <Trophy className="w-10 h-10 text-white" />
+          </div>
+          <h3 className="text-xl font-extrabold text-white text-center mb-4">تحدي صعب</h3>
+          <div className="space-y-3 text-sm text-white/80">
+            <div className="flex items-start gap-3">
+              <span className="text-gold-300 font-bold shrink-0">١.</span>
+              <p><strong>10 أسئلة صعبة</strong></p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-gold-300 font-bold shrink-0">٢.</span>
+              <p>الزمن الإجمالي: <strong>60 ثانية</strong> فقط</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-gold-300 font-bold shrink-0">٣.</span>
+              <p><strong>محاولة واحدة</strong> لكل سؤال</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-gold-300 font-bold shrink-0">٤.</span>
+              <p>عتبة النجاح: <strong>80٪</strong></p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-gold-300 font-bold shrink-0">٥.</span>
+              <p>بعد الفشل: انتظر <strong>24 ساعة</strong></p>
+            </div>
+          </div>
 
-    // ─── 🆕 intro-X (IntroductionScreen) ───
-    if (screen.startsWith('intro-')) {
-      const lessonId = screen.replace('intro-', '');
-      const isKids = lessonId.startsWith('L0') || lessonId.startsWith('L1') || lessonId.startsWith('L2') || lessonId.startsWith('L3');
+          <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30">
+            <p className="text-xs text-amber-200 leading-relaxed">
+              تحدي حقيقي: لا يوجد كشف للحل. ركز جيدا!
+            </p>
+          </div>
+        </motion.div>
 
-      return (
-        <IntroductionScreen
-          lessonId={lessonId}
-          onBack={() => setScreen(`learn-${lessonId.split('-')[0]}` as AppScreen)}
-          onComplete={() => {
-            // علّم الدرس كمكتمل
-            try {
-              const raw = localStorage.getItem('soroban_completed_lessons');
-              const arr: string[] = raw ? JSON.parse(raw) : [];
-              if (!arr.includes(lessonId)) {
-                arr.push(lessonId);
-                localStorage.setItem('soroban_completed_lessons', JSON.stringify(arr));
-              }
-            } catch { /* ignore */ }
-            setScreen(`learn-${lessonId.split('-')[0]}` as AppScreen);
-          }}
-          playSound={handleSound}
-        />
-      );
-    }
+        <button onClick={startTest} className="btn-primary w-full !py-4 !text-lg">
+          <Play className="w-6 h-6" />
+          ابدأ الاختبار
+        </button>
+      </div>
+    );
+  }
 
-    // ─── 🆕 lesson-view-X (LessonScreen) ───
-    if (screen.startsWith('lesson-view-')) {
-      const lessonId = screen.replace('lesson-view-', '');
-      const levelId = lessonId.split('-')[0];
+  // ═══ Running ═══
+  if (phase === 'running' && currentQ) {
+    const progress = ((currentIdx + 1) / questions.length) * 100;
+    const timeWarning = timeLeft <= 10;
 
-      return (
-        <LessonScreen
-          lessonId={lessonId}
-          onBack={() => setScreen(`learn-${levelId}` as AppScreen)}
-          onNext={(nextId) => {
-            if (nextId.endsWith('-intro')) {
-              setScreen(`intro-${nextId}` as AppScreen);
-            } else {
-              setScreen(`lesson-view-${nextId}` as AppScreen);
-            }
-          }}
-          onComplete={(id) => {
-            // علّم الدرس كمكتمل + احفظ
-            try {
-              const raw = localStorage.getItem('soroban_completed_lessons');
-              const arr: string[] = raw ? JSON.parse(raw) : [];
-              if (!arr.includes(id)) {
-                arr.push(id);
-                localStorage.setItem('soroban_completed_lessons', JSON.stringify(arr));
-              }
-            } catch { /* ignore */ }
-          }}
-          playSound={handleSound}
-          onXP={(amount) => console.log('XP:', amount)}
-        />
-      );
-    }
+    return (
+      <div dir="rtl" className="min-h-screen px-3 sm:px-6 py-4 max-w-2xl mx-auto flex flex-col">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="flex-1">
+            <h2 className="text-base font-bold text-white">
+              سؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
+            </h2>
+            <p className="text-[10px] text-white/50">{currentQ.skillId} · {currentQ.type === 'read' ? 'اقرأ' : 'مثل'}</p>
+          </div>
+          <div className={'flex items-center gap-1.5 px-3 py-2 rounded-xl border ' + (timeWarning ? 'bg-red-500/20 border-red-500/50' : 'bg-white/5 border-white/10')}>
+            <Clock className={'w-4 h-4 ' + (timeWarning ? 'text-red-300' : 'text-amber-300')} />
+            <span className={'font-bold font-mono text-sm ' + (timeWarning ? 'text-red-300' : 'text-white')}>
+              {formatTime(timeLeft)}
+            </span>
+          </div>
+        </div>
 
-    // ─── 🆕 level-test-X (LevelTestScreen) ───
-    if (screen.startsWith('level-test-')) {
-      const levelId = screen.replace('level-test-', '');
-      const isKids = ['L0', 'L1', 'L2', 'L3'].includes(levelId);
-
-      return (
-        <LevelTestScreen
-          levelId={levelId}
-          onBack={() => handleBackToCategory(isKids ? 'kids' : 'teens')}
-          onPass={() => handleBackToCategory(isKids ? 'kids' : 'teens')}
-          playSound={handleSound}
-        />
-      );
-    }
-
-    switch (screen) {
-      case 'welcome':
-        return <WelcomeScreen onStart={handleWelcomeStart} />;
-
-      case 'role':
-        return <RoleSelection onSelect={handleRoleSelect} playSound={handleSound} />;
-
-      case 'hero-dashboard':
-        return (
-          <>
-            <Header xp={stats.xp} streak={stats.streak} level={stats.level} soundEnabled={stats.soundEnabled} onToggleSound={toggleSound} onHome={handleBackToRole} />
-            <HeroDashboard onNavigate={(target) => handleNavigate(target as AppScreen)} playSound={handleSound} xp={stats.xp} streak={stats.streak} earnedBadges={stats.earnedBadges} />
-          </>
-        );
-
-      case 'guardian-dashboard':
-        return (
-          <>
-            <Header xp={stats.xp} streak={stats.streak} level={stats.level} soundEnabled={stats.soundEnabled} onToggleSound={toggleSound} onHome={handleBackToRole} />
-            <GuardianDashboard
-              onBack={handleBackToRole}
-              playSound={handleSound}
-              childName={localStorage.getItem('soroban_child_name') || 'البطل'}
-              childXP={stats.xp}
-              childStreak={stats.streak}
-              childLevel={stats.level}
-              onSwitchToHero={handleSwitchToHero}
-              onShowWelcome={handleShowWelcome}
+        <div className="mb-4">
+          <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-gold-400 to-amber-600"
+              animate={{ width: progress + '%' }}
+              transition={{ type: 'spring', stiffness: 200 }}
             />
-          </>
-        );
+          </div>
+        </div>
 
-      case 'placement-test':
-        return <PlacementTestScreen onBack={handleBackToHero} onComplete={handlePlacementComplete} playSound={handleSound} />;
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <motion.div
+            key={currentIdx}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-card p-4 sm:p-6 w-full text-center mb-4"
+          >
+            <p className="text-lg font-extrabold text-white mb-4">{currentQ.prompt}</p>
 
-      case 'soroban':
-        return <SorobanPlayground onBack={handleBackToHero} playSound={handleSound} />;
+            {currentQ.type === 'read' && (
+              <>
+                <div className="flex justify-center mb-4">
+                  <Soroban2D5
+                    key={'read-' + currentQ.id}
+                    columns={getColumns(currentQ.expectedValue)}
+                    demoValue={currentQ.expectedValue}
+                    interactive={false}
+                    showValue={false}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
+                  {currentQ.choices && currentQ.choices.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => handleChoice(c)}
+                      className="py-4 rounded-2xl bg-white/10 border-2 border-white/20 text-white font-display font-black text-2xl hover:bg-white/20 hover:scale-105 active:scale-95 transition"
+                    >
+                      {formatNumber(c, numberStyle)}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
 
-      case 'category-exam-1':
-        return (
-          <CategoryExamScreen
-            category="kids"
-            onBack={() => handleBackToCategory('kids')}
-            onComplete={(passed, _score) => {
-              if (passed) {
-                try { localStorage.setItem('soroban_section2_unlocked', 'true'); } catch { /* ignore */ }
-                setScreen('category-teens');
-              } else {
-                setScreen('category-kids');
-              }
-            }}
-            playSound={handleSound}
-          />
-        );
+            {currentQ.type === 'build' && (
+              <>
+                <div className="flex justify-center mb-3">
+                  <Soroban2D5
+                    key={'build-' + currentQ.id}
+                    columns={getColumns(currentQ.expectedValue)}
+                    initialValue={0}
+                    autoBeadSize={true}
+                    interactive={true}
+                    showValue={true}
+                    onValueChange={setAbacusValue}
+                  />
+                </div>
+                <div className="flex gap-2 justify-center">
+                  <button onClick={handleCheckBuild} className="btn-primary !py-2.5 !px-6 !text-sm">
+                    <CheckCircle2 className="w-4 h-4" /> تحقق
+                  </button>
+                  <button onClick={() => { playSound('click'); setAbacusValue(0); }} className="btn-ghost !py-2.5 !px-4 !text-sm">
+                    <RotateCcw className="w-4 h-4" /> مسح
+                  </button>
+                </div>
+              </>
+            )}
+          </motion.div>
+        </div>
 
-      case 'category-exam-2':
-        return (
-          <CategoryExamScreen
-            category="teens"
-            onBack={() => handleBackToCategory('teens')}
-            onComplete={(passed, _score) => {
-              setScreen(passed ? 'hero-dashboard' : 'category-teens');
-            }}
-            playSound={handleSound}
-          />
-        );
+        <button
+          onClick={() => { playSound('click'); setShowEndConfirm(true); }}
+          className="w-full py-2.5 rounded-2xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 font-bold text-xs transition"
+        >
+          إنهاء الاختبار الآن
+        </button>
 
-      case 'category-kids':
-        return <CategoryScreen category="kids" onNavigate={(target) => handleNavigate(target as AppScreen)} playSound={handleSound} />;
+        <AnimatePresence>
+          {showEndConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+              onClick={() => setShowEndConfirm(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.85, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-slate-900 rounded-3xl p-6 max-w-md w-full border border-amber-500/30 text-center"
+              >
+                <h3 className="text-xl font-extrabold text-white mb-2">إنهاء الاختبار؟</h3>
+                <p className="text-sm text-white/60 mb-6">الأسئلة غير المجابة تحتسب صفرا.</p>
+                <div className="flex gap-3">
+                  <button onClick={confirmEnd} className="flex-1 py-3 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white font-bold">
+                    نعم، أنه
+                  </button>
+                  <button onClick={() => setShowEndConfirm(false)} className="flex-1 py-3 rounded-2xl bg-white/10 text-white font-bold">
+                    متابعة
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
 
-      case 'category-teens':
-        return <CategoryScreen category="teens" onNavigate={(target) => handleNavigate(target as AppScreen)} playSound={handleSound} />;
+  // ═══ Result ═══
+  if (phase === 'result') {
+    const passed = finalPassed;
+    return (
+      <div dir="rtl" className="min-h-screen px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-6 mb-6 overflow-hidden relative"
+        >
+          <div className={'absolute -top-24 -right-24 w-64 h-64 blur-3xl ' + (passed ? 'bg-emerald-500/20' : 'bg-amber-500/20')} />
 
-      // ─── Levels (L0-L7) — من CategoryScreen ───
-      case 'lesson-L0':
-      case 'lesson-L1':
-      case 'lesson-L2':
-      case 'lesson-L3':
-      case 'lesson-L4':
-      case 'lesson-L5':
-      case 'lesson-L6':
-      case 'lesson-L7': {
-        const levelId = screen.replace('lesson-', '') as LevelId;
-        const isKids = ['L0', 'L1', 'L2', 'L3'].includes(levelId);
+          <div className="relative text-center">
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+              className={'w-24 h-24 rounded-3xl bg-gradient-to-br flex items-center justify-center shadow-2xl mx-auto mb-4 ' + (passed ? 'from-emerald-400 to-teal-600' : 'from-amber-400 to-orange-600')}
+            >
+              {passed ? <Trophy className="w-12 h-12 text-white" /> : <XCircle className="w-12 h-12 text-white" />}
+            </motion.div>
 
-        return (
-          <LevelScreen
-            levelId={levelId}
-            onNavigate={(target) => handleNavigate(target as AppScreen)}
-            onBack={() => handleBackToCategory(isKids ? 'kids' : 'teens')}
-            playSound={handleSound}
-          />
-        );
-      }
+            <h2 className="text-2xl font-extrabold text-white mb-2">
+              {passed ? '🎉 مبروك! نجحت' : '💪 حاول مرة أخرى'}
+            </h2>
 
-      // ─── Enrichment ───
-      case 'enrichment-1':
-      case 'enrichment-2':
-        return (
-          <EnrichmentScreen
-            category={screen === 'enrichment-1' ? 'kids' : 'teens'}
-            onBack={() => handleBackToCategory(screen === 'enrichment-1' ? 'kids' : 'teens')}
-            onOpenModule={() => { /* TODO */ }}
-          />
-        );
+            <div className="my-6 p-4 rounded-2xl bg-white/5 border border-white/10">
+              <p className="text-sm text-white/60 mb-1">النتيجة</p>
+              <p className="text-5xl font-black text-white">{formatNumber(finalScore, numberStyle)}٪</p>
+              <p className={'text-sm font-bold mt-2 ' + (passed ? 'text-emerald-300' : 'text-amber-300')}>
+                {passed ? '🎓 المستوى التالي مفتوح!' : 'تحتاج 80٪ للنجاح'}
+              </p>
+            </div>
 
-      // ─── Practice (0-7) ───
-      case 'practice-0':
-      case 'practice-1':
-      case 'practice-2':
-      case 'practice-3':
-      case 'practice-4':
-      case 'practice-5':
-      case 'practice-6':
-      case 'practice-7': {
-        const practiceNum = parseInt(screen.replace('practice-', ''), 10);
-        return (
-          <PracticeScreen
-            levelNum={practiceNum}
-            onBack={() => handleBackToCategory(practiceNum <= 3 ? 'kids' : 'teens')}
-            onComplete={(passed, _score) => {
-              if (passed) {
-                try {
-                  const raw = localStorage.getItem('soroban_passed_practice');
-                  const arr = raw ? JSON.parse(raw) : [];
-                  if (!arr.includes(practiceNum)) {
-                    arr.push(practiceNum);
-                    localStorage.setItem('soroban_passed_practice', JSON.stringify(arr));
-                  }
-                } catch { /* ignore */ }
-              }
-            }}
-            playSound={handleSound}
-            onXP={(amount) => console.log('XP:', amount)}
-            burst={_burst}
-          />
-        );
-      }
+            {!passed && (
+              <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/30">
+                <p className="text-xs text-amber-200">
+                  ⏰ يمكنك إعادة الاختبار بعد 24 ساعة
+                </p>
+              </div>
+            )}
+          </div>
+        </motion.div>
 
-      // ─── Anzan بصري (0-7) ───
-      case 'anzan-0':
-      case 'anzan-1':
-      case 'anzan-2':
-      case 'anzan-3':
-      case 'anzan-4':
-      case 'anzan-5':
-      case 'anzan-6':
-      case 'anzan-7': {
-        const anzanNum = parseInt(screen.replace('anzan-', ''), 10);
-        return (
-          <AnzanScreen
-            levelNum={anzanNum}
-            onBack={() => handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')}
-            playSound={handleSound}
-            onXP={(amount) => console.log('XP:', amount)}
-            burst={_burst}
-          />
-        );
-      }
+        <button
+          onClick={() => { playSound('click'); if (passed) onPass(); else onBack(); }}
+          className="btn-primary w-full !py-4 !text-lg"
+        >
+          {passed ? '🎓 تابع الرحلة' : 'العودة'}
+        </button>
+      </div>
+    );
+  }
 
-      // ─── Anzan سمعي (0-7) ───
-      case 'audio-anzan-0':
-      case 'audio-anzan-1':
-      case 'audio-anzan-2':
-      case 'audio-anzan-3':
-      case 'audio-anzan-4':
-      case 'audio-anzan-5':
-      case 'audio-anzan-6':
-      case 'audio-anzan-7': {
-        const anzanNum = parseInt(screen.replace('audio-anzan-', ''), 10);
-        return (
-          <AudioAnzanScreen
-            levelNum={anzanNum}
-            onBack={() => handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')}
-            playSound={handleSound}
-            onXP={(amount) => console.log('XP:', amount)}
-            burst={_burst}
-          />
-        );
-      }
-
-      // ─── Coming Soon ───
-      case 'quests':
-      case 'multiplication':
-      case 'secrets':
-      case 'cross-multiplication':
-      case 'division':
-      case 'certificate':
-      case 'final-exam':
-        return <ComingSoonScreen onBack={handleBackToHero} title={getComingSoonTitle(screen)} />;
-
-      default:
-        return <ComingSoonScreen onBack={handleBackToRole} />;
-    }
-  };
-
-  return (
-    <>
-      <div key={screen}>{renderScreen()}</div>
-      {import.meta.env.DEV && <DebugOverlay />}
-    </>
-  );
+  return null;
 }
+
+export default LevelTestScreen;
