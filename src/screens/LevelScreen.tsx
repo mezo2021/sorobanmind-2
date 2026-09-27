@@ -1,9 +1,11 @@
 // src/screens/LevelScreen.tsx
+// شاشة المستوى — الأزرار الرئيسية (تعلم، تمرّن، أنزان، اختبار)
+
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import {
-  BookOpen, Lightbulb, Dumbbell, Eye, Volume2,
-  Lock, CheckCircle2, Trophy, Play, Star,
+  BookOpen, Dumbbell, Eye, Volume2,
+  Lock, CheckCircle2, Trophy, Play, Star, GraduationCap,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -41,78 +43,14 @@ interface LevelInfo {
 // ═══════════════════════════════════════════════════════════
 
 const LEVELS_DATA: Record<string, LevelInfo> = {
-  L0: {
-    id: 'L0', number: 0,
-    titleAr: 'التمهيدي',
-    titleEn: 'Foundation',
-    desc: 'التعرّف على السوروبان والأرقام من ٠ إلى ٩ والقيمة المكانية',
-    gradient: 'from-emerald-500 to-teal-700',
-    categoryId: 'kids', categoryScreen: 'hero-dashboard',
-    practiceNum: 0, anzanNum: 0,
-  },
-  L1: {
-    id: 'L1', number: 1,
-    titleAr: 'الجمع والطرح',
-    titleEn: 'Addition & Subtraction',
-    desc: 'جمع وطرح بسيط + مكملات ٥ + مكملات ١٠ + عمليات مختلطة',
-    gradient: 'from-blue-500 to-cyan-700',
-    categoryId: 'kids', categoryScreen: 'hero-dashboard',
-    practiceNum: 1, anzanNum: 1,
-  },
-  L2: {
-    id: 'L2', number: 2,
-    titleAr: 'الضرب',
-    titleEn: 'Multiplication',
-    desc: 'الضرب على السوروبان بطريقة تاكاشي',
-    gradient: 'from-purple-500 to-violet-700',
-    categoryId: 'kids', categoryScreen: 'hero-dashboard',
-    practiceNum: 2, anzanNum: 2,
-  },
-  L3: {
-    id: 'L3', number: 3,
-    titleAr: 'القسمة',
-    titleEn: 'Division',
-    desc: 'القسمة على السوروبان — التقدير والطرح المتتالي',
-    gradient: 'from-amber-500 to-orange-700',
-    categoryId: 'kids', categoryScreen: 'hero-dashboard',
-    practiceNum: 3, anzanNum: 3,
-  },
-  L4: {
-    id: 'L4', number: 4,
-    titleAr: 'جمع وطرح متقدم',
-    titleEn: 'Advanced Add & Sub',
-    desc: 'متعدد الخانات والسلاسل المركبة',
-    gradient: 'from-blue-500 to-indigo-700',
-    categoryId: 'teens', categoryScreen: 'hero-dashboard',
-    practiceNum: 4, anzanNum: 4,
-  },
-  L5: {
-    id: 'L5', number: 5,
-    titleAr: 'ضرب وقسمة متقدم',
-    titleEn: 'Advanced Mul & Div',
-    desc: 'الضرب والقسمة بطرق تاكاشي المتقدمة',
-    gradient: 'from-purple-500 to-fuchsia-700',
-    categoryId: 'teens', categoryScreen: 'hero-dashboard',
-    practiceNum: 5, anzanNum: 5,
-  },
-  L6: {
-    id: 'L6', number: 6,
-    titleAr: 'الكسور العشرية',
-    titleEn: 'Decimals',
-    desc: 'العمليات على الأعداد العشرية',
-    gradient: 'from-amber-500 to-rose-700',
-    categoryId: 'teens', categoryScreen: 'hero-dashboard',
-    practiceNum: 6, anzanNum: 6,
-  },
-  L7: {
-    id: 'L7', number: 7,
-    titleAr: 'الجذور',
-    titleEn: 'Roots',
-    desc: 'الجذور التربيعية والتكعيبية',
-    gradient: 'from-rose-500 to-purple-700',
-    categoryId: 'teens', categoryScreen: 'hero-dashboard',
-    practiceNum: 7, anzanNum: 7,
-  },
+  L0: { id: 'L0', number: 0, titleAr: 'التمهيدي', titleEn: 'Foundation', desc: 'التعرّف على السوروبان والأرقام من ٠ إلى ٩ والقيمة المكانية', gradient: 'from-emerald-500 to-teal-700', categoryId: 'kids', categoryScreen: 'hero-dashboard', practiceNum: 0, anzanNum: 0 },
+  L1: { id: 'L1', number: 1, titleAr: 'الجمع والطرح', titleEn: 'Addition & Subtraction', desc: 'جمع وطرح بسيط + مكملات ٥ + مكملات ١٠ + عمليات مختلطة', gradient: 'from-blue-500 to-cyan-700', categoryId: 'kids', categoryScreen: 'hero-dashboard', practiceNum: 1, anzanNum: 1 },
+  L2: { id: 'L2', number: 2, titleAr: 'الضرب', titleEn: 'Multiplication', desc: 'الضرب على السوروبان بطريقة تاكاشي', gradient: 'from-purple-500 to-violet-700', categoryId: 'kids', categoryScreen: 'hero-dashboard', practiceNum: 2, anzanNum: 2 },
+  L3: { id: 'L3', number: 3, titleAr: 'القسمة', titleEn: 'Division', desc: 'القسمة على السوروبان — التقدير والطرح المتتالي', gradient: 'from-amber-500 to-orange-700', categoryId: 'kids', categoryScreen: 'hero-dashboard', practiceNum: 3, anzanNum: 3 },
+  L4: { id: 'L4', number: 4, titleAr: 'جمع وطرح متقدم', titleEn: 'Advanced Add & Sub', desc: 'متعدد الخانات والسلاسل المركبة', gradient: 'from-blue-500 to-indigo-700', categoryId: 'teens', categoryScreen: 'hero-dashboard', practiceNum: 4, anzanNum: 4 },
+  L5: { id: 'L5', number: 5, titleAr: 'ضرب وقسمة متقدم', titleEn: 'Advanced Mul & Div', desc: 'الضرب والقسمة بطرق تاكاشي المتقدمة', gradient: 'from-purple-500 to-fuchsia-700', categoryId: 'teens', categoryScreen: 'hero-dashboard', practiceNum: 5, anzanNum: 5 },
+  L6: { id: 'L6', number: 6, titleAr: 'الكسور العشرية', titleEn: 'Decimals', desc: 'العمليات على الأعداد العشرية', gradient: 'from-amber-500 to-rose-700', categoryId: 'teens', categoryScreen: 'hero-dashboard', practiceNum: 6, anzanNum: 6 },
+  L7: { id: 'L7', number: 7, titleAr: 'الجذور', titleEn: 'Roots', desc: 'الجذور التربيعية والتكعيبية', gradient: 'from-rose-500 to-purple-700', categoryId: 'teens', categoryScreen: 'hero-dashboard', practiceNum: 7, anzanNum: 7 },
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -127,22 +65,26 @@ function loadProgress() {
   try {
     return {
       completedLevels: JSON.parse(localStorage.getItem('soroban_completed_levels') || '[]') as string[],
+      completedLessons: JSON.parse(localStorage.getItem('soroban_completed_lessons') || '[]') as string[],
       passedPractice: JSON.parse(localStorage.getItem('soroban_passed_practice') || '[]') as number[],
       passedAnzanVisual: JSON.parse(localStorage.getItem('soroban_passed_anzan_visual') || '[]') as number[],
       passedAnzanAudio: JSON.parse(localStorage.getItem('soroban_passed_anzan_audio') || '[]') as number[],
+      passedLevelTests: JSON.parse(localStorage.getItem('soroban_passed_level_tests') || '[]') as string[],
     };
   } catch {
     return {
       completedLevels: [],
+      completedLessons: [],
       passedPractice: [],
       passedAnzanVisual: [],
       passedAnzanAudio: [],
+      passedLevelTests: [],
     };
   }
 }
 
 // ═══════════════════════════════════════════════════════════
-// بطاقة قسم
+// SectionCard
 // ═══════════════════════════════════════════════════════════
 
 interface SectionCardProps {
@@ -218,7 +160,6 @@ export function LevelScreen({
   const sound = playSound || (() => {});
   const back = onBack || (() => navigate('hero-dashboard'));
 
-  // ✅ لـ Header
   const { stats, toggleSound } = useGameStats();
 
   const level = LEVELS_DATA[levelId];
@@ -232,16 +173,8 @@ export function LevelScreen({
     return (
       <div dir="rtl" className="px-6 py-6 max-w-3xl mx-auto text-center">
         <div className="glass-card p-8">
-          <p className="text-white/60 font-body mb-4">
-            المستوى غير موجود
-          </p>
-          <button
-            type="button"
-            onClick={back}
-            className="btn-primary"
-          >
-            رجوع
-          </button>
+          <p className="text-white/60 font-body mb-4">المستوى غير موجود</p>
+          <button type="button" onClick={back} className="btn-primary">رجوع</button>
         </div>
       </div>
     );
@@ -261,18 +194,19 @@ export function LevelScreen({
   const isPracticePassed = progress.passedPractice.includes(level.practiceNum);
   const isAnzanVisualPassed = progress.passedAnzanVisual.includes(level.anzanNum);
   const isAnzanAudioPassed = progress.passedAnzanAudio.includes(level.anzanNum);
+  const isLevelTestPassed = progress.passedLevelTests.includes(levelId);
 
   const practiceLocked = !isLessonCompleted;
   const anzanVisualLocked = !isPracticePassed;
   const anzanAudioLocked = !isAnzanVisualPassed;
+  const levelTestLocked = !isAnzanAudioPassed;
 
   const completionPct =
-    ([isLessonCompleted, isPracticePassed, isAnzanVisualPassed, isAnzanAudioPassed]
-      .filter(Boolean).length / 4) * 100;
+    ([isLessonCompleted, isPracticePassed, isAnzanVisualPassed, isAnzanAudioPassed, isLevelTestPassed]
+      .filter(Boolean).length / 5) * 100;
 
   return (
     <>
-      {/* ✅ Header كامل */}
       <Header
         xp={stats.xp}
         streak={stats.streak}
@@ -291,9 +225,7 @@ export function LevelScreen({
               {toArabicNumber(level.number)} — {level.titleAr}
             </h2>
           </div>
-          <p className="text-xs text-white/50 font-body mt-0.5">
-            {level.titleEn}
-          </p>
+          <p className="text-xs text-white/50 font-body mt-0.5">{level.titleEn}</p>
         </div>
 
         {/* Hero Card */}
@@ -318,11 +250,12 @@ export function LevelScreen({
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {isLessonCompleted && <span className="text-[10px] px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-200 font-bold">درس ✓</span>}
                 {isPracticePassed && <span className="text-[10px] px-2 py-1 rounded-lg bg-blue-500/20 text-blue-200 font-bold">تمرّن ✓</span>}
                 {isAnzanVisualPassed && <span className="text-[10px] px-2 py-1 rounded-lg bg-purple-500/20 text-purple-200 font-bold">بصري ✓</span>}
                 {isAnzanAudioPassed && <span className="text-[10px] px-2 py-1 rounded-lg bg-rose-500/20 text-rose-200 font-bold">سمعي ✓</span>}
+                {isLevelTestPassed && <span className="text-[10px] px-2 py-1 rounded-lg bg-gold-400/20 text-gold-200 font-bold">اختبار ✓</span>}
               </div>
             </div>
 
@@ -338,6 +271,7 @@ export function LevelScreen({
 
         {/* Sections */}
         <div className="space-y-3">
+          {/* 1. تعلّم → قائمة الدروس */}
           <SectionCard
             title="📖 تعلّم"
             subtitle="القصة + المفهوم + الأمثلة المحلولة"
@@ -345,26 +279,16 @@ export function LevelScreen({
             gradient={level.gradient}
             locked={false}
             completed={isLessonCompleted}
-            onClick={() => handleNav(`lesson-${levelId}` as Screen)}
+            onClick={() => handleNav(`learn-${levelId}` as Screen)}
             playSound={sound}
           />
 
-          <SectionCard
-            title="💡 جرّب"
-            subtitle="أمثلة بدون حل — بلا مؤقّت"
-            icon={Lightbulb}
-            gradient="from-pink-500 to-rose-600"
-            locked={false}
-            completed={false}
-            onClick={() => handleNav(`lesson-${levelId}` as Screen)}
-            playSound={sound}
-          />
-
+          {/* 2. تمرّن */}
           <SectionCard
             title={`✏️ تمرّن ${toArabicNumber(level.practiceNum)}`}
             subtitle={
               practiceLocked
-                ? '🔒 يُفتح بعد إنهاء الدرس'
+                ? '🔒 يُفتح بعد إنهاء الدروس'
                 : isPracticePassed
                   ? '✅ نجحت في هذا التمرّن'
                   : 'أسئلة تكيفية من البنك'
@@ -377,6 +301,7 @@ export function LevelScreen({
             playSound={sound}
           />
 
+          {/* 3. أنزان بصري */}
           <SectionCard
             title="🧠 أنزان بصري"
             subtitle={
@@ -394,6 +319,7 @@ export function LevelScreen({
             playSound={sound}
           />
 
+          {/* 4. أنزان سمعي */}
           <SectionCard
             title="🎧 أنزان سمعي"
             subtitle={
@@ -410,38 +336,49 @@ export function LevelScreen({
             onClick={() => handleNav(`audio-anzan-${level.anzanNum}` as Screen)}
             playSound={sound}
           />
+
+          {/* 5. اختبار المستوى (جديد) */}
+          <SectionCard
+            title={`🎓 اختبار ${toArabicNumber(level.number)}`}
+            subtitle={
+              levelTestLocked
+                ? '🔒 يُفتح بعد إتمام كل المسارات'
+                : isLevelTestPassed
+                  ? '✅ نجحت في اختبار المستوى'
+                  : '10 أسئلة صعبة — 60 ثانية — 80%'
+            }
+            icon={GraduationCap}
+            gradient="from-gold-400 to-amber-600"
+            locked={levelTestLocked}
+            completed={isLevelTestPassed}
+            onClick={() => handleNav(`level-test-${levelId}` as Screen)}
+            playSound={sound}
+          />
         </div>
 
         {/* نجاح كامل */}
-        {isLessonCompleted &&
-          isPracticePassed &&
-          isAnzanVisualPassed &&
-          isAnzanAudioPassed && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mt-6 glass-card p-5 text-center overflow-hidden relative"
-            >
-              <div className="absolute -top-20 -right-20 w-48 h-48 bg-gold-500/20 blur-3xl" />
-              <div className="relative">
-                <Trophy className="w-12 h-12 text-gold-300 mx-auto mb-3" />
-                <h3 className="text-lg font-extrabold font-display text-white mb-1">
-                  🎉 أتممت هذا المستوى!
-                </h3>
-                <p className="text-sm text-white/60 font-body mb-4">
-                  يمكنك الانتقال للمستوى التالي
-                </p>
-                <button
-                  type="button"
-                  onClick={goBack}
-                  className="btn-primary w-full"
-                >
-                  <Play className="w-5 h-5" />
-                  العودة إلى القسم
-                </button>
-              </div>
-            </motion.div>
-          )}
+        {isLessonCompleted && isPracticePassed && isAnzanVisualPassed && isAnzanAudioPassed && isLevelTestPassed && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mt-6 glass-card p-5 text-center overflow-hidden relative"
+          >
+            <div className="absolute -top-20 -right-20 w-48 h-48 bg-gold-500/20 blur-3xl" />
+            <div className="relative">
+              <Trophy className="w-12 h-12 text-gold-300 mx-auto mb-3" />
+              <h3 className="text-lg font-extrabold font-display text-white mb-1">
+                🎉 أتممت هذا المستوى!
+              </h3>
+              <p className="text-sm text-white/60 font-body mb-4">
+                يمكنك الانتقال للمستوى التالي
+              </p>
+              <button type="button" onClick={goBack} className="btn-primary w-full">
+                <Play className="w-5 h-5" />
+                العودة إلى القسم
+              </button>
+            </div>
+          </motion.div>
+        )}
       </div>
     </>
   );
