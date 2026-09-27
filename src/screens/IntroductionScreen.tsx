@@ -65,6 +65,12 @@ export function IntroductionScreen({
     onBack();
   };
 
+  // ✅ مسار SVG يعمل على GitHub Pages + التطوير
+  const baseUrl = import.meta.env.BASE_URL || '/';
+  const imageUrl = page.imageSvg
+    ? (baseUrl.replace(/\/$/, '') + '/images/' + page.imageSvg + '.svg')
+    : null;
+
   return (
     <div dir="rtl" className="min-h-screen pb-36">
       {/* Header ثابت */}
@@ -106,10 +112,10 @@ export function IntroductionScreen({
               {page.content}
             </div>
 
-            {page.imageSvg && (
+            {imageUrl && (
               <div className="mt-6 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
                 <img
-                  src={`/images/${page.imageSvg}.svg`}
+                  src={imageUrl}
                   alt={page.imageAlt || ''}
                   className="w-full h-auto"
                   loading="lazy"
