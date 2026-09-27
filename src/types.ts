@@ -55,8 +55,8 @@ export type Screen =
   | 'category-exam-2'
   | 'certificate'
   // الإثراء
-  | 'enrichment-1'
-  | 'enrichment-2'
+  | 'finger-math'
+  | 'magic-secrets'
   // شاشات قديمة (للتوافق المؤقت)
   | 'learn'
   | 'practice'
