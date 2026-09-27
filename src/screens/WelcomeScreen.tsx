@@ -1,6 +1,6 @@
 // src/screens/WelcomeScreen.tsx
 import { motion } from 'framer-motion';
-import { Rocket, Brain, Target, BookOpen, Trophy, BarChart3 } from 'lucide-react';
+import { Rocket, Brain, Target, BookOpen, Trophy, BarChart3, Sparkles, Grid3X3 } from 'lucide-react';
 import logoImg from '@/assets/logo-header.png';
 import sorobanaImg from '@/assets/sorobana/sorobana-teaching-pointing.webp';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
@@ -8,6 +8,8 @@ import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 const FEATURES = [
   { icon: Brain, text: 'أنزان بصري وسماعي' },
   { icon: Target, text: 'تدريب تفاعلي ذكي' },
+  { icon: Sparkles, text: 'تعليم تكيفي حسب مستواك' },
+  { icon: Grid3X3, text: 'سوروبان تفاعلي حر' },
   { icon: BookOpen, text: 'منهج ياباني أصيل' },
   { icon: Trophy, text: 'شهادة دولية فاخرة' },
   { icon: BarChart3, text: 'لوحة متابعة لولي الأمر' },
@@ -31,10 +33,57 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
       dir="rtl"
       className="min-h-screen flex flex-col items-center justify-center px-4 py-8 relative"
     >
+      {/* ═══ الشريط البنفسجي (يسار — يلائم سوروبانا) ═══ */}
+      <motion.div
+        initial={{ scaleY: 0 }}
+        animate={{ scaleY: 1 }}
+        transition={{ duration: 1.2, ease: 'easeOut' }}
+        className="fixed top-0 left-0 h-full z-40 pointer-events-none origin-top"
+        style={{
+          width: '8px',
+          background:
+            'linear-gradient(180deg, #DDD6FE 0%, #C084FC 25%, #A855F7 50%, #9333EA 75%, #7C3AED 100%)',
+          boxShadow:
+            '4px 0 16px rgba(192, 132, 252, 0.7), 4px 0 32px rgba(168, 85, 247, 0.4)',
+          borderTopRightRadius: '4px',
+          borderBottomRightRadius: '4px',
+        }}
+        aria-hidden="true"
+      />
+
+      {/* ═══ الزخرفة الذهبية (أعلى — تتناسب مع الشعار) ═══ */}
+      <motion.div
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: 1 }}
+        transition={{ duration: 1.4, ease: 'easeOut', delay: 0.2 }}
+        className="fixed top-0 left-0 w-full z-40 pointer-events-none origin-center"
+        style={{
+          height: '6px',
+          background:
+            'linear-gradient(90deg, #7C3AED 0%, #A855F7 15%, #FBBF24 40%, #F59E0B 50%, #FBBF24 60%, #A855F7 85%, #7C3AED 100%)',
+          boxShadow:
+            '0 4px 16px rgba(251, 191, 36, 0.55), 0 4px 32px rgba(168, 85, 247, 0.35)',
+          borderBottomLeftRadius: '4px',
+          borderBottomRightRadius: '4px',
+        }}
+        aria-hidden="true"
+      />
+
+      {/* ═══ توهج ناعم قرب الشريط الأيسر ═══ */}
+      <div
+        className="fixed top-0 left-0 h-full w-32 z-30 pointer-events-none"
+        style={{
+          background:
+            'linear-gradient(90deg, rgba(139, 92, 246, 0.22) 0%, rgba(139, 92, 246, 0) 100%)',
+        }}
+        aria-hidden="true"
+      />
+
+      {/* ═══ الشعار والعنوان ═══ */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-6"
+        className="text-center mb-6 mt-4"
       >
         <img
           src={logoImg}
@@ -49,6 +98,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         <p className="text-sm text-white/60 font-body">أكاديمية السوروبان الدولية</p>
       </motion.div>
 
+      {/* ═══ سوروبانا + الكلام ═══ */}
       <div className="w-full max-w-md mb-6">
         <div className="flex items-center gap-3">
           <motion.button
@@ -110,6 +160,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         </div>
       </div>
 
+      {/* ═══ المميزات ═══ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -138,10 +189,11 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         </div>
       </motion.div>
 
+      {/* ═══ زر البدء ═══ */}
       <motion.button
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1 }}
+        transition={{ delay: 1.2 }}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         onClick={onStart}
