@@ -23,6 +23,7 @@ import AnzanScreen from './screens/AnzanScreen';
 import AudioAnzanScreen from './screens/AudioAnzanScreen';
 
 // ═══ 🆕 Lessons + Test ═══
+import FingerMathScreen from './screens/FingerMathScreen';
 import LearnScreen from './screens/LearnScreen';
 import LessonScreen from './screens/LessonScreen';
 import IntroductionScreen from './screens/IntroductionScreen';
@@ -272,6 +273,14 @@ export default function App() {
         />
       );
     }
+if (screen === 'finger-math') {
+  return (
+    <FingerMathScreen
+      onBack={() => handleBackToCategory('kids')}
+      playSound={handleSound}
+    />
+  );
+}
 
     // ═══ 🆕 intro-L0-intro ... ═══
     if (screen.startsWith('intro-')) {
