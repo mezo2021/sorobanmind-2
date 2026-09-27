@@ -10,15 +10,12 @@ import {
 
 import { FingerMath } from '@/components/FingerMath';
 import { FloatingCompanion } from '@/components/FloatingCompanion';
+import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 
-// ═══════════════════════════════════════════════════════════
-// الثوابت
-// ═══════════════════════════════════════════════════════════
-
-const STORY_AUDIO_ID = 0; // story-0.mp3
+const STORY_AUDIO_ID = 0;
 const MAX_TRIES = 2;
 const COMPLETED_KEY = 'soroban_completed_enrichment';
 
@@ -47,10 +44,6 @@ const TRY_QUESTIONS = [
   { value: 42 },
 ];
 
-// ═══════════════════════════════════════════════════════════
-// أدوات
-// ═══════════════════════════════════════════════════════════
-
 function generateChoices(correct: number): number[] {
   const set = new Set<number>([correct]);
   const candidates = [
@@ -66,10 +59,6 @@ function generateChoices(correct: number): number[] {
   return Array.from(set).sort(() => Math.random() - 0.5);
 }
 
-// ═══════════════════════════════════════════════════════════
-// Props
-// ═══════════════════════════════════════════════════════════
-
 interface FingerMathScreenProps {
   onBack: () => void;
   playSound: (type: 'click' | 'success' | 'error' | 'bead' | 'whoosh' | 'levelup') => void;
@@ -77,10 +66,6 @@ interface FingerMathScreenProps {
 }
 
 type Tab = 'watch' | 'try';
-
-// ═══════════════════════════════════════════════════════════
-// الشاشة
-// ═══════════════════════════════════════════════════════════
 
 export function FingerMathScreen({
   onBack,
@@ -179,7 +164,6 @@ export function FingerMathScreen({
 
   return (
     <div dir="rtl" className="min-h-screen pb-36">
-      {/* Header */}
       <div className="sticky top-0 z-30 backdrop-blur-lg bg-slate-900/70 border-b border-white/10 px-3 sm:px-6 py-3">
         <div className="max-w-3xl mx-auto flex items-center gap-2">
           <button
@@ -204,7 +188,6 @@ export function FingerMathScreen({
           </button>
         </div>
 
-        {/* Tabs */}
         <div className="max-w-3xl mx-auto mt-3 flex gap-2 p-1 rounded-2xl bg-white/5 border border-white/10">
           <button
             onClick={() => { playSound('click'); setTab('watch'); setFeedback('idle'); }}
@@ -244,7 +227,6 @@ export function FingerMathScreen({
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              {/* Story */}
               <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-400/30">
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
@@ -271,7 +253,6 @@ export function FingerMathScreen({
                 </p>
               </div>
 
-              {/* Concept */}
               <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-gold-400/10 to-gold-600/10 border border-gold-400/30">
                 <h3 className="text-sm font-bold text-gold-300 mb-2">💡 المفهوم</h3>
                 <p className="text-sm text-white/85 font-body mb-3">
@@ -283,7 +264,6 @@ export function FingerMathScreen({
                 </p>
               </div>
 
-              {/* Example */}
               <div className="glass-card p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-bold text-white/70">
@@ -355,7 +335,7 @@ export function FingerMathScreen({
                 </p>
 
                 <div className="flex justify-center mb-4 overflow-x-auto">
-                  <FingerMath value={currentTry.value} />
+                  <FingerMath value={currentTry.value} hideValue={true} />
                 </div>
 
                 {feedback !== 'reveal' && (
@@ -438,12 +418,17 @@ export function FingerMathScreen({
             <CheckCircle2 className="w-5 h-5" />
             {allSolved
               ? 'أكملت الدرس +20 XP'
-              : `أكمل الأسئلة (${formatNumber(solvedCount, numberStyle)}/${formatNumber(totalTry, numberStyle)})`}
+              : 'أكمل الأسئلة (' + formatNumber(solvedCount, numberStyle) + '/' + formatNumber(totalTry, numberStyle) + ')'}
           </button>
         </div>
       </div>
 
       <FloatingCompanion playSound={playSound} />
+      <SorobanaCompanion
+        isSpeaking={sorobana.isSpeaking}
+        onClick={() => { if (!isReadingStory) sorobana.speakTeaching(); }}
+        mode={tab === 'try' ? 'try' : 'watch'}
+      />
     </div>
   );
 }
