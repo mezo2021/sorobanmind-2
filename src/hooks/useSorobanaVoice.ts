@@ -9,7 +9,7 @@ function audioPath(file: string): string {
 }
 
 function storyPath(id: number): string {
-  return `${BASE}audio/stories/story-${id}.mp3`;
+  return `${BASE}stories/story-${id}.mp3`;
 }
 
 export const SOROBANA_AUDIO = {
