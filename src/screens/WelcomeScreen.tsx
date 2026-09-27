@@ -33,45 +33,16 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
       dir="rtl"
       className="min-h-screen flex flex-col items-center justify-center px-4 py-8 relative"
     >
-      {/* ═══ الشريط البنفسجي (يسار فقط — يلائم سوروبانا) ═══ */}
-      <motion.div
-        initial={{ scaleY: 0 }}
-        animate={{ scaleY: 1 }}
-        transition={{ duration: 1.2, ease: 'easeOut' }}
-        className="fixed top-0 left-0 h-full z-40 pointer-events-none origin-top"
-        style={{
-          width: '8px',
-          background:
-            'linear-gradient(180deg, #DDD6FE 0%, #C084FC 25%, #A855F7 50%, #9333EA 75%, #7C3AED 100%)',
-          boxShadow:
-            '4px 0 16px rgba(192, 132, 252, 0.7), 4px 0 32px rgba(168, 85, 247, 0.4)',
-          borderTopRightRadius: '4px',
-          borderBottomRightRadius: '4px',
-        }}
-        aria-hidden="true"
-      />
-
-      {/* ═══ توهج ناعم قرب الشريط الأيسر ═══ */}
-      <div
-        className="fixed top-0 left-0 h-full w-24 z-30 pointer-events-none"
-        style={{
-          background:
-            'linear-gradient(90deg, rgba(139, 92, 246, 0.18) 0%, rgba(139, 92, 246, 0) 100%)',
-        }}
-        aria-hidden="true"
-      />
-
-      {/* ═══ الشعار والعنوان ═══ */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-5"
+        className="text-center mb-6"
       >
         <img
           src={logoImg}
           alt="SorobanMind"
-          width={85}
-          height={85}
+          width={90}
+          height={90}
           className="mx-auto mb-3 drop-shadow-2xl"
         />
         <h1 className="text-3xl sm:text-4xl font-black font-display shimmer-text mb-1">
@@ -80,9 +51,8 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         <p className="text-sm text-white/60 font-body">أكاديمية السوروبان الدولية</p>
       </motion.div>
 
-      {/* ═══ سوروبانا + الكلام ═══ */}
-      <div className="w-full max-w-sm mb-5">
-        <div className="flex items-center gap-2">
+      <div className="w-full max-w-md mb-6">
+        <div className="flex items-center gap-3">
           <motion.button
             type="button"
             onClick={handleCompanionTap}
@@ -94,8 +64,8 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             <img
               src={sorobanaImg}
               alt="سوروبانا"
-              width={110}
-              height={150}
+              width={140}
+              height={190}
               className="drop-shadow-2xl pointer-events-none"
               draggable={false}
             />
@@ -108,7 +78,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             className="flex-1 relative"
           >
             <div
-              className="relative px-3 py-2 rounded-2xl shadow-2xl border-2"
+              className="relative px-4 py-3 rounded-2xl shadow-2xl border-2"
               style={{
                 background: 'linear-gradient(135deg, #FFFFFF 0%, #F5EBD0 100%)',
                 borderColor: '#DAA520',
@@ -116,7 +86,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
               }}
             >
               <p
-                className="text-xs sm:text-sm font-bold leading-snug text-right"
+                className="text-sm sm:text-base font-bold leading-relaxed text-right"
                 dir="rtl"
                 style={{ fontFamily: 'Tajawal, Cairo, "Segoe UI", sans-serif' }}
               >
@@ -142,17 +112,16 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         </div>
       </div>
 
-      {/* ═══ المميزات ═══ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="glass-card p-4 w-full max-w-sm mb-5"
+        className="glass-card p-5 w-full max-w-md mb-6"
       >
         <p className="text-sm font-bold text-gold-300 mb-3 text-center">
           ✨ ماذا سنفعل معاً؟
         </p>
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {FEATURES.map((f, i) => {
             const Icon = f.icon;
             return (
@@ -160,18 +129,17 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                 key={i}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 + i * 0.06 }}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10"
+                transition={{ delay: 0.6 + i * 0.08 }}
+                className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 border border-white/10"
               >
-                <Icon className="w-4 h-4 text-gold-400 shrink-0" />
-                <span className="text-xs text-white/85 font-body">{f.text}</span>
+                <Icon className="w-5 h-5 text-gold-400 shrink-0" />
+                <span className="text-sm text-white/85 font-body">{f.text}</span>
               </motion.div>
             );
           })}
         </div>
       </motion.div>
 
-      {/* ═══ زر البدء ═══ */}
       <motion.button
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -179,9 +147,9 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         onClick={onStart}
-        className="btn-primary w-full max-w-sm !py-3.5 !text-base"
+        className="btn-primary w-full max-w-md !py-4 !text-lg"
       >
-        <Rocket className="w-5 h-5" />
+        <Rocket className="w-6 h-6" />
         ابدأ الرحلة
       </motion.button>
     </div>
