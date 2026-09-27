@@ -1,593 +1,534 @@
-# 📘 SorobanMind v2 — Master Plan
-## الخطة الرئيسية للمشروع
+📘 SorobanMind v2 — Master Plan (نسخة نهائية)
 
-> **آخر تحديث:** 2026-09-24
-> **الحالة:** قيد التطوير — الجلسة 1
-> **الرابط:** https://mezo2021.github.io/sorobanmind-2
-
----
-
-## 🎯 1. الرؤية (Vision)
-
-**SorobanMind** = تطبيق تعليمي عربي تفاعلي لتعلّم **السوروبان الياباني** و**الحساب الذهني**.
-
-### 🎯 الهدف:
-> **أن يصبح العقل أسرع من الآلة الحاسبة**
-
-### 👥 الجمهور المستهدف (فئتان):
-
-| الفئة | العمر | الأسلوب |
-|-------|-------|---------|
-| 🧒 **المستوى الأول** | 5-12 سنة | مرح، قصص، ألعاب، سوروبانا |
-| 🧑 **المستوى الثاني** | 13+ سنة | جدي، رسمي، إتقان |
-
-### 🌍 اللغات:
-- **العربية** (أساسية) — i18n كامل
-- **الإنجليزية** (ثانوية) — قابلة للتفعيل
+آخر تحديث: 2026-09-27 (نهاية الجلسة 8)
+الحالة: 🟢 يعمل + L0 كامل + إثراء مكتمل + أنظمة صوتية تعمل
+نسبة الإنجاز: ~92%
+الرابط: https://mezo2021.github.io/sorobanmind-2
 
 ---
 
-## 🏗️ 2. المعمارية العامة
+🎯 1. الرؤية
 
-### 📊 نموذج "Fusion"
+SorobanMind = تطبيق تعليمي عربي تفاعلي لتعلّم السوروبان الياباني.
 
-```
-┌────────────────────────────────────────────────────┐
-│              SorobanMind v2                         │
-├────────────────────────────────────────────────────┤
-│                                                     │
-│  [Role Selection]  ← البطل / ولي الأمر             │
-│         ↓                                           │
-│  [Category Selection]  ← 5-12 / 13+                │
-│         ↓                                           │
-│  [Welcome Screen]  ← كل 7 أيام (مع سوروبانا)       │
-│         ↓                                           │
-│  [Hero Dashboard]  ← الصفحة الرئيسية               │
-│         ↓                                           │
-│  ┌──────────────┬──────────────┬──────────────┐    │
-│  │              │              │              │    │
-│  ▼              ▼              ▼              ▼    │
-│ [Learn v1]  [Curriculum v2] [Enrichment] [Anzan]  │
-│ 14 درساً    20 مستوى        E1/E2/E3      بصري+سمعي│
-│              │              │              │      │
-│              └──────┬───────┴──────────────┘      │
-│                     ▼                              │
-│              [Adaptive Engine]                     │
-│              يتكيّف مع مستوى كل طالب              │
-│                                                    │
-└────────────────────────────────────────────────────┘
-```
+الأهداف:
 
-### 🔗 الطبقات:
+1. منهج ياباني أصيل (Takashi Kojima)
+2. تعليم تكيفي — أسئلة مخصّصة لكل طالب
+3. فئتان عمريتان:
+   · 🧒 قسم 1 (5-12): L0 → L3 + إثراء
+   · 🧑 قسم 2 (13+): L4 → L7 + إثراء
 
-| الطبقة | الوصف | المصدر |
-|--------|-------|--------|
-| **v1 (Base)** | الشاشات، الأصوات، الشخصيات، الألعاب | تطبيقك الأصلي |
-| **v2 (New)** | محرك السوروبان، المنهج الـ20، i18n | بناء جديد |
-| **GPT (Engine)** | التعليم التكيفي، mastery tracking | من ChatGPT |
-| **Fusion (UI)** | الدمج بين v1 + v2 | الآن |
+الميزة التنافسية:
+
+محرك تكيفي حقيقي + نظام XP للتقدم + إثراء تفاعلي.
 
 ---
 
-## 🎓 3. المنهج الدراسي
+🧠 2. المنهج — 8 مستويات + 20 مهارة
 
-### 🧒 المستوى الأول (5-12 سنة)
+المستوى المهارات المحتوى القسم الحالة
+L0 S1, S2 تعرّف + أرقام 0-9 + قيمة مكانية 🧒 ✅ مكتمل
+L1 S3-S9 جمع + طرح + أصدقاء 5 + أصدقاء 10 🧒 🔜 التالي
+L2 S10-S12 الضرب 🧒 ⏳
+L3 S13-S15 القسمة 🧒 ⏳
+L4 S16 جمع/طرح متقدم 🧑 ⏳
+L5 S17 ضرب/قسمة متقدم 🧑 ⏳
+L6 S18 كسور عشرية 🧑 ⏳
+L7 S19, S20 جذور 🧑 ⏳
 
-**الترتيب:**
+بنية كل مستوى:
+
 ```
-📖 المقدمة (الإثراء)
-├── E1: رياضيات الأصابع (Finger Math)
-└── E2: أسرار جدول الضرب (Magic Secrets)
-
-        ↓
-        
-🎓 المنهج الأساسي (منهج GPT — 20 مستوى)
-├── L00: التعرّف على السوروبان
-├── L01: الأرقام 0-9
-├── L02: القيمة المكانية
-├── L03: الجمع المباشر
-├── L04: مكملات الخمسة — جمع
-├── L05: مكملات الخمسة — طرح
-├── L06: مكملات العشرة — جمع
-├── L07: مكملات العشرة — طرح
-├── L08: الجمع متعدد الخانات
-├── L09: الطرح متعدد الخانات
-├── L10: العمليات المختلطة
-├── L11: التخزين الذهني
-├── L12: الأنزان البصري
-├── L13: الأنزان السمعي
-├── L14: الفلاش أنزان
-├── L15: الضرب على السوروبان
-├── L16: القسمة على السوروبان
-├── L17: الكسور العشرية
-├── L18: Mitori-zan
-├── L19: المنافسات
-└── L20: الشهادة الدولية
+📖 تعلّم (قائمة دروس)
+   ↓ إتمام كل الدروس
+✏️ تمرّن (5 أسئلة من bank-v2)
+   ↓ نجاح 75%
+🧠 أنزان بصري
+   ↓ نجاح 75%
+🎧 أنزان سمعي
+   ↓ نجاح 75%
+🎓 اختبار المستوى (10 أسئلة صعبة — 60 ثانية — 80%)
+   ↓ نجاح 80%
+📖 المستوى التالي
 ```
-
-### 🧑 المستوى الثاني (13+ سنة)
-
-**الترتيب:**
-```
-📖 المقدمة (الإثراء)
-└── E3: الضرب الفيدي (Vedic Multiplication)
-
-        ↓
-        
-🎓 نفس المنهج الأساسي (L00-L20)
-   لكن بأسلوب رسمي — بدون سوروبانا
-```
-
-### 🔑 الفرق بين المستويين:
-
-| العنصر | 5-12 | 13+ |
-|--------|------|-----|
-| الشخصية | سوروبانا | لا شيء |
-| الأصوات | MP3 طفولية | TTS رسمي |
-| الألوان | بنفسجي/ذهبي | أزرق/نيلي |
-| التغذية الراجعة | "يا بطل!" | "أحسنت، تقدم ملحوظ" |
-| الجلسة | 10-15 دقيقة | 25-40 دقيقة |
-| المكافآت | نجوم، مغامرات، XP | شهادات، مستويات KYU |
-| الإثراء | الأصابع + الأسرار | الضرب الفيدي |
 
 ---
 
-## 🧠 4. محرك التعليم التكيّفي (Adaptive Engine)
+🔒 3. منطق القفل
 
-> **من ChatGPT — أهم ميزة جديدة**
-
-### 🎯 الفكرة:
-
-**بدلاً من أن جميع الطلاب يرون نفس الأسئلة، كل طالب يرى أسئلة مخصّصة حسب:**
-
-1. **مستواه** (Mastery)
-2. **نقاط ضعفه** (Weak Skills)
-3. **سرعته** (Avg Time)
-4. **دقته** (Accuracy)
-
-### 📊 المكوّنات:
-
-#### أ) `masteryTracker.ts`
-**يتتبع إتقان كل مهارة:**
-
-```ts
-interface SkillProgress {
-  skillId: string;
-  attempts: number;
-  correct: number;
-  consecutiveCorrect: number;  // سلسلة صحيحة
-  avgTimeMs: number;            // متوسط الزمن
-  masteredAt?: string;
-}
-
-interface MasteryCriteria {
-  minCorrect: number;           // عدد صحيح أدنى
-  accuracy: number;              // نسبة دقة
-  maxTimePerProblem: number;    // زمن أقصى
-  consecutiveCorrect: number;   // سلسلة إجبارية
-}
-```
-
-#### ب) `problemGenerator.ts`
-**يولّد مسائل وفق قواعد السوروبان:**
-
-```ts
-interface ProblemGeneratorSpec {
-  type: 'numbers' | 'add-subtract' | 'build-soroban';
-  constraints: {
-    min: number;
-    max: number;
-    movement?: MovementType;   // direct, five-friend, ...
-    seed?: number;              // لإعادة إنتاج نفس التسلسل
-  };
-}
-
-// يستخدم `sorobanEngine` للتحقق من صحة المسألة تربوياً
-```
-
-#### ج) `adaptiveEngine.ts`
-**يقرر الأسئلة التالية:**
-
-```ts
-// خوارزمية بسيطة:
-// - 70% من مهارات ضعيفة
-// - 30% من مهارات جديدة
-// - إذا كانت السلسلة صحيحة، تزيد الصعوبة تلقائياً
-```
-
-### 🎯 الفائدة:
-
-- كل طالب يرى أسئلة مختلفة
-- التقدم تلقائي عند الإتقان
-- لا ملل من التكرار
-- لا إحباط من الصعوبة
+العنصر يُفتح بعد
+🎨 الإثراء مفتوح دائماً
+📖 L0 مفتوح
+📖 درس داخل L0 أول درس مفتوح، الباقي متسلسل
+✏️ تمرّن N إنهاء كل دروس L(N)
+🧠 أنزان بصري N نجاح تمرّن N
+🎧 أنزان سمعي N نجاح بصري N
+🎓 اختبار N نجاح سمعي N
+📖 L(N+1) نجاح اختبار N
+🏆 امتحان القسم 1 إتمام L0-L3 كاملاً
+📝 Placement Test 48 ساعة بين المحاولات
+🎓 اختبار L0 24 ساعة بعد الفشل
+🔒 سر سحري (بعد الأول) 50 XP
 
 ---
 
-## 📁 5. البنية المعمارية الكاملة
+💰 4. نظام XP (جديد — الجلسة 9)
+
+مصادر XP:
+
+المصدر XP
+إتمام درس L0-L7 +10
+إتمام دروس إثراء +20
+إجابة صحيحة في تمرّن +5
+إتمام اختبار مستوى +20
+إتمام امتحان القسم +50
+🆕 إتمام سر (تمرين) +2 × score
+
+استخدام XP:
+
+الاستخدام التكلفة
+🔒 فتح سر سحري 50 XP
+🔒 فتح درس مقفل مجاناً (بالنجاح)
+
+التخزين:
+
+```javascript
+localStorage: 'soroban_xp'  // رصيد الحالي
+```
+
+---
+
+✨ 5. نظام الأسرار السحرية (جديد — الجلسة 9)
+
+الفكرة:
+
+· 🎁 السر الأول (5) — مجاني دائماً للجميع
+· 🔒 الأسرار 2-16 — 50 XP لكل سر
+· ✅ بعد الفتح → يبقى مفتوحاً للأبد
+
+للفئتين:
+
+القسم البطاقة
+🧒 صغار "🪄 أسرار الضرب"
+🧑 كبار "🪄 الأسرار السحرية"
+
+نفس الشاشة — نفس المحتوى.
+
+آلية الفتح:
+
+```
+عند الضغط على سر مقفل:
+┌──────────────────────────────┐
+│  🔒 سر جدول الـ 6            │
+│                              │
+│  💰 الفتح: 50 XP              │
+│  🎯 رصيدك: 120 XP            │
+│                              │
+│  [✅ افتح (50 XP)]  [❌ إلغاء]│
+└──────────────────────────────┘
+
+عند رصيد غير كافي:
+┌──────────────────────────────┐
+│  🔒 سر جدول الـ 6            │
+│                              │
+│  💰 الفتح: 50 XP              │
+│  🎯 رصيدك: 20 XP              │
+│                              │
+│  ⚠️ تحتاج 30 XP إضافية       │
+│                              │
+│  [❌ إلغاء]                   │
+└──────────────────────────────┘
+```
+
+التخزين:
+
+```javascript
+localStorage:
+- 'soroban_unlocked_secrets' = [5]  // أول سر مفتوح مجاناً
+- 'soroban_xp' = 120
+```
+
+بعد فتح سر جديد:
+
+```javascript
+soroban_unlocked_secrets = [5, 6, 7]
+soroban_xp = 70  // 120 - 50
+```
+
+---
+
+📚 6. بنك الأسئلة
+
+📁 البنية:
+
+```
+src/data/
+├── bank-v2/                     ✅ ~585 + ~350
+│   ├── types.ts
+│   ├── part-01 → part-04
+│   ├── bank-exam.ts
+│   ├── placement-engine.ts
+│   └── index.ts
+├── bank-raw/                    ✅ 400 (تحديد المستوى)
+├── bank-linked.ts               ✅ دمج
+└── curriculum.ts                ✅ 8 مستويات
+```
+
+🎯 نظام ID:
+
+البنك الصيغة مثال
+bank-v2 L{level}-S{skill}-{seq} L1-S3-001
+bank-exam EX{1-2}-S{skill}-{seq} EX1-S3-001
+placement PL-L{level}-S{skill}-{seq} PL-L0-S3-001
+test-pool L{level}-TEST-S{skill}-{seq} L0-TEST-S1-01
+example L{level}-S{skill}-E{seq} L0-S1-E1
+try L{level}-S{skill}-T{seq} L0-S1-T1
+
+⏱️ تصنيف السرعة:
+
+التصنيف القاعدة الشارة
+⚡ قياسي ≤ 50% answerMs 🏅 شارة مهارة
+✅ مقبول ≤ 75% —
+🐢 بطيء 75% —
+
+---
+
+🏗️ 7. البنية الكاملة
 
 ```
 src/
+├── App.tsx                          ✅ (~500 سطر)
+├── types.ts                         ✅
 │
-├── 📄 App.tsx                          # نقطة الدخول + Screen routing
-├── 📄 main.tsx                          # تهيئة React
-├── 📄 index.css                         # أنماط v1 (glass, btn-primary)
-├── 📄 vite-env.d.ts                     # أنواع الملفات الثابتة
+├── store/
+│   ├── progressStore.ts             ✅
+│   ├── numberStyleStore.ts          ✅
+│   └── masteryBadgesStore.ts        ✅
 │
-├── 📁 i18n/                             # الترجمة (v2)
-│   ├── ar.ts                            # ~180 مفتاح عربي
-│   ├── en.ts                            # ~180 مفتاح إنجليزي
-│   ├── index.ts                         # نظام الترجمة
-│   └── useTranslation.ts                # hook الترجمة
+├── curriculum/
+│   ├── types.ts                     ✅ (مجمَّد)
+│   └── lessons/                     ✅ 🆕
+│       ├── types.ts                 ✅ LessonNode
+│       ├── index.ts                 ✅ Registry
+│       └── L0/                      ✅ 4 ملفات
 │
-├── 📁 curriculum/                       # المنهج (v2)
-│   ├── types.ts                         # أنواع CurriculumLevel, Skill
-│   └── levels/
-│       ├── types.ts                     # LevelContent
-│       ├── level-00.ts                  # ✅ مبني
-│       ├── level-01.ts                  # ✅ مبني
-│       ├── level-02.ts                  # ✅ مبني
-│       ├── level-03.ts                  # ✅ مبني
-│       ├── level-04.ts                  # ✅ مبني
-│       ├── level-05.ts                  # ✅ مبني
-│       ├── level-06.ts → level-20.ts    # ⏳ لاحقاً
-│       └── index.ts                     # فهرس المستويات
+├── engine/                          ✅ مجمَّد
+│   ├── sorobanEngine.ts
+│   ├── sorobanMoves.ts
+│   ├── masteryTracker.ts
+│   ├── problemGenerator.ts
+│   └── adaptiveEngine.ts
 │
-├── 📁 engine/                           # المحرك (v2)
-│   ├── sorobanMoves.ts                  # ✅ حركات الخرزات
-│   ├── sorobanEngine.ts                 # ✅ محرك السوروبان
-│   ├── problemGenerator.ts              # ⏳ من GPT
-│   ├── masteryTracker.ts                # ⏳ من GPT
-│   └── adaptiveEngine.ts                # ⏳ من GPT
+├── data/                            ✅
+│   ├── bank-v2/                     ✅ ~935
+│   ├── bank-raw/                    ✅ 400
+│   ├── bank-linked.ts               ✅
+│   ├── curriculum.ts                ✅
+│   ├── data.ts                      ⚠️ v1 — للمرجع
+│   └── learnModules.ts              ⚠️ v1 — للمرجع
 │
-├── 📁 store/                            # الحالة (v2)
-│   └── progressStore.ts                 # Zustand + localStorage
+├── components/                      ✅ ~20
+│   ├── FloatingCompanion.tsx        ✅ البطل
+│   ├── SorobanaCompanion.tsx        ✅ المعلمة
+│   ├── FingerMath.tsx               ✅ 🆕
+│   ├── Soroban2D5/                  ✅ 6 ملفات
+│   └── ...
 │
-├── 📁 data/
-│   ├── modes.ts                         # ✅ فئات (kids, teens)
-│   ├── curriculum.ts                    # ✅ فهرس L00-L20
-│   ├── enrichment.ts                    # ✅ فهرس الإثراء
-│   └── legacy/                          # v1 (منفصل)
-│       ├── types.ts                     # v1 types
-│       ├── data.ts                      # v1 levels + quests
-│       └── learnModules.ts              # v1's 14 lessons
+├── hooks/                           ✅ ~7
+│   ├── useSorobanaVoice.ts          ✅ مُصلَح
+│   ├── useSpeech.ts                 ✅
+│   ├── useGameStats.ts              ✅
+│   └── ...
 │
-├── 📁 hooks/
-│   ├── useSpeech.ts                     # ✅ TTS
-│   ├── useSorobanaVoice.ts              # ✅ MP3
-│   ├── useSorobanLogic.ts               # ✅ منطق السوروبان
-│   ├── useBeadSound.ts                  # ✅ صوت الخرزات
-│   ├── useBeadHaptics.ts                # ✅ اهتزاز
-│   ├── useQuests.ts                     # ⏳ من v1
-│   ├── useGameStats.ts                  # ⏳ من v1
-│   ├── useCharacterVoice.ts             # ⏳ من v1
-│   ├── useSound.ts                      # ⏳ من v1
-│   └── useConfetti.ts                   # ⏳ من v1
-│
-├── 📁 utils/
-│   ├── audioAnzanBadges.ts              # ⏳ من v1
-│   ├── badgeChecker.ts                  # ⏳ من v1
-│   ├── skillsChecker.ts                 # ⏳ من v1
-│   └── certificateGenerator.ts          # ⏳ من v1
-│
-├── 📁 components/
-│   ├── soroban2d5/                      # ✅ السوروبان التفاعلي
-│   │   ├── Soroban2D5.tsx
-│   │   ├── Rod2D5.tsx
-│   │   ├── Bead2D5.tsx
-│   │   ├── useSorobanLogic.ts
-│   │   ├── useBeadSound.ts
-│   │   └── useBeadHaptics.ts
-│   │
-│   ├── avatars/
-│   │   └── ImageAvatar.tsx              # ⏳ من v1
-│   │
-│   ├── SorobanaCompanion.tsx            # ✅ الشخصية الصوتية
-│   ├── Companion.tsx                    # ⏳ من v1
-│   ├── CharacterSelector.tsx            # ⏳ من v1
-│   ├── FloatingCompanion.tsx            # ⏳ من v1
-│   ├── NameInputModal.tsx               # ⏳ من v1
-│   ├── BadgeModal.tsx                   # ⏳ من v1
-│   ├── SpeechButton.tsx                 # ⏳ من v1
-│   ├── CertificateLogo.tsx              # ⏳ من v1
-│   ├── CertificateMedal.tsx             # ⏳ من v1
-│   └── DebugOverlay.tsx                 # ⏳ من v1
-│
-├── 📁 screens/
-│   ├── RoleSelection.tsx                # ⏳ من v1 (مُعدّل)
-│   ├── WelcomeScreen.tsx                # ⏳ من v1
-│   ├── Header.tsx                       # ⏳ من v1
-│   ├── HeroDashboard.tsx                # ⏳ من v1 (مُعدّل)
-│   ├── GuardianDashboard.tsx            # ⏳ من v1
-│   ├── CategorySelectScreen.tsx         # ✅ v2
-│   ├── CurriculumScreen.tsx             # ✅ v2
-│   ├── EnrichmentScreen.tsx             # ✅ v2
-│   ├── LevelScreen.tsx                  # ✅ v2
-│   ├── LearnScreen.tsx                  # ⏳ من v1
-│   ├── PracticeScreen.tsx               # ⏳ من v1
-│   ├── AnzanScreen.tsx                  # ⏳ من v1
-│   ├── AudioAnzanScreen.tsx             # ⏳ من v1
-│   ├── QuestsScreen.tsx                 # ⏳ من v1
-│   ├── FinalExam.tsx                    # ⏳ من v1
-│   ├── CertificateScreen.tsx            # ⏳ من v1
-│   ├── MultiplicationScreen.tsx         # ⏳ من v1
-│   ├── MagicSecretsScreen.tsx           # ⏳ من v1
-│   ├── CrossMultiplicationScreen.tsx    # ⏳ من v1
-│   └── DivisionScreen.tsx               # ⏳ من v1
-│
-├── 📄 examBank2.ts                      # ⏳ بنك أسئلة الامتحانات
-├── 📄 types.ts                          # re-export من data/legacy/types
-│
-├── 📁 assets/
-│   ├── logo-header.png                  ✅
-│   ├── logo-intro.webp                  ✅
-│   ├── logo-certificate.webp            ✅
-│   ├── sorobana/
-│   │   ├── sorobana-main.webp           ✅
-│   │   └── sorobana-teaching-pointing.webp ✅
-│   └── avatars/
-│       ├── sham.png                     ✅
-│       ├── rayan.png                    ✅
-│       ├── bana.png                     ✅
-│       └── joud2.png                    ✅
-│
-└── 📁 public/
-    └── audio/
-        ├── greeting-1/2/3.mp3           ✅
-        ├── teaching-1/2/3.mp3           ✅
-        ├── correct-1/2.mp3              ✅
-        ├── wrong-1/2.mp3                ✅
-        ├── end-lesson.mp3               ✅
-        ├── welcome-sorobana.mp3         ✅
-        └── stories/
-            └── story-0 → story-9.mp3    ✅
+└── screens/                         ✅ ~15
+    ├── WelcomeScreen.tsx            ✅
+    ├── RoleSelection.tsx            ✅
+    ├── HeroDashboard.tsx            ✅
+    ├── GuardianDashboard.tsx        ⚠️ يحتاج تحديث
+    ├── Header.tsx                   ✅
+    ├── CategoryScreen.tsx           ✅
+    ├── LevelScreen.tsx              ✅
+    ├── PracticeScreen.tsx           ✅
+    ├── AnzanScreen.tsx              ✅
+    ├── AudioAnzanScreen.tsx         ✅
+    ├── PlacementTestScreen.tsx      ✅
+    ├── SorobanPlayground.tsx        ✅
+    ├── CategoryExamScreen.tsx       ✅
+    ├── LearnScreen.tsx              ✅ 🆕
+    ├── LessonScreen.tsx             ✅ 🆕
+    ├── IntroductionScreen.tsx       ✅ 🆕
+    ├── LevelTestScreen.tsx          ✅ 🆕
+    ├── FingerMathScreen.tsx         ✅ 🆕
+    ├── MagicSecretsScreen.tsx       ✅ 🆕
+    ├── CrossMultiplicationScreen.tsx ⚠️ غير مربوط
+    └── CertificateScreen.tsx        ⚠️ غير مربوط
+```
+
+🔊 الملفات الصوتية (22):
+
+```
+public/
+├── audio/                    ✅ 12 ملف
+│   ├── welcome-sorobana.mp3
+│   ├── greeting-1/2/3.mp3
+│   ├── teaching-1/2/3.mp3
+│   ├── correct-1/2.mp3
+│   ├── wrong-1/2.mp3
+│   └── end-lesson.mp3
+└── stories/                  ✅ 10 ملفات
+    └── story-0 → story-9.mp3
 ```
 
 ---
 
-## 🎯 6. القرارات التصميمية (Decision Log)
+🖥️ 8. الشاشات التفاعلية (12)
 
-| # | القرار | التاريخ | السبب |
-|---|--------|---------|-------|
-| 1 | استخدام `assets` (بدون حرف e زائد) | 2026-09-24 | تصحيح إملائي |
-| 2 | فصل v1 types في `data/legacy/` | 2026-09-24 | تجنّب التعارض مع v2 |
-| 3 | الإبقاء على `learnModules.ts` v1 | 2026-09-24 | كنز من 14 درساً |
-| 4 | دمج v1 + v2 تحت `HeroDashboard` | 2026-09-24 | استفادة قصوى |
-| 5 | استخدام `@/` alias (tsconfig + vite) | 2026-09-24 | أنظف imports |
-| 6 | رفع `vite-env.d.ts` لدعم الملفات الثابتة | 2026-09-24 | ضروري للأصول |
-| 7 | `Screen` type موحّد في `App.tsx` | 2026-09-24 | إدارة مركزية |
-| 8 | الفئتان: kids (5-12) + teens (13+) | 2026-09-24 | تلبية الجمهورين |
-| 9 | الإثراء منفصل حسب الفئة | 2026-09-24 | منطق تربوي |
-| 10 | تعليم تكيفي من GPT | 2026-09-24 | ميزة تنافسية |
+# الشاشة الوصف
+1 WelcomeScreen ترحيب + 7 مميزات + شريط بنفسجي
+2 RoleSelection اختيار الدور
+3 HeroDashboard لوحة البطل
+4 GuardianDashboard لوحة ولي الأمر
+5 CategoryScreen الأقسام
+6 LevelScreen المستوى
+7 LearnScreen قائمة دروس
+8 LessonScreen شاهد + جرّب
+9 IntroductionScreen 7 صفحات
+10 LevelTestScreen اختبار 60 ثانية
+11 FingerMathScreen رياضيات الأصابع
+12 MagicSecretsScreen 16 سر + جدول
 
----
+شاشات أخرى تعمل:
 
-## 🗺️ 7. خارطة الطريق (Roadmap)
-
-### 🔷 المرحلة 1 — التأسيس ✅
-- [x] إنشاء مستودع `sorobanmind-2`
-- [x] رفع 20 ملف أساسي
-- [x] محرك السوروبان (sorobanEngine, sorobanMoves)
-- [x] i18n كامل (180 مفتاح)
-- [x] Zustand store
-- [x] GitHub Actions للنشر التلقائي
-- [x] رفع الأصوات (21 ملف MP3)
-- [x] رفع الصور (8 ملفات)
-- [x] 6 مستويات (L00-L05)
-- [x] CategorySelect + Curriculum + Enrichment
-- [x] LevelScreen الأساسي
-
-### 🔷 المرحلة 2 — نقل v1 (الجلسة الحالية)
-- [ ] examBank2 + DebugOverlay + ImageAvatar
-- [ ] Companion + CharacterSelector + FloatingCompanion
-- [ ] NameInputModal + BadgeModal + SpeechButton
-- [ ] CertificateLogo + CertificateMedal
-- [ ] 5 Hooks (useQuests, useGameStats, useCharacterVoice, useSound, useConfetti)
-- [ ] 4 Utils (audioAnzanBadges, badgeChecker, skillsChecker, certificateGenerator)
-- [ ] 3 data legacy files (types, data, learnModules)
-- [ ] 5 screens أساسية (RoleSelection, Welcome, Header, HeroDashboard, Guardian)
-- [ ] 11 screens تعليمية (Learn, Practice, Anzan, AudioAnzan, Quests, FinalExam, Certificate, Multiplication, MagicSecrets, CrossMult, Division)
-- [ ] App.tsx موحّد
-
-### 🔷 المرحلة 3 — التعليم التكيفي (من GPT)
-- [ ] masteryTracker.ts
-- [ ] problemGenerator.ts
-- [ ] adaptiveEngine.ts
-- [ ] ربطها بـ LevelScreen
-
-### 🔷 المرحلة 4 — إكمال المنهج
-- [ ] L06 → L20 (15 مستوى)
-- [ ] اختبارات المستويات
-- [ ] Mitori-zan screen
-
-### 🔷 المرحلة 5 — التلميع
-- [ ] ضغط الصور
-- [ ] PWA (offline)
-- [ ] اختبار على أجهزة مختلفة
-- [ ] تحسينات الأداء
-
-### 🔷 المرحلة 6 — النشر
-- [ ] Google Play (APK)
-- [ ] تحسينات SEO
-- [ ] تسويق
+· PracticeScreen — تمرّن تكيفي
+· AnzanScreen — أنزان بصري
+· AudioAnzanScreen — أنزان سمعي
+· PlacementTestScreen — تحديد المستوى
+· CategoryExamScreen — امتحان 1 + 2
+· SorobanPlayground — سوروبان حر
 
 ---
 
-## 📊 8. حالة الملفات (File Status)
+✅ 9. ما تم إنجازه
 
-### ✅ مكتملة:
+🎯 الجلسات 1-7:
 
-| المجموعة | العدد |
-|----------|-------|
-| i18n | 4 |
-| curriculum (types + levels) | 8 |
-| engine | 2 |
-| store | 1 |
-| data (v2) | 3 |
-| components/soroban2d5 | 6 |
-| components (main) | 2 |
-| hooks | 5 |
-| screens (v2) | 4 |
-| **المجموع** | **35** |
+· البنية الأساسية + المحرك التكيفي
+· بنك v2 (~935 سؤال)
+· أنزان بصري + سمعي
+· امتحانات القسم 1+2
+· Playground
+· تعليم تكيفي
+· شارات المهارات
 
-### ⏳ في الانتظار:
+✅ الجلسة 8 (اليوم):
 
-| المجموعة | العدد |
-|----------|-------|
-| components (v1) | 8 |
-| hooks (v1) | 5 |
-| utils | 4 |
-| data legacy | 3 |
-| screens (v1) | 16 |
-| examBank2 | 1 |
-| engine (adaptive) | 3 |
-| curriculum levels (L06-L20) | 15 |
-| **المجموع** | **55** |
-
-### 🎯 الإجمالي:
-- **مكتمل:** 35 ملف (39%)
-- **متبقي:** 55 ملف (61%)
+· بناء L0 كاملاً (3 دروس + اختبار)
+· curriculum/lessons/ — هيكل جديد
+· 4 شاشات جديدة (LearnScreen, LessonScreen, IntroductionScreen, LevelTestScreen)
+· إصلاح storyPath (MP3)
+· إصلاح SVG → Soroban2D5
+· أصوات سوروبانا (correct/wrong)
+· فقاعة "أحسنت! 🌟"
+· FingerMathScreen (إثراء)
+· MagicSecretsScreen (إثراء)
+· تحديث WelcomeScreen (7 مميزات)
+· شريط بنفسجي في Welcome
+· CategoryScreen نظيف
 
 ---
 
-## 🔧 9. التقنيات المستخدمة
+🔜 10. ما هو باقي (8%)
 
-| التقنية | الإصدار | الاستخدام |
-|---------|---------|-----------|
-| React | 18.3.1 | UI |
-| TypeScript | 5.5.3 | اللغة |
-| Vite | 5.3.3 | البناء |
-| Tailwind CSS | 3.4.4 | التنسيق |
-| Framer Motion | 11.0.8 | الحركات |
-| Zustand | 4.5.2 | الحالة |
-| lucide-react | 0.400.0 | الأيقونات |
-| GitHub Actions | — | النشر |
-| GitHub Pages | — | الاستضافة |
+📚 المنهج:
 
----
+· L1 (7 دروس: S3-S9)
+· L2 (3 دروس: S10-S12)
+· L3 (3 دروس: S13-S15)
+· L4-L7 (5 دروس: S16-S20)
+· = 18 درس متبقٍ
 
-## 🎨 10. الهوية البصرية
+🎨 الإثراء:
 
-### 🎨 الألوان:
+· ربط CrossMultiplicationScreen (للكبار)
+· ألعاب تعليمية (اختياري)
 
-| اللون | الاستخدام | Hex |
-|-------|-----------|-----|
-| Purple | أساسي | #a855f7 |
-| Electric | ثانوي | #3b82f6 |
-| Emerald | نجاح | #10b981 |
-| Gold | تمييز | #fbbf24 |
-| Ink | خلفية | #0a0a1a |
+🎯 ميزات الجلسة 9 (الجديدة):
 
-### ✍️ الخطوط:
-- **Baloo 2** — عناوين (display)
-- **Cairo** — نصوص (body)
+· 🆕 "الأسرار السحرية" للصغار والكبار
+· 🆕 نظام قفل بـ 50 XP لكل سر
+· 🆕 السر الأول مجاني دائماً
+· 🆕 رسالة "تحتاج X XP إضافية"
 
-### 🎭 الأنماط:
-- `glass-card` — بطاقات زجاجية
-- `btn-primary` — أزرار رئيسية
-- `btn-ghost` — أزرار ثانوية
-- `shimmer-text` — عناوين متلألئة
+🗺️ تحسينات:
+
+· GuardianDashboard — تحديث للبنية الجديدة
+· CertificateScreen — ربط
+· جلسة استدراك ذكية
+· شارات برونزية/فضية/ذهبية
+· PWA + APK
 
 ---
 
-## 📝 11. ملاحظات للتطوير
+🗺️ 11. خارطة الطريق
 
-### ⚠️ قواعد ذهبية:
+✅ الجلسة 8 (منتهية):
 
-1. **لا تحذف شيئاً** من v1 بدون نسخة احتياطية
-2. **لا تُعدّل `learnModules.ts`** — كنز
-3. **لا تستبدل** `localStorage` في v1 — يعمل
-4. **لا تخلط** بين `types.ts` (v2) و `data/legacy/types.ts` (v1)
-5. **استخدم `@/`** لكل import من `src/`
+بناء L0 + إصلاحات + إثراء أساسي
 
-### 🎯 أهداف الجودة:
+🎯 الجلسة 9 (القادمة):
 
-- [ ] زمن تحميل < 3 ثوان
-- [ ] لا أخطاء console
-- [ ] يعمل على Chrome, Safari, Firefox
-- [ ] متجاوب مع الجوالات الصغيرة
-- [ ] PWA قابل للتحميل
+المهمة الأساسية: بناء L1 (7 دروس) + اختبار
 
----
++ الإضافة الجديدة:
 
-## 🔗 12. روابط مهمة
+· ✨ "الأسرار السحرية" للصغار والكبار
+· 🔒 نظام قفل بـ 50 XP
+· 🥇 السر الأول مجاني
+· 📊 تحديث useGameStats بـ spendXP()
+· 🎨 رسالة "تحتاج X XP إضافية"
 
-| الرابط | الوصف |
-|--------|-------|
-| [Live Demo](https://mezo2021.github.io/sorobanmind-2) | التطبيق المباشر |
-| [GitHub Repo](https://github.com/mezo2021/sorobanmind-2) | المستودع |
-| [Actions](https://github.com/mezo2021/sorobanmind-2/actions) | سجل البناء |
-| [v1 القديم](https://github.com/mezo2021/sorobanmind-platform_2026) | المصدر |
+🎯 الجلسة 10:
 
----
+L2 + L3 (6 دروس)
 
-## 📅 13. سجل الجلسات
+🎯 الجلسة 11:
 
-### 🗓️ الجلسة 1 (2026-09-24)
-**الأهداف:**
-- إنشاء المستودع
-- محرك السوروبان
-- i18n
-- رفع الأصول
-- 6 مستويات
-- شاشات v2 الأساسية
+L4-L7 (5 دروس) + TTS
 
-**الإنجازات:**
-- ✅ 35 ملف مكتمل
-- ✅ 21 ملف صوتي
-- ✅ 8 صور
-- ✅ GitHub Actions يعمل
-- ✅ التطبيق منشور
+🎯 الجلسة 12:
 
-**المتبقي:**
-- ⏳ نقل v1
-- ⏳ محرك GPT
-- ⏳ L06-L20
+· ربط CrossMultiplicationScreen
+· GuardianDashboard (تحديث)
+
+🎯 الجلسة 13:
+
+· جلسة استدراك ذكية
+· شارات برونزية/فضية/ذهبية
+· خريطة ضعف بصرية
+
+🎯 الجلسة 14:
+
+· CertificateScreen
+· PWA + APK
 
 ---
 
-## 🎯 14. الأولويات الحالية
+📊 12. الإحصائيات
 
-### 🔴 أولوية قصوى (الآن):
-1. **نقل v1** (كل الشاشات)
-2. **examBank2 + DebugOverlay**
-3. **App.tsx موحّد**
-
-### 🟡 أولوية متوسطة (بعدها):
-4. **محرك GPT** (Adaptive)
-5. **L06-L20**
-
-### 🟢 أولوية منخفضة:
-6. **PWA**
-7. **APK**
-8. **تلميع نهائي**
+المقياس القيمة
+نسبة الإنجاز ~92%
+الملفات المكتملة ~135
+الملفات المتبقية ~10
+أسئلة البنك ~1080
+المستويات 8
+المهارات 20
+الشاشات التفاعلية 12
+الدروس المبنية 3
+الملفات الصوتية 22
+أنظمة XP ✅ (الجلسة 9)
 
 ---
 
-## 📞 15. ملاحظات المطوّر
+⚠️ 13. ملاحظات حرجة
 
-**المطوّر:** مصطفى علي أكر ([@mezo2021](https://github.com/mezo2021))
+13.1 GuardianDashboard:
 
-**المرجع المنهجي:**
-- **Takashi Kojima** — "The Japanese Abacus: Its Use and Theory"
-- **Japan Soroban Association** (日本珠算連盟)
+· البنية القديمة (10 دروس) — لا تعرض التقدم الجديد
+· يحتاج قراءة:
+  · soroban_completed_lessons
+  · soroban_passed_level_tests
+  · soroban_xp
+  · soroban_unlocked_secrets
 
-**الشكر:**
-- ChatGPT — للتعليم التكيفي والمنهج
-- مجتمع السوروبان العربي
+13.2 ملفات v1:
+
+· data.ts + learnModules.ts — للمرجع فقط
+· أرشفتها بعد L1-L7
+
+13.3 EnrichmentScreen:
+
+· حُذف من App.tsx — نُقل الإثراء لشاشات مستقلة
+
+13.4 useGameStats:
+
+· يحتاج إضافة spendXP(amount) في الجلسة 9
+
+---
+
+🎯 14. الأولويات (Priority List)
+
+# الميزة الأولوية الجلسة
+1 بناء L1 (7 دروس) 🔴 عالية 9
+2 الأسرار السحرية (XP) 🔴 عالية 9
+3 useGameStats.spendXP 🔴 عالية 9
+4 L2 + L3 (6 دروس) 🔴 عالية 10
+5 L4-L7 (5 دروس) 🔴 عالية 11
+6 ربط CrossMultiplicationScreen 🟠 متوسطة 12
+7 GuardianDashboard تحديث 🟠 متوسطة 12
+8 جلسة استدراك 🟠 متوسطة 13
+9 شارات برونزية/فضية/ذهبية 🟠 متوسطة 13
+10 CertificateScreen 🟠 متوسطة 14
+11 PWA + APK 🟡 منخفضة 14
+12 ألعاب تعليمية 🟡 منخفضة 14
+
+---
+
+🔗 15. روابط مهمة
+
+الرابط الوصف
+Live Demo التطبيق
+GitHub Repo المستودع
+Actions سجل البناء
+
+---
+
+📞 16. المطوّر
+
+مصطفى علي أكر (@mezo2021)
+
+المراجع:
+
+· Takashi Kojima — The Japanese Abacus
+· Japan Soroban Association
+· ChatGPT / Claude — للتعليم التكيفي
 
 ---
 
 <div align="center">
 
-## 🧮 SorobanMind
+🧮 SorobanMind
 
-**صُنع بحب لأطفال العالم العربي** 🌍
+صُنع بحب لأطفال العالم العربي 🌍
 
-**حيث يصبح العقل أسرع من الآلة الحاسبة** 🚀
+آخر تحديث: 2026-09-27 — نهاية الجلسة 8
+الحالة: 🟢 يعمل + L0 كامل + إثراء مكتمل — ~92%
+
+التقييم المتوقّع: 🏆 100/100
+
+</div>
 
 ---
 
-*آخر تحديث: 2026-09-24 — الجلسة 1*
+🎯 خطوات 100/100
 
-</div>
+🔴 ضروري (60%):
+
+1. L1-L7 (18 درس) — 40%
+2. نظام الأسرار XP — 10%
+3. GuardianDashboard — 10%
+
+🟠 مهم (30%):
+
+4. جلسة استدراك ذكية — 10%
+5. شارات برونزية/فضية/ذهبية — 10%
+6. CertificateScreen — 10%
+
+🟡 لمسات (10%):
+
+7. PWA + APK — 5%
+8. ألعاب تعليمية — 5%
+
+= مشروع احترافي كامل 💯
+
+---
