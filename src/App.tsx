@@ -23,6 +23,12 @@ import PracticeScreen from './screens/PracticeScreen';
 import AnzanScreen from './screens/AnzanScreen';
 import AudioAnzanScreen from './screens/AudioAnzanScreen';
 
+// ═══ 🆕 Lessons + Test ═══
+import LearnScreen from './screens/LearnScreen';
+import LessonScreen from './screens/LessonScreen';
+import IntroductionScreen from './screens/IntroductionScreen';
+import LevelTestScreen from './screens/LevelTestScreen';
+
 // ═══ Playground ═══
 import SorobanPlayground from './screens/SorobanPlayground';
 
@@ -107,7 +113,7 @@ function getComingSoonTitle(screen: string): string {
 export default function App() {
   const [screen, setScreen] = useState<AppScreen>('loading');
   const [role, setRole] = useState<Role>(null);
-  const [activeLevelId, setActiveLevelId] = useState<LevelId | null>(null);
+  const [, setActiveLevelId] = useState<LevelId | null>(null);
   const [ready, setReady] = useState(false);
 
   const { stats, toggleSound } = useGameStats();
@@ -173,11 +179,6 @@ export default function App() {
   const handleBackToHero = () => {
     setRole('hero');
     setScreen('hero-dashboard');
-  };
-
-  const handleOpenLevel = (levelId: string) => {
-    setActiveLevelId(levelId as LevelId);
-    setScreen(`lesson-${levelId}` as AppScreen);
   };
 
   const handleBackToCategory = (category: 'kids' | 'teens') => {
@@ -251,6 +252,100 @@ export default function App() {
 
   // ═══ Screen Renderer ═══
   const renderScreen = () => {
+    // ═══ 🆕 learn-L0 ... learn-L7 ═══
+    if (screen.startsWith('learn-')) {
+      const levelId = screen.replace('learn-', '');
+      const isKids = ['L0', 'L1', 'L2', 'L3'].includes(levelId);
+
+      return (
+        <LearnScreen
+          levelId={levelId}
+          onBack={() => handleBackToCategory(isKids ? 'kids' : 'teens')}
+          onOpenLesson={(lessonId) => {
+            setActiveLevelId(levelId as LevelId);
+            if (lessonId.endsWith('-intro')) {
+              setScreen(('intro-' + lessonId) as AppScreen);
+            } else {
+              setScreen(('lesson-view-' + lessonId) as AppScreen);
+            }
+          }}
+          playSound={handleSound}
+        />
+      );
+    }
+
+    // ═══ 🆕 intro-L0-intro ... ═══
+    if (screen.startsWith('intro-')) {
+      const lessonId = screen.replace('intro-', '');
+      const levelId = lessonId.split('-')[0];
+
+      return (
+        <IntroductionScreen
+          lessonId={lessonId}
+          onBack={() => setScreen(('learn-' + levelId) as AppScreen)}
+          onComplete={() => {
+            try {
+              const raw = localStorage.getItem('soroban_completed_lessons');
+              const arr: string[] = raw ? JSON.parse(raw) : [];
+              if (!arr.includes(lessonId)) {
+                arr.push(lessonId);
+                localStorage.setItem('soroban_completed_lessons', JSON.stringify(arr));
+              }
+            } catch { /* ignore */ }
+            setScreen(('learn-' + levelId) as AppScreen);
+          }}
+          playSound={handleSound}
+        />
+      );
+    }
+
+    // ═══ 🆕 lesson-view-L0-S1 ... ═══
+    if (screen.startsWith('lesson-view-')) {
+      const lessonId = screen.replace('lesson-view-', '');
+      const levelId = lessonId.split('-')[0];
+
+      return (
+        <LessonScreen
+          lessonId={lessonId}
+          onBack={() => setScreen(('learn-' + levelId) as AppScreen)}
+          onNext={(nextId) => {
+            if (nextId.endsWith('-intro')) {
+              setScreen(('intro-' + nextId) as AppScreen);
+            } else {
+              setScreen(('lesson-view-' + nextId) as AppScreen);
+            }
+          }}
+          onComplete={(id) => {
+            try {
+              const raw = localStorage.getItem('soroban_completed_lessons');
+              const arr: string[] = raw ? JSON.parse(raw) : [];
+              if (!arr.includes(id)) {
+                arr.push(id);
+                localStorage.setItem('soroban_completed_lessons', JSON.stringify(arr));
+              }
+            } catch { /* ignore */ }
+          }}
+          playSound={handleSound}
+          onXP={(amount) => console.log('XP:', amount)}
+        />
+      );
+    }
+
+    // ═══ 🆕 level-test-L0 ... level-test-L7 ═══
+    if (screen.startsWith('level-test-')) {
+      const levelId = screen.replace('level-test-', '');
+      const isKids = ['L0', 'L1', 'L2', 'L3'].includes(levelId);
+
+      return (
+        <LevelTestScreen
+          levelId={levelId}
+          onBack={() => handleBackToCategory(isKids ? 'kids' : 'teens')}
+          onPass={() => handleBackToCategory(isKids ? 'kids' : 'teens')}
+          playSound={handleSound}
+        />
+      );
+    }
+
     switch (screen) {
       case 'welcome':
         return <WelcomeScreen onStart={handleWelcomeStart} />;
@@ -305,7 +400,6 @@ export default function App() {
           </>
         );
 
-      // ═══ Placement Test ═══
       case 'placement-test':
         return (
           <PlacementTestScreen
@@ -315,7 +409,6 @@ export default function App() {
           />
         );
 
-      // ═══ Soroban Playground ═══
       case 'soroban':
         return (
           <SorobanPlayground
@@ -324,7 +417,6 @@ export default function App() {
           />
         );
 
-      // ═══ Category Exam 1 (Kids) ═══
       case 'category-exam-1':
         return (
           <CategoryExamScreen
@@ -344,7 +436,6 @@ export default function App() {
           />
         );
 
-      // ═══ Category Exam 2 (Teens) ═══
       case 'category-exam-2':
         return (
           <CategoryExamScreen
@@ -357,7 +448,6 @@ export default function App() {
           />
         );
 
-      // ═══ Categories ═══
       case 'category-kids':
         return (
           <CategoryScreen
@@ -376,7 +466,6 @@ export default function App() {
           />
         );
 
-      // ═══ Levels (L0-L7) ═══
       case 'lesson-L0':
       case 'lesson-L1':
       case 'lesson-L2':
@@ -398,7 +487,6 @@ export default function App() {
         );
       }
 
-      // ═══ Enrichment ═══
       case 'enrichment-1':
       case 'enrichment-2':
         return (
@@ -413,7 +501,6 @@ export default function App() {
           />
         );
 
-      // ═══ Practice (0-7) ═══
       case 'practice-0':
       case 'practice-1':
       case 'practice-2':
@@ -452,7 +539,6 @@ export default function App() {
         );
       }
 
-      // ═══ Anzan بصري (0-7) ═══
       case 'anzan-0':
       case 'anzan-1':
       case 'anzan-2':
@@ -476,7 +562,6 @@ export default function App() {
         );
       }
 
-      // ═══ Anzan سمعي (0-7) ═══
       case 'audio-anzan-0':
       case 'audio-anzan-1':
       case 'audio-anzan-2':
@@ -500,7 +585,6 @@ export default function App() {
         );
       }
 
-      // ═══ Coming Soon ═══
       case 'quests':
       case 'multiplication':
       case 'secrets':
