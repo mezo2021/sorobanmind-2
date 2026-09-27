@@ -24,6 +24,7 @@ import AudioAnzanScreen from './screens/AudioAnzanScreen';
 
 // ═══ 🆕 Lessons + Test ═══
 import FingerMathScreen from './screens/FingerMathScreen';
+import MagicSecretsScreen from './screens/MagicSecretsScreen';
 import LearnScreen from './screens/LearnScreen';
 import LessonScreen from './screens/LessonScreen';
 import IntroductionScreen from './screens/IntroductionScreen';
