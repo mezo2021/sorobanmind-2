@@ -17,7 +17,6 @@ import Header from './screens/Header';
 // ═══ Category + Level ═══
 import CategoryScreen from './screens/CategoryScreen';
 import LevelScreen from './screens/LevelScreen';
-import EnrichmentScreen from './screens/EnrichmentScreen';
 import PlacementTestScreen from './screens/PlacementTestScreen';
 import PracticeScreen from './screens/PracticeScreen';
 import AnzanScreen from './screens/AnzanScreen';
@@ -487,19 +486,6 @@ export default function App() {
         );
       }
 
-      case 'enrichment-1':
-      case 'enrichment-2':
-        return (
-          <EnrichmentScreen
-            category={screen === 'enrichment-1' ? 'kids' : 'teens'}
-            onBack={() =>
-              handleBackToCategory(screen === 'enrichment-1' ? 'kids' : 'teens')
-            }
-            onOpenModule={() => {
-              /* TODO */
-            }}
-          />
-        );
 
       case 'practice-0':
       case 'practice-1':
