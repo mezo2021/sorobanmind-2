@@ -4,10 +4,11 @@
 import type { LessonNode, LessonExample, TryQuestion } from '../types';
 
 // ═══════════════════════════════════════════════════════════
-// 📝 الأمثلة المحلولة (10 — "تعلّم" — تسلسل 0→9)
+// 📝 الأمثلة المحلولة (10 أمثلة — "شاهد")
 // ═══════════════════════════════════════════════════════════
 
 const EXAMPLES: LessonExample[] = [
+  // ─── 1) مثّل الرقم 0 ───
   {
     id: 'L0-S1-E1',
     problemText: 'مثّل الرقم 0',
@@ -16,7 +17,7 @@ const EXAMPLES: LessonExample[] = [
     steps: [
       {
         stepIndex: 1,
-        instructionText: 'اترك كل الخرزات بعيدة عن العارضة',
+        instructionText: 'اترك الخرزات بعيدة عن العارضة',
         fingerUsed: 'index',
         direction: 'down',
         targetColumn: 'units',
@@ -24,8 +25,10 @@ const EXAMPLES: LessonExample[] = [
         expectedValueAfter: 0,
       },
     ],
-    explanation: 'لا خرزة تلمس العارضة — الرقم صفر.',
+    explanation: 'لا توجد خرزة تلمس العارضة — الرقم صفر.',
   },
+
+  // ─── 2) مثّل الرقم 1 ───
   {
     id: 'L0-S1-E2',
     problemText: 'مثّل الرقم 1',
@@ -34,7 +37,7 @@ const EXAMPLES: LessonExample[] = [
     steps: [
       {
         stepIndex: 1,
-        instructionText: 'ارفع خرزة سفلية واحدة بالإبهام',
+        instructionText: 'ارفع خرزة سفلية واحدة نحو العارضة بالإبهام',
         fingerUsed: 'thumb',
         direction: 'up',
         targetColumn: 'units',
@@ -44,69 +47,17 @@ const EXAMPLES: LessonExample[] = [
     ],
     explanation: 'خرزة سفلية واحدة = 1.',
   },
+
+  // ─── 3) مثّل الرقم 5 ───
   {
     id: 'L0-S1-E3',
-    problemText: 'مثّل الرقم 2',
-    answer: 2,
-    ruleCategory: 'build',
-    steps: [
-      {
-        stepIndex: 1,
-        instructionText: 'ارفع خرزتين سفليتين بالإبهام',
-        fingerUsed: 'thumb',
-        direction: 'up',
-        targetColumn: 'units',
-        beadsAffected: [1, 2],
-        expectedValueAfter: 2,
-      },
-    ],
-    explanation: 'خرزتان سفليتان = 2.',
-  },
-  {
-    id: 'L0-S1-E4',
-    problemText: 'مثّل الرقم 3',
-    answer: 3,
-    ruleCategory: 'build',
-    steps: [
-      {
-        stepIndex: 1,
-        instructionText: 'ارفع ثلاث خرزات سفلية بالإبهام',
-        fingerUsed: 'thumb',
-        direction: 'up',
-        targetColumn: 'units',
-        beadsAffected: [1, 2, 3],
-        expectedValueAfter: 3,
-      },
-    ],
-    explanation: 'ثلاث خرزات سفلية = 3.',
-  },
-  {
-    id: 'L0-S1-E5',
-    problemText: 'مثّل الرقم 4',
-    answer: 4,
-    ruleCategory: 'build',
-    steps: [
-      {
-        stepIndex: 1,
-        instructionText: 'ارفع الأربع خرزات السفلية بالإبهام',
-        fingerUsed: 'thumb',
-        direction: 'up',
-        targetColumn: 'units',
-        beadsAffected: [1, 2, 3, 4],
-        expectedValueAfter: 4,
-      },
-    ],
-    explanation: 'كل الخرزات السفلية = 4.',
-  },
-  {
-    id: 'L0-S1-E6',
     problemText: 'مثّل الرقم 5',
     answer: 5,
     ruleCategory: 'build',
     steps: [
       {
         stepIndex: 1,
-        instructionText: 'أنزل الخرزة العلوية بالسبابة',
+        instructionText: 'أنزل الخرزة العلوية نحو العارضة بالسبابة',
         fingerUsed: 'index',
         direction: 'down',
         targetColumn: 'units',
@@ -116,15 +67,37 @@ const EXAMPLES: LessonExample[] = [
     ],
     explanation: 'الخرزة العلوية وحدها = 5 (الجدة).',
   },
+
+  // ─── 4) مثّل الرقم 2 ───
   {
-    id: 'L0-S1-E7',
+    id: 'L0-S1-E4',
+    problemText: 'مثّل الرقم 2',
+    answer: 2,
+    ruleCategory: 'build',
+    steps: [
+      {
+        stepIndex: 1,
+        instructionText: 'ارفع خرزتين سفليتين نحو العارضة',
+        fingerUsed: 'thumb',
+        direction: 'up',
+        targetColumn: 'units',
+        beadsAffected: [1, 2],
+        expectedValueAfter: 2,
+      },
+    ],
+    explanation: 'خرزتان سفليتان = 2.',
+  },
+
+  // ─── 5) مثّل الرقم 6 ───
+  {
+    id: 'L0-S1-E5',
     problemText: 'مثّل الرقم 6',
     answer: 6,
     ruleCategory: 'build',
     steps: [
       {
         stepIndex: 1,
-        instructionText: 'أنزل الخرزة العلوية بالسبابة (5)',
+        instructionText: 'أنزل الخرزة العلوية (5)',
         fingerUsed: 'index',
         direction: 'down',
         targetColumn: 'units',
@@ -133,7 +106,7 @@ const EXAMPLES: LessonExample[] = [
       },
       {
         stepIndex: 2,
-        instructionText: 'ارفع خرزة سفلية واحدة بالإبهام (1)',
+        instructionText: 'ارفع خرزة سفلية واحدة (1)',
         fingerUsed: 'thumb',
         direction: 'up',
         targetColumn: 'units',
@@ -143,15 +116,37 @@ const EXAMPLES: LessonExample[] = [
     ],
     explanation: '5 + 1 = 6 (الجدة + طفل).',
   },
+
+  // ─── 6) مثّل الرقم 3 ───
   {
-    id: 'L0-S1-E8',
+    id: 'L0-S1-E6',
+    problemText: 'مثّل الرقم 3',
+    answer: 3,
+    ruleCategory: 'build',
+    steps: [
+      {
+        stepIndex: 1,
+        instructionText: 'ارفع ثلاث خرزات سفلية نحو العارضة',
+        fingerUsed: 'thumb',
+        direction: 'up',
+        targetColumn: 'units',
+        beadsAffected: [1, 2, 3],
+        expectedValueAfter: 3,
+      },
+    ],
+    explanation: 'ثلاث خرزات سفلية = 3.',
+  },
+
+  // ─── 7) مثّل الرقم 7 ───
+  {
+    id: 'L0-S1-E7',
     problemText: 'مثّل الرقم 7',
     answer: 7,
     ruleCategory: 'build',
     steps: [
       {
         stepIndex: 1,
-        instructionText: 'أنزل الخرزة العلوية بالسبابة (5)',
+        instructionText: 'أنزل الخرزة العلوية (5)',
         fingerUsed: 'index',
         direction: 'down',
         targetColumn: 'units',
@@ -160,7 +155,7 @@ const EXAMPLES: LessonExample[] = [
       },
       {
         stepIndex: 2,
-        instructionText: 'ارفع خرزتين سفليتين بالإبهام (2)',
+        instructionText: 'ارفع خرزتين سفليتين (2)',
         fingerUsed: 'thumb',
         direction: 'up',
         targetColumn: 'units',
@@ -170,6 +165,28 @@ const EXAMPLES: LessonExample[] = [
     ],
     explanation: '5 + 2 = 7 (الجدة + طفلان).',
   },
+
+  // ─── 8) مثّل الرقم 4 ───
+  {
+    id: 'L0-S1-E8',
+    problemText: 'مثّل الرقم 4',
+    answer: 4,
+    ruleCategory: 'build',
+    steps: [
+      {
+        stepIndex: 1,
+        instructionText: 'ارفع الأربع خرزات السفلية نحو العارضة',
+        fingerUsed: 'thumb',
+        direction: 'up',
+        targetColumn: 'units',
+        beadsAffected: [1, 2, 3, 4],
+        expectedValueAfter: 4,
+      },
+    ],
+    explanation: 'كل الخرزات السفلية = 4.',
+  },
+
+  // ─── 9) مثّل الرقم 8 ───
   {
     id: 'L0-S1-E9',
     problemText: 'مثّل الرقم 8',
@@ -178,7 +195,7 @@ const EXAMPLES: LessonExample[] = [
     steps: [
       {
         stepIndex: 1,
-        instructionText: 'أنزل الخرزة العلوية بالسبابة (5)',
+        instructionText: 'أنزل الخرزة العلوية (5)',
         fingerUsed: 'index',
         direction: 'down',
         targetColumn: 'units',
@@ -187,7 +204,7 @@ const EXAMPLES: LessonExample[] = [
       },
       {
         stepIndex: 2,
-        instructionText: 'ارفع ثلاث خرزات سفلية بالإبهام (3)',
+        instructionText: 'ارفع ثلاث خرزات سفلية (3)',
         fingerUsed: 'thumb',
         direction: 'up',
         targetColumn: 'units',
@@ -197,6 +214,8 @@ const EXAMPLES: LessonExample[] = [
     ],
     explanation: '5 + 3 = 8.',
   },
+
+  // ─── 10) مثّل الرقم 9 ───
   {
     id: 'L0-S1-E10',
     problemText: 'مثّل الرقم 9',
@@ -205,7 +224,7 @@ const EXAMPLES: LessonExample[] = [
     steps: [
       {
         stepIndex: 1,
-        instructionText: 'أنزل الخرزة العلوية بالسبابة (5)',
+        instructionText: 'أنزل الخرزة العلوية (5)',
         fingerUsed: 'index',
         direction: 'down',
         targetColumn: 'units',
@@ -214,7 +233,7 @@ const EXAMPLES: LessonExample[] = [
       },
       {
         stepIndex: 2,
-        instructionText: 'ارفع الأربع خرزات السفلية بالإبهام (4)',
+        instructionText: 'ارفع الأربع خرزات السفلية (4)',
         fingerUsed: 'thumb',
         direction: 'up',
         targetColumn: 'units',
@@ -227,97 +246,69 @@ const EXAMPLES: LessonExample[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════
-// ✏️ أسئلة "جرّب" (10 — عشوائية)
+// ✏️ أسئلة "جرّب" (10 أسئلة — قراءة الرقم المثبت)
 // ═══════════════════════════════════════════════════════════
 
 const TRY_QUESTIONS: TryQuestion[] = [
   {
-    id: 'L0-S1-T01',
+    id: 'L0-S1-T1',
+    type: 'read',
+    prompt: 'اقرأ الرقم المثبت: لا توجد خرزة تلامس العارضة',
+    expectedValue: 0,
+  },
+  {
+    id: 'L0-S1-T2',
+    type: 'read',
+    prompt: 'اقرأ الرقم المثبت: خرزة سفلية واحدة نحو العارضة',
+    expectedValue: 1,
+  },
+  {
+    id: 'L0-S1-T3',
+    type: 'read',
+    prompt: 'اقرأ الرقم المثبت: الخرزة العلوية نحو العارضة',
+    expectedValue: 5,
+  },
+  {
+    id: 'L0-S1-T4',
+    type: 'read',
+    prompt: 'اقرأ الرقم المثبت: خرزتان سفليتان نحو العارضة',
+    expectedValue: 2,
+  },
+  {
+    id: 'L0-S1-T5',
+    type: 'read',
+    prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + خرزة سفلية واحدة',
+    expectedValue: 6,
+  },
+  {
+    id: 'L0-S1-T6',
+    type: 'read',
+    prompt: 'اقرأ الرقم المثبت: ثلاث خرزات سفلية نحو العارضة',
+    expectedValue: 3,
+  },
+  {
+    id: 'L0-S1-T7',
     type: 'read',
     prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + خرزتان سفليتان',
     expectedValue: 7,
   },
   {
-    id: 'L0-S1-T02',
+    id: 'L0-S1-T8',
     type: 'read',
-    prompt: 'اقرأ الرقم المثبت: ثلاث خرزات سفلية',
-    expectedValue: 3,
+    prompt: 'اقرأ الرقم المثبت: أربع خرزات سفلية نحو العارضة',
+    expectedValue: 4,
   },
   {
-    id: 'L0-S1-T03',
+    id: 'L0-S1-T9',
     type: 'read',
-    prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + كل الخرزات السفلية',
-    expectedValue: 9,
-  },
-  {
-    id: 'L0-S1-T04',
-    type: 'compare',
-    prompt: 'أيّهما أكبر؟',
-    expectedValue: 4,
-    choices: [2, 4],
-    explanation: 'خرزتان = 2، أربع خرزات = 4، والـ 4 أكبر.',
-  },
-  {
-    id: 'L0-S1-T05',
-    type: 'build',
-    prompt: 'مثّل العدد 4 على المعداد',
-    expectedValue: 4,
-    steps: [
-      {
-        stepIndex: 1,
-        instructionText: 'ارفع الأربع خرزات السفلية بالإبهام',
-        fingerUsed: 'thumb',
-        direction: 'up',
-        targetColumn: 'units',
-        beadsAffected: [1, 2, 3, 4],
-        expectedValueAfter: 4,
-      },
-    ],
-    explanation: 'كل الخرزات السفلية = 4.',
-  },
-  {
-    id: 'L0-S1-T06',
-    type: 'build',
-    prompt: 'مثّل العدد 5 على المعداد',
-    expectedValue: 5,
-    steps: [
-      {
-        stepIndex: 1,
-        instructionText: 'أنزل الخرزة العلوية بالسبابة',
-        fingerUsed: 'index',
-        direction: 'down',
-        targetColumn: 'units',
-        beadsAffected: [5],
-        expectedValueAfter: 5,
-      },
-    ],
-    explanation: 'الخرزة العلوية وحدها = 5.',
-  },
-  {
-    id: 'L0-S1-T07',
-    type: 'sequence',
-    prompt: 'رتّب الأرقام تصاعدياً',
-    expectedValue: 4,
-    choices: [9, 4, 5],
-    explanation: 'الترتيب الصحيح: 4 ثم 5 ثم 9.',
-  },
-  {
-    id: 'L0-S1-T08',
-    type: 'read',
-    prompt: 'اقرأ الرقم المثبت: الخرزة العلوية فقط',
-    expectedValue: 5,
-  },
-  {
-    id: 'L0-S1-T09',
-    type: 'read',
-    prompt: 'اقرأ الرقم المثبت: أربع خرزات سفلية',
-    expectedValue: 4,
+    prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + ثلاث خرزات سفلية',
+    expectedValue: 8,
   },
   {
     id: 'L0-S1-T10',
     type: 'read',
-    prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + ثلاث خرزات سفلية',
-    expectedValue: 8,
+    prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + أربع خرزات سفلية',
+    expectedValue: 9,
   },
 ];
 
@@ -326,27 +317,32 @@ const TRY_QUESTIONS: TryQuestion[] = [
 // ═══════════════════════════════════════════════════════════
 
 export const L0_S1: LessonNode = {
+  // ───── الهوية ─────
   id: 'L0-S1',
   skillId: 'S1',
   levelId: 'L0',
-  order: 2,
+  order: 2, // بعد المقدمة
 
+  // ───── العنوان ─────
   title: {
     ar: 'تمثيل الأرقام من 0 إلى 9',
     en: 'Representing Numbers 0-9',
   },
 
+  // ───── القصة (من learnModules.level1) ─────
   story: {
     ar: 'في يوم مشمس، وصل ثلاثة أبطال صغار — شام وريان وبانة — إلى بوابة خشبية ضخمة نُقش عليها: قلعة السوروبان، من يدخلها يصبح سيد الأرقام. دقّوا الجرس، فانفتح الباب، وظهر حارس القلعة: رجل خشبي اسمه الإطار. قال مبتسماً: في هذه القلعة تسكن عائلة غريبة — أربعة أطفال نشيطون في الطابق السفلي، كل واحد قيمته واحد. وفوق الجسر تسكن الجدة الحنونة، قيمتها خمسة.',
     en: 'On a sunny day, three young heroes reached a giant wooden gate engraved with: Castle of the Soroban. They rang the bell, and the castle guard — a wooden man named the Frame — appeared. He said with a smile: In this castle lives a strange family — four active children downstairs, each worth one. Above the beam lives the kind grandmother, worth five.',
   },
-  storyAudioId: 1,
+  storyAudioId: 1, // story-1.mp3
 
+  // ───── المفهوم ─────
   concept: {
     ar: 'الخرزة العلوية (الجدة) قيمتها 5، وكل خرزة سفلية (طفل) قيمتها 1. الخرزة التي تلمس العارضة فقط هي التي تُحسب.',
     en: 'The upper bead (grandmother) is worth 5. Each lower bead (child) is worth 1. Only beads touching the beam are counted.',
   },
 
+  // ───── القاعدة ─────
   rule: {
     ar: 'لتمثيل رقم من 0 إلى 9: استخدم الخرزة العلوية للخمسة، والخرزات السفلية للأرقام 1-4.',
     en: 'To represent 0-9: use the upper bead for 5, and lower beads for 1-4.',
@@ -364,9 +360,11 @@ export const L0_S1: LessonNode = {
     { formula: '9', result: '5 + 4' },
   ],
 
+  // ───── المحتوى التفاعلي ─────
   examples: EXAMPLES,
   tryQuestions: TRY_QUESTIONS,
 
+  // ───── معلومات ─────
   estimatedMinutes: 10,
   xpReward: 10,
   isTheoretical: false,
