@@ -1,5 +1,5 @@
 // src/screens/IntroductionScreen.tsx
-// 🎬 شاشة المقدمة: عرض صفحات الدرس النظري (تمرير)
+// 🎬 شاشة المقدمة: عرض صفحات الدرس النظري
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,6 +7,7 @@ import { Home, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
 
 import { getLessonById } from '@/curriculum/lessons';
 import { FloatingCompanion } from '@/components/FloatingCompanion';
+import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 
 interface IntroductionScreenProps {
@@ -65,11 +66,8 @@ export function IntroductionScreen({
     onBack();
   };
 
-  // ✅ مسار SVG يعمل على GitHub Pages + التطوير
-  const baseUrl = import.meta.env.BASE_URL || '/';
-  const imageUrl = page.imageSvg
-    ? (baseUrl.replace(/\/$/, '') + '/images/' + page.imageSvg + '.svg')
-    : null;
+  // 🎯 إذا كانت الصفحة تطلب صورة سوروبان → استخدم Soroban2D5
+  const isSorobanImage = page.imageSvg === 'soroban-13';
 
   return (
     <div dir="rtl" className="min-h-screen pb-36">
@@ -112,13 +110,15 @@ export function IntroductionScreen({
               {page.content}
             </div>
 
-            {imageUrl && (
-              <div className="mt-6 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
-                <img
-                  src={imageUrl}
-                  alt={page.imageAlt || ''}
-                  className="w-full h-auto"
-                  loading="lazy"
+            {/* 🎯 صورة السوروبان — مبنية بـ Soroban2D5 */}
+            {isSorobanImage && (
+              <div className="mt-6 p-4 rounded-2xl bg-black/20 border border-white/10 overflow-x-auto">
+                <Soroban2D5
+                  columns={13}
+                  demoValue={0}
+                  interactive={false}
+                  showValue={false}
+                  autoBeadSize={true}
                 />
               </div>
             )}
@@ -172,7 +172,6 @@ export function IntroductionScreen({
         </div>
       </div>
 
-      {/* البطل العائم */}
       <FloatingCompanion playSound={playSound} />
     </div>
   );
