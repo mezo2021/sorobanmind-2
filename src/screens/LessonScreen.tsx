@@ -1,7 +1,7 @@
 // src/screens/LessonScreen.tsx
 // 📖 شاشة الدرس: شاهد (قصة + أمثلة) + جرّب (أسئلة تفاعلية)
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, Volume2, Square, Eye, Hand, ChevronRight, ChevronLeft,
@@ -102,6 +102,14 @@ export function LessonScreen({
   // ─── حالة الصوت ───
   const [isReadingStory, setIsReadingStory] = useState(false);
 
+  // ─── 🆕 فقاعة سوروبانا ───
+  const [companionMsg, setCompanionMsg] = useState<string | null>(null);
+
+  const showCompanionMsg = (msg: string, duration = 2200) => {
+    setCompanionMsg(msg);
+    window.setTimeout(() => setCompanionMsg(null), duration);
+  };
+
   // ─── الحماية: لا درس ───
   if (!lesson) {
     return (
@@ -124,7 +132,7 @@ export function LessonScreen({
   const allSolved = totalTry > 0 && solvedCount === totalTry;
   const hasTry = totalTry > 0;
 
-  // ─── موسيقى التبديل ───
+  // ─── تبديل التاب ───
   const switchTab = (t: Tab) => {
     playSound('click');
     setTab(t);
@@ -164,7 +172,7 @@ export function LessonScreen({
     setShowSteps(false);
   };
 
-  // ─── توليد الخيارات عند فتح سؤال "اقرأ" ───
+  // ─── توليد الخيارات ───
   useEffect(() => {
     if (tab === 'try' && currentTry && currentTry.type === 'read') {
       setChoices(generateChoices(currentTry.expectedValue));
@@ -172,7 +180,25 @@ export function LessonScreen({
     }
   }, [tab, tryIdx, currentTry?.id]);
 
-  // ─── التحقق ───
+  // ─── 🆕 تفاعل مشترك مع الإجابة ───
+  const reactToAnswer = (isCorrect: boolean, attempt: number) => {
+    if (isCorrect) {
+      playSound('success');
+      sorobana.speakCorrect();          // 🆕 صوت سوروبانا
+      showCompanionMsg('أحسنت! 🌟');     // 🆕 فقاعة
+      setFeedback('correct');
+    } else {
+      playSound('error');
+      sorobana.speakWrong();             // 🆕 صوت سوروبانا
+      if (attempt >= MAX_TRIES) {
+        setFeedback('reveal');
+      } else {
+        setFeedback('wrong');
+      }
+    }
+  };
+
+  // ─── التحقق (read) ───
   const handleCheckRead = (chosen: number) => {
     if (!currentTry || feedback === 'reveal') return;
     const isCorrect = chosen === currentTry.expectedValue;
@@ -181,20 +207,15 @@ export function LessonScreen({
     setAttempts((a) => ({ ...a, [key]: attempt }));
 
     if (isCorrect) {
-      playSound('success');
-      setFeedback('correct');
       setSolved((s) => new Set(s).add(key));
-      setTimeout(() => advanceTry(), 900);
+      reactToAnswer(true, attempt);
+      setTimeout(() => advanceTry(), 1100);
     } else {
-      playSound('error');
-      if (attempt >= MAX_TRIES) {
-        setFeedback('reveal');
-      } else {
-        setFeedback('wrong');
-      }
+      reactToAnswer(false, attempt);
     }
   };
 
+  // ─── التحقق (build) ───
   const handleCheckBuild = () => {
     if (!currentTry || feedback === 'reveal') return;
     const isCorrect = abacusValue === currentTry.expectedValue;
@@ -203,17 +224,11 @@ export function LessonScreen({
     setAttempts((a) => ({ ...a, [key]: attempt }));
 
     if (isCorrect) {
-      playSound('success');
-      setFeedback('correct');
       setSolved((s) => new Set(s).add(key));
-      setTimeout(() => advanceTry(), 900);
+      reactToAnswer(true, attempt);
+      setTimeout(() => advanceTry(), 1100);
     } else {
-      playSound('error');
-      if (attempt >= MAX_TRIES) {
-        setFeedback('reveal');
-      } else {
-        setFeedback('wrong');
-      }
+      reactToAnswer(false, attempt);
     }
   };
 
@@ -222,7 +237,7 @@ export function LessonScreen({
     setAbacusValue(0);
     setInputValue('');
     if (tryIdx + 1 >= totalTry) {
-      // آخر سؤال — لا نُغلق، ندع الطفل يرى "أنهيت"
+      // آخر سؤال
     } else {
       setTryIdx((i) => i + 1);
     }
@@ -257,7 +272,6 @@ export function LessonScreen({
     onNext(nextLesson.id);
   };
 
-  // ─── زر المنزل ───
   const handleHome = () => {
     playSound('click');
     sorobana.stop();
@@ -298,7 +312,7 @@ export function LessonScreen({
           </button>
         </div>
 
-        {/* ───── Tabs ───── */}
+        {/* Tabs */}
         <div className="max-w-3xl mx-auto mt-3 flex gap-2 p-1 rounded-2xl bg-white/5 border border-white/10">
           <button
             onClick={() => switchTab('watch')}
@@ -333,9 +347,6 @@ export function LessonScreen({
       {/* ───── Content ───── */}
       <div className="max-w-3xl mx-auto px-3 sm:px-6 py-5">
         <AnimatePresence mode="wait">
-          {/* ═══════════════════════════════════════════
-              TAP: شاهد
-             ═══════════════════════════════════════════ */}
           {tab === 'watch' && (
             <motion.div
               key="watch"
@@ -436,7 +447,6 @@ export function LessonScreen({
                     {formatText(currentExample.problemText, numberStyle)}
                   </p>
 
-                  {/* Soroban عرض */}
                   <div className="flex justify-center mb-4">
                     <Soroban2D5
                       key={`ex-${currentExample.id}`}
@@ -447,7 +457,6 @@ export function LessonScreen({
                     />
                   </div>
 
-                  {/* زر عرض الخطوات */}
                   {!showSteps && currentExample.steps.length > 0 && (
                     <button
                       onClick={() => { playSound('click'); setShowSteps(true); }}
@@ -458,7 +467,6 @@ export function LessonScreen({
                     </button>
                   )}
 
-                  {/* الخطوات */}
                   {showSteps && currentExample.steps.length > 0 && (
                     <div className="space-y-2">
                       {currentExample.steps.map((step, i) => (
@@ -485,7 +493,6 @@ export function LessonScreen({
                     </div>
                   )}
 
-                  {/* التنقل */}
                   <div className="flex gap-2 mt-4">
                     <button
                       onClick={prevExample}
@@ -505,7 +512,6 @@ export function LessonScreen({
                 </div>
               )}
 
-              {/* إذا لا أمثلة */}
               {examples.length === 0 && (
                 <div className="glass-card p-5 text-center text-white/60 text-sm">
                   هذا الدرس نظري — لا يحتوي على أمثلة تفاعلية.
@@ -514,9 +520,6 @@ export function LessonScreen({
             </motion.div>
           )}
 
-          {/* ═══════════════════════════════════════════
-              TAP: جرب
-             ═══════════════════════════════════════════ */}
           {tab === 'try' && currentTry && (
             <motion.div
               key="try"
@@ -526,7 +529,6 @@ export function LessonScreen({
               transition={{ duration: 0.25 }}
               className="space-y-4"
             >
-              {/* Progress */}
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-white/70">
                   سؤال {formatNumber(tryIdx + 1, numberStyle)} من{' '}
@@ -538,13 +540,11 @@ export function LessonScreen({
                 </span>
               </div>
 
-              {/* السؤال */}
               <div className="glass-card p-4 sm:p-5 text-center">
                 <p className="text-lg font-extrabold font-display text-white mb-4">
                   {formatText(currentTry.prompt, numberStyle)}
                 </p>
 
-                {/* نوع read: عرض Soroban + خيارات */}
                 {currentTry.type === 'read' && (
                   <>
                     <div className="flex justify-center mb-4">
@@ -574,7 +574,6 @@ export function LessonScreen({
                   </>
                 )}
 
-                {/* نوع build: Soroban تفاعلي */}
                 {currentTry.type === 'build' && (
                   <>
                     <div className="flex justify-center mb-3">
@@ -609,7 +608,6 @@ export function LessonScreen({
                 )}
               </div>
 
-              {/* Feedback */}
               {feedback === 'correct' && (
                 <div className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 text-center">
                   <p className="text-sm font-bold text-emerald-200">✅ أحسنت! إجابة صحيحة</p>
@@ -618,9 +616,7 @@ export function LessonScreen({
 
               {feedback === 'wrong' && (
                 <div className="p-3 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-center">
-                  <p className="text-sm font-bold text-amber-200">
-                    ❌ حاول مرة أخرى
-                  </p>
+                  <p className="text-sm font-bold text-amber-200">❌ حاول مرة أخرى</p>
                   <p className="text-[10px] text-amber-200/70 mt-1">
                     آخر محاولة — إن أخطأت، ستُعرض الإجابة
                   </p>
@@ -661,7 +657,6 @@ export function LessonScreen({
                 </div>
               )}
 
-              {/* شريط التقدم في الأسفل */}
               <div className="flex flex-wrap gap-1.5 justify-center mt-3">
                 {tryQuestions.map((q, i) => (
                   <div
@@ -682,7 +677,6 @@ export function LessonScreen({
           )}
         </AnimatePresence>
 
-        {/* ───── زر أنهيت الدرس ───── */}
         <div className="mt-6">
           {!allSolved && hasTry && (
             <p className="text-center text-xs text-white/50 mb-2">
@@ -717,7 +711,50 @@ export function LessonScreen({
         </div>
       </div>
 
-      {/* ───── البطل + المعلمة ───── */}
+      {/* ───── 🆕 فقاعة سوروبانا ───── */}
+      <AnimatePresence>
+        {companionMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.8 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="fixed z-[70] pointer-events-none"
+            style={{
+              bottom: 'calc(12rem + 130px)',
+              right: '0.75rem',
+              maxWidth: '170px',
+            }}
+          >
+            <div
+              className="relative px-3 py-2 rounded-2xl shadow-2xl border-2"
+              style={{
+                background: 'linear-gradient(135deg, #FFFFFF 0%, #E9F7EF 100%)',
+                borderColor: '#10B981',
+                color: '#065F46',
+              }}
+            >
+              <p className="text-xs font-bold text-right" dir="rtl">
+                {companionMsg}
+              </p>
+              <div
+                className="absolute"
+                style={{
+                  bottom: '-8px',
+                  right: '20px',
+                  width: '12px',
+                  height: '12px',
+                  background: '#E9F7EF',
+                  borderRight: '2px solid #10B981',
+                  borderBottom: '2px solid #10B981',
+                  transform: 'rotate(45deg)',
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <FloatingCompanion playSound={playSound} />
       <SorobanaCompanion
         isSpeaking={sorobana.isSpeaking}
