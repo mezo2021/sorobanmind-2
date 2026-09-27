@@ -23,6 +23,12 @@ import PracticeScreen from './screens/PracticeScreen';
 import AnzanScreen from './screens/AnzanScreen';
 import AudioAnzanScreen from './screens/AudioAnzanScreen';
 
+// ═══ 🆕 Lessons + Test ═══
+import LearnScreen from './screens/LearnScreen';
+import LessonScreen from './screens/LessonScreen';
+import IntroductionScreen from './screens/IntroductionScreen';
+import LevelTestScreen from './screens/LevelTestScreen';
+
 // ═══ Playground ═══
 import SorobanPlayground from './screens/SorobanPlayground';
 
@@ -33,7 +39,7 @@ import CategoryExamScreen from './screens/CategoryExamScreen';
 import { DebugOverlay } from './components/DebugOverlay';
 
 // ═══ Types ═══
-type AppScreen = V1Screen | 'loading';
+type AppScreen = V1Screen | 'loading' | `learn-${string}` | `level-test-${string}` | `lesson-view-${string}` | `intro-${string}`;
 
 // ═══ Constants ═══
 const WELCOME_STORAGE_KEY = 'soroban_welcome_seen';
@@ -108,16 +114,14 @@ export default function App() {
   const [screen, setScreen] = useState<AppScreen>('loading');
   const [role, setRole] = useState<Role>(null);
   const [activeLevelId, setActiveLevelId] = useState<LevelId | null>(null);
+  const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
   const { stats, toggleSound } = useGameStats();
   const playSound = useSound(stats.soundEnabled);
   const { burst: _burst } = useConfetti();
 
-  // ═══ Initialization ═══
-  useEffect(() => {
-    setReady(true);
-  }, []);
+  useEffect(() => { setReady(true); }, []);
 
   useEffect(() => {
     if (!ready) return;
@@ -128,7 +132,6 @@ export default function App() {
     }
   }, [ready]);
 
-  // ═══ Sound Wrapper ═══
   const handleSound = useCallback(
     (type: 'click' | 'success' | 'error' | 'bead' | 'whoosh' | 'levelup') => {
       if (stats.soundEnabled) playSound(type);
@@ -136,7 +139,6 @@ export default function App() {
     [stats.soundEnabled, playSound],
   );
 
-  // ═══ Handlers ═══
   const handleWelcomeStart = () => {
     markWelcomeSeen();
     handleSound('click');
@@ -145,25 +147,18 @@ export default function App() {
 
   const handleRoleSelect = (selectedRole: Role) => {
     setRole(selectedRole);
-    if (selectedRole === 'hero') {
-      setScreen('hero-dashboard');
-    } else if (selectedRole === 'guardian') {
-      setScreen('guardian-dashboard');
-    }
+    if (selectedRole === 'hero') setScreen('hero-dashboard');
+    else if (selectedRole === 'guardian') setScreen('guardian-dashboard');
   };
 
-  const handleNavigate = (target: AppScreen) => {
-    setScreen(target);
-  };
+  const handleNavigate = (target: AppScreen) => setScreen(target);
 
   const handleSwitchToHero = () => {
     setRole('hero');
     setScreen('hero-dashboard');
   };
 
-  const handleShowWelcome = () => {
-    setScreen('welcome');
-  };
+  const handleShowWelcome = () => setScreen('welcome');
 
   const handleBackToRole = () => {
     setRole(null);
@@ -175,73 +170,36 @@ export default function App() {
     setScreen('hero-dashboard');
   };
 
-  const handleOpenLevel = (levelId: string) => {
-    setActiveLevelId(levelId as LevelId);
-    setScreen(`lesson-${levelId}` as AppScreen);
-  };
-
   const handleBackToCategory = (category: 'kids' | 'teens') => {
     setScreen(category === 'kids' ? 'category-kids' : 'category-teens');
   };
 
   // ═══ Placement Test Handler ═══
-  const handlePlacementComplete = (
-    recommendedLevel: string,
-    weakSkills: string[],
-  ) => {
+  const handlePlacementComplete = (recommendedLevel: string, weakSkills: string[]) => {
     try {
       const LEVEL_ORDER = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7'];
       const recommendedIdx = LEVEL_ORDER.indexOf(recommendedLevel);
-
-      const previousLevels = recommendedIdx > 0
-        ? LEVEL_ORDER.slice(0, recommendedIdx)
-        : [];
-
+      const previousLevels = recommendedIdx > 0 ? LEVEL_ORDER.slice(0, recommendedIdx) : [];
       const newCompletedLevels = [...previousLevels];
 
-      localStorage.setItem(
-        'soroban_completed_levels',
-        JSON.stringify(newCompletedLevels),
-      );
-
-      localStorage.setItem(
-        'soroban_placement_weak_skills',
-        JSON.stringify(weakSkills),
-      );
-
-      localStorage.setItem(
-        'soroban_placement_recommended',
-        recommendedLevel,
-      );
-
-      localStorage.setItem(
-        'soroban_placement_result',
-        JSON.stringify({
-          recommendedLevel,
-          weakSkills,
-          date: Date.now(),
-        }),
-      );
-
-      localStorage.setItem(
-        'soroban_placement_last_attempt',
-        String(Date.now()),
-      );
+      localStorage.setItem('soroban_completed_levels', JSON.stringify(newCompletedLevels));
+      localStorage.setItem('soroban_placement_weak_skills', JSON.stringify(weakSkills));
+      localStorage.setItem('soroban_placement_recommended', recommendedLevel);
+      localStorage.setItem('soroban_placement_result', JSON.stringify({
+        recommendedLevel, weakSkills, date: Date.now(),
+      }));
+      localStorage.setItem('soroban_placement_last_attempt', String(Date.now()));
     } catch { /* ignore */ }
 
     const isKids = ['L0', 'L1', 'L2', 'L3'].includes(recommendedLevel);
     setScreen(isKids ? 'category-kids' : 'category-teens');
   };
 
-  // ═══ Loading Screen ═══
+  // ═══ Loading ═══
   if (!ready || screen === 'loading') {
     return (
       <div dir="rtl" className="min-h-screen flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
           <div className="text-5xl mb-4">🧮</div>
           <p className="text-xl text-amber-400 font-bold">جاري التحميل...</p>
         </motion.div>
@@ -251,47 +209,123 @@ export default function App() {
 
   // ═══ Screen Renderer ═══
   const renderScreen = () => {
+    // ─── 🆕 learn-X (LearnScreen) ───
+    if (screen.startsWith('learn-')) {
+      const levelId = screen.replace('learn-', '') as LevelId;
+      const isKids = ['L0', 'L1', 'L2', 'L3'].includes(levelId);
+
+      return (
+        <LearnScreen
+          levelId={levelId}
+          onBack={() => handleBackToCategory(isKids ? 'kids' : 'teens')}
+          onOpenLesson={(lessonId) => {
+            setActiveLessonId(lessonId);
+            // لو كان الدرس نظري (L0-intro) → IntroductionScreen
+            // غيره → LessonScreen
+            if (lessonId.endsWith('-intro')) {
+              setScreen(`intro-${lessonId}` as AppScreen);
+            } else {
+              setScreen(`lesson-view-${lessonId}` as AppScreen);
+            }
+          }}
+          playSound={handleSound}
+        />
+      );
+    }
+
+    // ─── 🆕 intro-X (IntroductionScreen) ───
+    if (screen.startsWith('intro-')) {
+      const lessonId = screen.replace('intro-', '');
+      const isKids = lessonId.startsWith('L0') || lessonId.startsWith('L1') || lessonId.startsWith('L2') || lessonId.startsWith('L3');
+
+      return (
+        <IntroductionScreen
+          lessonId={lessonId}
+          onBack={() => setScreen(`learn-${lessonId.split('-')[0]}` as AppScreen)}
+          onComplete={() => {
+            // علّم الدرس كمكتمل
+            try {
+              const raw = localStorage.getItem('soroban_completed_lessons');
+              const arr: string[] = raw ? JSON.parse(raw) : [];
+              if (!arr.includes(lessonId)) {
+                arr.push(lessonId);
+                localStorage.setItem('soroban_completed_lessons', JSON.stringify(arr));
+              }
+            } catch { /* ignore */ }
+            setScreen(`learn-${lessonId.split('-')[0]}` as AppScreen);
+          }}
+          playSound={handleSound}
+        />
+      );
+    }
+
+    // ─── 🆕 lesson-view-X (LessonScreen) ───
+    if (screen.startsWith('lesson-view-')) {
+      const lessonId = screen.replace('lesson-view-', '');
+      const levelId = lessonId.split('-')[0];
+
+      return (
+        <LessonScreen
+          lessonId={lessonId}
+          onBack={() => setScreen(`learn-${levelId}` as AppScreen)}
+          onNext={(nextId) => {
+            if (nextId.endsWith('-intro')) {
+              setScreen(`intro-${nextId}` as AppScreen);
+            } else {
+              setScreen(`lesson-view-${nextId}` as AppScreen);
+            }
+          }}
+          onComplete={(id) => {
+            // علّم الدرس كمكتمل + احفظ
+            try {
+              const raw = localStorage.getItem('soroban_completed_lessons');
+              const arr: string[] = raw ? JSON.parse(raw) : [];
+              if (!arr.includes(id)) {
+                arr.push(id);
+                localStorage.setItem('soroban_completed_lessons', JSON.stringify(arr));
+              }
+            } catch { /* ignore */ }
+          }}
+          playSound={handleSound}
+          onXP={(amount) => console.log('XP:', amount)}
+        />
+      );
+    }
+
+    // ─── 🆕 level-test-X (LevelTestScreen) ───
+    if (screen.startsWith('level-test-')) {
+      const levelId = screen.replace('level-test-', '');
+      const isKids = ['L0', 'L1', 'L2', 'L3'].includes(levelId);
+
+      return (
+        <LevelTestScreen
+          levelId={levelId}
+          onBack={() => handleBackToCategory(isKids ? 'kids' : 'teens')}
+          onPass={() => handleBackToCategory(isKids ? 'kids' : 'teens')}
+          playSound={handleSound}
+        />
+      );
+    }
+
     switch (screen) {
       case 'welcome':
         return <WelcomeScreen onStart={handleWelcomeStart} />;
 
       case 'role':
-        return (
-          <RoleSelection onSelect={handleRoleSelect} playSound={handleSound} />
-        );
+        return <RoleSelection onSelect={handleRoleSelect} playSound={handleSound} />;
 
       case 'hero-dashboard':
         return (
           <>
-            <Header
-              xp={stats.xp}
-              streak={stats.streak}
-              level={stats.level}
-              soundEnabled={stats.soundEnabled}
-              onToggleSound={toggleSound}
-              onHome={handleBackToRole}
-            />
-            <HeroDashboard
-              onNavigate={(target) => handleNavigate(target as AppScreen)}
-              playSound={handleSound}
-              xp={stats.xp}
-              streak={stats.streak}
-              earnedBadges={stats.earnedBadges}
-            />
+            <Header xp={stats.xp} streak={stats.streak} level={stats.level} soundEnabled={stats.soundEnabled} onToggleSound={toggleSound} onHome={handleBackToRole} />
+            <HeroDashboard onNavigate={(target) => handleNavigate(target as AppScreen)} playSound={handleSound} xp={stats.xp} streak={stats.streak} earnedBadges={stats.earnedBadges} />
           </>
         );
 
       case 'guardian-dashboard':
         return (
           <>
-            <Header
-              xp={stats.xp}
-              streak={stats.streak}
-              level={stats.level}
-              soundEnabled={stats.soundEnabled}
-              onToggleSound={toggleSound}
-              onHome={handleBackToRole}
-            />
+            <Header xp={stats.xp} streak={stats.streak} level={stats.level} soundEnabled={stats.soundEnabled} onToggleSound={toggleSound} onHome={handleBackToRole} />
             <GuardianDashboard
               onBack={handleBackToRole}
               playSound={handleSound}
@@ -305,26 +339,12 @@ export default function App() {
           </>
         );
 
-      // ═══ Placement Test ═══
       case 'placement-test':
-        return (
-          <PlacementTestScreen
-            onBack={handleBackToHero}
-            onComplete={handlePlacementComplete}
-            playSound={handleSound}
-          />
-        );
+        return <PlacementTestScreen onBack={handleBackToHero} onComplete={handlePlacementComplete} playSound={handleSound} />;
 
-      // ═══ Soroban Playground ═══
       case 'soroban':
-        return (
-          <SorobanPlayground
-            onBack={handleBackToHero}
-            playSound={handleSound}
-          />
-        );
+        return <SorobanPlayground onBack={handleBackToHero} playSound={handleSound} />;
 
-      // ═══ Category Exam 1 (Kids) ═══
       case 'category-exam-1':
         return (
           <CategoryExamScreen
@@ -332,9 +352,7 @@ export default function App() {
             onBack={() => handleBackToCategory('kids')}
             onComplete={(passed, _score) => {
               if (passed) {
-                try {
-                  localStorage.setItem('soroban_section2_unlocked', 'true');
-                } catch { /* ignore */ }
+                try { localStorage.setItem('soroban_section2_unlocked', 'true'); } catch { /* ignore */ }
                 setScreen('category-teens');
               } else {
                 setScreen('category-kids');
@@ -344,7 +362,6 @@ export default function App() {
           />
         );
 
-      // ═══ Category Exam 2 (Teens) ═══
       case 'category-exam-2':
         return (
           <CategoryExamScreen
@@ -357,26 +374,13 @@ export default function App() {
           />
         );
 
-      // ═══ Categories ═══
       case 'category-kids':
-        return (
-          <CategoryScreen
-            category="kids"
-            onNavigate={(target) => handleNavigate(target as AppScreen)}
-            playSound={handleSound}
-          />
-        );
+        return <CategoryScreen category="kids" onNavigate={(target) => handleNavigate(target as AppScreen)} playSound={handleSound} />;
 
       case 'category-teens':
-        return (
-          <CategoryScreen
-            category="teens"
-            onNavigate={(target) => handleNavigate(target as AppScreen)}
-            playSound={handleSound}
-          />
-        );
+        return <CategoryScreen category="teens" onNavigate={(target) => handleNavigate(target as AppScreen)} playSound={handleSound} />;
 
-      // ═══ Levels (L0-L7) ═══
+      // ─── Levels (L0-L7) — من CategoryScreen ───
       case 'lesson-L0':
       case 'lesson-L1':
       case 'lesson-L2':
@@ -398,22 +402,18 @@ export default function App() {
         );
       }
 
-      // ═══ Enrichment ═══
+      // ─── Enrichment ───
       case 'enrichment-1':
       case 'enrichment-2':
         return (
           <EnrichmentScreen
             category={screen === 'enrichment-1' ? 'kids' : 'teens'}
-            onBack={() =>
-              handleBackToCategory(screen === 'enrichment-1' ? 'kids' : 'teens')
-            }
-            onOpenModule={() => {
-              /* TODO */
-            }}
+            onBack={() => handleBackToCategory(screen === 'enrichment-1' ? 'kids' : 'teens')}
+            onOpenModule={() => { /* TODO */ }}
           />
         );
 
-      // ═══ Practice (0-7) ═══
+      // ─── Practice (0-7) ───
       case 'practice-0':
       case 'practice-1':
       case 'practice-2':
@@ -423,13 +423,10 @@ export default function App() {
       case 'practice-6':
       case 'practice-7': {
         const practiceNum = parseInt(screen.replace('practice-', ''), 10);
-
         return (
           <PracticeScreen
             levelNum={practiceNum}
-            onBack={() =>
-              handleBackToCategory(practiceNum <= 3 ? 'kids' : 'teens')
-            }
+            onBack={() => handleBackToCategory(practiceNum <= 3 ? 'kids' : 'teens')}
             onComplete={(passed, _score) => {
               if (passed) {
                 try {
@@ -437,10 +434,7 @@ export default function App() {
                   const arr = raw ? JSON.parse(raw) : [];
                   if (!arr.includes(practiceNum)) {
                     arr.push(practiceNum);
-                    localStorage.setItem(
-                      'soroban_passed_practice',
-                      JSON.stringify(arr),
-                    );
+                    localStorage.setItem('soroban_passed_practice', JSON.stringify(arr));
                   }
                 } catch { /* ignore */ }
               }
@@ -452,7 +446,7 @@ export default function App() {
         );
       }
 
-      // ═══ Anzan بصري (0-7) ═══
+      // ─── Anzan بصري (0-7) ───
       case 'anzan-0':
       case 'anzan-1':
       case 'anzan-2':
@@ -462,13 +456,10 @@ export default function App() {
       case 'anzan-6':
       case 'anzan-7': {
         const anzanNum = parseInt(screen.replace('anzan-', ''), 10);
-
         return (
           <AnzanScreen
             levelNum={anzanNum}
-            onBack={() =>
-              handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
-            }
+            onBack={() => handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')}
             playSound={handleSound}
             onXP={(amount) => console.log('XP:', amount)}
             burst={_burst}
@@ -476,7 +467,7 @@ export default function App() {
         );
       }
 
-      // ═══ Anzan سمعي (0-7) ═══
+      // ─── Anzan سمعي (0-7) ───
       case 'audio-anzan-0':
       case 'audio-anzan-1':
       case 'audio-anzan-2':
@@ -486,13 +477,10 @@ export default function App() {
       case 'audio-anzan-6':
       case 'audio-anzan-7': {
         const anzanNum = parseInt(screen.replace('audio-anzan-', ''), 10);
-
         return (
           <AudioAnzanScreen
             levelNum={anzanNum}
-            onBack={() =>
-              handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
-            }
+            onBack={() => handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')}
             playSound={handleSound}
             onXP={(amount) => console.log('XP:', amount)}
             burst={_burst}
@@ -500,7 +488,7 @@ export default function App() {
         );
       }
 
-      // ═══ Coming Soon ═══
+      // ─── Coming Soon ───
       case 'quests':
       case 'multiplication':
       case 'secrets':
@@ -508,12 +496,7 @@ export default function App() {
       case 'division':
       case 'certificate':
       case 'final-exam':
-        return (
-          <ComingSoonScreen
-            onBack={handleBackToHero}
-            title={getComingSoonTitle(screen)}
-          />
-        );
+        return <ComingSoonScreen onBack={handleBackToHero} title={getComingSoonTitle(screen)} />;
 
       default:
         return <ComingSoonScreen onBack={handleBackToRole} />;
@@ -522,10 +505,7 @@ export default function App() {
 
   return (
     <>
-      <div key={screen}>
-        {renderScreen()}
-      </div>
-
+      <div key={screen}>{renderScreen()}</div>
       {import.meta.env.DEV && <DebugOverlay />}
     </>
   );
