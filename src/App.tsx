@@ -308,7 +308,16 @@ if (screen === 'finger-math') {
       );
     }
 
-    // ═══ 🆕 lesson-view-L0-S1 ... ═══
+    if (screen === 'magic-secrets') {
+  return (
+    <MagicSecretsScreen
+      onBack={() => handleBackToCategory('kids')}
+      playSound={handleSound}
+    />
+  );
+}
+
+// ═══ 🆕 lesson-view-L0-S1 ... ═══
     if (screen.startsWith('lesson-view-')) {
       const lessonId = screen.replace('lesson-view-', '');
       const levelId = lessonId.split('-')[0];
