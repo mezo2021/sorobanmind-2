@@ -108,7 +108,15 @@ export function HeroDashboard({
   streak,
   earnedBadges: _earnedBadges,
 }: HeroDashboardProps) {
-  const [companion, setCompanion] = useState<CharacterType>('sham');
+  const [exam2Passed, setExam2Passed] = useState(false);
+
+useEffect(() => {
+  try {
+    const raw = localStorage.getItem('soroban_exam2_passed');
+    if (raw) setExam2Passed(JSON.parse(raw) === true);
+  } catch { /* ignore */ }
+}, []);
+const [companion, setCompanion] = useState<CharacterType>('sham');
   const [showSelector, setShowSelector] = useState(false);
   const [childName, setChildName] = useState<string>('');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
