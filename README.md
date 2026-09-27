@@ -1,14 +1,10 @@
-
----
-
-📂 الملف: PROJECT_PLAN.md 
-
+📂 الملف: PROJECT_PLAN.md
 
 ```markdown
 # 📘 SorobanMind v2 — Master Plan
 
-> **آخر تحديث:** 2026-09-27 (الجلسة 8 — بناء L0 كاملاً)
-> **الحالة:** 🟢 التطبيق يعمل + بنك v2 (~1080) + L0 كامل (دروس + LearnScreen + اختبار)
+> **آخر تحديث:** 2026-09-27 (الجلسة 8 — بناء L0 كاملاً + إصلاحات)
+> **الحالة:** 🟢 التطبيق يعمل + بنك v2 (~1080) + L0 كامل + أنظمة صوتية تعمل
 > **الرابط:** https://mezo2021.github.io/sorobanmind-2
 > **المستودع:** https://github.com/mezo2021/sorobanmind-2
 
@@ -30,26 +26,26 @@
 
 ---
 
-## 🧠 2. المنهج — 8 مستويات (L0-L7) + 20 مهارة (S1-S20)
+## 🧠 2. المنهج — 8 مستويات + 20 مهارة
 
-| المستوى | المهارات | المحتوى | القسم |
-|---------|----------|---------|-------|
-| **L0** | S1, S2 | تعرّف + أرقام 0-9 + قيمة مكانية | 🧒 |
-| **L1** | S3-S9 | جمع + طرح + أصدقاء 5 + أصدقاء 10 + مختلط | 🧒 |
-| **L2** | S10-S12 | الضرب | 🧒 |
-| **L3** | S13-S15 | القسمة | 🧒 |
-| **L4** | S16 | جمع/طرح متقدم | 🧑 |
-| **L5** | S17 | ضرب/قسمة متقدم | 🧑 |
-| **L6** | S18 | كسور عشرية | 🧑 |
-| **L7** | S19, S20 | جذور تربيعية + تكعيبية | 🧑 |
+| المستوى | المهارات | المحتوى | القسم | الحالة |
+|---------|----------|---------|-------|--------|
+| **L0** | S1, S2 | تعرّف + أرقام 0-9 + قيمة مكانية | 🧒 | ✅ **مكتمل** |
+| **L1** | S3-S9 | جمع + طرح + أصدقاء 5 + أصدقاء 10 | 🧒 | 🔜 التالي |
+| **L2** | S10-S12 | الضرب | 🧒 | ⏳ |
+| **L3** | S13-S15 | القسمة | 🧒 | ⏳ |
+| **L4** | S16 | جمع/طرح متقدم | 🧑 | ⏳ |
+| **L5** | S17 | ضرب/قسمة متقدم | 🧑 | ⏳ |
+| **L6** | S18 | كسور عشرية | 🧑 | ⏳ |
+| **L7** | S19, S20 | جذور | 🧑 | ⏳ |
 
-### بنية كل مستوى (تسلسل إجباري):
+### بنية كل مستوى:
 
 ```
 
 📖 تعلّم (قائمة دروس)
 ↓ إتمام كل الدروس
-✏️ تمرّن (5 أسئلة تكيفية من bank-v2)
+✏️ تمرّن (5 أسئلة من bank-v2)
 ↓ نجاح 75%
 🧠 أنزان بصري (Flash / عادي)
 ↓ نجاح 75%
@@ -69,20 +65,15 @@
 |--------|-----------|
 | 🎨 الإثراء | مفتوح دائماً |
 | 📖 L0 | مفتوح |
-| 📖 تعلّم (قائمة دروس) | مفتوح دائماً (لكن الدروس داخلية متسلسلة) |
-| ✏️ تمرّن N | إنهاء **كل دروس** L(N) |
-| 🧠 أنزان N بصري | نجاح تمرّن N |
-| 🎧 أنزان N سمعي | نجاح بصري N |
+| 📖 درس داخل L0 | أول درس مفتوح، الباقي متسلسل |
+| ✏️ تمرّن N | إنهاء كل دروس L(N) |
+| 🧠 أنزان بصري N | نجاح تمرّن N |
+| 🎧 أنزان سمعي N | نجاح بصري N |
 | 🎓 اختبار N | نجاح سمعي N |
 | 📖 L(N+1) | نجاح اختبار N |
-| 🏆 امتحان القسم 1 | إتمام L0-L3 كاملاً + كل الاختبارات |
-| 🎓 القسم 2 (L4) | نجاح 80% في امتحان القسم 1 |
+| 🏆 امتحان القسم 1 | إتمام L0-L3 كاملاً |
 | 📝 Placement Test | 48 ساعة بين المحاولات |
-
-### قفل الدروس الداخلية (داخل المستوى):
-- أول درس مفتوح
-- كل درس يُفتح بعد إتمام **جرب** للدرس السابق
-- الحفظ في: `soroban_completed_lessons` (مفتاح localStorage)
+| 🎓 اختبار L0 | **24 ساعة** بعد الفشل |
 
 ---
 
@@ -93,20 +84,19 @@
 ```
 
 src/data/
-├── bank-v2/
-│   ├── types.ts                 ← QuestionTiming + BankQuestion
-│   ├── part-01.ts               ← S1-S9 (~285 سؤال)
-│   ├── part-02.ts               ← S10-S15 (150 سؤال)
-│   ├── part-03.ts               ← S16-S17 (80 سؤال)
-│   ├── part-04.ts               ← S18-S20 (70 سؤال)
-│   ├── bank-exam.ts             ← امتحانات 1 و 2
-│   ├── placement-engine.ts      ← امتحان تحديد المستوى
-│   └── index.ts                 ← الواجهة الموحّدة + امتحانات القسم
+├── bank-v2/                     ← البنك الأساسي (~585 + ~350)
+│   ├── types.ts
+│   ├── part-01.ts (S1-S9)
+│   ├── part-02.ts (S10-S15)
+│   ├── part-03.ts (S16-S17)
+│   ├── part-04.ts (S18-S20)
+│   ├── bank-exam.ts
+│   ├── placement-engine.ts
+│   └── index.ts
 │
-├── bank-raw/                    ← 400 سؤال خام (يستخدمها تحديد المستوى)
-├── bank-linked.ts               ← دمج bank-v2 + bank-raw
-├── bank.ts / bank-adapter.ts    ← 🗑️ مهجور
-└── curriculum.ts                ← 8 مستويات + قسمان
+├── bank-raw/                    ← 400 سؤال (تحديد المستوى)
+├── bank-linked.ts               ← دمج
+└── curriculum.ts                ← 8 مستويات
 
 ```
 
@@ -114,25 +104,27 @@ src/data/
 
 | المصدر | العدد | الاستخدام |
 |--------|-------|-----------|
-| bank-v2/part-01 → 04 | ~585 | تمرّن + أنزان + امتحانات القسم |
-| bank-exam (EXAM_POOL_1+2) | ~350 | امتحان تحديد المستوى |
+| bank-v2 | ~585 | تمرّن + أنزان + امتحانات |
+| bank-exam | ~350 | امتحان تحديد المستوى |
 | bank-raw | 400 | تحديد المستوى (35 سؤالاً) |
-| **المجموع** | **~1080** | 🎯 |
+| **الإجمالي** | **~1080** | 🎯 |
 
 ### 🎯 نظام ID:
 
 | البنك | الصيغة | مثال |
 |-------|--------|------|
 | bank-v2 | `L{level}-S{skill}-{seq}` | `L1-S3-001` |
-| bank-exam 1 | `EX1-S{skill}-{seq}` | `EX1-S3-001` |
-| bank-exam 2 | `EX2-S{skill}-{seq}` | `EX2-S16-001` |
+| bank-exam | `EX{1-2}-S{skill}-{seq}` | `EX1-S3-001` |
 | placement | `PL-L{level}-S{skill}-{seq}` | `PL-L0-S3-001` |
+| test-pool | `L{level}-TEST-S{skill}-{seq}` | `L0-TEST-S1-01` |
+| example | `L{level}-S{skill}-E{seq}` | `L0-S1-E1` |
+| try | `L{level}-S{skill}-T{seq}` | `L0-S1-T1` |
 
-### ⏱️ نظام التوقيت (QuestionTiming):
+### ⏱️ نظام التوقيت:
 
 ```typescript
 interface QuestionTiming {
-  displayMs?: number;   // للأنزان فقط (Flash)
+  displayMs?: number;   // للأنزان Flash فقط
   answerMs: number;     // الوقت المعياري
   maxMs: number;        // الحد الأقصى
 }
@@ -142,21 +134,20 @@ interface QuestionTiming {
 
 التصنيف القاعدة الشارة
 ⚡ قياسي ≤ 50% من answerMs 🏅 شارة مهارة
-✅ مقبول ≤ 75% من answerMs —
-🐢 بطيء 75% من answerMs —
+✅ مقبول ≤ 75% —
+🐢 بطيء 75% —
 
 ---
 
-🎨 5. نظام نمط الأرقام (عربي / لاتيني)
+🎨 5. نظام نمط الأرقام
 
 📁 الملفات:
 
 ```
 src/
-├── utils/numberStyle.ts             ← تحويل الأرقام
-├── store/numberStyleStore.ts        ← Zustand Store
-├── components/NumberStyleToggle.tsx ← زر التبديل
-└── screens/Header.tsx               ← الزر الرئيسي
+├── utils/numberStyle.ts
+├── store/numberStyleStore.ts
+└── components/NumberStyleToggle.tsx
 ```
 
 🎯 التطبيق:
@@ -164,11 +155,11 @@ src/
 · ✅ Header + Practice + Anzan + AudioAnzan + PlacementTest
 · ✅ CategoryScreen + LevelScreen + Soroban2D5 + SorobanPlayground
 · ✅ CategoryExam + LearnScreen + LessonScreen + IntroductionScreen + LevelTestScreen
-· ⏳ قيد التطبيق: GuardianDashboard
+· ⏳ GuardianDashboard
 
 ---
 
-🏗️ 6. البنية الكاملة
+🏗️ 6. البنية الكاملة (الجلسة 8)
 
 ```
 src/
@@ -176,28 +167,26 @@ src/
 ├── types.ts                         ✅
 │
 ├── store/
-│   ├── progressStore.ts             ✅ (Zustand + persist)
+│   ├── progressStore.ts             ✅
 │   ├── numberStyleStore.ts          ✅
 │   └── masteryBadgesStore.ts        ✅
 │
 ├── utils/
 │   ├── numberStyle.ts               ✅
 │   ├── arabicNumbers.ts             ✅
-│   ├── audioAnzanBadges.ts          ✅
 │   ├── badgeChecker.ts              ✅
 │   ├── certificateGenerator.ts      ✅
-│   ├── numerals.ts                  ✅
 │   └── skillsChecker.ts             ✅
 │
 ├── curriculum/
-│   ├── types.ts                     ✅ (مجمَّد — يستخدمه bank-v2 + engine)
+│   ├── types.ts                     ✅ (مجمَّد)
 │   └── lessons/                     ✅ 🆕 (المنهج الجديد)
 │       ├── types.ts                 ✅ (LessonNode)
 │       ├── index.ts                 ✅ (registry)
 │       └── L0/
-│           ├── intro.ts             ✅ (المقدمة — 7 صفحات)
-│           ├── S1.ts                ✅ (تمثيل 0-9)
-│           ├── S2.ts                ✅ (القيمة المكانية)
+│           ├── intro.ts             ✅ (7 صفحات)
+│           ├── S1.ts                ✅ (10 أمثلة + 10 جرب)
+│           ├── S2.ts                ✅ (10 أمثلة + 10 جرب)
 │           └── test-pool.ts         ✅ (30 سؤال اختبار)
 │
 ├── engine/                          ✅ (مجمَّد)
@@ -207,43 +196,43 @@ src/
 │   ├── problemGenerator.ts
 │   └── adaptiveEngine.ts
 │
-├── data/                            ✅
-│   ├── bank-v2/                     ✅ (~585 + ~350)
+├── data/
+│   ├── bank-v2/                     ✅ (~935)
 │   ├── bank-raw/                    ✅ (400)
 │   ├── bank-linked.ts               ✅
-│   ├── curriculum.ts                ✅ (8 مستويات + قسمان)
+│   ├── curriculum.ts                ✅
 │   ├── data.ts                      ⚠️ (v1 — غير مربوط)
 │   └── learnModules.ts              ⚠️ (v1 — غير مربوط)
 │
 ├── components/
-│   ├── NumberStyleToggle.tsx        ✅
-│   ├── AdaptiveFeedback.tsx         ✅
-│   ├── Companion.tsx                ✅
-│   ├── FloatingCompanion.tsx        ✅ (البطل أسفل يمين)
+│   ├── FloatingCompanion.tsx        ✅ (البطل)
 │   ├── SorobanaCompanion.tsx        ✅ (المعلمة)
 │   ├── CharacterSelector.tsx        ✅
+│   ├── Companion.tsx                ✅
+│   ├── NumberStyleToggle.tsx        ✅
+│   ├── AdaptiveFeedback.tsx         ✅
 │   ├── DebugOverlay.tsx             ✅
 │   ├── BadgeModal.tsx               ✅
 │   ├── avatars/ImageAvatar.tsx      ✅
-│   └── soroban2d5/                  ✅
+│   └── soroban2d5/                  ✅ (6 ملفات)
 │
 ├── hooks/
 │   ├── useGameStats.ts              ✅
 │   ├── useSound.ts                  ✅
 │   ├── useConfetti.ts               ✅
 │   ├── useCharacterVoice.ts         ✅
-│   ├── useSorobanaVoice.ts          ✅ (TTS + MP3)
+│   ├── useSorobanaVoice.ts          ✅ (TTS + MP3 — مُصلَح)
 │   ├── useSpeech.ts                 ✅
 │   └── useQuests.ts                 ✅
 │
-└── screens/                         ✅
-    ├── WelcomeScreen.tsx            ✅
+└── screens/                         ✅ (18 ملف)
+    ├── WelcomeScreen.tsx            ✅ (7 مميزات)
     ├── RoleSelection.tsx            ✅
     ├── HeroDashboard.tsx            ✅
-    ├── GuardianDashboard.tsx        ✅ (يحتاج تحديث للبنية الجديدة)
+    ├── GuardianDashboard.tsx        ⚠️ (يحتاج تحديث)
     ├── Header.tsx                   ✅
     ├── CategoryScreen.tsx           ✅
-    ├── LevelScreen.tsx              ✅ (زر "تعلّم" يعمل + اختبار مضاف)
+    ├── LevelScreen.tsx              ✅ (زر تعلّم + اختبار)
     ├── PracticeScreen.tsx           ✅
     ├── AnzanScreen.tsx              ✅
     ├── AudioAnzanScreen.tsx         ✅
@@ -251,10 +240,10 @@ src/
     ├── SorobanPlayground.tsx        ✅
     ├── CategoryExamScreen.tsx       ✅
     ├── EnrichmentScreen.tsx         ✅
-    ├── LearnScreen.tsx              ✅ 🆕 (قائمة دروس المستوى)
+    ├── LearnScreen.tsx              ✅ 🆕 (قائمة دروس)
     ├── LessonScreen.tsx             ✅ 🆕 (شاهد + جرب)
-    ├── IntroductionScreen.tsx       ✅ 🆕 (المقدمة — 7 صفحات)
-    ├── LevelTestScreen.tsx          ✅ 🆕 (اختبار 10 أسئلة)
+    ├── IntroductionScreen.tsx       ✅ 🆕 (7 صفحات)
+    ├── LevelTestScreen.tsx          ✅ 🆕 (10 أسئلة)
     ├── MagicSecretsScreen.tsx       ⚠️ (موجود — غير مربوط)
     ├── CrossMultiplicationScreen.tsx ⚠️ (موجود — غير مربوط)
     ├── MultiplicationScreen.tsx     ⚠️ (موجود — غير مربوط)
@@ -262,96 +251,102 @@ src/
     └── CertificateScreen.tsx        ⚠️ (موجود — غير مربوط)
 ```
 
+🔊 الملفات الصوتية (public/):
+
+```
+public/
+├── audio/                    ← أصوات سوروبانا (12 ملف)
+│   ├── welcome-sorobana.mp3
+│   ├── greeting-1/2/3.mp3
+│   ├── teaching-1/2/3.mp3
+│   ├── correct-1/2.mp3
+│   ├── wrong-1/2.mp3
+│   └── end-lesson.mp3
+│
+├── stories/                  ← قصص MP3 (10 ملفات)
+│   ├── story-0.mp3 → story-9.mp3
+│   └── README.md
+│
+└── images/
+    └── (فارغ حالياً — نستخدم Soroban2D5)
+```
+
 ---
 
-🎯 7. الشاشات التفاعلية
+🎯 7. الشاشات التفاعلية (10)
 
-📖 LearnScreen (🆕 — قائمة دروس المستوى):
+📖 LearnScreen 🆕
 
-· يعرض دروس L0-L7 (مقدمة + S1 + S2...)
-· قفل متسلسل: كل درس يُفتح بعد السابق
+· قائمة دروس المستوى (مقدمة + S1 + S2...)
+· قفل متسلسل
 · البطل أسفل يمين
 · زر تبديل نمط الأرقام
 · Props: levelId, onBack, onOpenLesson, playSound
 
-📖 LessonScreen (🆕 — شاشة الدرس):
+📖 LessonScreen 🆕
 
 · تابان: شاهد / جرّب
-· شاهد: قصة + زر "موجز القصة" (MP3) + مفهوم + قاعدة + أمثلة بخطوات
-· جرّب: نوعان:
-  · read: Soroban يعرض الرقم → الطفل يختار من 4 خيارات
-  · build: Soroban تفاعلي → الطفل يحرّك الخرزات → [تحقق]
-· محاولتان لكل سؤال (ثم كشف الحل)
-· زر "أنهيت الدرس" يتفعل بعد كل "جرب"
-· البطل + المعلمة (SorobanaCompanion)
+· شاهد: قصة (MP3) + مفهوم + قاعدة + أمثلة بخطوات
+· جرّب:
+  · read: Soroban يعرض الرقم → 4 خيارات
+  · build: Soroban تفاعلي → [تحقق]
+· محاولتان لكل سؤال
+· 🆕 صوت سوروبانا + فقاعة "أحسنت! 🌟"
 · Props: lessonId, onBack, onNext, onComplete, playSound, onXP
 
-🎬 IntroductionScreen (🆕 — المقدمة):
+🎬 IntroductionScreen 🆕
 
-· 7 صفحات (تمرير عبر [التالي])
-· تاريخ المعداد + صورة SVG
-· القاعدة الذهبية + الفوائد + الدراسات العلمية
+· 7 صفحات تمرير
+· 🆕 يستخدم Soroban2D5 بـ 13 عموداً (بدل SVG)
 · زر 🏠 Home
-· البطل أسفل يمين
 · Props: lessonId, onBack, onComplete, playSound
 
-🎓 LevelTestScreen (🆕 — اختبار المستوى):
+🎓 LevelTestScreen 🆕
 
 · 10 أسئلة صعبة (3 من S1 + 7 من S2)
 · 60 ثانية فقط
-· محاولة واحدة لكل سؤال
+· محاولة واحدة
 · بلا كشف الحل
-· بلا بطل / معلمة
-· 80% للنجاح
-· 24 ساعة بعد الفشل
+· 80% للنجاح + 24 ساعة بعد الفشل
 · Props: levelId, onBack, onPass, playSound
 
-📖 PracticeScreen:
+📖 PracticeScreen
 
 · 5 أسئلة من bank-v2
-· محاولة واحدة + زر "تحقق" + "التالي" يدوي
 · عدّاد تصاعدي + توهج 70%
-· الأعمدة = max(السلسلة، الناتج)
-· تسجيل الضعف (recordWeaknessAttempt)
-· 5 XP لكل إجابة صحيحة
+· 5 XP لكل إجابة
+· 75% للنجاح
 
-🧠 AnzanScreen:
+🧠 AnzanScreen
 
-· وضعان: Flash + عادي
-· Flash: 2 ثانية لكل رقم
-· عادي: عرض السؤال كاملاً + TTS
-· الأعمدة = max(السلسلة، الناتج)
+· Flash (2s) + عادي
+· TTS في الوضع العادي
 · 5 أسئلة + AdaptiveFeedback
 
-🎧 AudioAnzanScreen:
+🎧 AudioAnzanScreen
 
 · TTS يقرأ الأرقام بالعربية
-· بدون عرض بصري
+· بلا عرض بصري
 · زر "إعادة السمع" (مرة واحدة)
-· 5 أسئلة + AdaptiveFeedback
 
-🎮 SorobanPlayground:
+🎮 SorobanPlayground
 
-· وضع حر — بلا أسئلة ولا مؤقت
-· اختيار الأعمدة: 3 / 6 / 9 / 13
-· حجم الخرزات تلقائي
-· زر 🏠 + 🔄 + "إعادة الكل"
+· وضع حر — بلا أسئلة
+· 3 / 6 / 9 / 13 عمود
+· زر 🏠 + 🔄
 
-📝 PlacementTestScreen:
+📝 PlacementTestScreen
 
 · 35-40 سؤالاً من bank-raw
 · 20 دقيقة
 · الإجابة على السوروبان
-· 5 مستويات × 5 أسئلة
-· المستوى المُوصى به = أول مستوى رسب فيه
 
-🏆 CategoryExamScreen:
+🏆 CategoryExamScreen
 
-· Exam 1 (Kids): 20 سؤالاً — 10 دقائق (L0:3, L1:7, L2:5, L3:5)
-· Exam 2 (Teens): 40 سؤالاً — 20 دقيقة (10 لكل مستوى)
+· Exam 1 (Kids): 20 سؤالاً — 10 دقائق
+· Exam 2 (Teens): 40 سؤالاً — 20 دقيقة
 · محاولتان لكل سؤال (1 / 0.5 نقطة)
-· 80% للنجاح + 48 ساعة انتظار
-· نجاح Exam 1 → فتح القسم 2
+· 80% + 48 ساعة انتظار
 
 ---
 
@@ -380,11 +375,10 @@ weaknessScore = (1 - accuracy) × 60
 نسبة الأسئلة العلاجية = 70%
 ```
 
-التطبيق:
+المفاتيح:
 
-· recordWeaknessAttempt(skillId, correct, timeMs) — في كل إجابة
-· getPracticeQuestions(num) — 70% ضعيف + 30% عادي
-· getWeakSkills() — للوحة ولي الأمر
+· soroban_weak_skills_v2 — للضعف
+· recordWeaknessAttempt(skillId, correct, timeMs)
 
 ---
 
@@ -392,9 +386,8 @@ weaknessScore = (1 - accuracy) × 60
 
 القاعدة:
 
-· 🏅 قياسي (≤ 50% من answerMs) → شارة فورية
+· 🏅 قياسي (≤ 50% answerMs) → شارة فورية
 · ✅ مقبول (≤ 75%) → لا شارة
-· 🐢 بطيء (> 75%) → لا شارة
 
 التخزين:
 
@@ -407,154 +400,165 @@ weaknessScore = (1 - accuracy) × 60
 
 الشارات المستقبلية (⏳):
 
-· 🥉 برونزية: 1 إجابة صحيحة بزمن قياسي
-· 🥈 فضية: 3 إجابات متتالية بزمن قياسي
-· 🥇 ذهبية: 5 إجابات متتالية بزمن قياسي
+· 🥉 برونزية: 1 إجابة قياسية
+· 🥈 فضية: 3 متتالية
+· 🥇 ذهبية: 5 متتالية
 
 ---
 
 📊 10. نظام التعليم التكيفي
 
-بعد كل جلسة (تمرّن/أنزان):
+بعد كل جلسة:
 
 ```
-╔══════════════════════════════════════════╗
-║  📊 ملاحظات التعليم التكيفي              ║
-╠══════════════════════════════════════════╣
-║  ✅ مهارات أتقنتها (بزمن قياسي)          ║
-║  👍 مهارات جيدة (زمن مقبول)              ║
-║  ⚠️ مهارات تحتاج تقوية                   ║
-║  📉 مهارات هذا المستوى (مراجعة)           ║
-║  📚 مهارات من مستويات أخرى                ║
-╚══════════════════════════════════════════╝
+📊 ملاحظات التعليم التكيفي
+├── ✅ مهارات أتقنتها (بزمن قياسي)
+├── 👍 مهارات جيدة (زمن مقبول)
+├── ⚠️ مهارات تحتاج تقوية
+├── 📉 مهارات هذا المستوى (مراجعة)
+├── 📚 مهارات من مستويات أخرى
+└── 💡 التوصية: أعد جلسة على المهارات أعلاه
 ```
 
-ميزات قادمة:
+ميزات قادمة (ملاحظات لاحقة):
 
-· 🔄 جلسة مراجعة ذكية
-· 📊 خريطة ضعف بصرية (heatmap)
-· 🎯 توصيات مخصّصة (careless / accuracy / speed / both)
-· 📈 مقارنة الطفل بنفسه
+· 🔗 ربط كل مهارة ضعيفة بتوصية لمراجعة درسها
+  · مثال: ضعف في S2 → زر "راجع L0-S2"
+  · يستخدم skillId → lesson-view-{level}-{skill}
+· 🎯 زر "درس تمكين" — ينتقل لامتحان مصغّر مخصص للضعف
+· 🔄 جلسة استدراك تلقائية
 
 ---
 
 🎨 11. الإثراء — الحالة
 
-🧒 قسم 1 (5-12):
+🧒 قسم 1:
 
-# الشاشة الحالة
-1 🖐️ رياضيات الأصابع (داخل EnrichmentScreen) ⚠️ موجودة — زر لا يعمل
-2 ✨ أسرار جدول الضرب (داخل EnrichmentScreen) ⚠️ موجودة — زر لا يعمل
-3 🪄 أسرار الضرب السحرية (secrets) ⚠️ MagicSecretsScreen موجود — غير مربوط
-4 🎮 ألعاب تعليمية (مربعات + مكعبات) ❌ قادمة
+# الإثراء الشاشة الحالة
+1 🖐️ رياضيات الأصابع EnrichmentScreen ✅ يعمل
+2 ✨ أسرار جدول الضرب داخل EnrichmentScreen ⚠️ الزر لا يعمل
+3 🪄 أسرار الضرب السحرية secrets ⚠️ MagicSecretsScreen موجود — غير مربوط
+4 🎮 ألعاب تعليمية — ❌ قادمة
 
-🧑 قسم 2 (13+):
+🧑 قسم 2:
 
-# الشاشة الحالة
-1 🏹 الضرب التقاطعي (cross-multiplication) ⚠️ CrossMultiplicationScreen موجود — غير مربوط
-2 📐 الضرب (multiplication) ⚠️ MultiplicationScreen موجود — غير مربوط
-3 ➗ القسمة (division) ⚠️ DivisionScreen موجود — غير مربوط
+# الإثراء الشاشة الحالة
+1 🏹 الضرب التقاطعي cross-multiplication ⚠️ موجود — غير مربوط
+2 📐 الضرب multiplication ⚠️ موجود — غير مربوط
+3 ➗ القسمة division ⚠️ موجود — غير مربوط
 
-📋 المطلوب (قريباً):
+المطلوب:
 
-· ربط الأزرار الأربعة في App.tsx (استبدال ComingSoonScreen)
+· ربط 4 شاشات في App.tsx (استبدال ComingSoonScreen)
 · إصلاح زر "أسرار جدول الضرب" داخل EnrichmentScreen
 
 ---
 
-📖 12. الدروس والمحتوى
+📖 12. الدروس — الحالة
 
-✅ الجديد (الجلسة 8):
+✅ L0 مكتمل:
 
 ```
-src/curriculum/lessons/
-├── types.ts                 ✅ (LessonNode)
-├── index.ts                 ✅ (registry + دوال استعلام)
-└── L0/
-    ├── intro.ts             ✅ (7 صفحات مقدمة)
-    ├── S1.ts                ✅ (10 أمثلة + 10 جرب)
-    ├── S2.ts                ✅ (10 أمثلة + 10 جرب)
-    └── test-pool.ts         ✅ (30 سؤال صعب — اختبار)
+src/curriculum/lessons/L0/
+├── intro.ts             ✅ 7 صفحات
+├── S1.ts                ✅ تمثيل 0-9
+├── S2.ts                ✅ القيمة المكانية
+└── test-pool.ts         ✅ 30 سؤال اختبار
 ```
 
-📋 المتبقي:
+الإحصاء:
 
-· L1 (7 دروس: S3-S9)
-· L2 (3 دروس: S10-S12)
-· L3 (3 دروس: S13-S15)
-· L4-L7 (5 دروس: S16-S20)
+· 3 دروس
+· 20 مثالاً محلولاً
+· 20 سؤال "جرب"
+· 30 سؤال اختبار
+· 7 صفحات مقدمة
+
+🔜 التالي: L1 (7 دروس)
+
+· S3: جمع مباشر
+· S4: طرح مباشر
+· S5: صديق 5 جمع
+· S6: صديق 5 طرح
+· S7: صديق 10 جمع
+· S8: صديق 10 طرح
+· S9: مختلط
+· · اختبار L1
 
 🎵 الأصوات:
 
-· public/audio/stories/story-0.mp3 → story-9.mp3 (10 ملفات)
+· story-0.mp3 → story-9.mp3 (10 ملفات)
 · تربط بالدروس عبر storyAudioId
-· الدروس الجديدة: TTS مؤقت (حتى التسجيل)
+· S1: story-1.mp3 | S2: story-2.mp3
+· الدروس بدون MP3: TTS مؤقت
 
-⚠️ ملفات v1 (غير مربوطة):
+⚠️ ملفات v1 (للمرجع):
 
-· src/data/data.ts (دروس v1)
-· src/data/learnModules.ts (وحدات v1 — 10 دروس)
-
-القرار: نحتفظ بها للمرجع، لكن نستخدم curriculum/lessons/ الجديد.
+· data.ts + learnModules.ts — غير مربوطة
 
 ---
 
 🗺️ 13. خارطة الطريق
 
-✅ الجلسات 1-7 (مكتملة):
+✅ الجلسات 1-7:
 
-· الجلسة 1: التأسيس + محرك السوروبان
-· الجلسة 2: البنك التكيفي (700)
-· الجلسة 3: توسيع البنك (900)
-· الجلسة 4: bank-v2 + بنية جديدة
-· الجلسة 5: الأنزان + النمط + التكيف
-· الجلسة 6: الشارات + Playground
-· الجلسة 7: الامتحانات (1 + 2)
+· التأسيس + البنك التكيفي + الشارات + الامتحانات
 
-✅ الجلسة 8 — بناء L0 كاملاً (اليوم):
+✅ الجلسة 8 — بناء L0 + إصلاحات (اليوم):
 
-· curriculum/lessons/types.ts ✅
-· curriculum/lessons/L0/intro.ts ✅
-· curriculum/lessons/L0/S1.ts ✅
-· curriculum/lessons/L0/S2.ts ✅
-· curriculum/lessons/L0/test-pool.ts ✅
-· curriculum/lessons/index.ts ✅
-· screens/LearnScreen.tsx ✅ (قائمة دروس)
-· screens/LessonScreen.tsx ✅ (شاهد + جرب)
-· screens/IntroductionScreen.tsx ✅ (7 صفحات)
-· screens/LevelTestScreen.tsx ✅ (10 أسئلة)
-· تعديل LevelScreen.tsx ✅ (زر "تعلّم" يعمل + اختبار)
-· تعديل App.tsx ✅ (routes: learn-, intro-, lesson-view-, level-test-)
+· 🆕 curriculum/lessons/ (هيكل جديد)
+· 🆕 L0/intro.ts (7 صفحات)
+· 🆕 L0/S1.ts + L0/S2.ts
+· 🆕 L0/test-pool.ts (30 سؤال)
+· 🆕 LearnScreen.tsx
+· 🆕 LessonScreen.tsx
+· 🆕 IntroductionScreen.tsx
+· 🆕 LevelTestScreen.tsx
+· 🔧 تعديل LevelScreen.tsx (زر تعلّم + اختبار)
+· 🔧 تعديل App.tsx (4 routes جديدة)
+· 🐛 إصلاح storyPath في useSorobanaVoice
+· 🐛 إصلاح SVG (استبدال بـ Soroban2D5)
+· 🆕 إضافة speakCorrect + speakWrong في LessonScreen
+· 🆕 فقاعة "أحسنت! 🌟" عند الإجابة الصحيحة
+· 🎨 تحديث WelcomeScreen (7 مميزات)
 
-🎯 الجلسة 9 — توسيع المنهج:
+🎯 الجلسة 9 — بناء L1 كاملاً:
 
-· بناء L1 كاملاً (7 دروس: S3-S9)
-· بناء L2 (3 دروس: S10-S12)
-· بناء L3 (3 دروس: S13-S15)
-· اختبارات L1-L3
+· 7 دروس (S3-S9)
+· اختبار L1
+· تحديث lessons/index.ts
 
-🎯 الجلسة 10 — القسم الثاني:
+🎯 الجلسة 10 — بناء L2 + L3:
 
-· بناء L4-L7 (5 دروس: S16-S20)
-· اختبارات L4-L7
-· TTS مؤقت للدروس بدون MP3
+· L2: S10-S12 (3 دروس)
+· L3: S13-S15 (3 دروس)
+· اختبارات L2-L3
 
-🎯 الجلسة 11 — الإثراء والربط:
+🎯 الجلسة 11 — بناء L4-L7:
 
-· ربط الإثراء الأربعة (secrets + cross-mult + mult + division)
+· L4: S16
+· L5: S17
+· L6: S18
+· L7: S19-S20
+· TTS للجميع
+
+🎯 الجلسة 12 — الإثراء والربط:
+
+· ربط 4 شاشات الإثراء
 · إصلاح زر "أسرار جدول الضرب"
 · ألعاب تعليمية
 
-🎯 الجلسة 12 — التعليم التكيفي المتقدم:
+🎯 الجلسة 13 — التكيف المتقدم:
 
-· جلسة مراجعة ذكية
-· تشخيص دقيق للأخطاء
+· جلسة استدراك ذكية
+· ربط كل مهارة ضعيفة بتوصية درسها
 · خريطة ضعف بصرية
+· شارات برونزية/فضية/ذهبية
 
-🎯 الجلسة 13 — الإكمال:
+🎯 الجلسة 14 — الإكمال:
 
-· CertificateScreen (من v1)
-· GuardianDashboard — تحديث للبنية الجديدة
+· CertificateScreen
+· GuardianDashboard (تحديث كامل)
 · PWA + APK
 
 ---
@@ -562,118 +566,98 @@ src/curriculum/lessons/
 📊 14. الإحصائيات
 
 المقياس القيمة
-الملفات المكتملة ~125
-الملفات المتبقية ~15
-نسبة الإنجاز ~90%
+الملفات المكتملة ~130
+الملفات المتبقية ~12
+نسبة الإنجاز ~91%
 أسئلة البنك ~1080
 المستويات 8 (L0-L7)
 المهارات 20 (S1-S20)
 الأقسام 2 (5-12 / 13+)
 الشاشات التفاعلية 10
-الدروس المبنية 3 (L0: intro + S1 + S2)
+الدروس المبنية 3 (L0)
+الملفات الصوتية 22 (12 + 10)
 
 ---
 
-🎯 15. الميزات المُنجَزة (الجلسة 8)
+⚠️ 15. ملاحظات حرجة
 
-✅ بناء L0 كاملاً:
+1️⃣ GuardianDashboard:
 
-· 3 دروس (مقدمة + S1 + S2)
-· 20 مثالاً محلولاً (10 لكل مهارة)
-· 20 سؤال "جرب"
-· 30 سؤال اختبار صعب
-· 7 صفحات مقدمة (تاريخ + صورة SVG + فوائد + دراسات)
-
-✅ شاشات جديدة:
-
-· LearnScreen — قائمة دروس
-· LessonScreen — شاهد + جرب
-· IntroductionScreen — تمرير 7 صفحات
-· LevelTestScreen — اختبار 60 ثانية
-
-✅ تعديلات:
-
-· LevelScreen — زر "تعلّم" يعمل + اختبار مضاف
-· App.tsx — 4 routes جديدة
-· curriculum/lessons/ — هيكل جديد
-
-✅ المميزات التقنية:
-
-· البطل + المعلمة في كل شاشات الدروس
-· زر "موجز القصة" → MP3
-· Soroban2D5 تفاعلي لـ "build"
-· Soroban2D5 للعرض لـ "read"
-· محاولتان لكل سؤال + كشف الحل
-· LevelTestScreen: 24 ساعة انتظار
-
----
-
-⚠️ 16. ملاحظات حرجة
-
-1️⃣ التكامل مع GuardianDashboard:
-
-· الخريطة الحالية مبنية على البنية القديمة (10 دروس)
-· تحتاج تحديث للبنية الجديدة (8 مستويات + دروس داخلية)
-· مفاتيح localStorage: soroban_completed_lessons + soroban_passed_level_tests
+· خريطة التقدم مبنية على البنية القديمة (10 دروس)
+· تحتاج تحديث للبنية الجديدة:
+  · soroban_completed_lessons (دروس داخلية)
+  · soroban_passed_level_tests (اختبارات المستوى)
+  · 8 مستويات × (مقدمة + مهارات)
 
 2️⃣ الإثراء:
 
-· 4 شاشات موجودة (MagicSecrets, CrossMultiplication, Multiplication, Division)
-· غير مربوطة بـ App.tsx
-· إصلاح سهل: استبدال ComingSoonScreen بها
+· 4 شاشات جاهزة — غير مربوطة
+· إصلاح سريع: استبدال ComingSoonScreen
 
 3️⃣ ملفات v1:
 
-· data.ts + learnModules.ts
-· غير مربوطة — للمرجع فقط
-· القرار النهائي: أرشفتها بعد إتمام L1-L7
+· data.ts + learnModules.ts — للمرجع فقط
+· القرار: أرشفتها بعد إتمام L1-L7
 
 4️⃣ الدروس الناقصة:
 
 · L1-L7: تحتاج قصص + أمثلة + أسئلة
-· S10-S20: قصص جديدة (JSON مبدئي موجود)
+· القصص موجودة في JSON (من Claude سابقاً)
 · TTS مؤقت للدروس بدون MP3
 
-5️⃣ ملفات curriculum/levels/ القديمة:
+5️⃣ ربط المهارة بتوصية مراجعة (ميزة لاحقة):
 
-· حُذفت في الجلسة 8
-· curriculum/types.ts بقي (يستخدمه bank-v2 + engine)
+· عند ضعف في S_x → عرض زر "راجع الدرس"
+· الرابط: lesson-view-{level}-{skillId}
+· مثال: S2 ضعيف → lesson-view-L0-S2
+· · اقتراح "امتحان تمكين مصغّر" (10 أسئلة من نفس المهارة)
 
 ---
 
-❓ 17. أسئلة للمناقشة
+🎯 16. الميزات المُنجَزة (الجلسة 8)
 
-س1: ترتيب بناء L1-L7
+🎬 بنية الدروس الجديدة:
 
-· أ) نبني L1 كاملاً ثم L2 ثم L3 (تسلسل)
-· ب) نبني S3-S9 (L1) في جلسة واحدة
-· ج) نبدأ بـ L2 (الضرب) — أكثر متعة
+· LessonNode (نوع شامل)
+· registry موحّد
+· دوال استعلام: getLessonsByLevel, getLessonById, getNextLesson, إلخ.
 
-اقتراحي: أ — تسلسل طبيعي.
+📱 4 شاشات جديدة:
 
-س2: القصص لـ S10-S20
+· LearnScreen (قائمة دروس)
+· LessonScreen (شاهد + جرب)
+· IntroductionScreen (تمرير صفحات)
+· LevelTestScreen (اختبار 60 ثانية)
 
-· أ) نستخدم JSON القصص (موجودة لكن قصيرة)
-· ب) نكتب قصصاً جديدة بنفس أسلوب "الجدة 5"
-· ج) نستخدم TTS للجميع
+🐛 إصلاحات:
 
-اقتراحي: ب — استمرارية الأسلوب.
+· storyPath (حذف audio/)
+· SVG المعداد (استبدال بـ Soroban2D5)
+· أصوات سوروبانا (correct/wrong)
+· فقاعة "أحسنت"
 
-س3: GuardianDashboard
+🎨 تحديثات بصرية:
 
-· أ) نصلحه الآن
-· ب) نتركه لبعد L1-L7
-· ج) نصممه من جديد
+· WelcomeScreen (7 مميزات)
+· LevelScreen (زر "تعلّم" يعمل + اختبار)
 
-اقتراحي: ب — بعد اكتمال المنهج.
+---
 
-س4: الإثراء
+🎯 17. المرتقب لاحقاً (Priority List)
 
-· أ) نربطه الآن (5 دقائق)
-· ب) نتركه لبعد L1-L3
-· ج) نصلح زر "أسرار جدول الضرب" فقط
-
-اقتراحي: أ — سريع.
+# الميزة الأولوية الجلسة
+1 بناء L1 (7 دروس) 🔴 عالية 9
+2 بناء L2 + L3 🔴 عالية 10
+3 بناء L4-L7 🔴 عالية 11
+4 ربط الإثراء (4 شاشات) 🟠 متوسطة 12
+5 إصلاح زر "أسرار جدول الضرب" 🟠 متوسطة 12
+6 GuardianDashboard (تحديث) 🟠 متوسطة 12
+7 ربط المهارة بتوصية درسها 🟠 متوسطة 13
+8 جلسة استدراك ذكية 🟠 متوسطة 13
+9 شارات برونزية/فضية/ذهبية 🟠 متوسطة 13
+10 ألعاب تعليمية 🟡 منخفضة 14
+11 CertificateScreen 🟠 متوسطة 14
+12 PWA + APK 🟡 منخفضة 14
 
 ---
 
@@ -705,34 +689,9 @@ Actions سجل البناء
 صُنع بحب لأطفال العالم العربي 🌍
 
 آخر تحديث: 2026-09-27 — نهاية الجلسة 8
-الحالة: 🟢 التطبيق يعمل + L0 كامل — ~90% مكتمل
+الحالة: 🟢 التطبيق يعمل + L0 كامل + أنظمة صوتية تعمل — ~91% مكتمل
 
 </div>
 ```
 
 ---
-
-📝 ملاحظاتي (اقرأها بتمعّن)
-
-✅ ما تم إنجازه فعلياً:
-
-1. بناء L0 كاملاً — 3 دروس + اختبار
-2. 4 شاشات جديدة — LearnScreen + LessonScreen + IntroductionScreen + LevelTestScreen
-3. تعديل LevelScreen — زر "تعلّم" يعمل + اختبار مضاف
-4. تعديل App.tsx — 4 routes جديدة
-5. حذف curriculum/levels/ القديم — نُظّف المشروع
-
-📊 التغييرات الرئيسية عن الملف الأصلي:
-
-البند الأصلي الآن
-نسبة الإنجاز 88% 90%
-الشاشات التفاعلية 6 10
-بنية الدروس curriculum/levels/ (قديم) curriculum/lessons/ (جديد)
-L0 غير موجود ✅ كامل
-اختبار L0 غير موجود ✅ موجود
-
-⚠️ نقاط تحتاج انتباهك:
-
-1. GuardianDashboard — الخريطة تحتاج تحديث (بسبب البنية الجديدة)
-2. الإثراء — 4 شاشات جاهزة لكن غير مربوطة
-3. ملفات v1 (data.ts, learnModules.ts) — للمرجع فقط
