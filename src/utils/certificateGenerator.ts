@@ -1,6 +1,6 @@
 // src/utils/certificateGenerator.ts — مولّد بيانات الشهادة
 
-export type CertificateLevel = 'gold' | 'silver' | 'bronze' | 'pass';
+export type CertificateLevel = 'gold' | 'silver' | 'bronze' | 'pass' | 'fail';
 
 export interface CertificateData {
   studentName: string;
@@ -29,7 +29,7 @@ function hashCode(str: string): number {
 function generateCertificateNumber(seed: string): string {
   const year = new Date().getFullYear();
   const num = (hashCode(seed) % 900000) + 100000;
-  return `ISA-${year}-${num}`;
+  return 'ISA-' + year + '-' + num;
 }
 
 function toHijriApprox(date: Date): string {
@@ -37,9 +37,17 @@ function toHijriApprox(date: Date): string {
   const hijriYear = Math.floor(((gregorianYear - 622) * 33) / 32);
   const month = date.getMonth() + 1;
   const day = date.getDate();
-  return `${hijriYear} / ${String(month).padStart(2, '0')} / ${String(day).padStart(2, '0')} هـ`;
+  return hijriYear + ' / ' + String(month).padStart(2, '0') + ' / ' + String(day).padStart(2, '0') + ' هـ';
 }
 
+/**
+ * تصنيف الشهادة حسب الدرجة:
+ *  95-100 → 🥇 ذهبية (ممتاز)
+ *  90-94  → 🥈 فضية (ممتاز مرتفع)
+ *  85-89  → 🥉 برونزية (جيد جداً)
+ *  80-84  → 🎖️ نجاح (بلا ميدالية)
+ *  < 80   → ❌ راسب (لا شهادة)
+ */
 export function getLevel(average: number): {
   level: CertificateLevel;
   levelAr: string;
@@ -50,13 +58,16 @@ export function getLevel(average: number): {
   if (average >= 95) {
     return { level: 'gold', levelAr: 'ذهبي', levelEn: 'Gold', medalEmoji: '🥇', appreciation: 'ممتاز' };
   }
+  if (average >= 90) {
+    return { level: 'silver', levelAr: 'فضي', levelEn: 'Silver', medalEmoji: '🥈', appreciation: 'ممتاز مرتفع' };
+  }
   if (average >= 85) {
-    return { level: 'silver', levelAr: 'فضي', levelEn: 'Silver', medalEmoji: '🥈', appreciation: 'جيد جداً' };
+    return { level: 'bronze', levelAr: 'برونزي', levelEn: 'Bronze', medalEmoji: '🥉', appreciation: 'جيد جداً' };
   }
-  if (average >= 75) {
-    return { level: 'bronze', levelAr: 'برونزي', levelEn: 'Bronze', medalEmoji: '🥉', appreciation: 'جيد' };
+  if (average >= 80) {
+    return { level: 'pass', levelAr: 'ناجح', levelEn: 'Pass', medalEmoji: '🎖️', appreciation: 'جيد' };
   }
-  return { level: 'pass', levelAr: 'مقبول', levelEn: 'Pass', medalEmoji: '🎖️', appreciation: 'مقبول' };
+  return { level: 'fail', levelAr: 'راسب', levelEn: 'Fail', medalEmoji: '', appreciation: 'حاول مرة أخرى' };
 }
 
 export function getCertificateData(
@@ -70,10 +81,12 @@ export function getCertificateData(
   const { level, levelAr, levelEn, medalEmoji, appreciation } = getLevel(averageScore);
 
   const now = new Date();
-  const issueDate = `${now.getFullYear()} / ${String(now.getMonth() + 1).padStart(2, '0')} / ${String(now.getDate()).padStart(2, '0')} م`;
+  const issueDate = now.getFullYear() + ' / ' +
+    String(now.getMonth() + 1).padStart(2, '0') + ' / ' +
+    String(now.getDate()).padStart(2, '0') + ' م';
   const certificateNumber = generateCertificateNumber(safeName + exam1Score + exam2Score);
 
-  const verificationUrl = `https://mezo2021.github.io/sorobanmind-2/#verify/${certificateNumber}`;
+  const verificationUrl = 'https://mezo2021.github.io/sorobanmind-2/#verify/' + certificateNumber;
 
   return {
     studentName: safeName,
@@ -101,8 +114,10 @@ export function getLevelColors(level: CertificateLevel) {
     case 'bronze':
       return { primary: '#CD7F32', dark: '#8B4513', light: '#F5E6D3', text: '#5D3A1A' };
     case 'pass':
-    default:
       return { primary: '#4A90E2', dark: '#2C5AA0', light: '#E3F2FD', text: '#1A3D7A' };
+    case 'fail':
+    default:
+      return { primary: '#9CA3AF', dark: '#6B7280', light: '#F3F4F6', text: '#374151' };
   }
 }
 
