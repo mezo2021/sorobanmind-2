@@ -1,5 +1,40 @@
-// src/utils/skillsChecker.ts — حساب المهارات الأربع للطفل
+// ═══════════════════════════════════════════════════════════════════
+// 📊 src/utils/skillsChecker.ts — حساب المهارات الأربع للطفل
+// ═══════════════════════════════════════════════════════════════════
+//
+// الوظيفة:
+//   - يحسب 4 مهارات: التركيز · التخيل · الملاحظة · الاستماع
+//   - يقرأ البيانات من 3 مفاتيح localStorage
+//
+// ⚠️ ملاحظات حرجة:
+//   1. لا يستورد أي شيء من bank مباشرة (نظيف ✅)
+//   2. لكنه يعتمد على مفاتيح localStorage التي تكتب فيها:
+//      - AnzanScreen.tsx
+//      - PracticeScreen.tsx
+//      - AudioAnzanScreen.tsx
+//
+// 🔑 المفاتيح الحالية (localStorage):
+//   - soroban_anzan_stats        ← AnzanScreen
+//   - soroban_practice_stats     ← PracticeScreen
+//   - soroban_anzan_audio_badges ← AudioAnzanScreen
+//
+// 🔗 خطة الربط المستقبلي (SRB):
+//   عند بناء SRB (المرحلة 5):
+//   1. تغيير المفاتيح إلى صيغة موحّدة (srb_*)
+//   2. تحديث الشاشات الثلاث في نفس الـ commit
+//   3. الحفاظ على الواجهة calculateSkills() كما هي
+//
+// 📤 الواجهة العامة (تبقى ثابتة):
+//   - calculateSkills(): SkillResult[]
+//   - SkillResult (interface)
+//
+// آخر تحديث: 2026-09-29
+//   - إضافة توثيق احترافي
+//   - لا تغيير في المنطق
+//
+// ═══════════════════════════════════════════════════════════════════
 
+// 🔑 مفاتيح localStorage (ستُوحّد مع SRB لاحقًا)
 const ANZAN_KEY = 'soroban_anzan_stats';
 const PRACTICE_KEY = 'soroban_practice_stats';
 const AUDIO_ANZAN_KEY = 'soroban_anzan_audio_badges';
@@ -73,6 +108,10 @@ function loadAudioAnzanBadges(): AudioAnzanBadges {
     return {};
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// 📤 الواجهة العامة — تبقى ثابتة حتى بعد SRB
+// ═══════════════════════════════════════════════════════════════════
 
 export interface SkillResult {
   id: string;
