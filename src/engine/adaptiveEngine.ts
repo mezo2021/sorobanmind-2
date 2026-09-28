@@ -1,8 +1,64 @@
+// ═══════════════════════════════════════════════════════════════════
+// 🧠 src/engine/adaptiveEngine.ts — المحرك التكيفي
+// ═══════════════════════════════════════════════════════════════════
+//
+// الوظيفة:
+//   - تحديد المستوى (Placement Test)
+//   - توليد توصيات علاجية
+//   - بناء جلسات علاجية
+//   - تشخيص المهارات الضعيفة
+//
+// 🚨 ارتباطات حرجة (SRB Migration Points):
+//
+//   ⚠️⚠️⚠️ الملف يستورد من "../data/bank-linked" ⚠️⚠️⚠️
+//
+//   هذا هو الملف الذي يسبب التعارض مع البنوك.
+//
+//   📋 ما يُستورد حاليًا:
+//     1. SOROBAN_BANK          → يُستبدل بـ SRB (بنك SRB الجديد)
+//     2. evaluateBankAnswer    → يُستبدل بـ SRB.evaluate()
+//     3. type BankQuestion     → يُستبدل بـ SRBQuestion
+//     4. type QuestionEvaluation → يبقى أو يُستبدل بـ SRBEvaluation
+//
+//   🔗 خطة الربط المستقبلي (SRB - المرحلة 5):
+//
+//     1. بناء src/data/srb/ كاملًا
+//     2. بناء src/data/srb-adapter.ts
+//     3. استبدال import من bank-linked → srb-adapter
+//     4. اختبار شامل
+//     5. حذف bank-linked نهائيًا
+//
+// 📥 الاعتماديات الأخرى:
+//   - ./masteryTracker (نظيف ✅)
+//   - ../curriculum/types (العقد الأساسي ✅)
+//
+// 📤 الصادرات الرئيسية:
+//   - createPlacementTest()
+//   - evaluatePlacementTest()
+//   - processAttempt()
+//   - selectRemediationQuestions()
+//   - buildRemediationSession()
+//   - findWeakSkills()
+//   - diagnoseSkill()
+//
+// ⚠️ الحالة الحالية:
+//   - يعمل، لكن معرّفات المستويات L01-L20 قديمة
+//   - levelNumber() يفترض صيغة "L{رقم}" — ستحتاج تحديثًا لـ SRB
+//
+// آخر تحديث: 2026-09-29
+//   - إضافة توثيق شامل + علامات SRB
+//   - لا تغيير في المنطق
+//
+// ═══════════════════════════════════════════════════════════════════
+
+// 🔗 SRB-MIGRATION: هذا الاستيراد سيُستبدل لاحقًا بـ srb-adapter
+//    مؤقتًا: bank-linked
+//    المستقبل: ../data/srb-adapter
 import {
-  SOROBAN_BANK,
-  evaluateBankAnswer,
-  type BankQuestion,
-  type QuestionEvaluation
+  SOROBAN_BANK,           // 🔗 يُستبدل بـ SRB.getAll()
+  evaluateBankAnswer,     // 🔗 يُستبدل بـ SRB.evaluate()
+  type BankQuestion,      // 🔗 يُستبدل بـ SRBQuestion
+  type QuestionEvaluation // 🔗 يبقى (أو SRBEvaluation)
 } from "../data/bank-linked";
 
 import {
@@ -20,6 +76,10 @@ import type {
   Skill,
   CurriculumLevel
 } from "../curriculum/types";
+
+// ═══════════════════════════════════════════════════════════════════
+// 📝 الأنواع (Types)
+// ═══════════════════════════════════════════════════════════════════
 
 /**
  * إجابة واحدة في اختبار تحديد المستوى.
@@ -82,31 +142,14 @@ export interface PlacementResult {
  * سجل خطأ تعليمي.
  */
 export interface LearningError {
-  /** معرف السؤال */
   questionId: string;
-
-  /** المهارة */
   skillId: string;
-
-  /** القاعدة */
   ruleId: string;
-
-  /** الحركة */
   movement: string;
-
-  /** نوع العملية */
   operation: string;
-
-  /** الإجابة التي أدخلها الطفل */
   userAnswer: number;
-
-  /** الإجابة الصحيحة */
   correctAnswer: number;
-
-  /** الزمن */
   timeMs: number;
-
-  /** نوع المشكلة */
   issue: QuestionEvaluation["issue"];
 }
 
@@ -114,24 +157,15 @@ export interface LearningError {
  * توصية تعليمية.
  */
 export interface AdaptiveRecommendation {
-  /** معرف السؤال */
   questionId: string;
-
-  /** سبب اختياره */
   reason:
     | "skill-gap"
     | "rule-gap"
     | "movement-gap"
     | "slow-skill"
     | "retry";
-
-  /** أولوية */
   priority: number;
-
-  /** المهارة */
   skillId: string;
-
-  /** القاعدة */
   ruleId: string;
 }
 
@@ -139,18 +173,15 @@ export interface AdaptiveRecommendation {
  * نتيجة تحديث الأداء.
  */
 export interface AdaptiveUpdate {
-  /** التقدم الجديد */
   progress: SkillProgress;
-
-  /** نسبة الإتقان */
   masteryPercentage: number;
-
-  /** سبب الضعف */
   weakness: SkillWeakness;
-
-  /** هل المهارة أصبحت متقنة */
   mastered: boolean;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// 🛠️ أدوات مساعدة
+// ═══════════════════════════════════════════════════════════════════
 
 /**
  * سحب عشوائي من مصفوفة.
@@ -228,6 +259,11 @@ function createRng(
 
 /**
  * استخراج رقم المستوى من L01 / L02 ...
+ *
+ * 🔗 SRB-MIGRATION: هذا سيحتاج تحديثًا لـ SRB IDs
+ *    الصيغة الحالية: L01, L02, ...
+ *    صيغة SRB: L0, L1, L2, ... (بدون صفر)
+ *    أو: SRB-L0-S01-B001 (كامل)
  */
 function levelNumber(
   levelId: string
@@ -246,18 +282,21 @@ function levelNumber(
   );
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// 🎯 اختبار تحديد المستوى
+// ═══════════════════════════════════════════════════════════════════
+
 /**
  * إنشاء اختبار تحديد المستوى.
  *
- * مهم:
- * السحب عشوائي،
- * لكنه موزون حتى لا يهيمن مستوى واحد على الاختبار.
+ * 🔗 SRB-MIGRATION: يعتمد على SOROBAN_BANK من bank-linked
+ *    سيُستبدل بـ SRB.getAll() لاحقًا.
  */
 export function createPlacementTest(
-  bank: readonly BankQuestion[] = SOROBAN_BANK,
+  bank: readonly BankQuestion[] = SOROBAN_BANK,  // 🔗 SRB
   questionCount = 30,
   seed = Date.now()
-): BankQuestion[] {
+): BankQuestion[] {  // 🔗 SRB
   if (
     questionCount <= 0 ||
     !Number.isInteger(
@@ -275,7 +314,7 @@ export function createPlacementTest(
   const levelMap =
     new Map<
       string,
-      BankQuestion[]
+      BankQuestion[]  // 🔗 SRB
     >();
 
   for (const question of bank) {
@@ -306,8 +345,7 @@ export function createPlacementTest(
     return [];
   }
 
-  const result: BankQuestion[] =
-    [];
+  const result: BankQuestion[] = [];  // 🔗 SRB
 
   const basePerLevel =
     Math.floor(
@@ -386,9 +424,11 @@ export function createPlacementTest(
 
 /**
  * تقييم اختبار تحديد المستوى.
+ *
+ * 🔗 SRB-MIGRATION: يعتمد على evaluateBankAnswer و SOROBAN_BANK
  */
 export function evaluatePlacementTest(
-  questions: readonly BankQuestion[],
+  questions: readonly BankQuestion[],  // 🔗 SRB
   answers: readonly PlacementAnswer[],
   levels?: readonly CurriculumLevel[]
 ): PlacementResult {
@@ -477,7 +517,7 @@ export function evaluatePlacementTest(
     }
 
     const evaluation =
-      evaluateBankAnswer(
+      evaluateBankAnswer(  // 🔗 SRB.evaluate()
         question,
         answer.answer,
         answer.timeMs
@@ -612,7 +652,7 @@ export function evaluatePlacementTest(
   const remediationQuestionIds =
     selectRemediationQuestions(
       errors,
-      SOROBAN_BANK,
+      SOROBAN_BANK,  // 🔗 SRB.getAll()
       10
     ).map(
       recommendation =>
@@ -633,9 +673,11 @@ export function evaluatePlacementTest(
 
 /**
  * تسجيل محاولة واحدة داخل المحرك التكيفي.
+ *
+ * 🔗 SRB-MIGRATION: يعتمد على BankQuestion (من bank-linked)
  */
 export function processAttempt(
-  question: BankQuestion,
+  question: BankQuestion,  // 🔗 SRB
   userAnswer: number,
   timeMs: number,
   progress?: SkillProgress
@@ -664,14 +706,6 @@ export function processAttempt(
       attempt
     );
 
-  /**
-   * لا نستطيع هنا تحديد mastery
-   * من دون Skill definition.
-   *
-   * لذلك يعاد التشخيص الأساسي
-   * عبر progress حتى يتم تمرير Skill
-   * في الطبقة الأعلى.
-   */
   const percentage =
     next.attempts === 0
       ? 0
@@ -694,10 +728,12 @@ export function processAttempt(
 
 /**
  * إنشاء توصيات علاجية بناءً على الأخطاء.
+ *
+ * 🔗 SRB-MIGRATION: يعتمد على SOROBAN_BANK
  */
 export function selectRemediationQuestions(
   errors: readonly LearningError[],
-  bank: readonly BankQuestion[] = SOROBAN_BANK,
+  bank: readonly BankQuestion[] = SOROBAN_BANK,  // 🔗 SRB
   count = 10
 ): AdaptiveRecommendation[] {
   if (
@@ -844,12 +880,14 @@ export function selectRemediationQuestions(
 
 /**
  * بناء جلسة علاجية من خطأ محدد.
+ *
+ * 🔗 SRB-MIGRATION: يعتمد على SOROBAN_BANK
  */
 export function buildRemediationSession(
   questionId: string,
   count = 5,
-  bank: readonly BankQuestion[] = SOROBAN_BANK
-): BankQuestion[] {
+  bank: readonly BankQuestion[] = SOROBAN_BANK  // 🔗 SRB
+): BankQuestion[] {  // 🔗 SRB
   const source =
     bank.find(
       question =>
@@ -861,12 +899,6 @@ export function buildRemediationSession(
     return [];
   }
 
-  /**
-   * نعطي الأولوية:
-   * 1. نفس المهارة.
-   * 2. نفس القاعدة.
-   * 3. نفس الحركة.
-   */
   const candidates =
     bank
       .filter(
@@ -937,6 +969,8 @@ export function buildRemediationSession(
 
 /**
  * تحديد المهارات الأضعف من سجل المحاولات.
+ *
+ * ✅ لا يعتمد على bank — نظيف
  */
 export function findWeakSkills(
   attempts: readonly Attempt[]
@@ -1007,6 +1041,8 @@ export function findWeakSkills(
 
 /**
  * إنشاء توصية مباشرة من SkillProgress.
+ *
+ * ✅ لا يعتمد على bank — نظيف
  */
 export function diagnoseSkill(
   progress: SkillProgress,
