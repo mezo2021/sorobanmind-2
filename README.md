@@ -1,6 +1,4 @@
 
----
-
 ```markdown
 <div align="center">
 
@@ -554,5 +552,3 @@ interface WeakSkillRecord {
 
 </div>
 ```
-
----
