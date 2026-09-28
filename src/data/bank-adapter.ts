@@ -1,74 +1,132 @@
-// src/data/bank-adapter.ts
-// يحوّل الأسئلة الخام (200 + 200 متقدمة) إلى BankQuestion
-// للاستخدام في التعليم التكيفي
+// ═══════════════════════════════════════════════════════════════════
+// 🔄 src/data/bank-adapter.ts — محوّل الأسئلة الخام → BankQuestion
+// ═══════════════════════════════════════════════════════════════════
 //
-// ⚠️ يعتمد على bank-raw/types.ts الذي يجب أن يحتوي على:
-//    SECTIONS.S1 ... SECTIONS.S17
+// ⚠️⚠️⚠️ ملف حرج — الجسر بين bank-raw والمحرك ⚠️⚠️⚠️
+//
+// الوظيفة الحالية:
+//   - يحوّل الأسئلة الخام (bank-raw) → BankQuestion
+//   - يستخرج: العملية · الحركة · المعاملات · الإجابة
+//   - يستخدم regex لتحليل النصوص العربية
+//
+// 🚨🚨🚨 مشكلة خطيرة: تعارض أنظمة الترقيم 🚨🚨🚨
+//
+//   هناك 3 أنظمة ترقيم متصارعة في المشروع:
+//
+//     | الملف            | مثال        | الوصف             |
+//     |------------------|-------------|-------------------|
+//     | bank.ts          | L01 ... L07 | نظام قديم (v1)    |
+//     | bank-adapter.ts  | L03 ... L20 | نظام خام (هذا)    |
+//     | SRB (الوثيقة)    | L0  ... L7  | النظام المستهدف   |
+//
+//   ⚠️ هذا التعارض هو السبب الجذري لفشل توحيد IDs سابقًا!
+//
+// 🔗 خطة الاستبدال بـ SRB (المرحلة 5):
+//
+//   الخطوة 1: بناء SRB كاملًا (src/data/srb/)
+//   الخطوة 2: تحديث SECTION_TO_LEVEL لتُطابق SRB
+//   الخطوة 3: تحديث SECTION_TO_SKILL لتُطابق SRB
+//   الخطوة 4: تحديث SECTION_TO_RULE لتُطابق SRB
+//   الخطوة 5: اختبار adaptAllRawQuestions()
+//   الخطوة 6: حذف bank-adapter.ts (استُبدل بـ srb-adapter)
+//
+// ⚠️ الاعتماديات الحرجة:
+//   - ./bank (BankQuestion, BankOperation, Difficulty)   🔗 → SRB
+//   - ./bank-raw (RAW_QUESTIONS, SECTIONS, ...)           🔗 → SRB
+//
+// ⚠️ قواعد حرجة عند التعديل:
+//   1. أي تغيير في SECTION_TO_LEVEL قد يكسر توزيع المستويات
+//   2. أي تغيير في detectMovement قد يكسر الحركات
+//   3. ابحث عن كل من يستورد adaptRawQuestion قبل التعديل
+//
+// آخر تحديث: 2026-09-29
+//   - إضافة توثيق شامل + علامات SRB-MIGRATION
+//   - لا تغيير في المنطق
+//
+// ═══════════════════════════════════════════════════════════════════
 
+// 🔗 SRB-MIGRATION: هذا الاستيراد سيُستبدل لاحقًا
 import type {
-  BankQuestion,
-  BankOperation,
-  Difficulty,
-} from "./bank";
+  BankQuestion,       // 🔗 → SRBQuestion
+  BankOperation,      // 🔗 → SRBOperation (أو يبقى)
+  Difficulty,         // 🔗 → SRBDifficulty (أو يبقى)
+} from "./bank";       // 🔗 → ../data/srb/types
+
 import type { MovementType } from "../curriculum/types";
+
+// 🔗 SRB-MIGRATION: bank-raw سيُستبدل بـ SRB (نفس الفكرة)
 import {
-  RAW_QUESTIONS,
-  SECTIONS,
-  isAdvancedSection,
-  extractSolutionText,
-  type RawQuestion,
-  type SectionId,
+  RAW_QUESTIONS,       // 🔗 → SRB.rawQuestions
+  SECTIONS,            // 🔗 → SRB.sections
+  isAdvancedSection,   // 🔗 → SRB.isAdvanced()
+  extractSolutionText, // 🔗 → SRB.extractSolution()
+  type RawQuestion,    // 🔗 → SRBRawQuestion
+  type SectionId,      // 🔗 → SRBSectionId
 } from "./bank-raw";
 
-// ═══════════════════════════════════════════════════════════
-// خريطة القسم → المستوى (بعد التصحيح)
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// 🗺️ خريطة القسم → المستوى (بصيغة L03-L20 القديمة)
+// 🔗 SRB-MIGRATION: ستُعاد كتابتها بصيغة L0-L7
+// ═══════════════════════════════════════════════════════════════════
 //
-// التصحيحات:
-//   S2 كان L06 → الصحيح L04 (أصدقاء 5)
-//   S3 كان L08 → الصحيح L06 (أصدقاء 10)
-//   S7 كان L13 → الصحيح L20 (السالبة)
-//   S9 كان L18 → الصحيح L18 (ميتوري متقدم)
-//   S10 كان L19 → الصحيح L19 (منافسات)
+// ⚠️ هذه الخريطة تحتوي على ترقيم مختلف عن bank.ts
+//    (الذي يستخدم L01-L07).
+//
+// 🎯 خريطة التحويل المستقبلية (L03-L20 → L0-L7):
+//
+//    | الحالي | SRB  |
+//    |--------|------|
+//    | L03    | L1   |
+//    | L04    | L1   |
+//    | L06    | L1   |
+//    | L09    | L1   |
+//    | L10    | L1   |
+//    | L15    | L2   |
+//    | L16    | L3   |
+//    | L17    | L6   |
+//    | L18    | L7   |
+//    | L19    | L7   |
+//    | L20    | L4   |
 
 const SECTION_TO_LEVEL: Record<SectionId, string> = {
-  // ─── الأقسام الأصلية ───
-  [SECTIONS.S1]: "L03",   // جمع/طرح بسيط
-  [SECTIONS.S2]: "L04",   // أصدقاء 5
-  [SECTIONS.S3]: "L06",   // أصدقاء 10
-  [SECTIONS.S4]: "L10",   // قواعد مركبة
-  [SECTIONS.S5]: "L15",   // الضرب
-  [SECTIONS.S6]: "L16",   // القسمة
-  [SECTIONS.S7]: "L20",   // السالبة
-  [SECTIONS.S8]: "L17",   // العشرية
-  [SECTIONS.S9]: "L18",   // الجذور التربيعية
-  [SECTIONS.S10]: "L19",  // الجذور التكعيبية
+  // ─── الأقسام الأصلية (10 أقسام) ───
+  [SECTIONS.S1]: "L03",   // 🔗 SRB: L1 (جمع/طرح بسيط)
+  [SECTIONS.S2]: "L04",   // 🔗 SRB: L1 (أصدقاء 5)
+  [SECTIONS.S3]: "L06",   // 🔗 SRB: L1 (أصدقاء 10)
+  [SECTIONS.S4]: "L10",   // 🔗 SRB: L1 (قواعد مركبة)
+  [SECTIONS.S5]: "L15",   // 🔗 SRB: L2 (الضرب)
+  [SECTIONS.S6]: "L16",   // 🔗 SRB: L3 (القسمة)
+  [SECTIONS.S7]: "L20",   // 🔗 SRB: L4 (السالبة)
+  [SECTIONS.S8]: "L17",   // 🔗 SRB: L6 (العشرية)
+  [SECTIONS.S9]: "L18",   // 🔗 SRB: L7 (الجذور التربيعية)
+  [SECTIONS.S10]: "L19",  // 🔗 SRB: L7 (الجذور التكعيبية)
 
-  // ─── الأقسام المتقدمة ───
-  [SECTIONS.S11]: "L10",  // عمليات مختلطة متقدمة
-  [SECTIONS.S12]: "L09",  // متعدد الخانات
-  [SECTIONS.S13]: "L15",  // ضرب متقدم
-  [SECTIONS.S14]: "L16",  // قسمة متقدمة
-  [SECTIONS.S15]: "L17",  // عشرية متقدمة
-  [SECTIONS.S16]: "L20",  // سالبة متقدمة
-  [SECTIONS.S17]: "L18",  // جذور متقدمة
+  // ─── الأقسام المتقدمة (7 أقسام) ───
+  [SECTIONS.S11]: "L10",  // 🔗 SRB: L1 (عمليات مختلطة متقدمة)
+  [SECTIONS.S12]: "L09",  // 🔗 SRB: L1 (متعدد الخانات)
+  [SECTIONS.S13]: "L15",  // 🔗 SRB: L2 (ضرب متقدم)
+  [SECTIONS.S14]: "L16",  // 🔗 SRB: L3 (قسمة متقدمة)
+  [SECTIONS.S15]: "L17",  // 🔗 SRB: L6 (عشرية متقدمة)
+  [SECTIONS.S16]: "L20",  // 🔗 SRB: L4 (سالبة متقدمة)
+  [SECTIONS.S17]: "L18",  // 🔗 SRB: L7 (جذور متقدمة)
 };
 
-// ═══════════════════════════════════════════════════════════
-// خريطة القسم → Skill ID
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// 🗺️ خريطة القسم → Skill ID
+// 🔗 SRB-MIGRATION: ستُحدَّث لتُطابق SRB (مثل: L0.S01)
+// ═══════════════════════════════════════════════════════════════════
 
 const SECTION_TO_SKILL: Record<SectionId, string> = {
-  [SECTIONS.S1]: "L03.S01",
-  [SECTIONS.S2]: "L04.S01",
-  [SECTIONS.S3]: "L06.S01",
-  [SECTIONS.S4]: "L10.S01",
-  [SECTIONS.S5]: "L15.S01",
-  [SECTIONS.S6]: "L16.S01",
-  [SECTIONS.S7]: "L20.S01",
-  [SECTIONS.S8]: "L17.S01",
-  [SECTIONS.S9]: "L18.S01",
-  [SECTIONS.S10]: "L19.S01",
+  [SECTIONS.S1]: "L03.S01",   // 🔗 SRB: L1.S01
+  [SECTIONS.S2]: "L04.S01",   // 🔗 SRB: L1.S02
+  [SECTIONS.S3]: "L06.S01",   // 🔗 SRB: L1.S03
+  [SECTIONS.S4]: "L10.S01",   // 🔗 SRB: L1.S04
+  [SECTIONS.S5]: "L15.S01",   // 🔗 SRB: L2.S01
+  [SECTIONS.S6]: "L16.S01",   // 🔗 SRB: L3.S01
+  [SECTIONS.S7]: "L20.S01",   // 🔗 SRB: L4.S01
+  [SECTIONS.S8]: "L17.S01",   // 🔗 SRB: L6.S01
+  [SECTIONS.S9]: "L18.S01",   // 🔗 SRB: L7.S01
+  [SECTIONS.S10]: "L19.S01",  // 🔗 SRB: L7.S02
   [SECTIONS.S11]: "L10.S02",
   [SECTIONS.S12]: "L09.S01",
   [SECTIONS.S13]: "L15.S02",
@@ -78,9 +136,10 @@ const SECTION_TO_SKILL: Record<SectionId, string> = {
   [SECTIONS.S17]: "L18.S02",
 };
 
-// ═══════════════════════════════════════════════════════════
-// خريطة القسم → Rule ID
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// 🗺️ خريطة القسم → Rule ID
+// 🔗 SRB-MIGRATION: تبقى كما هي (مفاهيم ثابتة)
+// ═══════════════════════════════════════════════════════════════════
 
 const SECTION_TO_RULE: Record<SectionId, string> = {
   [SECTIONS.S1]: "DIRECT_ADD_SUB",
@@ -102,9 +161,9 @@ const SECTION_TO_RULE: Record<SectionId, string> = {
   [SECTIONS.S17]: "SQUARE_ROOT_ADVANCED",
 };
 
-// ═══════════════════════════════════════════════════════════
-// صعوبة القسم
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// 🎚️ صعوبة القسم
+// ═══════════════════════════════════════════════════════════════════
 
 function sectionToDifficulty(section: SectionId): Difficulty {
   const map: Record<SectionId, Difficulty> = {
@@ -129,31 +188,31 @@ function sectionToDifficulty(section: SectionId): Difficulty {
   return map[section] ?? 3;
 }
 
-// ═══════════════════════════════════════════════════════════
-// استخراج العملية من نص السؤال
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// 🔍 دوال التحليل (regex)
+// ═══════════════════════════════════════════════════════════════════
 
+/**
+ * استخراج العملية من نص السؤال.
+ */
 function detectOperation(question: string): BankOperation {
   if (/[√∛]|جذر/.test(question)) return "read";
   if (/÷/.test(question)) return "division";
   if (/[×x]/.test(question)) return "multiplication";
 
-  // إزالة الأقواس وحساب عدد العمليات
   const hasAdd = /\+/.test(question);
   const hasSub = /-|−/.test(question);
 
-  if (hasAdd && hasSub) return "addition"; // سلسلة مختلطة
+  if (hasAdd && hasSub) return "addition";
   if (hasSub) return "subtraction";
   if (hasAdd) return "addition";
   return "addition";
 }
 
-// ═══════════════════════════════════════════════════════════
-// استخراج الحركة من شرح الحل
-// ═══════════════════════════════════════════════════════════
-
+/**
+ * استخراج الحركة من شرح الحل.
+ */
 function detectMovement(solution: string): MovementType {
-  // ترتيب الأكثر تحديداً أولاً
   if (/\+10\s*-\s*5|−10\s*\+\s*5|-10\s*\+\s*5|\+10\s*\+\s*5/.test(solution)) {
     return "mixed";
   }
@@ -174,20 +233,18 @@ function detectMovement(solution: string): MovementType {
   return "direct";
 }
 
-// ═══════════════════════════════════════════════════════════
-// تطبيع الأرقام العربية
-// ═══════════════════════════════════════════════════════════
-
+/**
+ * تطبيع الأرقام العربية.
+ */
 function normalizeArabicDigits(text: string): string {
   return text.replace(/[٠-٩]/g, (d) =>
     String("٠١٢٣٤٥٦٧٨٩".indexOf(d)),
   );
 }
 
-// ═══════════════════════════════════════════════════════════
-// استخراج المعاملات الرقمية
-// ═══════════════════════════════════════════════════════════
-
+/**
+ * استخراج المعاملات الرقمية.
+ */
 function extractOperands(question: string): number[] {
   if (/[√∛]/.test(question)) return [];
 
@@ -204,10 +261,9 @@ function extractOperands(question: string): number[] {
     .filter((n) => Number.isFinite(n));
 }
 
-// ═══════════════════════════════════════════════════════════
-// استخراج الإجابة الرقمية
-// ═══════════════════════════════════════════════════════════
-
+/**
+ * استخراج الإجابة الرقمية.
+ */
 function parseResult(result: string): number {
   const cleaned = normalizeArabicDigits(result)
     .replace(/[−–—]/g, "-")
@@ -217,10 +273,9 @@ function parseResult(result: string): number {
   return Number.isFinite(num) ? num : 0;
 }
 
-// ═══════════════════════════════════════════════════════════
-// حساب عدد الخانات
-// ═══════════════════════════════════════════════════════════
-
+/**
+ * حساب عدد الخانات.
+ */
 function computeDigits(answer: number, operands: number[]): number {
   const values = [Math.abs(answer), ...operands.map(Math.abs)];
   const maxDigits = Math.max(
@@ -230,10 +285,9 @@ function computeDigits(answer: number, operands: number[]): number {
   return maxDigits;
 }
 
-// ═══════════════════════════════════════════════════════════
-// استخراج الخانات المستخدمة
-// ═══════════════════════════════════════════════════════════
-
+/**
+ * استخراج الخانات المستخدمة.
+ */
 function computePlaceValues(
   answer: number,
   operands: number[],
@@ -250,13 +304,18 @@ function computePlaceValues(
   return ["units"];
 }
 
-// ═══════════════════════════════════════════════════════════
-// التحويل الرئيسي: RawQuestion → BankQuestion
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// 🔄 التحويل الرئيسي: RawQuestion → BankQuestion
+// ═══════════════════════════════════════════════════════════════════
 
+/**
+ * تحويل سؤال خام إلى BankQuestion.
+ *
+ * 🔗 SRB-MIGRATION: ستصبح adaptSRBQuestion()
+ */
 export function adaptRawQuestion(raw: RawQuestion): BankQuestion {
-  const levelId = SECTION_TO_LEVEL[raw.section] ?? "L03";
-  const skillId = SECTION_TO_SKILL[raw.section] ?? "L03.S01";
+  const levelId = SECTION_TO_LEVEL[raw.section] ?? "L03";   // 🔗 SRB
+  const skillId = SECTION_TO_SKILL[raw.section] ?? "L03.S01"; // 🔗 SRB
   const ruleId = SECTION_TO_RULE[raw.section] ?? "DIRECT_ADD_SUB";
   const difficulty = sectionToDifficulty(raw.section);
 
@@ -267,7 +326,7 @@ export function adaptRawQuestion(raw: RawQuestion): BankQuestion {
   const answer = parseResult(raw.result);
 
   const prefix = isAdvancedSection(raw.section) ? "ADV" : "BANK";
-  const id = `${prefix}-${String(raw.id).padStart(3, "0")}`;
+  const id = `${prefix}-${String(raw.id).padStart(3, "0")}`;  // 🔗 SRB
 
   return {
     id,
@@ -304,6 +363,8 @@ export function adaptRawQuestion(raw: RawQuestion): BankQuestion {
 
 /**
  * تحويل كل الأسئلة الخام.
+ *
+ * 🔗 SRB-MIGRATION: ستصبح adaptAllSRBQuestions()
  */
 export function adaptAllRawQuestions(): BankQuestion[] {
   return RAW_QUESTIONS.map(adaptRawQuestion);
