@@ -1,17 +1,71 @@
+// ═══════════════════════════════════════════════════════════════════
+// 🏦 src/data/bank-linked.ts — البنك الموحّد (v2 + raw)
+// ═══════════════════════════════════════════════════════════════════
+//
+// الوظيفة:
+//   - يجمع بنكين: bank-v2 (نظام حديث) + bank-raw (منهج كوجيما)
+//   - يوفّر طبقة توافق مع المحرك القديم
+//   - يُصدّر SOROBAN_BANK الذي يستهلكه المحرك التكيفي
+//
+// ✅ حالة جيدة: يستخدم بالفعل ترقيمًا متوافقًا مع SRB
+//    - المستويات: L0-L7
+//    - المهارات: S1-S20
+//
+// 📥 الاعتماديات:
+//   - ./bank-v2 (SOROBAN_BANK_V2 + الأنواع)
+//   - ./bank-adapter (adaptAllRawQuestions)
+//   - ../curriculum/types (Problem, MovementType)
+//
+// 📤 الصادرات:
+//   - SOROBAN_BANK · BANK_SIZE · BANK_STATS
+//   - getQuestionById · getQuestionsByLevel · getQuestionsBySkill
+//   - getQuestionsByRule · getQuestionsByMovement · getQuestionsByLevelSkill
+//   - bankQuestionToProblem · evaluateBankAnswer
+//   - filterBank · sampleFromBank
+//   - getSkillsForPracticeNum · getPracticeQuestions · getCategoryExamQuestions
+//
+// 🔗 خطة الاستبدال بـ SRB (المرحلة 5):
+//
+//   الخطوة 1: بناء src/data/srb/questions/ (الأسئلة الحقيقية)
+//   الخطوة 2: إنشاء src/data/srb/index.ts يُصدّر SOROBAN_BANK من SRB
+//   الخطوة 3: تعديل هذا الملف ليعيد التصدير من SRB بدل v2 + raw
+//   الخطوة 4: اختبار شامل
+//   الخطوة 5: حذف bank-v2/ و bank-raw/ و bank-adapter.ts
+//
+// 🎯 التبسيط المستقبلي (بعد SRB):
+//
+//   قبل: v2 + raw ← two sources
+//   بعد: srb     ← one source
+//
+// ⚠️ قواعد حرجة:
+//   1. لا تغيّر أسماء الصادرات (المحرك يعتمد عليها)
+//   2. أي تعديل على toUnified() قد يكسر تحويل v2
+//   3. أي تعديل على adaptAllRawQuestions() قد يكسر raw
+//
+// آخر تحديث: 2026-09-29
+//   - إضافة توثيق شامل + علامات SRB-MIGRATION
+//   - لا تغيير في المنطق
+//
+// ═══════════════════════════════════════════════════════════════════
+
 // src/data/bank-linked.ts
 // البنك الموحّد — يجمع bank-v2 + bank-raw المحوَّل
 // يوفّر طبقة توافق مع المحرك القديم
 
+// 🔗 SRB-MIGRATION: سيُستبدل بـ ../data/srb
 import {
-  SOROBAN_BANK_V2,
-  type BankQuestion as BankQuestionV2,
-  type BankOperation as BankOperationV2,
+  SOROBAN_BANK_V2,             // 🔗 → SRB.getAll()
+  type BankQuestion as BankQuestionV2,  // 🔗 → SRBQuestion
+  type BankOperation as BankOperationV2, // 🔗 → SRBOperation
 } from "./bank-v2";
+
+// 🔗 SRB-MIGRATION: سيُستبدل بـ SRB.rawAdapter
 import { adaptAllRawQuestions } from "./bank-adapter";
+
 import type { Problem, MovementType } from "../curriculum/types";
 
 // ═══════════════════════════════════════════════════════════
-// الأنواع
+// 📝 الأنواع (Types)
 // ═══════════════════════════════════════════════════════════
 
 export type BankOperation = BankOperationV2;
@@ -32,10 +86,15 @@ export interface SorobanRule {
   skillId: string;
 }
 
+/**
+ * السؤال الموحّد داخل البنك.
+ *
+ * 🔗 SRB-MIGRATION: سيصبح SRBQuestion بنفس الشكل
+ */
 export interface BankQuestion {
-  id: string;
-  levelId: string;
-  skillId: string;
+  id: string;              // 🔗 SRB: SRB-L0-S01-B001
+  levelId: string;         // ✅ متوافق: L0-L7
+  skillId: string;         // ✅ متوافق: S1-S20
   prompt: string;
   operands: number[];
   operation: BankOperation;
@@ -72,7 +131,7 @@ export interface QuestionEvaluation {
 }
 
 // ═══════════════════════════════════════════════════════════
-// أدوات مساعدة
+// 🛠️ أدوات مساعدة
 // ═══════════════════════════════════════════════════════════
 
 function getDigits(value: number): number {
@@ -109,7 +168,9 @@ function hasSubtractionBorrow(a: number, b: number): boolean {
 }
 
 // ═══════════════════════════════════════════════════════════
-// تحويل bank-v2 → BankQuestion الموحّد
+// 🔄 تحويل bank-v2 → BankQuestion الموحّد
+// 🔗 SRB-MIGRATION: عند SRB، لن نحتاج هذه الدالة
+//    (لأن SRB سيُنتج BankQuestion مباشرة)
 // ═══════════════════════════════════════════════════════════
 
 function toUnified(q: BankQuestionV2, order: number): BankQuestion {
@@ -118,8 +179,8 @@ function toUnified(q: BankQuestionV2, order: number): BankQuestion {
 
   return {
     id: q.id,
-    levelId: q.levelId,
-    skillId: q.skillId,
+    levelId: q.levelId,                    // ✅ متوافق: L0-L7
+    skillId: q.skillId,                    // ✅ متوافق: S1-S20
     prompt: q.prompt,
     operands: q.operands,
     operation: q.operation,
@@ -128,7 +189,7 @@ function toUnified(q: BankQuestionV2, order: number): BankQuestion {
     difficulty: q.difficulty,
     // ✅ استخدام q.timing بدلاً من الحقول المسطحة
     expectedTimeMs: q.timing.answerMs,
-maxTimeMs: q.timing.maxMs,
+    maxTimeMs: q.timing.maxMs,
     explanation: q.explanation,
     tags: q.tags,
 
@@ -156,7 +217,8 @@ maxTimeMs: q.timing.maxMs,
 }
 
 // ═══════════════════════════════════════════════════════════
-// البنك الموحّد
+// 🏦 البنك الموحّد
+// 🔗 SRB-MIGRATION: سيُستبدل بـ SRB.getAll()
 // ═══════════════════════════════════════════════════════════
 
 const V2_UNIFIED: BankQuestion[] = SOROBAN_BANK_V2.map((q, i) =>
@@ -166,6 +228,11 @@ const V2_UNIFIED: BankQuestion[] = SOROBAN_BANK_V2.map((q, i) =>
 const RAW_UNIFIED: BankQuestion[] =
   adaptAllRawQuestions() as unknown as BankQuestion[];
 
+/**
+ * البنك الموحّد الرئيسي.
+ *
+ * 🔗 SRB-MIGRATION: سيُستبدل بـ SRB.questions (موحّد من SRB مباشرة)
+ */
 export const SOROBAN_BANK: readonly BankQuestion[] = Object.freeze([
   ...V2_UNIFIED,
   ...RAW_UNIFIED,
@@ -173,6 +240,11 @@ export const SOROBAN_BANK: readonly BankQuestion[] = Object.freeze([
 
 export const BANK_SIZE = SOROBAN_BANK.length;
 
+/**
+ * إحصائيات البنك.
+ *
+ * 🔗 SRB-MIGRATION: سيُحدَّث ليعكس SRB
+ */
 export const BANK_STATS = {
   v2: V2_UNIFIED.length,
   raw: RAW_UNIFIED.length,
@@ -180,7 +252,8 @@ export const BANK_STATS = {
 } as const;
 
 // ═══════════════════════════════════════════════════════════
-// دوال الاستعلام
+// 🔍 دوال الاستعلام
+// 🔗 SRB-MIGRATION: كلها ستُستبدل بـ SRB.getBy*()
 // ═══════════════════════════════════════════════════════════
 
 export function getQuestionById(id: string): BankQuestion | undefined {
@@ -213,7 +286,8 @@ export function getQuestionsByLevelSkill(
 }
 
 // ═══════════════════════════════════════════════════════════
-// تحويل BankQuestion → Problem
+// 🔄 تحويل BankQuestion → Problem
+// 🔗 SRB-MIGRATION: SRB.toProblem(question)
 // ═══════════════════════════════════════════════════════════
 
 export function bankQuestionToProblem(question: BankQuestion): Problem {
@@ -246,7 +320,8 @@ export function bankQuestionToProblem(question: BankQuestion): Problem {
 }
 
 // ═══════════════════════════════════════════════════════════
-// تقييم الإجابة
+// 📊 تقييم الإجابة
+// 🔗 SRB-MIGRATION: SRB.evaluate(question, answer, time)
 // ═══════════════════════════════════════════════════════════
 
 export function evaluateBankAnswer(
@@ -283,7 +358,8 @@ export function evaluateBankAnswer(
 }
 
 // ═══════════════════════════════════════════════════════════
-// الفلترة
+// 🔍 الفلترة
+// 🔗 SRB-MIGRATION: ستبقى كما هي (تعمل مع SRB)
 // ═══════════════════════════════════════════════════════════
 
 export interface BankFilter {
@@ -353,9 +429,15 @@ export function sampleFromBank(
 }
 
 // ═══════════════════════════════════════════════════════════
-// دوال مساعدة للشاشات
+// 🎯 دوال مساعدة للشاشات
+// 🔗 SRB-MIGRATION: ستبقى كما هي (تعمل مع SRB)
 // ═══════════════════════════════════════════════════════════
 
+/**
+ * المهارات المرتبطة بكل مستوى.
+ *
+ * ✅ متوافق مع SRB (S1-S20 موجودة)
+ */
 export function getSkillsForPracticeNum(num: number): string[] {
   const map: Record<number, string[]> = {
     0: ["S1", "S2"],
