@@ -5,7 +5,7 @@ import type { LessonNode } from '../types';
 
 export const L0_INTRO: LessonNode = {
   // ═══════════ الهوية ═══════════
-  id: 'L0-intro',
+  id: 'SRB-INTRO',
   skillId: null, // نظري — لا يحتسب كمهارة
   levelId: 'L0',
   order: 1, // الأول في L0
@@ -40,7 +40,7 @@ export const L0_INTRO: LessonNode = {
   introPages: [
     // ─────── الصفحة 1: العنوان ───────
     {
-      id: 'L0-intro-p1',
+      id: 'SRB-INTRO-P-001',
       title: '🧮 السوروبان',
       content:
         'آلة الحساب اليابانية التي علّمت العالم الحساب الذهني.\n\n' +
@@ -49,7 +49,7 @@ export const L0_INTRO: LessonNode = {
 
     // ─────── الصفحة 2: القصة ───────
     {
-      id: 'L0-intro-p2',
+      id: 'SRB-INTRO-P-002',
       title: '📜 قصة المعداد',
       content:
         'قبل أكثر من 2500 سنة، اخترع الإنسان أول آلة حساب لمساعدته على العدّ.\n\n' +
@@ -59,7 +59,7 @@ export const L0_INTRO: LessonNode = {
 
     // ─────── الصفحة 3: صورة السوروبان ───────
     {
-      id: 'L0-intro-p3',
+      id: 'SRB-INTRO-P-003',
       title: '🔍 مكوّنات السوروبان',
       content:
         'السوروبان التقليدي يتكون من:\n\n' +
@@ -74,7 +74,7 @@ export const L0_INTRO: LessonNode = {
 
     // ─────── الصفحة 4: القاعدة الذهبية ───────
     {
-      id: 'L0-intro-p4',
+      id: 'SRB-INTRO-P-004',
       title: '🔑 السر الذهبي',
       content:
         'القاعدة الوحيدة التي يجب أن تتذكرها دائماً:\n\n' +
@@ -84,7 +84,7 @@ export const L0_INTRO: LessonNode = {
 
     // ─────── الصفحة 5: الفوائد ───────
     {
-      id: 'L0-intro-p5',
+      id: 'SRB-INTRO-P-005',
       title: '✨ لماذا نتعلّم السوروبان؟',
       content:
         '1. يزيد التركيز والانتباه\n' +
@@ -97,7 +97,7 @@ export const L0_INTRO: LessonNode = {
 
     // ─────── الصفحة 6: الدراسات العلمية ───────
     {
-      id: 'L0-intro-p6',
+      id: 'SRB-INTRO-P-006',
       title: '🔬 ماذا يقول العلم؟',
       content:
         'أثبتت دراسات يابانية على مدى 30 سنة:\n\n' +
@@ -110,7 +110,7 @@ export const L0_INTRO: LessonNode = {
 
     // ─────── الصفحة 7: الختام ───────
     {
-      id: 'L0-intro-p7',
+      id: 'SRB-INTRO-P-007',
       title: '🎯 رحلتك تبدأ الآن!',
       content:
         'أنت الآن تعرف:\n\n' +
