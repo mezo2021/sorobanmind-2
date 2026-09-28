@@ -10,7 +10,7 @@ import type { LessonNode, LessonExample, TryQuestion } from '../types';
 const EXAMPLES: LessonExample[] = [
   // ─── 1) مثّل 12 ───
   {
-    id: 'L0-S2-E1',
+    id: 'SRB-L0-S02-E-001',
     problemText: 'مثّل الرقم 12',
     answer: 12,
     ruleCategory: 'build',
@@ -48,7 +48,7 @@ const EXAMPLES: LessonExample[] = [
 
   // ─── 2) مثّل 34 ───
   {
-    id: 'L0-S2-E2',
+    id: 'SRB-L0-S02-E-002',
     problemText: 'مثّل الرقم 34',
     answer: 34,
     ruleCategory: 'build',
@@ -77,7 +77,7 @@ const EXAMPLES: LessonExample[] = [
 
   // ─── 3) مثّل 58 ───
   {
-    id: 'L0-S2-E3',
+    id: 'SRB-L0-S02-E-003',
     problemText: 'مثّل الرقم 58',
     answer: 58,
     ruleCategory: 'build',
@@ -106,7 +106,7 @@ const EXAMPLES: LessonExample[] = [
 
   // ─── 4) مثّل 70 ───
   {
-    id: 'L0-S2-E4',
+    id: 'SRB-L0-S02-E-004',
     problemText: 'مثّل الرقم 70',
     answer: 70,
     ruleCategory: 'build',
@@ -135,7 +135,7 @@ const EXAMPLES: LessonExample[] = [
 
   // ─── 5) مثّل 91 ───
   {
-    id: 'L0-S2-E5',
+    id: 'SRB-L0-S02-E-005',
     problemText: 'مثّل الرقم 91',
     answer: 91,
     ruleCategory: 'build',
@@ -164,7 +164,7 @@ const EXAMPLES: LessonExample[] = [
 
   // ─── 6) مثّل 205 ───
   {
-    id: 'L0-S2-E6',
+    id: 'SRB-L0-S02-E-006',
     problemText: 'مثّل الرقم 205',
     answer: 205,
     ruleCategory: 'build',
@@ -202,7 +202,7 @@ const EXAMPLES: LessonExample[] = [
 
   // ─── 7) مثّل 340 ───
   {
-    id: 'L0-S2-E7',
+    id: 'SRB-L0-S02-E-007',
     problemText: 'مثّل الرقم 340',
     answer: 340,
     ruleCategory: 'build',
@@ -240,7 +240,7 @@ const EXAMPLES: LessonExample[] = [
 
   // ─── 8) مثّل 406 ───
   {
-    id: 'L0-S2-E8',
+    id: 'SRB-L0-S02-E-008',
     problemText: 'مثّل الرقم 406',
     answer: 406,
     ruleCategory: 'build',
@@ -278,7 +278,7 @@ const EXAMPLES: LessonExample[] = [
 
   // ─── 9) مثّل 583 ───
   {
-    id: 'L0-S2-E9',
+    id: 'SRB-L0-S02-E-009',
     problemText: 'مثّل الرقم 583',
     answer: 583,
     ruleCategory: 'build',
@@ -316,7 +316,7 @@ const EXAMPLES: LessonExample[] = [
 
   // ─── 10) مثّل 709 ───
   {
-    id: 'L0-S2-E10',
+    id: 'SRB-L0-S02-E-010',
     problemText: 'مثّل الرقم 709',
     answer: 709,
     ruleCategory: 'build',
@@ -359,7 +359,7 @@ const EXAMPLES: LessonExample[] = [
 
 const TRY_QUESTIONS: TryQuestion[] = [
   {
-    id: 'L0-S2-T1',
+    id: 'SRB-L0-S02-T-001',
     type: 'build',
     prompt: 'مثّل الرقم 1024 على المعداد',
     expectedValue: 1024,
@@ -404,7 +404,7 @@ const TRY_QUESTIONS: TryQuestion[] = [
     explanation: '1024 = 1000 + 0 + 20 + 4',
   },
   {
-    id: 'L0-S2-T2',
+    id: 'SRB-L0-S02-T-002',
     type: 'build',
     prompt: 'مثّل الرقم 2350 على المعداد',
     expectedValue: 2350,
@@ -449,7 +449,7 @@ const TRY_QUESTIONS: TryQuestion[] = [
     explanation: '2350 = 2000 + 300 + 50 + 0',
   },
   {
-    id: 'L0-S2-T3',
+    id: 'SRB-L0-S02-T-003',
     type: 'build',
     prompt: 'مثّل الرقم 4007 على المعداد',
     expectedValue: 4007,
@@ -494,7 +494,7 @@ const TRY_QUESTIONS: TryQuestion[] = [
     explanation: '4007 = 4000 + 0 + 0 + 7',
   },
   {
-    id: 'L0-S2-T4',
+    id: 'SRB-L0-S02-T-004',
     type: 'build',
     prompt: 'مثّل الرقم 6080 على المعداد',
     expectedValue: 6080,
@@ -539,7 +539,7 @@ const TRY_QUESTIONS: TryQuestion[] = [
     explanation: '6080 = 6000 + 0 + 80 + 0',
   },
   {
-    id: 'L0-S2-T5',
+    id: 'SRB-L0-S02-T-005',
     type: 'build',
     prompt: 'مثّل الرقم 9999 على المعداد',
     expectedValue: 9999,
@@ -584,7 +584,7 @@ const TRY_QUESTIONS: TryQuestion[] = [
     explanation: '9999 = أكبر رقم من 4 مراتب',
   },
   {
-    id: 'L0-S2-T6',
+    id: 'SRB-L0-S02-T-006',
     type: 'build',
     prompt: 'مثّل الرقم 5020 على المعداد',
     expectedValue: 5020,
@@ -629,7 +629,7 @@ const TRY_QUESTIONS: TryQuestion[] = [
     explanation: '5020 = 5000 + 0 + 20 + 0',
   },
   {
-    id: 'L0-S2-T7',
+    id: 'SRB-L0-S02-T-007',
     type: 'build',
     prompt: 'مثّل الرقم 7840 على المعداد',
     expectedValue: 7840,
@@ -674,7 +674,7 @@ const TRY_QUESTIONS: TryQuestion[] = [
     explanation: '7840 = 7000 + 800 + 40 + 0',
   },
   {
-    id: 'L0-S2-T8',
+    id: 'SRB-L0-S02-T-008',
     type: 'build',
     prompt: 'مثّل الرقم 3056 على المعداد',
     expectedValue: 3056,
@@ -719,7 +719,7 @@ const TRY_QUESTIONS: TryQuestion[] = [
     explanation: '3056 = 3000 + 0 + 50 + 6',
   },
   {
-    id: 'L0-S2-T9',
+    id: 'SRB-L0-S02-T-009',
     type: 'build',
     prompt: 'مثّل الرقم 8412 على المعداد',
     expectedValue: 8412,
@@ -764,7 +764,7 @@ const TRY_QUESTIONS: TryQuestion[] = [
     explanation: '8412 = 8000 + 400 + 10 + 2',
   },
   {
-    id: 'L0-S2-T10',
+    id: 'SRB-L0-S02-T-010',
     type: 'build',
     prompt: 'مثّل الرقم 7008 على المعداد',
     expectedValue: 7008,
@@ -816,8 +816,8 @@ const TRY_QUESTIONS: TryQuestion[] = [
 
 export const L0_S2: LessonNode = {
   // ───── الهوية ─────
-  id: 'L0-S2',
-  skillId: 'S2',
+  id: 'SRB-L0-S02',
+  skillId: 'S02',
   levelId: 'L0',
   order: 3,
 
