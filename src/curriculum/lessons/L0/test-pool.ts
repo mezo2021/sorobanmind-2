@@ -3,7 +3,7 @@
 
 export interface L0TestQuestion {
   id: string;
-  skillId: 'S1' | 'S2';
+  skillId: 'S01' | 'S02';
   type: 'read' | 'build';
   prompt: string;
   expectedValue: number;
@@ -17,8 +17,8 @@ export interface L0TestQuestion {
 
 const S1_POOL: L0TestQuestion[] = [
   {
-    id: 'L0-TEST-S1-01',
-    skillId: 'S1',
+    id: 'SRB-L0-S01-X-001',
+    skillId: 'S01',
     type: 'read',
     prompt: 'اقرأ الرقم المثبت',
     expectedValue: 9,
@@ -26,8 +26,8 @@ const S1_POOL: L0TestQuestion[] = [
     answerMs: 6000,
   },
   {
-    id: 'L0-TEST-S1-02',
-    skillId: 'S1',
+    id: 'SRB-L0-S01-X-002',
+    skillId: 'S01',
     type: 'read',
     prompt: 'اقرأ الرقم المثبت',
     expectedValue: 8,
@@ -35,8 +35,8 @@ const S1_POOL: L0TestQuestion[] = [
     answerMs: 6000,
   },
   {
-    id: 'L0-TEST-S1-03',
-    skillId: 'S1',
+    id: 'SRB-L0-S01-X-003',
+    skillId: 'S01',
     type: 'read',
     prompt: 'اقرأ الرقم المثبت',
     expectedValue: 7,
@@ -44,8 +44,8 @@ const S1_POOL: L0TestQuestion[] = [
     answerMs: 6000,
   },
   {
-    id: 'L0-TEST-S1-04',
-    skillId: 'S1',
+    id: 'SRB-L0-S01-X-004',
+    skillId: 'S01',
     type: 'read',
     prompt: 'اقرأ الرقم المثبت',
     expectedValue: 6,
@@ -53,40 +53,40 @@ const S1_POOL: L0TestQuestion[] = [
     answerMs: 6000,
   },
   {
-    id: 'L0-TEST-S1-05',
-    skillId: 'S1',
+    id: 'SRB-L0-S01-X-005',
+    skillId: 'S01',
     type: 'build',
     prompt: 'مثل الرقم 9',
     expectedValue: 9,
     answerMs: 6000,
   },
   {
-    id: 'L0-TEST-S1-06',
-    skillId: 'S1',
+    id: 'SRB-L0-S01-X-006',
+    skillId: 'S01',
     type: 'build',
     prompt: 'مثل الرقم 8',
     expectedValue: 8,
     answerMs: 6000,
   },
   {
-    id: 'L0-TEST-S1-07',
-    skillId: 'S1',
+    id: 'SRB-L0-S01-X-007',
+    skillId: 'S01',
     type: 'build',
     prompt: 'مثل الرقم 7',
     expectedValue: 7,
     answerMs: 6000,
   },
   {
-    id: 'L0-TEST-S1-08',
-    skillId: 'S1',
+    id: 'SRB-L0-S01-X-008',
+    skillId: 'S01',
     type: 'build',
     prompt: 'مثل الرقم 6',
     expectedValue: 6,
     answerMs: 6000,
   },
   {
-    id: 'L0-TEST-S1-09',
-    skillId: 'S1',
+    id: 'SRB-L0-S01-X-009',
+    skillId: 'S01',
     type: 'read',
     prompt: 'أقصى قيمة في عمود واحد',
     expectedValue: 9,
@@ -94,8 +94,8 @@ const S1_POOL: L0TestQuestion[] = [
     answerMs: 6000,
   },
   {
-    id: 'L0-TEST-S1-10',
-    skillId: 'S1',
+    id: 'SRB-L0-S01-X-010',
+    skillId: 'S01',
     type: 'read',
     prompt: 'العلوية + كل السفلية',
     expectedValue: 9,
@@ -119,8 +119,8 @@ const S2_POOL: L0TestQuestion[] = [];
 for (let i = 0; i < S2_NUMBERS.length; i++) {
   const num = S2_NUMBERS[i];
   S2_POOL.push({
-    id: 'L0-TEST-S2-' + String(i + 1).padStart(2, '0'),
-    skillId: 'S2',
+    id: 'SRB-L0-S02-X-' + String(i + 1).padStart(3, '0'),
+    skillId: 'S02',
     type: 'build',
     prompt: 'مثل الرقم ' + num,
     expectedValue: num,
