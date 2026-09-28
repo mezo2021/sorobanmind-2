@@ -12,7 +12,7 @@ import {
 import { LEVELS, BADGES } from '../data';
 import type { LevelNode } from '../types';
 import { useQuests } from '../hooks/useQuests';
-import { loadAnzanBadges, type AnzanBadges } from '../examBank2';
+import { loadAnzanBadges, type AnzanBadges } from '../utils/anzanBadges';
 import { loadAudioAnzanBadges, type AudioAnzanBadges } from '../utils/audioAnzanBadges';
 import { calculateSkills } from '../utils/skillsChecker';
 
