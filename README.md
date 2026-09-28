@@ -1,4 +1,4 @@
-```markdown
+
 <div align="center">
 
 # 🧮 SorobanMind
@@ -550,4 +550,3 @@ interface WeakSkillRecord {
 الخطوة التالية: 🛡️ نسخة احتياطية → حل App.tsx → توحيد IDs
 
 </div>
-```
