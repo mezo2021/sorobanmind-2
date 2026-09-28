@@ -10,7 +10,7 @@ import type { LessonNode, LessonExample, TryQuestion } from '../types';
 const EXAMPLES: LessonExample[] = [
   // ─── 1) مثّل الرقم 0 ───
   {
-    id: 'L0-S1-E1',
+    id: 'SRB-L0-S01-E-001',
     problemText: 'مثّل الرقم 0',
     answer: 0,
     ruleCategory: 'build',
@@ -30,7 +30,7 @@ const EXAMPLES: LessonExample[] = [
 
   // ─── 2) مثّل الرقم 1 ───
   {
-    id: 'L0-S1-E2',
+    id: 'SRB-L0-S01-E-002',
     problemText: 'مثّل الرقم 1',
     answer: 1,
     ruleCategory: 'build',
@@ -48,29 +48,9 @@ const EXAMPLES: LessonExample[] = [
     explanation: 'خرزة سفلية واحدة = 1.',
   },
 
-  // ─── 3) مثّل الرقم 5 ───
+  // ─── 3) مثّل الرقم 2 ───
   {
-    id: 'L0-S1-E3',
-    problemText: 'مثّل الرقم 5',
-    answer: 5,
-    ruleCategory: 'build',
-    steps: [
-      {
-        stepIndex: 1,
-        instructionText: 'أنزل الخرزة العلوية نحو العارضة بالسبابة',
-        fingerUsed: 'index',
-        direction: 'down',
-        targetColumn: 'units',
-        beadsAffected: [5],
-        expectedValueAfter: 5,
-      },
-    ],
-    explanation: 'الخرزة العلوية وحدها = 5 (الجدة).',
-  },
-
-  // ─── 4) مثّل الرقم 2 ───
-  {
-    id: 'L0-S1-E4',
+    id: 'SRB-L0-S01-E-003',
     problemText: 'مثّل الرقم 2',
     answer: 2,
     ruleCategory: 'build',
@@ -88,9 +68,69 @@ const EXAMPLES: LessonExample[] = [
     explanation: 'خرزتان سفليتان = 2.',
   },
 
-  // ─── 5) مثّل الرقم 6 ───
+  // ─── 4) مثّل الرقم 3 ───
   {
-    id: 'L0-S1-E5',
+    id: 'SRB-L0-S01-E-004',
+    problemText: 'مثّل الرقم 3',
+    answer: 3,
+    ruleCategory: 'build',
+    steps: [
+      {
+        stepIndex: 1,
+        instructionText: 'ارفع ثلاث خرزات سفلية نحو العارضة',
+        fingerUsed: 'thumb',
+        direction: 'up',
+        targetColumn: 'units',
+        beadsAffected: [1, 2, 3],
+        expectedValueAfter: 3,
+      },
+    ],
+    explanation: 'ثلاث خرزات سفلية = 3.',
+  },
+
+  // ─── 5) مثّل الرقم 4 ───
+  {
+    id: 'SRB-L0-S01-E-005',
+    problemText: 'مثّل الرقم 4',
+    answer: 4,
+    ruleCategory: 'build',
+    steps: [
+      {
+        stepIndex: 1,
+        instructionText: 'ارفع الأربع خرزات السفلية نحو العارضة',
+        fingerUsed: 'thumb',
+        direction: 'up',
+        targetColumn: 'units',
+        beadsAffected: [1, 2, 3, 4],
+        expectedValueAfter: 4,
+      },
+    ],
+    explanation: 'كل الخرزات السفلية = 4.',
+  },
+
+  // ─── 6) مثّل الرقم 5 ───
+  {
+    id: 'SRB-L0-S01-E-006',
+    problemText: 'مثّل الرقم 5',
+    answer: 5,
+    ruleCategory: 'build',
+    steps: [
+      {
+        stepIndex: 1,
+        instructionText: 'أنزل الخرزة العلوية نحو العارضة بالسبابة',
+        fingerUsed: 'index',
+        direction: 'down',
+        targetColumn: 'units',
+        beadsAffected: [5],
+        expectedValueAfter: 5,
+      },
+    ],
+    explanation: 'الخرزة العلوية وحدها = 5 (الجدة).',
+  },
+
+  // ─── 7) مثّل الرقم 6 ───
+  {
+    id: 'SRB-L0-S01-E-007',
     problemText: 'مثّل الرقم 6',
     answer: 6,
     ruleCategory: 'build',
@@ -117,29 +157,9 @@ const EXAMPLES: LessonExample[] = [
     explanation: '5 + 1 = 6 (الجدة + طفل).',
   },
 
-  // ─── 6) مثّل الرقم 3 ───
+  // ─── 8) مثّل الرقم 7 ───
   {
-    id: 'L0-S1-E6',
-    problemText: 'مثّل الرقم 3',
-    answer: 3,
-    ruleCategory: 'build',
-    steps: [
-      {
-        stepIndex: 1,
-        instructionText: 'ارفع ثلاث خرزات سفلية نحو العارضة',
-        fingerUsed: 'thumb',
-        direction: 'up',
-        targetColumn: 'units',
-        beadsAffected: [1, 2, 3],
-        expectedValueAfter: 3,
-      },
-    ],
-    explanation: 'ثلاث خرزات سفلية = 3.',
-  },
-
-  // ─── 7) مثّل الرقم 7 ───
-  {
-    id: 'L0-S1-E7',
+    id: 'SRB-L0-S01-E-008',
     problemText: 'مثّل الرقم 7',
     answer: 7,
     ruleCategory: 'build',
@@ -166,29 +186,9 @@ const EXAMPLES: LessonExample[] = [
     explanation: '5 + 2 = 7 (الجدة + طفلان).',
   },
 
-  // ─── 8) مثّل الرقم 4 ───
-  {
-    id: 'L0-S1-E8',
-    problemText: 'مثّل الرقم 4',
-    answer: 4,
-    ruleCategory: 'build',
-    steps: [
-      {
-        stepIndex: 1,
-        instructionText: 'ارفع الأربع خرزات السفلية نحو العارضة',
-        fingerUsed: 'thumb',
-        direction: 'up',
-        targetColumn: 'units',
-        beadsAffected: [1, 2, 3, 4],
-        expectedValueAfter: 4,
-      },
-    ],
-    explanation: 'كل الخرزات السفلية = 4.',
-  },
-
   // ─── 9) مثّل الرقم 8 ───
   {
-    id: 'L0-S1-E9',
+    id: 'SRB-L0-S01-E-009',
     problemText: 'مثّل الرقم 8',
     answer: 8,
     ruleCategory: 'build',
@@ -217,7 +217,7 @@ const EXAMPLES: LessonExample[] = [
 
   // ─── 10) مثّل الرقم 9 ───
   {
-    id: 'L0-S1-E10',
+    id: 'SRB-L0-S01-E-010',
     problemText: 'مثّل الرقم 9',
     answer: 9,
     ruleCategory: 'build',
@@ -251,61 +251,61 @@ const EXAMPLES: LessonExample[] = [
 
 const TRY_QUESTIONS: TryQuestion[] = [
   {
-    id: 'L0-S1-T1',
+    id: 'SRB-L0-S01-T-001',
     type: 'read',
     prompt: 'اقرأ الرقم المثبت: لا توجد خرزة تلامس العارضة',
     expectedValue: 0,
   },
   {
-    id: 'L0-S1-T2',
+    id: 'SRB-L0-S01-T-002',
     type: 'read',
     prompt: 'اقرأ الرقم المثبت: خرزة سفلية واحدة نحو العارضة',
     expectedValue: 1,
   },
   {
-    id: 'L0-S1-T3',
-    type: 'read',
-    prompt: 'اقرأ الرقم المثبت: الخرزة العلوية نحو العارضة',
-    expectedValue: 5,
-  },
-  {
-    id: 'L0-S1-T4',
+    id: 'SRB-L0-S01-T-003',
     type: 'read',
     prompt: 'اقرأ الرقم المثبت: خرزتان سفليتان نحو العارضة',
     expectedValue: 2,
   },
   {
-    id: 'L0-S1-T5',
-    type: 'read',
-    prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + خرزة سفلية واحدة',
-    expectedValue: 6,
-  },
-  {
-    id: 'L0-S1-T6',
+    id: 'SRB-L0-S01-T-004',
     type: 'read',
     prompt: 'اقرأ الرقم المثبت: ثلاث خرزات سفلية نحو العارضة',
     expectedValue: 3,
   },
   {
-    id: 'L0-S1-T7',
-    type: 'read',
-    prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + خرزتان سفليتان',
-    expectedValue: 7,
-  },
-  {
-    id: 'L0-S1-T8',
+    id: 'SRB-L0-S01-T-005',
     type: 'read',
     prompt: 'اقرأ الرقم المثبت: أربع خرزات سفلية نحو العارضة',
     expectedValue: 4,
   },
   {
-    id: 'L0-S1-T9',
+    id: 'SRB-L0-S01-T-006',
+    type: 'read',
+    prompt: 'اقرأ الرقم المثبت: الخرزة العلوية نحو العارضة',
+    expectedValue: 5,
+  },
+  {
+    id: 'SRB-L0-S01-T-007',
+    type: 'read',
+    prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + خرزة سفلية واحدة',
+    expectedValue: 6,
+  },
+  {
+    id: 'SRB-L0-S01-T-008',
+    type: 'read',
+    prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + خرزتان سفليتان',
+    expectedValue: 7,
+  },
+  {
+    id: 'SRB-L0-S01-T-009',
     type: 'read',
     prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + ثلاث خرزات سفلية',
     expectedValue: 8,
   },
   {
-    id: 'L0-S1-T10',
+    id: 'SRB-L0-S01-T-010',
     type: 'read',
     prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + أربع خرزات سفلية',
     expectedValue: 9,
@@ -318,8 +318,8 @@ const TRY_QUESTIONS: TryQuestion[] = [
 
 export const L0_S1: LessonNode = {
   // ───── الهوية ─────
-  id: 'L0-S1',
-  skillId: 'S1',
+  id: 'SRB-L0-S01',
+  skillId: 'S01',
   levelId: 'L0',
   order: 2, // بعد المقدمة
 
