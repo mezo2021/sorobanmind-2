@@ -17,14 +17,18 @@ import { formatText, formatNumber } from '@/utils/numberStyle';
 
 import {
   getPracticeQuestions,
-  recordWeaknessAttempt,
-  type BankQuestion,
-} from '@/data/bank-v2';
+  saveSectionGrade,
+  type SRBLevel,
+  type SRBSection,
+  type SRBQuestion,
+  type SRBModule,
+} from '@/data/srb-adapter';
 
 type Phase = 'intro' | 'running' | 'reveal' | 'result';
 
 interface PracticeScreenProps {
-  levelNum: number;
+  level: SRBLevel;
+  section: SRBSection;
   onBack: () => void;
   onComplete?: (passed: boolean, score: number) => void;
   playSound: (type: 'click' | 'success' | 'error' | 'whoosh' | 'levelup') => void;
@@ -40,13 +44,14 @@ interface PerfStats {
 }
 
 const XP_PER_CORRECT = 5;
-const PASS_THRESHOLD = 75;
+const PASS_THRESHOLD = 70;
 const WARNING_RATIO = 0.7;
+const QUESTION_COUNT = 5;
 
-function getColumnsForQuestion(question: BankQuestion): number {
+function getColumnsForQuestion(q: SRBQuestion): number {
   const candidates: number[] = [
-    Math.abs(question.correctAnswer),
-    ...question.operands.map((op) => Math.abs(op)),
+    Math.abs(q.result),
+    ...q.operands.map((op) => Math.abs(op)),
   ];
   const maxAbs = Math.max(...candidates);
   if (maxAbs < 1000) return 3;
@@ -55,11 +60,23 @@ function getColumnsForQuestion(question: BankQuestion): number {
   return 13;
 }
 
+function getMaxMs(q: SRBQuestion): number {
+  return q.target_time_ms[1];
+}
+
+function getAnswerMs(q: SRBQuestion): number {
+  return q.target_time_ms[0];
+}
+
+function buildSkillId(level: SRBLevel, section: SRBSection, module: SRBModule): string {
+  return `${level}-${section}-${module}`;
+}
+
 export function PracticeScreen({
-  levelNum, onBack, onComplete, playSound, onXP, burst,
+  level, section, onBack, onComplete, playSound, onXP, burst,
 }: PracticeScreenProps) {
   const [phase, setPhase] = useState<Phase>('intro');
-  const [questions, setQuestions] = useState<BankQuestion[]>([]);
+  const [questions, setQuestions] = useState<SRBQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [abacusValue, setAbacusValue] = useState(0);
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
@@ -71,9 +88,9 @@ export function PracticeScreen({
   const sorobana = useSorobanaVoice();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
+  const wrongModulesRef = useRef<Set<SRBModule>>(new Set());
 
   const addXP = useProgressStore((s) => s.addXP);
-  const markPracticePassed = useProgressStore((s) => s.markPracticePassed);
   const updateStreak = useProgressStore((s) => s.updateStreak);
 
   const numberStyle = useNumberStyleStore((s) => s.style);
@@ -82,15 +99,16 @@ export function PracticeScreen({
   const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
 
   const currentQ = questions[currentIdx];
-  const maxMs = currentQ ? currentQ.timing.maxMs : 30000;
+  const maxMs = currentQ ? getMaxMs(currentQ) : 30000;
   const warningAtMs = maxMs * WARNING_RATIO;
   const isWarning = elapsedMs >= warningAtMs;
   const progressPct = Math.min(100, (elapsedMs / maxMs) * 100);
 
   const startSession = useCallback(() => {
-    const qs = getPracticeQuestions(levelNum, Date.now(), []);
+    const qs = getPracticeQuestions(level, section, Date.now(), []);
     if (qs.length === 0) { playSound('error'); return; }
     perfRef.current = new Map();
+    wrongModulesRef.current = new Set();
     setQuestions(qs);
     setCurrentIdx(0);
     setAbacusValue(0);
@@ -101,7 +119,7 @@ export function PracticeScreen({
     setPerformances([]);
     setPhase('running');
     playSound('click');
-  }, [levelNum, playSound]);
+  }, [level, section, playSound]);
 
   useEffect(() => {
     if (phase !== 'running') return;
@@ -121,31 +139,32 @@ export function PracticeScreen({
   const trackPerformance = useCallback(
     (isCorrect: boolean, timeMs: number) => {
       if (!currentQ) return;
-      const skillId = currentQ.skillId;
+      const skillId = buildSkillId(level, section, currentQ.module);
+      const answerMs = getAnswerMs(currentQ);
       const existing = perfRef.current.get(skillId) ?? {
-        correct: 0, attempts: 0, totalTimeMs: 0, answerMs: currentQ.timing.answerMs,
+        correct: 0, attempts: 0, totalTimeMs: 0, answerMs,
       };
       existing.attempts += 1;
       if (isCorrect) existing.correct += 1;
       existing.totalTimeMs += timeMs;
       perfRef.current.set(skillId, existing);
       if (isCorrect) {
-        const cls = classifySpeed(timeMs, currentQ.timing.answerMs);
-        if (cls === 'mastery') awardBadge(skillId, timeMs, currentQ.timing.answerMs);
+        const cls = classifySpeed(timeMs, answerMs);
+        if (cls === 'mastery') awardBadge(skillId, timeMs, answerMs);
+      } else {
+        wrongModulesRef.current.add(currentQ.module);
       }
     },
-    [currentQ, awardBadge],
+    [currentQ, level, section, awardBadge],
   );
 
   const handleTimeout = useCallback(() => {
     if (!currentQ || feedback !== 'idle') return;
     if (timerRef.current) clearInterval(timerRef.current);
-    const timeMs = maxMs;
-    recordWeaknessAttempt(currentQ.skillId, false, timeMs);
-    trackPerformance(false, timeMs);
+    trackPerformance(false, maxMs);
     playSound('error');
     setFeedback('wrong');
-    setSavedTimeMs(timeMs);
+    setSavedTimeMs(maxMs);
     sorobana.speakWrong();
     setPhase('reveal');
   }, [currentQ, feedback, maxMs, playSound, sorobana, trackPerformance]);
@@ -153,9 +172,8 @@ export function PracticeScreen({
   const handleCheck = useCallback(() => {
     if (!currentQ || feedback !== 'idle') return;
     if (timerRef.current) clearInterval(timerRef.current);
-    const isCorrect = abacusValue === currentQ.correctAnswer;
+    const isCorrect = abacusValue === currentQ.result;
     const timeMs = elapsedMs;
-    recordWeaknessAttempt(currentQ.skillId, isCorrect, timeMs);
     trackPerformance(isCorrect, timeMs);
     if (isCorrect) {
       setScore((s) => s + 1);
@@ -199,8 +217,12 @@ export function PracticeScreen({
     setSavedTimeMs(null);
     if (currentIdx + 1 >= questions.length) {
       const finalScore = score;
-      const passed = (finalScore / questions.length) * 100 >= PASS_THRESHOLD;
-      if (passed) markPracticePassed(levelNum);
+      const percentage = Math.round((finalScore / questions.length) * 100);
+      const passed = percentage >= PASS_THRESHOLD;
+      saveSectionGrade(
+        level, section, 'practice', percentage,
+        Array.from(wrongModulesRef.current),
+      );
       setPerformances(buildPerformances());
       setPhase('result');
       playSound(passed ? 'levelup' : 'whoosh');
@@ -210,23 +232,27 @@ export function PracticeScreen({
       setPhase('running');
     }
   }, [
-    currentIdx, questions.length, score, levelNum, playSound,
-    sorobana, onComplete, markPracticePassed, buildPerformances,
+    currentIdx, questions.length, score, level, section, playSound,
+    sorobana, onComplete, buildPerformances,
   ]);
 
   const handleEnd = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     sorobana.stop();
     const finalScore = score;
-    const passed = (finalScore / questions.length) * 100 >= PASS_THRESHOLD;
-    if (passed) markPracticePassed(levelNum);
+    const percentage = Math.round((finalScore / questions.length) * 100);
+    const passed = percentage >= PASS_THRESHOLD;
+    saveSectionGrade(
+      level, section, 'practice', percentage,
+      Array.from(wrongModulesRef.current),
+    );
     setPerformances(buildPerformances());
     setPhase('result');
     playSound('whoosh');
     onComplete?.(passed, finalScore);
   }, [
-    score, questions.length, levelNum, playSound,
-    sorobana, onComplete, markPracticePassed, buildPerformances,
+    score, questions.length, level, section, playSound,
+    sorobana, onComplete, buildPerformances,
   ]);
 
   if (phase === 'intro') {
@@ -237,12 +263,12 @@ export function PracticeScreen({
             className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
             <ArrowRight className="w-6 h-6" />
           </button>
-          <div className="flex-1">
-            <h2 className="text-2xl font-extrabold font-display text-white">
-              تمرّن {formatNumber(levelNum, numberStyle)}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-2xl font-extrabold font-display text-white truncate">
+              تمرّن
             </h2>
             <p className="text-sm text-white/50 font-body">
-              {formatNumber(5, numberStyle)} أسئلة من هذا المستوى
+              {level} · {section} — {formatNumber(QUESTION_COUNT, numberStyle)} أسئلة
             </p>
           </div>
           <BookOpen className="w-6 h-6 text-purple-300" />
@@ -254,17 +280,17 @@ export function PracticeScreen({
           </div>
           <h3 className="text-xl font-extrabold font-display text-white text-center mb-4">قبل أن تبدأ</h3>
           <div className="space-y-3 text-sm text-white/80 font-body">
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">{formatNumber(1, numberStyle)}.</span><p>{formatNumber(5, numberStyle)} أسئلة من مهارات هذا المستوى</p></div>
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">{formatNumber(2, numberStyle)}.</span><p>محاولة واحدة فقط لكل سؤال</p></div>
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">{formatNumber(3, numberStyle)}.</span><p>زر "تحقق" متاح دائماً، والانتقال يدوي بزر "التالي"</p></div>
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">{formatNumber(4, numberStyle)}.</span><p>{formatNumber(75, numberStyle)}٪ للنّجاح</p></div>
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">{formatNumber(5, numberStyle)}.</span><p>يمكنك إنهاء التدريب في أي لحظة</p></div>
+            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">1.</span><p>{formatNumber(QUESTION_COUNT, numberStyle)} أسئلة من درس {section}</p></div>
+            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">2.</span><p>محاولة واحدة فقط لكل سؤال</p></div>
+            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">3.</span><p>زر "تحقق" متاح دائماً، والانتقال يدوي بزر "التالي"</p></div>
+            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">4.</span><p>{formatNumber(PASS_THRESHOLD, numberStyle)}٪ للنّجاح</p></div>
+            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">5.</span><p>يمكنك إنهاء التدريب في أي لحظة</p></div>
           </div>
           <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30">
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-200 font-body leading-relaxed">
-                💡 الإجابة بزمن قياسي (أسرع من ٥٠٪) تمنحك <strong>شارة المهارة</strong> 🏅
+                💡 الإجابة بزمن قياسي (أسرع من ٤٠٪) تمنحك <strong>شارة المهارة</strong> 🏅
               </p>
             </div>
           </div>
@@ -280,7 +306,7 @@ export function PracticeScreen({
 
   if (phase === 'running' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
-    const formattedPrompt = formatText(currentQ.prompt.replace(/ = ؟$/, ''), numberStyle);
+    const formattedPrompt = formatText(currentQ.question.replace(/ = ؟$/, ''), numberStyle);
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -289,7 +315,7 @@ export function PracticeScreen({
               السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-xs text-white/50 font-body">
-              {currentQ.skillId} · صعوبة {formatNumber(currentQ.difficulty, numberStyle)}
+              {section} · {currentQ.module}
             </p>
           </div>
           <button type="button" onClick={handleEnd}
@@ -347,7 +373,7 @@ export function PracticeScreen({
 
   if (phase === 'reveal' && currentQ) {
     const isCorrect = feedback === 'correct';
-    const formattedAnswer = formatNumber(currentQ.correctAnswer, numberStyle);
+    const formattedAnswer = formatNumber(currentQ.result, numberStyle);
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
@@ -377,6 +403,13 @@ export function PracticeScreen({
                   isCorrect ? 'text-emerald-300' : 'text-red-300'
                 }`}>
                   {formatNumber((savedTimeMs / 1000).toFixed(1), numberStyle)}s
+                </p>
+              </div>
+            )}
+            {currentQ.solution && (
+              <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-400/30 text-right">
+                <p className="text-xs text-blue-200 font-body leading-relaxed">
+                  💡 {formatText(currentQ.solution, numberStyle)}
                 </p>
               </div>
             )}
@@ -413,7 +446,7 @@ export function PracticeScreen({
               {passed ? 'أحسنت! نجحت 🎉' : 'حاول مرة أخرى 💪'}
             </h2>
             <p className="text-sm text-white/60 font-body mb-6">
-              {passed ? 'لقد أتقنت هذا المستوى' : 'ستُعاد الأسئلة البطيئة قريباً'}
+              {passed ? 'لقد أتقنت هذا الدرس' : 'ستُعاد الأسئلة البطيئة قريباً'}
             </p>
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
               <p className="text-sm text-white/60 font-body">النتيجة</p>
@@ -436,7 +469,7 @@ export function PracticeScreen({
         </motion.div>
 
         {performances.length > 0 && (
-          <AdaptiveFeedback performances={performances} sectionLabel="تمرّن" levelNum={levelNum} />
+          <AdaptiveFeedback performances={performances} sectionLabel={`تمرّن — ${section}`} />
         )}
 
         <div className="space-y-3">
