@@ -550,50 +550,55 @@ case 'practice-7': {
 }
 
       case 'anzan-0':
-      case 'anzan-1':
-      case 'anzan-2':
-      case 'anzan-3':
-      case 'anzan-4':
-      case 'anzan-5':
-      case 'anzan-6':
-      case 'anzan-7': {
-        const anzanNum = parseInt(screen.replace('anzan-', ''), 10);
+case 'anzan-1':
+case 'anzan-2':
+case 'anzan-3':
+case 'anzan-4':
+case 'anzan-5':
+case 'anzan-6':
+case 'anzan-7': {
+  const anzanNum = parseInt(screen.replace('anzan-', ''), 10);
+  const level = `L${anzanNum}` as SRBLevel;
 
-        return (
-          <AnzanScreen
-            levelNum={anzanNum}
-            onBack={() =>
-              handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
-            }
-            playSound={handleSound}
-            onXP={(amount) => console.log('XP:', amount)}
-            burst={_burst}
-          />
-        );
+  return (
+    <AnzanScreen
+      level={level}
+      section={'S01' as SRBSection}
+      initialMode="flash"
+      onBack={() =>
+        handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
       }
+      playSound={handleSound}
+      onXP={(amount) => console.log('XP:', amount)}
+      burst={_burst}
+    />
+  );
+}
 
       case 'audio-anzan-0':
-      case 'audio-anzan-1':
-      case 'audio-anzan-2':
-      case 'audio-anzan-3':
-      case 'audio-anzan-4':
-      case 'audio-anzan-5':
-      case 'audio-anzan-6':
-      case 'audio-anzan-7': {
-        const anzanNum = parseInt(screen.replace('audio-anzan-', ''), 10);
+case 'audio-anzan-1':
+case 'audio-anzan-2':
+case 'audio-anzan-3':
+case 'audio-anzan-4':
+case 'audio-anzan-5':
+case 'audio-anzan-6':
+case 'audio-anzan-7': {
+  const anzanNum = parseInt(screen.replace('audio-anzan-', ''), 10);
+  const level = `L${anzanNum}` as SRBLevel;
 
-        return (
-          <AudioAnzanScreen
-            levelNum={anzanNum}
-            onBack={() =>
-              handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
-            }
-            playSound={handleSound}
-            onXP={(amount) => console.log('XP:', amount)}
-            burst={_burst}
-          />
-        );
+  return (
+    <AudioAnzanScreen
+      level={level}
+      section={'S01' as SRBSection}
+      onBack={() =>
+        handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
       }
+      playSound={handleSound}
+      onXP={(amount) => console.log('XP:', amount)}
+      burst={_burst}
+    />
+  );
+}
 
       case 'quests':
       case 'multiplication':
