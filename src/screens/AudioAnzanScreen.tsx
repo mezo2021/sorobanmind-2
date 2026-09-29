@@ -1,10 +1,4 @@
 // src/screens/AudioAnzanScreen.tsx
-// شاشة الأنزان السمعي
-// ✅ لفظ صوتي عربي صحيح (كلمات عربية)
-// ✅ إصلاح عدد الأعمدة (3/6/9)
-// ✅ توهّج عند 70% + زر إنهاء
-// ✅ AdaptiveFeedback + Mastery Badges
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -24,19 +18,19 @@ import { formatText, formatNumber } from '@/utils/numberStyle';
 import { numberToArabicWords } from '@/utils/arabicNumbers';
 
 import {
-  getAnzanAudioQuestions,
-  recordWeaknessAttempt,
-  type BankQuestion,
-} from '@/data/bank-v2';
-
-// ═══════════════════════════════════════════════════════════
-// الأنواع
-// ═══════════════════════════════════════════════════════════
+  getAudioAnzanQuestions,
+  saveSectionGrade,
+  type SRBLevel,
+  type SRBSection,
+  type SRBQuestion,
+  type SRBModule,
+} from '@/data/srb-adapter';
 
 type Phase = 'intro' | 'listening' | 'answering' | 'reveal' | 'result';
 
 interface AudioAnzanScreenProps {
-  levelNum: number;
+  level: SRBLevel;
+  section: SRBSection;
   onBack: () => void;
   onComplete?: (passed: boolean, score: number) => void;
   playSound: (type: 'click' | 'success' | 'error' | 'whoosh' | 'levelup') => void;
@@ -51,43 +45,47 @@ interface PerfStats {
   answerMs: number;
 }
 
-// ═══════════════════════════════════════════════════════════
-// الثوابت
-// ═══════════════════════════════════════════════════════════
-
 const XP_PER_CORRECT = 5;
-const PASS_THRESHOLD = 75;
+const PASS_THRESHOLD = 70;
 const DELAY_BETWEEN_TERMS_MS = 800;
-const WARNING_RATIO = 0.7; // ✅ 70%
+const WARNING_RATIO = 0.7;
+const QUESTION_COUNT = 5;
 
-// ═══════════════════════════════════════════════════════════
-// أدوات
-// ═══════════════════════════════════════════════════════════
-
-function getColumnsForQuestion(question: BankQuestion): number {
+function getColumnsForQuestion(q: SRBQuestion): number {
   const candidates: number[] = [
-    Math.abs(question.correctAnswer),
-    ...question.operands.map((op) => Math.abs(op)),
+    Math.abs(q.result),
+    ...q.operands.map((op) => Math.abs(op)),
   ];
   const maxAbs = Math.max(...candidates);
-
   if (maxAbs < 1000) return 3;
   if (maxAbs < 1_000_000) return 6;
   if (maxAbs < 1_000_000_000) return 9;
   return 13;
 }
 
-function buildSpeechSequence(question: BankQuestion): string[] {
-  const { operands, operation } = question;
+function getMaxMs(q: SRBQuestion): number {
+  return q.target_time_ms[1];
+}
+
+function getAnswerMs(q: SRBQuestion): number {
+  return q.target_time_ms[0];
+}
+
+function buildSkillId(level: SRBLevel, section: SRBSection, module: SRBModule): string {
+  return `${level}-${section}-${module}`;
+}
+
+function buildSpeechSequence(q: SRBQuestion): string[] {
+  const { operands, operation } = q;
   const parts: string[] = [];
 
-  if (operation === "multiplication") {
+  if (operation === 'multiplication') {
     parts.push(numberToArabicWords(operands[0]));
     parts.push(`في ${numberToArabicWords(Math.abs(operands[1]))}`);
     return parts;
   }
 
-  if (operation === "division") {
+  if (operation === 'division') {
     parts.push(numberToArabicWords(operands[0]));
     parts.push(`على ${numberToArabicWords(Math.abs(operands[1]))}`);
     return parts;
@@ -106,15 +104,11 @@ function buildSpeechSequence(question: BankQuestion): string[] {
   return parts;
 }
 
-// ═══════════════════════════════════════════════════════════
-// الشاشة الرئيسية
-// ═══════════════════════════════════════════════════════════
-
 export function AudioAnzanScreen({
-  levelNum, onBack, onComplete, playSound, onXP, burst,
+  level, section, onBack, onComplete, playSound, onXP, burst,
 }: AudioAnzanScreenProps) {
   const [phase, setPhase] = useState<Phase>('intro');
-  const [questions, setQuestions] = useState<BankQuestion[]>([]);
+  const [questions, setQuestions] = useState<SRBQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [abacusValue, setAbacusValue] = useState(0);
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
@@ -128,7 +122,6 @@ export function AudioAnzanScreen({
   const { speak, stop: stopSpeech, isSpeaking, isSupported } = useSpeech();
 
   const addXP = useProgressStore((s) => s.addXP);
-  const markAnzanAudioPassed = useProgressStore((s) => s.markAnzanAudioPassed);
   const updateStreak = useProgressStore((s) => s.updateStreak);
 
   const numberStyle = useNumberStyleStore((s) => s.style);
@@ -139,22 +132,19 @@ export function AudioAnzanScreen({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioSequenceRef = useRef<number>(0);
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
+  const wrongModulesRef = useRef<Set<SRBModule>>(new Set());
 
   const currentQ = questions[currentIdx];
-  const maxMs = currentQ ? currentQ.timing.maxMs : 30000;
+  const maxMs = currentQ ? getMaxMs(currentQ) : 30000;
   const warningAtMs = maxMs * WARNING_RATIO;
   const isWarning = elapsedMs >= warningAtMs;
   const progressPct = Math.min(100, (elapsedMs / maxMs) * 100);
 
-  // ═══════════════════════════════════════════════════════
-  // بدء الجلسة
-  // ═══════════════════════════════════════════════════════
   const startSession = useCallback(() => {
-    const qs = getAnzanAudioQuestions(levelNum, Date.now(), []);
+    const qs = getAudioAnzanQuestions(level, section, Date.now(), []);
     if (qs.length === 0) { playSound('error'); return; }
-
     perfRef.current = new Map();
-
+    wrongModulesRef.current = new Set();
     setQuestions(qs);
     setCurrentIdx(0);
     setAbacusValue(0);
@@ -166,11 +156,8 @@ export function AudioAnzanScreen({
     setPerformances([]);
     setPhase('listening');
     playSound('click');
-  }, [levelNum, playSound]);
+  }, [level, section, playSound]);
 
-  // ═══════════════════════════════════════════════════════
-  // مرحلة الاستماع
-  // ═══════════════════════════════════════════════════════
   useEffect(() => {
     if (phase !== 'listening') return;
     if (!currentQ) return;
@@ -198,9 +185,6 @@ export function AudioAnzanScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, currentQ, isSupported]);
 
-  // ═══════════════════════════════════════════════════════
-  // العدّاد (تصاعدي)
-  // ═══════════════════════════════════════════════════════
   useEffect(() => {
     if (phase !== 'answering') return;
     if (feedback !== 'idle') return;
@@ -215,41 +199,32 @@ export function AudioAnzanScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, feedback, maxMs]);
 
-  // ═══════════════════════════════════════════════════════
-  // تسجيل الأداء
-  // ═══════════════════════════════════════════════════════
   const trackPerformance = useCallback(
     (isCorrect: boolean, timeMs: number) => {
       if (!currentQ) return;
-      const skillId = currentQ.skillId;
+      const skillId = buildSkillId(level, section, currentQ.module);
+      const answerMs = getAnswerMs(currentQ);
       const existing = perfRef.current.get(skillId) ?? {
-        correct: 0, attempts: 0, totalTimeMs: 0, answerMs: currentQ.timing.answerMs,
+        correct: 0, attempts: 0, totalTimeMs: 0, answerMs,
       };
       existing.attempts += 1;
       if (isCorrect) existing.correct += 1;
       existing.totalTimeMs += timeMs;
       perfRef.current.set(skillId, existing);
-
       if (isCorrect) {
-        const cls = classifySpeed(timeMs, currentQ.timing.answerMs);
-        if (cls === 'mastery') {
-          awardBadge(skillId, timeMs, currentQ.timing.answerMs);
-        }
+        const cls = classifySpeed(timeMs, answerMs);
+        if (cls === 'mastery') awardBadge(skillId, timeMs, answerMs);
+      } else {
+        wrongModulesRef.current.add(currentQ.module);
       }
     },
-    [currentQ, awardBadge],
+    [currentQ, level, section, awardBadge],
   );
 
-  // ═══════════════════════════════════════════════════════
-  // انتهاء الوقت
-  // ═══════════════════════════════════════════════════════
   const handleTimeout = useCallback(() => {
     if (!currentQ || feedback !== 'idle') return;
     if (timerRef.current) clearInterval(timerRef.current);
-
-    recordWeaknessAttempt(currentQ.skillId, false, maxMs);
     trackPerformance(false, maxMs);
-
     playSound('error');
     setFeedback('wrong');
     setSavedTimeMs(maxMs);
@@ -257,9 +232,6 @@ export function AudioAnzanScreen({
     setPhase('reveal');
   }, [currentQ, feedback, maxMs, playSound, sorobana, trackPerformance]);
 
-  // ═══════════════════════════════════════════════════════
-  // إعادة السمع
-  // ═══════════════════════════════════════════════════════
   const handleReplay = useCallback(() => {
     if (replayUsed || !currentQ) return;
     setReplayUsed(true);
@@ -267,19 +239,12 @@ export function AudioAnzanScreen({
     setPhase('listening');
   }, [replayUsed, currentQ, playSound]);
 
-  // ═══════════════════════════════════════════════════════
-  // التحقق
-  // ═══════════════════════════════════════════════════════
   const handleCheck = useCallback(() => {
     if (!currentQ || feedback !== 'idle') return;
     if (timerRef.current) clearInterval(timerRef.current);
-
-    const isCorrect = abacusValue === currentQ.correctAnswer;
+    const isCorrect = abacusValue === currentQ.result;
     const timeMs = elapsedMs;
-
-    recordWeaknessAttempt(currentQ.skillId, isCorrect, timeMs);
     trackPerformance(isCorrect, timeMs);
-
     if (isCorrect) {
       setScore((s) => s + 1);
       setFeedback('correct');
@@ -301,9 +266,6 @@ export function AudioAnzanScreen({
     onXP, burst, addXP, updateStreak, trackPerformance,
   ]);
 
-  // ═══════════════════════════════════════════════════════
-  // بناء قائمة الأداء
-  // ═══════════════════════════════════════════════════════
   const buildPerformances = useCallback((): SkillPerformance[] => {
     const list: SkillPerformance[] = [];
     perfRef.current.forEach((stats, skillId) => {
@@ -317,9 +279,19 @@ export function AudioAnzanScreen({
     return list;
   }, []);
 
-  // ═══════════════════════════════════════════════════════
-  // السؤال التالي
-  // ═══════════════════════════════════════════════════════
+  const saveGrade = useCallback(
+    (finalScore: number, totalQuestions: number): boolean => {
+      const percentage = Math.round((finalScore / totalQuestions) * 100);
+      const passed = percentage >= PASS_THRESHOLD;
+      saveSectionGrade(
+        level, section, 'anzanAudio', percentage,
+        Array.from(wrongModulesRef.current),
+      );
+      return passed;
+    },
+    [level, section],
+  );
+
   const nextQuestion = useCallback(() => {
     sorobana.stop();
     stopSpeech();
@@ -328,49 +300,35 @@ export function AudioAnzanScreen({
     setElapsedMs(0);
     setSavedTimeMs(null);
     setReplayUsed(false);
-
     if (currentIdx + 1 >= questions.length) {
-      const finalScore = score;
-      const passed = (finalScore / questions.length) * 100 >= PASS_THRESHOLD;
-      if (passed) markAnzanAudioPassed(levelNum);
+      const passed = saveGrade(score, questions.length);
       setPerformances(buildPerformances());
       setPhase('result');
       playSound(passed ? 'levelup' : 'whoosh');
-      onComplete?.(passed, finalScore);
+      onComplete?.(passed, score);
     } else {
       setCurrentIdx((i) => i + 1);
       setPhase('listening');
     }
   }, [
-    currentIdx, questions.length, score, levelNum, playSound,
-    sorobana, stopSpeech, onComplete, markAnzanAudioPassed, buildPerformances,
+    currentIdx, questions.length, score, playSound,
+    sorobana, stopSpeech, onComplete, buildPerformances, saveGrade,
   ]);
 
-  // ═══════════════════════════════════════════════════════
-  // زر إنهاء التدريب
-  // ═══════════════════════════════════════════════════════
   const handleEnd = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     stopSpeech();
     sorobana.stop();
-
-    const finalScore = score;
-    const passed = (finalScore / questions.length) * 100 >= PASS_THRESHOLD;
-
-    if (passed) markAnzanAudioPassed(levelNum);
-
+    const passed = saveGrade(score, questions.length);
     setPerformances(buildPerformances());
     setPhase('result');
     playSound('whoosh');
-    onComplete?.(passed, finalScore);
+    onComplete?.(passed, score);
   }, [
-    score, questions.length, levelNum, playSound, stopSpeech,
-    sorobana, onComplete, markAnzanAudioPassed, buildPerformances,
+    score, questions.length, playSound, stopSpeech,
+    sorobana, onComplete, buildPerformances, saveGrade,
   ]);
 
-  // ═══════════════════════════════════════════════════════
-  // غير مدعوم
-  // ═══════════════════════════════════════════════════════
   if (!isSupported) {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
@@ -382,7 +340,6 @@ export function AudioAnzanScreen({
     );
   }
 
-  // ═══ intro ═══
   if (phase === 'intro') {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
@@ -391,10 +348,10 @@ export function AudioAnzanScreen({
             className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
             <ArrowRight className="w-6 h-6" />
           </button>
-          <div className="flex-1">
-            <h2 className="text-2xl font-extrabold font-display text-white">الأنزان السمعي</h2>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-2xl font-extrabold font-display text-white truncate">الأنزان السمعي</h2>
             <p className="text-sm text-white/50 font-body">
-              {formatNumber(5, numberStyle)} أسئلة من هذا المستوى
+              {level} · {section} — {formatNumber(QUESTION_COUNT, numberStyle)} أسئلة
             </p>
           </div>
           <Volume2 className="w-6 h-6 text-purple-300" />
@@ -407,24 +364,24 @@ export function AudioAnzanScreen({
           <h3 className="text-xl font-extrabold font-display text-white text-center mb-4">🎧 كيف يعمل؟</h3>
           <div className="space-y-3 text-sm text-white/80 font-body">
             <div className="flex items-start gap-3">
-              <span className="text-purple-300 font-bold shrink-0">{formatNumber(1, numberStyle)}.</span>
+              <span className="text-purple-300 font-bold shrink-0">1.</span>
               <p>ستسمع الأرقام <strong>واحداً واحداً</strong> بالعربية</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-purple-300 font-bold shrink-0">{formatNumber(2, numberStyle)}.</span>
+              <span className="text-purple-300 font-bold shrink-0">2.</span>
               <p>الرقم الأول بلا إشارة، والباقي مع إشاراته</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-purple-300 font-bold shrink-0">{formatNumber(3, numberStyle)}.</span>
+              <span className="text-purple-300 font-bold shrink-0">3.</span>
               <p>بعد آخر رقم → عدّاد الإجابة يبدأ</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-purple-300 font-bold shrink-0">{formatNumber(4, numberStyle)}.</span>
+              <span className="text-purple-300 font-bold shrink-0">4.</span>
               <p>يمكنك إعادة السمع <strong>مرة واحدة</strong>، وإنهاء التدريب في أي لحظة</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-purple-300 font-bold shrink-0">{formatNumber(5, numberStyle)}.</span>
-              <p>{formatNumber(5, numberStyle)} نقاط خبرة لكل إجابة صحيحة</p>
+              <span className="text-purple-300 font-bold shrink-0">5.</span>
+              <p>{formatNumber(XP_PER_CORRECT, numberStyle)} نقاط خبرة لكل إجابة صحيحة</p>
             </div>
           </div>
           <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30">
@@ -445,7 +402,6 @@ export function AudioAnzanScreen({
     );
   }
 
-  // ═══ listening ═══
   if (phase === 'listening' && currentQ) {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto min-h-screen flex flex-col">
@@ -454,14 +410,10 @@ export function AudioAnzanScreen({
             <h2 className="text-lg font-bold text-white truncate">
               السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
-            <p className="text-xs text-white/50 font-body">{currentQ.skillId} · أنزان سمعي</p>
+            <p className="text-xs text-white/50 font-body">{section} · أنزان سمعي</p>
           </div>
-
-          <button
-            type="button"
-            onClick={handleEnd}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition"
-          >
+          <button type="button" onClick={handleEnd}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition">
             <Square className="w-3.5 h-3.5" />
             إنهاء
           </button>
@@ -491,7 +443,6 @@ export function AudioAnzanScreen({
     );
   }
 
-  // ═══ answering ═══
   if (phase === 'answering' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
     return (
@@ -503,16 +454,11 @@ export function AudioAnzanScreen({
             </h2>
             <p className="text-xs text-white/50 font-body">مثّل الناتج على العداد</p>
           </div>
-
-          <button
-            type="button"
-            onClick={handleEnd}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition"
-          >
+          <button type="button" onClick={handleEnd}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition">
             <Square className="w-3.5 h-3.5" />
             إنهاء
           </button>
-
           <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
             isWarning ? 'bg-red-500/30 border-red-500/70 shadow-lg shadow-red-500/50 animate-pulse' : 'bg-white/5 border-white/10'
           }`}>
@@ -525,11 +471,9 @@ export function AudioAnzanScreen({
 
         <div className="mb-5">
           <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-            <motion.div
-              className={`h-full rounded-full transition-colors ${
-                isWarning ? 'bg-gradient-to-r from-red-500 to-rose-600' : 'bg-gradient-to-r from-emerald-400 to-teal-500'
-              }`}
-              animate={{ width: `${progressPct}%` }} transition={{ duration: 0.1 }} />
+            <motion.div className={`h-full rounded-full transition-colors ${
+              isWarning ? 'bg-gradient-to-r from-red-500 to-rose-600' : 'bg-gradient-to-r from-emerald-400 to-teal-500'
+            }`} animate={{ width: `${progressPct}%` }} transition={{ duration: 0.1 }} />
           </div>
         </div>
 
@@ -576,10 +520,9 @@ export function AudioAnzanScreen({
     );
   }
 
-  // ═══ reveal ═══
   if (phase === 'reveal' && currentQ) {
     const isCorrect = feedback === 'correct';
-    const formattedAnswer = formatNumber(currentQ.correctAnswer, numberStyle);
+    const formattedAnswer = formatNumber(currentQ.result, numberStyle);
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
@@ -608,6 +551,13 @@ export function AudioAnzanScreen({
                 </p>
               </div>
             )}
+            {currentQ.solution && (
+              <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-400/30 text-right">
+                <p className="text-xs text-blue-200 font-body leading-relaxed">
+                  💡 {formatText(currentQ.solution, numberStyle)}
+                </p>
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -619,7 +569,6 @@ export function AudioAnzanScreen({
     );
   }
 
-  // ═══ result ═══
   if (phase === 'result') {
     const percentage = Math.round((score / questions.length) * 100);
     const passed = percentage >= PASS_THRESHOLD;
@@ -660,10 +609,7 @@ export function AudioAnzanScreen({
         </motion.div>
 
         {performances.length > 0 && (
-          <AdaptiveFeedback
-            performances={performances}
-            sectionLabel="أنزان سمعي"
-          />
+          <AdaptiveFeedback performances={performances} sectionLabel={`أنزان سمعي — ${section}`} />
         )}
 
         <div className="space-y-3">
