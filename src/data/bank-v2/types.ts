@@ -1,5 +1,84 @@
+// ═══════════════════════════════════════════════════════════════════
+// 🏗️ src/data/bank-v2/types.ts — أنواع وأدوات بنك الأسئلة v2
+// ═══════════════════════════════════════════════════════════════════
+//
+// الوظيفة:
+//   - يُعرِّف BankQuestion (بنية السؤال الحديثة)
+//   - يوفّر makeId() و makeQuestion() لبناء الأسئلة
+//   - يوفّر TIMING_PROFILES (20 مهارة × 5 صعوبات)
+//   - يوفّر adaptTiming() للسياقات المختلفة (P / ANZ / X)
+//   - يوفّر classifyAdd/Sub (منطق الحركة على السوروبان)
+//
+// ✅ حالة ممتازة: متوافق مع SRB بنسبة 80%
+//
+// 📥 الاعتماديات:
+//   - ../../curriculum/types (MovementType)
+//
+// 📤 الصادرات الرئيسية:
+//
+//   الأنواع:
+//     - BankOperation · Difficulty · QuestionTiming · BankQuestion
+//
+//   بناء:
+//     - makeId() · makeQuestion()
+//
+//   التوقيت:
+//     - TIMING_PROFILES · getDefaultTiming() · adaptTiming()
+//     - applyAdaptiveSpeed()
+//
+//   أدوات:
+//     - createRng() · randInt() · shuffle()
+//     - getDigits() · hasCarry() · hasBorrow()
+//     - complementTo5() · complementTo10()
+//     - classifyAdd() · classifySub()
+//
+// 🎯 التوافق مع SRB:
+//
+//   | العنصر في v2          | SRB المقابل              | الحالة |
+//   |-----------------------|--------------------------|--------|
+//   | id: "L0-S1-001"       | "SRB-L0-S01-M01-B001"    | ⚠️ يحتاج تحويل |
+//   | skillId: "S1"         | "S01"                    | ⚠️ خانة واحدة |
+//   | timing.answerMs       | target_time_ms[0]        | ✅ متوافق |
+//   | timing.maxMs          | target_time_ms[1]        | ✅ متوافق |
+//   | maxMs = answerMs×1.5  | نفس القاعدة              | ✅ مطابق! |
+//
+// 🔗 خطة الاستبدال بـ SRB (المرحلة 5):
+//
+//   الخطوة 1: إنشاء src/data/srb/types.ts
+//     - نسخ BankQuestion
+//     - إضافة: moduleId, allowed_phases, prerequisite_id
+//     - إضافة: next_if_success, next_if_fail, difficulty_score
+//
+//   الخطوة 2: تحديث makeId() لصيغة SRB
+//     - من: "L0-S1-001"
+//     - إلى: "SRB-L0-S01-M01-B001"
+//
+//   الخطوة 3: نقل classifyAdd/Sub إلى SRB
+//     - منطق السوروبان ثابت
+//
+//   الخطوة 4: نقل TIMING_PROFILES إلى SRB
+//     - 20 مهارة × 5 صعوبات = 100 قيمة
+//
+//   الخطوة 5: تحديث المستوردين (bank-linked → srb)
+//
+// ⚠️ قواعد حرجة:
+//   1. لا تغيّر TIMING_PROFILES (100 قيمة مختبرة)
+//   2. لا تغيّر classifyAdd/Sub (منطق السوروبان)
+//   3. لا تغيّر قاعدة maxMs × 1.5
+//   4. حافظ على adaptTiming (4 سياقات)
+//
+// آخر تحديث: 2026-09-29
+//   - إضافة توثيق شامل + تحليل التوافق مع SRB
+//   - لا تغيير في المنطق
+//
+// ═══════════════════════════════════════════════════════════════════
+
 // src/data/bank-v2/types.ts
 import type { MovementType } from "../../curriculum/types";
+
+// ═══════════════════════════════════════════════════════════
+// 📝 الأنواع (Types)
+// ═══════════════════════════════════════════════════════════
 
 export type BankOperation =
   | "addition"
@@ -11,31 +90,60 @@ export type BankOperation =
 
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 
+/**
+ * توقيتات السؤال.
+ *
+ * 🔗 SRB-MIGRATION: يتحول إلى target_time_ms في SRB
+ */
 export interface QuestionTiming {
-  displayMs?: number;
-  answerMs: number;
-  maxMs: number;
+  displayMs?: number;   // زمن العرض (للأنزان)
+  answerMs: number;     // 🔗 SRB: target_time_ms[0]
+  maxMs: number;        // 🔗 SRB: target_time_ms[1]
 }
 
+/**
+ * السؤال الحديث (v2).
+ *
+ * 🔗 SRB-MIGRATION: سيصبح SRBQuestion مع حقول إضافية
+ */
 export interface BankQuestion {
-  id: string;
-  levelId: string;
-  skillId: string;
+  id: string;                    // 🔗 SRB: SRB-L0-S01-M01-B001
+  levelId: string;               // ✅ متوافق: L0-L7
+  skillId: string;               // ⚠️ SRB: S01 بدلاً من S1
   prompt: string;
   operands: number[];
   operation: BankOperation;
   correctAnswer: number;
   movement: MovementType;
   difficulty: Difficulty;
-  timing: QuestionTiming;
+  timing: QuestionTiming;        // 🔗 SRB: target_time_ms + display_ms
   explanation?: string;
   tags?: string[];
+  // 🔗 SRB سيضيف: moduleId, allowed_phases, prerequisite_id,
+  //             next_if_success, next_if_fail, difficulty_score
 }
 
+// ═══════════════════════════════════════════════════════════
+// 🏗️ بناء الأسئلة
+// 🔗 SRB-MIGRATION: ستُحدَّث لصيغة SRB
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * إنشاء معرّف السؤال.
+ *
+ * الصيغة الحالية: "L0-S1-001"
+ *
+ * 🔗 SRB-MIGRATION: سيصبح "SRB-L0-S01-M01-B001"
+ */
 export function makeId(levelId: string, skillNum: number, seq: number): string {
   return `${levelId}-S${skillNum}-${String(seq).padStart(3, "0")}`;
 }
 
+/**
+ * إنشاء سؤال كامل مع التوقيت المناسب.
+ *
+ * 🔗 SRB-MIGRATION: SRB.makeQuestion()
+ */
 export function makeQuestion(params: {
   levelId: string;
   skillNum: number;
@@ -71,7 +179,7 @@ export function makeQuestion(params: {
       timing = {
         ...timing,
         answerMs: params.expectedTimeMs,
-        maxMs: Math.round(params.expectedTimeMs * 1.5),
+        maxMs: Math.round(params.expectedTimeMs * 1.5),  // 🔗 SRB: قاعدة #8
       };
     }
   }
@@ -79,7 +187,7 @@ export function makeQuestion(params: {
   return {
     id,
     levelId: params.levelId,
-    skillId: `S${params.skillNum}`,
+    skillId: `S${params.skillNum}`,      // ⚠️ SRB: S01, S02, ...
     prompt: params.prompt,
     operands: params.operands,
     operation: params.operation,
@@ -92,11 +200,24 @@ export function makeQuestion(params: {
   };
 }
 
+// ═══════════════════════════════════════════════════════════
+// ⏱️ ملفات التوقيت (Timing Profiles)
+// 🔗 SRB-MIGRATION: تنتقل إلى SRB كما هي
+// ═══════════════════════════════════════════════════════════
+
 interface TimingProfile {
+  /** [difficulty 1, 2, 3, 4, 5] */
   answerMs: [number, number, number, number, number];
   displayMs: number;
 }
 
+/**
+ * ملفات التوقيت لكل مهارة (S1-S20).
+ *
+ * القاعدة: كل مهارة لها 5 قيم (حسب الصعوبة 1-5).
+ *
+ * 🔗 SRB-MIGRATION: SRB.TIMING_PROFILES
+ */
 const TIMING_PROFILES: Record<number, TimingProfile> = {
   1: { answerMs: [5000, 4500, 4000, 3500, 3000], displayMs: 3000 },
   2: { answerMs: [7000, 6000, 5500, 5000, 4500], displayMs: 3000 },
@@ -120,6 +241,11 @@ const TIMING_PROFILES: Record<number, TimingProfile> = {
   20: { answerMs: [45000, 42000, 40000, 38000, 35000], displayMs: 5000 },
 };
 
+/**
+ * التوقيت الافتراضي لمهارة وصعوبة.
+ *
+ * 🔗 SRB-MIGRATION: SRB.getDefaultTiming()
+ */
 export function getDefaultTiming(
   skillNum: number,
   difficulty: Difficulty,
@@ -130,10 +256,21 @@ export function getDefaultTiming(
   return {
     displayMs: profile.displayMs,
     answerMs,
-    maxMs: Math.round(answerMs * 1.5),
+    maxMs: Math.round(answerMs * 1.5),   // 🔗 SRB: قاعدة #8
   };
 }
 
+/**
+ * تعديل التوقيت حسب السياق.
+ *
+ * 4 سياقات:
+ *   - practice: +20% وقت، +30% max (أوسع)
+ *   - anzan-visual: -20% وقت (أسرع)
+ *   - anzan-audio: -30% عرض، -20% وقت
+ *   - exam: كما هو
+ *
+ * 🔗 SRB-MIGRATION: SRB.adaptTiming()
+ */
 export function adaptTiming(
   timing: QuestionTiming,
   context: "practice" | "anzan-visual" | "anzan-audio" | "exam",
@@ -163,6 +300,15 @@ export function adaptTiming(
   }
 }
 
+/**
+ * تقليص الوقت تدريجيًا مع تتابع الإجابات الصحيحة.
+ *
+ * القاعدة:
+ *   - كل 5 إجابات صحيحة متتالية → -5% وقت
+ *   - الحد الأدنى: 50% من الوقت الأصلي
+ *
+ * 🔗 SRB-MIGRATION: SRB.applyAdaptiveSpeed()
+ */
 export function applyAdaptiveSpeed(
   timing: QuestionTiming,
   correctStreak: number,
@@ -178,6 +324,10 @@ export function applyAdaptiveSpeed(
     maxMs: Math.round(timing.maxMs * reductionFactor),
   };
 }
+
+// ═══════════════════════════════════════════════════════════
+// 🎲 أدوات عشوائية
+// ═══════════════════════════════════════════════════════════
 
 export function createRng(seed: number): () => number {
   let value = seed >>> 0;
@@ -203,6 +353,10 @@ export function shuffle<T>(arr: T[], rng: () => number): T[] {
   return result;
 }
 
+// ═══════════════════════════════════════════════════════════
+// 🔢 أدوات رياضية
+// ═══════════════════════════════════════════════════════════
+
 export function getDigits(value: number): number {
   const abs = Math.abs(Math.trunc(value));
   if (abs === 0) return 1;
@@ -227,14 +381,32 @@ export function hasBorrow(a: number, b: number): boolean {
   return false;
 }
 
+// ═══════════════════════════════════════════════════════════
+// 🧮 أدوات السوروبان (مكملات + تصنيف حركة)
+// 🔗 SRB-MIGRATION: منطق ثابت — ينتقل كما هو
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * مكمل العدد 5.
+ * مثال: complementTo5(3) = 2
+ */
 export function complementTo5(d: number): number {
   return 5 - d;
 }
 
+/**
+ * مكمل العدد 10.
+ * مثال: complementTo10(7) = 3
+ */
 export function complementTo10(d: number): number {
   return 10 - d;
 }
 
+/**
+ * تصنيف حركة الجمع على السوروبان.
+ *
+ * 🔗 SRB-MIGRATION: SRB.classifyAdd() — منطق ثابت
+ */
 export function classifyAdd(current: number, delta: number): MovementType {
   const lower = current % 5;
   const hasUpper = current >= 5;
@@ -247,6 +419,11 @@ export function classifyAdd(current: number, delta: number): MovementType {
   return "ten-friend-add";
 }
 
+/**
+ * تصنيف حركة الطرح على السوروبان.
+ *
+ * 🔗 SRB-MIGRATION: SRB.classifySub() — منطق ثابت
+ */
 export function classifySub(current: number, delta: number): MovementType {
   const lower = current % 5;
   const hasUpper = current >= 5;
