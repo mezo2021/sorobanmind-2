@@ -1,11 +1,4 @@
 // src/screens/AnzanScreen.tsx
-// شاشة الأنزان البصري — Flash + عادي
-// ✅ Flash: 2s لكل رقم
-// ✅ عادي: عرض السؤال كاملاً + TTS مع "زائد" و"يساوي"
-// ✅ الأعمدة من أكبر قيمة في السؤال
-// ✅ زر إنهاء + توهّج 70%
-// ✅ AdaptiveFeedback + Mastery Badges
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -25,20 +18,21 @@ import { formatText, formatNumber } from '@/utils/numberStyle';
 import { numberToArabicWords } from '@/utils/arabicNumbers';
 
 import {
-  getAnzanVisualQuestions,
-  recordWeaknessAttempt,
-  type BankQuestion,
-} from '@/data/bank-v2';
-
-// ═══════════════════════════════════════════════════════════
-// الأنواع
-// ═══════════════════════════════════════════════════════════
+  getAnzanQuestions,
+  saveSectionGrade,
+  type SRBLevel,
+  type SRBSection,
+  type SRBQuestion,
+  type SRBModule,
+} from '@/data/srb-adapter';
 
 type Phase = 'intro' | 'showing' | 'answering' | 'reveal' | 'result';
-type Mode = 'flash' | 'عادي';
+type Mode = 'flash' | 'normal';
 
 interface AnzanScreenProps {
-  levelNum: number;
+  level: SRBLevel;
+  section: SRBSection;
+  initialMode?: Mode;
   onBack: () => void;
   onComplete?: (passed: boolean, score: number) => void;
   playSound: (type: 'click' | 'success' | 'error' | 'whoosh' | 'levelup') => void;
@@ -53,40 +47,44 @@ interface PerfStats {
   answerMs: number;
 }
 
-// ═══════════════════════════════════════════════════════════
-// الثوابت
-// ═══════════════════════════════════════════════════════════
-
 const XP_PER_CORRECT = 5;
-const PASS_THRESHOLD = 75;
+const PASS_THRESHOLD = 70;
 const DISPLAY_MS_PER_TERM = 2000;
 const WARNING_RATIO = 0.7;
+const QUESTION_COUNT = 5;
 
-// ═══════════════════════════════════════════════════════════
-// أدوات
-// ═══════════════════════════════════════════════════════════
-
-function getColumnsForQuestion(question: BankQuestion): number {
+function getColumnsForQuestion(q: SRBQuestion): number {
   const candidates: number[] = [
-    Math.abs(question.correctAnswer),
-    ...question.operands.map((op) => Math.abs(op)),
+    Math.abs(q.result),
+    ...q.operands.map((op) => Math.abs(op)),
   ];
   const maxAbs = Math.max(...candidates);
-
   if (maxAbs < 1000) return 3;
   if (maxAbs < 1_000_000) return 6;
   if (maxAbs < 1_000_000_000) return 9;
   return 13;
 }
 
-function buildDisplayTerms(question: BankQuestion): string[] {
-  const { operands, operation } = question;
+function getMaxMs(q: SRBQuestion): number {
+  return q.target_time_ms[1];
+}
 
-  if (operation === "multiplication") {
-    return [String(operands[0]), `× ${Math.abs(operands[1])}`];
+function getAnswerMs(q: SRBQuestion): number {
+  return q.target_time_ms[0];
+}
+
+function buildSkillId(level: SRBLevel, section: SRBSection, module: SRBModule): string {
+  return `${level}-${section}-${module}`;
+}
+
+function buildDisplayTerms(q: SRBQuestion): string[] {
+  const { operands, operation } = q;
+
+  if (operation === 'multiplication') {
+    return [String(operands[0]), `×${Math.abs(operands[1])}`];
   }
-  if (operation === "division") {
-    return [String(operands[0]), `÷ ${Math.abs(operands[1])}`];
+  if (operation === 'division') {
+    return [String(operands[0]), `÷${Math.abs(operands[1])}`];
   }
 
   return operands.map((op, i) => {
@@ -96,13 +94,13 @@ function buildDisplayTerms(question: BankQuestion): string[] {
   });
 }
 
-function buildFullQuestionText(question: BankQuestion): string {
-  const { operands, operation } = question;
+function buildFullQuestionText(q: SRBQuestion): string {
+  const { operands, operation } = q;
 
-  if (operation === "multiplication") {
+  if (operation === 'multiplication') {
     return `${operands[0]} × ${Math.abs(operands[1])}`;
   }
-  if (operation === "division") {
+  if (operation === 'division') {
     return `${operands[0]} ÷ ${Math.abs(operands[1])}`;
   }
 
@@ -115,20 +113,13 @@ function buildFullQuestionText(question: BankQuestion): string {
   return text;
 }
 
-/**
- * ✅ لفظ السؤال كاملاً للوضع العادي:
- *  - الجمع: "واحد وعشرون زائد ثلاثة، يساوي"
- *  - الطرح: "خمسة عشر ناقص أربعة، يساوي"
- *  - الضرب: "خمسة في ثلاثة، يساوي"
- *  - القسمة: "خمسة عشر على ثلاثة، يساوي"
- */
-function buildFullQuestionSpeech(question: BankQuestion): string {
-  const { operands, operation } = question;
+function buildFullQuestionSpeech(q: SRBQuestion): string {
+  const { operands, operation } = q;
 
-  if (operation === "multiplication") {
+  if (operation === 'multiplication') {
     return `${numberToArabicWords(operands[0])} في ${numberToArabicWords(Math.abs(operands[1]))}، يساوي`;
   }
-  if (operation === "division") {
+  if (operation === 'division') {
     return `${numberToArabicWords(operands[0])} على ${numberToArabicWords(Math.abs(operands[1]))}، يساوي`;
   }
 
@@ -141,16 +132,19 @@ function buildFullQuestionSpeech(question: BankQuestion): string {
   return parts.join('، ') + '، يساوي';
 }
 
-// ═══════════════════════════════════════════════════════════
-// الشاشة الرئيسية
-// ═══════════════════════════════════════════════════════════
-
 export function AnzanScreen({
-  levelNum, onBack, onComplete, playSound, onXP, burst,
+  level,
+  section,
+  initialMode = 'flash',
+  onBack,
+  onComplete,
+  playSound,
+  onXP,
+  burst,
 }: AnzanScreenProps) {
   const [phase, setPhase] = useState<Phase>('intro');
-  const [mode, setMode] = useState<Mode>('flash');
-  const [questions, setQuestions] = useState<BankQuestion[]>([]);
+  const [mode, setMode] = useState<Mode>(initialMode);
+  const [questions, setQuestions] = useState<SRBQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [currentTermIdx, setCurrentTermIdx] = useState(0);
   const [abacusValue, setAbacusValue] = useState(0);
@@ -164,7 +158,6 @@ export function AnzanScreen({
   const { speak, stop: stopSpeech, isSpeaking, isSupported } = useSpeech();
 
   const addXP = useProgressStore((s) => s.addXP);
-  const markAnzanVisualPassed = useProgressStore((s) => s.markAnzanVisualPassed);
   const updateStreak = useProgressStore((s) => s.updateStreak);
 
   const numberStyle = useNumberStyleStore((s) => s.style);
@@ -175,9 +168,10 @@ export function AnzanScreen({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const displayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
+  const wrongModulesRef = useRef<Set<SRBModule>>(new Set());
 
   const currentQ = questions[currentIdx];
-  const maxMs = currentQ ? currentQ.timing.maxMs : 30000;
+  const maxMs = currentQ ? getMaxMs(currentQ) : 30000;
   const warningAtMs = maxMs * WARNING_RATIO;
   const isWarning = elapsedMs >= warningAtMs;
   const progressPct = Math.min(100, (elapsedMs / maxMs) * 100);
@@ -185,11 +179,10 @@ export function AnzanScreen({
   const displayTerms = currentQ ? buildDisplayTerms(currentQ) : [];
 
   const startSession = useCallback(() => {
-    const qs = getAnzanVisualQuestions(levelNum, Date.now(), []);
+    const qs = getAnzanQuestions(level, section, mode, Date.now(), []);
     if (qs.length === 0) { playSound('error'); return; }
-
     perfRef.current = new Map();
-
+    wrongModulesRef.current = new Set();
     setQuestions(qs);
     setCurrentIdx(0);
     setCurrentTermIdx(0);
@@ -201,23 +194,28 @@ export function AnzanScreen({
     setPerformances([]);
     setPhase('showing');
     playSound('click');
-  }, [levelNum, playSound]);
+  }, [level, section, mode, playSound]);
 
   useEffect(() => {
     if (phase !== 'showing') return;
     if (!currentQ) return;
 
-    if (mode === 'عادي') {
-      if (!isSupported) {
-        const t = setTimeout(() => setPhase('answering'), 3000);
-        return () => clearTimeout(t);
+    const digits = currentQ.digit_count_max ?? 1;
+    const displayMs = digits <= 1 ? 2000 : 3000;
+
+    if (mode === 'normal') {
+      if (isSupported) {
+        const speech = buildFullQuestionSpeech(currentQ);
+        speak(speech, { rate: 0.9 });
       }
-      const speech = buildFullQuestionSpeech(currentQ);
-      speak(speech, {
-        rate: 0.9,
-        onEnd: () => setPhase('answering'),
-      });
-      return () => { stopSpeech(); };
+      const t = setTimeout(() => {
+        stopSpeech();
+        setPhase('answering');
+      }, displayMs);
+      return () => {
+        clearTimeout(t);
+        stopSpeech();
+      };
     }
 
     if (currentTermIdx >= displayTerms.length) {
@@ -227,13 +225,13 @@ export function AnzanScreen({
 
     displayTimerRef.current = setTimeout(() => {
       setCurrentTermIdx((i) => i + 1);
-    }, DISPLAY_MS_PER_TERM);
+    }, displayMs);
 
     return () => {
       if (displayTimerRef.current) clearTimeout(displayTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, currentTermIdx, displayTerms.length, mode, isSupported]);
+  }, [phase, currentTermIdx, displayTerms.length, mode, isSupported, currentQ]);
 
   useEffect(() => {
     if (phase !== 'answering') return;
@@ -252,29 +250,28 @@ export function AnzanScreen({
   const trackPerformance = useCallback(
     (isCorrect: boolean, timeMs: number) => {
       if (!currentQ) return;
-      const skillId = currentQ.skillId;
+      const skillId = buildSkillId(level, section, currentQ.module);
+      const answerMs = getAnswerMs(currentQ);
       const existing = perfRef.current.get(skillId) ?? {
-        correct: 0, attempts: 0, totalTimeMs: 0, answerMs: currentQ.timing.answerMs,
+        correct: 0, attempts: 0, totalTimeMs: 0, answerMs,
       };
       existing.attempts += 1;
       if (isCorrect) existing.correct += 1;
       existing.totalTimeMs += timeMs;
       perfRef.current.set(skillId, existing);
-
       if (isCorrect) {
-        const cls = classifySpeed(timeMs, currentQ.timing.answerMs);
-        if (cls === 'mastery') {
-          awardBadge(skillId, timeMs, currentQ.timing.answerMs);
-        }
+        const cls = classifySpeed(timeMs, answerMs);
+        if (cls === 'mastery') awardBadge(skillId, timeMs, answerMs);
+      } else {
+        wrongModulesRef.current.add(currentQ.module);
       }
     },
-    [currentQ, awardBadge],
+    [currentQ, level, section, awardBadge],
   );
 
   const handleTimeout = useCallback(() => {
     if (!currentQ || feedback !== 'idle') return;
     if (timerRef.current) clearInterval(timerRef.current);
-    recordWeaknessAttempt(currentQ.skillId, false, maxMs);
     trackPerformance(false, maxMs);
     playSound('error');
     setFeedback('wrong');
@@ -286,13 +283,9 @@ export function AnzanScreen({
   const handleCheck = useCallback(() => {
     if (!currentQ || feedback !== 'idle') return;
     if (timerRef.current) clearInterval(timerRef.current);
-
-    const isCorrect = abacusValue === currentQ.correctAnswer;
+    const isCorrect = abacusValue === currentQ.result;
     const timeMs = elapsedMs;
-
-    recordWeaknessAttempt(currentQ.skillId, isCorrect, timeMs);
     trackPerformance(isCorrect, timeMs);
-
     if (isCorrect) {
       setScore((s) => s + 1);
       setFeedback('correct');
@@ -307,7 +300,6 @@ export function AnzanScreen({
       playSound('error');
       sorobana.speakWrong();
     }
-
     setSavedTimeMs(timeMs);
     setPhase('reveal');
   }, [
@@ -328,6 +320,20 @@ export function AnzanScreen({
     return list;
   }, []);
 
+  const saveGrade = useCallback(
+    (finalScore: number, totalQuestions: number): boolean => {
+      const percentage = Math.round((finalScore / totalQuestions) * 100);
+      const passed = percentage >= PASS_THRESHOLD;
+      const gradeMode = mode === 'flash' ? 'anzanVisualFlash' : 'anzanVisualNormal';
+      saveSectionGrade(
+        level, section, gradeMode, percentage,
+        Array.from(wrongModulesRef.current),
+      );
+      return passed;
+    },
+    [level, section, mode],
+  );
+
   const nextQuestion = useCallback(() => {
     sorobana.stop();
     stopSpeech();
@@ -336,44 +342,35 @@ export function AnzanScreen({
     setElapsedMs(0);
     setSavedTimeMs(null);
     setCurrentTermIdx(0);
-
     if (currentIdx + 1 >= questions.length) {
-      const finalScore = score;
-      const passed = (finalScore / questions.length) * 100 >= PASS_THRESHOLD;
-      if (passed) markAnzanVisualPassed(levelNum);
+      const passed = saveGrade(score, questions.length);
       setPerformances(buildPerformances());
       setPhase('result');
       playSound(passed ? 'levelup' : 'whoosh');
-      onComplete?.(passed, finalScore);
+      onComplete?.(passed, score);
     } else {
       setCurrentIdx((i) => i + 1);
       setPhase('showing');
     }
   }, [
-    currentIdx, questions.length, score, levelNum, playSound,
-    sorobana, stopSpeech, onComplete, markAnzanVisualPassed, buildPerformances,
+    currentIdx, questions.length, score, playSound,
+    sorobana, stopSpeech, onComplete, buildPerformances, saveGrade,
   ]);
 
   const handleEnd = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     stopSpeech();
     sorobana.stop();
-
-    const finalScore = score;
-    const passed = (finalScore / questions.length) * 100 >= PASS_THRESHOLD;
-
-    if (passed) markAnzanVisualPassed(levelNum);
-
+    const passed = saveGrade(score, questions.length);
     setPerformances(buildPerformances());
     setPhase('result');
     playSound('whoosh');
-    onComplete?.(passed, finalScore);
+    onComplete?.(passed, score);
   }, [
-    score, questions.length, levelNum, playSound, stopSpeech,
-    sorobana, onComplete, markAnzanVisualPassed, buildPerformances,
+    score, questions.length, playSound, stopSpeech,
+    sorobana, onComplete, buildPerformances, saveGrade,
   ]);
 
-  // ═══ intro ═══
   if (phase === 'intro') {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
@@ -382,12 +379,12 @@ export function AnzanScreen({
             className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
             <ArrowRight className="w-6 h-6" />
           </button>
-          <div className="flex-1">
-            <h2 className="text-2xl font-extrabold font-display text-white">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-2xl font-extrabold font-display text-white truncate">
               الأنزان البصري
             </h2>
             <p className="text-sm text-white/50 font-body">
-              {formatNumber(5, numberStyle)} أسئلة من هذا المستوى
+              {level} · {section} — {formatNumber(QUESTION_COUNT, numberStyle)} أسئلة
             </p>
           </div>
           <Brain className="w-6 h-6 text-purple-300" />
@@ -401,9 +398,9 @@ export function AnzanScreen({
             <Zap className="w-4 h-4" />
             Flash (تحدٍّ)
           </button>
-          <button type="button" onClick={() => { playSound('click'); setMode('عادي'); }}
+          <button type="button" onClick={() => { playSound('click'); setMode('normal'); }}
             className={`flex-1 py-3 rounded-xl font-bold transition text-sm flex items-center justify-center gap-2 ${
-              mode === 'عادي' ? 'bg-purple-600 shadow-lg text-white' : 'text-white/60'
+              mode === 'normal' ? 'bg-purple-600 shadow-lg text-white' : 'text-white/60'
             }`}>
             <Eye className="w-4 h-4" />
             عادي
@@ -420,19 +417,19 @@ export function AnzanScreen({
           <div className="space-y-3 text-sm text-white/80 font-body">
             {mode === 'flash' ? (
               <>
-                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">{formatNumber(1, numberStyle)}.</span><p>الأرقام تظهر <strong>واحداً واحداً</strong> ({formatNumber(2, numberStyle)} ثانيتين لكل رقم)</p></div>
-                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">{formatNumber(2, numberStyle)}.</span><p>الرقم الأول بلا إشارة، والباقي مع إشاراته</p></div>
-                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">{formatNumber(3, numberStyle)}.</span><p>بعد آخر رقم → عدّاد الإجابة</p></div>
+                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">1.</span><p>الأرقام تظهر <strong>واحداً واحداً</strong></p></div>
+                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">2.</span><p>الرقم الأول بلا إشارة، والباقي مع إشاراته</p></div>
+                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">3.</span><p>بعد آخر رقم → عدّاد الإجابة</p></div>
               </>
             ) : (
               <>
-                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">{formatNumber(1, numberStyle)}.</span><p>السؤال يظهر <strong>كاملاً مكتوباً</strong></p></div>
-                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">{formatNumber(2, numberStyle)}.</span><p>يُقرأ السؤال صوتياً بالعربية ("واحد وعشرون زائد ثلاثة، يساوي")</p></div>
-                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">{formatNumber(3, numberStyle)}.</span><p>السؤال يبقى ظاهراً أثناء الإجابة</p></div>
+                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">1.</span><p>السؤال يظهر <strong>كاملاً</strong> مع صوت</p></div>
+                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">2.</span><p>يختفي بعد 2-3 ثوان</p></div>
+                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">3.</span><p>ثم تبني الناتج</p></div>
               </>
             )}
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">{formatNumber(4, numberStyle)}.</span><p>زر "تحقق" متاح دائماً، والانتقال يدوي بزر "التالي"</p></div>
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">{formatNumber(5, numberStyle)}.</span><p>يمكنك إنهاء التدريب في أي لحظة</p></div>
+            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">4.</span><p>زر "تحقق" متاح، والانتقال يدوي بزر "التالي"</p></div>
+            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">5.</span><p>يمكنك إنهاء التدريب في أي لحظة</p></div>
           </div>
           <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30">
             <div className="flex items-start gap-2">
@@ -452,7 +449,6 @@ export function AnzanScreen({
     );
   }
 
-  // ═══ showing ═══
   if (phase === 'showing' && currentQ) {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto min-h-screen flex flex-col">
@@ -462,7 +458,7 @@ export function AnzanScreen({
               السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-xs text-white/50 font-body">
-              {currentQ.skillId} · {mode === 'flash' ? 'Flash' : 'عادي'}
+              {section} · {mode === 'flash' ? 'Flash' : 'عادي'}
             </p>
           </div>
           <button type="button" onClick={handleEnd}
@@ -503,33 +499,24 @@ export function AnzanScreen({
               )}
             </AnimatePresence>
           ) : (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
               className="text-center">
-              <p className="text-sm text-white/50 font-body mb-4">
-                اسمع السؤال ثم مثّل الناتج
-              </p>
-              <p className="text-4xl sm:text-5xl font-black font-display text-white mb-6"
+              <p className="text-sm text-white/50 font-body mb-4">اقرأ السؤال</p>
+              <p className="text-5xl sm:text-7xl font-black font-display text-white"
                 dir={isArabic ? 'rtl' : 'ltr'}>
                 {formatText(buildFullQuestionText(currentQ), numberStyle)} = ؟
               </p>
-              <motion.div
-                animate={{ scale: isSpeaking ? [1, 1.15, 1] : 1 }}
-                transition={{ duration: 1, repeat: isSpeaking ? Infinity : 0 }}
-                className="inline-flex w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-electric-500 items-center justify-center shadow-xl">
-                <Brain className="w-10 h-10 text-white" />
-              </motion.div>
             </motion.div>
           )}
         </div>
 
         <p className="text-xs text-white/40 font-body text-center mt-6">
-          {mode === 'flash' ? '💡 جهّز أصابعك — طبّق كل رقم فوراً على العداد' : '🎧 اسمع السؤال بتركيز'}
+          {mode === 'flash' ? '💡 جهّز أصابعك — طبّق كل رقم فوراً' : '🎧 اسمع السؤال بتركيز'}
         </p>
       </div>
     );
   }
 
-  // ═══ answering ═══
   if (phase === 'answering' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
     return (
@@ -558,23 +545,11 @@ export function AnzanScreen({
 
         <div className="mb-5">
           <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-            <motion.div
-              className={`h-full rounded-full transition-colors ${
-                isWarning ? 'bg-gradient-to-r from-red-500 to-rose-600' : 'bg-gradient-to-r from-emerald-400 to-teal-500'
-              }`}
-              animate={{ width: `${progressPct}%` }}
-              transition={{ duration: 0.1 }} />
+            <motion.div className={`h-full rounded-full transition-colors ${
+              isWarning ? 'bg-gradient-to-r from-red-500 to-rose-600' : 'bg-gradient-to-r from-emerald-400 to-teal-500'
+            }`} animate={{ width: `${progressPct}%` }} transition={{ duration: 0.1 }} />
           </div>
         </div>
-
-        {mode === 'عادي' && (
-          <div className="glass-card p-4 mb-4 text-center">
-            <p className="text-2xl sm:text-3xl font-black font-display text-white"
-              dir={isArabic ? 'rtl' : 'ltr'}>
-              {formatText(buildFullQuestionText(currentQ), numberStyle)} = ؟
-            </p>
-          </div>
-        )}
 
         <div className="flex items-center justify-center gap-2 mb-5">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -602,11 +577,9 @@ export function AnzanScreen({
     );
   }
 
-  // ═══ reveal ═══
   if (phase === 'reveal' && currentQ) {
     const isCorrect = feedback === 'correct';
-    const formattedAnswer = formatNumber(currentQ.correctAnswer, numberStyle);
-
+    const formattedAnswer = formatNumber(currentQ.result, numberStyle);
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
@@ -637,10 +610,10 @@ export function AnzanScreen({
                 </p>
               </div>
             )}
-            {currentQ.explanation && (
+            {currentQ.solution && (
               <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-400/30 text-right">
                 <p className="text-xs text-blue-200 font-body leading-relaxed">
-                  💡 {formatText(currentQ.explanation, numberStyle)}
+                  💡 {formatText(currentQ.solution, numberStyle)}
                 </p>
               </div>
             )}
@@ -655,12 +628,10 @@ export function AnzanScreen({
     );
   }
 
-  // ═══ result ═══
   if (phase === 'result') {
     const percentage = Math.round((score / questions.length) * 100);
     const passed = percentage >= PASS_THRESHOLD;
     const xpEarned = score * XP_PER_CORRECT;
-
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto space-y-5">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
@@ -687,9 +658,7 @@ export function AnzanScreen({
               <p className="text-5xl font-black font-display text-white mt-1" dir={isArabic ? 'rtl' : 'ltr'}>
                 {formatNumber(score, numberStyle)} / {formatNumber(questions.length, numberStyle)}
               </p>
-              <p className={`text-lg font-bold font-body mt-1 ${
-                passed ? 'text-emerald-300' : 'text-amber-300'
-              }`}>
+              <p className={`text-lg font-bold font-body mt-1 ${passed ? 'text-emerald-300' : 'text-amber-300'}`}>
                 {formatNumber(percentage, numberStyle)}٪
               </p>
             </div>
@@ -703,11 +672,7 @@ export function AnzanScreen({
         </motion.div>
 
         {performances.length > 0 && (
-          <AdaptiveFeedback
-            performances={performances}
-            sectionLabel="أنزان بصري"
-            levelNum={levelNum}
-          />
+          <AdaptiveFeedback performances={performances} sectionLabel={`أنزان بصري — ${section}`} />
         )}
 
         <div className="space-y-3">
