@@ -36,24 +36,11 @@ import SorobanPlayground from './screens/SorobanPlayground';
 // ═══ Category Exam ═══
 import CategoryExamScreen from './screens/CategoryExamScreen';
 
-import LessonsListScreen from './screens/LessonsListScreen';
-import PracticeScreenSRB from './screens/PracticeScreenSRB';
-import AnzanScreenSRB from './screens/AnzanScreenSRB';
-import AudioAnzanScreenSRB from './screens/AudioAnzanScreenSRB';
-import RemediationScreen from './screens/RemediationScreen';
-import SRBTestScreen from './screens/SRBTestScreen';
-import type { SRBLevel, SRBSection } from './data/srb-adapter';
-
-type LessonsListMode =
-  | 'practice'
-  | 'anzan-visual-normal'
-  | 'anzan-visual-flash'
-  | 'anzan-audio';
 // ═══ Debug ═══
 import { DebugOverlay } from './components/DebugOverlay';
 
 // ═══ Types ═══
-type AppScreen = V1Screen | 'loading' | string;
+type AppScreen = V1Screen | 'loading';
 
 // ═══ Constants ═══
 const WELCOME_STORAGE_KEY = 'soroban_welcome_seen';
@@ -140,21 +127,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-  if (!ready) return;
-  
-  // قراءة #hash من الرابط
-  const hash = window.location.hash.replace('#', '');
-  if (hash) {
-    setScreen(hash as AppScreen);
-    return;
-  }
-  
-  if (shouldShowWelcome()) {
-    setScreen('welcome');
-  } else {
-    setScreen('role');
-  }
-}, [ready]);
+    if (!ready) return;
+    if (shouldShowWelcome()) {
+      setScreen('welcome');
+    } else {
+      setScreen('role');
+    }
+  }, [ready]);
 
   // ═══ Sound Wrapper ═══
   const handleSound = useCallback(
@@ -274,132 +253,6 @@ export default function App() {
 
   // ═══ Screen Renderer ═══
   const renderScreen = () => {
-// ═══ 🆕 lessons-list-L0-practice ═══
-if (screen.startsWith('lessons-list-')) {
-  const rest = screen.replace('lessons-list-', '');
-  const level = rest.substring(0, 2) as SRBLevel;
-  const modeStr = rest.substring(3);
-
-  const modeMap: Record<string, LessonsListMode> = {
-    'practice': 'practice',
-    'anzan-normal': 'anzan-visual-normal',
-    'anzan-flash': 'anzan-visual-flash',
-    'anzan-audio': 'anzan-audio',
-  };
-
-  const mode = modeMap[modeStr];
-  const isKids = ['L0', 'L1', 'L2', 'L3'].includes(level);
-
-  if (!mode) {
-    return <ComingSoonScreen onBack={handleBackToRole} />;
-  }
-
-  return (
-    <LessonsListScreen
-      level={level}
-      mode={mode}
-      onBack={() => handleBackToCategory(isKids ? 'kids' : 'teens')}
-      onSelectSection={(section) => {
-        let target = '';
-        if (mode === 'practice') {
-          target = `practice-srb-${level}-${section}`;
-        } else if (mode === 'anzan-visual-normal') {
-          target = `anzan-srb-${level}-${section}-normal`;
-        } else if (mode === 'anzan-visual-flash') {
-          target = `anzan-srb-${level}-${section}-flash`;
-        } else {
-          target = `audio-anzan-srb-${level}-${section}`;
-        }
-        setScreen(target as AppScreen);
-      }}
-      playSound={handleSound}
-    />
-  );
-}
-
-// ═══ 🆕 practice-srb-L0-S01 ═══
-if (screen.startsWith('practice-srb-')) {
-  const rest = screen.replace('practice-srb-', '');
-  const dashIdx = rest.indexOf('-');
-  const level = rest.substring(0, dashIdx) as SRBLevel;
-  const section = rest.substring(dashIdx + 1) as SRBSection;
-
-  return (
-    <PracticeScreenSRB
-      level={level}
-      section={section}
-      onBack={() => setScreen(`lessons-list-${level}-practice` as AppScreen)}
-      playSound={handleSound}
-    />
-  );
-}
-
-// ═══ 🆕 anzan-srb-L0-S01-flash ═══
-if (screen.startsWith('anzan-srb-')) {
-  const rest = screen.replace('anzan-srb-', '');
-  const parts = rest.split('-');
-  const level = parts[0] as SRBLevel;
-  const section = parts[1] as SRBSection;
-  const mode = (parts[2] as 'normal' | 'flash') || 'flash';
-
-  return (
-    <AnzanScreenSRB
-      level={level}
-      section={section}
-      initialMode={mode}
-      onBack={() => {
-        const listMode = mode === 'flash' ? 'anzan-flash' : 'anzan-normal';
-        setScreen(`lessons-list-${level}-${listMode}` as AppScreen);
-      }}
-      playSound={handleSound}
-    />
-  );
-}
-
-// ═══ 🆕 audio-anzan-srb-L0-S01 ═══
-if (screen.startsWith('audio-anzan-srb-')) {
-  const rest = screen.replace('audio-anzan-srb-', '');
-  const dashIdx = rest.indexOf('-');
-  const level = rest.substring(0, dashIdx) as SRBLevel;
-  const section = rest.substring(dashIdx + 1) as SRBSection;
-
-  return (
-    <AudioAnzanScreenSRB
-      level={level}
-      section={section}
-      onBack={() => setScreen(`lessons-list-${level}-anzan-audio` as AppScreen)}
-      playSound={handleSound}
-    />
-  );
-}
-
-// ═══ 🆕 remediation-L0-S01 ═══
-if (screen.startsWith('remediation-')) {
-  const rest = screen.replace('remediation-', '');
-  const dashIdx = rest.indexOf('-');
-  const level = rest.substring(0, dashIdx) as SRBLevel;
-  const section = rest.substring(dashIdx + 1) as SRBSection;
-
-  return (
-    <RemediationScreen
-      level={level}
-      section={section}
-      onBack={() => setScreen(`lessons-list-${level}-practice` as AppScreen)}
-      playSound={handleSound}
-    />
-  );
-}
-// ═══ 🧪 SRB Test ═══
-if (screen === 'srb-test') {
-  return (
-    <SRBTestScreen
-      onBack={handleBackToRole}
-      onNavigate={(target) => setScreen(target as AppScreen)}
-      playSound={handleSound}
-    />
-  );
-}
-
     // ═══ 🆕 learn-L0 ... learn-L7 ═══
     if (screen.startsWith('learn-')) {
       const levelId = screen.replace('learn-', '');
@@ -421,14 +274,15 @@ if (screen === 'srb-test') {
         />
       );
     }
-if (screen === 'finger-math') {
-  return (
-    <FingerMathScreen
-      onBack={() => handleBackToCategory('kids')}
-      playSound={handleSound}
-    />
-  );
-}
+
+    if (screen === 'finger-math') {
+      return (
+        <FingerMathScreen
+          onBack={() => handleBackToCategory('kids')}
+          playSound={handleSound}
+        />
+      );
+    }
 
     // ═══ 🆕 intro-L0-intro ... ═══
     if (screen.startsWith('intro-')) {
@@ -456,15 +310,15 @@ if (screen === 'finger-math') {
     }
 
     if (screen === 'magic-secrets') {
-  return (
-    <MagicSecretsScreen
-      onBack={() => handleBackToCategory('kids')}
-      playSound={handleSound}
-    />
-  );
-}
+      return (
+        <MagicSecretsScreen
+          onBack={() => handleBackToCategory('kids')}
+          playSound={handleSound}
+        />
+      );
+    }
 
-// ═══ 🆕 lesson-view-L0-S1 ... ═══
+    // ═══ 🆕 lesson-view-L0-S1 ... ═══
     if (screen.startsWith('lesson-view-')) {
       const lessonId = screen.replace('lesson-view-', '');
       const levelId = lessonId.split('-')[0];
@@ -651,7 +505,6 @@ if (screen === 'finger-math') {
           />
         );
       }
-
 
       case 'practice-0':
       case 'practice-1':
