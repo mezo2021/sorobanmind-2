@@ -6,11 +6,11 @@ import type { SRBQuestion } from "../../../types";
 import { makeQuestion } from "../../../generateId";
 
 export const S01_M4: readonly SRBQuestion[] = Object.freeze([
-  // ─── قراءة سريعة (flash) ───
+  // ─── قراءة سريعة (Flash / ANZ-V فقط) ───
   makeQuestion({
     level: "L0", section: "S01", module: "m4", sequence: 1,
     primary_phase: "ANZ-V",
-    allowed_phases: ["T", "P", "ANZ-V", "X"],
+    allowed_phases: ["T", "ANZ-V", "ANZ-F", "X"],
     question: "أي رقم: علوية + 0 سفلية؟",
     operands: [5], operation: "read", result: 5,
     solution: "5.",
@@ -21,18 +21,7 @@ export const S01_M4: readonly SRBQuestion[] = Object.freeze([
   makeQuestion({
     level: "L0", section: "S01", module: "m4", sequence: 2,
     primary_phase: "ANZ-V",
-    allowed_phases: ["T", "P", "ANZ-V", "X"],
-    question: "أي رقم: علوية + 4 سفلية؟",
-    operands: [9], operation: "read", result: 9,
-    solution: "9.",
-    movement: "direct",
-    difficulty: 1, expected_time_ms: 3000,
-    tags: ["transition", "read", "flash"],
-  }),
-  makeQuestion({
-    level: "L0", section: "S01", module: "m4", sequence: 3,
-    primary_phase: "ANZ-V",
-    allowed_phases: ["T", "P", "ANZ-V", "X"],
+    allowed_phases: ["T", "ANZ-V", "ANZ-F", "X"],
     question: "أي رقم: علوية + 1 سفلية؟",
     operands: [6], operation: "read", result: 6,
     solution: "6.",
@@ -41,9 +30,9 @@ export const S01_M4: readonly SRBQuestion[] = Object.freeze([
     tags: ["transition", "read", "flash"],
   }),
   makeQuestion({
-    level: "L0", section: "S01", module: "m4", sequence: 4,
+    level: "L0", section: "S01", module: "m4", sequence: 3,
     primary_phase: "ANZ-V",
-    allowed_phases: ["T", "P", "ANZ-V", "X"],
+    allowed_phases: ["T", "ANZ-V", "ANZ-F", "X"],
     question: "أي رقم: علوية + 3 سفلية؟",
     operands: [8], operation: "read", result: 8,
     solution: "8.",
@@ -52,9 +41,9 @@ export const S01_M4: readonly SRBQuestion[] = Object.freeze([
     tags: ["transition", "read", "flash"],
   }),
   makeQuestion({
-    level: "L0", section: "S01", module: "m4", sequence: 5,
+    level: "L0", section: "S01", module: "m4", sequence: 4,
     primary_phase: "ANZ-V",
-    allowed_phases: ["T", "P", "ANZ-V", "X"],
+    allowed_phases: ["T", "ANZ-V", "ANZ-F", "X"],
     question: "أي رقم: علوية + 2 سفلية؟",
     operands: [7], operation: "read", result: 7,
     solution: "7.",
@@ -62,11 +51,22 @@ export const S01_M4: readonly SRBQuestion[] = Object.freeze([
     difficulty: 1, expected_time_ms: 3000,
     tags: ["transition", "read", "flash"],
   }),
+  makeQuestion({
+    level: "L0", section: "S01", module: "m4", sequence: 5,
+    primary_phase: "ANZ-V",
+    allowed_phases: ["T", "ANZ-V", "ANZ-F", "X"],
+    question: "أي رقم: علوية + 4 سفلية؟",
+    operands: [9], operation: "read", result: 9,
+    solution: "9.",
+    movement: "direct",
+    difficulty: 1, expected_time_ms: 3000,
+    tags: ["transition", "read", "flash"],
+  }),
 
-  // ─── بناء سريع ───
+  // ─── بناء سريع (P · T · X) ───
   makeQuestion({
     level: "L0", section: "S01", module: "m4", sequence: 6,
-    primary_phase: "T",
+    primary_phase: "P",
     allowed_phases: ["T", "P", "X"],
     question: "مثّل 7 بسرعة",
     operands: [7], operation: "build", result: 7,
@@ -77,7 +77,7 @@ export const S01_M4: readonly SRBQuestion[] = Object.freeze([
   }),
   makeQuestion({
     level: "L0", section: "S01", module: "m4", sequence: 7,
-    primary_phase: "T",
+    primary_phase: "P",
     allowed_phases: ["T", "P", "X"],
     question: "مثّل 9 بسرعة",
     operands: [9], operation: "build", result: 9,
@@ -88,7 +88,7 @@ export const S01_M4: readonly SRBQuestion[] = Object.freeze([
   }),
   makeQuestion({
     level: "L0", section: "S01", module: "m4", sequence: 8,
-    primary_phase: "T",
+    primary_phase: "P",
     allowed_phases: ["T", "P", "X"],
     question: "مثّل 6 بسرعة",
     operands: [6], operation: "build", result: 6,
@@ -99,7 +99,7 @@ export const S01_M4: readonly SRBQuestion[] = Object.freeze([
   }),
   makeQuestion({
     level: "L0", section: "S01", module: "m4", sequence: 9,
-    primary_phase: "T",
+    primary_phase: "P",
     allowed_phases: ["T", "P", "X"],
     question: "مثّل 8 بسرعة",
     operands: [8], operation: "build", result: 8,
@@ -109,11 +109,11 @@ export const S01_M4: readonly SRBQuestion[] = Object.freeze([
     tags: ["transition", "build"],
   }),
 
-  // ─── تسلسل ───
+  // ─── تسلسل (Flash فقط) ───
   makeQuestion({
     level: "L0", section: "S01", module: "m4", sequence: 10,
-    primary_phase: "P",
-    allowed_phases: ["P", "ANZ-F", "X"],
+    primary_phase: "ANZ-F",
+    allowed_phases: ["ANZ-F"],
     question: "اقرأ الأرقام بسرعة: 3 · 7 · 1 · 9 · 5",
     operands: [3, 7, 1, 9, 5], operation: "read", result: 5,
     solution: "يُقاس الزمن — الهدف 8 ثوانٍ.",
@@ -123,8 +123,8 @@ export const S01_M4: readonly SRBQuestion[] = Object.freeze([
   }),
   makeQuestion({
     level: "L0", section: "S01", module: "m4", sequence: 11,
-    primary_phase: "P",
-    allowed_phases: ["P", "ANZ-F", "X"],
+    primary_phase: "ANZ-F",
+    allowed_phases: ["ANZ-F"],
     question: "اقرأ الأرقام بسرعة: 8 · 2 · 6 · 4 · 0",
     operands: [8, 2, 6, 4, 0], operation: "read", result: 0,
     solution: "يُقاس الزمن — الهدف 8 ثوانٍ.",
