@@ -53,7 +53,7 @@ type LessonsListMode =
 import { DebugOverlay } from './components/DebugOverlay';
 
 // ═══ Types ═══
-type AppScreen = V1Screen | 'loading';
+type AppScreen = V1Screen | 'loading' | string;
 
 // ═══ Constants ═══
 const WELCOME_STORAGE_KEY = 'soroban_welcome_seen';
