@@ -140,13 +140,21 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
-    if (shouldShowWelcome()) {
-      setScreen('welcome');
-    } else {
-      setScreen('role');
-    }
-  }, [ready]);
+  if (!ready) return;
+  
+  // قراءة #hash من الرابط
+  const hash = window.location.hash.replace('#', '');
+  if (hash) {
+    setScreen(hash as AppScreen);
+    return;
+  }
+  
+  if (shouldShowWelcome()) {
+    setScreen('welcome');
+  } else {
+    setScreen('role');
+  }
+}, [ready]);
 
   // ═══ Sound Wrapper ═══
   const handleSound = useCallback(
