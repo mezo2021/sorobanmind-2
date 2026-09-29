@@ -5,7 +5,7 @@
 // الوظيفة:
 //   - بناء خطة الجلسة العلاجية
 //   - تحديد المواضيع الضعيفة تلقائيًا
-//   - رسائل للمستخدم
+//   - رسائل جاهزة للمستخدم
 //
 // 📊 القواعد:
 //   - تُبنى من weakModules في progress
@@ -65,6 +65,12 @@ export interface RemediationPlan {
  * @param section - الدرس
  * @param count - عدد الأسئلة (افتراضيًا 5)
  * @returns خطة الجلسة
+ *
+ * @example
+ * const plan = buildRemediationPlan("L0", "S01");
+ * if (plan.shouldStart) {
+ *   // افتح شاشة الجلسة العلاجية
+ * }
  */
 export function buildRemediationPlan(
   level: SRBLevel,
@@ -127,11 +133,11 @@ export function buildRemediationPlan(
 }
 
 // ═══════════════════════════════════════════════════════════
-// 📢 رسائل
+// 📢 رسائل جاهزة
 // ═══════════════════════════════════════════════════════════
 
 /**
- * رسالة جاهزة للعرض.
+ * رسالة تفصيلية للعرض.
  */
 export function getRemediationMessage(plan: RemediationPlan): string {
   if (!plan.shouldStart) {
@@ -153,15 +159,16 @@ export function getRemediationButtonLabel(plan: RemediationPlan): string {
   return `🩺 جلسة علاجية (${plan.questions.length})`;
 }
 
-// ═══════════════════════════════════════════════════════════
-// 📊 إحصائيات
-// ═══════════════════════════════════════════════════════════
+/**
+ * عنوان الشاشة.
+ */
+export function getRemediationTitle(): string {
+  return "🩺 الجلسة العلاجية";
+}
 
 /**
- * عدد الدروس التي تحتاج علاجًا في مستوى.
+ * وصف الشاشة.
  */
-export function countRemediationSections(level: SRBLevel): number {
-  // نستخدم getSectionsNeedingRemediation من progress
-  const { getSectionsNeedingRemediation } = require("./progress");
-  return getSectionsNeedingRemediation(level).length;
+export function getRemediationDescription(): string {
+  return "جلسة مخصصة بدون درجات — تُظهر لك الحل بعد كل سؤال.";
 }
