@@ -35,6 +35,7 @@ import SorobanPlayground from './screens/SorobanPlayground';
 
 // ═══ Category Exam ═══
 import CategoryExamScreen from './screens/CategoryExamScreen';
+import type { SRBLevel, SRBSection } from './data/srb-adapter';
 
 // ═══ Debug ═══
 import { DebugOverlay } from './components/DebugOverlay';
@@ -507,42 +508,46 @@ export default function App() {
       }
 
       case 'practice-0':
-      case 'practice-1':
-      case 'practice-2':
-      case 'practice-3':
-      case 'practice-4':
-      case 'practice-5':
-      case 'practice-6':
-      case 'practice-7': {
-        const practiceNum = parseInt(screen.replace('practice-', ''), 10);
+case 'practice-1':
+case 'practice-2':
+case 'practice-3':
+case 'practice-4':
+case 'practice-5':
+case 'practice-6':
+case 'practice-7': {
+  const practiceNum = parseInt(screen.replace('practice-', ''), 10);
+  const level = `L${practiceNum}` as SRBLevel;
 
-        return (
-          <PracticeScreen
-            levelNum={practiceNum}
-            onBack={() =>
-              handleBackToCategory(practiceNum <= 3 ? 'kids' : 'teens')
-            }
-            onComplete={(passed, _score) => {
-              if (passed) {
-                try {
-                  const raw = localStorage.getItem('soroban_passed_practice');
-                  const arr = raw ? JSON.parse(raw) : [];
-                  if (!arr.includes(practiceNum)) {
-                    arr.push(practiceNum);
-                    localStorage.setItem(
-                      'soroban_passed_practice',
-                      JSON.stringify(arr),
-                    );
-                  }
-                } catch { /* ignore */ }
-              }
-            }}
-            playSound={handleSound}
-            onXP={(amount) => console.log('XP:', amount)}
-            burst={_burst}
-          />
-        );
+  // هذه الشاشة القديمة — نحولها للسؤال الأول من المستوى
+  // مؤقتًا: نستخدم S01 كنقطة بداية
+  return (
+    <PracticeScreen
+      level={level}
+      section={'S01' as SRBSection}
+      onBack={() =>
+        handleBackToCategory(practiceNum <= 3 ? 'kids' : 'teens')
       }
+      onComplete={(passed, _score) => {
+        if (passed) {
+          try {
+            const raw = localStorage.getItem('soroban_passed_practice');
+            const arr = raw ? JSON.parse(raw) : [];
+            if (!arr.includes(practiceNum)) {
+              arr.push(practiceNum);
+              localStorage.setItem(
+                'soroban_passed_practice',
+                JSON.stringify(arr),
+              );
+            }
+          } catch { /* ignore */ }
+        }
+      }}
+      playSound={handleSound}
+      onXP={(amount) => console.log('XP:', amount)}
+      burst={_burst}
+    />
+  );
+}
 
       case 'anzan-0':
       case 'anzan-1':
