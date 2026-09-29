@@ -1,14 +1,79 @@
+// ═══════════════════════════════════════════════════════════════════
+// 🎓 src/data/bank-v2/placement-engine.ts — محرك تحديد المستوى
+// ═══════════════════════════════════════════════════════════════════
+//
+// الوظيفة:
+//   - يبني امتحان تحديد المستوى (40 سؤالًا)
+//   - يوزّع 5 أسئلة لكل مستوى (L0-L7)
+//   - يقيّم الإجابات ويحدد المستوى المناسب
+//   - يسجّل المهارات الضعيفة في localStorage
+//
+// ✅ حالة جيدة: يستخدم ترقيم L0-L7 — متوافق مع SRB
+//
+// 📥 الاعتماديات:
+//   - ./bank-exam (EXAM_POOL_1 + EXAM_POOL_2 + ExamQuestion)
+//
+// 📤 الصادرات:
+//   - PlacementQuestion · LevelResult · PlacementResult
+//   - QUESTIONS_PER_LEVEL · POINTS_PER_QUESTION · POINTS_PER_LEVEL · PASS_THRESHOLD
+//   - buildPlacementTest() · evaluatePlacementTest()
+//   - canTakePlacementTest() · getLevelName()
+//
+// 🎯 تصميم المحرك:
+//
+//   المصدر:
+//     - EXAM_POOL_1: L0-L3 (4 مستويات)
+//     - EXAM_POOL_2: L4-L7 (4 مستويات)
+//
+//   التوزيع:
+//     - 5 أسئلة لكل مستوى = 40 سؤالًا إجمالًا
+//     - 5 نقاط لكل سؤال
+//     - 25 نقطة لكل مستوى
+//     - عتبة النجاح: 20 نقطة (80%)
+//
+//   الاختيار:
+//     - pickLongest() — يختار الأسئلة الأكثر تعقيدًا (termCount أعلى)
+//
+//   التقييم:
+//     - إذا فشل مستوى → firstFailedLevel = هذا المستوى
+//     - recommendedLevel = firstFailedLevel
+//     - إذا نجح الكل → recommendedLevel = "L7"
+//
+// 🔗 خطة الاستبدال بـ SRB (المرحلة 5):
+//
+//   الخطوة 1: إنشاء SRB placement pool:
+//      - SRB.getAll() مع filter على allowed_phases: ["PT"]
+//   الخطوة 2: تحديث buildPlacementTest() ليقرأ من SRB
+//   الخطوة 3: تحديث evalutePlacementTest() ليحفظ في progressStore
+//      بدل localStorage مباشرة
+//   الخطوة 4: اختبار شامل
+//
+//   ملاحظة: لا يحتاج تغييرًا كبيرًا — البنية متوافقة مع SRB
+//
+// ⚠️ قواعد حرجة:
+//   1. لا تغيّر QUESTIONS_PER_LEVEL (5) دون مراجعة
+//   2. لا تغيّر PASS_THRESHOLD (20 نقطة = 80%)
+//   3. لا تغيّر ترقيم L0-L7 (متوافق مع SRB)
+//   4. أي تعديل على evaluatePlacementTest() قد يؤثر على تحديد المستوى
+//
+// آخر تحديث: 2026-09-29
+//   - إضافة توثيق شامل + علامات SRB-MIGRATION
+//   - لا تغيير في المنطق
+//
+// ═══════════════════════════════════════════════════════════════════
+
 // src/data/bank-v2/placement-engine.ts
 // محرك امتحان تحديد المستوى (Placement Test)
 
+// 🔗 SRB-MIGRATION: سيُستبدل بـ SRB.getPlacementQuestions()
 import {
-  EXAM_POOL_1,
-  EXAM_POOL_2,
-  type ExamQuestion,
+  EXAM_POOL_1,             // 🔗 → SRB.getByPhase("PT", "L0-L3")
+  EXAM_POOL_2,             // 🔗 → SRB.getByPhase("PT", "L4-L7")
+  type ExamQuestion,       // 🔗 → SRBQuestion
 } from "./bank-exam";
 
 // ═══════════════════════════════════════════════════════════
-// الأنواع
+// 📝 الأنواع (Types)
 // ═══════════════════════════════════════════════════════════
 
 export interface PlacementQuestion extends ExamQuestion {
@@ -35,20 +100,20 @@ export interface PlacementResult {
 }
 
 // ═══════════════════════════════════════════════════════════
-// الثوابت
+// 🔢 الثوابت
 // ═══════════════════════════════════════════════════════════
 
-export const QUESTIONS_PER_LEVEL = 5;
-export const POINTS_PER_QUESTION = 5;
-export const POINTS_PER_LEVEL = 25;
-export const PASS_THRESHOLD = 20;
+export const QUESTIONS_PER_LEVEL = 5;       // 5 أسئلة لكل مستوى
+export const POINTS_PER_QUESTION = 5;       // 5 نقاط لكل سؤال
+export const POINTS_PER_LEVEL = 25;         // 5 × 5 = 25 نقطة
+export const PASS_THRESHOLD = 20;           // 80% من 25 = 20 نقطة
 
 const ALL_LEVELS = ["L0", "L1", "L2", "L3", "L4", "L5", "L6", "L7"];
 const EX1_LEVELS = ["L0", "L1", "L2", "L3"];
 const EX2_LEVELS = ["L4", "L5", "L6", "L7"];
 
 // ═══════════════════════════════════════════════════════════
-// أدوات
+// 🛠️ أدوات
 // ═══════════════════════════════════════════════════════════
 
 function createRng(seed: number): () => number {
@@ -71,6 +136,11 @@ function shuffle<T>(arr: T[], rng: () => number): T[] {
   return result;
 }
 
+/**
+ * اختيار الأسئلة الأكثر تعقيدًا.
+ *
+ * 🔗 SRB-MIGRATION: قد تُحدَّث المعايير
+ */
 function pickLongest(
   pool: ExamQuestion[],
   count: number,
@@ -80,13 +150,15 @@ function pickLongest(
 }
 
 // ═══════════════════════════════════════════════════════════
-// بناء امتحان تحديد المستوى
+// 🎯 بناء امتحان تحديد المستوى
+// 🔗 SRB-MIGRATION: SRB.getPlacementTest()
 // ═══════════════════════════════════════════════════════════
 
 export function buildPlacementTest(seed = Date.now()): PlacementQuestion[] {
   const rng = createRng(seed);
   const questions: PlacementQuestion[] = [];
 
+  // المستويات الأساسية (L0-L3)
   for (const levelId of EX1_LEVELS) {
     const pool = EXAM_POOL_1.filter((q) => q.levelId === levelId);
     if (pool.length === 0) continue;
@@ -102,6 +174,7 @@ export function buildPlacementTest(seed = Date.now()): PlacementQuestion[] {
     }
   }
 
+  // المستويات المتقدمة (L4-L7)
   for (const levelId of EX2_LEVELS) {
     const pool = EXAM_POOL_2.filter((q) => q.levelId === levelId);
     if (pool.length === 0) continue;
@@ -121,7 +194,8 @@ export function buildPlacementTest(seed = Date.now()): PlacementQuestion[] {
 }
 
 // ═══════════════════════════════════════════════════════════
-// تقييم امتحان تحديد المستوى
+// 📊 تقييم امتحان تحديد المستوى
+// 🔗 SRB-MIGRATION: SRB.evaluatePlacement()
 // ═══════════════════════════════════════════════════════════
 
 export function evaluatePlacementTest(
@@ -133,6 +207,7 @@ export function evaluatePlacementTest(
     { total: number; correct: number; weakSkills: Set<string> }
   >();
 
+  // تهيئة جميع المستويات
   for (const levelId of ALL_LEVELS) {
     byLevel.set(levelId, {
       total: 0,
@@ -141,6 +216,7 @@ export function evaluatePlacementTest(
     });
   }
 
+  // معالجة كل سؤال
   for (const q of questions) {
     const levelData = byLevel.get(q.levelId);
     if (!levelData) continue;
@@ -155,9 +231,10 @@ export function evaluatePlacementTest(
     } else {
       levelData.weakSkills.add(q.skillId);
 
-      // تسجيل الضعف مباشرة في localStorage
+      // 🔗 SRB-MIGRATION: سيُستبدل بـ progressStore.updateWeakSkills()
+      //    بدل localStorage مباشرة
       try {
-        const WEAK_KEY = "soroban_weak_skills_v2";
+        const WEAK_KEY = "soroban_weak_skills_v2";  // 🔗 SRB: srb_weak_skills
         const raw = localStorage.getItem(WEAK_KEY);
         const data = raw ? JSON.parse(raw) : {};
         const current = data[q.skillId] ?? {
@@ -182,6 +259,7 @@ export function evaluatePlacementTest(
     }
   }
 
+  // حساب النتائج لكل مستوى
   const levels: LevelResult[] = [];
   let firstFailedLevel: string | null = null;
   const allWeakSkills = new Set<string>();
@@ -212,6 +290,7 @@ export function evaluatePlacementTest(
     });
   }
 
+  // المستوى المُوصى به
   let recommendedLevel: string;
   if (firstFailedLevel !== null) {
     recommendedLevel = firstFailedLevel;
@@ -235,9 +314,15 @@ export function evaluatePlacementTest(
 }
 
 // ═══════════════════════════════════════════════════════════
-// أدوات مساعدة
+// 🛠️ أدوات مساعدة
+// 🔗 SRB-MIGRATION: ستبقى كما هي
 // ═══════════════════════════════════════════════════════════
 
+/**
+ * هل يمكن للطالب إجراء اختبار تحديد المستوى؟
+ *
+ * القاعدة: انتظار 48 ساعة بين المحاولات.
+ */
 export function canTakePlacementTest(
   lastAttempt: number | null,
   cooldownMs: number = 48 * 60 * 60 * 1000,
@@ -250,6 +335,9 @@ export function canTakePlacementTest(
   return { allowed: false, waitMs: cooldownMs - elapsed };
 }
 
+/**
+ * اسم المستوى بالعربية.
+ */
 export function getLevelName(levelId: string): string {
   const map: Record<string, string> = {
     L0: "التمهيدي",
