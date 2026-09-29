@@ -9,10 +9,15 @@
 //   - اختيار عشوائي موزون
 //
 // 📊 القواعد:
-//   - الأسئلة من نفس الدرس S فقط
+//   - الأسئلة من نفس الدرس S + نفس المستوى L
 //   - 5 أسئلة لكل جلسة عادية
 //   - 5 أسئلة للجلسة العلاجية (قابلة للتوسع)
 //   - لا تكرار داخل الجلسة
+//
+// 🔧 التعديل (2026-09-29):
+//   - إضافة فلترة level + section في getAvailableQuestions
+//   - إضافة فلترة level + section + module في getAvailableByModule
+//   - تمرير level في buildSession و buildRemediationSession
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -27,7 +32,6 @@ import type {
 import {
   getQuestionsBySection,
   getQuestionsByModule,
-  SOROBAN_BANK,
 } from "./index";
 
 // ═══════════════════════════════════════════════════════════
@@ -112,30 +116,40 @@ function shuffle<T>(arr: T[], rng: () => number): T[] {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 🔍 فلترة
+// 🔍 فلترة (مع level)
 // ═══════════════════════════════════════════════════════════
 
 /**
  * الأسئلة المتاحة لدرس + مرحلة.
+ *
+ * ⚠️ يُصفّي حسب: level + section + phase
  */
 function getAvailableQuestions(
+  level: SRBLevel,
   section: SRBSection,
   phase: SRBPhase,
 ): SRBQuestion[] {
   const all = getQuestionsBySection(section);
-  return all.filter((q) => q.allowed_phases.includes(phase));
+  return all.filter(
+    (q) => q.level === level && q.allowed_phases.includes(phase),
+  );
 }
 
 /**
  * الأسئلة المتاحة لموضوع معين + مرحلة.
+ *
+ * ⚠️ يُصفّي حسب: level + section + module + phase
  */
 function getAvailableByModule(
+  level: SRBLevel,
   section: SRBSection,
   module: SRBModule,
   phase: SRBPhase,
 ): SRBQuestion[] {
   const all = getQuestionsByModule(section, module);
-  return all.filter((q) => q.allowed_phases.includes(phase));
+  return all.filter(
+    (q) => q.level === level && q.allowed_phases.includes(phase),
+  );
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -158,14 +172,15 @@ function getAvailableByModule(
  */
 export function buildSession(spec: SessionSpec): SessionResult {
   const {
+    level,
     section,
     phase,
     count = 5,
     seed = Date.now(),
   } = spec;
 
-  // 1. جلب الأسئلة المتاحة
-  const pool = getAvailableQuestions(section, phase);
+  // 1. جلب الأسئلة المتاحة (level + section + phase)
+  const pool = getAvailableQuestions(level, section, phase);
 
   // 2. خلط
   const rng = createRng(seed);
@@ -201,6 +216,7 @@ export function buildRemediationSession(
   spec: RemediationSpec,
 ): SessionResult {
   const {
+    level,
     section,
     weakModules,
     count = 5,
@@ -211,14 +227,14 @@ export function buildRemediationSession(
   const allWeakQuestions: SRBQuestion[] = [];
 
   for (const module of weakModules) {
-    const moduleQs = getAvailableByModule(section, module, "P");
+    const moduleQs = getAvailableByModule(level, section, module, "P");
     allWeakQuestions.push(...moduleQs);
   }
 
   // 2. إذا لم نجد أسئلة، نعود لكل أسئلة الدرس
   let pool = allWeakQuestions;
   if (pool.length === 0) {
-    pool = getAvailableQuestions(section, "P");
+    pool = getAvailableQuestions(level, section, "P");
   }
 
   // 3. خلط
@@ -246,11 +262,6 @@ export function buildRemediationSession(
  * ⚠️ ملاحظة: هذا يحتاج دعماً من بنية السؤال.
  *    حالياً البنك يستخدم إدخال مباشر (إباكوس) — لا خيارات.
  *    عند إضافة أسئلة متعددة الخيارات، تُستخدم هذه الدالة.
- *
- * @param correctAnswer - الإجابة الصحيحة
- * @param distractors - الإجابات الخاطئة
- * @param seed - بذرة عشوائية
- * @returns مصفوفة الخيارات مُعاد ترتيبها
  */
 export function shuffleAnswerOptions(
   correctAnswer: number,
@@ -263,10 +274,7 @@ export function shuffleAnswerOptions(
   const rng = createRng(seed);
   const all = [correctAnswer, ...distractors];
 
-  // خلط
   const shuffled = shuffle([...all], rng);
-
-  // موضع الإجابة الصحيحة بعد الخلط
   const correctIndex = shuffled.indexOf(correctAnswer);
 
   return {
@@ -281,32 +289,43 @@ export function shuffleAnswerOptions(
 
 /**
  * عدد الأسئلة المتاحة لدرس + مرحلة.
+ *
+ * ⚠️ يحتاج level الآن.
  */
 export function countAvailableQuestions(
+  level: SRBLevel,
   section: SRBSection,
   phase: SRBPhase,
 ): number {
-  return getAvailableQuestions(section, phase).length;
+  return getAvailableQuestions(level, section, phase).length;
 }
 
 /**
  * هل يمكن بناء جلسة كاملة؟
+ *
+ * ⚠️ يحتاج level الآن.
  */
 export function canBuildSession(
+  level: SRBLevel,
   section: SRBSection,
   phase: SRBPhase,
   count: number = 5,
 ): boolean {
-  return countAvailableQuestions(section, phase) >= count;
+  return countAvailableQuestions(level, section, phase) >= count;
 }
 
 /**
- * قائمة المراحل المتاحة لكل درس.
+ * قائمة المراحل المتاحة لكل درس (في مستوى معين).
+ *
+ * ⚠️ يحتاج level الآن.
  */
 export function getAvailablePhases(
+  level: SRBLevel,
   section: SRBSection,
 ): SRBPhase[] {
-  const questions = getQuestionsBySection(section);
+  const questions = getQuestionsBySection(section).filter(
+    (q) => q.level === level,
+  );
   const phases = new Set<SRBPhase>();
 
   for (const q of questions) {
