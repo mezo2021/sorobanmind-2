@@ -35,9 +35,9 @@
 
 ---
 
-## 📚 المنهج — 8 مستويات / 20 مهارة
+## 📚 المنهج — 8 مستويات / 20 درس
 
-| المستوى | الاسم | المهارات | القسم |
+| المستوى | الاسم | الدروس | القسم |
 |---|---|---|---|
 | **L0** | التمهيدي | S01 تمثيل 0-9 · S02 القيمة المكانية | 🧒 |
 | **L1** | الجمع والطرح | S03 جمع مباشر · S04 طرح مباشر · S05 أصدقاء 5 جمع · S06 أصدقاء 5 طرح · S07 أصدقاء 10 جمع · S08 أصدقاء 10 طرح · S09 مختلط | 🧒 |
@@ -65,14 +65,14 @@
 
 ### 🔑 نظام الـ ID
 
-**الصيغة**: `SRB-L{مستوى}-S{مهارة}-M{موضوع}-{B/A}{تسلسل}`
+**الصيغة**: `SRB-L{مستوى}-S{درس}-m{مهارة}-{B/A}{تسلسل}`
 
 **أمثلة**:
 ```
 
-SRB-L0-S01-M01-B001   ← أول سؤال، تمثيل 0-4
-SRB-L0-S01-M02-B003   ← ثالث سؤال، تمثيل 5
-SRB-L1-S03-M01-A001   ← أول سؤال متقدم، جمع مباشر
+SRB-L0-S01-m1-B001   ← أول سؤال، درس S01، مهارة m1
+SRB-L0-S01-m2-B003   ← ثالث سؤال، درس S01، مهارة m2
+SRB-L1-S03-m1-A001   ← أول سؤال متقدم، درس S03، مهارة m1
 
 ```
 
@@ -80,10 +80,25 @@ SRB-L1-S03-M01-A001   ← أول سؤال متقدم، جمع مباشر
 |---|---|
 | `SRB` | بادئة بنك السوروبان |
 | `L0..L7` | المستوى |
-| `S01..S20` | المهارة (بخانتين) |
-| `M01..M99` | الموضوع الفرعي (بخانتين) |
+| `S01..S20` | الدرس (بخانتين) |
+| `m1..m99` | المهارة (بحرف صغير) |
 | `B / A` | أساسي (basic) / متقدم (advanced) |
 | `001..N` | التسلسل (3 أرقام) |
+
+### 🎯 بنية m (المهارات الفرعية)
+
+**القاعدة**: كل درس S يُعيد ترقيم m من `m1`.
+
+**السبب**: `S` جزء من ID → لا تضارب.
+
+**مثال**:
+```
+
+S10 (الضرب 2×1)       → m1 (منزلة × 2 منازل)
+S11 (الضرب 2×2)       → m1 (منزلة × 3 منازل) · m2 (منزلتين × 2 منازل)
+S12 (الضرب المتقدم)   → m1 (منزلة × 4) · m2 (منزلتين × 3-4) · m3 (3×3)
+
+```
 
 ### 📏 القواعد الصارمة
 
@@ -93,7 +108,7 @@ SRB-L1-S03-M01-A001   ← أول سؤال متقدم، جمع مباشر
 | 2 | `operand_count` = عدد الأرقام في السؤال (وليس الجواب) |
 | 3 | `difficulty_score` يتصاعد بانتظام |
 | 4 | `solution` نظيف — بلا مسودات ولا "تصحيح:" |
-| 5 | `next_if_fail` يرجع 3 خطوات داخل نفس القسم |
+| 5 | `next_if_fail` يرجع 3 خطوات داخل نفس الدرس |
 | 6 | `mastery_threshold` = 0.85 للأساسي · 0.8 للمتقدم |
 | 7 | `stage` = basic (L0–L3) · advanced (L4–L7) |
 | 8 | `target_time_ms` = [min, max] حيث max = min × 1.5 |
@@ -115,10 +130,10 @@ SRB-L1-S03-M01-A001   ← أول سؤال متقدم، جمع مباشر
 | **PT** | تحديد المستوى | 40 سؤالًا | ✅ |
 | **EN** | الإثراء | محتوى جانبي | ❌ |
 
-**القاعدة**: السؤال الواحد يمكن أن يظهر في عدة مراحل عبر `allowed_phases`:
+**مثال**:
 ```json
 {
-  "id": "SRB-L0-S01-M01-B001",
+  "id": "SRB-L0-S01-m1-B001",
   "allowed_phases": ["T", "P", "ANZ-V", "X"],
   "primary_phase": "T"
 }
@@ -142,7 +157,7 @@ SRB-L1-S03-M01-A001   ← أول سؤال متقدم، جمع مباشر
 🚨 تشخيص الأخطاء (4 مستويات)
 
 # الشرط المستوى العلاج
-1 3 أخطاء في M واحد M (موضوع) إعادة الموضوع
+1 3 أخطاء في m واحد m (مهارة) إعادة المهارة
 2 3 أخطاء في S واحد S (درس) إعادة الدرس
 3 3 أخطاء متتالية بأي شكل عام تنبيه + تهدئة
 4 5 أخطاء كلها خاطئة في L L (مستوى) العودة لمستوى أدنى
@@ -157,7 +172,7 @@ SRB-L1-S03-M01-A001   ← أول سؤال متقدم، جمع مباشر
 امتحان قسم CE-2 40 سؤالًا نجاح 80%
 تحديد مستوى PT 40 سؤالًا نجاح 75% لكل مستوى
 
-⚠️ ملاحظة: في الاختبارات الطويلة (10+ أسئلة)، التوزيع موزون عبر المواضيع — فلا يمكن أن يأتي أكثر من 3 أسئلة من M واحد.
+⚠️ ملاحظة: في الاختبارات الطويلة (10+ أسئلة)، التوزيع موزون عبر المواضيع — فلا يمكن أن يأتي أكثر من 3 أسئلة من m واحد.
 
 ---
 
@@ -185,7 +200,7 @@ src/
 ├── i18n/                            ✅ الترجمة (ar / en)
 │
 ├── curriculum/                      📖 المنهج
-│   ├── types.ts                     🔑 العقد الأساسي
+│   ├── types.ts                     🔑 العقد الأساسي (14 مستورد)
 │   └── lessons/L0/                  ✅ 3 دروس
 │
 ├── engine/                          🧠 المحرك الرياضي
@@ -196,27 +211,27 @@ src/
 │   └── adaptiveEngine.ts            ✅ موثّق + SRB-MIGRATION
 │
 ├── data/                            💾 البيانات
-│   ├── bank.ts                      ⚠️ v1 — قيد الاستبدال
-│   ├── bank-v2/                     ⚠️ 4 بنوك + امتحانات (SRB)
+│   ├── bank.ts                      ⚠️ v1 — معزول (0 مستورد)
+│   ├── bank-v2/                     ⚠️ 4 بنوك + امتحانات
 │   │   ├── types.ts                 ✅ موثّق
-│   │   ├── index.ts                 ✅ موثّق
+│   │   ├── index.ts                 ✅ موثّق (7 مستوردين)
 │   │   ├── part-01 → part-04.ts    ✅ بنية مؤكدة
 │   │   ├── bank-exam.ts             ✅ موثّق
 │   │   └── placement-engine.ts      ✅ موثّق
-│   ├── bank-raw/                    ⚠️ 400 سؤال ياباني (SRB)
+│   ├── bank-raw/                    ⚠️ 400 سؤال ياباني
 │   │   ├── types.ts                 ✅ موثّق
-│   │   ├── index.ts                 ✅ موثّق
+│   │   ├── index.ts                 ✅ موثّق (2 مستوردين)
 │   │   ├── raw-01 → raw-07.ts      ✅ بنية مؤكدة
 │   │   └── (S1-S17)
-│   ├── bank-linked.ts               ✅ موثّق + SRB-MIGRATION
-│   ├── bank-adapter.ts              ✅ موثّق + SRB-MIGRATION
+│   ├── bank-linked.ts               ✅ موثّق (2 مستوردين)
+│   ├── bank-adapter.ts              ✅ موثّق (1 مستورد)
 │   ├── curriculum.ts                ✅ 8 مستويات
 │   ├── modes.ts                     ✅ أنماط اللعب
 │   ├── srb/                         🆕 الهدف
 │   └── srb-adapter.ts               🆕 سيُبنى
 │
 ├── store/                           📦 المتاجر
-│   ├── progressStore.ts             ✅ الأساسي
+│   ├── progressStore.ts             ✅ الأساسي (7 مستوردين)
 │   ├── masteryBadgesStore.ts        ⚠️ مكرر
 │   └── numberStyleStore.ts          ⚠️ يُدمج
 │
@@ -233,19 +248,77 @@ src/
 ├── hooks/                           🪝 Hooks (7)
 │
 ├── components/                      🧩 المكونات
+│   ├── AdaptiveFeedback.tsx         🔴 يستورد من bank-v2
 │   └── soroban2d5/                  ✅ السوروبان التفاعلي
 │
 └── screens/                         📱 الشاشات
 ├── LessonScreen.tsx             ✅
-├── PracticeScreen.tsx           🔴 يحتاج مراجعة
-├── AnzanScreen.tsx              🔴 يحتاج مراجعة
-├── AudioAnzanScreen.tsx         🔴 يحتاج مراجعة
-├── CategoryExamScreen.tsx       🔴 يحتاج مراجعة
-├── LevelTestScreen.tsx          🔴 يحتاج مراجعة
-├── PlacementTestScreen.tsx      🔴 يحتاج مراجعة
+├── PracticeScreen.tsx           🔴 يستورد من bank-v2
+├── AnzanScreen.tsx              🔴 يستورد من bank-v2
+├── AudioAnzanScreen.tsx         🔴 يستورد من bank-v2
+├── CategoryExamScreen.tsx       🔴 يستورد من bank-v2
+├── LevelTestScreen.tsx          🔴 (يحتاج فحص)
+├── PlacementTestScreen.tsx      🔴 يستورد من bank-v2
 └── (14 شاشة أخرى)               ✅
 
 ```
+
+---
+
+🔗 خريطة الاعتماديات الكاملة
+
+🎯 المستوردون الحقيقيون (خلاصة كل البحوث)
+
+# الملف المصدر المستوردون الحقيقيون العدد
+1 bank-linked.ts adaptiveEngine.ts · problemGenerator.ts 2
+2 bank-v2/index.ts AnzanScreen · PracticeScreen · CategoryExamScreen · AudioAnzanScreen · PlacementTestScreen · AdaptiveFeedback · bank-linked.ts 7
+3 bank-raw/index.ts bank-v2/bank-exam.ts · bank-adapter.ts 2
+4 bank-adapter.ts bank-linked.ts 1
+5 bank.ts ❌ معزول تمامًا 0
+
+المجموع: 12 علاقة استيراد حقيقية.
+
+🎯 خريطة bank-v2 بالتفصيل
+
+# الملف ما يستورده
+1 src/screens/AnzanScreen.tsx (يحتاج كشف)
+2 src/screens/PracticeScreen.tsx getPracticeQuestions · recordWeaknessAttempt · BankQuestion
+3 src/screens/CategoryExamScreen.tsx EXAM_MAX_ATTEMPTS · EXAM_COOLDOWN_MS · BankQuestion
+4 src/screens/AudioAnzanScreen.tsx (يحتاج كشف)
+5 src/screens/PlacementTestScreen.tsx (يحتاج كشف)
+6 src/components/AdaptiveFeedback.tsx loadWeakSkills
+7 src/data/bank-linked.ts SOROBAN_BANK_V2 · BankQuestion · BankOperation
+
+🎯 خريطة curriculum/types.ts (14 مستورد)
+
+# الملف ما يستورده
+1 src/data/modes.ts Category
+2 src/engine/masteryTracker.ts Attempt · SkillProgress · Skill
+3 src/components/SorobanEngineDebug.tsx RodState
+4 src/engine/sorobanMoves.ts MovementType · RodState · SorobanState
+5 src/data/bank-linked.ts Problem · MovementType
+6 src/data/bank-adapter.ts MovementType
+7 src/engine/sorobanEngine.ts MovementType · SorobanState · SolveStep
+8 src/engine/problemGenerator.ts Problem · ProblemGeneratorSpec
+9 src/data/bank-v2/types.ts MovementType
+10 src/data/bank.ts MovementType · Problem
+11 src/engine/adaptiveEngine.ts Attempt · SkillProgress · Skill · CurriculumLevel
+12 src/data/curriculum.ts (أنواع متعددة)
+13 src/store/progressStore.ts (أنواع متعددة)
+14 src/curriculum/lessons/L0/* (أنواع متعددة)
+
+⚠️ العقد الأساسي — لا يُلمس.
+
+🎯 خريطة progressStore.ts (7 مستوردين)
+
+# الملف ما يستورده
+1 src/App.tsx LevelId (type)
+2 src/data/curriculum.ts LevelId (type)
+3 src/screens/LevelScreen.tsx (يحتاج كشف)
+4 src/screens/PracticeScreen.tsx useProgressStore
+5 src/screens/AnzanScreen.tsx useProgressStore
+6 src/screens/AudioAnzanScreen.tsx useProgressStore
+7 (يحتاج فحص إضافي) —
 
 ---
 
@@ -268,19 +341,19 @@ src/
 🏦 البنوك الأربعة — نظرة شاملة
 
 # الملف الحجم المصدر نظام الترقيم الحالة
-1 bank.ts 500 مولَّد برمجيًا L01-L07 ⚠️ قيد الاستبدال
+1 bank.ts 500 مولَّد برمجيًا L01-L07 ⚠️ قيد الاستبدال (معزول)
 2 bank-v2/part-01 → 04 ~935 نظام حديث L0-L7 / S1-S20 ✅ مستخدم
 3 bank-raw/raw-01 → 07 400 منهج كوجيما S1-S17 ✅ مستخدم
 4 bank-linked.ts موحّد v2 + raw مختلط ⚠️ قيد الاستبدال
 
 🚨 التعارض الحقيقي: 3 أنظمة ترقيم
 
-الملف المستوى المهارة القسم
-bank.ts L01-L07 L01.S01 —
-bank-v2/ L0-L7 S1-S20 —
-bank-raw/ — — S1-S17
-bank-adapter.ts L03-L20 L03.S01 S1-S17
-SRB L0-L7 S01-S20 M01-M99
+الملف المستوى الدرس المهارة القسم
+bank.ts L01-L07 L01.S01 — —
+bank-v2/ L0-L7 S1-S20 — —
+bank-raw/ — — — S1-S17
+bank-adapter.ts L03-L20 L03.S01 — S1-S17
+SRB L0-L7 S01-S20 m1-m99 —
 
 ⚠️ هذا التعارض هو السبب الجذري لفشل توحيد IDs سابقًا.
 
@@ -300,7 +373,7 @@ L5 part-03 + bank-raw/raw-05 60 ✅ جاهز
 L6 part-04 + bank-raw/raw-04 — ⏳ في الانتظار
 L7 part-04 + bank-raw/raw-07 — ⏳ في الانتظار
 
-📋 الملفات الموثّقة (من جلسة التنظيف)
+📋 الملفات الموثّقة (جلسة 2026-09-28/29)
 
 # الملف الحالة
 1 src/utils/anzanBadges.ts ✅ جديد
@@ -328,6 +401,7 @@ L7 part-04 + bank-raw/raw-07 — ⏳ في الانتظار
 الفئة العدد الملفات
 البنك 4 bank.ts · bank-linked.ts · bank-adapter.ts · data/index.ts
 التمرّن والأنزان 6 PracticeScreen · AnzanScreen · AudioAnzanScreen · CategoryExamScreen · LevelTestScreen · PlacementTestScreen
+المكونات 1 AdaptiveFeedback.tsx
 المتاجر والشارات 3 masteryBadgesStore.ts · numberStyleStore.ts · skillsChecker.ts
 الشهادة 1 CertificateScreen.tsx
 
@@ -358,22 +432,29 @@ L7 part-04 + bank-raw/raw-07 — ⏳ في الانتظار
 14 توثيق bank-v2/index.ts ✅
 15 توثيق bank-v2/bank-exam.ts ✅
 16 توثيق bank-v2/placement-engine.ts ✅
+17 خريطة الاعتماديات الكاملة ✅
+
+---
 
 🎯 المرحلة القادمة — بناء SRB
 
 # المهمة الحالة
 1 بناء src/data/srb/types.ts ⏳
 2 بناء src/data/srb/generateId.ts ⏳
-3 بناء src/data/srb/modules.ts (المواضيع الفرعية) ⏳
-4 بناء src/data/srb/questions/L0/ ⏳
-5 بناء src/data/srb/questions/L1/ ⏳
-6 بناء src/data/srb/index.ts ⏳
-7 بناء src/data/srb-adapter.ts ⏳
-8 توصيل SRB بـ problemGenerator ⏳
-9 توصيل SRB بـ adaptiveEngine ⏳
-10 تطبيق SRB على L0 ⏳
-11 اختبار L0 حيًّا ⏳
-12 حفظ ZIP احتياطي ⏳
+3 بناء src/data/srb/curriculum.ts ⏳
+4 بناء src/data/srb/modules.ts ⏳
+5 بناء src/data/srb/questions/L0/S01/m1 → m4.ts ⏳
+6 بناء src/data/srb/questions/L0/S02/m1 → m4.ts ⏳
+7 بناء src/data/srb/index.ts ⏳
+8 بناء src/data/srb-adapter.ts ⏳
+9 توصيل SRB بـ problemGenerator ⏳
+10 توصيل SRB بـ adaptiveEngine ⏳
+11 توجيه 7 مستوردين لـ bank-v2 إلى srb-adapter ⏳
+12 تطبيق SRB على L0 ⏳
+13 اختبار L0 حيًّا ⏳
+14 حفظ ZIP احتياطي ⏳
+
+---
 
 🗺️ المراحل الكبرى
 
@@ -383,10 +464,27 @@ L7 part-04 + bank-raw/raw-07 — ⏳ في الانتظار
 ③ بناء SRB ⏳
 ④ توصيل SRB بالمحرك ⏳
 ⑤ تطبيق SRB على L0 → L1 ⏳
-⑥ حذف البنوك القديمة ⏳
+⑥ حذف البنوك القديمة (أرشفة) ⏳
 ⑦ توحيد المتاجر ⏳
 ⑧ إصلاح App.tsx ⏳
 ⑨ PWA + APK ⏳
+
+---
+
+📋 خريطة تعديل المستوردين (عند SRB)
+
+9 ملفات تحتاج تعديل import:
+
+# الملف من إلى
+1 src/engine/adaptiveEngine.ts ../data/bank-linked ../data/srb-adapter
+2 src/engine/problemGenerator.ts ../data/bank-linked ../data/srb-adapter
+3 src/screens/AnzanScreen.tsx @/data/bank-v2 @/data/srb-adapter
+4 src/screens/PracticeScreen.tsx @/data/bank-v2 @/data/srb-adapter
+5 src/screens/CategoryExamScreen.tsx @/data/bank-v2 @/data/srb-adapter
+6 src/screens/AudioAnzanScreen.tsx @/data/bank-v2 @/data/srb-adapter
+7 src/screens/PlacementTestScreen.tsx @/data/bank-v2 @/data/srb-adapter
+8 src/components/AdaptiveFeedback.tsx @/data/bank-v2 @/data/srb-adapter
+9 src/data/bank-linked.ts — (يُؤرشف)
 
 ---
 
@@ -397,13 +495,14 @@ L7 part-04 + bank-raw/raw-07 — ⏳ في الانتظار
 2 ملف واحد في المرة — ثم اختبار
 3 لا تلمس المحرك الرياضي (sorobanMoves.ts + sorobanEngine.ts)
 4 SRB هو البنك الوحيد النهائي
-5 الـ ID موحّد: SRB-L{level}-S{sec}-M{module}-{B/A}{seq}
+5 الـ ID موحّد: SRB-L{level}-S{sec}-m{module}-{B/A}{seq}
 6 المراحل في allowed_phases — ليس في ID
 7 digit_count_max = خانات result
 8 operand_count = أرقام السؤال
 9 solution نظيف — بلا مسودات
-10 كل قسم ≥ 15 سؤالًا
+10 كل درس ≥ 15 سؤالًا
 11 لا كود قبل توثيق
+12 m مرتبط بـ S — إعادة ترقيم في كل درس
 
 🔍 نقاط المراجعة السبع (لكل مستوى جديد)
 
@@ -411,7 +510,7 @@ L7 part-04 + bank-raw/raw-07 — ⏳ في الانتظار
 2. تسلسل الـ ID — B001 → B002 بلا فراغات
 3. الشجرة — prerequisite / next_if_success / next_if_fail
 4. الرياضيات — الجواب والشرح صحيحان
-5. التغطية — كل قسم ≥ 15 سؤالًا
+5. التغطية — كل درس ≥ 15 سؤالًا
 6. التوافق — الحقول المطلوبة للمحركات موجودة
 7. السلامة النصية — لا مسودات، لا "تصحيح:"
 
@@ -483,8 +582,10 @@ interface WeakSkillRecord {
 4. App.tsx يعتمد على split('-') — يُصلح لاحقًا
 5. الشهادات — certificateGenerator.ts غير مربوط بعد
 6. 👑 أسطورة + 🏆 خبير — مؤجَّلان
-7. بنك bank.ts — في مرحلة انتقالية، ليس مهجورًا
+7. bank.ts معزول تمامًا — يمكن أرشفته في أي وقت
 8. 3 أنظمة ترقيم — مصدر التعارض الحقيقي
+9. 12 علاقة استيراد — كلها معروفة
+10. curriculum/types.ts عقد أساسي — 14 مستورد
 
 ---
 
@@ -498,6 +599,7 @@ interface WeakSkillRecord {
 دروس L0 src/curriculum/lessons/L0/
 البنك الحديث src/data/bank-v2/
 البنك الخام src/data/bank-raw/
+العقد الأساسي src/curriculum/types.ts
 
 ---
 
