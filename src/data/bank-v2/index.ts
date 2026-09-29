@@ -1,16 +1,98 @@
+// ═══════════════════════════════════════════════════════════════════
+// 🏦 src/data/bank-v2/index.ts — الفهرس الموحّد لبنك v2
+// ═══════════════════════════════════════════════════════════════════
+//
+// الوظيفة:
+//   - يجمع: PART_01 + PART_02 + PART_03 + PART_04
+//   - يُعيد تصدير: types + bank-exam + placement-engine
+//   - يوفّر: دوال استعلام، فلترة، تتبع ضعف، امتحانات قسم
+//
+// ✅ حالة جيدة: يستخدم S1-S20 و L0-L7 — متوافق جزئيًا مع SRB
+//
+// 📥 الاعتماديات:
+//   - ./types (BankQuestion + أدوات)
+//   - ./part-01 → ./part-04 (PART_XX)
+//
+// 📤 الصادرات:
+//
+//   ثوابت التمرّن:
+//     - PRACTICE_QUESTION_COUNT (5)
+//     - ANZAN_VISUAL_COUNT · ANZAN_AUDIO_COUNT (5)
+//     - WEAK_SKILL_RATIO (0.7) · WEAK_SKILL_THRESHOLD (50)
+//
+//   البنك:
+//     - SOROBAN_BANK_V2 · BANK_V2_SIZE · BANK_V2_STATS
+//
+//   الاستعلام:
+//     - getQuestionById · getQuestionsByLevel · getQuestionsBySkill
+//     - getQuestionsByMovement · getQuestionsByLevelSkill
+//
+//   الفلترة:
+//     - BankFilterV2 · filterBankV2 · sampleFromBankV2
+//
+//   تتبّع الضعف:
+//     - WeakSkillRecord · loadWeakSkills · recordWeaknessAttempt
+//     - getWeakSkills · getWeakestSkill · getSkillWeakness · clearWeakSkills
+//
+//   الشاشات:
+//     - getSkillsForPracticeNum · getPracticeQuestions
+//     - getAnzanVisualQuestions · getAnzanAudioQuestions
+//
+//   امتحانات القسم:
+//     - EXAM1_QUESTION_COUNT (20) · EXAM2_QUESTION_COUNT (40)
+//     - EXAM1_TIME_SEC (600) · EXAM2_TIME_SEC (1200)
+//     - EXAM_PASS_THRESHOLD (80) · EXAM_MAX_ATTEMPTS (2)
+//     - EXAM_COOLDOWN_MS (48 ساعة)
+//     - buildExam1Category · buildExam2Category
+//
+// 🎯 التوافق مع SRB:
+//
+//   | العنصر في v2                    | SRB المقابل              | الحالة |
+//   |---------------------------------|--------------------------|--------|
+//   | SOROBAN_BANK_V2                 | SRB.getAll()             | 🔄 |
+//   | skillIds: "S1"                  | "S01"                    | ⚠️ يحتاج تحويل |
+//   | soroban_weak_skills_v2          | srb_weak_skills          | 🔄 |
+//   | PRACTICE_QUESTION_COUNT (5)     | SRB.PRACTICE_COUNT       | ✅ |
+//   | WEAK_SKILL_RATIO (0.7)          | SRB.WEAK_RATIO           | ✅ |
+//   | WEAK_SKILL_THRESHOLD (50)       | SRB.WEAK_THRESHOLD       | ✅ |
+//   | EXAM1_DISTRIBUTION              | SRB.EXAM1_DIST           | ✅ |
+//   | EXAM2_DISTRIBUTION              | SRB.EXAM2_DIST           | ✅ |
+//
+// 🔗 خطة الاستبدال بـ SRB (المرحلة 5):
+//
+//   الخطوة 1: SRB.getAll() بدل SOROBAN_BANK_V2
+//   الخطوة 2: تحديث skillIds إلى S01-S20
+//   الخطوة 3: نقل تتبّع الضعف إلى progressStore
+//   الخطوة 4: تحديث المفاتيح (soroban_weak_skills_v2 → srb_weak_skills)
+//   الخطوة 5: اختبار شامل + حذف bank-v2/
+//
+// ⚠️ قواعد حرجة:
+//   1. لا تغيّر توزيعات الامتحانات (EXAM1_DISTRIBUTION · EXAM2_DISTRIBUTION)
+//   2. لا تغيّر عتبات (PASS_THRESHOLD · MAX_ATTEMPTS · COOLDOWN)
+//   3. لا تغيّر WEAK_SKILL_RATIO (0.7) — قرار تعليمي
+//   4. لا تغيّر منطق pickHardest (اختيار الأصعب)
+//
+// آخر تحديث: 2026-09-29
+//   - إضافة توثيق شامل + تحليل توافق SRB
+//   - لا تغيير في المنطق
+//
+// ═══════════════════════════════════════════════════════════════════
+
 // src/data/bank-v2/index.ts
 // بنك الأسئلة v2 — الفهرس الموحّد
 // يجمع: bank-v2 + bank-exam + placement + منطق الضعف + امتحانات القسم
 
 import type { BankQuestion } from "./types";
 import { createRng, shuffle } from "./types";
+
+// 🔗 SRB-MIGRATION: ستُستبدل بـ SRB.questions
 import { PART_01 } from "./part-01";
 import { PART_02 } from "./part-02";
 import { PART_03 } from "./part-03";
 import { PART_04 } from "./part-04";
 
 // ═══════════════════════════════════════════════════════════
-// إعادة تصدير الأنواع والأدوات
+// 🔄 إعادة تصدير الأنواع والأدوات
 // ═══════════════════════════════════════════════════════════
 
 export type {
@@ -21,8 +103,8 @@ export type {
 } from "./types";
 
 export {
-  makeId,
-  makeQuestion,
+  makeId,              // 🔗 SRB: SRB.makeId()
+  makeQuestion,        // 🔗 SRB: SRB.makeQuestion()
   createRng,
   randInt,
   shuffle,
@@ -31,21 +113,21 @@ export {
   hasBorrow,
   complementTo5,
   complementTo10,
-  classifyAdd,
-  classifySub,
-  getDefaultTiming,
-  adaptTiming,
-  applyAdaptiveSpeed,
+  classifyAdd,         // 🔗 SRB: SRB.classifyAdd()
+  classifySub,         // 🔗 SRB: SRB.classifySub()
+  getDefaultTiming,    // 🔗 SRB: SRB.getDefaultTiming()
+  adaptTiming,         // 🔗 SRB: SRB.adaptTiming()
+  applyAdaptiveSpeed,  // 🔗 SRB: SRB.applyAdaptiveSpeed()
 } from "./types";
 
 export type { ExamQuestion } from "./bank-exam";
 
 export {
-  EXAM_POOL_1,
-  EXAM_POOL_2,
+  EXAM_POOL_1,         // 🔗 SRB: SRB.getExamPool("EX1")
+  EXAM_POOL_2,         // 🔗 SRB: SRB.getExamPool("EX2")
   EXAM_STATS,
-  buildExam1,
-  buildExam2,
+  buildExam1,          // 🔗 SRB: SRB.buildExam1()
+  buildExam2,          // 🔗 SRB: SRB.buildExam2()
 } from "./bank-exam";
 
 export type {
@@ -55,26 +137,30 @@ export type {
 } from "./placement-engine";
 
 export {
-  buildPlacementTest,
-  evaluatePlacementTest,
-  canTakePlacementTest,
+  buildPlacementTest,      // 🔗 SRB: SRB.buildPlacementTest()
+  evaluatePlacementTest,   // 🔗 SRB: SRB.evaluatePlacementTest()
+  canTakePlacementTest,    // 🔗 SRB: SRB.canTakePlacementTest()
   getLevelName,
   QUESTIONS_PER_LEVEL,
   POINTS_PER_QUESTION,
   POINTS_PER_LEVEL,
-  PASS_THRESHOLD,
+  PASS_THRESHOLD,          // 🔗 SRB: SRB.PLACEMENT_PASS
 } from "./placement-engine";
 
-// الإعدادات (Constants)
+// ═══════════════════════════════════════════════════════════
+// 🔢 الإعدادات (Constants)
+// 🔗 SRB-MIGRATION: تنتقل إلى SRB.config
+// ═══════════════════════════════════════════════════════════
 
-export const PRACTICE_QUESTION_COUNT = 5;
-export const ANZAN_VISUAL_COUNT = 5;
-export const ANZAN_AUDIO_COUNT = 5;
-export const WEAK_SKILL_RATIO = 0.7;
-export const WEAK_SKILL_THRESHOLD = 50;
+export const PRACTICE_QUESTION_COUNT = 5;   // 5 أسئلة لكل جلسة تمرّن
+export const ANZAN_VISUAL_COUNT = 5;        // 5 أسئلة لكل جلسة أنزان بصري
+export const ANZAN_AUDIO_COUNT = 5;         // 5 أسئلة لكل جلسة أنزان سمعي
+export const WEAK_SKILL_RATIO = 0.7;        // 70% من الأسئلة للمهارات الضعيفة
+export const WEAK_SKILL_THRESHOLD = 50;     // عتبة "ضعيف" = 50/100
 
 // ═══════════════════════════════════════════════════════════
-// البنك الأساسي
+// 🏦 البنك الأساسي
+// 🔗 SRB-MIGRATION: SRB.getAll()
 // ═══════════════════════════════════════════════════════════
 
 export const SOROBAN_BANK_V2: readonly BankQuestion[] = Object.freeze([
@@ -95,7 +181,8 @@ export const BANK_V2_STATS = {
 } as const;
 
 // ═══════════════════════════════════════════════════════════
-// دوال الاستعلام
+// 🔍 دوال الاستعلام
+// 🔗 SRB-MIGRATION: SRB.get*()
 // ═══════════════════════════════════════════════════════════
 
 export function getQuestionById(id: string): BankQuestion | undefined {
@@ -124,7 +211,8 @@ export function getQuestionsByLevelSkill(
 }
 
 // ═══════════════════════════════════════════════════════════
-// الفلترة
+// 🔍 الفلترة
+// 🔗 SRB-MIGRATION: SRB.filter() · SRB.sample()
 // ═══════════════════════════════════════════════════════════
 
 export interface BankFilterV2 {
@@ -186,10 +274,11 @@ export function sampleFromBankV2(
 }
 
 // ═══════════════════════════════════════════════════════════
-// تتبّع الضعف
+// 📊 تتبّع الضعف (Weak Skills Tracking)
+// 🔗 SRB-MIGRATION: ينتقل إلى progressStore
 // ═══════════════════════════════════════════════════════════
 
-const WEAK_SKILLS_KEY = "soroban_weak_skills_v2";
+const WEAK_SKILLS_KEY = "soroban_weak_skills_v2";  // 🔗 SRB: srb_weak_skills
 
 export interface WeakSkillRecord {
   skillId: string;
@@ -198,9 +287,18 @@ export interface WeakSkillRecord {
   wrong: number;
   avgTimeMs: number;
   lastAttempt: number;
-  weaknessScore: number;
+  weaknessScore: number;   // 0-100
 }
 
+/**
+ * حساب درجة الضعف.
+ *
+ * القاعدة:
+ *   - (1 - accuracy) × 60
+ *   - +20 إذا كانت accuracy < 50%
+ *   - +20 إذا كان avgTimeMs > 15000
+ *   - الحد الأقصى: 100
+ */
 function computeWeaknessScore(record: {
   attempts: number;
   correct: number;
@@ -280,7 +378,7 @@ export function recordWeaknessAttempt(
 export function getWeakSkills(): WeakSkillRecord[] {
   const all = loadWeakSkills();
   return Object.values(all)
-    .filter((r) => r.attempts >= 3)
+    .filter((r) => r.attempts >= 3)   // على الأقل 3 محاولات
     .sort((a, b) => b.weaknessScore - a.weaknessScore);
 }
 
@@ -301,13 +399,19 @@ export function clearWeakSkills(): void {
 }
 
 // ═══════════════════════════════════════════════════════════
-// دوال مساعدة للشاشات (تمرّن + أنزان)
+// 🎯 دوال مساعدة للشاشات (تمرّن + أنزان)
+// 🔗 SRB-MIGRATION: SRB.getPracticeQuestions()
 // ═══════════════════════════════════════════════════════════
 
+/**
+ * المهارات المرتبطة بكل مستوى.
+ *
+ * ⚠️ يستخدم S1-S20 (خانة واحدة) — SRB يستخدم S01-S20 (خانتان)
+ */
 export function getSkillsForPracticeNum(num: number): string[] {
   const map: Record<number, string[]> = {
-    0: ["S1", "S2"],
-    1: ["S3", "S4", "S5", "S6", "S7", "S8", "S9"],
+    0: ["S1", "S2"],                              // 🔗 SRB: S01, S02
+    1: ["S3", "S4", "S5", "S6", "S7", "S8", "S9"], // 🔗 SRB: S03-S09
     2: ["S10", "S11", "S12"],
     3: ["S13", "S14", "S15"],
     4: ["S16"],
@@ -327,6 +431,7 @@ export function getPracticeQuestions(
   const skills = getSkillsForPracticeNum(num);
   if (skills.length === 0) return [];
 
+  // تحميل المهارات الضعيفة
   const weak = loadWeakSkills();
   const weakInThisLevel = skills
     .map((s) => weak[s])
@@ -335,6 +440,7 @@ export function getPracticeQuestions(
 
   const questions: BankQuestion[] = [];
 
+  // 70% من المهارات الضعيفة
   if (weakInThisLevel.length > 0) {
     const weakCount = Math.ceil(count * WEAK_SKILL_RATIO);
     const weakSkillIds = weakInThisLevel.map((r) => r!.skillId);
@@ -348,6 +454,7 @@ export function getPracticeQuestions(
     questions.push(...weakQs);
   }
 
+  // 30% من باقي المهارات
   const remaining = count - questions.length;
   if (remaining > 0) {
     const usedSoFar = [...usedIds, ...questions.map((q) => q.id)];
@@ -381,7 +488,8 @@ export function getAnzanAudioQuestions(
 }
 
 // ═══════════════════════════════════════════════════════════
-// امتحانات القسم (Category Exams)
+// 🎓 امتحانات القسم (Category Exams)
+// 🔗 SRB-MIGRATION: SRB.buildCategoryExam()
 // ═══════════════════════════════════════════════════════════
 
 /** ✅ عدد المنازل */
@@ -431,6 +539,7 @@ const EXAM1_DISTRIBUTION: Record<string, number> = {
   L2: 5,
   L3: 5,
 };
+// المجموع: 20 سؤال
 
 /** توزيع Exam 2 (L4-L7) */
 const EXAM2_DISTRIBUTION: Record<string, number> = {
@@ -439,14 +548,15 @@ const EXAM2_DISTRIBUTION: Record<string, number> = {
   L6: 10,
   L7: 10,
 };
+// المجموع: 40 سؤال
 
 export const EXAM1_QUESTION_COUNT = 20;
 export const EXAM2_QUESTION_COUNT = 40;
-export const EXAM1_TIME_SEC = 10 * 60;
-export const EXAM2_TIME_SEC = 20 * 60;
-export const EXAM_PASS_THRESHOLD = 80;
-export const EXAM_MAX_ATTEMPTS = 2;
-export const EXAM_COOLDOWN_MS = 48 * 60 * 60 * 1000;
+export const EXAM1_TIME_SEC = 10 * 60;   // 10 دقائق
+export const EXAM2_TIME_SEC = 20 * 60;   // 20 دقيقة
+export const EXAM_PASS_THRESHOLD = 80;   // 80% للنجاح
+export const EXAM_MAX_ATTEMPTS = 2;      // محاولتان
+export const EXAM_COOLDOWN_MS = 48 * 60 * 60 * 1000;  // 48 ساعة
 
 /**
  * ✅ بناء امتحان القسم 1 (L0-L3) — 20 سؤالاً — الأصعب من كل مستوى.
