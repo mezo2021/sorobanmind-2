@@ -41,6 +41,7 @@ import PracticeScreenSRB from './screens/PracticeScreenSRB';
 import AnzanScreenSRB from './screens/AnzanScreenSRB';
 import AudioAnzanScreenSRB from './screens/AudioAnzanScreenSRB';
 import RemediationScreen from './screens/RemediationScreen';
+import SRBTestScreen from './screens/SRBTestScreen';
 import type { SRBLevel, SRBSection } from './data/srb-adapter';
 
 type LessonsListMode =
@@ -376,6 +377,16 @@ if (screen.startsWith('remediation-')) {
       level={level}
       section={section}
       onBack={() => setScreen(`lessons-list-${level}-practice` as AppScreen)}
+      playSound={handleSound}
+    />
+  );
+}
+// ═══ 🧪 SRB Test ═══
+if (screen === 'srb-test') {
+  return (
+    <SRBTestScreen
+      onBack={handleBackToRole}
+      onNavigate={(target) => setScreen(target as AppScreen)}
       playSound={handleSound}
     />
   );
