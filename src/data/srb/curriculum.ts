@@ -1,13 +1,14 @@
 // ═══════════════════════════════════════════════════════════════════
-// 📚 src/data/srb/curriculum.ts — المنهج الكامل
+// 📚 src/data/srb/curriculum.ts — المنهج الكامل (15 درسًا)
 // ═══════════════════════════════════════════════════════════════════
 //
 // الوظيفة:
 //   - يُعرِّف 8 مستويات (L0-L7)
-//   - يُعرِّف 20 درسًا (S01-S20)
+//   - يُعرِّف 15 درسًا (S01-S15)
 //   - الربط: level → sections
 //   - الفئة: kids (5-12) / teens (13+)
 //
+// 📅 آخر تحديث: 2026-09-30 — الجلسة 10
 // ═══════════════════════════════════════════════════════════════════
 
 import type { SRBLevel, SRBSection } from "./types";
@@ -23,7 +24,7 @@ export interface SRBLevelDef {
   description: string;
   category: "kids" | "teens";
   sections: SRBSection[];
-  hasCertificate: boolean;   // L0 فقط = false
+  hasCertificate: boolean;
   order: number;
 }
 
@@ -42,39 +43,39 @@ export const SRB_LEVELS: readonly SRBLevelDef[] = Object.freeze([
     id: "L1",
     name: "الجمع والطرح",
     nameEn: "Addition & Subtraction",
-    description: "الجمع والطرح المباشر + أصدقاء 5 و 10",
+    description: "الجمع والطرح بأصدقاء 5 و10",
     category: "kids",
-    sections: ["S03", "S04", "S05", "S06", "S07", "S08", "S09"],
+    sections: ["S03", "S04"],
     hasCertificate: true,
     order: 1,
   },
   {
     id: "L2",
-    name: "الضرب",
-    nameEn: "Multiplication",
-    description: "الضرب المتدرج (2×1 · 2×2 · متقدم)",
+    name: "سلاسل الجمع والطرح",
+    nameEn: "Add & Sub Chains",
+    description: "سلاسل الجمع والطرح المتعددة",
     category: "kids",
-    sections: ["S10", "S11", "S12"],
+    sections: ["S05", "S06"],
     hasCertificate: true,
     order: 2,
   },
   {
     id: "L3",
-    name: "القسمة",
-    nameEn: "Division",
-    description: "القسمة المتدرجة (÷1 · ÷2 · ÷3)",
+    name: "الضرب",
+    nameEn: "Multiplication",
+    description: "الضرب المتدرج (1×2 · 2×2)",
     category: "kids",
-    sections: ["S13", "S14", "S15"],
+    sections: ["S07", "S08"],
     hasCertificate: true,
     order: 3,
   },
   {
     id: "L4",
-    name: "جمع وطرح متقدم",
-    nameEn: "Advanced Add & Sub",
-    description: "السلاسل المركّبة والأعداد الكبيرة",
+    name: "القسمة",
+    nameEn: "Division",
+    description: "القسمة المتدرجة (÷1 · ÷2)",
     category: "teens",
-    sections: ["S16"],
+    sections: ["S09", "S10"],
     hasCertificate: true,
     order: 4,
   },
@@ -82,9 +83,9 @@ export const SRB_LEVELS: readonly SRBLevelDef[] = Object.freeze([
     id: "L5",
     name: "ضرب وقسمة متقدم",
     nameEn: "Advanced Mul & Div",
-    description: "الضرب والقسمة المتقدمة",
+    description: "الضرب (2×3) والقسمة المتقدمة",
     category: "teens",
-    sections: ["S17"],
+    sections: ["S11", "S12"],
     hasCertificate: true,
     order: 5,
   },
@@ -92,9 +93,9 @@ export const SRB_LEVELS: readonly SRBLevelDef[] = Object.freeze([
     id: "L6",
     name: "الكسور العشرية",
     nameEn: "Decimals",
-    description: "جمع وطرح وضرب الأعداد العشرية",
+    description: "الأعداد العشرية (جمع · طرح · ضرب · قسمة)",
     category: "teens",
-    sections: ["S18"],
+    sections: ["S13", "S14"],
     hasCertificate: true,
     order: 6,
   },
@@ -102,16 +103,16 @@ export const SRB_LEVELS: readonly SRBLevelDef[] = Object.freeze([
     id: "L7",
     name: "الجذور",
     nameEn: "Roots",
-    description: "الجذور التربيعية والتكعيبية",
+    description: "الجذور التربيعية الكاملة",
     category: "teens",
-    sections: ["S19", "S20"],
+    sections: ["S15"],
     hasCertificate: true,
     order: 7,
   },
 ]);
 
 // ═══════════════════════════════════════════════════════════
-// 📖 الدروس (20)
+// 📖 الدروس (15)
 // ═══════════════════════════════════════════════════════════
 
 export interface SRBSectionDef {
@@ -132,7 +133,7 @@ export const SRB_SECTIONS: readonly SRBSectionDef[] = Object.freeze([
     name: "تمثيل الأرقام 0-9",
     nameEn: "Number Representation 0-9",
     description: "قراءة وبناء الأرقام من 0 إلى 9 على السوروبان",
-    moduleCount: 4,
+    moduleCount: 3,
     order: 1,
   },
   {
@@ -141,7 +142,7 @@ export const SRB_SECTIONS: readonly SRBSectionDef[] = Object.freeze([
     name: "القيمة المكانية",
     nameEn: "Place Value",
     description: "الآحاد والعشرات والمئات والآلاف",
-    moduleCount: 4,
+    moduleCount: 2,
     order: 2,
   },
 
@@ -149,176 +150,131 @@ export const SRB_SECTIONS: readonly SRBSectionDef[] = Object.freeze([
   {
     id: "S03",
     level: "L1",
-    name: "الجمع المباشر",
-    nameEn: "Direct Addition",
-    description: "الجمع بدون حمل",
-    moduleCount: 2,
+    name: "الجمع",
+    nameEn: "Addition",
+    description: "الجمع: بسيط · أصدقاء 5 · أصدقاء 10 · مركب",
+    moduleCount: 4,
     order: 1,
   },
   {
     id: "S04",
     level: "L1",
-    name: "الطرح المباشر",
-    nameEn: "Direct Subtraction",
-    description: "الطرح بدون استلاف",
-    moduleCount: 2,
+    name: "الطرح",
+    nameEn: "Subtraction",
+    description: "الطرح: بسيط · أصدقاء 5 · أصدقاء 10 · مركب",
+    moduleCount: 4,
     order: 2,
   },
+
+  // ─── L2 — سلاسل الجمع والطرح ───
   {
     id: "S05",
-    level: "L1",
-    name: "أصدقاء 5 — جمع",
-    nameEn: "Five Friends — Add",
-    description: "استخدام مكمّلات الخمسة في الجمع",
-    moduleCount: 1,
-    order: 3,
+    level: "L2",
+    name: "سلاسل الجمع",
+    nameEn: "Addition Chains",
+    description: "سلاسل الجمع المتعددة الحدود",
+    moduleCount: 4,
+    order: 1,
   },
   {
     id: "S06",
-    level: "L1",
-    name: "أصدقاء 5 — طرح",
-    nameEn: "Five Friends — Sub",
-    description: "استخدام مكمّلات الخمسة في الطرح",
-    moduleCount: 1,
-    order: 4,
+    level: "L2",
+    name: "سلاسل الطرح",
+    nameEn: "Subtraction Chains",
+    description: "سلاسل الطرح المتعددة الحدود",
+    moduleCount: 4,
+    order: 2,
   },
+
+  // ─── L3 — الضرب ───
   {
     id: "S07",
-    level: "L1",
-    name: "أصدقاء 10 — جمع",
-    nameEn: "Ten Friends — Add",
-    description: "استخدام مكمّلات العشرة في الجمع",
-    moduleCount: 1,
-    order: 5,
+    level: "L3",
+    name: "ضرب 1 × 2",
+    nameEn: "Multiplication 1×2",
+    description: "ضرب عدد منزلة واحدة × عدد منزلتين",
+    moduleCount: 4,
+    order: 1,
   },
   {
     id: "S08",
-    level: "L1",
-    name: "أصدقاء 10 — طرح",
-    nameEn: "Ten Friends — Sub",
-    description: "استخدام مكمّلات العشرة في الطرح",
-    moduleCount: 1,
-    order: 6,
-  },
-  {
-    id: "S09",
-    level: "L1",
-    name: "جمع/طرح مختلط",
-    nameEn: "Mixed Add/Sub",
-    description: "سلاسل مختلطة من الجمع والطرح",
-    moduleCount: 2,
-    order: 7,
-  },
-
-  // ─── L2 — الضرب ───
-  {
-    id: "S10",
-    level: "L2",
-    name: "الضرب — منزلة × 2",
-    nameEn: "Multiplication 1×2",
-    description: "ضرب منزلة واحدة × منزلتين",
-    moduleCount: 1,
-    order: 1,
-  },
-  {
-    id: "S11",
-    level: "L2",
-    name: "الضرب — 2×2",
+    level: "L3",
+    name: "ضرب 2 × 2",
     nameEn: "Multiplication 2×2",
-    description: "ضرب منزلتين × منزلتين أو 3",
-    moduleCount: 2,
+    description: "ضرب عدد منزلتين × عدد منزلتين",
+    moduleCount: 4,
     order: 2,
   },
-  {
-    id: "S12",
-    level: "L2",
-    name: "الضرب المتقدم",
-    nameEn: "Advanced Multiplication",
-    description: "ضرب متعدد المنازل (3×3 · 4×2 · 2×4)",
-    moduleCount: 3,
-    order: 3,
-  },
 
-  // ─── L3 — القسمة ───
+  // ─── L4 — القسمة ───
   {
-    id: "S13",
-    level: "L3",
+    id: "S09",
+    level: "L4",
     name: "القسمة ÷ 1",
     nameEn: "Division ÷1",
     description: "القسمة على رقم واحد",
-    moduleCount: 2,
+    moduleCount: 4,
     order: 1,
   },
   {
-    id: "S14",
-    level: "L3",
+    id: "S10",
+    level: "L4",
     name: "القسمة ÷ 2",
     nameEn: "Division ÷2",
     description: "القسمة على رقمين",
-    moduleCount: 2,
+    moduleCount: 4,
     order: 2,
-  },
-  {
-    id: "S15",
-    level: "L3",
-    name: "القسمة ÷ 3",
-    nameEn: "Division ÷3",
-    description: "القسمة على ثلاثة أرقام",
-    moduleCount: 2,
-    order: 3,
-  },
-
-  // ─── L4 — جمع وطرح متقدم ───
-  {
-    id: "S16",
-    level: "L4",
-    name: "جمع/طرح متقدم",
-    nameEn: "Advanced Add/Sub",
-    description: "سلاسل مركّبة وأعداد كبيرة",
-    moduleCount: 3,
-    order: 1,
   },
 
   // ─── L5 — ضرب وقسمة متقدم ───
   {
-    id: "S17",
+    id: "S11",
     level: "L5",
-    name: "ضرب/قسمة متقدم",
-    nameEn: "Advanced Mul/Div",
-    description: "ضرب متقدم + قسمة متقدمة",
-    moduleCount: 2,
+    name: "ضرب 2 × 3",
+    nameEn: "Multiplication 2×3",
+    description: "ضرب عدد منزلتين × عدد 3 منازل",
+    moduleCount: 4,
     order: 1,
+  },
+  {
+    id: "S12",
+    level: "L5",
+    name: "القسمة المتقدمة",
+    nameEn: "Advanced Division",
+    description: "القسمة على 2-3 منازل",
+    moduleCount: 4,
+    order: 2,
   },
 
   // ─── L6 — الكسور العشرية ───
   {
-    id: "S18",
+    id: "S13",
     level: "L6",
-    name: "الأعداد العشرية",
-    nameEn: "Decimals",
-    description: "جمع/طرح/ضرب الأعداد العشرية",
-    moduleCount: 2,
+    name: "جمع/طرح العشري",
+    nameEn: "Decimal Add/Sub",
+    description: "جمع وطرح الأعداد العشرية",
+    moduleCount: 3,
     order: 1,
+  },
+  {
+    id: "S14",
+    level: "L6",
+    name: "ضرب/قسمة العشري",
+    nameEn: "Decimal Mul/Div",
+    description: "ضرب وقسمة الأعداد العشرية",
+    moduleCount: 2,
+    order: 2,
   },
 
   // ─── L7 — الجذور ───
   {
-    id: "S19",
+    id: "S15",
     level: "L7",
     name: "الجذور التربيعية",
     nameEn: "Square Roots",
     description: "الجذور التربيعية الكاملة",
     moduleCount: 1,
     order: 1,
-  },
-  {
-    id: "S20",
-    level: "L7",
-    name: "الجذور التكعيبية",
-    nameEn: "Cube Roots",
-    description: "الجذور التكعيبية الكاملة",
-    moduleCount: 1,
-    order: 2,
   },
 ]);
 
