@@ -11,7 +11,7 @@
 //   - m مرتبط بـ S (إعادة ترقيم في كل درس)
 //   - كل S يُعيد الترقيم من m1
 //
-// 📅 آخر تحديث: 2026-09-30 — الجلسة 10
+// 📅 آخر تحديث: 2026-10-01 — إعادة ترتيب L2-L4
 // ═══════════════════════════════════════════════════════════════════
 
 import type { SRBSection, SRBModule, SRBLevel } from "./types";
@@ -150,13 +150,13 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
     order: 4,
   },
 
-  // ═══════════════ L2 — سلاسل الجمع والطرح (8 m) ═══════════════
+  // ═══════════════ L4 — سلاسل الجمع والطرح (8 m) ═══════════════
 
   // ─── S05: سلاسل الجمع (4 m) ───
   {
     id: "m1",
     section: "S05",
-    level: "L2",
+    level: "L4",
     name: "جمع بسيط (سلاسل)",
     description: "سلاسل جمع مباشرة",
     order: 1,
@@ -164,7 +164,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m2",
     section: "S05",
-    level: "L2",
+    level: "L4",
     name: "جمع بأصدقاء 5 (سلاسل)",
     description: "سلاسل جمع بأصدقاء 5",
     order: 2,
@@ -172,7 +172,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m3",
     section: "S05",
-    level: "L2",
+    level: "L4",
     name: "جمع بأصدقاء 10 (سلاسل)",
     description: "سلاسل جمع بأصدقاء 10",
     order: 3,
@@ -180,7 +180,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m4",
     section: "S05",
-    level: "L2",
+    level: "L4",
     name: "جمع مركب (سلاسل)",
     description: "سلاسل جمع مركّبة",
     order: 4,
@@ -190,7 +190,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m1",
     section: "S06",
-    level: "L2",
+    level: "L4",
     name: "طرح بسيط (سلاسل)",
     description: "سلاسل طرح مباشرة",
     order: 1,
@@ -198,7 +198,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m2",
     section: "S06",
-    level: "L2",
+    level: "L4",
     name: "طرح بأصدقاء 5 (سلاسل)",
     description: "سلاسل طرح بأصدقاء 5",
     order: 2,
@@ -206,7 +206,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m3",
     section: "S06",
-    level: "L2",
+    level: "L4",
     name: "طرح بأصدقاء 10 (سلاسل)",
     description: "سلاسل طرح بأصدقاء 10",
     order: 3,
@@ -214,19 +214,19 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m4",
     section: "S06",
-    level: "L2",
+    level: "L4",
     name: "طرح مركب (سلاسل)",
     description: "سلاسل طرح مركّبة",
     order: 4,
   },
 
-  // ═══════════════ L3 — الضرب (8 m) ═══════════════
+  // ═══════════════ L2 — الضرب (8 m) ═══════════════
 
   // ─── S07: ضرب 1×2 (4 m) ───
   {
     id: "m1",
     section: "S07",
-    level: "L3",
+    level: "L2",
     name: "ضرب بسيط",
     description: "إضافات مباشرة",
     order: 1,
@@ -234,7 +234,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m2",
     section: "S07",
-    level: "L3",
+    level: "L2",
     name: "ضرب بأصدقاء 5",
     description: "إضافة 1-4 إلى عمود فيه 1-4",
     order: 2,
@@ -242,7 +242,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m3",
     section: "S07",
-    level: "L3",
+    level: "L2",
     name: "ضرب بأصدقاء 10",
     description: "ترحيل بعد 9",
     order: 3,
@@ -250,7 +250,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m4",
     section: "S07",
-    level: "L3",
+    level: "L2",
     name: "ضرب مركب",
     description: "أصدقاء 10 + أصدقاء 5",
     order: 4,
@@ -260,7 +260,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m1",
     section: "S08",
-    level: "L3",
+    level: "L2",
     name: "ضرب بسيط",
     description: "إضافات مباشرة",
     order: 1,
@@ -268,7 +268,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m2",
     section: "S08",
-    level: "L3",
+    level: "L2",
     name: "ضرب بأصدقاء 5",
     description: "إضافة 1-4 إلى عمود فيه 1-4",
     order: 2,
@@ -276,7 +276,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m3",
     section: "S08",
-    level: "L3",
+    level: "L2",
     name: "ضرب بأصدقاء 10",
     description: "ترحيل بعد 9",
     order: 3,
@@ -284,19 +284,19 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m4",
     section: "S08",
-    level: "L3",
+    level: "L2",
     name: "ضرب مركب",
     description: "أصدقاء 10 + أصدقاء 5",
     order: 4,
   },
 
-  // ═══════════════ L4 — القسمة (8 m) ═══════════════
+  // ═══════════════ L3 — القسمة (8 m) ═══════════════
 
   // ─── S09: القسمة ÷1 (4 m) ───
   {
     id: "m1",
     section: "S09",
-    level: "L4",
+    level: "L3",
     name: "قسمة بسيطة",
     description: "طرح مباشر للنواتج الجزئية",
     order: 1,
@@ -304,7 +304,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m2",
     section: "S09",
-    level: "L4",
+    level: "L3",
     name: "قسمة بأصدقاء 5",
     description: "طرح باستخدام مكمّلات 5",
     order: 2,
@@ -312,7 +312,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m3",
     section: "S09",
-    level: "L4",
+    level: "L3",
     name: "قسمة بأصدقاء 10",
     description: "استعارة من العمود المجاور",
     order: 3,
@@ -320,7 +320,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m4",
     section: "S09",
-    level: "L4",
+    level: "L3",
     name: "قسمة مركبة",
     description: "أصدقاء 10 + أصدقاء 5",
     order: 4,
@@ -330,7 +330,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m1",
     section: "S10",
-    level: "L4",
+    level: "L3",
     name: "قسمة بسيطة",
     description: "طرح مباشر للنواتج الجزئية",
     order: 1,
@@ -338,7 +338,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m2",
     section: "S10",
-    level: "L4",
+    level: "L3",
     name: "قسمة بأصدقاء 5",
     description: "طرح باستخدام مكمّلات 5",
     order: 2,
@@ -346,7 +346,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m3",
     section: "S10",
-    level: "L4",
+    level: "L3",
     name: "قسمة بأصدقاء 10",
     description: "استعارة من العمود المجاور",
     order: 3,
@@ -354,7 +354,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   {
     id: "m4",
     section: "S10",
-    level: "L4",
+    level: "L3",
     name: "قسمة مركبة",
     description: "أصدقاء 10 + أصدقاء 5",
     order: 4,
