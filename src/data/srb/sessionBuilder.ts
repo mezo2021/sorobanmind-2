@@ -1,23 +1,23 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🎲 src/data/srb/sessionBuilder.ts — مولّد الجلسات
+// 🎲 src/data/srb/sessionBuilder.ts — مولّد الجلسات (بناء على مستوى)
 // ═══════════════════════════════════════════════════════════════════
 //
 // الوظيفة:
 //   - بناء جلسة عادية (P · ANZ-V · ANZ-F · ANZ-A)
 //   - بناء جلسة علاجية (Remediation)
 //   - ضمان عدم التكرار في الجلسة الواحدة
-//   - اختيار عشوائي موزون
 //
-// 📊 القواعد:
-//   - الأسئلة من نفس الدرس S + نفس المستوى L
-//   - 5 أسئلة لكل جلسة عادية
-//   - 5 أسئلة للجلسة العلاجية (قابلة للتوسع)
+// 📊 القواعد (جديد — 2026-09-30):
+//   - الجلسة تُبنى على **مستوى كامل** (لا درس واحد)
+//   - سؤال واحد من كل m في المستوى
+//   - إذا كان عدد m < 5 → نرفع إلى 5 بأسئلة عشوائية
+//   - إذا كان عدد m > 5 → نستخدم كل m (8 مثلًا)
 //   - لا تكرار داخل الجلسة
 //
-// 🔧 التعديل (2026-09-29):
-//   - إضافة فلترة level + section في getAvailableQuestions
-//   - إضافة فلترة level + section + module في getAvailableByModule
-//   - تمرير level في buildSession و buildRemediationSession
+// 🔧 التعديل (2026-09-30):
+//   - إلغاء section من SessionSpec — الجلسة الآن على مستوى
+//   - getAvailableQuestionsByLevel — كل أسئلة المستوى
+//   - buildSession — سؤال من كل m
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -30,28 +30,28 @@ import type {
 } from "./types";
 
 import {
-  getQuestionsBySection,
+  getQuestionsByLevel,
   getQuestionsByModule,
 } from "./index";
+
+import { getSectionsByLevel, getLevelDef } from "./curriculum";
+import { getModulesBySection } from "./modules";
 
 // ═══════════════════════════════════════════════════════════
 // 📝 الأنواع
 // ═══════════════════════════════════════════════════════════
 
 /**
- * مواصفات بناء جلسة عادية.
+ * مواصفات بناء جلسة عادية (على مستوى).
  */
 export interface SessionSpec {
   /** المستوى */
   level: SRBLevel;
 
-  /** الدرس */
-  section: SRBSection;
-
   /** المرحلة */
   phase: SRBPhase;
 
-  /** عدد الأسئلة (افتراضيًا 5) */
+  /** الحد الأدنى لعدد الأسئلة (افتراضيًا 5) */
   count?: number;
 
   /** مُولّد رقم (اختياري — للاختبار) */
@@ -59,19 +59,16 @@ export interface SessionSpec {
 }
 
 /**
- * مواصفات بناء جلسة علاجية.
+ * مواصفات بناء جلسة علاجية (على مستوى).
  */
 export interface RemediationSpec {
   /** المستوى */
   level: SRBLevel;
 
-  /** الدرس */
-  section: SRBSection;
-
   /** المواضيع الضعيفة (m) */
   weakModules: SRBModule[];
 
-  /** عدد الأسئلة (افتراضيًا 5) */
+  /** الحد الأدنى للعدد (افتراضيًا 5) */
   count?: number;
 
   /** مُولّد رقم */
@@ -116,29 +113,22 @@ function shuffle<T>(arr: T[], rng: () => number): T[] {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 🔍 فلترة (مع level)
+// 🔍 فلترة
 // ═══════════════════════════════════════════════════════════
 
 /**
- * الأسئلة المتاحة لدرس + مرحلة.
- *
- * ⚠️ يُصفّي حسب: level + section + phase
+ * كل أسئلة المستوى في مرحلة معينة.
  */
-function getAvailableQuestions(
+function getAvailableQuestionsByLevel(
   level: SRBLevel,
-  section: SRBSection,
   phase: SRBPhase,
 ): SRBQuestion[] {
-  const all = getQuestionsBySection(section);
-  return all.filter(
-    (q) => q.level === level && q.allowed_phases.includes(phase),
-  );
+  const all = getQuestionsByLevel(level);
+  return all.filter((q) => q.allowed_phases.includes(phase));
 }
 
 /**
- * الأسئلة المتاحة لموضوع معين + مرحلة.
- *
- * ⚠️ يُصفّي حسب: level + section + module + phase
+ * أسئلة موضوع محدد في مستوى + مرحلة.
  */
 function getAvailableByModule(
   level: SRBLevel,
@@ -153,47 +143,113 @@ function getAvailableByModule(
 }
 
 // ═══════════════════════════════════════════════════════════
+// 🧩 جمع كل (section, module) في المستوى
+// ═══════════════════════════════════════════════════════════
+
+interface SectionModulePair {
+  section: SRBSection;
+  module: SRBModule;
+}
+
+/**
+ * كل أزواج (section, module) في المستوى.
+ *
+ * مثال L0:
+ *   [{S01, m1}, {S01, m2}, {S01, m3}, {S02, m1}, {S02, m2}]
+ */
+function collectModulesInLevel(level: SRBLevel): SectionModulePair[] {
+  const sections = getSectionsByLevel(level);
+  const pairs: SectionModulePair[] = [];
+
+  for (const s of sections) {
+    const modules = getModulesBySection(s.id);
+    for (const m of modules) {
+      pairs.push({ section: s.id, module: m.id });
+    }
+  }
+
+  return pairs;
+}
+
+// ═══════════════════════════════════════════════════════════
 // 🎯 بناء الجلسة العادية
 // ═══════════════════════════════════════════════════════════
 
 /**
- * بناء جلسة عادية (P · ANZ-V · ANZ-F · ANZ-A).
+ * بناء جلسة عادية على مستوى كامل.
+ *
+ * الآلية:
+ *   1. اجمع كل (section, module) في المستوى.
+ *   2. لكل m → اختر سؤالًا واحدًا عشوائيًا.
+ *   3. إذا عدد الأسئلة < count → أضف أسئلة عشوائية من المستوى.
+ *   4. اخلط الأسئلة النهائية.
+ *   5. لا تكرار.
  *
  * @param spec - المواصفات
  * @returns نتيجة الجلسة
  *
  * @example
- * buildSession({
- *   level: "L0",
- *   section: "S01",
- *   phase: "P",
- *   count: 5,
- * });
+ * buildSession({ level: "L0", phase: "P" });
+ * // → 5 أسئلة (سؤال من كل m)
+ *
+ * buildSession({ level: "L1", phase: "P" });
+ * // → 8 أسئلة (سؤال من كل m)
+ *
+ * buildSession({ level: "L7", phase: "P" });
+ * // → 5 أسئلة (m واحدة + 4 عشوائية)
  */
 export function buildSession(spec: SessionSpec): SessionResult {
   const {
     level,
-    section,
     phase,
     count = 5,
     seed = Date.now(),
   } = spec;
 
-  // 1. جلب الأسئلة المتاحة (level + section + phase)
-  const pool = getAvailableQuestions(level, section, phase);
-
-  // 2. خلط
   const rng = createRng(seed);
-  const shuffled = shuffle([...pool], rng);
 
-  // 3. اختيار أول count بلا تكرار
-  const selected = shuffled.slice(0, Math.min(count, shuffled.length));
+  // 1. جمع كل (section, module) في المستوى
+  const pairs = collectModulesInLevel(level);
+
+  // 2. اختيار سؤال واحد من كل m (بلا تكرار)
+  const picked: SRBQuestion[] = [];
+  const usedIds = new Set<string>();
+
+  for (const { section, module } of pairs) {
+    const pool = getAvailableByModule(level, section, module, phase);
+    const available = pool.filter((q) => !usedIds.has(q.id));
+
+    if (available.length === 0) continue;
+
+    const idx = Math.floor(rng() * available.length);
+    const chosen = available[idx];
+
+    picked.push(chosen);
+    usedIds.add(chosen.id);
+  }
+
+  // 3. إذا عدد الأسئلة < count → أضف عشوائيًا
+  if (picked.length < count) {
+    const allLevelQs = getAvailableQuestionsByLevel(level, phase)
+      .filter((q) => !usedIds.has(q.id));
+
+    const shuffled = shuffle([...allLevelQs], rng);
+    const needed = count - picked.length;
+
+    for (let i = 0; i < needed && i < shuffled.length; i += 1) {
+      picked.push(shuffled[i]);
+      usedIds.add(shuffled[i].id);
+    }
+  }
+
+  // 4. خلط نهائي
+  const finalQuestions = shuffle(picked, rng);
 
   return {
-    questions: selected,
-    isComplete: selected.length >= count,
+    questions: finalQuestions,
+    isComplete: finalQuestions.length >= count,
     requestedCount: count,
-    actualCount: selected.length,
+    actualCount: finalQuestions.length,
   };
 }
 
@@ -202,12 +258,12 @@ export function buildSession(spec: SessionSpec): SessionResult {
 // ═══════════════════════════════════════════════════════════
 
 /**
- * بناء جلسة علاجية.
+ * بناء جلسة علاجية على مستوى كامل.
  *
- * ⚠️ الفرق عن الجلسة العادية:
+ * ⚠️ الفرق:
+ *   - تُبنى من مواضيع ضعيفة (m) محددة.
  *   - لا تُسجّل درجات.
  *   - تُظهر الحل بعد كل سؤال.
- *   - تُبنى من مواضيع ضعيفة (m).
  *
  * @param spec - المواصفات
  * @returns نتيجة الجلسة
@@ -217,38 +273,58 @@ export function buildRemediationSession(
 ): SessionResult {
   const {
     level,
-    section,
     weakModules,
     count = 5,
     seed = Date.now(),
   } = spec;
 
-  // 1. جلب أسئلة كل موضوع ضعيف
-  const allWeakQuestions: SRBQuestion[] = [];
-
-  for (const module of weakModules) {
-    const moduleQs = getAvailableByModule(level, section, module, "P");
-    allWeakQuestions.push(...moduleQs);
-  }
-
-  // 2. إذا لم نجد أسئلة، نعود لكل أسئلة الدرس
-  let pool = allWeakQuestions;
-  if (pool.length === 0) {
-    pool = getAvailableQuestions(level, section, "P");
-  }
-
-  // 3. خلط
   const rng = createRng(seed);
-  const shuffled = shuffle([...pool], rng);
 
-  // 4. اختيار بلا تكرار
-  const selected = shuffled.slice(0, Math.min(count, shuffled.length));
+  // 1. اجمع أزواج (section, module) للمواضيع الضعيفة فقط
+  const allPairs = collectModulesInLevel(level);
+  const targetPairs = allPairs.filter((p) =>
+    weakModules.includes(p.module),
+  );
+
+  // 2. اختيار سؤال من كل m ضعيف
+  const picked: SRBQuestion[] = [];
+  const usedIds = new Set<string>();
+
+  for (const { section, module } of targetPairs) {
+    const pool = getAvailableByModule(level, section, module, "P");
+    const available = pool.filter((q) => !usedIds.has(q.id));
+
+    if (available.length === 0) continue;
+
+    const idx = Math.floor(rng() * available.length);
+    const chosen = available[idx];
+
+    picked.push(chosen);
+    usedIds.add(chosen.id);
+  }
+
+  // 3. إذا قل العدد → أضف من باقي المستوى
+  if (picked.length < count) {
+    const allLevelQs = getAvailableQuestionsByLevel(level, "P")
+      .filter((q) => !usedIds.has(q.id));
+
+    const shuffled = shuffle([...allLevelQs], rng);
+    const needed = count - picked.length;
+
+    for (let i = 0; i < needed && i < shuffled.length; i += 1) {
+      picked.push(shuffled[i]);
+      usedIds.add(shuffled[i].id);
+    }
+  }
+
+  // 4. خلط نهائي
+  const finalQuestions = shuffle(picked, rng);
 
   return {
-    questions: selected,
-    isComplete: selected.length >= count,
+    questions: finalQuestions,
+    isComplete: finalQuestions.length >= count,
     requestedCount: count,
-    actualCount: selected.length,
+    actualCount: finalQuestions.length,
   };
 }
 
@@ -259,9 +335,7 @@ export function buildRemediationSession(
 /**
  * إعادة ترتيب خيارات الإجابة لسؤال.
  *
- * ⚠️ ملاحظة: هذا يحتاج دعماً من بنية السؤال.
- *    حالياً البنك يستخدم إدخال مباشر (إباكوس) — لا خيارات.
- *    عند إضافة أسئلة متعددة الخيارات، تُستخدم هذه الدالة.
+ * ⚠️ حالياً البنك يستخدم إدخال مباشر — لا خيارات.
  */
 export function shuffleAnswerOptions(
   correctAnswer: number,
@@ -288,44 +362,38 @@ export function shuffleAnswerOptions(
 // ═══════════════════════════════════════════════════════════
 
 /**
- * عدد الأسئلة المتاحة لدرس + مرحلة.
- *
- * ⚠️ يحتاج level الآن.
+ * عدد الأسئلة المتاحة لمستوى + مرحلة.
  */
 export function countAvailableQuestions(
   level: SRBLevel,
-  section: SRBSection,
   phase: SRBPhase,
 ): number {
-  return getAvailableQuestions(level, section, phase).length;
+  return getAvailableQuestionsByLevel(level, phase).length;
 }
 
 /**
  * هل يمكن بناء جلسة كاملة؟
- *
- * ⚠️ يحتاج level الآن.
  */
 export function canBuildSession(
   level: SRBLevel,
-  section: SRBSection,
   phase: SRBPhase,
   count: number = 5,
 ): boolean {
-  return countAvailableQuestions(level, section, phase) >= count;
+  return countAvailableQuestions(level, phase) >= count;
 }
 
 /**
- * قائمة المراحل المتاحة لكل درس (في مستوى معين).
- *
- * ⚠️ يحتاج level الآن.
+ * عدد m في المستوى.
  */
-export function getAvailablePhases(
-  level: SRBLevel,
-  section: SRBSection,
-): SRBPhase[] {
-  const questions = getQuestionsBySection(section).filter(
-    (q) => q.level === level,
-  );
+export function countModulesInLevel(level: SRBLevel): number {
+  return collectModulesInLevel(level).length;
+}
+
+/**
+ * قائمة المراحل المتاحة لمستوى.
+ */
+export function getAvailablePhases(level: SRBLevel): SRBPhase[] {
+  const questions = getQuestionsByLevel(level);
   const phases = new Set<SRBPhase>();
 
   for (const q of questions) {
@@ -333,6 +401,17 @@ export function getAvailablePhases(
   }
 
   return Array.from(phases);
+}
+
+/**
+ * هل المستوى موجود في SRB؟
+ */
+export function isLevelAvailable(level: SRBLevel): boolean {
+  const def = getLevelDef(level);
+  if (!def) return false;
+
+  const questions = getQuestionsByLevel(level);
+  return questions.length > 0;
 }
 
 // ═══════════════════════════════════════════════════════════
