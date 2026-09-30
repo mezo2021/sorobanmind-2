@@ -13,6 +13,12 @@ import {
   classifySpeed,
 } from "@/store/masteryBadgesStore";
 import { loadWeakSkills } from "@/data/bank-v2";
+import { getModuleName } from "@/data/srb/modules";
+import type {
+  SRBLevel,
+  SRBSection,
+  SRBModule,
+} from "@/data/srb/types";
 import { useNumberStyleStore } from "@/store/numberStyleStore";
 import { formatNumber } from "@/utils/numberStyle";
 
@@ -37,56 +43,53 @@ interface AdaptiveFeedbackProps {
 }
 
 // ═══════════════════════════════════════════════════════════
-// خريطة المستوى → المهارات
+// أدوات — تحليل skillId (صيغة: L2-S07-m1)
 // ═══════════════════════════════════════════════════════════
 
-const LEVEL_SKILLS: Record<number, string[]> = {
-  0: ['S1', 'S2'],
-  1: ['S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9'],
-  2: ['S10', 'S11', 'S12'],
-  3: ['S13', 'S14', 'S15'],
-  4: ['S16'],
-  5: ['S17'],
-  6: ['S18'],
-  7: ['S19', 'S20'],
-};
-
-// ═══════════════════════════════════════════════════════════
-// أدوات
-// ═══════════════════════════════════════════════════════════
-
-function getSkillLabel(skillId: string): string {
-  const map: Record<string, string> = {
-    S1: "تمثيل 0-9",
-    S2: "القيمة المكانية",
-    S3: "الجمع المباشر",
-    S4: "الطرح المباشر",
-    S5: "أصدقاء 5 — جمع",
-    S6: "أصدقاء 5 — طرح",
-    S7: "أصدقاء 10 — جمع",
-    S8: "أصدقاء 10 — طرح",
-    S9: "جمع/طرح مختلط",
-    S10: "ضرب 2 منازل × 1",
-    S11: "ضرب 2 منازل × 2",
-    S12: "ضرب متقدم",
-    S13: "قسمة ÷ 1",
-    S14: "قسمة ÷ 2",
-    S15: "قسمة ÷ 3",
-    S16: "جمع/طرح متقدم",
-    S17: "ضرب/قسمة متقدم",
-    S18: "الكسور العشرية",
-    S19: "جذر تربيعي",
-    S20: "جذر تكعيبي",
-  };
-  return map[skillId] ?? skillId;
+interface ParsedSkillId {
+  level: SRBLevel;
+  section: SRBSection;
+  module: SRBModule;
 }
 
-/** معرفة المستوى من معرف المهارة */
+/**
+ * يحلّل skillId بصيغة "L2-S07-m1"
+ * يُعيد null إن لم تكن الصيغة صحيحة.
+ */
+function parseSkillId(skillId: string): ParsedSkillId | null {
+  const parts = skillId.split("-");
+  if (parts.length !== 3) return null;
+
+  const [level, section, module] = parts;
+  if (!/^L\d$/.test(level)) return null;
+  if (!/^S\d{2}$/.test(section)) return null;
+  if (!/^m\d$/.test(module)) return null;
+
+  return {
+    level: level as SRBLevel,
+    section: section as SRBSection,
+    module: module as SRBModule,
+  };
+}
+
+/**
+ * يُعيد الاسم العربي للمهارة من modules.ts.
+ * fallback: يُعيد الـ skillId نفسه إن فشل التحليل.
+ */
+function getSkillLabel(skillId: string): string {
+  const parsed = parseSkillId(skillId);
+  if (!parsed) return skillId;
+  return getModuleName(parsed.section, parsed.module);
+}
+
+/**
+ * يستخرج رقم المستوى من skillId ("L2-S07-m1" → 2).
+ * fallback: null.
+ */
 function getLevelOfSkill(skillId: string): number | null {
-  for (const [level, skills] of Object.entries(LEVEL_SKILLS)) {
-    if (skills.includes(skillId)) return Number(level);
-  }
-  return null;
+  const parsed = parseSkillId(skillId);
+  if (!parsed) return null;
+  return Number(parsed.level.slice(1));
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -121,17 +124,18 @@ export function AdaptiveFeedback({
     .filter((r) => r.weaknessScore >= 50)
     .sort((a, b) => b.weaknessScore - a.weaknessScore);
 
-  // ✅ فصل حسب المستوى
-  const currentLevelSkillIds = levelNum !== undefined
-    ? (LEVEL_SKILLS[levelNum] ?? [])
-    : null;
+  // ✅ فصل حسب المستوى (باستخدام parseSkillId)
+  const isInCurrentLevel = (skillId: string): boolean => {
+    if (levelNum === undefined) return false;
+    return getLevelOfSkill(skillId) === levelNum;
+  };
 
-  const historicalThisLevel = currentLevelSkillIds
-    ? allHistoricalWeak.filter((r) => currentLevelSkillIds.includes(r.skillId))
+  const historicalThisLevel = levelNum !== undefined
+    ? allHistoricalWeak.filter((r) => isInCurrentLevel(r.skillId))
     : [];
 
-  const historicalOtherLevels = currentLevelSkillIds
-    ? allHistoricalWeak.filter((r) => !currentLevelSkillIds.includes(r.skillId))
+  const historicalOtherLevels = levelNum !== undefined
+    ? allHistoricalWeak.filter((r) => !isInCurrentLevel(r.skillId))
     : allHistoricalWeak;
 
   // ─── إذا لا يوجد شيء — لا نعرض ───
@@ -306,7 +310,7 @@ export function AdaptiveFeedback({
                 className="px-2.5 py-1 rounded-lg bg-red-500/20 border border-red-400/40 text-red-200 text-[10px] font-bold"
                 title={getSkillLabel(r.skillId)}
               >
-                {r.skillId} · {formatNumber(Math.round(r.weaknessScore), numberStyle)}%
+                {r.skillId} · {getSkillLabel(r.skillId)} · {formatNumber(Math.round(r.weaknessScore), numberStyle)}%
               </span>
             ))}
           </div>
