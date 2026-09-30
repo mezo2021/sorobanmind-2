@@ -1,6 +1,7 @@
 // src/screens/PracticeScreen.tsx
+// ✅ SRB: wrongSkillsRef يحفظ skillId كامل ("L2-S07-m1") بدل "m1"
 // ✅ SRB: زر الجلسة العلاجية عند وجود مهارات ضعيفة
-// 📅 آخر تحديث: SRB Migration — Phase 3
+// 📅 آخر تحديث: SRB Migration — Phase 1
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -123,7 +124,7 @@ export function PracticeScreen({
   const sorobana = useSorobanaVoice();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
-  const wrongModulesRef = useRef<Set<SRBModule>>(new Set());
+  const wrongSkillsRef = useRef<Set<string>>(new Set());
 
   const addXP = useProgressStore((s) => s.addXP);
   const updateStreak = useProgressStore((s) => s.updateStreak);
@@ -189,7 +190,7 @@ export function PracticeScreen({
     const qs = getPracticeQuestions(level, Date.now(), []);
     if (qs.length === 0) { playSound('error'); return; }
     perfRef.current = new Map();
-    wrongModulesRef.current = new Set();
+    wrongSkillsRef.current = new Set();
     setQuestions(qs);
     setCurrentIdx(0);
     setAbacusValue(0);
@@ -234,7 +235,8 @@ export function PracticeScreen({
         const cls = classifySpeed(timeMs, answerMs);
         if (cls === 'mastery') awardBadge(skillId, timeMs, answerMs);
       } else {
-        wrongModulesRef.current.add(currentQ.module);
+        // ✅ SRB: احفظ skillId كامل ("L2-S07-m1")
+        wrongSkillsRef.current.add(skillId);
       }
     },
     [currentQ, level, awardBadge],
@@ -302,7 +304,7 @@ export function PracticeScreen({
     const percentage = Math.round((finalScore / questions.length) * 100);
     saveSectionGrade(
       level, firstSection, 'practice', percentage,
-      Array.from(wrongModulesRef.current),
+      Array.from(wrongSkillsRef.current),
     );
     setPerformances(buildPerformances());
     setPhase('result');
