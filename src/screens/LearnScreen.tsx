@@ -1,6 +1,6 @@
 // src/screens/LearnScreen.tsx
 // 📖 قائمة دروس المستوى (Level → Lessons)
-// يعرض دروس L0 (مقدمة، S1، S2...) مع القفل المتسلسل
+// يعرض دروس المستوى (مقدمة، S1، S2...) مع القفل المتسلسل
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -37,9 +37,9 @@ const LEVEL_META: Record<string, {
 }> = {
   L0: { number: 0, title: 'التمهيدي', titleEn: 'Foundation', gradient: 'from-emerald-500 to-teal-700' },
   L1: { number: 1, title: 'الجمع والطرح', titleEn: 'Add & Subtract', gradient: 'from-blue-500 to-cyan-700' },
-  L2: { number: 2, title: 'سلاسل الجمع والطرح', titleEn: 'Add & Sub Chains', gradient: 'from-purple-500 to-violet-700' },
-  L3: { number: 3, title: 'الضرب', titleEn: 'Multiplication', gradient: 'from-amber-500 to-orange-700' },
-  L4: { number: 4, title: 'القسمة', titleEn: 'Division', gradient: 'from-blue-500 to-indigo-700' },
+  L2: { number: 2, title: 'الضرب', titleEn: 'Multiplication', gradient: 'from-amber-500 to-orange-700' },
+  L3: { number: 3, title: 'القسمة', titleEn: 'Division', gradient: 'from-blue-500 to-indigo-700' },
+  L4: { number: 4, title: 'سلاسل الجمع والطرح', titleEn: 'Add & Sub Chains', gradient: 'from-purple-500 to-violet-700' },
   L5: { number: 5, title: 'ضرب وقسمة متقدم', titleEn: 'Advanced Mul & Div', gradient: 'from-purple-500 to-fuchsia-700' },
   L6: { number: 6, title: 'الكسور العشرية', titleEn: 'Decimals', gradient: 'from-amber-500 to-rose-700' },
   L7: { number: 7, title: 'الجذور', titleEn: 'Roots', gradient: 'from-rose-500 to-purple-700' },
