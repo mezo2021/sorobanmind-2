@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
-import { SorobanaCompanion } from '@/components/SorobanaCompanion';
+import { SorobanaCompanion } from '@/components/sorobanaCompanion';
 import { AdaptiveFeedback, type SkillPerformance } from '@/components/AdaptiveFeedback';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { useProgressStore } from '@/store/progressStore';
@@ -48,6 +48,16 @@ interface PerfStats {
 const XP_PER_CORRECT = 5;
 const PASS_THRESHOLD = 70;
 const WARNING_RATIO = 0.7;
+
+// 1) helper (مرة واحدة أعلى الملف)
+function getDecimalFactor(q: SRBQuestion): number {
+  const decimals = [q.result, ...q.operands].map((n) => {
+    const str = Math.abs(n).toString();
+    const dotIdx = str.indexOf('.');
+    return dotIdx === -1 ? 0 : str.length - dotIdx - 1;
+  });
+  return Math.pow(10, Math.max(...decimals, 0));
+}
 
 function getColumnsForQuestion(q: SRBQuestion): number {
   const candidates: number[] = [
@@ -184,7 +194,12 @@ export function PracticeScreen({
   const handleCheck = useCallback(() => {
     if (!currentQ || feedback !== 'idle') return;
     if (timerRef.current) clearInterval(timerRef.current);
-    const isCorrect = abacusValue === currentQ.result;
+
+    // 2) في handleCheck
+    const factor = getDecimalFactor(currentQ);
+    const targetValue = Math.round(currentQ.result * factor);
+    const isCorrect = abacusValue === targetValue;
+
     const timeMs = elapsedMs;
     trackPerformance(isCorrect, timeMs);
     if (isCorrect) {
