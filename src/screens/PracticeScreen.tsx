@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
-import { SorobanaCompanion } from '@/components/sorobanaCompanion';
+import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { AdaptiveFeedback, type SkillPerformance } from '@/components/AdaptiveFeedback';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { useProgressStore } from '@/store/progressStore';
