@@ -7,17 +7,15 @@
 //   - بناء جلسة علاجية (Remediation)
 //   - ضمان عدم التكرار في الجلسة الواحدة
 //
-// 📊 القواعد (جديد — 2026-09-30):
-//   - الجلسة تُبنى على **مستوى كامل** (لا درس واحد)
+// 📊 القواعد:
+//   - الجلسة تُبنى على **مستوى كامل**
 //   - سؤال واحد من كل m في المستوى
-//   - إذا كان عدد m < 5 → نرفع إلى 5 بأسئلة عشوائية
-//   - إذا كان عدد m > 5 → نستخدم كل m (8 مثلًا)
+//   - إذا عدد m < 5 → نرفع إلى 5 بأسئلة عشوائية
 //   - لا تكرار داخل الجلسة
 //
-// 🔧 التعديل (2026-09-30):
-//   - إلغاء section من SessionSpec — الجلسة الآن على مستوى
-//   - getAvailableQuestionsByLevel — كل أسئلة المستوى
-//   - buildSession — سؤال من كل m
+// 📅 آخر تحديث: 2026-09-30 — الجلسة 10
+//   - إلغاء section من SessionSpec
+//   - استخدام skill IDs في RemediationSpec
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -60,13 +58,15 @@ export interface SessionSpec {
 
 /**
  * مواصفات بناء جلسة علاجية (على مستوى).
+ *
+ * ⚠️ تستقبل skill IDs (مثل "SRB-L0-S01-m1").
  */
 export interface RemediationSpec {
   /** المستوى */
   level: SRBLevel;
 
-  /** المواضيع الضعيفة (m) */
-  weakModules: SRBModule[];
+  /** المهارات الضعيفة (skill IDs) */
+  weakSkills: string[];
 
   /** الحد الأدنى للعدد (افتراضيًا 5) */
   count?: number;
@@ -153,9 +153,6 @@ interface SectionModulePair {
 
 /**
  * كل أزواج (section, module) في المستوى.
- *
- * مثال L0:
- *   [{S01, m1}, {S01, m2}, {S01, m3}, {S02, m1}, {S02, m2}]
  */
 function collectModulesInLevel(level: SRBLevel): SectionModulePair[] {
   const sections = getSectionsByLevel(level);
@@ -172,6 +169,27 @@ function collectModulesInLevel(level: SRBLevel): SectionModulePair[] {
 }
 
 // ═══════════════════════════════════════════════════════════
+// 🔑 تحليل skill ID
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * استخراج (section, module) من skill ID.
+ *
+ * مثال: "SRB-L0-S01-m1" → { section: "S01", module: "m1" }
+ */
+function parseSkillId(
+  skillId: string,
+): { section: SRBSection; module: SRBModule } | null {
+  const match = /^SRB-(L[0-7])-(S\d{2})-(m\d{1,2})$/.exec(skillId);
+  if (!match) return null;
+
+  return {
+    section: match[2] as SRBSection,
+    module: match[3] as SRBModule,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════
 // 🎯 بناء الجلسة العادية
 // ═══════════════════════════════════════════════════════════
 
@@ -183,20 +201,11 @@ function collectModulesInLevel(level: SRBLevel): SectionModulePair[] {
  *   2. لكل m → اختر سؤالًا واحدًا عشوائيًا.
  *   3. إذا عدد الأسئلة < count → أضف أسئلة عشوائية من المستوى.
  *   4. اخلط الأسئلة النهائية.
- *   5. لا تكرار.
- *
- * @param spec - المواصفات
- * @returns نتيجة الجلسة
  *
  * @example
- * buildSession({ level: "L0", phase: "P" });
- * // → 5 أسئلة (سؤال من كل m)
- *
- * buildSession({ level: "L1", phase: "P" });
- * // → 8 أسئلة (سؤال من كل m)
- *
- * buildSession({ level: "L7", phase: "P" });
- * // → 5 أسئلة (m واحدة + 4 عشوائية)
+ * buildSession({ level: "L0", phase: "P" });  // → 5 أسئلة
+ * buildSession({ level: "L1", phase: "P" });  // → 8 أسئلة
+ * buildSession({ level: "L7", phase: "P" });  // → 5 أسئلة (1 m + 4 عشوائية)
  */
 export function buildSession(spec: SessionSpec): SessionResult {
   const {
@@ -261,7 +270,7 @@ export function buildSession(spec: SessionSpec): SessionResult {
  * بناء جلسة علاجية على مستوى كامل.
  *
  * ⚠️ الفرق:
- *   - تُبنى من مواضيع ضعيفة (m) محددة.
+ *   - تُبنى من skill IDs محددة (مثل "SRB-L0-S01-m1").
  *   - لا تُسجّل درجات.
  *   - تُظهر الحل بعد كل سؤال.
  *
@@ -273,20 +282,29 @@ export function buildRemediationSession(
 ): SessionResult {
   const {
     level,
-    weakModules,
+    weakSkills,
     count = 5,
     seed = Date.now(),
   } = spec;
 
   const rng = createRng(seed);
 
-  // 1. اجمع أزواج (section, module) للمواضيع الضعيفة فقط
+  // 1. استخراج (section, module) من skill IDs
+  const parsedSkills = weakSkills
+    .map(parseSkillId)
+    .filter((p): p is { section: SRBSection; module: SRBModule } => p !== null);
+
+  // 2. اجمع كل (section, module) في المستوى
   const allPairs = collectModulesInLevel(level);
+
+  // 3. فلترة: الأزواج الضعيفة فقط
   const targetPairs = allPairs.filter((p) =>
-    weakModules.includes(p.module),
+    parsedSkills.some(
+      (ps) => ps.section === p.section && ps.module === p.module,
+    ),
   );
 
-  // 2. اختيار سؤال من كل m ضعيف
+  // 4. اختيار سؤال من كل m ضعيف
   const picked: SRBQuestion[] = [];
   const usedIds = new Set<string>();
 
@@ -303,7 +321,7 @@ export function buildRemediationSession(
     usedIds.add(chosen.id);
   }
 
-  // 3. إذا قل العدد → أضف من باقي المستوى
+  // 5. إذا قل العدد → أضف من باقي المستوى
   if (picked.length < count) {
     const allLevelQs = getAvailableQuestionsByLevel(level, "P")
       .filter((q) => !usedIds.has(q.id));
@@ -317,7 +335,7 @@ export function buildRemediationSession(
     }
   }
 
-  // 4. خلط نهائي
+  // 6. خلط نهائي
   const finalQuestions = shuffle(picked, rng);
 
   return {
@@ -334,8 +352,6 @@ export function buildRemediationSession(
 
 /**
  * إعادة ترتيب خيارات الإجابة لسؤال.
- *
- * ⚠️ حالياً البنك يستخدم إدخال مباشر — لا خيارات.
  */
 export function shuffleAnswerOptions(
   correctAnswer: number,
