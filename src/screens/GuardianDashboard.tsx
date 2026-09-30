@@ -1,15 +1,15 @@
 // src/screens/GuardianDashboard.tsx
 // ✅ SRB-first: يقرأ من progressStore + masteryBadgesStore
-// ✅ Props محفوظة للتوافق مع App.tsx (لكن تُتجاهل قيمها)
+// ✅ Props محفوظة للتوافق (deprecated — تُقرأ من store)
 
 import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import {
-  ArrowRight, TrendingUp, Target, Clock, Award,
+  ArrowRight, TrendingUp, Target, Award,
   Brain, Calendar, Zap, CheckCircle2, BarChart3,
   Star, Eye, Crown, Diamond, Trophy, Lock as LockBadge,
   Swords, ShieldCheck, Circle, Lock, Volume2, RefreshCw,
-  Home, Sparkles, PlayCircle,
+  Home, Sparkles, PlayCircle, Timer,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -38,13 +38,18 @@ interface ParsedSkillId {
   module: SRBModule;
 }
 
+/**
+ * يحلّل skillId بصيغة "L2-S07-m1"
+ */
 function parseSkillId(skillId: string): ParsedSkillId | null {
   const parts = skillId.split('-');
   if (parts.length !== 3) return null;
+
   const [level, section, module] = parts;
   if (!/^L\d$/.test(level)) return null;
   if (!/^S\d{2}$/.test(section)) return null;
   if (!/^m\d$/.test(module)) return null;
+
   return {
     level: level as SRBLevel,
     section: section as SRBSection,
@@ -52,11 +57,18 @@ function parseSkillId(skillId: string): ParsedSkillId | null {
   };
 }
 
+/**
+ * يُعيد الاسم العربي للمهارة.
+ */
 function getSkillLabel(skillId: string): string {
   const parsed = parseSkillId(skillId);
   if (!parsed) return skillId;
   return getModuleName(parsed.section, parsed.module);
 }
+
+// ═══════════════════════════════════════════════════════════
+// ثوابت — Gradients · Icons
+// ═══════════════════════════════════════════════════════════
 
 const LEVEL_GRADIENTS: Record<string, string> = {
   L0: 'from-emerald-500 to-teal-700',
@@ -80,12 +92,13 @@ const LEVEL_ICONS: LucideIcon[] = [
 interface GuardianDashboardProps {
   onBack: () => void;
   playSound: (type: 'click' | 'whoosh') => void;
+  /** @deprecated — يُقرأ من progressStore.childName */
   childName?: string;
-  /** @deprecated — يُقرأ الآن من progressStore.totalXP */
+  /** @deprecated — يُقرأ من progressStore.totalXP */
   childXP?: number;
-  /** @deprecated — يُقرأ الآن من progressStore.currentStreak */
+  /** @deprecated — يُقرأ من progressStore.currentStreak */
   childStreak?: number;
-  /** @deprecated — يُحسب الآن من totalXP */
+  /** @deprecated — يُحسب من totalXP */
   childLevel?: number;
   onSwitchToHero?: () => void;
   onShowWelcome?: () => void;
@@ -94,17 +107,24 @@ interface GuardianDashboardProps {
 type LevelStatus = 'completed' | 'available' | 'locked';
 
 interface LevelNodeData {
-  id: number;
-  nameAr: string;
+  id: number;          // order (0-7)
+  nameAr: string;      // name
+  nameEn: string;      // nameEn
   status: LevelStatus;
-  xpRequired: number;
+  xpRequired: number;  // (order + 1) * 100
 }
 
 // ═══════════════════════════════════════════════════════════
 // LevelNodeButton
 // ═══════════════════════════════════════════════════════════
 
-function LevelNodeButton({ level, index }: { level: LevelNodeData; index: number }) {
+function LevelNodeButton({
+  level,
+  index,
+}: {
+  level: LevelNodeData;
+  index: number;
+}) {
   const isOdd = index % 2 === 1;
   const Icon =
     level.status === 'locked' ? Lock
@@ -176,84 +196,137 @@ export function GuardianDashboard({
 
   // ═══ مشتقات ═══
   const childLevel = Math.floor(totalXP / 100) + 1;
+  const totalLevelsCount = SRB_LEVELS.length; // 8
+  const completedLevelsStr = completedLevels as unknown as string[];
   const completedLevelsCount = completedLevels.length;
 
-  // ═══ 🎓 شارات إنجاز المستوى (مشتقة من completedLevels) ═══
-  const levelBadges = useMemo(() =>
-    SRB_LEVELS.map((lv, idx) => ({
-      id: lv.id,
-      label: lv.name,
-      labelEn: lv.nameEn,
-      order: lv.order,
-      Icon: LEVEL_ICONS[idx] ?? Star,
-      gradient: LEVEL_GRADIENTS[lv.id] ?? 'from-purple-500 to-electric-500',
-      earned: (completedLevels as unknown as string[]).includes(lv.id),
-    })),
+  // ═══ 🎓 شارات إنجاز المستوى (8 مشتقة من completedLevels) ═══
+  const levelBadges = useMemo(
+    () =>
+      SRB_LEVELS.map((lv, idx) => ({
+        id: lv.id,
+        label: lv.name,
+        labelEn: lv.nameEn,
+        order: lv.order,
+        Icon: LEVEL_ICONS[idx] ?? Star,
+        gradient: LEVEL_GRADIENTS[lv.id] ?? 'from-purple-500 to-electric-500',
+        earned: completedLevelsStr.includes(lv.id),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [completedLevels],
   );
 
   const earnedLevelBadges = levelBadges.filter((b) => b.earned).length;
 
-  // ═══ 🏅 شارات إتقان المهارات (SRB) ═══
+  // ═══ 🏅 شارات إتقان المهارات ═══
   const masteryBadgesList = useMemo(
     () => Object.values(masteryBadges).sort((a, b) => b.masteredAt - a.masteredAt),
     [masteryBadges],
   );
 
   // ═══ 🧠 شارات الأنزان البصري ═══
-  const anzanBadgeList = useMemo(() => [
-    { id: 'master_addition', label: 'خبير جمع وطرح', icon: '🧠', color: 'from-cyan-500 to-blue-700', earned: !!anzanBadges.master_addition },
-    { id: 'master_multiplication', label: 'خبير ضرب', icon: '✖️', color: 'from-indigo-500 to-purple-700', earned: !!anzanBadges.master_multiplication },
-    { id: 'master_division', label: 'خبير قسمة', icon: '➗', color: 'from-blue-500 to-cyan-700', earned: !!anzanBadges.master_division },
-    { id: 'master_mixed', label: 'خبير مختلط', icon: '🔀', color: 'from-pink-500 to-rose-700', earned: !!anzanBadges.master_mixed },
-  ], [anzanBadges]);
+  const anzanBadgeList = useMemo(
+    () => [
+      { id: 'master_addition', label: 'خبير جمع وطرح', icon: '🧠', color: 'from-cyan-500 to-blue-700', earned: !!anzanBadges.master_addition },
+      { id: 'master_multiplication', label: 'خبير ضرب', icon: '✖️', color: 'from-indigo-500 to-purple-700', earned: !!anzanBadges.master_multiplication },
+      { id: 'master_division', label: 'خبير قسمة', icon: '➗', color: 'from-blue-500 to-cyan-700', earned: !!anzanBadges.master_division },
+      { id: 'master_mixed', label: 'خبير مختلط', icon: '🔀', color: 'from-pink-500 to-rose-700', earned: !!anzanBadges.master_mixed },
+    ],
+    [anzanBadges],
+  );
 
   const earnedAnzanCount = anzanBadgeList.filter((b) => b.earned).length;
 
   // ═══ 🎧 شارات الأنزان السماعي ═══
-  const audioAnzanBadgeList = useMemo(() => [
-    { id: 'master_addition_audio', label: 'خبير جمع وطرح سماعي', icon: '🎤', color: 'from-cyan-500 to-blue-700', earned: !!anzanAudioBadges.master_addition_audio },
-    { id: 'master_multiplication_audio', label: 'خبير ضرب سماعي', icon: '🎤', color: 'from-indigo-500 to-purple-700', earned: !!anzanAudioBadges.master_multiplication_audio },
-    { id: 'master_division_audio', label: 'خبير قسمة سماعية', icon: '🎤', color: 'from-blue-500 to-cyan-700', earned: !!anzanAudioBadges.master_division_audio },
-  ], [anzanAudioBadges]);
+  const audioAnzanBadgeList = useMemo(
+    () => [
+      { id: 'master_addition_audio', label: 'خبير جمع وطرح سماعي', icon: '🎤', color: 'from-cyan-500 to-blue-700', earned: !!anzanAudioBadges.master_addition_audio },
+      { id: 'master_multiplication_audio', label: 'خبير ضرب سماعي', icon: '🎤', color: 'from-indigo-500 to-purple-700', earned: !!anzanAudioBadges.master_multiplication_audio },
+      { id: 'master_division_audio', label: 'خبير قسمة سماعية', icon: '🎤', color: 'from-blue-500 to-cyan-700', earned: !!anzanAudioBadges.master_division_audio },
+    ],
+    [anzanAudioBadges],
+  );
 
   const earnedAudioCount = audioAnzanBadgeList.filter((b) => b.earned).length;
 
-  // ═══ 📊 المهارات (SRB) ═══
+  // ═══ 📊 المهارات الأربع (SRB) ═══
   const skills = useMemo(() => {
-    const totalLevels = SRB_LEVELS.length;
-    const concentration = Math.min(100, Math.round((passedPractice.length / totalLevels) * 100));
-    const visualization = Math.min(100, Math.round((passedAnzanVisual.length / totalLevels) * 100));
+    const concentration = Math.min(
+      100,
+      Math.round((passedPractice.length / totalLevelsCount) * 100),
+    );
+
+    const visualization = Math.min(
+      100,
+      Math.round((passedAnzanVisual.length / totalLevelsCount) * 100),
+    );
+
     const masteryCount = Object.keys(masteryBadges).length;
-    const observation = Math.min(100, Math.round((masteryCount / 20) * 100));
-    const listening = Math.min(100, Math.round((passedAnzanAudio.length / totalLevels) * 100));
+    const observation = Math.min(
+      100,
+      Math.round((masteryCount / 20) * 100),
+    );
+
+    const listening = Math.min(
+      100,
+      Math.round((passedAnzanAudio.length / totalLevelsCount) * 100),
+    );
 
     return [
-      { id: 'concentration', nameAr: 'التركيز والانتباه', descriptionAr: 'قدرة الطفل على البقاء مركّزاً خلال الجلسات', percentage: concentration, available: true },
-      { id: 'visualization', nameAr: 'التخيل والتصور', descriptionAr: 'قدرة الطفل على تخيل المعداد في عقله (الأنزان)', percentage: visualization, available: true },
-      { id: 'observation', nameAr: 'دقة الملاحظة', descriptionAr: 'قدرة الطفل على حل المسائل من المحاولة الأولى', percentage: observation, available: true },
-      { id: 'listening', nameAr: 'الاستماع والانتباه السمعي', descriptionAr: 'قدرة الطفل على الحساب من خلال السماع', percentage: listening, available: true },
+      {
+        id: 'concentration',
+        nameAr: 'التركيز والانتباه',
+        descriptionAr: 'قدرة الطفل على البقاء مركّزاً خلال الجلسات',
+        percentage: concentration,
+        available: true,
+      },
+      {
+        id: 'visualization',
+        nameAr: 'التخيل والتصور',
+        descriptionAr: 'قدرة الطفل على تخيل المعداد في عقله (الأنزان)',
+        percentage: visualization,
+        available: true,
+      },
+      {
+        id: 'observation',
+        nameAr: 'دقة الملاحظة',
+        descriptionAr: 'قدرة الطفل على حل المسائل من المحاولة الأولى',
+        percentage: observation,
+        available: true,
+      },
+      {
+        id: 'listening',
+        nameAr: 'الاستماع والانتباه السمعي',
+        descriptionAr: 'قدرة الطفل على الحساب من خلال السماع',
+        percentage: listening,
+        available: true,
+      },
     ];
-  }, [passedPractice, passedAnzanVisual, passedAnzanAudio, masteryBadges]);
+  }, [passedPractice, passedAnzanVisual, passedAnzanAudio, masteryBadges, totalLevelsCount]);
 
   // ═══ 🗺️ خارطة المستويات ═══
-  const levelNodes: LevelNodeData[] = useMemo(() =>
-    SRB_LEVELS.map((lv, idx) => {
-      const isCompleted = (completedLevels as unknown as string[]).includes(lv.id);
-      const prevCompleted = idx === 0 ||
-        (completedLevels as unknown as string[]).includes(SRB_LEVELS[idx - 1].id);
-      const status: LevelStatus = isCompleted
-        ? 'completed'
-        : prevCompleted
-          ? 'available'
-          : 'locked';
-      return {
-        id: lv.order,
-        nameAr: lv.name,
-        status,
-        xpRequired: (idx + 1) * 100,
-      };
-    }),
+  const levelNodes: LevelNodeData[] = useMemo(
+    () =>
+      SRB_LEVELS.map((lv, idx) => {
+        const isCompleted = completedLevelsStr.includes(lv.id);
+        const prevCompleted =
+          idx === 0 || completedLevelsStr.includes(SRB_LEVELS[idx - 1].id);
+
+        const status: LevelStatus = isCompleted
+          ? 'completed'
+          : prevCompleted
+            ? 'available'
+            : 'locked';
+
+        return {
+          id: lv.order,
+          nameAr: lv.name,
+          nameEn: lv.nameEn,
+          status,
+          xpRequired: (lv.order + 1) * 100,
+        };
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [completedLevels],
   );
 
@@ -271,10 +344,38 @@ export function GuardianDashboard({
 
   // ═══ 📈 الإحصائيات العلوية ═══
   const stats = [
-    { label: 'نقاط الخبرة', labelEn: 'XP Points', value: toArabicNumber(totalXP), icon: Zap, gradient: 'from-gold-400 to-gold-600', glow: 'shadow-gold-500/30' },
-    { label: 'المستوى', labelEn: 'Level', value: toArabicNumber(childLevel), icon: Award, gradient: 'from-purple-500 to-purple-700', glow: 'shadow-purple-500/30' },
-    { label: 'الأيام المتتالية', labelEn: 'Day Streak', value: toArabicNumber(currentStreak), icon: TrendingUp, gradient: 'from-orange-500 to-red-500', glow: 'shadow-orange-500/30' },
-    { label: 'المهارات المتقنة', labelEn: 'Mastered', value: toArabicNumber(masteryBadgesList.length), icon: Target, gradient: 'from-emerald2-500 to-emerald2-700', glow: 'shadow-emerald2-500/30' },
+    {
+      label: 'نقاط الخبرة',
+      labelEn: 'XP Points',
+      value: toArabicNumber(totalXP),
+      icon: Zap,
+      gradient: 'from-gold-400 to-gold-600',
+      glow: 'shadow-gold-500/30',
+    },
+    {
+      label: 'المستوى',
+      labelEn: 'Level',
+      value: toArabicNumber(childLevel),
+      icon: Award,
+      gradient: 'from-purple-500 to-purple-700',
+      glow: 'shadow-purple-500/30',
+    },
+    {
+      label: 'الأيام المتتالية',
+      labelEn: 'Day Streak',
+      value: toArabicNumber(currentStreak),
+      icon: TrendingUp,
+      gradient: 'from-orange-500 to-red-500',
+      glow: 'shadow-orange-500/30',
+    },
+    {
+      label: 'المهارات المتقنة',
+      labelEn: 'Mastered',
+      value: toArabicNumber(masteryBadgesList.length),
+      icon: Target,
+      gradient: 'from-emerald2-500 to-emerald2-700',
+      glow: 'shadow-emerald2-500/30',
+    },
   ];
 
   // ═══ Refresh ═══
@@ -288,7 +389,10 @@ export function GuardianDashboard({
       {/* ═══ رأس الصفحة ═══ */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
         <button
-          onClick={() => { playSound('click'); onBack(); }}
+          onClick={() => {
+            playSound('click');
+            onBack();
+          }}
           className="btn-ghost !px-3 !py-2"
         >
           <ArrowRight className="w-5 h-5" />
@@ -306,8 +410,12 @@ export function GuardianDashboard({
 
         {onShowWelcome && (
           <button
-            onClick={() => { playSound('click'); onShowWelcome(); }}
+            onClick={() => {
+              playSound('click');
+              onShowWelcome();
+            }}
             className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-200 hover:bg-amber-500/25 transition-all text-sm font-body"
+            title="عرض شاشة الترحيب"
           >
             <PlayCircle className="w-4 h-4" />
             <span>شاشة الترحيب</span>
@@ -316,8 +424,12 @@ export function GuardianDashboard({
 
         {onSwitchToHero && (
           <button
-            onClick={() => { playSound('click'); onSwitchToHero(); }}
+            onClick={() => {
+              playSound('click');
+              onSwitchToHero();
+            }}
             className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-purple-500/15 border border-purple-400/30 text-purple-200 hover:bg-purple-500/25 transition-all text-sm font-body"
+            title="العودة إلى وضع البطل"
           >
             <Home className="w-4 h-4" />
             <span>وضع البطل</span>
@@ -354,7 +466,8 @@ export function GuardianDashboard({
               {savedName}
             </h2>
             <p className="text-sm text-emerald2-300 font-body mt-0.5">
-              مستوى {toArabicNumber(childLevel)} · {toArabicNumber(completedLevelsCount)}/{toArabicNumber(SRB_LEVELS.length)} دروس مكتملة
+              مستوى {toArabicNumber(childLevel)} ·{' '}
+              {toArabicNumber(completedLevelsCount)}/{toArabicNumber(totalLevelsCount)} مستويات مكتملة
             </p>
           </div>
         </div>
@@ -375,7 +488,9 @@ export function GuardianDashboard({
               <div className={`inline-flex w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br ${stat.gradient} items-center justify-center shadow-lg ${stat.glow} mb-3`}>
                 <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
-              <p className="text-2xl sm:text-3xl font-extrabold font-display text-white mb-0.5">{stat.value}</p>
+              <p className="text-2xl sm:text-3xl font-extrabold font-display text-white mb-0.5">
+                {stat.value}
+              </p>
               <p className="text-xs sm:text-sm text-white/60 font-body">{stat.label}</p>
               <p className="text-[10px] text-white/30 font-body">{stat.labelEn}</p>
             </motion.div>
@@ -383,7 +498,7 @@ export function GuardianDashboard({
         })}
       </div>
 
-      {/* ═══ المهارات ═══ */}
+      {/* ═══ المهارات الأربع ═══ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -404,36 +519,40 @@ export function GuardianDashboard({
               transition={{ delay: 0.25 + i * 0.08 }}
             >
               <div className="flex items-center justify-between mb-1.5">
-                <p className={`text-sm font-bold font-body ${skill.available ? 'text-white/80' : 'text-white/40'}`}>
+                <p className="text-sm font-bold font-body text-white/80">
                   {skill.nameAr}
                 </p>
-                <span className={`text-xs font-bold font-display ${
-                  skill.percentage >= 70 ? 'text-emerald2-300' :
-                  skill.percentage >= 40 ? 'text-gold-300' :
-                  'text-red-300'
-                }`}>
+                <span
+                  className={`text-xs font-bold font-display ${
+                    skill.percentage >= 70 ? 'text-emerald2-300'
+                    : skill.percentage >= 40 ? 'text-gold-300'
+                    : 'text-red-300'
+                  }`}
+                >
                   {toArabicNumber(skill.percentage)}٪
                 </span>
               </div>
               <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
                 <motion.div
                   className={`h-full rounded-full ${
-                    skill.percentage >= 70 ? 'bg-gradient-to-r from-emerald2-400 to-emerald2-600' :
-                    skill.percentage >= 40 ? 'bg-gradient-to-r from-gold-400 to-gold-600' :
-                    'bg-gradient-to-r from-red-400 to-red-600'
+                    skill.percentage >= 70 ? 'bg-gradient-to-r from-emerald2-400 to-emerald2-600'
+                    : skill.percentage >= 40 ? 'bg-gradient-to-r from-gold-400 to-gold-600'
+                    : 'bg-gradient-to-r from-red-400 to-red-600'
                   }`}
                   initial={{ width: 0 }}
                   animate={{ width: `${skill.percentage}%` }}
                   transition={{ delay: 0.35 + i * 0.08, duration: 0.8 }}
                 />
               </div>
-              <p className="text-[10px] text-white/40 font-body mt-1.5">{skill.descriptionAr}</p>
+              <p className="text-[10px] text-white/40 font-body mt-1.5">
+                {skill.descriptionAr}
+              </p>
             </motion.div>
           ))}
         </div>
       </motion.div>
 
-      {/* ═══ 🎓 شارات إنجاز المستوى (SRB) ═══ */}
+      {/* ═══ 🎓 شارات إنجاز المستوى (8) ═══ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -443,7 +562,9 @@ export function GuardianDashboard({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-gold-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">🎓 شارات إنجاز المستوى</h3>
+            <h3 className="text-xl font-extrabold font-display text-white">
+              🎓 شارات إنجاز المستوى
+            </h3>
           </div>
           <span className="badge bg-gold-400/15 border-gold-400/20 text-gold-200 text-xs">
             {toArabicNumber(earnedLevelBadges)}/{toArabicNumber(levelBadges.length)}
@@ -460,15 +581,27 @@ export function GuardianDashboard({
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.06 }}
                 className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${
-                  badge.earned ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5'
+                  badge.earned
+                    ? 'bg-white/5 border-white/10'
+                    : 'bg-white/[0.02] border-white/5'
                 }`}
               >
-                <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
-                  badge.earned ? `bg-gradient-to-br ${badge.gradient}` : 'bg-white/5'
-                }`}>
-                  {badge.earned ? <Icon className="w-7 h-7 text-white" /> : <LockBadge className="w-6 h-6 text-white/25" />}
+                <div
+                  className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
+                    badge.earned ? `bg-gradient-to-br ${badge.gradient}` : 'bg-white/5'
+                  }`}
+                >
+                  {badge.earned ? (
+                    <Icon className="w-7 h-7 text-white" />
+                  ) : (
+                    <LockBadge className="w-6 h-6 text-white/25" />
+                  )}
                 </div>
-                <p className={`text-xs font-bold font-body text-center ${badge.earned ? 'text-white/80' : 'text-white/30'}`}>
+                <p
+                  className={`text-xs font-bold font-body text-center ${
+                    badge.earned ? 'text-white/80' : 'text-white/30'
+                  }`}
+                >
                   {badge.label}
                 </p>
                 <p className="text-[10px] text-white/40 font-body text-center leading-tight">
@@ -480,7 +613,7 @@ export function GuardianDashboard({
         </div>
       </motion.div>
 
-      {/* ═══ 🏅 شارات إتقان المهارات (SRB) ═══ */}
+      {/* ═══ 🏅 شارات إتقان المهارات ═══ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -490,7 +623,9 @@ export function GuardianDashboard({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5 text-gold-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">🏅 شارات إتقان المهارات</h3>
+            <h3 className="text-xl font-extrabold font-display text-white">
+              🏅 شارات إتقان المهارات
+            </h3>
           </div>
           <span className="badge bg-gold-400/15 border-gold-400/20 text-gold-200 text-xs">
             {toArabicNumber(masteryBadgesList.length)}
@@ -507,6 +642,7 @@ export function GuardianDashboard({
               const parsed = parseSkillId(badge.skillId);
               const label = getSkillLabel(badge.skillId);
               const timeSec = Math.round(badge.bestTimeMs / 1000);
+
               return (
                 <motion.div
                   key={badge.skillId}
@@ -519,11 +655,14 @@ export function GuardianDashboard({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-white truncate">
-                      {parsed ? `${parsed.level}-${parsed.section}-${parsed.module}` : badge.skillId}
+                      {parsed
+                        ? `${parsed.level}-${parsed.section}-${parsed.module}`
+                        : badge.skillId}
                     </p>
                     <p className="text-[10px] text-gold-200 truncate">{label}</p>
-                    <p className="text-[10px] text-white/50">
-                      ⏱ {toArabicNumber(timeSec)}s (قياسي)
+                    <p className="text-[10px] text-white/50 flex items-center gap-1">
+                      <Timer className="w-3 h-3" />
+                      {toArabicNumber(timeSec)}s (قياسي)
                     </p>
                   </div>
                 </motion.div>
@@ -549,7 +688,9 @@ export function GuardianDashboard({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-purple-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">شارات الأنزان البصري</h3>
+            <h3 className="text-xl font-extrabold font-display text-white">
+              شارات الأنزان البصري
+            </h3>
           </div>
           <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-200 text-xs">
             {toArabicNumber(earnedAnzanCount)}/{toArabicNumber(anzanBadgeList.length)}
@@ -564,21 +705,27 @@ export function GuardianDashboard({
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.08 }}
               className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${
-                badge.earned ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5'
+                badge.earned
+                  ? 'bg-white/5 border-white/10'
+                  : 'bg-white/[0.02] border-white/5'
               }`}
             >
-              <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
-                badge.earned ? `bg-gradient-to-br ${badge.color}` : 'bg-white/5'
-              }`}>
+              <div
+                className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
+                  badge.earned ? `bg-gradient-to-br ${badge.color}` : 'bg-white/5'
+                }`}
+              >
                 {badge.earned ? (
                   <span className="text-2xl">{badge.icon}</span>
                 ) : (
                   <LockBadge className="w-6 h-6 text-white/25" />
                 )}
               </div>
-              <p className={`text-xs font-bold font-body text-center ${
-                badge.earned ? 'text-white/80' : 'text-white/30'
-              }`}>
+              <p
+                className={`text-xs font-bold font-body text-center ${
+                  badge.earned ? 'text-white/80' : 'text-white/30'
+                }`}
+              >
                 {badge.label}
               </p>
             </motion.div>
@@ -596,7 +743,9 @@ export function GuardianDashboard({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Volume2 className="w-5 h-5 text-purple-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">شارات الأنزان السماعي</h3>
+            <h3 className="text-xl font-extrabold font-display text-white">
+              شارات الأنزان السماعي
+            </h3>
           </div>
           <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-200 text-xs">
             {toArabicNumber(earnedAudioCount)}/{toArabicNumber(audioAnzanBadgeList.length)}
@@ -611,21 +760,27 @@ export function GuardianDashboard({
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.08 }}
               className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${
-                badge.earned ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5'
+                badge.earned
+                  ? 'bg-white/5 border-white/10'
+                  : 'bg-white/[0.02] border-white/5'
               }`}
             >
-              <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
-                badge.earned ? `bg-gradient-to-br ${badge.color}` : 'bg-white/5'
-              }`}>
+              <div
+                className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
+                  badge.earned ? `bg-gradient-to-br ${badge.color}` : 'bg-white/5'
+                }`}
+              >
                 {badge.earned ? (
                   <span className="text-2xl">{badge.icon}</span>
                 ) : (
                   <LockBadge className="w-6 h-6 text-white/25" />
                 )}
               </div>
-              <p className={`text-[10px] font-bold font-body text-center leading-tight ${
-                badge.earned ? 'text-white/80' : 'text-white/30'
-              }`}>
+              <p
+                className={`text-[10px] font-bold font-body text-center leading-tight ${
+                  badge.earned ? 'text-white/80' : 'text-white/30'
+                }`}
+              >
                 {badge.label}
               </p>
             </motion.div>
@@ -643,10 +798,12 @@ export function GuardianDashboard({
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">خارطة المستويات</h3>
+            <h3 className="text-xl font-extrabold font-display text-white">
+              خارطة المستويات
+            </h3>
           </div>
           <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-300 text-xs">
-            {toArabicNumber(completedLevelsCount)}/{toArabicNumber(SRB_LEVELS.length)} مكتمل
+            {toArabicNumber(completedLevelsCount)}/{toArabicNumber(totalLevelsCount)} مكتمل
           </span>
         </div>
 
@@ -679,14 +836,21 @@ export function GuardianDashboard({
                 <motion.div
                   initial={{ height: 0 }}
                   animate={{ height: `${height}%` }}
-                  transition={{ delay: 0.5 + i * 0.06, type: 'spring', stiffness: 100, damping: 15 }}
+                  transition={{
+                    delay: 0.5 + i * 0.06,
+                    type: 'spring',
+                    stiffness: 100,
+                    damping: 15,
+                  }}
                   className="w-full rounded-t-xl bg-gradient-to-t from-purple-600 to-electric-400 min-h-[4px] relative group"
                 >
                   <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-white/0 group-hover:text-white/80 transition-colors whitespace-nowrap">
                     {toArabicNumber(day.xp)}
                   </span>
                 </motion.div>
-                <span className="text-[10px] sm:text-xs text-white/50 font-body">{day.day}</span>
+                <span className="text-[10px] sm:text-xs text-white/50 font-body">
+                  {day.day}
+                </span>
               </div>
             );
           })}
@@ -709,7 +873,7 @@ export function GuardianDashboard({
             {toArabicNumber(passedPractice.length)}
           </p>
           <p className="text-xs text-emerald2-300 font-body mt-1">
-            من {toArabicNumber(SRB_LEVELS.length)}
+            من {toArabicNumber(totalLevelsCount)}
           </p>
         </motion.div>
 
@@ -720,14 +884,14 @@ export function GuardianDashboard({
           className="glass-card p-5"
         >
           <div className="flex items-center gap-2 mb-2">
-            <Brain className="w-5 h-5 text-electric-400" />
+            <Eye className="w-5 h-5 text-electric-400" />
             <p className="text-sm text-white/60 font-body">أنزان بصري ناجح</p>
           </div>
           <p className="text-3xl font-extrabold font-display text-white">
             {toArabicNumber(passedAnzanVisual.length)}
           </p>
           <p className="text-xs text-electric-300 font-body mt-1">
-            من {toArabicNumber(SRB_LEVELS.length)}
+            من {toArabicNumber(totalLevelsCount)}
           </p>
         </motion.div>
 
@@ -744,14 +908,12 @@ export function GuardianDashboard({
           <p className="text-3xl font-extrabold font-display text-white">
             {toArabicNumber(
               earnedLevelBadges +
-              masteryBadgesList.length +
-              earnedAnzanCount +
-              earnedAudioCount
+                masteryBadgesList.length +
+                earnedAnzanCount +
+                earnedAudioCount,
             )}
           </p>
-          <p className="text-xs text-gold-300 font-body mt-1">
-            جميع الأنواع
-          </p>
+          <p className="text-xs text-gold-300 font-body mt-1">جميع الأنواع</p>
         </motion.div>
       </div>
 
@@ -768,7 +930,10 @@ export function GuardianDashboard({
         </div>
         <div className="space-y-2.5">
           {levelNodes.map((node, i) => {
-            const pct = node.status === 'completed' ? 100 : node.status === 'available' ? 40 : 0;
+            const pct =
+              node.status === 'completed' ? 100
+              : node.status === 'available' ? 40
+              : 0;
             return (
               <motion.div
                 key={node.id}
@@ -784,15 +949,21 @@ export function GuardianDashboard({
                     : 'bg-white/20'
                   }`}
                 />
-                <span className={`text-sm font-body w-28 sm:w-36 shrink-0 ${node.status === 'locked' ? 'text-white/30' : 'text-white/70'}`}>
+                <span
+                  className={`text-sm font-body w-28 sm:w-36 shrink-0 ${
+                    node.status === 'locked' ? 'text-white/30' : 'text-white/70'
+                  }`}
+                >
                   {node.nameAr}
                 </span>
                 <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
                   <motion.div
                     className={`h-full rounded-full ${
-                      node.status === 'completed' ? 'bg-gradient-to-r from-emerald2-400 to-emerald2-600'
-                      : node.status === 'available' ? 'bg-gradient-to-r from-purple-400 to-electric-500'
-                      : 'bg-white/10'
+                      node.status === 'completed'
+                        ? 'bg-gradient-to-r from-emerald2-400 to-emerald2-600'
+                        : node.status === 'available'
+                          ? 'bg-gradient-to-r from-purple-400 to-electric-500'
+                          : 'bg-white/10'
                     }`}
                     initial={{ width: 0 }}
                     animate={{ width: `${pct}%` }}
@@ -813,12 +984,14 @@ export function GuardianDashboard({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="glass-card p-5 sm:p-6 mb-6"
+        className="glass-card p-5 sm:p-6"
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Swords className="w-5 h-5 text-gold-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">المغامرات النشطة</h3>
+            <h3 className="text-xl font-extrabold font-display text-white">
+              المغامرات النشطة
+            </h3>
           </div>
         </div>
 
@@ -834,7 +1007,9 @@ export function GuardianDashboard({
                 className="p-4 rounded-2xl bg-white/5 border border-white/10"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <p className="font-bold text-white font-body text-sm">{quest.titleAr}</p>
+                  <p className="font-bold text-white font-body text-sm">
+                    {quest.titleAr}
+                  </p>
                   <span className="text-xs font-bold text-gold-300">
                     +{toArabicNumber(quest.xpReward)} XP
                   </span>
