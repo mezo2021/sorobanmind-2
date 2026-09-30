@@ -1,6 +1,9 @@
 // src/screens/GuardianDashboard.tsx
+// ✅ SRB-first: يقرأ من progressStore + masteryBadgesStore
+// ✅ Props محفوظة للتوافق مع App.tsx (لكن تُتجاهل قيمها)
+
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import {
   ArrowRight, TrendingUp, Target, Clock, Award,
   Brain, Calendar, Zap, CheckCircle2, BarChart3,
@@ -9,62 +12,99 @@ import {
   Home, Sparkles, PlayCircle,
   type LucideIcon,
 } from 'lucide-react';
-import { LEVELS, BADGES } from '../data';
-import type { LevelNode } from '../types';
+
 import { useQuests } from '../hooks/useQuests';
-import { loadAnzanBadges, type AnzanBadges } from '../utils/anzanBadges';
-import { loadAudioAnzanBadges, type AudioAnzanBadges } from '../utils/audioAnzanBadges';
-import { calculateSkills } from '../utils/skillsChecker';
+
+// ═══ SRB Stores ═══
+import { useProgressStore } from '../store/progressStore';
+import { useMasteryBadgesStore } from '../store/masteryBadgesStore';
+
+// ═══ SRB Data ═══
+import { SRB_LEVELS } from '../data/srb/curriculum';
+import { getModuleName } from '../data/srb/modules';
+import type { SRBLevel, SRBSection, SRBModule } from '../data/srb/types';
+
+// ═══════════════════════════════════════════════════════════
+// أدوات
+// ═══════════════════════════════════════════════════════════
 
 function toArabicNumber(value: number | string): string {
   return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 }
 
-const STATS_KEY = 'sorobanmind-stats';
-const COMPLETED_KEY = 'soroban-completed-lessons';
-const ANZAN_KEY = 'soroban_anzan_stats';
-const PRACTICE_KEY = 'soroban_practice_stats';
+interface ParsedSkillId {
+  level: SRBLevel;
+  section: SRBSection;
+  module: SRBModule;
+}
+
+function parseSkillId(skillId: string): ParsedSkillId | null {
+  const parts = skillId.split('-');
+  if (parts.length !== 3) return null;
+  const [level, section, module] = parts;
+  if (!/^L\d$/.test(level)) return null;
+  if (!/^S\d{2}$/.test(section)) return null;
+  if (!/^m\d$/.test(module)) return null;
+  return {
+    level: level as SRBLevel,
+    section: section as SRBSection,
+    module: module as SRBModule,
+  };
+}
+
+function getSkillLabel(skillId: string): string {
+  const parsed = parseSkillId(skillId);
+  if (!parsed) return skillId;
+  return getModuleName(parsed.section, parsed.module);
+}
+
+const LEVEL_GRADIENTS: Record<string, string> = {
+  L0: 'from-emerald-500 to-teal-700',
+  L1: 'from-blue-500 to-cyan-700',
+  L2: 'from-amber-500 to-orange-700',
+  L3: 'from-blue-500 to-indigo-700',
+  L4: 'from-purple-500 to-violet-700',
+  L5: 'from-purple-500 to-fuchsia-700',
+  L6: 'from-amber-500 to-rose-700',
+  L7: 'from-rose-500 to-purple-700',
+};
+
+const LEVEL_ICONS: LucideIcon[] = [
+  Star, Star, Target, Target, Award, Award, Crown, Diamond,
+];
+
+// ═══════════════════════════════════════════════════════════
+// الأنواع
+// ═══════════════════════════════════════════════════════════
 
 interface GuardianDashboardProps {
   onBack: () => void;
   playSound: (type: 'click' | 'whoosh') => void;
   childName?: string;
-  childXP: number;
-  childStreak: number;
-  childLevel: number;
+  /** @deprecated — يُقرأ الآن من progressStore.totalXP */
+  childXP?: number;
+  /** @deprecated — يُقرأ الآن من progressStore.currentStreak */
+  childStreak?: number;
+  /** @deprecated — يُحسب الآن من totalXP */
+  childLevel?: number;
   onSwitchToHero?: () => void;
   onShowWelcome?: () => void;
 }
 
-interface AnzanStats {
-  highScore: number;
-  totalRounds: number;
-  totalCorrect: number;
+type LevelStatus = 'completed' | 'available' | 'locked';
+
+interface LevelNodeData {
+  id: number;
+  nameAr: string;
+  status: LevelStatus;
+  xpRequired: number;
 }
 
-interface PracticeStats {
-  totalProblems: number;
-  correctAnswers: number;
-  additionProblems: number;
-  subtractionProblems: number;
-}
+// ═══════════════════════════════════════════════════════════
+// LevelNodeButton
+// ═══════════════════════════════════════════════════════════
 
-const BADGE_ICONS: Record<string, LucideIcon> = {
-  Star, Eye, Award, Crown, Target, Diamond,
-};
-
-const BADGE_GRADIENTS: Record<string, string> = {
-  beginner: 'from-emerald2-400 to-emerald2-600',
-  trainee: 'from-electric-400 to-electric-600',
-  'anzan-master': 'from-electric-400 to-electric-600',
-  skilled: 'from-purple-400 to-purple-600',
-  'soroban-expert': 'from-purple-400 to-purple-600',
-  professional: 'from-pink-400 to-pink-600',
-  legend: 'from-gold-400 to-gold-600',
-  'eternal-legend': 'from-gold-400 to-gold-600',
-};
-
-function LevelNodeButton({ level, index }: { level: LevelNode; index: number }) {
+function LevelNodeButton({ level, index }: { level: LevelNodeData; index: number }) {
   const isOdd = index % 2 === 1;
   const Icon =
     level.status === 'locked' ? Lock
@@ -103,141 +143,145 @@ function LevelNodeButton({ level, index }: { level: LevelNode; index: number }) 
   );
 }
 
+// ═══════════════════════════════════════════════════════════
+// الشاشة
+// ═══════════════════════════════════════════════════════════
+
 export function GuardianDashboard({
   onBack,
   playSound,
   childName = 'البطل',
-  childXP,
-  childStreak,
-  childLevel,
   onSwitchToHero,
   onShowWelcome,
 }: GuardianDashboardProps) {
-  const [savedName, setSavedName] = useState(childName);
-  const [completed, setCompleted] = useState<number[]>([]);
-  const [earnedBadges, setEarnedBadges] = useState<string[]>([]);
-  const [anzanStats, setAnzanStats] = useState<AnzanStats>({ highScore: 0, totalRounds: 0, totalCorrect: 0 });
-  const [anzanBadges, setAnzanBadges] = useState<AnzanBadges>({});
-  const [audioAnzanBadges, setAudioAnzanBadges] = useState<AudioAnzanBadges>({});
-  const [practiceStats, setPracticeStats] = useState<PracticeStats>({
-    totalProblems: 0, correctAnswers: 0, additionProblems: 0, subtractionProblems: 0,
-  });
-  const [weeklyXP, setWeeklyXP] = useState<{ day: string; xp: number }[]>([]);
-  const [skills, setSkills] = useState(calculateSkills());
-  const [lastRefresh, setLastRefresh] = useState(Date.now());
+  // ═══ progressStore (SRB) ═══
+  const storedName = useProgressStore((s) => s.childName);
+  const totalXP = useProgressStore((s) => s.totalXP);
+  const currentStreak = useProgressStore((s) => s.currentStreak);
+  const completedLevels = useProgressStore((s) => s.completedLevels);
+  const passedPractice = useProgressStore((s) => s.passedPractice);
+  const passedAnzanVisual = useProgressStore((s) => s.passedAnzanVisual);
+  const passedAnzanAudio = useProgressStore((s) => s.passedAnzanAudio);
+  const anzanBadges = useProgressStore((s) => s.anzanBadges);
+  const anzanAudioBadges = useProgressStore((s) => s.anzanAudioBadges);
 
+  // ═══ masteryBadgesStore ═══
+  const masteryBadges = useMasteryBadgesStore((s) => s.badges);
+
+  // ═══ Quests ═══
   const quests = useQuests();
 
-  const loadAllData = () => {
-    const name = localStorage.getItem('soroban_child_name');
-    if (name) setSavedName(name);
+  // ═══ اسم الطفل ═══
+  const savedName = storedName || childName;
 
-    try {
-      const saved = localStorage.getItem(COMPLETED_KEY);
-      if (saved) setCompleted(JSON.parse(saved));
-    } catch { /* ignore */ }
+  // ═══ مشتقات ═══
+  const childLevel = Math.floor(totalXP / 100) + 1;
+  const completedLevelsCount = completedLevels.length;
 
-    try {
-      const stats = localStorage.getItem(STATS_KEY);
-      if (stats) {
-        const parsed = JSON.parse(stats);
-        if (Array.isArray(parsed.earnedBadges)) setEarnedBadges(parsed.earnedBadges);
-      }
-    } catch { /* ignore */ }
+  // ═══ 🎓 شارات إنجاز المستوى (مشتقة من completedLevels) ═══
+  const levelBadges = useMemo(() =>
+    SRB_LEVELS.map((lv, idx) => ({
+      id: lv.id,
+      label: lv.name,
+      labelEn: lv.nameEn,
+      order: lv.order,
+      Icon: LEVEL_ICONS[idx] ?? Star,
+      gradient: LEVEL_GRADIENTS[lv.id] ?? 'from-purple-500 to-electric-500',
+      earned: (completedLevels as unknown as string[]).includes(lv.id),
+    })),
+    [completedLevels],
+  );
 
-    try {
-      const saved = localStorage.getItem(ANZAN_KEY);
-      if (saved) setAnzanStats((prev) => ({ ...prev, ...JSON.parse(saved) }));
-    } catch { /* ignore */ }
+  const earnedLevelBadges = levelBadges.filter((b) => b.earned).length;
 
-    setAnzanBadges(loadAnzanBadges());
-    setAudioAnzanBadges(loadAudioAnzanBadges());
+  // ═══ 🏅 شارات إتقان المهارات (SRB) ═══
+  const masteryBadgesList = useMemo(
+    () => Object.values(masteryBadges).sort((a, b) => b.masteredAt - a.masteredAt),
+    [masteryBadges],
+  );
 
-    try {
-      const saved = localStorage.getItem(PRACTICE_KEY);
-      if (saved) setPracticeStats((prev) => ({ ...prev, ...JSON.parse(saved) }));
-    } catch { /* ignore */ }
-
-    try {
-      const saved = localStorage.getItem(STATS_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
-        const today = new Date().getDay();
-        const mapped = days.map((day, idx) => ({
-          day,
-          xp: idx === (today + 1) % 7 ? parsed.xp || 0 : 0,
-        }));
-        setWeeklyXP(mapped);
-      }
-    } catch { /* ignore */ }
-
-    setSkills(calculateSkills());
-    setLastRefresh(Date.now());
-  };
-
-  useEffect(() => {
-    loadAllData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ✅ التحديث الآن يُعيد تحميل الصفحة كاملاً (Refresh حقيقي)
-  const handleRefresh = () => {
-    playSound('click');
-    window.location.reload();
-  };
-
-  const accuracy = practiceStats.totalProblems > 0
-    ? Math.round((practiceStats.correctAnswers / practiceStats.totalProblems) * 100)
-    : 0;
-  const maxWeeklyXP = Math.max(...weeklyXP.map((d) => d.xp), 1);
-  const completedLevels = completed.length;
-
-  const stats = [
-    { label: 'نقاط الخبرة', labelEn: 'XP Points', value: toArabicNumber(childXP), icon: Zap, gradient: 'from-gold-400 to-gold-600', glow: 'shadow-gold-500/30' },
-    { label: 'المستوى', labelEn: 'Level', value: toArabicNumber(childLevel), icon: Award, gradient: 'from-purple-500 to-purple-700', glow: 'shadow-purple-500/30' },
-    { label: 'الأيام المتتالية', labelEn: 'Day Streak', value: toArabicNumber(childStreak), icon: TrendingUp, gradient: 'from-orange-500 to-red-500', glow: 'shadow-orange-500/30' },
-    { label: 'دقة الإجابات', labelEn: 'Accuracy', value: `${toArabicNumber(accuracy)}٪`, icon: Target, gradient: 'from-emerald2-500 to-emerald2-700', glow: 'shadow-emerald2-500/30' },
-  ];
-
-  const nextBadge = BADGES.find((b) => !earnedBadges.includes(b.id));
-
-  const progressPct = (() => {
-    if (!nextBadge) return 100;
-    const req = nextBadge.requirement;
-    switch (req.type) {
-      case 'lessons':
-        return Math.min(100, (completed.length / req.count) * 100);
-      case 'xp':
-        return Math.min(100, (childXP / req.count) * 100);
-      default:
-        return 0;
-    }
-  })();
-
-  const anzanBadgeList = [
+  // ═══ 🧠 شارات الأنزان البصري ═══
+  const anzanBadgeList = useMemo(() => [
     { id: 'master_addition', label: 'خبير جمع وطرح', icon: '🧠', color: 'from-cyan-500 to-blue-700', earned: !!anzanBadges.master_addition },
     { id: 'master_multiplication', label: 'خبير ضرب', icon: '✖️', color: 'from-indigo-500 to-purple-700', earned: !!anzanBadges.master_multiplication },
     { id: 'master_division', label: 'خبير قسمة', icon: '➗', color: 'from-blue-500 to-cyan-700', earned: !!anzanBadges.master_division },
     { id: 'master_mixed', label: 'خبير مختلط', icon: '🔀', color: 'from-pink-500 to-rose-700', earned: !!anzanBadges.master_mixed },
-  ];
+  ], [anzanBadges]);
+
   const earnedAnzanCount = anzanBadgeList.filter((b) => b.earned).length;
 
-  const audioAnzanBadgeList = [
-    { id: 'master_addition_audio', label: 'خبير جمع وطرح سماعي', icon: '🎤', color: 'from-cyan-500 to-blue-700', earned: !!audioAnzanBadges.master_addition_audio },
-    { id: 'master_multiplication_audio', label: 'خبير ضرب سماعي', icon: '🎤', color: 'from-indigo-500 to-purple-700', earned: !!audioAnzanBadges.master_multiplication_audio },
-    { id: 'master_division_audio', label: 'خبير قسمة سماعية', icon: '🎤', color: 'from-blue-500 to-cyan-700', earned: !!audioAnzanBadges.master_division_audio },
-  ];
+  // ═══ 🎧 شارات الأنزان السماعي ═══
+  const audioAnzanBadgeList = useMemo(() => [
+    { id: 'master_addition_audio', label: 'خبير جمع وطرح سماعي', icon: '🎤', color: 'from-cyan-500 to-blue-700', earned: !!anzanAudioBadges.master_addition_audio },
+    { id: 'master_multiplication_audio', label: 'خبير ضرب سماعي', icon: '🎤', color: 'from-indigo-500 to-purple-700', earned: !!anzanAudioBadges.master_multiplication_audio },
+    { id: 'master_division_audio', label: 'خبير قسمة سماعية', icon: '🎤', color: 'from-blue-500 to-cyan-700', earned: !!anzanAudioBadges.master_division_audio },
+  ], [anzanAudioBadges]);
+
   const earnedAudioCount = audioAnzanBadgeList.filter((b) => b.earned).length;
 
-  const lastRefreshText = (() => {
-    const diff = Date.now() - lastRefresh;
-    const sec = Math.floor(diff / 1000);
-    if (sec < 5) return 'الآن';
-    if (sec < 60) return `قبل ${toArabicNumber(sec)} ثانية`;
-    const min = Math.floor(sec / 60);
-    return `قبل ${toArabicNumber(min)} دقيقة`;
-  })();
+  // ═══ 📊 المهارات (SRB) ═══
+  const skills = useMemo(() => {
+    const totalLevels = SRB_LEVELS.length;
+    const concentration = Math.min(100, Math.round((passedPractice.length / totalLevels) * 100));
+    const visualization = Math.min(100, Math.round((passedAnzanVisual.length / totalLevels) * 100));
+    const masteryCount = Object.keys(masteryBadges).length;
+    const observation = Math.min(100, Math.round((masteryCount / 20) * 100));
+    const listening = Math.min(100, Math.round((passedAnzanAudio.length / totalLevels) * 100));
+
+    return [
+      { id: 'concentration', nameAr: 'التركيز والانتباه', descriptionAr: 'قدرة الطفل على البقاء مركّزاً خلال الجلسات', percentage: concentration, available: true },
+      { id: 'visualization', nameAr: 'التخيل والتصور', descriptionAr: 'قدرة الطفل على تخيل المعداد في عقله (الأنزان)', percentage: visualization, available: true },
+      { id: 'observation', nameAr: 'دقة الملاحظة', descriptionAr: 'قدرة الطفل على حل المسائل من المحاولة الأولى', percentage: observation, available: true },
+      { id: 'listening', nameAr: 'الاستماع والانتباه السمعي', descriptionAr: 'قدرة الطفل على الحساب من خلال السماع', percentage: listening, available: true },
+    ];
+  }, [passedPractice, passedAnzanVisual, passedAnzanAudio, masteryBadges]);
+
+  // ═══ 🗺️ خارطة المستويات ═══
+  const levelNodes: LevelNodeData[] = useMemo(() =>
+    SRB_LEVELS.map((lv, idx) => {
+      const isCompleted = (completedLevels as unknown as string[]).includes(lv.id);
+      const prevCompleted = idx === 0 ||
+        (completedLevels as unknown as string[]).includes(SRB_LEVELS[idx - 1].id);
+      const status: LevelStatus = isCompleted
+        ? 'completed'
+        : prevCompleted
+          ? 'available'
+          : 'locked';
+      return {
+        id: lv.order,
+        nameAr: lv.name,
+        status,
+        xpRequired: (idx + 1) * 100,
+      };
+    }),
+    [completedLevels],
+  );
+
+  // ═══ 📅 نشاط الأسبوع ═══
+  const weeklyXP = useMemo(() => {
+    const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+    const today = new Date().getDay();
+    return days.map((day, idx) => ({
+      day,
+      xp: idx === (today + 1) % 7 ? totalXP : 0,
+    }));
+  }, [totalXP]);
+
+  const maxWeeklyXP = Math.max(...weeklyXP.map((d) => d.xp), 1);
+
+  // ═══ 📈 الإحصائيات العلوية ═══
+  const stats = [
+    { label: 'نقاط الخبرة', labelEn: 'XP Points', value: toArabicNumber(totalXP), icon: Zap, gradient: 'from-gold-400 to-gold-600', glow: 'shadow-gold-500/30' },
+    { label: 'المستوى', labelEn: 'Level', value: toArabicNumber(childLevel), icon: Award, gradient: 'from-purple-500 to-purple-700', glow: 'shadow-purple-500/30' },
+    { label: 'الأيام المتتالية', labelEn: 'Day Streak', value: toArabicNumber(currentStreak), icon: TrendingUp, gradient: 'from-orange-500 to-red-500', glow: 'shadow-orange-500/30' },
+    { label: 'المهارات المتقنة', labelEn: 'Mastered', value: toArabicNumber(masteryBadgesList.length), icon: Target, gradient: 'from-emerald2-500 to-emerald2-700', glow: 'shadow-emerald2-500/30' },
+  ];
+
+  // ═══ Refresh ═══
+  const handleRefresh = () => {
+    playSound('click');
+    window.location.reload();
+  };
 
   return (
     <div className="px-3 sm:px-6 py-6 max-w-5xl mx-auto" dir="rtl">
@@ -251,7 +295,6 @@ export function GuardianDashboard({
           <span className="hidden sm:inline">تبديل الدور</span>
         </button>
 
-        {/* ✅ زر تحديث الصفحة (Refresh حقيقي) */}
         <button
           onClick={handleRefresh}
           className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-500/15 border border-blue-400/30 text-blue-200 hover:bg-blue-500/25 transition-all text-sm font-body"
@@ -265,7 +308,6 @@ export function GuardianDashboard({
           <button
             onClick={() => { playSound('click'); onShowWelcome(); }}
             className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-200 hover:bg-amber-500/25 transition-all text-sm font-body"
-            title="عرض شاشة الترحيب"
           >
             <PlayCircle className="w-4 h-4" />
             <span>شاشة الترحيب</span>
@@ -276,7 +318,6 @@ export function GuardianDashboard({
           <button
             onClick={() => { playSound('click'); onSwitchToHero(); }}
             className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-purple-500/15 border border-purple-400/30 text-purple-200 hover:bg-purple-500/25 transition-all text-sm font-body"
-            title="العودة إلى وضع البطل"
           >
             <Home className="w-4 h-4" />
             <span>وضع البطل</span>
@@ -285,9 +326,7 @@ export function GuardianDashboard({
 
         <div className="flex-1" />
 
-        <span className="text-[10px] text-white/40 font-body">
-          آخر تحديث: {lastRefreshText}
-        </span>
+        <span className="text-[10px] text-white/40 font-body">SRB · محدّث آنياً</span>
       </div>
 
       {/* ═══ نظرة عامة على الطفل ═══ */}
@@ -315,7 +354,7 @@ export function GuardianDashboard({
               {savedName}
             </h2>
             <p className="text-sm text-emerald2-300 font-body mt-0.5">
-              مستوى {toArabicNumber(childLevel)} · {toArabicNumber(completedLevels)}/{toArabicNumber(LEVELS.length)} دروس مكتملة
+              مستوى {toArabicNumber(childLevel)} · {toArabicNumber(completedLevelsCount)}/{toArabicNumber(SRB_LEVELS.length)} دروس مكتملة
             </p>
           </div>
         </div>
@@ -369,42 +408,142 @@ export function GuardianDashboard({
                   {skill.nameAr}
                 </p>
                 <span className={`text-xs font-bold font-display ${
-                  !skill.available ? 'text-white/30' :
                   skill.percentage >= 70 ? 'text-emerald2-300' :
                   skill.percentage >= 40 ? 'text-gold-300' :
                   'text-red-300'
                 }`}>
-                  {skill.available ? `${toArabicNumber(skill.percentage)}٪` : 'قريباً'}
+                  {toArabicNumber(skill.percentage)}٪
                 </span>
               </div>
               <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
                 <motion.div
                   className={`h-full rounded-full ${
-                    !skill.available ? 'bg-white/10' :
                     skill.percentage >= 70 ? 'bg-gradient-to-r from-emerald2-400 to-emerald2-600' :
                     skill.percentage >= 40 ? 'bg-gradient-to-r from-gold-400 to-gold-600' :
                     'bg-gradient-to-r from-red-400 to-red-600'
                   }`}
                   initial={{ width: 0 }}
-                  animate={{ width: `${skill.available ? skill.percentage : 0}%` }}
+                  animate={{ width: `${skill.percentage}%` }}
                   transition={{ delay: 0.35 + i * 0.08, duration: 0.8 }}
                 />
               </div>
-              {skill.note ? (
-                <p className="text-[10px] text-amber-300/80 font-body mt-1.5">{skill.note}</p>
-              ) : (
-                <p className="text-[10px] text-white/40 font-body mt-1.5">{skill.descriptionAr}</p>
-              )}
+              <p className="text-[10px] text-white/40 font-body mt-1.5">{skill.descriptionAr}</p>
             </motion.div>
           ))}
         </div>
       </motion.div>
 
-      {/* ═══ شارات الأنزان البصري ═══ */}
+      {/* ═══ 🎓 شارات إنجاز المستوى (SRB) ═══ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.22 }}
+        className="glass-card p-5 sm:p-6 mb-6"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-gold-300" />
+            <h3 className="text-xl font-extrabold font-display text-white">🎓 شارات إنجاز المستوى</h3>
+          </div>
+          <span className="badge bg-gold-400/15 border-gold-400/20 text-gold-200 text-xs">
+            {toArabicNumber(earnedLevelBadges)}/{toArabicNumber(levelBadges.length)}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {levelBadges.map((badge, i) => {
+            const Icon = badge.Icon;
+            return (
+              <motion.div
+                key={badge.id}
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.06 }}
+                className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${
+                  badge.earned ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5'
+                }`}
+              >
+                <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
+                  badge.earned ? `bg-gradient-to-br ${badge.gradient}` : 'bg-white/5'
+                }`}>
+                  {badge.earned ? <Icon className="w-7 h-7 text-white" /> : <LockBadge className="w-6 h-6 text-white/25" />}
+                </div>
+                <p className={`text-xs font-bold font-body text-center ${badge.earned ? 'text-white/80' : 'text-white/30'}`}>
+                  {badge.label}
+                </p>
+                <p className="text-[10px] text-white/40 font-body text-center leading-tight">
+                  {badge.labelEn}
+                </p>
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* ═══ 🏅 شارات إتقان المهارات (SRB) ═══ */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.23 }}
+        className="glass-card p-5 sm:p-6 mb-6"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Award className="w-5 h-5 text-gold-300" />
+            <h3 className="text-xl font-extrabold font-display text-white">🏅 شارات إتقان المهارات</h3>
+          </div>
+          <span className="badge bg-gold-400/15 border-gold-400/20 text-gold-200 text-xs">
+            {toArabicNumber(masteryBadgesList.length)}
+          </span>
+        </div>
+
+        {masteryBadgesList.length === 0 ? (
+          <p className="text-center text-white/40 font-body text-sm py-6">
+            🏅 لم يتقن الطفل أي مهارة بعد — أكمل بزمن قياسي للحصول على شارة!
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {masteryBadgesList.slice(0, 10).map((badge) => {
+              const parsed = parseSkillId(badge.skillId);
+              const label = getSkillLabel(badge.skillId);
+              const timeSec = Math.round(badge.bestTimeMs / 1000);
+              return (
+                <motion.div
+                  key={badge.skillId}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-l from-gold-400/10 to-transparent border border-gold-400/30"
+                >
+                  <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-lg">
+                    <Trophy className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-white truncate">
+                      {parsed ? `${parsed.level}-${parsed.section}-${parsed.module}` : badge.skillId}
+                    </p>
+                    <p className="text-[10px] text-gold-200 truncate">{label}</p>
+                    <p className="text-[10px] text-white/50">
+                      ⏱ {toArabicNumber(timeSec)}s (قياسي)
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
+        {masteryBadgesList.length > 10 && (
+          <p className="text-center text-white/40 font-body text-xs mt-3">
+            و {toArabicNumber(masteryBadgesList.length - 10)} شارة أخرى...
+          </p>
+        )}
+      </motion.div>
+
+      {/* ═══ 🧠 شارات الأنزان البصري ═══ */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.24 }}
         className="glass-card p-5 sm:p-6 mb-6"
       >
         <div className="flex items-center justify-between mb-4">
@@ -447,11 +586,11 @@ export function GuardianDashboard({
         </div>
       </motion.div>
 
-      {/* ═══ شارات الأنزان السماعي ═══ */}
+      {/* ═══ 🎧 شارات الأنزان السماعي ═══ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.24 }}
+        transition={{ delay: 0.25 }}
         className="glass-card p-5 sm:p-6 mb-6"
       >
         <div className="flex items-center justify-between mb-4">
@@ -494,77 +633,182 @@ export function GuardianDashboard({
         </div>
       </motion.div>
 
-      {/* ═══ الشارات العامة ═══ */}
+      {/* ═══ 🗺️ خارطة المستويات ═══ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
+        transition={{ delay: 0.35 }}
         className="glass-card p-5 sm:p-6 mb-6"
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-gold-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">الشارات</h3>
+            <ShieldCheck className="w-5 h-5 text-emerald-300" />
+            <h3 className="text-xl font-extrabold font-display text-white">خارطة المستويات</h3>
           </div>
-          <span className="badge bg-gold-400/15 border-gold-400/20 text-gold-200 text-xs">
-            {toArabicNumber(earnedBadges.length)}/{toArabicNumber(BADGES.length)}
+          <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-300 text-xs">
+            {toArabicNumber(completedLevelsCount)}/{toArabicNumber(SRB_LEVELS.length)} مكتمل
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          {BADGES.map((badge, i) => {
-            const isEarned = earnedBadges.includes(badge.id);
-            const Icon = BADGE_ICONS[badge.icon] || Star;
-            const gradient = BADGE_GRADIENTS[badge.id] || 'from-purple-400 to-electric-500';
+        <div className="relative overflow-x-auto scrollbar-hide pb-4">
+          <div className="flex items-start gap-3 sm:gap-5 min-w-max pr-2 pl-8">
+            <div className="absolute top-8 right-0 left-0 h-1 bg-gradient-to-r from-purple-500/30 via-electric-500/30 to-white/5 rounded-full" />
+            {levelNodes.map((node, i) => (
+              <LevelNodeButton key={node.id} level={node} index={i} />
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ═══ 📅 نشاط الأسبوع ═══ */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="glass-card p-5 sm:p-6 mb-6"
+      >
+        <div className="flex items-center gap-2 mb-5">
+          <BarChart3 className="w-5 h-5 text-electric-400" />
+          <h3 className="text-lg font-extrabold font-display text-white">نشاط الأسبوع</h3>
+        </div>
+        <div className="flex items-end justify-between gap-2 sm:gap-3 h-40">
+          {weeklyXP.map((day, i) => {
+            const height = (day.xp / maxWeeklyXP) * 100;
+            return (
+              <div key={day.day} className="flex flex-col items-center gap-2 flex-1">
+                <motion.div
+                  initial={{ height: 0 }}
+                  animate={{ height: `${height}%` }}
+                  transition={{ delay: 0.5 + i * 0.06, type: 'spring', stiffness: 100, damping: 15 }}
+                  className="w-full rounded-t-xl bg-gradient-to-t from-purple-600 to-electric-400 min-h-[4px] relative group"
+                >
+                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-white/0 group-hover:text-white/80 transition-colors whitespace-nowrap">
+                    {toArabicNumber(day.xp)}
+                  </span>
+                </motion.div>
+                <span className="text-[10px] sm:text-xs text-white/50 font-body">{day.day}</span>
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* ═══ 📊 إحصائيات مفصلة ═══ */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="glass-card p-5"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle2 className="w-5 h-5 text-emerald2-400" />
+            <p className="text-sm text-white/60 font-body">تمارين ناجحة</p>
+          </div>
+          <p className="text-3xl font-extrabold font-display text-white">
+            {toArabicNumber(passedPractice.length)}
+          </p>
+          <p className="text-xs text-emerald2-300 font-body mt-1">
+            من {toArabicNumber(SRB_LEVELS.length)}
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.55 }}
+          className="glass-card p-5"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Brain className="w-5 h-5 text-electric-400" />
+            <p className="text-sm text-white/60 font-body">أنزان بصري ناجح</p>
+          </div>
+          <p className="text-3xl font-extrabold font-display text-white">
+            {toArabicNumber(passedAnzanVisual.length)}
+          </p>
+          <p className="text-xs text-electric-300 font-body mt-1">
+            من {toArabicNumber(SRB_LEVELS.length)}
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.6 }}
+          className="glass-card p-5"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Award className="w-5 h-5 text-gold-400" />
+            <p className="text-sm text-white/60 font-body">إجمالي الشارات</p>
+          </div>
+          <p className="text-3xl font-extrabold font-display text-white">
+            {toArabicNumber(
+              earnedLevelBadges +
+              masteryBadgesList.length +
+              earnedAnzanCount +
+              earnedAudioCount
+            )}
+          </p>
+          <p className="text-xs text-gold-300 font-body mt-1">
+            جميع الأنواع
+          </p>
+        </motion.div>
+      </div>
+
+      {/* ═══ 📈 تقدم المستويات ═══ */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.65 }}
+        className="glass-card p-5 sm:p-6 mb-6"
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <Calendar className="w-5 h-5 text-purple-400" />
+          <h3 className="text-lg font-extrabold font-display text-white">تقدم المستويات</h3>
+        </div>
+        <div className="space-y-2.5">
+          {levelNodes.map((node, i) => {
+            const pct = node.status === 'completed' ? 100 : node.status === 'available' ? 40 : 0;
             return (
               <motion.div
-                key={badge.id}
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.06 }}
-                className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${isEarned ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5'}`}
+                key={node.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.7 + i * 0.04 }}
+                className="flex items-center gap-3"
               >
-                <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${isEarned ? `bg-gradient-to-br ${gradient}` : 'bg-white/5'}`}>
-                  {isEarned ? <Icon className="w-7 h-7 text-white" /> : <LockBadge className="w-6 h-6 text-white/25" />}
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${
+                    node.status === 'completed' ? 'bg-emerald2-400'
+                    : node.status === 'available' ? 'bg-purple-400 animate-pulse'
+                    : 'bg-white/20'
+                  }`}
+                />
+                <span className={`text-sm font-body w-28 sm:w-36 shrink-0 ${node.status === 'locked' ? 'text-white/30' : 'text-white/70'}`}>
+                  {node.nameAr}
+                </span>
+                <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
+                  <motion.div
+                    className={`h-full rounded-full ${
+                      node.status === 'completed' ? 'bg-gradient-to-r from-emerald2-400 to-emerald2-600'
+                      : node.status === 'available' ? 'bg-gradient-to-r from-purple-400 to-electric-500'
+                      : 'bg-white/10'
+                    }`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ delay: 0.8 + i * 0.04, duration: 0.6 }}
+                  />
                 </div>
-                <p className={`text-xs font-bold font-body text-center ${isEarned ? 'text-white/80' : 'text-white/30'}`}>
-                  {badge.nameAr}
-                </p>
-                <p className="text-[10px] text-white/40 font-body text-center leading-tight">
-                  {badge.descriptionAr}
-                </p>
+                <span className="text-xs text-white/40 font-body w-8 text-left shrink-0">
+                  {toArabicNumber(node.xpRequired)}
+                </span>
               </motion.div>
             );
           })}
         </div>
-
-        {nextBadge ? (
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <p className="text-xs text-white/50 font-body">
-                الشارة التالية: "{nextBadge.nameAr}"
-              </p>
-              <p className="text-xs text-gold-300 font-body">
-                {nextBadge.descriptionAr}
-              </p>
-            </div>
-            <div className="h-3 rounded-full bg-white/10 overflow-hidden">
-              <motion.div
-                className={`h-full rounded-full bg-gradient-to-r ${BADGE_GRADIENTS[nextBadge.id] || 'from-purple-400 to-electric-500'}`}
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPct}%` }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-              />
-            </div>
-          </div>
-        ) : (
-          <p className="text-center text-sm text-gold-300 font-body font-bold">
-            🏆 حصل على جميع الشارات! أسطورة حقيقية
-          </p>
-        )}
       </motion.div>
 
-      {/* ═══ المغامرات النشطة ═══ */}
+      {/* ═══ ⚔️ المغامرات النشطة ═══ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -617,174 +861,6 @@ export function GuardianDashboard({
               لا توجد مغامرات نشطة حالياً.
             </div>
           )}
-        </div>
-      </motion.div>
-
-      {/* ═══ خارطة المستويات ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
-        className="glass-card p-5 sm:p-6 mb-6"
-      >
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">خارطة المستويات</h3>
-          </div>
-          <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-300 text-xs">
-            {toArabicNumber(completedLevels)}/{toArabicNumber(LEVELS.length)} مكتمل
-          </span>
-        </div>
-
-        <div className="relative overflow-x-auto scrollbar-hide pb-4">
-          <div className="flex items-start gap-3 sm:gap-5 min-w-max pr-2 pl-8">
-            <div className="absolute top-8 right-0 left-0 h-1 bg-gradient-to-r from-purple-500/30 via-electric-500/30 to-white/5 rounded-full" />
-            {LEVELS.map((level, i) => (
-              <LevelNodeButton key={level.id} level={level} index={i} />
-            ))}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* ═══ نشاط الأسبوع ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="glass-card p-5 sm:p-6 mb-6"
-      >
-        <div className="flex items-center gap-2 mb-5">
-          <BarChart3 className="w-5 h-5 text-electric-400" />
-          <h3 className="text-lg font-extrabold font-display text-white">نشاط الأسبوع</h3>
-        </div>
-        <div className="flex items-end justify-between gap-2 sm:gap-3 h-40">
-          {weeklyXP.map((day, i) => {
-            const height = (day.xp / maxWeeklyXP) * 100;
-            return (
-              <div key={day.day} className="flex flex-col items-center gap-2 flex-1">
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: `${height}%` }}
-                  transition={{ delay: 0.5 + i * 0.06, type: 'spring', stiffness: 100, damping: 15 }}
-                  className="w-full rounded-t-xl bg-gradient-to-t from-purple-600 to-electric-400 min-h-[4px] relative group"
-                >
-                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-white/0 group-hover:text-white/80 transition-colors whitespace-nowrap">
-                    {toArabicNumber(day.xp)}
-                  </span>
-                </motion.div>
-                <span className="text-[10px] sm:text-xs text-white/50 font-body">{day.day}</span>
-              </div>
-            );
-          })}
-        </div>
-      </motion.div>
-
-      {/* ═══ إحصائيات مفصلة ═══ */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="glass-card p-5"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald2-400" />
-            <p className="text-sm text-white/60 font-body">مسائل محلولة</p>
-          </div>
-          <p className="text-3xl font-extrabold font-display text-white">
-            {toArabicNumber(practiceStats.totalProblems)}
-          </p>
-          <p className="text-xs text-emerald2-300 font-body mt-1">
-            {toArabicNumber(practiceStats.correctAnswers)} إجابة صحيحة
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.55 }}
-          className="glass-card p-5"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-5 h-5 text-electric-400" />
-            <p className="text-sm text-white/60 font-body">جولات الأنزان</p>
-          </div>
-          <p className="text-3xl font-extrabold font-display text-white">
-            {toArabicNumber(anzanStats.totalRounds)}
-          </p>
-          <p className="text-xs text-electric-300 font-body mt-1">
-            {toArabicNumber(anzanStats.totalCorrect)} إجابة صحيحة
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
-          className="glass-card p-5"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Award className="w-5 h-5 text-gold-400" />
-            <p className="text-sm text-white/60 font-body">رقم قياسي أنزان</p>
-          </div>
-          <p className="text-3xl font-extrabold font-display text-white">
-            {toArabicNumber(anzanStats.highScore)}
-          </p>
-          <p className="text-xs text-gold-300 font-body mt-1">أعلى نتيجة</p>
-        </motion.div>
-      </div>
-
-      {/* ═══ تقدم المستويات ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.65 }}
-        className="glass-card p-5 sm:p-6"
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <Calendar className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-extrabold font-display text-white">تقدم المستويات</h3>
-        </div>
-        <div className="space-y-2.5">
-          {LEVELS.map((level, i) => {
-            const pct = level.status === 'completed' ? 100 : level.status === 'available' ? 40 : 0;
-            return (
-              <motion.div
-                key={level.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 + i * 0.04 }}
-                className="flex items-center gap-3"
-              >
-                <span
-                  className={`w-2 h-2 rounded-full shrink-0 ${
-                    level.status === 'completed' ? 'bg-emerald2-400'
-                    : level.status === 'available' ? 'bg-purple-400 animate-pulse'
-                    : 'bg-white/20'
-                  }`}
-                />
-                <span className={`text-sm font-body w-28 sm:w-36 shrink-0 ${level.status === 'locked' ? 'text-white/30' : 'text-white/70'}`}>
-                  {level.nameAr}
-                </span>
-                <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
-                  <motion.div
-                    className={`h-full rounded-full ${
-                      level.status === 'completed' ? 'bg-gradient-to-r from-emerald2-400 to-emerald2-600'
-                      : level.status === 'available' ? 'bg-gradient-to-r from-purple-400 to-electric-500'
-                      : 'bg-white/10'
-                    }`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ delay: 0.8 + i * 0.04, duration: 0.6 }}
-                  />
-                </div>
-                <span className="text-xs text-white/40 font-body w-8 text-left shrink-0">
-                  {toArabicNumber(level.xpRequired)}
-                </span>
-              </motion.div>
-            );
-          })}
         </div>
       </motion.div>
     </div>
