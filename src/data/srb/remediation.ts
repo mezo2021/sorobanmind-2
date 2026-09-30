@@ -2,24 +2,14 @@
 // 🩺 src/data/srb/remediation.ts — منطق الجلسة العلاجية
 // ═══════════════════════════════════════════════════════════════════
 //
-// الوظيفة:
-//   - بناء خطة الجلسة العلاجية
-//   - تحديد المهارات الضعيفة تلقائيًا
-//   - رسائل جاهزة للمستخدم
-//
-// 📊 القواعد:
-//   - تُبنى من weakSkills في progress
-//   - لا تُسجّل درجات
-//   - تُظهر الحل بعد كل سؤال
-//
 // 📅 آخر تحديث: 2026-09-30 — الجلسة 10
-//   - إلغاء section (الجلسة على مستوى)
-//   - استخدام skill IDs بدل SRBModule
+//   - توافق مع الشاشات القديمة (section اختياري + weakModules)
 //
 // ═══════════════════════════════════════════════════════════════════
 
 import type {
   SRBLevel,
+  SRBSection,
   SRBQuestion,
 } from "./types";
 
@@ -43,6 +33,9 @@ export interface RemediationPlan {
   /** المهارات الضعيفة (skill IDs) */
   weakSkills: string[];
 
+  /** @deprecated alias لـ weakSkills — للتوافق */
+  weakModules: string[];
+
   /** أسئلة الجلسة */
   questions: SRBQuestion[];
 
@@ -60,20 +53,24 @@ export interface RemediationPlan {
 /**
  * بناء خطة الجلسة العلاجية لمستوى معين.
  *
- * @param level - المستوى
- * @param count - عدد الأسئلة (افتراضيًا 5)
- * @returns خطة الجلسة
- *
- * @example
- * const plan = buildRemediationPlan("L0");
- * if (plan.shouldStart) {
- *   // افتح شاشة الجلسة العلاجية
- * }
+ * ⚠️ التوقيع يقبل شكلين للتوافق:
+ *   - buildRemediationPlan(level)
+ *   - buildRemediationPlan(level, count)
+ *   - buildRemediationPlan(level, section, count)  ← section يُتجاهل
  */
 export function buildRemediationPlan(
   level: SRBLevel,
-  count: number = 5,
+  sectionOrCount?: SRBSection | number,
+  count?: number,
 ): RemediationPlan {
+  // تحديد العدد الفعلي (للتوافق)
+  const finalCount =
+    typeof sectionOrCount === "number"
+      ? sectionOrCount
+      : typeof count === "number"
+      ? count
+      : 5;
+
   // 1. فحص: هل يحتاج علاج؟
   const check = shouldRemediate(level);
 
@@ -82,6 +79,7 @@ export function buildRemediationPlan(
       shouldStart: false,
       level,
       weakSkills: [],
+      weakModules: [],
       questions: [],
       reason: check.reason,
       message: "لا حاجة لجلسة علاجية — الأداء جيد.",
@@ -98,6 +96,7 @@ export function buildRemediationPlan(
       shouldStart: false,
       level,
       weakSkills: [],
+      weakModules: [],
       questions: [],
       reason: "لا مهارات ضعيفة محددة",
       message: "لا حاجة لجلسة علاجية.",
@@ -108,7 +107,7 @@ export function buildRemediationPlan(
   const session = buildRemediationSession({
     level,
     weakSkills,
-    count,
+    count: finalCount,
   });
 
   const shouldStart = session.questions.length > 0;
@@ -117,6 +116,7 @@ export function buildRemediationPlan(
     shouldStart,
     level,
     weakSkills,
+    weakModules: weakSkills,
     questions: session.questions,
     reason: check.reason,
     message: shouldStart
@@ -129,38 +129,24 @@ export function buildRemediationPlan(
 // 📢 رسائل جاهزة
 // ═══════════════════════════════════════════════════════════
 
-/**
- * رسالة تفصيلية للعرض.
- */
 export function getRemediationMessage(plan: RemediationPlan): string {
   if (!plan.shouldStart) {
     return plan.message;
   }
-
   return `🩺 ${plan.questions.length} أسئلة — ${plan.weakSkills.length} مهارة ضعيفة`;
 }
 
-/**
- * رسالة قصيرة للزر.
- */
 export function getRemediationButtonLabel(plan: RemediationPlan): string {
   if (!plan.shouldStart) {
     return "لا حاجة";
   }
-
   return `🩺 جلسة علاجية (${plan.questions.length})`;
 }
 
-/**
- * عنوان الشاشة.
- */
 export function getRemediationTitle(): string {
   return "🩺 الجلسة العلاجية";
 }
 
-/**
- * وصف الشاشة.
- */
 export function getRemediationDescription(): string {
   return "جلسة مخصصة بدون درجات — تُظهر لك الحل بعد كل سؤال.";
 }
