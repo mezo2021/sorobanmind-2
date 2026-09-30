@@ -1,6 +1,6 @@
 // src/utils/arabicNumbers.ts
 // تحويل الأرقام إلى كلمات عربية — للأنزان السمعي
-// يدعم حتى 999 تريليون
+// يدعم حتى 999 تريليون + الأعداد العشرية
 
 const UNITS = [
   '', 'واحد', 'اثنان', 'ثلاثة', 'أربعة',
@@ -76,11 +76,11 @@ function trillions(n: number): string {
 }
 
 // ═══════════════════════════════════════════════════════════
-// الدالة الرئيسية
+// الدالة الرئيسية (لم تتغيّر — للأعداد الصحيحة)
 // ═══════════════════════════════════════════════════════════
 
 /**
- * تحويل رقم إلى كلمات عربية.
+ * تحويل رقم صحيح إلى كلمات عربية.
  * @example
  * numberToArabicWords(234)      // "مئتان وأربعة وثلاثون"
  * numberToArabicWords(5000)     // "خمسة آلاف"
@@ -115,6 +115,50 @@ export function numberToArabicWords(value: number): string {
 export function numberToArabicWordsSigned(value: number): string {
   if (value < 0) return `ناقص ${numberToArabicWords(Math.abs(value))}`;
   return numberToArabicWords(value);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ✅ جديد: دعم الأعداد العشرية
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * يحوّل عددًا (صحيحًا أو عشريًا) إلى كلمات عربية.
+ *
+ * - 6      → "ستة"
+ * - 6.3    → "ستة فاصلة ثلاثة"
+ * - 0.5    → "صفر فاصلة خمسة"
+ * - 12.75  → "اثنا عشر فاصلة خمسة وسبعون"
+ * - -1.5   → "ناقص واحد فاصلة خمسة"
+ *
+ * ⚠️ ملاحظة: يستخدم "فاصلة" كنطق معياري للفاصلة العشرية.
+ */
+export function numberToArabicWordsDecimal(value: number): string {
+  if (!Number.isFinite(value)) return '';
+
+  // رقم صحيح → الدالة القديمة
+  if (Number.isInteger(value)) {
+    return numberToArabicWords(value);
+  }
+
+  const sign = value < 0 ? 'ناقص ' : '';
+  const abs = Math.abs(value);
+  const str = abs.toString();
+  const [intPart, decPart] = str.split('.');
+
+  const intWords = numberToArabicWords(Number(intPart));
+  const decWords = numberToArabicWords(Number(decPart));
+
+  return `${sign}${intWords} فاصلة ${decWords}`;
+}
+
+/**
+ * للاستخدام في السياق الرياضي — يعالج السالب + العشري.
+ */
+export function numberToArabicWordsDecimalSigned(value: number): string {
+  if (value < 0) {
+    return `ناقص ${numberToArabicWordsDecimal(Math.abs(value))}`;
+  }
+  return numberToArabicWordsDecimal(value);
 }
 
 export default numberToArabicWords;
