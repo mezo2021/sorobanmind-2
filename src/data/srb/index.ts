@@ -3,11 +3,14 @@
 // ═══════════════════════════════════════════════════════════════════
 //
 // الوظيفة:
-//   - يجمع كل أسئلة SRB
+//   - يجمع كل أسئلة SRB من 8 ملفات (L0 → L7)
 //   - يُصدّر SOROBAN_BANK
 //   - دوال استعلام: byId, byLevel, bySection, byModule, byPhase
 //   - فلترة: filter, sample
 //   - إحصائيات: stats
+//
+// 📅 آخر تحديث: 2026-09-30 — الجلسة 10
+//   - استيراد 8 ملفات مستويات بدل شجرة S01/S02
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -23,34 +26,31 @@ import type {
 } from "./types";
 
 // ═══════════════════════════════════════════════════════════
-// 📥 استيراد الأسئلة
+// 📥 استيراد الأسئلة (8 ملفات)
 // ═══════════════════════════════════════════════════════════
 
-// L0 — S01
-import { S01_M1 } from "./questions/L0/S01/m1";
-import { S01_M2 } from "./questions/L0/S01/m2";
-import { S01_M3 } from "./questions/L0/S01/m3";
-import { S01_M4 } from "./questions/L0/S01/m4";
-
-// L0 — S02
-import { S02_M1 } from "./questions/L0/S02/m1";
-import { S02_M2 } from "./questions/L0/S02/m2";
-import { S02_M3 } from "./questions/L0/S02/m3";
-import { S02_M4 } from "./questions/L0/S02/m4";
+import { L0_QUESTIONS } from "./questions/L0";
+import { L1_QUESTIONS } from "./questions/L1";
+import { L2_QUESTIONS } from "./questions/L2";
+import { L3_QUESTIONS } from "./questions/L3";
+import { L4_QUESTIONS } from "./questions/L4";
+import { L5_QUESTIONS } from "./questions/L5";
+import { L6_QUESTIONS } from "./questions/L6";
+import { L7_QUESTIONS } from "./questions/L7";
 
 // ═══════════════════════════════════════════════════════════
 // 🏦 البنك الرئيسي
 // ═══════════════════════════════════════════════════════════
 
 export const SOROBAN_BANK: readonly SRBQuestion[] = Object.freeze([
-  ...S01_M1,
-  ...S01_M2,
-  ...S01_M3,
-  ...S01_M4,
-  ...S02_M1,
-  ...S02_M2,
-  ...S02_M3,
-  ...S02_M4,
+  ...L0_QUESTIONS,
+  ...L1_QUESTIONS,
+  ...L2_QUESTIONS,
+  ...L3_QUESTIONS,
+  ...L4_QUESTIONS,
+  ...L5_QUESTIONS,
+  ...L6_QUESTIONS,
+  ...L7_QUESTIONS,
 ]);
 
 export const BANK_SIZE = SOROBAN_BANK.length;
