@@ -1,8 +1,11 @@
 // src/components/AdaptiveFeedback.tsx
 // مكوّن عرض ملاحظات التعليم التكيفي
 // ✅ فصل المهارات التاريخية حسب المستوى الحالي / مستويات أخرى
+// ✅ SRB: يقرأ من progressStore.skillProgress مباشرة
+// 📅 آخر تحديث: SRB Migration — Phase 3
 
 import { motion } from "framer-motion";
+import { useMemo } from "react";
 import {
   CheckCircle2, AlertTriangle, TrendingUp, Lightbulb,
   Trophy, Clock, Target,
@@ -12,7 +15,7 @@ import {
   useMasteryBadgesStore,
   classifySpeed,
 } from "@/store/masteryBadgesStore";
-import { loadWeakSkills } from "@/data/bank-v2";
+import { useProgressStore } from "@/store/progressStore";
 import { getModuleName } from "@/data/srb/modules";
 import type {
   SRBLevel,
@@ -42,8 +45,13 @@ interface AdaptiveFeedbackProps {
   levelNum?: number;
 }
 
+interface WeakRecord {
+  skillId: string;
+  weaknessScore: number;
+}
+
 // ═══════════════════════════════════════════════════════════
-// أدوات — تحليل skillId (صيغة: L2-S07-m1)
+// أدوات — parseSkillId · label · weaknessScore
 // ═══════════════════════════════════════════════════════════
 
 interface ParsedSkillId {
@@ -52,10 +60,6 @@ interface ParsedSkillId {
   module: SRBModule;
 }
 
-/**
- * يحلّل skillId بصيغة "L2-S07-m1"
- * يُعيد null إن لم تكن الصيغة صحيحة.
- */
 function parseSkillId(skillId: string): ParsedSkillId | null {
   const parts = skillId.split("-");
   if (parts.length !== 3) return null;
@@ -72,24 +76,39 @@ function parseSkillId(skillId: string): ParsedSkillId | null {
   };
 }
 
-/**
- * يُعيد الاسم العربي للمهارة من modules.ts.
- * fallback: يُعيد الـ skillId نفسه إن فشل التحليل.
- */
 function getSkillLabel(skillId: string): string {
   const parsed = parseSkillId(skillId);
   if (!parsed) return skillId;
   return getModuleName(parsed.section, parsed.module);
 }
 
-/**
- * يستخرج رقم المستوى من skillId ("L2-S07-m1" → 2).
- * fallback: null.
- */
 function getLevelOfSkill(skillId: string): number | null {
   const parsed = parseSkillId(skillId);
   if (!parsed) return null;
   return Number(parsed.level.slice(1));
+}
+
+/**
+ * يحسب degree الضعف من بيانات skillProgress.
+ *
+ * القواعد:
+ *   - أقل من 3 محاولات → 0 (لا نحكم على مهارة لم تُتمرّن)
+ *   - accuracyScore = (1 - دقة) × 70
+ *   - timeScore = 30 إن كان المتوسط أكبر من 15 ثانية
+ *   - النتيجة = min(100, المجموع)
+ */
+function computeWeaknessScore(params: {
+  attempts: number;
+  correct: number;
+  avgTimeMs: number;
+}): number {
+  const { attempts, correct, avgTimeMs } = params;
+  if (attempts < 3) return 0;
+
+  const accuracy = correct / attempts;
+  const accuracyScore = (1 - accuracy) * 70;
+  const timeScore = avgTimeMs > 15000 ? 30 : 0;
+  return Math.min(100, accuracyScore + timeScore);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -104,6 +123,7 @@ export function AdaptiveFeedback({
   const { style: numberStyle } = useNumberStyleStore();
   const hasBadge = useMasteryBadgesStore((s) => s.hasBadge);
   const allBadges = useMasteryBadgesStore((s) => s.getAllBadges);
+  const skillProgress = useProgressStore((s) => s.skillProgress);
 
   // ─── تصنيف أداء هذه الجلسة ───
   const masteredSkills = performances.filter(
@@ -118,25 +138,38 @@ export function AdaptiveFeedback({
     (p) => p.speedClass === "slow" || p.correct < p.attempts,
   );
 
-  // ─── المهارات الضعيفة تاريخياً ───
-  const historicalWeak = loadWeakSkills();
-  const allHistoricalWeak = Object.values(historicalWeak)
-    .filter((r) => r.weaknessScore >= 50)
-    .sort((a, b) => b.weaknessScore - a.weaknessScore);
+  // ─── ✅ المهارات الضعيفة تاريخياً (من progressStore) ───
+  const allHistoricalWeak: WeakRecord[] = useMemo(
+    () =>
+      Object.values(skillProgress)
+        .map((sp) => ({
+          skillId: sp.skillId,
+          weaknessScore: computeWeaknessScore({
+            attempts: sp.attempts,
+            correct: sp.correct,
+            avgTimeMs: sp.avgTimeMs,
+          }),
+        }))
+        .filter((r) => r.weaknessScore >= 50)
+        .sort((a, b) => b.weaknessScore - a.weaknessScore),
+    [skillProgress],
+  );
 
-  // ✅ فصل حسب المستوى (باستخدام parseSkillId)
+  // ─── الفصل حسب المستوى ───
   const isInCurrentLevel = (skillId: string): boolean => {
     if (levelNum === undefined) return false;
     return getLevelOfSkill(skillId) === levelNum;
   };
 
-  const historicalThisLevel = levelNum !== undefined
-    ? allHistoricalWeak.filter((r) => isInCurrentLevel(r.skillId))
-    : [];
+  const historicalThisLevel =
+    levelNum !== undefined
+      ? allHistoricalWeak.filter((r) => isInCurrentLevel(r.skillId))
+      : [];
 
-  const historicalOtherLevels = levelNum !== undefined
-    ? allHistoricalWeak.filter((r) => !isInCurrentLevel(r.skillId))
-    : allHistoricalWeak;
+  const historicalOtherLevels =
+    levelNum !== undefined
+      ? allHistoricalWeak.filter((r) => !isInCurrentLevel(r.skillId))
+      : allHistoricalWeak;
 
   // ─── إذا لا يوجد شيء — لا نعرض ───
   if (
@@ -191,7 +224,8 @@ export function AdaptiveFeedback({
                       {p.skillId} — {getSkillLabel(p.skillId)}
                     </p>
                     <p className="text-[10px] text-emerald-300">
-                      {p.correct}/{p.attempts} · {formatNumber(Math.round(p.avgTimeMs / 1000), numberStyle)}s
+                      {p.correct}/{p.attempts} ·{" "}
+                      {formatNumber(Math.round(p.avgTimeMs / 1000), numberStyle)}s
                     </p>
                   </div>
                 </div>
@@ -229,7 +263,8 @@ export function AdaptiveFeedback({
                       {p.skillId} — {getSkillLabel(p.skillId)}
                     </p>
                     <p className="text-[10px] text-blue-300">
-                      {p.correct}/{p.attempts} · {formatNumber(Math.round(p.avgTimeMs / 1000), numberStyle)}s
+                      {p.correct}/{p.attempts} ·{" "}
+                      {formatNumber(Math.round(p.avgTimeMs / 1000), numberStyle)}s
                     </p>
                   </div>
                 </div>
@@ -266,7 +301,8 @@ export function AdaptiveFeedback({
                       {p.skillId} — {getSkillLabel(p.skillId)}
                     </p>
                     <p className="text-[10px] text-amber-300">
-                      {p.correct}/{p.attempts} · {formatNumber(Math.round(p.avgTimeMs / 1000), numberStyle)}s
+                      {p.correct}/{p.attempts} ·{" "}
+                      {formatNumber(Math.round(p.avgTimeMs / 1000), numberStyle)}s
                       {p.speedClass === "slow" && " · بطيء"}
                       {p.correct < p.attempts && " · دقة منخفضة"}
                     </p>
@@ -310,7 +346,8 @@ export function AdaptiveFeedback({
                 className="px-2.5 py-1 rounded-lg bg-red-500/20 border border-red-400/40 text-red-200 text-[10px] font-bold"
                 title={getSkillLabel(r.skillId)}
               >
-                {r.skillId} · {getSkillLabel(r.skillId)} · {formatNumber(Math.round(r.weaknessScore), numberStyle)}%
+                {r.skillId} · {getSkillLabel(r.skillId)} ·{" "}
+                {formatNumber(Math.round(r.weaknessScore), numberStyle)}%
               </span>
             ))}
           </div>
@@ -343,7 +380,9 @@ export function AdaptiveFeedback({
                   {skillLevel !== null && (
                     <span className="text-[8px] opacity-70">· L{skillLevel}</span>
                   )}
-                  <span className="opacity-70">· {formatNumber(Math.round(r.weaknessScore), numberStyle)}%</span>
+                  <span className="opacity-70">
+                    · {formatNumber(Math.round(r.weaknessScore), numberStyle)}%
+                  </span>
                 </span>
               );
             })}
@@ -358,7 +397,11 @@ export function AdaptiveFeedback({
       {/* ─── الإجمالي ─── */}
       <div className="glass-card p-4 text-center">
         <p className="text-[10px] text-white/50 font-body">
-          إجمالي الشارات: <strong className="text-gold-300">{formatNumber(allBadges.length, numberStyle)}</strong> / {formatNumber(20, numberStyle)}
+          إجمالي الشارات:{" "}
+          <strong className="text-gold-300">
+            {formatNumber(allBadges.length, numberStyle)}
+          </strong>{" "}
+          / {formatNumber(20, numberStyle)}
         </p>
       </div>
     </motion.div>
