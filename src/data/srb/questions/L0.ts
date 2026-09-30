@@ -3,14 +3,14 @@
 // ═══════════════════════════════════════════════════════════════════
 //
 // 📊 يحتوي:
-//   - S01 (تمثيل الأرقام 0-9): m1 (0-4), m2 (5), m3 (6-9) = 15 سؤالًا
+//   - S01 (تمثيل 0-9): m1 (0-4), m2 (5-9), m3 (تثبيت) = 15 سؤالًا
 //   - S02 (القيمة المكانية): m1 (آحاد/عشرات), m2 (مئات/آلاف) = 10 أسئلة
 //
 // الإجمالي: 25 سؤالًا
 //
 // 📅 آخر تحديث: 2026-09-30 — الجلسة 10
+//   - إعادة تقسيم S01: m2 = 5-9 · m3 = تثبيت 0-9
 //   - كل الأسئلة تبدأ من الصفر
-//   - نوعان من الأسئلة: build / action-read
 // ═══════════════════════════════════════════════════════════════════
 
 import { makeQuestion } from "../generateId";
@@ -83,7 +83,7 @@ export const L0_QUESTIONS: SRBQuestion[] = [
     tags: ["representation", "0-4"],
   }),
 
-  // ─── m2: تمثيل 5 ───
+  // ─── m2: تمثيل 5-9 ───
 
   makeQuestion({
     level: "L0", section: "S01", module: "m2", sequence: 1, variant: "A",
@@ -91,7 +91,7 @@ export const L0_QUESTIONS: SRBQuestion[] = [
     allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
     question: "أنزل الخرزة العلوية. ماذا تمثل؟",
     operands: [5], operation: "read", result: 5,
-    solution: "سبب الاختيار: حركة واحدة من الصفر. أنزل الخرزة العلوية بالسبابة نحو العارضة. الخرزة العلوية الملامسة للعارضة تمثل 5.",
+    solution: "سبب الاختيار: حركة العلوية من الصفر. أنزل الخرزة العلوية بالسبابة نحو العارضة. الخرزة العلوية تمثل 5.",
     movement: "direct", difficulty: 2,
     expected_time_ms: 5000, expected_anzan_ms: 3000,
     tags: ["representation", "five", "action-read"],
@@ -99,56 +99,6 @@ export const L0_QUESTIONS: SRBQuestion[] = [
 
   makeQuestion({
     level: "L0", section: "S01", module: "m2", sequence: 2, variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "كم تمثل الخرزة العلوية في عمود الآحاد؟",
-    operands: [5], operation: "read", result: 5,
-    solution: "سبب الاختيار: سؤال مفهومي عن قيمة الخرزة العلوية. الخرزة العلوية في أي عمود = 5. لا ترفع أي سفلية.",
-    movement: "direct", difficulty: 2,
-    expected_time_ms: 5000, expected_anzan_ms: 3000,
-    tags: ["concept", "five"],
-  }),
-
-  makeQuestion({
-    level: "L0", section: "S01", module: "m2", sequence: 3, variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "مثل العدد 5 على العداد",
-    operands: [5], operation: "build", result: 5,
-    solution: "سبب الاختيار: تمثيل 5 بالخرزة العلوية. أنزل الخرزة العلوية بالسبابة. اترك الخرزات السفلية بعيدة عن العارضة.",
-    movement: "direct", difficulty: 2,
-    expected_time_ms: 5000, expected_anzan_ms: 3000,
-    tags: ["representation", "five"],
-  }),
-
-  makeQuestion({
-    level: "L0", section: "S01", module: "m2", sequence: 4, variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "أنزل الخرزة العلوية بالسبابة. ما القيمة الممثلة؟",
-    operands: [5], operation: "read", result: 5,
-    solution: "سبب الاختيار: تأكيد حركة العلوية. أنزل الخرزة العلوية بالسبابة نحو العارضة. القيمة الممثلة هي 5.",
-    movement: "direct", difficulty: 2,
-    expected_time_ms: 5000, expected_anzan_ms: 3000,
-    tags: ["representation", "five", "action-read"],
-  }),
-
-  makeQuestion({
-    level: "L0", section: "S01", module: "m2", sequence: 5, variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "مثل العدد 5 على العداد",
-    operands: [5], operation: "build", result: 5,
-    solution: "سبب الاختيار: تثبيت تمثيل 5. أنزل الخرزة العلوية بالسبابة. لا ترفع أي خرزة سفلية.",
-    movement: "direct", difficulty: 2,
-    expected_time_ms: 4500, expected_anzan_ms: 2700,
-    tags: ["representation", "five"],
-  }),
-
-  // ─── m3: تمثيل 6-9 ───
-
-  makeQuestion({
-    level: "L0", section: "S01", module: "m3", sequence: 1, variant: "A",
     primary_phase: "P",
     allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
     question: "مثل العدد 6 على العداد",
@@ -160,7 +110,7 @@ export const L0_QUESTIONS: SRBQuestion[] = [
   }),
 
   makeQuestion({
-    level: "L0", section: "S01", module: "m3", sequence: 2, variant: "A",
+    level: "L0", section: "S01", module: "m2", sequence: 3, variant: "A",
     primary_phase: "P",
     allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
     question: "أنزل العلوية وارفع خرزتين. ماذا تمثل؟",
@@ -172,7 +122,7 @@ export const L0_QUESTIONS: SRBQuestion[] = [
   }),
 
   makeQuestion({
-    level: "L0", section: "S01", module: "m3", sequence: 3, variant: "A",
+    level: "L0", section: "S01", module: "m2", sequence: 4, variant: "A",
     primary_phase: "P",
     allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
     question: "مثل العدد 8 على العداد",
@@ -184,7 +134,7 @@ export const L0_QUESTIONS: SRBQuestion[] = [
   }),
 
   makeQuestion({
-    level: "L0", section: "S01", module: "m3", sequence: 4, variant: "A",
+    level: "L0", section: "S01", module: "m2", sequence: 5, variant: "A",
     primary_phase: "P",
     allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
     question: "أنزل العلوية وارفع 4 سفليات. ماذا تمثل؟",
@@ -195,16 +145,66 @@ export const L0_QUESTIONS: SRBQuestion[] = [
     tags: ["representation", "six-nine", "pinch", "action-read"],
   }),
 
+  // ─── m3: تثبيت 0-9 ───
+
+  makeQuestion({
+    level: "L0", section: "S01", module: "m3", sequence: 1, variant: "A",
+    primary_phase: "P",
+    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
+    question: "مثل العدد 3 على العداد",
+    operands: [3], operation: "build", result: 3,
+    solution: "سبب الاختيار: تثبيت رقم من المجموعة السفلية. ارفع 3 خرزات سفلية بالإبهام نحو العارضة.",
+    movement: "direct", difficulty: 2,
+    expected_time_ms: 5500, expected_anzan_ms: 3300,
+    tags: ["consolidation", "0-9"],
+  }),
+
+  makeQuestion({
+    level: "L0", section: "S01", module: "m3", sequence: 2, variant: "A",
+    primary_phase: "P",
+    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
+    question: "مثل العدد 7 على العداد",
+    operands: [7], operation: "build", result: 7,
+    solution: "سبب الاختيار: تثبيت رقم من المجموعة المركبة. حركة القرص: أنزل العلوية (5) وارفع خرزتين (2) معًا.",
+    movement: "direct", difficulty: 3,
+    expected_time_ms: 6500, expected_anzan_ms: 3900,
+    tags: ["consolidation", "0-9", "pinch"],
+  }),
+
+  makeQuestion({
+    level: "L0", section: "S01", module: "m3", sequence: 3, variant: "A",
+    primary_phase: "P",
+    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
+    question: "مثل العدد 1 على العداد",
+    operands: [1], operation: "build", result: 1,
+    solution: "سبب الاختيار: تثبيت رقم صغير. ارفع خرزة سفلية واحدة بالإبهام نحو العارضة.",
+    movement: "direct", difficulty: 1,
+    expected_time_ms: 5000, expected_anzan_ms: 3000,
+    tags: ["consolidation", "0-9"],
+  }),
+
+  makeQuestion({
+    level: "L0", section: "S01", module: "m3", sequence: 4, variant: "A",
+    primary_phase: "P",
+    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
+    question: "مثل العدد 9 على العداد",
+    operands: [9], operation: "build", result: 9,
+    solution: "سبب الاختيار: تثبيت أكبر عدد في عمود. حركة القرص: أنزل العلوية (5) وارفع 4 سفليات (4) معًا.",
+    movement: "direct", difficulty: 3,
+    expected_time_ms: 7000, expected_anzan_ms: 4200,
+    tags: ["consolidation", "0-9", "pinch"],
+  }),
+
   makeQuestion({
     level: "L0", section: "S01", module: "m3", sequence: 5, variant: "A",
     primary_phase: "P",
     allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "أنزل العلوية وارفع سفليه. ماذا تمثل؟",
-    operands: [6], operation: "read", result: 6,
-    solution: "سبب الاختيار: تأكيد حركة القرص. أنزل الخرزة العلوية (5) وارفع خرزة سفلية واحدة (1) معًا. النتيجة 5+1 = 6.",
-    movement: "direct", difficulty: 3,
-    expected_time_ms: 6000, expected_anzan_ms: 3600,
-    tags: ["representation", "six-nine", "pinch", "action-read"],
+    question: "مثل العدد 5 على العداد",
+    operands: [5], operation: "build", result: 5,
+    solution: "سبب الاختيار: تثبيت الرقم المتوسط. أنزل الخرزة العلوية بالسبابة نحو العارضة. اترك السفلي بعيدًا.",
+    movement: "direct", difficulty: 2,
+    expected_time_ms: 5000, expected_anzan_ms: 3000,
+    tags: ["consolidation", "0-9"],
   }),
 
   // ═══════════════════════════════════════════════════════════
@@ -219,7 +219,7 @@ export const L0_QUESTIONS: SRBQuestion[] = [
     allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
     question: "مثل العدد 40 على العداد",
     operands: [40], operation: "build", result: 40,
-    solution: "سبب الاختيار: عشرات نظيفة (آحاد = 0). في عمود العشرات: ارفع 4 خرزات سفلية بالإبهام. اترك عمود الآحاد فارغًا.",
+    solution: "سبب الاختيار: عشرات نظيفة (آحاد = 0). في عمود العشرات: ارفع 4 خرزات سفلية بالإبهام = 40. اترك عمود الآحاد فارغًا.",
     movement: "direct", difficulty: 3,
     expected_time_ms: 7000, expected_anzan_ms: 4200,
     tags: ["place-value", "tens"],
