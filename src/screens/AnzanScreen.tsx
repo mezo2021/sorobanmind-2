@@ -1,4 +1,7 @@
 // src/screens/AnzanScreen.tsx
+// ✅ SRB: يمنح شارة الأنزان البصري عند اجتياز الجلسة (≥ 70%)
+// 📅 آخر تحديث: SRB Migration — Phase 3
+
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -11,7 +14,10 @@ import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { AdaptiveFeedback, type SkillPerformance } from '@/components/AdaptiveFeedback';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { useSpeech } from '@/hooks/useSpeech';
-import { useProgressStore } from '@/store/progressStore';
+import {
+  useProgressStore,
+  type AnzanBadges,
+} from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { useMasteryBadgesStore, classifySpeed } from '@/store/masteryBadgesStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
@@ -68,6 +74,29 @@ function extractHint(q: SRBQuestion | undefined): string | null {
   if (!q?.solution) return null;
   const m = q.solution.match(/^تلميح:\s*(.+?)(?:\.\s|$)/);
   return m ? m[1].trim() : null;
+}
+
+// 🆕 خريطة section → مفتاح شارة الأنزان البصري
+function getAnzanBadgeKey(section: SRBSection): keyof AnzanBadges | null {
+  switch (section) {
+    case 'S03':
+    case 'S04':
+    case 'S05':
+    case 'S06':
+      return 'master_addition';
+    case 'S07':
+    case 'S08':
+      return 'master_multiplication';
+    case 'S09':
+    case 'S10':
+      return 'master_division';
+    case 'S11':
+    case 'S12':
+      return 'master_mixed';
+    default:
+      // S13, S14, S15 → تجاهل حاليًا
+      return null;
+  }
 }
 
 function getColumnsForQuestion(q: SRBQuestion): number {
@@ -177,12 +206,17 @@ export function AnzanScreen({
   const [elapsedMs, setElapsedMs] = useState(0);
   const [savedTimeMs, setSavedTimeMs] = useState<number | null>(null);
   const [performances, setPerformances] = useState<SkillPerformance[]>([]);
+  const [justEarnedBadges, setJustEarnedBadges] = useState<string[]>([]);
 
   const sorobana = useSorobanaVoice();
   const { speak, stop: stopSpeech, isSpeaking, isSupported } = useSpeech();
 
   const addXP = useProgressStore((s) => s.addXP);
   const updateStreak = useProgressStore((s) => s.updateStreak);
+
+  // 🆕 شارات الأنزان البصري (من progressStore)
+  const anzanBadges = useProgressStore((s) => s.anzanBadges);
+  const setAnzanBadge = useProgressStore((s) => s.setAnzanBadge);
 
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic';
@@ -225,6 +259,7 @@ export function AnzanScreen({
     setElapsedMs(0);
     setSavedTimeMs(null);
     setPerformances([]);
+    setJustEarnedBadges([]);
     setPhase('showing');
     playSound('click');
   }, [level, mode, playSound]);
@@ -362,6 +397,25 @@ export function AnzanScreen({
     (finalScore: number, totalQuestions: number): boolean => {
       const percentage = Math.round((finalScore / totalQuestions) * 100);
       const passed = percentage >= PASS_THRESHOLD;
+
+      // ═══ 🆕 منح شارة الأنزان البصري عند النجاح ═══
+      if (passed) {
+        const uniqueSections = new Set(questions.map((q) => q.section));
+        const earned: string[] = [];
+
+        uniqueSections.forEach((section) => {
+          const key = getAnzanBadgeKey(section);
+          if (key && !anzanBadges[key]) {
+            setAnzanBadge(key, true);
+            earned.push(key);
+          }
+        });
+
+        if (earned.length > 0) {
+          setJustEarnedBadges(earned);
+        }
+      }
+
       const gradeMode = mode === 'flash' ? 'anzanVisualFlash' : 'anzanVisualNormal';
       const firstSection = questions[0]?.section ?? 'S01';
       saveSectionGrade(
@@ -370,7 +424,7 @@ export function AnzanScreen({
       );
       return passed;
     },
-    [level, mode, questions],
+    [level, mode, questions, anzanBadges, setAnzanBadge],
   );
 
   const nextQuestion = useCallback(() => {
@@ -716,6 +770,14 @@ export function AnzanScreen({
     const percentage = Math.round((score / questions.length) * 100);
     const passed = percentage >= PASS_THRESHOLD;
     const xpEarned = score * XP_PER_CORRECT;
+
+    const ANZAN_BADGE_LABELS: Record<string, string> = {
+      master_addition: '🧠 خبير جمع وطرح',
+      master_multiplication: '✖️ خبير ضرب',
+      master_division: '➗ خبير قسمة',
+      master_mixed: '🔀 خبير مختلط',
+    };
+
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto space-y-5">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
@@ -754,6 +816,30 @@ export function AnzanScreen({
                 +{formatNumber(xpEarned, numberStyle)} XP
               </p>
             </div>
+
+            {/* 🆕 إشعار الشارات المُكتسبة */}
+            {justEarnedBadges.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="mt-4 p-4 rounded-2xl bg-gradient-to-l from-gold-400/20 to-transparent border-2 border-gold-400/50"
+              >
+                <p className="text-sm font-bold text-gold-200 font-display mb-2">
+                  🎉 حصلت على شارة جديدة!
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {justEarnedBadges.map((key) => (
+                    <span
+                      key={key}
+                      className="px-3 py-1.5 rounded-xl bg-gold-400/30 text-gold-100 text-xs font-bold"
+                    >
+                      {ANZAN_BADGE_LABELS[key] ?? key}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </div>
         </motion.div>
 
