@@ -1,37 +1,32 @@
 // ═══════════════════════════════════════════════════════════════════
-// 📊 src/data/srb/progress.ts — طبقة تخزين تقدّم SRB
+// 📊 src/data/srb/progress.ts — طبقة تخزين تقدّم SRB (على مستوى)
 // ═══════════════════════════════════════════════════════════════════
 //
 // الوظيفة:
-//   - حفظ درجات كل درس (5 مراحل)
-//   - قراءة التقدّم لكل درس / مستوى
-//   - تحديد المواضيع الضعيفة (m)
+//   - حفظ درجات كل مستوى (5 مراحل)
+//   - قراءة التقدّم لكل مستوى
+//   - تحديد المهارات الضعيفة (skill IDs)
 //   - قرار الجلسة العلاجية
 //
 // 🔑 مفتاح التخزين: srb_progress
-// ⚠️ منفصل تمامًا عن المفاتيح القديمة — لا تعارض
 //
-// 📊 البنية:
+// 📊 البنية الجديدة (2026-09-30):
 //   {
-//     "L0-S01": {
-//       practice: { grade: 85, attempts: 2, passed: true, weakModules: ["m3"] },
+//     "L0": {
+//       practice: { grade: 85, attempts: 2, passed: true, weakSkills: ["SRB-L0-S01-m3"] },
 //       anzanVisualNormal: { grade: 90, ... },
 //       anzanVisualFlash: { grade: 75, ... },
 //       anzanAudio: { grade: 80, ... },
 //       test: { grade: null, ... }
 //     },
-//     "L0-S02": { ... }
+//     "L1": { ... }
 //   }
+//
+// ⚠️ لا يوجد section في المفاتيح — الجلسة على مستوى كامل.
 //
 // ═══════════════════════════════════════════════════════════════════
 
-import type {
-  SRBLevel,
-  SRBSection,
-  SRBModule,
-} from "./types";
-
-import { getModulesBySection } from "./modules";
+import type { SRBLevel } from "./types";
 
 // ═══════════════════════════════════════════════════════════
 // 🔑 مفتاح التخزين
@@ -44,7 +39,7 @@ const STORAGE_KEY = "srb_progress";
 // ═══════════════════════════════════════════════════════════
 
 /**
- * وضع التقييم — 5 أنواع لكل درس.
+ * وضع التقييم — 5 أنواع لكل مستوى.
  */
 export type SRBGradeMode =
   | "practice"           // ✏️ تمرّن
@@ -69,17 +64,20 @@ export interface GradeRecord {
   /** هل نجح؟ (≥ 70%) */
   passed: boolean;
 
-  /** المواضيع الضعيفة (m) */
-  weakModules: SRBModule[];
+  /**
+   * المهارات الضعيفة (skill IDs).
+   * صيغة: "SRB-L0-S01-m1"
+   */
+  weakSkills: string[];
 
   /** أعلى درجة سابقة */
   bestGrade?: number;
 }
 
 /**
- * تقدّم درس واحد.
+ * تقدّم مستوى واحد.
  */
-export interface SectionProgress {
+export interface LevelProgress {
   practice?: GradeRecord;
   anzanVisualNormal?: GradeRecord;
   anzanVisualFlash?: GradeRecord;
@@ -88,38 +86,29 @@ export interface SectionProgress {
 }
 
 /**
- * خريطة كل الدروس.
- * المفتاح: "L0-S01"
+ * خريطة كل المستويات.
+ * المفتاح: "L0", "L1", ...
  */
-export type SectionProgressMap = Record<string, SectionProgress>;
+export type LevelProgressMap = Record<string, LevelProgress>;
 
 // ═══════════════════════════════════════════════════════════
 // 🛠️ أدوات مساعدة
 // ═══════════════════════════════════════════════════════════
 
 /**
- * تكوين مفتاح الدرس.
+ * تكوين مفتاح المستوى.
  */
-export function makeSectionKey(
-  level: SRBLevel,
-  section: SRBSection,
-): string {
-  return `${level}-${section}`;
+export function makeLevelKey(level: SRBLevel): string {
+  return level;
 }
 
 /**
- * فك مفتاح الدرس.
+ * فك مفتاح المستوى.
  */
-export function parseSectionKey(
-  key: string,
-): { level: SRBLevel; section: SRBSection } | null {
-  const match = /^(L[0-7])-(S\d{2})$/.exec(key);
+export function parseLevelKey(key: string): SRBLevel | null {
+  const match = /^(L[0-7])$/.exec(key);
   if (!match) return null;
-
-  return {
-    level: match[1] as SRBLevel,
-    section: match[2] as SRBSection,
-  };
+  return match[1] as SRBLevel;
 }
 
 /**
@@ -135,10 +124,8 @@ function isPassed(grade: number): boolean {
 
 /**
  * تحميل كل التقدّم.
- *
- * @returns خريطة كل الدروس مع تقدّمها
  */
-export function loadAllProgress(): SectionProgressMap {
+export function loadAllProgress(): LevelProgressMap {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
@@ -146,21 +133,20 @@ export function loadAllProgress(): SectionProgressMap {
     const parsed = JSON.parse(raw);
     if (typeof parsed !== "object" || parsed === null) return {};
 
-    return parsed as SectionProgressMap;
+    return parsed as LevelProgressMap;
   } catch {
     return {};
   }
 }
 
 /**
- * تحميل تقدّم درس محدد.
+ * تحميل تقدّم مستوى محدد.
  */
-export function loadSectionProgress(
+export function loadLevelProgress(
   level: SRBLevel,
-  section: SRBSection,
-): SectionProgress {
+): LevelProgress {
   const all = loadAllProgress();
-  return all[makeSectionKey(level, section)] ?? {};
+  return all[makeLevelKey(level)] ?? {};
 }
 
 /**
@@ -168,10 +154,9 @@ export function loadSectionProgress(
  */
 export function loadGrade(
   level: SRBLevel,
-  section: SRBSection,
   mode: SRBGradeMode,
 ): GradeRecord | null {
-  const progress = loadSectionProgress(level, section);
+  const progress = loadLevelProgress(level);
   return progress[mode] ?? null;
 }
 
@@ -180,20 +165,16 @@ export function loadGrade(
  */
 export function hasPassed(
   level: SRBLevel,
-  section: SRBSection,
   mode: SRBGradeMode,
 ): boolean {
-  const grade = loadGrade(level, section, mode);
+  const grade = loadGrade(level, mode);
   return grade?.passed ?? false;
 }
 
 /**
- * هل أكمل كل المراحل؟
+ * هل أكمل كل المراحل (P + ANZ-V + ANZ-F + ANZ-A)؟
  */
-export function isSectionFullyCompleted(
-  level: SRBLevel,
-  section: SRBSection,
-): boolean {
+export function isLevelFullyCompleted(level: SRBLevel): boolean {
   const modes: SRBGradeMode[] = [
     "practice",
     "anzanVisualNormal",
@@ -201,18 +182,15 @@ export function isSectionFullyCompleted(
     "anzanAudio",
   ];
 
-  return modes.every((m) => hasPassed(level, section, m));
+  return modes.every((m) => hasPassed(level, m));
 }
 
 /**
- * متوسط كل المراحل الأربع لدرس.
+ * متوسط كل المراحل الأربع لمستوى.
  *
  * @returns المتوسط (0-100) أو null إذا لم تكتمل كل المراحل
  */
-export function getSectionAverage(
-  level: SRBLevel,
-  section: SRBSection,
-): number | null {
+export function getLevelAverage(level: SRBLevel): number | null {
   const modes: SRBGradeMode[] = [
     "practice",
     "anzanVisualNormal",
@@ -220,7 +198,7 @@ export function getSectionAverage(
     "anzanAudio",
   ];
 
-  const grades = modes.map((m) => loadGrade(level, section, m));
+  const grades = modes.map((m) => loadGrade(level, m));
 
   // إذا واحدة ناقصة، نُرجع null
   if (grades.some((g) => g === null)) {
@@ -238,52 +216,50 @@ export function getSectionAverage(
 /**
  * حفظ درجة جديدة.
  *
- * يُحدّث: attempts, lastAttempt, grade, passed, weakModules.
- * يحفظ bestGrade (أعلى درجة).
+ * @param level - المستوى
+ * @param mode - وضع التقييم
+ * @param grade - الدرجة (0-100)
+ * @param weakSkills - قائمة skill IDs (مثل ["SRB-L0-S01-m1"])
  */
-export function saveSectionGrade(
+export function saveLevelGrade(
   level: SRBLevel,
-  section: SRBSection,
   mode: SRBGradeMode,
   grade: number,
-  weakModules: SRBModule[] = [],
+  weakSkills: string[] = [],
 ): void {
   try {
     const all = loadAllProgress();
-    const key = makeSectionKey(level, section);
+    const key = makeLevelKey(level);
 
-    const sectionProgress: SectionProgress = all[key] ?? {};
-    const existing = sectionProgress[mode];
+    const levelProgress: LevelProgress = all[key] ?? {};
+    const existing = levelProgress[mode];
 
     const newRecord: GradeRecord = {
       grade: Math.max(0, Math.min(100, Math.round(grade))),
       attempts: (existing?.attempts ?? 0) + 1,
       lastAttempt: Date.now(),
       passed: isPassed(grade),
-      weakModules,
+      weakSkills,
       bestGrade: Math.max(
         existing?.bestGrade ?? 0,
         Math.round(grade),
       ),
     };
 
-    sectionProgress[mode] = newRecord;
-    all[key] = sectionProgress;
+    levelProgress[mode] = newRecord;
+    all[key] = levelProgress;
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
   } catch { /* ignore */ }
 }
 
 /**
- * حذف تقدّم درس (لإعادة البدء).
+ * حذف تقدّم مستوى (لإعادة البدء).
  */
-export function clearSectionProgress(
-  level: SRBLevel,
-  section: SRBSection,
-): void {
+export function clearLevelProgress(level: SRBLevel): void {
   try {
     const all = loadAllProgress();
-    delete all[makeSectionKey(level, section)];
+    delete all[makeLevelKey(level)];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
   } catch { /* ignore */ }
 }
@@ -302,16 +278,16 @@ export function clearAllProgress(): void {
 // ═══════════════════════════════════════════════════════════
 
 /**
- * الحصول على قوة/ضعف موضوع معين (m).
+ * هل skill معين ضعيف في مستوى؟
  *
+ * @param skillId - مثل "SRB-L0-S01-m1"
  * @returns 0 (ممتاز) إلى 100 (ضعيف جدًا)
  */
-export function getModuleWeakness(
+export function getSkillWeakness(
   level: SRBLevel,
-  section: SRBSection,
-  module: SRBModule,
+  skillId: string,
 ): number {
-  const progress = loadSectionProgress(level, section);
+  const progress = loadLevelProgress(level);
   let weakness = 0;
   let count = 0;
 
@@ -328,15 +304,13 @@ export function getModuleWeakness(
 
     count += 1;
 
-    // إذا كانت m ضمن weakModules → ضعيف
-    if (record.weakModules.includes(module)) {
+    // إذا كان skillId ضمن weakSkills → ضعيف
+    if (record.weakSkills.includes(skillId)) {
       weakness += record.grade < 50 ? 100 : 70;
     } else if (record.grade < 70) {
       weakness += 60;
     } else if (record.grade < 85) {
       weakness += 30;
-    } else {
-      weakness += 0;
     }
   }
 
@@ -344,14 +318,11 @@ export function getModuleWeakness(
 }
 
 /**
- * قائمة المواضيع الضعيفة في درس.
+ * قائمة كل المهارات الضعيفة في مستوى.
  */
-export function getWeakModules(
-  level: SRBLevel,
-  section: SRBSection,
-): SRBModule[] {
-  const progress = loadSectionProgress(level, section);
-  const weakSet = new Set<SRBModule>();
+export function getWeakSkills(level: SRBLevel): string[] {
+  const progress = loadLevelProgress(level);
+  const weakSet = new Set<string>();
 
   const modes: SRBGradeMode[] = [
     "practice",
@@ -363,7 +334,7 @@ export function getWeakModules(
   for (const mode of modes) {
     const record = progress[mode];
     if (!record) continue;
-    record.weakModules.forEach((m) => weakSet.add(m));
+    record.weakSkills.forEach((s) => weakSet.add(s));
   }
 
   return Array.from(weakSet);
@@ -377,8 +348,8 @@ export interface RemediationCheck {
   /** هل يحتاج جلسة علاجية؟ */
   shouldRemediate: boolean;
 
-  /** المواضيع الضعيفة */
-  weakModules: SRBModule[];
+  /** المهارات الضعيفة (skill IDs) */
+  weakSkills: string[];
 
   /** الدرجة الحالية (إن وُجدت) */
   currentGrade: number | null;
@@ -395,14 +366,11 @@ export interface RemediationCheck {
  *
  * القواعد:
  *   1. درجة أقل من 70% في أي مرحلة.
- *   2. weakModules غير فارغة.
+ *   2. weakSkills غير فارغة.
  *   3. 3 محاولات بدون تحسّن.
  */
-export function shouldRemediate(
-  level: SRBLevel,
-  section: SRBSection,
-): RemediationCheck {
-  const progress = loadSectionProgress(level, section);
+export function shouldRemediate(level: SRBLevel): RemediationCheck {
+  const progress = loadLevelProgress(level);
 
   const modes: SRBGradeMode[] = [
     "practice",
@@ -411,8 +379,7 @@ export function shouldRemediate(
     "anzanAudio",
   ];
 
-  // جمع weakModules
-  const allWeak = new Set<SRBModule>();
+  const allWeak = new Set<string>();
   let lowestGrade: number | null = null;
   let maxAttempts = 0;
 
@@ -420,7 +387,7 @@ export function shouldRemediate(
     const record = progress[mode];
     if (!record) continue;
 
-    record.weakModules.forEach((m) => allWeak.add(m));
+    record.weakSkills.forEach((s) => allWeak.add(s));
     maxAttempts = Math.max(maxAttempts, record.attempts);
 
     if (lowestGrade === null || record.grade < lowestGrade) {
@@ -428,14 +395,14 @@ export function shouldRemediate(
     }
   }
 
-  const weakModules = Array.from(allWeak);
+  const weakSkills = Array.from(allWeak);
   const shouldRemediate =
     (lowestGrade !== null && lowestGrade < 70) ||
-    weakModules.length > 0;
+    weakSkills.length > 0;
 
   let reason = "";
-  if (weakModules.length > 0) {
-    reason = `مواضيع ضعيفة: ${weakModules.join(", ")}`;
+  if (weakSkills.length > 0) {
+    reason = `مهارات ضعيفة: ${weakSkills.length}`;
   } else if (lowestGrade !== null && lowestGrade < 70) {
     reason = `درجة منخفضة: ${lowestGrade}%`;
   } else if (maxAttempts >= 3) {
@@ -446,7 +413,7 @@ export function shouldRemediate(
 
   return {
     shouldRemediate,
-    weakModules,
+    weakSkills,
     currentGrade: lowestGrade,
     attempts: maxAttempts,
     reason,
@@ -454,20 +421,17 @@ export function shouldRemediate(
 }
 
 /**
- * قائمة كل الدروس التي تحتاج جلسات علاجية في مستوى معين.
+ * قائمة كل المستويات التي تحتاج جلسات علاجية.
  */
-export function getSectionsNeedingRemediation(
-  level: SRBLevel,
-): SRBSection[] {
+export function getLevelsNeedingRemediation(): SRBLevel[] {
   const all = loadAllProgress();
-  const sections: SRBSection[] = [];
+  const levels: SRBLevel[] = [];
 
   for (const [key, progress] of Object.entries(all)) {
-    const parsed = parseSectionKey(key);
-    if (!parsed || parsed.level !== level) continue;
+    const parsed = parseLevelKey(key);
+    if (!parsed) continue;
 
-    // جمع weakModules لكل المراحل
-    const weakSet = new Set<SRBModule>();
+    const weakSet = new Set<string>();
     const modes: SRBGradeMode[] = [
       "practice",
       "anzanVisualNormal",
@@ -478,15 +442,15 @@ export function getSectionsNeedingRemediation(
     for (const mode of modes) {
       const record = progress[mode];
       if (!record) continue;
-      record.weakModules.forEach((m) => weakSet.add(m));
+      record.weakSkills.forEach((s) => weakSet.add(s));
     }
 
     if (weakSet.size > 0) {
-      sections.push(parsed.section);
+      levels.push(parsed);
     }
   }
 
-  return sections;
+  return levels;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -495,73 +459,39 @@ export function getSectionsNeedingRemediation(
 
 export interface LevelProgressStats {
   level: SRBLevel;
-  sections: Array<{
-    section: SRBSection;
-    practice: GradeRecord | null;
-    anzanVisualNormal: GradeRecord | null;
-    anzanVisualFlash: GradeRecord | null;
-    anzanAudio: GradeRecord | null;
-    test: GradeRecord | null;
-    average: number | null;
-    fullyCompleted: boolean;
-  }>;
-  /** متوسط المستوى (0-100) */
-  levelAverage: number | null;
-  /** عدد الدروس المكتملة */
-  completedSections: number;
-  /** عدد الدروس الكلي */
-  totalSections: number;
+  practice: GradeRecord | null;
+  anzanVisualNormal: GradeRecord | null;
+  anzanVisualFlash: GradeRecord | null;
+  anzanAudio: GradeRecord | null;
+  test: GradeRecord | null;
+  /** متوسط المراحل الأربع (P + ANZ) */
+  average: number | null;
+  /** هل أكمل كل المراحل؟ */
+  fullyCompleted: boolean;
+  /** المهارات الضعيفة */
+  weakSkills: string[];
 }
 
 /**
  * إحصائيات مستوى معين.
  */
 export function getLevelStats(level: SRBLevel): LevelProgressStats {
-  const all = loadAllProgress();
-  const sections: LevelProgressStats["sections"] = [];
+  const progress = loadLevelProgress(level);
 
-  for (const [key, progress] of Object.entries(all)) {
-    const parsed = parseSectionKey(key);
-    if (!parsed || parsed.level !== level) continue;
-
-    const average = getSectionAverage(parsed.level, parsed.section);
-    const fullyCompleted =
-      progress.practice?.passed === true &&
-      progress.anzanVisualNormal?.passed === true &&
-      progress.anzanVisualFlash?.passed === true &&
-      progress.anzanAudio?.passed === true;
-
-    sections.push({
-      section: parsed.section,
-      practice: progress.practice ?? null,
-      anzanVisualNormal: progress.anzanVisualNormal ?? null,
-      anzanVisualFlash: progress.anzanVisualFlash ?? null,
-      anzanAudio: progress.anzanAudio ?? null,
-      test: progress.test ?? null,
-      average,
-      fullyCompleted,
-    });
-  }
-
-  // متوسط المستوى
-  const averages = sections
-    .map((s) => s.average)
-    .filter((a): a is number => a !== null);
-
-  const levelAverage = averages.length === 0
-    ? null
-    : Math.round(
-        averages.reduce((sum, a) => sum + a, 0) / averages.length,
-      );
-
-  const completedSections = sections.filter((s) => s.fullyCompleted).length;
+  const average = getLevelAverage(level);
+  const fullyCompleted = isLevelFullyCompleted(level);
+  const weakSkills = getWeakSkills(level);
 
   return {
     level,
-    sections,
-    levelAverage,
-    completedSections,
-    totalSections: sections.length,
+    practice: progress.practice ?? null,
+    anzanVisualNormal: progress.anzanVisualNormal ?? null,
+    anzanVisualFlash: progress.anzanVisualFlash ?? null,
+    anzanAudio: progress.anzanAudio ?? null,
+    test: progress.test ?? null,
+    average,
+    fullyCompleted,
+    weakSkills,
   };
 }
 
@@ -582,35 +512,15 @@ export function computeLevelFinalScore(
 ): number | null {
   const stats = getLevelStats(level);
 
-  if (stats.sections.length === 0) return null;
+  if (stats.average === null) return null;
 
-  // متوسط المراحل الأربع لكل درس
-  const sectionAverages = stats.sections
-    .map((s) => s.average)
-    .filter((a): a is number => a !== null);
-
-  if (sectionAverages.length === 0) return null;
-
-  const practiceAnzanAverage = Math.round(
-    sectionAverages.reduce((sum, a) => sum + a, 0) /
-      sectionAverages.length,
-  );
-
-  // اختبار المستوى (إذا موجود)
-  const testRecords = stats.sections
-    .map((s) => s.test)
-    .filter((t): t is GradeRecord => t !== null);
-
-  if (testRecords.length === 0) {
+  if (stats.test === null) {
     // لا يوجد اختبار — نُرجع المتوسط فقط
-    return practiceAnzanAverage;
+    return stats.average;
   }
 
-  const testAverage = Math.round(
-    testRecords.reduce((sum, t) => sum + t.grade, 0) /
-      testRecords.length,
-  );
-
   // المعادلة: 70% اختبار + 30% متوسط
-  return Math.round(0.7 * testAverage + 0.3 * practiceAnzanAverage);
+  return Math.round(
+    0.7 * stats.test.grade + 0.3 * stats.average,
+  );
 }
