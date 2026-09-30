@@ -26,7 +26,7 @@ import {
   type SRBModule,
 } from '@/data/srb-adapter';
 
-type Phase = 'intro' | 'showing' | 'answering' | 'reveal' | 'result';
+type Phase = 'intro' | 'showing' | 'answering' | 'reveal' | 'result' | 'empty';
 type Mode = 'flash' | 'normal';
 
 interface AnzanScreenProps {
@@ -49,7 +49,6 @@ interface PerfStats {
 
 const XP_PER_CORRECT = 5;
 const PASS_THRESHOLD = 70;
-const DISPLAY_MS_PER_TERM = 2000;
 const WARNING_RATIO = 0.7;
 const QUESTION_COUNT = 5;
 
@@ -78,7 +77,12 @@ function buildSkillId(level: SRBLevel, section: SRBSection, module: SRBModule): 
 }
 
 function buildDisplayTerms(q: SRBQuestion): string[] {
-  const { operands, operation } = q;
+  const { operands, operation, question } = q;
+
+  // ✅ لأسئلة "مثل العدد" و"اقرأ" → نعرض نص السؤال الكامل
+  if (operation === 'build' || operation === 'read') {
+    return [question];
+  }
 
   if (operation === 'multiplication') {
     return [String(operands[0]), `×${Math.abs(operands[1])}`];
@@ -114,7 +118,12 @@ function buildFullQuestionText(q: SRBQuestion): string {
 }
 
 function buildFullQuestionSpeech(q: SRBQuestion): string {
-  const { operands, operation } = q;
+  const { operands, operation, question } = q;
+
+  // ✅ لأسئلة "مثل العدد" → نقرأ نص السؤال مباشرة
+  if (operation === 'build' || operation === 'read') {
+    return question;
+  }
 
   if (operation === 'multiplication') {
     return `${numberToArabicWords(operands[0])} في ${numberToArabicWords(Math.abs(operands[1]))}، يساوي`;
@@ -180,7 +189,11 @@ export function AnzanScreen({
 
   const startSession = useCallback(() => {
     const qs = getAnzanQuestions(level, section, mode, Date.now(), []);
-    if (qs.length === 0) { playSound('error'); return; }
+    if (qs.length === 0) {
+      playSound('error');
+      setPhase('empty');
+      return;
+    }
     perfRef.current = new Map();
     wrongModulesRef.current = new Set();
     setQuestions(qs);
@@ -371,6 +384,37 @@ export function AnzanScreen({
     sorobana, onComplete, buildPerformances, saveGrade,
   ]);
 
+  // ═══════════════════════════════════════════════════════════
+  // 🚧 مرحلة "المستوى فارغ"
+  // ═══════════════════════════════════════════════════════════
+
+  if (phase === 'empty') {
+    return (
+      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
+        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-xl mb-6">
+          <span className="text-4xl">🚧</span>
+        </div>
+        <h2 className="text-2xl font-extrabold font-display text-white mb-3 text-center">
+          هذا المستوى قيد البناء
+        </h2>
+        <p className="text-white/60 font-body text-center mb-8 leading-relaxed max-w-md">
+          لم نُكمل أسئلة {level} بعد. جرّب L0 الآن — إنه جاهز!
+        </p>
+        <button
+          type="button"
+          onClick={() => { playSound('click'); onBack(); }}
+          className="btn-primary"
+        >
+          رجوع
+        </button>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 📖 intro
+  // ═══════════════════════════════════════════════════════════
+
   if (phase === 'intro') {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
@@ -384,7 +428,7 @@ export function AnzanScreen({
               الأنزان البصري
             </h2>
             <p className="text-sm text-white/50 font-body">
-              {level} · {section} — {formatNumber(QUESTION_COUNT, numberStyle)} أسئلة
+              {level} — {formatNumber(QUESTION_COUNT, numberStyle)} أسئلة
             </p>
           </div>
           <Brain className="w-6 h-6 text-purple-300" />
@@ -449,7 +493,13 @@ export function AnzanScreen({
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 👁️ showing
+  // ═══════════════════════════════════════════════════════════
+
   if (phase === 'showing' && currentQ) {
+    const isBuildOrRead = currentQ.operation === 'build' || currentQ.operation === 'read';
+
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto min-h-screen flex flex-col">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -458,7 +508,7 @@ export function AnzanScreen({
               السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-xs text-white/50 font-body">
-              {section} · {mode === 'flash' ? 'Flash' : 'عادي'}
+              {mode === 'flash' ? 'Flash' : 'عادي'}
             </p>
           </div>
           <button type="button" onClick={handleEnd}
@@ -485,7 +535,7 @@ export function AnzanScreen({
                   exit={{ opacity: 0, scale: 1.5 }}
                   transition={{ duration: 0.3 }}
                   className="text-center">
-                  <p className="text-7xl sm:text-9xl font-black font-display text-white"
+                  <p className={`font-black font-display text-white ${isBuildOrRead ? 'text-3xl sm:text-5xl' : 'text-7xl sm:text-9xl'}`}
                     dir={isArabic ? 'rtl' : 'ltr'}>
                     {formatText(displayTerms[currentTermIdx], numberStyle)}
                   </p>
@@ -502,9 +552,11 @@ export function AnzanScreen({
             <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
               className="text-center">
               <p className="text-sm text-white/50 font-body mb-4">اقرأ السؤال</p>
-              <p className="text-5xl sm:text-7xl font-black font-display text-white"
+              <p className={`font-black font-display text-white ${isBuildOrRead ? 'text-3xl sm:text-5xl' : 'text-5xl sm:text-7xl'}`}
                 dir={isArabic ? 'rtl' : 'ltr'}>
-                {formatText(buildFullQuestionText(currentQ), numberStyle)} = ؟
+                {isBuildOrRead
+                  ? formatText(currentQ.question, numberStyle)
+                  : `${formatText(buildFullQuestionText(currentQ), numberStyle)} = ؟`}
               </p>
             </motion.div>
           )}
@@ -516,6 +568,10 @@ export function AnzanScreen({
       </div>
     );
   }
+
+  // ═══════════════════════════════════════════════════════════
+  // ✍️ answering
+  // ═══════════════════════════════════════════════════════════
 
   if (phase === 'answering' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
@@ -577,6 +633,10 @@ export function AnzanScreen({
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 🎯 reveal
+  // ═══════════════════════════════════════════════════════════
+
   if (phase === 'reveal' && currentQ) {
     const isCorrect = feedback === 'correct';
     const formattedAnswer = formatNumber(currentQ.result, numberStyle);
@@ -605,7 +665,9 @@ export function AnzanScreen({
             {savedTimeMs !== null && (
               <div className="p-3 rounded-2xl bg-white/5 border border-white/10 inline-block">
                 <p className="text-xs text-white/60 font-body">وقتك</p>
-                <p className={`text-xl font-bold font-mono ${isCorrect ? 'text-emerald-300' : 'text-red-300'}`}>
+                <p className={`text-xl font-bold font-mono ${
+                  isCorrect ? 'text-emerald-300' : 'text-red-300'
+                }`}>
                   {formatNumber((savedTimeMs / 1000).toFixed(1), numberStyle)}s
                 </p>
               </div>
@@ -627,6 +689,10 @@ export function AnzanScreen({
       </div>
     );
   }
+
+  // ═══════════════════════════════════════════════════════════
+  // 🏆 result
+  // ═══════════════════════════════════════════════════════════
 
   if (phase === 'result') {
     const percentage = Math.round((score / questions.length) * 100);
@@ -658,7 +724,9 @@ export function AnzanScreen({
               <p className="text-5xl font-black font-display text-white mt-1" dir={isArabic ? 'rtl' : 'ltr'}>
                 {formatNumber(score, numberStyle)} / {formatNumber(questions.length, numberStyle)}
               </p>
-              <p className={`text-lg font-bold font-body mt-1 ${passed ? 'text-emerald-300' : 'text-amber-300'}`}>
+              <p className={`text-lg font-bold font-body mt-1 ${
+                passed ? 'text-emerald-300' : 'text-amber-300'
+              }`}>
                 {formatNumber(percentage, numberStyle)}٪
               </p>
             </div>
@@ -672,7 +740,7 @@ export function AnzanScreen({
         </motion.div>
 
         {performances.length > 0 && (
-          <AdaptiveFeedback performances={performances} sectionLabel={`أنزان بصري — ${section}`} />
+          <AdaptiveFeedback performances={performances} sectionLabel="أنزان بصري" levelNum={0} />
         )}
 
         <div className="space-y-3">
