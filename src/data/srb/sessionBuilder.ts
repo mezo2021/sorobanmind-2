@@ -13,9 +13,8 @@
 //   - إذا عدد m < 5 → نرفع إلى 5 بأسئلة عشوائية
 //   - لا تكرار داخل الجلسة
 //
-// 📅 آخر تحديث: 2026-09-30 — الجلسة 10
-//   - إلغاء section من SessionSpec
-//   - استخدام skill IDs في RemediationSpec
+// 📅 آخر تحديث: 2026-10-01 — SRB Migration Phase 1
+//   - parseSkillId يقبل "SRB-L0-S01-m1" و "L0-S01-m1"
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -59,7 +58,7 @@ export interface SessionSpec {
 /**
  * مواصفات بناء جلسة علاجية (على مستوى).
  *
- * ⚠️ تستقبل skill IDs (مثل "SRB-L0-S01-m1").
+ * ⚠️ تستقبل skill IDs (مثل "SRB-L0-S01-m1" أو "L0-S01-m1").
  */
 export interface RemediationSpec {
   /** المستوى */
@@ -175,12 +174,16 @@ function collectModulesInLevel(level: SRBLevel): SectionModulePair[] {
 /**
  * استخراج (section, module) من skill ID.
  *
- * مثال: "SRB-L0-S01-m1" → { section: "S01", module: "m1" }
+ * ✅ يقبل الشكلين:
+ *   - "SRB-L0-S01-m1"
+ *   - "L0-S01-m1"
+ *
+ * مثال: "L0-S01-m1" → { section: "S01", module: "m1" }
  */
 function parseSkillId(
   skillId: string,
 ): { section: SRBSection; module: SRBModule } | null {
-  const match = /^SRB-(L[0-7])-(S\d{2})-(m\d{1,2})$/.exec(skillId);
+  const match = /^(?:SRB-)?(L[0-7])-(S\d{2})-(m\d{1,2})$/.exec(skillId);
   if (!match) return null;
 
   return {
@@ -270,7 +273,7 @@ export function buildSession(spec: SessionSpec): SessionResult {
  * بناء جلسة علاجية على مستوى كامل.
  *
  * ⚠️ الفرق:
- *   - تُبنى من skill IDs محددة (مثل "SRB-L0-S01-m1").
+ *   - تُبنى من skill IDs محددة (مثل "L0-S01-m1" أو "SRB-L0-S01-m1").
  *   - لا تُسجّل درجات.
  *   - تُظهر الحل بعد كل سؤال.
  *
