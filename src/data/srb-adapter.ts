@@ -4,12 +4,16 @@
 //
 // الوظيفة:
 //   - تُصدّر كل ما تحتاجه الشاشات من SRB
-//   - مع Fallback لـ bank-v2 (L1-L7 لم تُبنَ في SRB بعد)
+//   - بنفس أسماء bank-v2 (لتسهيل التبديل)
+//   - مع توقيعات جديدة على مستوى المستوى
 //
-// 🎯 الفائدة:
-//   - L0 → SRB
-//   - L1-L7 → bank-v2 (مؤقتًا)
-//   - عند بناء SRB لـ L1 → يتحول تلقائيًا
+// 🎯 الفرق عن bank-v2:
+//   - bank-v2: getPracticeQuestions(levelNum)
+//   - srb-adapter: getPracticeQuestions(level)
+//
+// 📅 آخر تحديث: 2026-09-30 — الجلسة 10
+//   - إلغاء section من الواجهات
+//   - الجلسة على مستوى كامل
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -40,8 +44,8 @@ export type {
 export type {
   SRBGradeMode,
   GradeRecord,
-  SectionProgress,
-  SectionProgressMap,
+  LevelProgress,
+  LevelProgressMap,
   RemediationCheck,
   LevelProgressStats,
 } from "./srb/progress";
@@ -129,7 +133,9 @@ export {
   shuffleAnswerOptions,
   countAvailableQuestions,
   canBuildSession,
+  countModulesInLevel,
   getAvailablePhases,
+  isLevelAvailable,
 } from "./srb/sessionBuilder";
 
 // ═══════════════════════════════════════════════════════════
@@ -137,21 +143,21 @@ export {
 // ═══════════════════════════════════════════════════════════
 
 export {
-  makeSectionKey,
-  parseSectionKey,
+  makeLevelKey,
+  parseLevelKey,
   loadAllProgress,
-  loadSectionProgress,
+  loadLevelProgress,
   loadGrade,
   hasPassed,
-  isSectionFullyCompleted,
-  getSectionAverage,
-  saveSectionGrade,
-  clearSectionProgress,
+  isLevelFullyCompleted,
+  getLevelAverage,
+  saveLevelGrade,
+  clearLevelProgress,
   clearAllProgress,
-  getModuleWeakness,
-  getWeakModules,
+  getSkillWeakness,
+  getWeakSkills,
   shouldRemediate,
-  getSectionsNeedingRemediation,
+  getLevelsNeedingRemediation,
   getLevelStats,
   computeLevelFinalScore,
 } from "./srb/progress";
@@ -169,124 +175,48 @@ export {
 } from "./srb/remediation";
 
 // ═══════════════════════════════════════════════════════════
-// 🔄 Fallback — البنك القديم (bank-v2)
+// 🛠️ دوال مساعدة للشاشات
 // ═══════════════════════════════════════════════════════════
-
-import {
-  getPracticeQuestions as oldGetPracticeQuestions,
-  getAnzanVisualQuestions as oldGetAnzanVisualQuestions,
-  getAnzanAudioQuestions as oldGetAnzanAudioQuestions,
-  type BankQuestion as BankQuestionV2,
-} from "./bank-v2";
 
 import { buildSession } from "./srb/sessionBuilder";
 import type {
   SRBLevel,
-  SRBSection,
-  SRBModule,
   SRBQuestion,
 } from "./srb/types";
 
-// ═══════════════════════════════════════════════════════════
-// 🛠️ أدوات Fallback
-// ═══════════════════════════════════════════════════════════
-
-function levelToNum(level: SRBLevel): number {
-  return parseInt(level.replace("L", ""), 10);
-}
-
-function padSection(skillId: string): SRBSection {
-  const match = /S(\d+)/.exec(skillId);
-  const num = match ? parseInt(match[1], 10) : 1;
-  return `S${String(num).padStart(2, "0")}` as SRBSection;
-}
-
-function oldToSRB(q: BankQuestionV2, level: SRBLevel): SRBQuestion {
-  const section = padSection(q.skillId);
-  const module = "m1" as SRBModule;
-  const id = `${q.id}-as-srb`;
-  const digitCount = String(Math.abs(Math.trunc(q.correctAnswer))).length;
-  const levelNum = levelToNum(level);
-
-  return {
-    id,
-    level,
-    section,
-    module,
-    sequence: 1,
-    variant: "B",
-    primary_phase: "P",
-    allowed_phases: ["P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    stage: levelNum <= 3 ? "basic" : "advanced",
-    difficulty: q.difficulty,
-    difficulty_score: q.difficulty,
-    in_curriculum: true,
-    question: q.prompt,
-    operands: q.operands,
-    operation: q.operation,
-    result: q.correctAnswer,
-    digit_count_max: digitCount,
-    operand_count: q.operands.length,
-    solution: q.explanation ?? "",
-    movement: q.movement,
-    movement_explanation: "",
-    note: undefined,
-    target_time_ms: [q.timing.answerMs, q.timing.maxMs],
-    mastery_threshold: 0.85,
-    prerequisite_id: null,
-    next_if_success: null,
-    next_if_fail: null,
-    original_bank_id: null,
-    original_bank_section: null,
-    classification_note: "from-bank-v2-fallback",
-    tags: q.tags ?? [],
-    place_values: [],
-    has_carry: false,
-    has_borrow: false,
-  };
-}
-
-// ═══════════════════════════════════════════════════════════
-// 🛠️ دوال مساعدة للشاشات — مع Fallback
-// ═══════════════════════════════════════════════════════════
-
+/**
+ * أسئلة جلسة تمرّن (P) لمستوى كامل.
+ *
+ * @example
+ * const questions = getPracticeQuestions("L0");
+ * // → 5 أسئلة (سؤال من كل m)
+ */
 export function getPracticeQuestions(
   level: SRBLevel,
-  section: SRBSection,
   seed?: number,
   usedIds: string[] = [],
 ): SRBQuestion[] {
-  // 1. SRB
   const result = buildSession({
     level,
-    section,
     phase: "P",
     count: 5,
     seed: seed ?? Date.now(),
   });
 
-  let questions = result.questions;
+  // استبعاد الأسئلة المستخدمة
+  if (usedIds.length === 0) return result.questions;
 
-  if (usedIds.length > 0) {
-    const usedSet = new Set(usedIds);
-    questions = questions.filter((q) => !usedSet.has(q.id));
-  }
-
-  if (questions.length > 0) return questions;
-
-  // 2. Fallback — bank-v2
-  try {
-    const levelNum = levelToNum(level);
-    const oldQs = oldGetPracticeQuestions(levelNum, seed ?? Date.now(), usedIds);
-    return oldQs.map((q) => oldToSRB(q, level));
-  } catch {
-    return [];
-  }
+  const usedSet = new Set(usedIds);
+  return result.questions.filter((q) => !usedSet.has(q.id));
 }
 
+/**
+ * أسئلة جلسة أنزان بصري.
+ *
+ * @param mode - "normal" (عادي) أو "flash" (سريع)
+ */
 export function getAnzanQuestions(
   level: SRBLevel,
-  section: SRBSection,
   mode: "normal" | "flash" = "normal",
   seed?: number,
   usedIds: string[] = [],
@@ -295,71 +225,65 @@ export function getAnzanQuestions(
 
   const result = buildSession({
     level,
-    section,
     phase,
     count: 5,
     seed: seed ?? Date.now(),
   });
 
-  let questions = result.questions;
+  if (usedIds.length === 0) return result.questions;
 
-  if (usedIds.length > 0) {
-    const usedSet = new Set(usedIds);
-    questions = questions.filter((q) => !usedSet.has(q.id));
-  }
-
-  if (questions.length > 0) return questions;
-
-  try {
-    const levelNum = levelToNum(level);
-    const oldQs = oldGetAnzanVisualQuestions(levelNum, seed ?? Date.now(), usedIds);
-    return oldQs.map((q) => oldToSRB(q, level));
-  } catch {
-    return [];
-  }
+  const usedSet = new Set(usedIds);
+  return result.questions.filter((q) => !usedSet.has(q.id));
 }
 
+/**
+ * أسئلة جلسة أنزان سمعي.
+ */
 export function getAudioAnzanQuestions(
   level: SRBLevel,
-  section: SRBSection,
   seed?: number,
   usedIds: string[] = [],
 ): SRBQuestion[] {
   const result = buildSession({
     level,
-    section,
     phase: "ANZ-A",
     count: 5,
     seed: seed ?? Date.now(),
   });
 
-  let questions = result.questions;
+  if (usedIds.length === 0) return result.questions;
 
-  if (usedIds.length > 0) {
-    const usedSet = new Set(usedIds);
-    questions = questions.filter((q) => !usedSet.has(q.id));
-  }
+  const usedSet = new Set(usedIds);
+  return result.questions.filter((q) => !usedSet.has(q.id));
+}
 
-  if (questions.length > 0) return questions;
+/**
+ * أسئلة اختبار المستوى (X).
+ */
+export function getTestQuestions(
+  level: SRBLevel,
+  count: number = 10,
+  seed?: number,
+): SRBQuestion[] {
+  const result = buildSession({
+    level,
+    phase: "X",
+    count,
+    seed: seed ?? Date.now(),
+  });
 
-  try {
-    const levelNum = levelToNum(level);
-    const oldQs = oldGetAnzanAudioQuestions(levelNum, seed ?? Date.now(), usedIds);
-    return oldQs.map((q) => oldToSRB(q, level));
-  } catch {
-    return [];
-  }
+  return result.questions;
 }
 
 // ═══════════════════════════════════════════════════════════
-// 🔗 Compatibility Types
+// 🔗 إعادة تصدير للتوافق
 // ═══════════════════════════════════════════════════════════
 
 export type BankQuestion = SRBQuestion;
 export type LevelId = SRBLevel;
 
 // ═══════════════════════════════════════════════════════════
-// 📋 ثوابت
+// 📋 ثوابت الامتحانات
 // ═══════════════════════════════════════════════════════════
 
 export const EXAM_MAX_ATTEMPTS = 2;
