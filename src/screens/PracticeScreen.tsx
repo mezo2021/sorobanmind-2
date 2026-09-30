@@ -1,7 +1,8 @@
 // src/screens/PracticeScreen.tsx
 // ✅ SRB: wrongSkillsRef يحفظ skillId كامل ("L2-S07-m1") بدل "m1"
+// ✅ SRB: weakSkills = union(أخطاء + بطيئات من performances)
 // ✅ SRB: زر الجلسة العلاجية عند وجود مهارات ضعيفة
-// 📅 آخر تحديث: SRB Migration — Phase 1
+// 📅 آخر تحديث: SRB Migration — Phase 1.5
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -302,11 +303,21 @@ export function PracticeScreen({
     // 🎯 استخدم section من أول سؤال
     const firstSection = questions[0]?.section ?? 'S01';
     const percentage = Math.round((finalScore / questions.length) * 100);
+
+    // 🆕 اجمع: الأخطاء + البطيئات من performances
+    const perf = buildPerformances();
+    const weakSkillIds = new Set<string>([
+      ...wrongSkillsRef.current,
+      ...perf
+        .filter((p) => p.speedClass === 'slow' || p.correct < p.attempts)
+        .map((p) => p.skillId),
+    ]);
+
     saveSectionGrade(
       level, firstSection, 'practice', percentage,
-      Array.from(wrongSkillsRef.current),
+      Array.from(weakSkillIds),
     );
-    setPerformances(buildPerformances());
+    setPerformances(perf);
     setPhase('result');
     playSound(passed ? 'levelup' : 'whoosh');
     onComplete?.(passed, finalScore);
