@@ -2,9 +2,10 @@
 // 🔌 src/data/srb-adapter.ts — الواجهة الموحّدة لـ SRB
 // ═══════════════════════════════════════════════════════════════════
 //
-// 📅 آخر تحديث: 2026-09-30 — الجلسة 10
-//   - دوال توافق مؤقتة (تقبل توقيعين)
-//   - دعم weakSkills + saveSectionGrade wrapper
+// 📅 آخر تحديث: 2026-09-30 — الجلسة 11
+//   - توحيد التوقيع: (level, ...) بدون section
+//   - count ديناميكي عبر sessionBuilder
+//   - إزالة دوال التوافق المُعقّدة
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -166,7 +167,7 @@ export {
 } from "./srb/remediation";
 
 // ═══════════════════════════════════════════════════════════
-// 🛠️ دوال مساعدة للشاشات (مع توافق مزدوج)
+// 🛠️ دوال مساعدة للشاشات (الواجهة النظيفة)
 // ═══════════════════════════════════════════════════════════
 
 import { buildSession } from "./srb/sessionBuilder";
@@ -183,41 +184,27 @@ import type { SRBGradeMode } from "./srb/progress";
 /**
  * أسئلة جلسة تمرّن (P) لمستوى كامل.
  *
- * ⚠️ يقبل شكلين للتوافق:
- *   - getPracticeQuestions(level, seed?, usedIds?)
- *   - getPracticeQuestions(level, section, seed, usedIds)  ← section يُتجاهل
+ * ✅ التوقيع الموحّد: (level, seed?, usedIds?)
+ *    - عدد الأسئلة يُحدَّد تلقائيًا: max(عدد المهارات m، 5)
+ *
+ * @param level - المستوى
+ * @param seed - مُولّد رقم (افتراضيًا Date.now())
+ * @param usedIds - معرّفات مستبعدة (لتجنّب التكرار)
  */
 export function getPracticeQuestions(
   level: SRBLevel,
-  sectionOrSeed?: SRBSection | number,
-  seedOrUsed?: number | string[],
-  usedIds?: string[],
+  seed: number = Date.now(),
+  usedIds: string[] = [],
 ): SRBQuestion[] {
-  let seed = Date.now();
-  let used: string[] = [];
-
-  if (typeof sectionOrSeed === "number") {
-    seed = sectionOrSeed;
-    if (Array.isArray(seedOrUsed)) used = seedOrUsed;
-  } else if (typeof seedOrUsed === "number") {
-    seed = seedOrUsed;
-    if (Array.isArray(usedIds)) used = usedIds;
-  } else if (Array.isArray(seedOrUsed)) {
-    used = seedOrUsed;
-  } else if (Array.isArray(usedIds)) {
-    used = usedIds;
-  }
-
   const result = buildSession({
     level,
     phase: "P",
-    count: 5,
     seed,
   });
 
-  if (used.length === 0) return result.questions;
+  if (usedIds.length === 0) return result.questions;
 
-  const usedSet = new Set(used);
+  const usedSet = new Set(usedIds);
   return result.questions.filter((q) => !usedSet.has(q.id));
 }
 
@@ -226,54 +213,31 @@ export function getPracticeQuestions(
 /**
  * أسئلة جلسة أنزان بصري.
  *
- * ⚠️ يقبل شكلين للتوافق:
- *   - getAnzanQuestions(level, mode?, seed?, usedIds?)
- *   - getAnzanQuestions(level, section, mode, seed, usedIds)  ← section يُتجاهل
+ * ✅ التوقيع الموحّد: (level, mode?, seed?, usedIds?)
+ *    - mode: "normal" | "flash" (افتراضيًا "normal")
+ *
+ * @param level - المستوى
+ * @param mode - "normal" أو "flash"
+ * @param seed - مُولّد رقم
+ * @param usedIds - معرّفات مستبعدة
  */
 export function getAnzanQuestions(
   level: SRBLevel,
-  sectionOrMode?: SRBSection | "normal" | "flash",
-  modeOrSeed?: "normal" | "flash" | number,
-  seedOrUsed?: number | string[],
-  usedIds?: string[],
+  mode: "normal" | "flash" = "normal",
+  seed: number = Date.now(),
+  usedIds: string[] = [],
 ): SRBQuestion[] {
-  let mode: "normal" | "flash" = "normal";
-  let seed = Date.now();
-  let used: string[] = [];
-
-  // تحديد mode
-  if (sectionOrMode === "normal" || sectionOrMode === "flash") {
-    mode = sectionOrMode;
-  } else if (modeOrSeed === "normal" || modeOrSeed === "flash") {
-    mode = modeOrSeed;
-  }
-
-  // تحديد seed
-  if (typeof modeOrSeed === "number") {
-    seed = modeOrSeed;
-  } else if (typeof seedOrUsed === "number") {
-    seed = seedOrUsed;
-  }
-
-  // تحديد usedIds
-  if (Array.isArray(seedOrUsed)) {
-    used = seedOrUsed;
-  } else if (Array.isArray(usedIds)) {
-    used = usedIds;
-  }
-
   const phase = mode === "flash" ? "ANZ-F" : "ANZ-V";
 
   const result = buildSession({
     level,
     phase,
-    count: 5,
     seed,
   });
 
-  if (used.length === 0) return result.questions;
+  if (usedIds.length === 0) return result.questions;
 
-  const usedSet = new Set(used);
+  const usedSet = new Set(usedIds);
   return result.questions.filter((q) => !usedSet.has(q.id));
 }
 
@@ -282,41 +246,26 @@ export function getAnzanQuestions(
 /**
  * أسئلة جلسة أنزان سمعي.
  *
- * ⚠️ يقبل شكلين للتوافق:
- *   - getAudioAnzanQuestions(level, seed?, usedIds?)
- *   - getAudioAnzanQuestions(level, section, seed, usedIds)  ← section يُتجاهل
+ * ✅ التوقيع الموحّد: (level, seed?, usedIds?)
+ *
+ * @param level - المستوى
+ * @param seed - مُولّد رقم
+ * @param usedIds - معرّفات مستبعدة
  */
 export function getAudioAnzanQuestions(
   level: SRBLevel,
-  sectionOrSeed?: SRBSection | number,
-  seedOrUsed?: number | string[],
-  usedIds?: string[],
+  seed: number = Date.now(),
+  usedIds: string[] = [],
 ): SRBQuestion[] {
-  let seed = Date.now();
-  let used: string[] = [];
-
-  if (typeof sectionOrSeed === "number") {
-    seed = sectionOrSeed;
-    if (Array.isArray(seedOrUsed)) used = seedOrUsed;
-  } else if (typeof seedOrUsed === "number") {
-    seed = seedOrUsed;
-    if (Array.isArray(usedIds)) used = usedIds;
-  } else if (Array.isArray(seedOrUsed)) {
-    used = seedOrUsed;
-  } else if (Array.isArray(usedIds)) {
-    used = usedIds;
-  }
-
   const result = buildSession({
     level,
     phase: "ANZ-A",
-    count: 5,
     seed,
   });
 
-  if (used.length === 0) return result.questions;
+  if (usedIds.length === 0) return result.questions;
 
-  const usedSet = new Set(used);
+  const usedSet = new Set(usedIds);
   return result.questions.filter((q) => !usedSet.has(q.id));
 }
 
@@ -324,20 +273,56 @@ export function getAudioAnzanQuestions(
 
 /**
  * أسئلة اختبار المستوى (X).
+ *
+ * @param level - المستوى
+ * @param seed - مُولّد رقم
  */
 export function getTestQuestions(
   level: SRBLevel,
-  count: number = 10,
-  seed?: number,
+  seed: number = Date.now(),
 ): SRBQuestion[] {
   const result = buildSession({
     level,
     phase: "X",
-    count,
-    seed: seed ?? Date.now(),
+    seed,
   });
 
   return result.questions;
+}
+
+// ─── getPlacementTestQuestions ───
+
+/**
+ * أسئلة اختبار تحديد المستوى (PT).
+ *
+ * @param levels - المستويات المطلوب توليد أسئلة منها
+ * @param countPerLevel - عدد الأسئلة لكل مستوى (افتراضيًا 3)
+ * @param seed - مُولّد رقم
+ */
+export function getPlacementTestQuestions(
+  levels: SRBLevel[],
+  countPerLevel: number = 3,
+  seed: number = Date.now(),
+): SRBQuestion[] {
+  const all: SRBQuestion[] = [];
+  let currentSeed = seed;
+
+  for (const level of levels) {
+    const result = buildSession({
+      level,
+      phase: "PT",
+      seed: currentSeed,
+    });
+
+    // احتفظ بأول countPerLevel أسئلة
+    const picked = result.questions.slice(0, countPerLevel);
+    all.push(...picked);
+
+    // غيّر seed للمستوى التالي
+    currentSeed = currentSeed + 1;
+  }
+
+  return all;
 }
 
 // ═══════════════════════════════════════════════════════════
