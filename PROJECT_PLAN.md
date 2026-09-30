@@ -1,4 +1,4 @@
-📘 SorobanMind v2 — Master Plan (النسخة النهائية المدمجة)
+
 
 ```markdown
 # 📘 SorobanMind v2 — Master Plan
