@@ -1,5 +1,5 @@
 // src/screens/AudioAnzanScreen.tsx
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight, ArrowLeft, CheckCircle2, XCircle, Clock,
@@ -20,6 +20,7 @@ import { numberToArabicWords } from '@/utils/arabicNumbers';
 import {
   getAudioAnzanQuestions,
   saveSectionGrade,
+  countModulesInLevel,
   type SRBLevel,
   type SRBSection,
   type SRBQuestion,
@@ -30,7 +31,8 @@ type Phase = 'intro' | 'listening' | 'answering' | 'reveal' | 'result' | 'empty'
 
 interface AudioAnzanScreenProps {
   level: SRBLevel;
-  section: SRBSection;
+  /** ⚠️ للتوافق — يُتجاهل، يُستخرج من currentQ.section */
+  section?: SRBSection;
   onBack: () => void;
   onComplete?: (passed: boolean, score: number) => void;
   playSound: (type: 'click' | 'success' | 'error' | 'whoosh' | 'levelup') => void;
@@ -49,7 +51,6 @@ const XP_PER_CORRECT = 5;
 const PASS_THRESHOLD = 70;
 const DELAY_BETWEEN_TERMS_MS = 800;
 const WARNING_RATIO = 0.7;
-const QUESTION_COUNT = 5;
 
 function getColumnsForQuestion(q: SRBQuestion): number {
   const candidates: number[] = [
@@ -78,7 +79,6 @@ function buildSkillId(level: SRBLevel, section: SRBSection, module: SRBModule): 
 function buildSpeechSequence(q: SRBQuestion): string[] {
   const { operands, operation, question } = q;
 
-  // ✅ لأسئلة "مثل العدد" → نقرأ نص السؤال
   if (operation === 'build' || operation === 'read') {
     return [question];
   }
@@ -111,7 +111,7 @@ function buildSpeechSequence(q: SRBQuestion): string[] {
 }
 
 export function AudioAnzanScreen({
-  level, section, onBack, onComplete, playSound, onXP, burst,
+  level, onBack, onComplete, playSound, onXP, burst,
 }: AudioAnzanScreenProps) {
   const [phase, setPhase] = useState<Phase>('intro');
   const [questions, setQuestions] = useState<SRBQuestion[]>([]);
@@ -140,6 +140,12 @@ export function AudioAnzanScreen({
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
   const wrongModulesRef = useRef<Set<SRBModule>>(new Set());
 
+  // 🎯 عدد الأسئلة الفعلي
+  const expectedQuestionCount = useMemo(
+    () => Math.max(countModulesInLevel(level), 5),
+    [level],
+  );
+
   const currentQ = questions[currentIdx];
   const maxMs = currentQ ? getMaxMs(currentQ) : 30000;
   const warningAtMs = maxMs * WARNING_RATIO;
@@ -147,7 +153,7 @@ export function AudioAnzanScreen({
   const progressPct = Math.min(100, (elapsedMs / maxMs) * 100);
 
   const startSession = useCallback(() => {
-    const qs = getAudioAnzanQuestions(level, section, Date.now(), []);
+    const qs = getAudioAnzanQuestions(level, Date.now(), []);
     if (qs.length === 0) {
       playSound('error');
       setPhase('empty');
@@ -166,7 +172,7 @@ export function AudioAnzanScreen({
     setPerformances([]);
     setPhase('listening');
     playSound('click');
-  }, [level, section, playSound]);
+  }, [level, playSound]);
 
   useEffect(() => {
     if (phase !== 'listening') return;
@@ -212,7 +218,7 @@ export function AudioAnzanScreen({
   const trackPerformance = useCallback(
     (isCorrect: boolean, timeMs: number) => {
       if (!currentQ) return;
-      const skillId = buildSkillId(level, section, currentQ.module);
+      const skillId = buildSkillId(level, currentQ.section, currentQ.module);
       const answerMs = getAnswerMs(currentQ);
       const existing = perfRef.current.get(skillId) ?? {
         correct: 0, attempts: 0, totalTimeMs: 0, answerMs,
@@ -228,7 +234,7 @@ export function AudioAnzanScreen({
         wrongModulesRef.current.add(currentQ.module);
       }
     },
-    [currentQ, level, section, awardBadge],
+    [currentQ, level, awardBadge],
   );
 
   const handleTimeout = useCallback(() => {
@@ -293,13 +299,14 @@ export function AudioAnzanScreen({
     (finalScore: number, totalQuestions: number): boolean => {
       const percentage = Math.round((finalScore / totalQuestions) * 100);
       const passed = percentage >= PASS_THRESHOLD;
+      const firstSection = questions[0]?.section ?? 'S01';
       saveSectionGrade(
-        level, section, 'anzanAudio', percentage,
+        level, firstSection, 'anzanAudio', percentage,
         Array.from(wrongModulesRef.current),
       );
       return passed;
     },
-    [level, section],
+    [level, questions],
   );
 
   const nextQuestion = useCallback(() => {
@@ -387,7 +394,7 @@ export function AudioAnzanScreen({
           <div className="flex-1 min-w-0">
             <h2 className="text-2xl font-extrabold font-display text-white truncate">الأنزان السمعي</h2>
             <p className="text-sm text-white/50 font-body">
-              {level} — {formatNumber(QUESTION_COUNT, numberStyle)} أسئلة
+              {level} — {formatNumber(expectedQuestionCount, numberStyle)} أسئلة
             </p>
           </div>
           <Volume2 className="w-6 h-6 text-purple-300" />
