@@ -2,12 +2,9 @@
 // 🔑 src/data/srb/generateId.ts — توليد وتحليل SRB IDs
 // ═══════════════════════════════════════════════════════════════════
 //
-// الصيغة: SRB-L{0-7}-S{01-20}-m{1-99}-{B/A}{001-999}
-//
-// أمثلة:
-//   SRB-L0-S01-m1-B001
-//   SRB-L2-S10-m3-A025
-//   SRB-L7-S20-m1-B001
+// 📅 آخر تحديث: 2026-09-30 — الجلسة 10
+//   - makeQuestion يستقبل expected_anzan_ms
+//   - يحسب anzan_time_ms = [min, max] حيث max = min × 1.5
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -16,22 +13,14 @@ import type {
   SRBSection,
   SRBModule,
   SRBQuestion,
+  SRBQuestionSpec,
+  SRBPlaceValue,
 } from "./types";
 
 // ═══════════════════════════════════════════════════════════
-// 🎯 دالة توليد SRB ID
+// 🎯 توليد SRB ID
 // ═══════════════════════════════════════════════════════════
 
-/**
- * توليد معرّف SRB كامل.
- *
- * @param level - المستوى (L0-L7)
- * @param section - الدرس (S01-S20)
- * @param module - المهارة (m1-m99)
- * @param variant - الصعوبة (B/A)
- * @param sequence - التسلسل (1-999)
- * @returns SRB ID بصيغة SRB-L0-S01-m1-B001
- */
 export function generateSrbId(
   level: SRBLevel,
   section: SRBSection,
@@ -39,7 +28,6 @@ export function generateSrbId(
   variant: "B" | "A",
   sequence: number,
 ): string {
-  // التحقق من المدخلات
   if (sequence < 1 || sequence > 999) {
     throw new RangeError(
       `sequence must be between 1 and 999, got ${sequence}`,
@@ -47,17 +35,13 @@ export function generateSrbId(
   }
 
   const paddedSeq = String(sequence).padStart(3, "0");
-
   return `SRB-${level}-${section}-${module}-${variant}${paddedSeq}`;
 }
 
 // ═══════════════════════════════════════════════════════════
-// 🔍 دالة تحليل SRB ID
+// 🔍 تحليل SRB ID
 // ═══════════════════════════════════════════════════════════
 
-/**
- * أجزاء SRB ID المُحلَّلة.
- */
 export interface ParsedSrbId {
   level: SRBLevel;
   section: SRBSection;
@@ -66,13 +50,6 @@ export interface ParsedSrbId {
   sequence: number;
 }
 
-/**
- * تحليل SRB ID إلى أجزائه.
- *
- * @param id - SRB ID كامل
- * @returns أجزاء ID
- * @throws Error إذا كان ID غير صالح
- */
 export function parseSrbId(id: string): ParsedSrbId {
   const regex = /^SRB-(L[0-7])-(S\d{2})-(m\d{1,2})-([BA])(\d{3})$/;
   const match = regex.exec(id);
@@ -82,7 +59,6 @@ export function parseSrbId(id: string): ParsedSrbId {
   }
 
   const [, level, section, module, variant, seqStr] = match;
-
   const sequence = parseInt(seqStr, 10);
 
   if (sequence < 1 || sequence > 999) {
@@ -98,9 +74,6 @@ export function parseSrbId(id: string): ParsedSrbId {
   };
 }
 
-/**
- * التحقق من صحة SRB ID (بدون رمي خطأ).
- */
 export function isValidSrbId(id: string): boolean {
   try {
     parseSrbId(id);
@@ -114,31 +87,21 @@ export function isValidSrbId(id: string): boolean {
 // 🛠️ دوال مساعدة
 // ═══════════════════════════════════════════════════════════
 
-/**
- * استخراج رقم المستوى من SRB ID.
- */
 export function getLevelNumber(level: SRBLevel): number {
   return parseInt(level.replace("L", ""), 10);
 }
 
-/**
- * استخراج رقم الدرس من SRB ID.
- */
 export function getSectionNumber(section: SRBSection): number {
   return parseInt(section.replace("S", ""), 10);
 }
 
-/**
- * استخراج رقم المهارة من SRB ID.
- */
 export function getModuleNumber(module: SRBModule): number {
   return parseInt(module.replace("m", ""), 10);
 }
 
 /**
- * استخراج "skill ID" (المستوى + الدرس + المهارة) من SRB ID.
- *
- * مثال: SRB-L0-S01-m1-B001 → SRB-L0-S01-m1
+ * استخراج skill ID من SRB ID الكامل.
+ * مثال: SRB-L0-S01-m1-A001 → SRB-L0-S01-m1
  */
 export function getSkillId(fullId: string): string {
   const parsed = parseSrbId(fullId);
@@ -146,9 +109,8 @@ export function getSkillId(fullId: string): string {
 }
 
 /**
- * استخراج "section ID" (المستوى + الدرس) من SRB ID.
- *
- * مثال: SRB-L0-S01-m1-B001 → SRB-L0-S01
+ * استخراج section ID من SRB ID الكامل.
+ * مثال: SRB-L0-S01-m1-A001 → SRB-L0-S01
  */
 export function getSectionId(fullId: string): string {
   const parsed = parseSrbId(fullId);
@@ -161,12 +123,6 @@ export function getSectionId(fullId: string): string {
 
 const ARABIC_DIGITS = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
 
-/**
- * تحويل رقم إلى صيغة عربية.
- *
- * @param num - الرقم
- * @returns الرقم بالأرقام العربية
- */
 export function toArabicDigits(num: number): string {
   return String(num)
     .split("")
@@ -177,11 +133,6 @@ export function toArabicDigits(num: number): string {
     .join("");
 }
 
-/**
- * عرض SRB ID بصيغة عربية جميلة.
- *
- * مثال: SRB-L0-S01-m1-B001 → SRB-L٠-S٠١-m١-B٠٠١
- */
 export function toArabicSrbId(id: string): string {
   try {
     const parsed = parseSrbId(id);
@@ -203,12 +154,12 @@ export function toArabicSrbId(id: string): string {
 /**
  * إنشاء سؤال SRB كامل من مواصفات مختصرة.
  *
- * @param spec - المواصفات المختصرة
- * @returns السؤال الكامل
+ * ⚠️ التغيير (2026-09-30):
+ *   - يستقبل expected_anzan_ms (اختياري)
+ *   - يحسب anzan_time_ms = [min, max] حيث max = min × 1.5
+ *   - إذا لم يُحدَّد expected_anzan_ms → 60% من expected_time_ms
  */
-export function makeQuestion(
-  spec: import("./types").SRBQuestionSpec,
-): SRBQuestion {
+export function makeQuestion(spec: SRBQuestionSpec): SRBQuestion {
   const {
     level,
     section,
@@ -228,6 +179,7 @@ export function makeQuestion(
     difficulty,
     difficulty_score,
     expected_time_ms,
+    expected_anzan_ms,
     mastery_threshold,
     prerequisite_id,
     tags,
@@ -236,38 +188,45 @@ export function makeQuestion(
     classification_note,
   } = spec;
 
-  // حساب digit_count_max من النتيجة
+  // ─── حساب digit_count_max ───
   const digit_count_max = Math.max(
     1,
     String(Math.abs(Math.trunc(result))).length,
   );
 
-  // حساب operand_count من السؤال
+  // ─── operand_count ───
   const operand_count = operands.length;
 
-  // التحقق من target_time_ms = [min, max] حيث max = min × 1.5
+  // ─── target_time_ms = [min, max] حيث max = min × 1.5 ───
   const minMs = expected_time_ms;
   const maxMs = Math.round(minMs * 1.5);
 
-  // حساب stage من level
+  // ─── 🆕 anzan_time_ms ───
+  // إذا لم يُحدَّد expected_anzan_ms → 60% من المعياري
+  const anzanMinMs = expected_anzan_ms ?? Math.round(minMs * 0.6);
+  const anzanMaxMs = Math.round(anzanMinMs * 1.5);
+
+  // ─── stage من level ───
   const levelNum = getLevelNumber(level);
   const stage = levelNum <= 3 ? "basic" : "advanced";
 
-  // حساب mastery_threshold من variant
+  // ─── mastery_threshold ───
   const threshold = mastery_threshold ?? (variant === "B" ? 0.85 : 0.8);
 
-  // حساب difficulty_score من difficulty (إن لم يُحدَّد)
+  // ─── difficulty_score ───
   const diffScore = difficulty_score ?? difficulty * 1.0;
 
-  // توليد ID
+  // ─── ID ───
   const id = generateSrbId(level, section, module, variant, sequence);
 
-  // حساب place_values من operands + result
+  // ─── place_values ───
   const place_values = computePlaceValues([...operands, result]);
 
-  // حساب has_carry و has_borrow (تقريبي)
-  const has_carry = movement.includes("carry") || movement.includes("ten-friend-add");
-  const has_borrow = movement.includes("borrow") || movement.includes("ten-friend-sub");
+  // ─── has_carry / has_borrow ───
+  const has_carry =
+    movement.includes("carry") || movement.includes("ten-friend-add");
+  const has_borrow =
+    movement.includes("borrow") || movement.includes("ten-friend-sub");
 
   return {
     id,
@@ -293,6 +252,7 @@ export function makeQuestion(
     movement_explanation,
     note,
     target_time_ms: [minMs, maxMs],
+    anzan_time_ms: [anzanMinMs, anzanMaxMs],
     mastery_threshold: threshold,
     prerequisite_id: prerequisite_id ?? null,
     next_if_success: null,
@@ -307,12 +267,11 @@ export function makeQuestion(
   };
 }
 
-/**
- * حساب place_values من قائمة أرقام.
- */
-function computePlaceValues(
-  values: number[],
-): import("./types").SRBPlaceValue[] {
+// ═══════════════════════════════════════════════════════════
+// 🛠️ computePlaceValues (داخلية)
+// ═══════════════════════════════════════════════════════════
+
+function computePlaceValues(values: number[]): SRBPlaceValue[] {
   const maxDigits = Math.max(
     1,
     ...values.map((v) => String(Math.abs(Math.trunc(v))).length),
