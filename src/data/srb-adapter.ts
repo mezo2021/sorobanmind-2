@@ -3,7 +3,8 @@
 // ═══════════════════════════════════════════════════════════════════
 //
 // 📅 آخر تحديث: 2026-09-30 — الجلسة 10
-//   - إضافة دوال توافق مؤقتة للشاشات القديمة
+//   - دوال توافق مؤقتة (تقبل توقيعين)
+//   - دعم weakSkills + saveSectionGrade wrapper
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -165,83 +166,161 @@ export {
 } from "./srb/remediation";
 
 // ═══════════════════════════════════════════════════════════
-// 🛠️ دوال مساعدة للشاشات
+// 🛠️ دوال مساعدة للشاشات (مع توافق مزدوج)
 // ═══════════════════════════════════════════════════════════
 
 import { buildSession } from "./srb/sessionBuilder";
+import { saveLevelGrade } from "./srb/progress";
 import type {
   SRBLevel,
   SRBSection,
   SRBQuestion,
 } from "./srb/types";
-import { saveLevelGrade } from "./srb/progress";
 import type { SRBGradeMode } from "./srb/progress";
+
+// ─── getPracticeQuestions ───
 
 /**
  * أسئلة جلسة تمرّن (P) لمستوى كامل.
+ *
+ * ⚠️ يقبل شكلين للتوافق:
+ *   - getPracticeQuestions(level, seed?, usedIds?)
+ *   - getPracticeQuestions(level, section, seed, usedIds)  ← section يُتجاهل
  */
 export function getPracticeQuestions(
   level: SRBLevel,
-  seed?: number,
-  usedIds: string[] = [],
+  sectionOrSeed?: SRBSection | number,
+  seedOrUsed?: number | string[],
+  usedIds?: string[],
 ): SRBQuestion[] {
+  let seed = Date.now();
+  let used: string[] = [];
+
+  if (typeof sectionOrSeed === "number") {
+    seed = sectionOrSeed;
+    if (Array.isArray(seedOrUsed)) used = seedOrUsed;
+  } else if (typeof seedOrUsed === "number") {
+    seed = seedOrUsed;
+    if (Array.isArray(usedIds)) used = usedIds;
+  } else if (Array.isArray(seedOrUsed)) {
+    used = seedOrUsed;
+  } else if (Array.isArray(usedIds)) {
+    used = usedIds;
+  }
+
   const result = buildSession({
     level,
     phase: "P",
     count: 5,
-    seed: seed ?? Date.now(),
+    seed,
   });
 
-  if (usedIds.length === 0) return result.questions;
+  if (used.length === 0) return result.questions;
 
-  const usedSet = new Set(usedIds);
+  const usedSet = new Set(used);
   return result.questions.filter((q) => !usedSet.has(q.id));
 }
 
+// ─── getAnzanQuestions ───
+
 /**
  * أسئلة جلسة أنزان بصري.
+ *
+ * ⚠️ يقبل شكلين للتوافق:
+ *   - getAnzanQuestions(level, mode?, seed?, usedIds?)
+ *   - getAnzanQuestions(level, section, mode, seed, usedIds)  ← section يُتجاهل
  */
 export function getAnzanQuestions(
   level: SRBLevel,
-  mode: "normal" | "flash" = "normal",
-  seed?: number,
-  usedIds: string[] = [],
+  sectionOrMode?: SRBSection | "normal" | "flash",
+  modeOrSeed?: "normal" | "flash" | number,
+  seedOrUsed?: number | string[],
+  usedIds?: string[],
 ): SRBQuestion[] {
+  let mode: "normal" | "flash" = "normal";
+  let seed = Date.now();
+  let used: string[] = [];
+
+  // تحديد mode
+  if (sectionOrMode === "normal" || sectionOrMode === "flash") {
+    mode = sectionOrMode;
+  } else if (modeOrSeed === "normal" || modeOrSeed === "flash") {
+    mode = modeOrSeed;
+  }
+
+  // تحديد seed
+  if (typeof modeOrSeed === "number") {
+    seed = modeOrSeed;
+  } else if (typeof seedOrUsed === "number") {
+    seed = seedOrUsed;
+  }
+
+  // تحديد usedIds
+  if (Array.isArray(seedOrUsed)) {
+    used = seedOrUsed;
+  } else if (Array.isArray(usedIds)) {
+    used = usedIds;
+  }
+
   const phase = mode === "flash" ? "ANZ-F" : "ANZ-V";
 
   const result = buildSession({
     level,
     phase,
     count: 5,
-    seed: seed ?? Date.now(),
+    seed,
   });
 
-  if (usedIds.length === 0) return result.questions;
+  if (used.length === 0) return result.questions;
 
-  const usedSet = new Set(usedIds);
+  const usedSet = new Set(used);
   return result.questions.filter((q) => !usedSet.has(q.id));
 }
 
+// ─── getAudioAnzanQuestions ───
+
 /**
  * أسئلة جلسة أنزان سمعي.
+ *
+ * ⚠️ يقبل شكلين للتوافق:
+ *   - getAudioAnzanQuestions(level, seed?, usedIds?)
+ *   - getAudioAnzanQuestions(level, section, seed, usedIds)  ← section يُتجاهل
  */
 export function getAudioAnzanQuestions(
   level: SRBLevel,
-  seed?: number,
-  usedIds: string[] = [],
+  sectionOrSeed?: SRBSection | number,
+  seedOrUsed?: number | string[],
+  usedIds?: string[],
 ): SRBQuestion[] {
+  let seed = Date.now();
+  let used: string[] = [];
+
+  if (typeof sectionOrSeed === "number") {
+    seed = sectionOrSeed;
+    if (Array.isArray(seedOrUsed)) used = seedOrUsed;
+  } else if (typeof seedOrUsed === "number") {
+    seed = seedOrUsed;
+    if (Array.isArray(usedIds)) used = usedIds;
+  } else if (Array.isArray(seedOrUsed)) {
+    used = seedOrUsed;
+  } else if (Array.isArray(usedIds)) {
+    used = usedIds;
+  }
+
   const result = buildSession({
     level,
     phase: "ANZ-A",
     count: 5,
-    seed: seed ?? Date.now(),
+    seed,
   });
 
-  if (usedIds.length === 0) return result.questions;
+  if (used.length === 0) return result.questions;
 
-  const usedSet = new Set(usedIds);
+  const usedSet = new Set(used);
   return result.questions.filter((q) => !usedSet.has(q.id));
 }
+
+// ─── getTestQuestions ───
 
 /**
  * أسئلة اختبار المستوى (X).
@@ -267,7 +346,7 @@ export function getTestQuestions(
 
 /**
  * @deprecated توافق مؤقت.
- * الشاشات القديمة تستدعي (level, section, mode, grade, weakSkills).
+ * الشاشات القديمة تستدعي: saveSectionGrade(level, section, mode, grade, weakSkills)
  * section يُتجاهل — الجلسة على مستوى كامل.
  */
 export function saveSectionGrade(
