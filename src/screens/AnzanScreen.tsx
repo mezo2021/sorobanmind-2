@@ -15,7 +15,7 @@ import { useProgressStore } from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { useMasteryBadgesStore, classifySpeed } from '@/store/masteryBadgesStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
-import { numberToArabicWords } from '@/utils/arabicNumbers';
+import { numberToArabicWordsDecimal } from '@/utils/arabicNumbers';
 
 import {
   getAnzanQuestions,
@@ -125,17 +125,17 @@ function buildFullQuestionSpeech(q: SRBQuestion): string {
   }
 
   if (operation === 'multiplication') {
-    return `${numberToArabicWords(operands[0])} في ${numberToArabicWords(Math.abs(operands[1]))}، يساوي`;
+    return `${numberToArabicWordsDecimal(operands[0])} في ${numberToArabicWordsDecimal(Math.abs(operands[1]))}، يساوي`;
   }
   if (operation === 'division') {
-    return `${numberToArabicWords(operands[0])} على ${numberToArabicWords(Math.abs(operands[1]))}، يساوي`;
+    return `${numberToArabicWordsDecimal(operands[0])} على ${numberToArabicWordsDecimal(Math.abs(operands[1]))}، يساوي`;
   }
 
-  const parts: string[] = [numberToArabicWords(operands[0])];
+  const parts: string[] = [numberToArabicWordsDecimal(operands[0])];
   for (let i = 1; i < operands.length; i++) {
     const op = operands[i];
-    if (op >= 0) parts.push(`زائد ${numberToArabicWords(op)}`);
-    else parts.push(`ناقص ${numberToArabicWords(Math.abs(op))}`);
+    if (op >= 0) parts.push(`زائد ${numberToArabicWordsDecimal(op)}`);
+    else parts.push(`ناقص ${numberToArabicWordsDecimal(Math.abs(op))}`);
   }
   return parts.join('، ') + '، يساوي';
 }
@@ -177,17 +177,12 @@ export function AnzanScreen({
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
   const wrongModulesRef = useRef<Set<SRBModule>>(new Set());
 
-  // 🎯 عدد الأسئلة الفعلي
   const expectedQuestionCount = useMemo(
     () => Math.max(countModulesInLevel(level), 5),
     [level],
   );
 
   const currentQ = questions[currentIdx];
-
-  // 🎯 section الحقيقي من السؤال
-  const currentSection: SRBSection | undefined = currentQ?.section;
-
   const maxMs = currentQ ? getMaxMs(currentQ) : 30000;
   const warningAtMs = maxMs * WARNING_RATIO;
   const isWarning = elapsedMs >= warningAtMs;
@@ -393,10 +388,7 @@ export function AnzanScreen({
     sorobana, onComplete, buildPerformances, saveGrade,
   ]);
 
-  // ═══════════════════════════════════════════════════════════
-  // 🚧 مرحلة "المستوى فارغ"
-  // ═══════════════════════════════════════════════════════════
-
+  // ═══ 🚧 empty ═══
   if (phase === 'empty') {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
@@ -420,10 +412,7 @@ export function AnzanScreen({
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 📖 intro
-  // ═══════════════════════════════════════════════════════════
-
+  // ═══ intro ═══
   if (phase === 'intro') {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
@@ -502,10 +491,7 @@ export function AnzanScreen({
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 👁️ showing
-  // ═══════════════════════════════════════════════════════════
-
+  // ═══ 👁️ showing ═══
   if (phase === 'showing' && currentQ) {
     const isBuildOrRead = currentQ.operation === 'build' || currentQ.operation === 'read';
 
@@ -578,10 +564,7 @@ export function AnzanScreen({
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // ✍️ answering
-  // ═══════════════════════════════════════════════════════════
-
+  // ═══ ✍️ answering ═══
   if (phase === 'answering' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
     return (
@@ -642,10 +625,7 @@ export function AnzanScreen({
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 🎯 reveal
-  // ═══════════════════════════════════════════════════════════
-
+  // ═══ 🎯 reveal ═══
   if (phase === 'reveal' && currentQ) {
     const isCorrect = feedback === 'correct';
     const formattedAnswer = formatNumber(currentQ.result, numberStyle);
@@ -699,10 +679,7 @@ export function AnzanScreen({
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 🏆 result
-  // ═══════════════════════════════════════════════════════════
-
+  // ═══ 🏆 result ═══
   if (phase === 'result') {
     const percentage = Math.round((score / questions.length) * 100);
     const passed = percentage >= PASS_THRESHOLD;
