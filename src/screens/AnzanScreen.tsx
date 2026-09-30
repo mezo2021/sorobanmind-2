@@ -1,5 +1,5 @@
 // src/screens/AnzanScreen.tsx
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, ArrowLeft, CheckCircle2, XCircle, Clock,
@@ -20,6 +20,7 @@ import { numberToArabicWords } from '@/utils/arabicNumbers';
 import {
   getAnzanQuestions,
   saveSectionGrade,
+  countModulesInLevel,
   type SRBLevel,
   type SRBSection,
   type SRBQuestion,
@@ -31,7 +32,8 @@ type Mode = 'flash' | 'normal';
 
 interface AnzanScreenProps {
   level: SRBLevel;
-  section: SRBSection;
+  /** ⚠️ للتوافق — يُتجاهل، يُستخرج من currentQ.section */
+  section?: SRBSection;
   initialMode?: Mode;
   onBack: () => void;
   onComplete?: (passed: boolean, score: number) => void;
@@ -50,7 +52,6 @@ interface PerfStats {
 const XP_PER_CORRECT = 5;
 const PASS_THRESHOLD = 70;
 const WARNING_RATIO = 0.7;
-const QUESTION_COUNT = 5;
 
 function getColumnsForQuestion(q: SRBQuestion): number {
   const candidates: number[] = [
@@ -79,7 +80,6 @@ function buildSkillId(level: SRBLevel, section: SRBSection, module: SRBModule): 
 function buildDisplayTerms(q: SRBQuestion): string[] {
   const { operands, operation, question } = q;
 
-  // ✅ لأسئلة "مثل العدد" و"اقرأ" → نعرض نص السؤال الكامل
   if (operation === 'build' || operation === 'read') {
     return [question];
   }
@@ -120,7 +120,6 @@ function buildFullQuestionText(q: SRBQuestion): string {
 function buildFullQuestionSpeech(q: SRBQuestion): string {
   const { operands, operation, question } = q;
 
-  // ✅ لأسئلة "مثل العدد" → نقرأ نص السؤال مباشرة
   if (operation === 'build' || operation === 'read') {
     return question;
   }
@@ -143,7 +142,6 @@ function buildFullQuestionSpeech(q: SRBQuestion): string {
 
 export function AnzanScreen({
   level,
-  section,
   initialMode = 'flash',
   onBack,
   onComplete,
@@ -179,7 +177,17 @@ export function AnzanScreen({
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
   const wrongModulesRef = useRef<Set<SRBModule>>(new Set());
 
+  // 🎯 عدد الأسئلة الفعلي
+  const expectedQuestionCount = useMemo(
+    () => Math.max(countModulesInLevel(level), 5),
+    [level],
+  );
+
   const currentQ = questions[currentIdx];
+
+  // 🎯 section الحقيقي من السؤال
+  const currentSection: SRBSection | undefined = currentQ?.section;
+
   const maxMs = currentQ ? getMaxMs(currentQ) : 30000;
   const warningAtMs = maxMs * WARNING_RATIO;
   const isWarning = elapsedMs >= warningAtMs;
@@ -188,7 +196,7 @@ export function AnzanScreen({
   const displayTerms = currentQ ? buildDisplayTerms(currentQ) : [];
 
   const startSession = useCallback(() => {
-    const qs = getAnzanQuestions(level, section, mode, Date.now(), []);
+    const qs = getAnzanQuestions(level, mode, Date.now(), []);
     if (qs.length === 0) {
       playSound('error');
       setPhase('empty');
@@ -207,7 +215,7 @@ export function AnzanScreen({
     setPerformances([]);
     setPhase('showing');
     playSound('click');
-  }, [level, section, mode, playSound]);
+  }, [level, mode, playSound]);
 
   useEffect(() => {
     if (phase !== 'showing') return;
@@ -263,7 +271,7 @@ export function AnzanScreen({
   const trackPerformance = useCallback(
     (isCorrect: boolean, timeMs: number) => {
       if (!currentQ) return;
-      const skillId = buildSkillId(level, section, currentQ.module);
+      const skillId = buildSkillId(level, currentQ.section, currentQ.module);
       const answerMs = getAnswerMs(currentQ);
       const existing = perfRef.current.get(skillId) ?? {
         correct: 0, attempts: 0, totalTimeMs: 0, answerMs,
@@ -279,7 +287,7 @@ export function AnzanScreen({
         wrongModulesRef.current.add(currentQ.module);
       }
     },
-    [currentQ, level, section, awardBadge],
+    [currentQ, level, awardBadge],
   );
 
   const handleTimeout = useCallback(() => {
@@ -338,13 +346,14 @@ export function AnzanScreen({
       const percentage = Math.round((finalScore / totalQuestions) * 100);
       const passed = percentage >= PASS_THRESHOLD;
       const gradeMode = mode === 'flash' ? 'anzanVisualFlash' : 'anzanVisualNormal';
+      const firstSection = questions[0]?.section ?? 'S01';
       saveSectionGrade(
-        level, section, gradeMode, percentage,
+        level, firstSection, gradeMode, percentage,
         Array.from(wrongModulesRef.current),
       );
       return passed;
     },
-    [level, section, mode],
+    [level, mode, questions],
   );
 
   const nextQuestion = useCallback(() => {
@@ -428,7 +437,7 @@ export function AnzanScreen({
               الأنزان البصري
             </h2>
             <p className="text-sm text-white/50 font-body">
-              {level} — {formatNumber(QUESTION_COUNT, numberStyle)} أسئلة
+              {level} — {formatNumber(expectedQuestionCount, numberStyle)} أسئلة
             </p>
           </div>
           <Brain className="w-6 h-6 text-purple-300" />
