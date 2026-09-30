@@ -1,4 +1,7 @@
 // src/screens/AudioAnzanScreen.tsx
+// ✅ SRB: يمنح شارة الأنزان السماعي عند اجتياز الجلسة (≥ 70%)
+// 📅 آخر تحديث: SRB Migration — Phase 3
+
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -11,7 +14,10 @@ import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { AdaptiveFeedback, type SkillPerformance } from '@/components/AdaptiveFeedback';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { useSpeech } from '@/hooks/useSpeech';
-import { useProgressStore } from '@/store/progressStore';
+import {
+  useProgressStore,
+  type AnzanAudioBadges,
+} from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { useMasteryBadgesStore, classifySpeed } from '@/store/masteryBadgesStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
@@ -67,6 +73,28 @@ function extractHint(q: SRBQuestion | undefined): string | null {
   if (!q?.solution) return null;
   const m = q.solution.match(/^تلميح:\s*(.+?)(?:\.\s|$)/);
   return m ? m[1].trim() : null;
+}
+
+// 🆕 خريطة section → مفتاح شارة الأنزان السماعي
+function getAudioAnzanBadgeKey(
+  section: SRBSection,
+): keyof AnzanAudioBadges | null {
+  switch (section) {
+    case 'S03':
+    case 'S04':
+    case 'S05':
+    case 'S06':
+      return 'master_addition_audio';
+    case 'S07':
+    case 'S08':
+      return 'master_multiplication_audio';
+    case 'S09':
+    case 'S10':
+      return 'master_division_audio';
+    // S11-S15 → لا يوجد بديل سماعي (mixed audio)
+    default:
+      return null;
+  }
 }
 
 function getColumnsForQuestion(q: SRBQuestion): number {
@@ -140,12 +168,17 @@ export function AudioAnzanScreen({
   const [savedTimeMs, setSavedTimeMs] = useState<number | null>(null);
   const [replayUsed, setReplayUsed] = useState(false);
   const [performances, setPerformances] = useState<SkillPerformance[]>([]);
+  const [justEarnedBadges, setJustEarnedBadges] = useState<string[]>([]);
 
   const sorobana = useSorobanaVoice();
   const { speak, stop: stopSpeech, isSpeaking, isSupported } = useSpeech();
 
   const addXP = useProgressStore((s) => s.addXP);
   const updateStreak = useProgressStore((s) => s.updateStreak);
+
+  // 🆕 شارات الأنزان السماعي (من progressStore)
+  const anzanAudioBadges = useProgressStore((s) => s.anzanAudioBadges);
+  const setAnzanAudioBadge = useProgressStore((s) => s.setAnzanAudioBadge);
 
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic';
@@ -186,6 +219,7 @@ export function AudioAnzanScreen({
     setSavedTimeMs(null);
     setReplayUsed(false);
     setPerformances([]);
+    setJustEarnedBadges([]);
     setPhase('listening');
     playSound('click');
   }, [level, playSound]);
@@ -320,6 +354,25 @@ export function AudioAnzanScreen({
     (finalScore: number, totalQuestions: number): boolean => {
       const percentage = Math.round((finalScore / totalQuestions) * 100);
       const passed = percentage >= PASS_THRESHOLD;
+
+      // ═══ 🆕 منح شارة الأنزان السماعي عند النجاح ═══
+      if (passed) {
+        const uniqueSections = new Set(questions.map((q) => q.section));
+        const earned: string[] = [];
+
+        uniqueSections.forEach((section) => {
+          const key = getAudioAnzanBadgeKey(section);
+          if (key && !anzanAudioBadges[key]) {
+            setAnzanAudioBadge(key, true);
+            earned.push(key);
+          }
+        });
+
+        if (earned.length > 0) {
+          setJustEarnedBadges(earned);
+        }
+      }
+
       const firstSection = questions[0]?.section ?? 'S01';
       saveSectionGrade(
         level, firstSection, 'anzanAudio', percentage,
@@ -327,7 +380,7 @@ export function AudioAnzanScreen({
       );
       return passed;
     },
-    [level, questions],
+    [level, questions, anzanAudioBadges, setAnzanAudioBadge],
   );
 
   const nextQuestion = useCallback(() => {
@@ -651,6 +704,13 @@ export function AudioAnzanScreen({
     const percentage = Math.round((score / questions.length) * 100);
     const passed = percentage >= PASS_THRESHOLD;
     const xpEarned = score * XP_PER_CORRECT;
+
+    const AUDIO_BADGE_LABELS: Record<string, string> = {
+      master_addition_audio: '🎤 خبير جمع وطرح سماعي',
+      master_multiplication_audio: '🎤 خبير ضرب سماعي',
+      master_division_audio: '🎤 خبير قسمة سماعية',
+    };
+
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto space-y-5">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
@@ -683,6 +743,30 @@ export function AudioAnzanScreen({
                 +{formatNumber(xpEarned, numberStyle)} XP
               </p>
             </div>
+
+            {/* 🆕 إشعار الشارات المُكتسبة */}
+            {justEarnedBadges.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="mt-4 p-4 rounded-2xl bg-gradient-to-l from-gold-400/20 to-transparent border-2 border-gold-400/50"
+              >
+                <p className="text-sm font-bold text-gold-200 font-display mb-2">
+                  🎉 حصلت على شارة جديدة!
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {justEarnedBadges.map((key) => (
+                    <span
+                      key={key}
+                      className="px-3 py-1.5 rounded-xl bg-gold-400/30 text-gold-100 text-xs font-bold"
+                    >
+                      {AUDIO_BADGE_LABELS[key] ?? key}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </div>
         </motion.div>
 
