@@ -62,6 +62,13 @@ function getDecimalFactor(q: SRBQuestion): number {
   return Math.pow(10, Math.max(...decimals, 0));
 }
 
+// 🆕 استخراج التلميح من بداية solution إن وُجد
+function extractHint(q: SRBQuestion | undefined): string | null {
+  if (!q?.solution) return null;
+  const m = q.solution.match(/^تلميح:\s*(.+?)(?:\.\s|$)/);
+  return m ? m[1].trim() : null;
+}
+
 function getColumnsForQuestion(q: SRBQuestion): number {
   const candidates: number[] = [
     Math.abs(q.result),
@@ -504,6 +511,7 @@ export function AudioAnzanScreen({
   // ═══ ✍️ answering ═══
   if (phase === 'answering' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
+    const hint = extractHint(currentQ);
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -551,6 +559,15 @@ export function AudioAnzanScreen({
         </div>
 
         <div className="glass-card p-5 mb-5">
+          {/* 🆕 التلميح قبل المعداد */}
+          {hint && (
+            <div className="mb-3 p-2 rounded-lg bg-purple-500/10 border border-purple-400/30">
+              <p className="text-xs text-purple-200 font-body text-center">
+                💡 <strong>تلميح:</strong> {hint}
+              </p>
+            </div>
+          )}
+
           <div className="flex flex-col items-center gap-3">
             <Soroban2D5
               key={`audio-anzan-${currentIdx}`}
