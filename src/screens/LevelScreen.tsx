@@ -63,28 +63,28 @@ const LEVELS_DATA: Record<string, LevelInfo> = {
   },
   L2: {
     id: 'L2', number: 2,
-    titleAr: 'سلاسل الجمع والطرح',
-    titleEn: 'Add & Sub Chains',
-    desc: 'سلاسل الجمع والطرح المتعددة الحدود',
-    gradient: 'from-purple-500 to-violet-700',
-    categoryId: 'kids', categoryScreen: 'hero-dashboard',
-    practiceNum: 2, anzanNum: 2,
-  },
-  L3: {
-    id: 'L3', number: 3,
     titleAr: 'الضرب',
     titleEn: 'Multiplication',
     desc: 'الضرب المتدرّج (١×٢ · ٢×٢) على السوروبان',
     gradient: 'from-amber-500 to-orange-700',
     categoryId: 'kids', categoryScreen: 'hero-dashboard',
-    practiceNum: 3, anzanNum: 3,
+    practiceNum: 2, anzanNum: 2,
   },
-  L4: {
-    id: 'L4', number: 4,
+  L3: {
+    id: 'L3', number: 3,
     titleAr: 'القسمة',
     titleEn: 'Division',
     desc: 'القسمة المتدرّجة (÷١ · ÷٢) — التقدير والطرح المتتالي',
     gradient: 'from-blue-500 to-indigo-700',
+    categoryId: 'kids', categoryScreen: 'hero-dashboard',
+    practiceNum: 3, anzanNum: 3,
+  },
+  L4: {
+    id: 'L4', number: 4,
+    titleAr: 'سلاسل الجمع والطرح',
+    titleEn: 'Add & Sub Chains',
+    desc: 'سلاسل الجمع والطرح المتعددة الحدود',
+    gradient: 'from-purple-500 to-violet-700',
     categoryId: 'teens', categoryScreen: 'hero-dashboard',
     practiceNum: 4, anzanNum: 4,
   },
@@ -401,7 +401,7 @@ export function LevelScreen({
             playSound={sound}
           />
 
-          {/* 5. اختبار المستوى (جديد) */}
+          {/* 5. اختبار المستوى */}
           <SectionCard
             title={`🎓 اختبار ${toArabicNumber(level.number)}`}
             subtitle={
