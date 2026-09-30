@@ -2,18 +2,8 @@
 // 🔌 src/data/srb-adapter.ts — الواجهة الموحّدة لـ SRB
 // ═══════════════════════════════════════════════════════════════════
 //
-// الوظيفة:
-//   - تُصدّر كل ما تحتاجه الشاشات من SRB
-//   - بنفس أسماء bank-v2 (لتسهيل التبديل)
-//   - مع توقيعات جديدة على مستوى المستوى
-//
-// 🎯 الفرق عن bank-v2:
-//   - bank-v2: getPracticeQuestions(levelNum)
-//   - srb-adapter: getPracticeQuestions(level)
-//
 // 📅 آخر تحديث: 2026-09-30 — الجلسة 10
-//   - إلغاء section من الواجهات
-//   - الجلسة على مستوى كامل
+//   - إضافة دوال توافق مؤقتة للشاشات القديمة
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -181,15 +171,14 @@ export {
 import { buildSession } from "./srb/sessionBuilder";
 import type {
   SRBLevel,
+  SRBSection,
   SRBQuestion,
 } from "./srb/types";
+import { saveLevelGrade } from "./srb/progress";
+import type { SRBGradeMode } from "./srb/progress";
 
 /**
  * أسئلة جلسة تمرّن (P) لمستوى كامل.
- *
- * @example
- * const questions = getPracticeQuestions("L0");
- * // → 5 أسئلة (سؤال من كل m)
  */
 export function getPracticeQuestions(
   level: SRBLevel,
@@ -203,7 +192,6 @@ export function getPracticeQuestions(
     seed: seed ?? Date.now(),
   });
 
-  // استبعاد الأسئلة المستخدمة
   if (usedIds.length === 0) return result.questions;
 
   const usedSet = new Set(usedIds);
@@ -212,8 +200,6 @@ export function getPracticeQuestions(
 
 /**
  * أسئلة جلسة أنزان بصري.
- *
- * @param mode - "normal" (عادي) أو "flash" (سريع)
  */
 export function getAnzanQuestions(
   level: SRBLevel,
@@ -273,6 +259,25 @@ export function getTestQuestions(
   });
 
   return result.questions;
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🔧 دوال توافق مؤقتة (للشاشات القديمة)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * @deprecated توافق مؤقت.
+ * الشاشات القديمة تستدعي (level, section, mode, grade, weakSkills).
+ * section يُتجاهل — الجلسة على مستوى كامل.
+ */
+export function saveSectionGrade(
+  level: SRBLevel,
+  _section: SRBSection,
+  mode: SRBGradeMode,
+  grade: number,
+  weakSkills: string[] = [],
+): void {
+  saveLevelGrade(level, mode, grade, weakSkills);
 }
 
 // ═══════════════════════════════════════════════════════════
