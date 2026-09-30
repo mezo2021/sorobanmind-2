@@ -1,14 +1,19 @@
 // src/screens/PracticeScreen.tsx
+// ✅ SRB: زر الجلسة العلاجية عند وجود مهارات ضعيفة
+// 📅 آخر تحديث: SRB Migration — Phase 3
+
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight, CheckCircle2, Trophy, RotateCcw, XCircle,
   Clock, BookOpen, AlertCircle, Play, ArrowLeft, Square,
+  Lightbulb,
 } from 'lucide-react';
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { AdaptiveFeedback, type SkillPerformance } from '@/components/AdaptiveFeedback';
+import { RemediationScreen } from './RemediationScreen';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { useProgressStore } from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
@@ -66,6 +71,14 @@ function extractHint(q: SRBQuestion | undefined): string | null {
   return m ? m[1].trim() : null;
 }
 
+// 🆕 استخراج section من skillId ("L2-S07-m1" → "S07")
+function getSectionFromSkillId(skillId: string): SRBSection | null {
+  const parts = skillId.split('-');
+  if (parts.length !== 3) return null;
+  if (!/^S\d{2}$/.test(parts[1])) return null;
+  return parts[1] as SRBSection;
+}
+
 function getColumnsForQuestion(q: SRBQuestion): number {
   const candidates: number[] = [
     Math.abs(q.result),
@@ -103,6 +116,10 @@ export function PracticeScreen({
   const [savedTimeMs, setSavedTimeMs] = useState<number | null>(null);
   const [performances, setPerformances] = useState<SkillPerformance[]>([]);
 
+  // 🆕 حالة عرض RemediationScreen
+  const [showRemediation, setShowRemediation] = useState(false);
+  const [remediationSection, setRemediationSection] = useState<SRBSection>('S01');
+
   const sorobana = useSorobanaVoice();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
@@ -127,10 +144,45 @@ export function PracticeScreen({
   // 🎯 نستخرج section الحقيقي من السؤال الحالي
   const currentSection: SRBSection | undefined = currentQ?.section;
 
+  // 🎯 رقم المستوى (0-7) لتمريره إلى AdaptiveFeedback
+  const levelNum = useMemo(() => Number(level.slice(1)), [level]);
+
   const maxMs = currentQ ? getMaxMs(currentQ) : 30000;
   const warningAtMs = maxMs * WARNING_RATIO;
   const isWarning = elapsedMs >= warningAtMs;
   const progressPct = Math.min(100, (elapsedMs / maxMs) * 100);
+
+  // 🆕 هل لدينا مهارات ضعيفة؟
+  const weakPerformances = useMemo(
+    () => performances.filter(
+      (p) => p.speedClass === 'slow' || p.correct < p.attempts,
+    ),
+    [performances],
+  );
+
+  const hasWeakSkills = weakPerformances.length > 0;
+
+  // 🆕 أكثر section تكرارًا بين المهارات الضعيفة
+  const bestWeakSection = useMemo<SRBSection | null>(() => {
+    if (weakPerformances.length === 0) return null;
+
+    const counts = new Map<SRBSection, number>();
+    weakPerformances.forEach((p) => {
+      const s = getSectionFromSkillId(p.skillId);
+      if (s) counts.set(s, (counts.get(s) ?? 0) + 1);
+    });
+
+    let best: SRBSection | null = null;
+    let maxCount = 0;
+    counts.forEach((count, section) => {
+      if (count > maxCount) {
+        maxCount = count;
+        best = section;
+      }
+    });
+
+    return best;
+  }, [weakPerformances]);
 
   const startSession = useCallback(() => {
     // ✅ تمرير بدون section
@@ -146,6 +198,7 @@ export function PracticeScreen({
     setElapsedMs(0);
     setSavedTimeMs(null);
     setPerformances([]);
+    setShowRemediation(false);
     setPhase('running');
     playSound('click');
   }, [level, playSound]);
@@ -278,6 +331,35 @@ export function PracticeScreen({
     const percentage = Math.round((score / questions.length) * 100);
     finalizeSession(percentage >= PASS_THRESHOLD, score);
   }, [score, questions.length, sorobana, finalizeSession]);
+
+  // 🆕 بدء الجلسة العلاجية
+  const handleStartRemediation = useCallback(() => {
+    const section = bestWeakSection ?? currentSection ?? 'S01';
+    setRemediationSection(section);
+    setShowRemediation(true);
+    playSound('click');
+  }, [bestWeakSection, currentSection, playSound]);
+
+  // 🆕 إنهاء الجلسة العلاجية
+  const handleRemediationBack = useCallback(() => {
+    setShowRemediation(false);
+    playSound('click');
+  }, [playSound]);
+
+  // ═══════════════════════════════════════════════════════════
+  // 🩺 عرض الجلسة العلاجية (قبل أي شيء آخر)
+  // ═══════════════════════════════════════════════════════════
+
+  if (showRemediation) {
+    return (
+      <RemediationScreen
+        level={level}
+        section={remediationSection}
+        onBack={handleRemediationBack}
+        playSound={playSound}
+      />
+    );
+  }
 
   // ═══════════════════════════════════════════════════════════
   // 🎬 العرض (نفسه مع تعديلات صغيرة)
@@ -509,8 +591,27 @@ export function PracticeScreen({
           </div>
         </motion.div>
 
+        {/* 🆕 زر الجلسة العلاجية — يظهر عند وجود مهارات ضعيفة */}
+        {hasWeakSkills && bestWeakSection && (
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            onClick={handleStartRemediation}
+            className="w-full py-4 rounded-2xl bg-gradient-to-l from-amber-400 to-orange-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/40 hover:shadow-amber-500/60 transition-shadow"
+          >
+            <Lightbulb className="w-5 h-5" />
+            🩺 جلسة علاجية مخصصة ({formatNumber(weakPerformances.length, numberStyle)} مهارة)
+          </motion.button>
+        )}
+
         {performances.length > 0 && (
-          <AdaptiveFeedback performances={performances} sectionLabel={`تمرّن — ${level}`} />
+          <AdaptiveFeedback
+            performances={performances}
+            sectionLabel={`تمرّن — ${level}`}
+            levelNum={levelNum}
+          />
         )}
 
         <div className="space-y-3">
