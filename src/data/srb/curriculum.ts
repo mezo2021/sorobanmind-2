@@ -8,7 +8,10 @@
 //   - الربط: level → sections
 //   - الفئة: kids (5-12) / teens (13+)
 //
-// 📅 آخر تحديث: 2026-09-30 — الجلسة 10
+// 📅 آخر تحديث: 2026-10-01 — إعادة ترتيب L2-L4
+//   - L2 = الضرب (S07, S08)
+//   - L3 = القسمة (S09, S10)
+//   - L4 = سلاسل الجمع/الطرح (S05, S06)
 // ═══════════════════════════════════════════════════════════════════
 
 import type { SRBLevel, SRBSection } from "./types";
@@ -51,31 +54,31 @@ export const SRB_LEVELS: readonly SRBLevelDef[] = Object.freeze([
   },
   {
     id: "L2",
-    name: "سلاسل الجمع والطرح",
-    nameEn: "Add & Sub Chains",
-    description: "سلاسل الجمع والطرح المتعددة",
-    category: "kids",
-    sections: ["S05", "S06"],
-    hasCertificate: true,
-    order: 2,
-  },
-  {
-    id: "L3",
     name: "الضرب",
     nameEn: "Multiplication",
     description: "الضرب المتدرج (1×2 · 2×2)",
     category: "kids",
     sections: ["S07", "S08"],
     hasCertificate: true,
+    order: 2,
+  },
+  {
+    id: "L3",
+    name: "القسمة",
+    nameEn: "Division",
+    description: "القسمة المتدرجة (÷1 · ÷2)",
+    category: "kids",
+    sections: ["S09", "S10"],
+    hasCertificate: true,
     order: 3,
   },
   {
     id: "L4",
-    name: "القسمة",
-    nameEn: "Division",
-    description: "القسمة المتدرجة (÷1 · ÷2)",
+    name: "سلاسل الجمع والطرح",
+    nameEn: "Add & Sub Chains",
+    description: "سلاسل الجمع والطرح المتعددة",
     category: "teens",
-    sections: ["S09", "S10"],
+    sections: ["S05", "S06"],
     hasCertificate: true,
     order: 4,
   },
@@ -166,10 +169,10 @@ export const SRB_SECTIONS: readonly SRBSectionDef[] = Object.freeze([
     order: 2,
   },
 
-  // ─── L2 — سلاسل الجمع والطرح ───
+  // ─── L4 — سلاسل الجمع والطرح ───
   {
     id: "S05",
-    level: "L2",
+    level: "L4",
     name: "سلاسل الجمع",
     nameEn: "Addition Chains",
     description: "سلاسل الجمع المتعددة الحدود",
@@ -178,7 +181,7 @@ export const SRB_SECTIONS: readonly SRBSectionDef[] = Object.freeze([
   },
   {
     id: "S06",
-    level: "L2",
+    level: "L4",
     name: "سلاسل الطرح",
     nameEn: "Subtraction Chains",
     description: "سلاسل الطرح المتعددة الحدود",
@@ -186,10 +189,10 @@ export const SRB_SECTIONS: readonly SRBSectionDef[] = Object.freeze([
     order: 2,
   },
 
-  // ─── L3 — الضرب ───
+  // ─── L2 — الضرب ───
   {
     id: "S07",
-    level: "L3",
+    level: "L2",
     name: "ضرب 1 × 2",
     nameEn: "Multiplication 1×2",
     description: "ضرب عدد منزلة واحدة × عدد منزلتين",
@@ -198,7 +201,7 @@ export const SRB_SECTIONS: readonly SRBSectionDef[] = Object.freeze([
   },
   {
     id: "S08",
-    level: "L3",
+    level: "L2",
     name: "ضرب 2 × 2",
     nameEn: "Multiplication 2×2",
     description: "ضرب عدد منزلتين × عدد منزلتين",
@@ -206,10 +209,10 @@ export const SRB_SECTIONS: readonly SRBSectionDef[] = Object.freeze([
     order: 2,
   },
 
-  // ─── L4 — القسمة ───
+  // ─── L3 — القسمة ───
   {
     id: "S09",
-    level: "L4",
+    level: "L3",
     name: "القسمة ÷ 1",
     nameEn: "Division ÷1",
     description: "القسمة على رقم واحد",
@@ -218,7 +221,7 @@ export const SRB_SECTIONS: readonly SRBSectionDef[] = Object.freeze([
   },
   {
     id: "S10",
-    level: "L4",
+    level: "L3",
     name: "القسمة ÷ 2",
     nameEn: "Division ÷2",
     description: "القسمة على رقمين",
