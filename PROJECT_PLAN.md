@@ -1,4 +1,7 @@
-📘 SorobanMind v2 — Master Plan المُحدَّث
+
+<div align="center">
+
+# 📘 SorobanMind v2 — Master Plan المُحدَّث
 
 نسخة دمج (2026-09-30) · تحافظ على القديم + تُضيف SRB
 
