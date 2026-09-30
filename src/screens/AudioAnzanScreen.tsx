@@ -52,6 +52,16 @@ const PASS_THRESHOLD = 70;
 const DELAY_BETWEEN_TERMS_MS = 800;
 const WARNING_RATIO = 0.7;
 
+// 1) helper (مرة واحدة أعلى الملف)
+function getDecimalFactor(q: SRBQuestion): number {
+  const decimals = [q.result, ...q.operands].map((n) => {
+    const str = Math.abs(n).toString();
+    const dotIdx = str.indexOf('.');
+    return dotIdx === -1 ? 0 : str.length - dotIdx - 1;
+  });
+  return Math.pow(10, Math.max(...decimals, 0));
+}
+
 function getColumnsForQuestion(q: SRBQuestion): number {
   const candidates: number[] = [
     Math.abs(q.result),
@@ -257,7 +267,12 @@ export function AudioAnzanScreen({
   const handleCheck = useCallback(() => {
     if (!currentQ || feedback !== 'idle') return;
     if (timerRef.current) clearInterval(timerRef.current);
-    const isCorrect = abacusValue === currentQ.result;
+
+    // 2) في handleCheck
+    const factor = getDecimalFactor(currentQ);
+    const targetValue = Math.round(currentQ.result * factor);
+    const isCorrect = abacusValue === targetValue;
+
     const timeMs = elapsedMs;
     trackPerformance(isCorrect, timeMs);
     if (isCorrect) {
