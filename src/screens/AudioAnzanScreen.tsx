@@ -15,7 +15,7 @@ import { useProgressStore } from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { useMasteryBadgesStore, classifySpeed } from '@/store/masteryBadgesStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
-import { numberToArabicWords } from '@/utils/arabicNumbers';
+import { numberToArabicWordsDecimal } from '@/utils/arabicNumbers';
 
 import {
   getAudioAnzanQuestions,
@@ -86,24 +86,24 @@ function buildSpeechSequence(q: SRBQuestion): string[] {
   const parts: string[] = [];
 
   if (operation === 'multiplication') {
-    parts.push(numberToArabicWords(operands[0]));
-    parts.push(`في ${numberToArabicWords(Math.abs(operands[1]))}`);
+    parts.push(numberToArabicWordsDecimal(operands[0]));
+    parts.push(`في ${numberToArabicWordsDecimal(Math.abs(operands[1]))}`);
     return parts;
   }
 
   if (operation === 'division') {
-    parts.push(numberToArabicWords(operands[0]));
-    parts.push(`على ${numberToArabicWords(Math.abs(operands[1]))}`);
+    parts.push(numberToArabicWordsDecimal(operands[0]));
+    parts.push(`على ${numberToArabicWordsDecimal(Math.abs(operands[1]))}`);
     return parts;
   }
 
   operands.forEach((op, i) => {
     if (i === 0) {
-      parts.push(numberToArabicWords(op));
+      parts.push(numberToArabicWordsDecimal(op));
     } else if (op >= 0) {
-      parts.push(numberToArabicWords(op));
+      parts.push(numberToArabicWordsDecimal(op));
     } else {
-      parts.push(`ناقص ${numberToArabicWords(Math.abs(op))}`);
+      parts.push(`ناقص ${numberToArabicWordsDecimal(Math.abs(op))}`);
     }
   });
 
@@ -140,7 +140,6 @@ export function AudioAnzanScreen({
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
   const wrongModulesRef = useRef<Set<SRBModule>>(new Set());
 
-  // 🎯 عدد الأسئلة الفعلي
   const expectedQuestionCount = useMemo(
     () => Math.max(countModulesInLevel(level), 5),
     [level],
@@ -358,7 +357,7 @@ export function AudioAnzanScreen({
     );
   }
 
-  // ═══ 🚧 مرحلة "المستوى فارغ" ═══
+  // ═══ 🚧 empty ═══
   if (phase === 'empty') {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
