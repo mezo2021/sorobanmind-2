@@ -26,7 +26,7 @@ import {
   type SRBModule,
 } from '@/data/srb-adapter';
 
-type Phase = 'intro' | 'listening' | 'answering' | 'reveal' | 'result';
+type Phase = 'intro' | 'listening' | 'answering' | 'reveal' | 'result' | 'empty';
 
 interface AudioAnzanScreenProps {
   level: SRBLevel;
@@ -76,7 +76,13 @@ function buildSkillId(level: SRBLevel, section: SRBSection, module: SRBModule): 
 }
 
 function buildSpeechSequence(q: SRBQuestion): string[] {
-  const { operands, operation } = q;
+  const { operands, operation, question } = q;
+
+  // ✅ لأسئلة "مثل العدد" → نقرأ نص السؤال
+  if (operation === 'build' || operation === 'read') {
+    return [question];
+  }
+
   const parts: string[] = [];
 
   if (operation === 'multiplication') {
@@ -142,7 +148,11 @@ export function AudioAnzanScreen({
 
   const startSession = useCallback(() => {
     const qs = getAudioAnzanQuestions(level, section, Date.now(), []);
-    if (qs.length === 0) { playSound('error'); return; }
+    if (qs.length === 0) {
+      playSound('error');
+      setPhase('empty');
+      return;
+    }
     perfRef.current = new Map();
     wrongModulesRef.current = new Set();
     setQuestions(qs);
@@ -329,6 +339,7 @@ export function AudioAnzanScreen({
     sorobana, onComplete, buildPerformances, saveGrade,
   ]);
 
+  // ═══ إذا المتصفح لا يدعم الصوت ═══
   if (!isSupported) {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
@@ -340,6 +351,31 @@ export function AudioAnzanScreen({
     );
   }
 
+  // ═══ 🚧 مرحلة "المستوى فارغ" ═══
+  if (phase === 'empty') {
+    return (
+      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
+        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-xl mb-6">
+          <span className="text-4xl">🚧</span>
+        </div>
+        <h2 className="text-2xl font-extrabold font-display text-white mb-3 text-center">
+          هذا المستوى قيد البناء
+        </h2>
+        <p className="text-white/60 font-body text-center mb-8 leading-relaxed max-w-md">
+          لم نُكمل أسئلة {level} بعد. جرّب L0 الآن — إنه جاهز!
+        </p>
+        <button
+          type="button"
+          onClick={() => { playSound('click'); onBack(); }}
+          className="btn-primary"
+        >
+          رجوع
+        </button>
+      </div>
+    );
+  }
+
+  // ═══ intro ═══
   if (phase === 'intro') {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
@@ -351,7 +387,7 @@ export function AudioAnzanScreen({
           <div className="flex-1 min-w-0">
             <h2 className="text-2xl font-extrabold font-display text-white truncate">الأنزان السمعي</h2>
             <p className="text-sm text-white/50 font-body">
-              {level} · {section} — {formatNumber(QUESTION_COUNT, numberStyle)} أسئلة
+              {level} — {formatNumber(QUESTION_COUNT, numberStyle)} أسئلة
             </p>
           </div>
           <Volume2 className="w-6 h-6 text-purple-300" />
@@ -402,6 +438,7 @@ export function AudioAnzanScreen({
     );
   }
 
+  // ═══ 🎧 listening ═══
   if (phase === 'listening' && currentQ) {
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto min-h-screen flex flex-col">
@@ -410,7 +447,7 @@ export function AudioAnzanScreen({
             <h2 className="text-lg font-bold text-white truncate">
               السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
-            <p className="text-xs text-white/50 font-body">{section} · أنزان سمعي</p>
+            <p className="text-xs text-white/50 font-body">أنزان سمعي</p>
           </div>
           <button type="button" onClick={handleEnd}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition">
@@ -443,6 +480,7 @@ export function AudioAnzanScreen({
     );
   }
 
+  // ═══ ✍️ answering ═══
   if (phase === 'answering' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
     return (
@@ -520,6 +558,7 @@ export function AudioAnzanScreen({
     );
   }
 
+  // ═══ 🎯 reveal ═══
   if (phase === 'reveal' && currentQ) {
     const isCorrect = feedback === 'correct';
     const formattedAnswer = formatNumber(currentQ.result, numberStyle);
@@ -569,6 +608,7 @@ export function AudioAnzanScreen({
     );
   }
 
+  // ═══ 🏆 result ═══
   if (phase === 'result') {
     const percentage = Math.round((score / questions.length) * 100);
     const passed = percentage >= PASS_THRESHOLD;
@@ -609,7 +649,7 @@ export function AudioAnzanScreen({
         </motion.div>
 
         {performances.length > 0 && (
-          <AdaptiveFeedback performances={performances} sectionLabel={`أنزان سمعي — ${section}`} />
+          <AdaptiveFeedback performances={performances} sectionLabel="أنزان سمعي" levelNum={0} />
         )}
 
         <div className="space-y-3">
