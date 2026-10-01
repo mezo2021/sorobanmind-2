@@ -1,6 +1,8 @@
 // src/screens/AudioAnzanScreen.tsx
+// ✅ SRB: wrongSkillsRef يحفظ skillId كامل ("L2-S07-m1") بدل "m1"
+// ✅ SRB: weakSkills = union(أخطاء + بطيئات من performances)
 // ✅ SRB: يمنح شارة الأنزان السماعي عند اجتياز الجلسة (≥ 70%)
-// 📅 آخر تحديث: SRB Migration — Phase 3
+// 📅 آخر تحديث: SRB Migration — Phase 2
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -91,7 +93,7 @@ function getAudioAnzanBadgeKey(
     case 'S09':
     case 'S10':
       return 'master_division_audio';
-    // S11-S15 → لا يوجد بديل سماعي (mixed audio)
+    // S11-S15 → لا يوجد بديل سماعي
     default:
       return null;
   }
@@ -188,7 +190,7 @@ export function AudioAnzanScreen({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioSequenceRef = useRef<number>(0);
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
-  const wrongModulesRef = useRef<Set<SRBModule>>(new Set());
+  const wrongSkillsRef = useRef<Set<string>>(new Set());
 
   const expectedQuestionCount = useMemo(
     () => Math.max(countModulesInLevel(level), 5),
@@ -209,7 +211,7 @@ export function AudioAnzanScreen({
       return;
     }
     perfRef.current = new Map();
-    wrongModulesRef.current = new Set();
+    wrongSkillsRef.current = new Set();
     setQuestions(qs);
     setCurrentIdx(0);
     setAbacusValue(0);
@@ -281,7 +283,8 @@ export function AudioAnzanScreen({
         const cls = classifySpeed(timeMs, answerMs);
         if (cls === 'mastery') awardBadge(skillId, timeMs, answerMs);
       } else {
-        wrongModulesRef.current.add(currentQ.module);
+        // ✅ SRB: احفظ skillId كامل ("L2-S07-m1")
+        wrongSkillsRef.current.add(skillId);
       }
     },
     [currentQ, level, awardBadge],
@@ -373,14 +376,23 @@ export function AudioAnzanScreen({
         }
       }
 
+      // 🆕 weakSkills = union(أخطاء + بطيئات)
+      const perf = buildPerformances();
+      const weakSkillIds = new Set<string>([
+        ...wrongSkillsRef.current,
+        ...perf
+          .filter((p) => p.speedClass === 'slow' || p.correct < p.attempts)
+          .map((p) => p.skillId),
+      ]);
+
       const firstSection = questions[0]?.section ?? 'S01';
       saveSectionGrade(
         level, firstSection, 'anzanAudio', percentage,
-        Array.from(wrongModulesRef.current),
+        Array.from(weakSkillIds),
       );
       return passed;
     },
-    [level, questions, anzanAudioBadges, setAnzanAudioBadge],
+    [level, questions, anzanAudioBadges, setAnzanAudioBadge, buildPerformances],
   );
 
   const nextQuestion = useCallback(() => {
