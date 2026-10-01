@@ -1,6 +1,8 @@
 // src/screens/AnzanScreen.tsx
+// ✅ SRB: wrongSkillsRef يحفظ skillId كامل ("L2-S07-m1") بدل "m1"
+// ✅ SRB: weakSkills = union(أخطاء + بطيئات من performances)
 // ✅ SRB: يمنح شارة الأنزان البصري عند اجتياز الجلسة (≥ 70%)
-// 📅 آخر تحديث: SRB Migration — Phase 3
+// 📅 آخر تحديث: SRB Migration — Phase 2
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -226,7 +228,7 @@ export function AnzanScreen({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const displayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
-  const wrongModulesRef = useRef<Set<SRBModule>>(new Set());
+  const wrongSkillsRef = useRef<Set<string>>(new Set());
 
   const expectedQuestionCount = useMemo(
     () => Math.max(countModulesInLevel(level), 5),
@@ -249,7 +251,7 @@ export function AnzanScreen({
       return;
     }
     perfRef.current = new Map();
-    wrongModulesRef.current = new Set();
+    wrongSkillsRef.current = new Set();
     setQuestions(qs);
     setCurrentIdx(0);
     setCurrentTermIdx(0);
@@ -331,7 +333,8 @@ export function AnzanScreen({
         const cls = classifySpeed(timeMs, answerMs);
         if (cls === 'mastery') awardBadge(skillId, timeMs, answerMs);
       } else {
-        wrongModulesRef.current.add(currentQ.module);
+        // ✅ SRB: احفظ skillId كامل ("L2-S07-m1")
+        wrongSkillsRef.current.add(skillId);
       }
     },
     [currentQ, level, awardBadge],
@@ -416,15 +419,24 @@ export function AnzanScreen({
         }
       }
 
+      // 🆕 weakSkills = union(أخطاء + بطيئات)
+      const perf = buildPerformances();
+      const weakSkillIds = new Set<string>([
+        ...wrongSkillsRef.current,
+        ...perf
+          .filter((p) => p.speedClass === 'slow' || p.correct < p.attempts)
+          .map((p) => p.skillId),
+      ]);
+
       const gradeMode = mode === 'flash' ? 'anzanVisualFlash' : 'anzanVisualNormal';
       const firstSection = questions[0]?.section ?? 'S01';
       saveSectionGrade(
         level, firstSection, gradeMode, percentage,
-        Array.from(wrongModulesRef.current),
+        Array.from(weakSkillIds),
       );
       return passed;
     },
-    [level, mode, questions, anzanBadges, setAnzanBadge],
+    [level, mode, questions, anzanBadges, setAnzanBadge, buildPerformances],
   );
 
   const nextQuestion = useCallback(() => {
