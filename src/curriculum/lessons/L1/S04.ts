@@ -63,7 +63,16 @@ export const S04_LESSON: LessonNode = {
         storyAudioText: "قالت الجدة خمسة: أنا أستطيع الطرح أيضاً. عندما تريدون طرح رقم، أصعد أنا لتستريح، لكن أترك أصدقائي الأطفال يلعبون في الساحة.",
         storyAudioId: 5,
       },
-      rule: { formula: "−n = −5 + (5 − n)", description: "نرفع العلوية 5 بالسبابة، ونرفع صديق n من الخرزات السفلية بالإبهام." },
+      rule: {
+        formula: "−n = −5 + (5 − n)",
+        description: "نرفع العلوية 5 بالسبابة، ونرفع صديق n من الخرزات السفلية بالإبهام.",
+        cases: [
+          { from: 1, formula: "−1 = −5 + 4" },
+          { from: 2, formula: "−2 = −5 + 3" },
+          { from: 3, formula: "−3 = −5 + 2" },
+          { from: 4, formula: "−4 = −5 + 1" },
+        ],
+      },
       condition: { formula: "c ≥ n · l < n · العلوية مفعّلة", explanation: "العدد المطلوب طرحه متوفّر ضمن القيمة، لكن السفليات المفعّلة لا تكفي — نستعين بالجدة 5." },
       friendsTable: { title: "أصدقاء 5", pairs: [{ from: 1, to: 4 }, { from: 2, to: 3 }, { from: 3, to: 2 }, { from: 4, to: 1 }] },
       discrimination: {
@@ -101,7 +110,21 @@ export const S04_LESSON: LessonNode = {
         storyAudioText: "قال العملاق عشرة: أنا أستطيع الطرح. عندما لا تكفي الآحاد، أغادر أنا، ويدخل متمم الرقم للآحاد.",
         storyAudioId: 7,
       },
-      rule: { formula: "−n = −10 + k  (حيث k = 10 − n)", description: "نُزيل خرزة 1 من العشرات (−10)، ونُضيف k إلى الآحاد مباشرة." },
+      rule: {
+        formula: "−n = −10 + k  (حيث k = 10 − n)",
+        description: "نُزيل خرزة 1 من العشرات (−10)، ونُضيف k إلى الآحاد مباشرة.",
+        cases: [
+          { from: 1, formula: "−1 = −10 + 9" },
+          { from: 2, formula: "−2 = −10 + 8" },
+          { from: 3, formula: "−3 = −10 + 7" },
+          { from: 4, formula: "−4 = −10 + 6" },
+          { from: 5, formula: "−5 = −10 + 5" },
+          { from: 6, formula: "−6 = −10 + 4" },
+          { from: 7, formula: "−7 = −10 + 3" },
+          { from: 8, formula: "−8 = −10 + 2" },
+          { from: 9, formula: "−9 = −10 + 1" },
+        ],
+      },
       condition: { formula: "c < n  ·  إمكانية إضافة k مباشرة إلى c", explanation: "الآحاد لا تكفي للطرح، لكن إضافة k للآحاد متوفّرة مباشرة (بلا تبديل 5)." },
       friendsTable: { title: "أصدقاء 10", pairs: [{ from: 1, to: 9 }, { from: 2, to: 8 }, { from: 3, to: 7 }, { from: 4, to: 6 }, { from: 5, to: 5 }, { from: 6, to: 4 }, { from: 7, to: 3 }, { from: 8, to: 2 }, { from: 9, to: 1 }] },
       discrimination: {
@@ -139,7 +162,16 @@ export const S04_LESSON: LessonNode = {
         storyAudioText: "وصل الأبطال إلى العرش المزدوج حيث تلتقي الجدة خمسة مع العملاق عشرة. في بعض مسائل الطرح الصعبة، يغادر العملاق عشرة أولاً، ثم تنزل الجدة خمسة لتساعد، ثم يخرج باقي الأصدقاء من الخرزات السفلية.",
         storyAudioId: 8,
       },
-      rule: { formula: "−n = −10 + 5 − (5 − k)  (حيث k = 10 − n)", description: "نُزيل عشرات واحدة (−10)، نُنزل العلوية 5 (+5)، ثم نُزيل (5−k) من الخرزات السفلية." },
+      rule: {
+        formula: "−n = −10 + 5 − (5 − k)  (حيث k = 10 − n)",
+        description: "نُزيل عشرات واحدة (−10)، نُنزل العلوية 5 (+5)، ثم نُزيل (5−k) من الخرزات السفلية.",
+        cases: [
+          { from: 6, formula: "−6 = −10 + 5 − 1" },
+          { from: 7, formula: "−7 = −10 + 5 − 2" },
+          { from: 8, formula: "−8 = −10 + 5 − 3" },
+          { from: 9, formula: "−9 = −10 + 5 − 4" },
+        ],
+      },
       condition: { formula: "c < n  ·  إضافة k تتطلّب تبديل 5  ·  l + k > 4", explanation: "الآحاد لا يكفي، وإضافة k تحتاج تبديل 5 (كماشة) — نستعين بالجدة 5 والعملاق 10 معًا." },
       discrimination: {
         steps: [
