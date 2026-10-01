@@ -2,7 +2,8 @@
 // ✅ SRB: wrongSkillsRef يحفظ skillId كامل ("L2-S07-m1") بدل "m1"
 // ✅ SRB: weakSkills = union(أخطاء + بطيئات من performances)
 // ✅ SRB: يمنح شارة الأنزان البصري عند اجتياز الجلسة (≥ 70%)
-// 📅 آخر تحديث: SRB Migration — Phase 2
+// ✅ عرض المعادلة في سطر واحد (مع تصغير تلقائي)
+// 📅 آخر تحديث: SRB Migration — Phase 3
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -76,6 +77,18 @@ function extractHint(q: SRBQuestion | undefined): string | null {
   if (!q?.solution) return null;
   const m = q.solution.match(/^تلميح:\s*(.+?)(?:\.\s|$)/);
   return m ? m[1].trim() : null;
+}
+
+// 🆕 حجم الخط حسب طول النص (لضمان بقائه في سطر واحد)
+function displayTextSize(len: number, isBuildOrRead: boolean): string {
+  if (isBuildOrRead) {
+    if (len > 22) return 'text-2xl sm:text-3xl';
+    if (len > 16) return 'text-3xl sm:text-4xl';
+    return 'text-3xl sm:text-5xl';
+  }
+  if (len > 22) return 'text-2xl sm:text-3xl';
+  if (len > 16) return 'text-3xl sm:text-4xl';
+  return 'text-5xl sm:text-7xl';
 }
 
 // 🆕 خريطة section → مفتاح شارة الأنزان البصري
@@ -216,7 +229,6 @@ export function AnzanScreen({
   const addXP = useProgressStore((s) => s.addXP);
   const updateStreak = useProgressStore((s) => s.updateStreak);
 
-  // 🆕 شارات الأنزان البصري (من progressStore)
   const anzanBadges = useProgressStore((s) => s.anzanBadges);
   const setAnzanBadge = useProgressStore((s) => s.setAnzanBadge);
 
@@ -333,7 +345,6 @@ export function AnzanScreen({
         const cls = classifySpeed(timeMs, answerMs);
         if (cls === 'mastery') awardBadge(skillId, timeMs, answerMs);
       } else {
-        // ✅ SRB: احفظ skillId كامل ("L2-S07-m1")
         wrongSkillsRef.current.add(skillId);
       }
     },
@@ -355,7 +366,6 @@ export function AnzanScreen({
     if (!currentQ || feedback !== 'idle') return;
     if (timerRef.current) clearInterval(timerRef.current);
 
-    // 2) في handleCheck
     const factor = getDecimalFactor(currentQ);
     const targetValue = Math.round(currentQ.result * factor);
     const isCorrect = abacusValue === targetValue;
@@ -401,7 +411,6 @@ export function AnzanScreen({
       const percentage = Math.round((finalScore / totalQuestions) * 100);
       const passed = percentage >= PASS_THRESHOLD;
 
-      // ═══ 🆕 منح شارة الأنزان البصري عند النجاح ═══
       if (passed) {
         const uniqueSections = new Set(questions.map((q) => q.section));
         const earned: string[] = [];
@@ -419,7 +428,6 @@ export function AnzanScreen({
         }
       }
 
-      // 🆕 weakSkills = union(أخطاء + بطيئات)
       const perf = buildPerformances();
       const weakSkillIds = new Set<string>([
         ...wrongSkillsRef.current,
@@ -583,6 +591,12 @@ export function AnzanScreen({
   if (phase === 'showing' && currentQ) {
     const isBuildOrRead = currentQ.operation === 'build' || currentQ.operation === 'read';
 
+    // 🆕 نص العرض + حجم الخط
+    const displayText = isBuildOrRead
+      ? formatText(currentQ.question, numberStyle)
+      : `${formatText(buildFullQuestionText(currentQ), numberStyle)} = ؟`;
+    const sizeClass = displayTextSize(displayText.length, isBuildOrRead);
+
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto min-h-screen flex flex-col">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -633,13 +647,14 @@ export function AnzanScreen({
             </AnimatePresence>
           ) : (
             <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
-              className="text-center">
+              className="text-center w-full">
               <p className="text-sm text-white/50 font-body mb-4">اقرأ السؤال</p>
-              <p className={`font-black font-display text-white ${isBuildOrRead ? 'text-3xl sm:text-5xl' : 'text-5xl sm:text-7xl'}`}
-                dir={isArabic ? 'rtl' : 'ltr'}>
-                {isBuildOrRead
-                  ? formatText(currentQ.question, numberStyle)
-                  : `${formatText(buildFullQuestionText(currentQ), numberStyle)} = ؟`}
+              {/* 🆕 سطر واحد — بلا كسر */}
+              <p
+                dir={isBuildOrRead ? (isArabic ? 'rtl' : 'ltr') : 'ltr'}
+                className={`font-black font-display text-white ${sizeClass} whitespace-nowrap`}
+              >
+                {displayText}
               </p>
             </motion.div>
           )}
@@ -696,7 +711,6 @@ export function AnzanScreen({
         </div>
 
         <div className="glass-card p-5 mb-5">
-          {/* 🆕 التلميح قبل المعداد */}
           {hint && (
             <div className="mb-3 p-2 rounded-lg bg-purple-500/10 border border-purple-400/30">
               <p className="text-xs text-purple-200 font-body text-center">
@@ -829,7 +843,6 @@ export function AnzanScreen({
               </p>
             </div>
 
-            {/* 🆕 إشعار الشارات المُكتسبة */}
             {justEarnedBadges.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
