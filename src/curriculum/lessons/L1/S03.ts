@@ -84,7 +84,16 @@ export const S03_LESSON: LessonNode = {
         storyAudioText: "وصل الأبطال إلى غرفة الجدة خمسة. أرادوا إضافة طفل واحد، لكن الساحة ممتلئة. ظهرت الجدة خمسة وقالت: لا تقلقوا، أنا أستطيع المساعدة، لكن لي شرط: إذا دخلت أنا، يجب أن يخرج صديق الرقم الذي تريدونه.",
         storyAudioId: 4,
       },
-      rule: { formula: "+n = +5 − (5 − n)", description: "نُنزل العلوية 5 بالسبابة، ونطرح صديق n من الخرزات السفلية." },
+      rule: {
+        formula: "+n = +5 − (5 − n)",
+        description: "نُنزل العلوية 5 بالسبابة، ونطرح صديق n من الخرزات السفلية.",
+        cases: [
+          { from: 1, formula: "+1 = +5 − 4" },
+          { from: 2, formula: "+2 = +5 − 3" },
+          { from: 3, formula: "+3 = +5 − 2" },
+          { from: 4, formula: "+4 = +5 − 1" },
+        ],
+      },
       condition: { formula: "c ≤ 4 · n ≤ 4 · c + n ≥ 5", explanation: "الخرزات السفلية لا تكفي، لكن الخرزة العلوية (5) فارغة وجاهزة للمساعدة!" },
       friendsTable: { title: "أصدقاء 5", pairs: [{ from: 1, to: 4 }, { from: 2, to: 3 }, { from: 3, to: 2 }, { from: 4, to: 1 }] },
       discrimination: {
@@ -130,7 +139,21 @@ export const S03_LESSON: LessonNode = {
         storyAudioText: "عندما كبرت الأرقام، لم تعد الجدة خمسة تكفي. ظهر عملاق العشرات عشرة في العمود الثاني على اليسار. قال: أنا أتدخل عندما يكتظ عمود الآحاد. نادوا عليّ، وسأطرح متمم الرقم من الآحاد.",
         storyAudioId: 6,
       },
-      rule: { formula: "+n = −k + 10  (حيث k = 10 − n)", description: "نخصم صديق n (وهو k) من الآحاد، ونُضيف خرزة 1 إلى عمود العشرات." },
+      rule: {
+        formula: "+n = −k + 10  (حيث k = 10 − n)",
+        description: "نخصم صديق n (وهو k) من الآحاد، ونُضيف خرزة 1 إلى عمود العشرات.",
+        cases: [
+          { from: 1, formula: "+1 = −9 + 10" },
+          { from: 2, formula: "+2 = −8 + 10" },
+          { from: 3, formula: "+3 = −7 + 10" },
+          { from: 4, formula: "+4 = −6 + 10" },
+          { from: 5, formula: "+5 = −5 + 10" },
+          { from: 6, formula: "+6 = −4 + 10" },
+          { from: 7, formula: "+7 = −3 + 10" },
+          { from: 8, formula: "+8 = −2 + 10" },
+          { from: 9, formula: "+9 = −1 + 10" },
+        ],
+      },
       condition: { formula: "c + n > 9  ·  إمكانية طرح k مباشرة", explanation: "المجموع يتجاوز 9، وتوجد خرزات كافية لطرح صديق 10 مباشرة من الآحاد." },
       friendsTable: { title: "أصدقاء 10", pairs: [{ from: 1, to: 9 }, { from: 2, to: 8 }, { from: 3, to: 7 }, { from: 4, to: 6 }, { from: 5, to: 5 }, { from: 6, to: 4 }, { from: 7, to: 3 }, { from: 8, to: 2 }, { from: 9, to: 1 }] },
       discrimination: {
@@ -176,7 +199,16 @@ export const S03_LESSON: LessonNode = {
         storyAudioText: "وصل الأبطال إلى العرش المزدوج حيث تلتقي الجدة خمسة مع العملاق عشرة. في بعض المسائل الصعبة، يحتاج الطفل للاتصال بالعملاق عشرة والجدة خمسة في نفس اللحظة.",
         storyAudioId: 8,
       },
-      rule: { formula: "+n = −5 + (5 − k) + 10", description: "نرفع العلوية 5، نرفع الفارق من الخرزات السفلية، ونُضيف 1 إلى العشرات." },
+      rule: {
+        formula: "+n = −5 + (5 − k) + 10",
+        description: "نرفع العلوية 5، نرفع الفارق من الخرزات السفلية، ونُضيف 1 إلى العشرات.",
+        cases: [
+          { from: 6, formula: "+6 = −5 + 1 + 10" },
+          { from: 7, formula: "+7 = −5 + 2 + 10" },
+          { from: 8, formula: "+8 = −5 + 3 + 10" },
+          { from: 9, formula: "+9 = −5 + 4 + 10" },
+        ],
+      },
       condition: { formula: "c + n > 9  ·  العلوية 5 مفعّلة  ·  l < k", explanation: "المجموع أكبر من 9، والخرزات السفلية المفعّلة لا تكفي لخصم صديق الـ 10 مباشرة، فنستعين بالجدة 5!" },
       discrimination: {
         steps: [
