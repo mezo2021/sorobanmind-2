@@ -640,6 +640,30 @@ export function LessonScreen({
                     {activeModule.rule.description}
                   </p>
 
+                  {activeModule.rule.cases && activeModule.rule.cases.length > 0 && (
+                    <div className="mt-3 mb-3">
+                      <p className="text-xs font-bold text-gold-300 mb-2">
+                        🎯 الحالات الخاصة
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                        {activeModule.rule.cases.map((c, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-center gap-1 p-2 rounded-lg bg-white/5 border border-white/10"
+                          >
+                            <span className="text-[10px] font-bold text-amber-300 font-display">
+                              {formatNumber(c.from, numberStyle)}
+                            </span>
+                            <span className="text-[10px] text-white/40">→</span>
+                            <span className="text-xs font-bold text-electric-300 font-display" dir="ltr">
+                              {c.formula}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <h3 className="text-sm font-bold text-gold-300 mb-1">🔒 الشرط</h3>
                   <p className="text-center text-sm font-display font-bold text-amber-300 mb-2 bg-white/5 p-2 rounded-xl">
                     {activeModule.condition.formula}
