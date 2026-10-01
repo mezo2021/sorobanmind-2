@@ -1,120 +1,114 @@
-📘 SorobanMind v2 — Master Plan (النسخة المدمجة النهائية)
+📘 SorobanMind v2 — Master Plan
 
-```markdown
-# 📘 SorobanMind v2 — Master Plan
-## نسخة مدمجة نهائية · 2026-10-01 (نهاية الجلسة 12)
+نسخة مدمجة نهائية · 2026-10-01 (نهاية الجلسة 12)
 
-> **القاعدة الذهبية**: لا نحذف شيئًا إلا ما أُلغي صريحًا. كل شيء آخر يبقى.
->
-> **ملاحظة الدمج**: هذا الملف يدمج Master Plan القديم + SRB الجديد + تحديثات الجلسات 11 و 12، مع إزالة التكرار والحفاظ على كل المعلومات.
+القاعدة الذهبية: لا نحذف شيئًا إلا ما أُلغي صريحًا. كل شيء آخر يبقى.
+
+ملاحظة الدمج: هذا الملف يدمج Master Plan القديم + SRB الجديد + تحديثات الجلسات 10-12، مع إزالة التكرار والحفاظ على كل المعلومات.
 
 ---
 
-## 🔴 ما أُلغي نهائيًا
+🔴 ما أُلغي نهائيًا
 
-| العنصر | السبب |
-|---|---|
-| `bank-linked.ts` | لم يعد له معنى |
-| `bank-adapter.ts` | لم يعد له معنى |
-| `data.ts` (v1) | أرشفة فقط |
-| `learnModules.ts` | أُلغي في الجلسة 8 |
-| بنية 20 درسًا | استُبدلت بـ **15 درسًا** |
-| بنية الجلسة لكل درس | استُبدلت بـ **الجلسة لكل مستوى** |
-| المهارات الـ 20 القديمة (m قديم) | استُبدلت بـ **51 m جديدة** |
-| `src/curriculum/index.ts` | محذوف (كان 404) — استُبدل بـ `srb/curriculum.ts` |
+العنصر السبب
+bank-linked.ts لم يعد له معنى
+bank-adapter.ts لم يعد له معنى
+data.ts (v1) أرشفة فقط
+learnModules.ts أُلغي في الجلسة 8
+بنية 20 درسًا استُبدلت بـ 15 درسًا
+بنية الجلسة لكل درس استُبدلت بـ الجلسة لكل مستوى
+المهارات الـ 20 القديمة (m قديم) استُبدلت بـ 51 m جديدة
+src/curriculum/index.ts محذوف (كان 404) — استُبدل بـ srb/curriculum.ts
+LEVEL_SKILLS (قديم) استُبدل بـ getModuleName من srb/modules
+loadWeakSkills (من bank-v2) استُبدل بـ progressStore.skillProgress
 
-> ⚠️ **تنبيه مهم**: البنكان `bank-v2/` و `bank-raw/` **لم يُلغيا** — كلاهما موجود ويعمل.
-> سيُحذفان فقط **بعد فك ارتباط الامتحانات الثلاثة (CE1, CE2, PT)** بهما، لتخفيف حجم التطبيق (PWA/APK).
-
----
-
-## 🟢 ما بقي كما هو (لا يُلمس)
-
-| العنصر | الحالة |
-|---|---|
-| رؤية المشروع | ✅ |
-| الفئتان العمريتان (5-12 / 13+) | ✅ |
-| نظام XP | ✅ |
-| الأسرار السحرية | ✅ |
-| نظام القفل/الفتح | ✅ |
-| الشاشات (20) | ✅ |
-| الملفات الصوتية (22) | ✅ |
-| الرفقاء (شام · ريان · جود · بانة) | ✅ |
-| الشارات (🥉🥈🥇) | ✅ |
-| المحرك الرياضي (sorobanEngine + moves) | ✅ **مجمَّد** |
-| اختبار تحديد المستوى | ✅ |
-| **`bank-v2/` + `bank-raw/`** | ✅ **موجودان ويعملان** — مرتبطان بـ **CE1 · CE2 · PT** |
+⚠️ تنبيه مهم: البنكان bank-v2/ و bank-raw/ لم يُلغيا — كلاهما موجود ويعمل.
+سيُحذفان فقط بعد فك ارتباط الامتحانات الثلاثة (CE1, CE2, PT) بهما، لتخفيف حجم التطبيق (PWA/APK).
 
 ---
 
-## 🟡 ما تغيّر (توثيق التحولات)
+🟢 ما بقي كما هو (لا يُلمس)
 
-### ① المنهج: من 20 درسًا → 15 درسًا
+العنصر الحالة
+رؤية المشروع ✅
+الفئتان العمريتان (5-12 / 13+) ✅
+نظام XP ✅
+الأسرار السحرية ✅
+نظام القفل/الفتح ✅
+الشاشات (22) ✅
+الملفات الصوتية (22) ✅
+الرفقاء (شام · ريان · جود · بانة) ✅
+الشارات (🥉🥈🥇) ✅
+المحرك الرياضي (sorobanEngine + moves) ✅ مجمَّد
+اختبار تحديد المستوى ✅
+bank-v2/ + bank-raw/ ✅ موجودان ويعملان — مرتبطان بـ CE1 · CE2 · PT
 
-| المستوى | القديم | الجديد |
-|---|---|---|
-| L0 | S1, S2 | **S01, S02** |
-| L1 | S3-S9 (7 دروس) | **S03, S04** |
-| L2 | S10-S12 (3 دروس) | **S05, S06** |
-| L3 | S13-S15 (3 دروس) | **S07, S08** |
-| L4 | S16 | **S09, S10** |
-| L5 | S17 | **S11, S12** |
-| L6 | S18 | **S13, S14** |
-| L7 | S19, S20 | **S15** |
-| **الإجمالي** | 20 درسًا · 20 m | **15 درسًا · 51 m** |
+---
 
-### ② المهارات m: من مبسّطة → مفصّلة
+🟡 ما تغيّر (توثيق التحولات)
 
-- **القديم**: كل درس = m واحدة رئيسية
-- **الجديد**: كل درس = 2-4 m حسب التقنيات (بسيط · أصدقاء 5 · أصدقاء 10 · مركب)
+① المنهج: من 20 درسًا → 15 درسًا
 
-### ③ بنية الجلسة: من درس → مستوى
+المستوى القديم الجديد
+L0 S1, S2 S01, S02
+L1 S3-S9 (7 دروس) S03, S04
+L2 S10-S12 (3 دروس) S05, S06
+L3 S13-S15 (3 دروس) S07, S08
+L4 S16 S09, S10
+L5 S17 S11, S12
+L6 S18 S13, S14
+L7 S19, S20 S15
+الإجمالي 20 درسًا · 20 m 15 درسًا · 51 m
 
-- **القديم**: تمرّن L0 = 5 أسئلة من S1
-- **الجديد**: تمرّن L0 = 5 أسئلة (سؤال واحد من كل m في المستوى)
+② المهارات m: من مبسّطة → مفصّلة
 
-**المعادلة الرسمية**:
+· القديم: كل درس = m واحدة رئيسية
+· الجديد: كل درس = 2-4 m حسب التقنيات (بسيط · أصدقاء 5 · أصدقاء 10 · مركب)
+
+③ بنية الجلسة: من درس → مستوى
+
+· القديم: تمرّن L0 = 5 أسئلة من S1
+· الجديد: تمرّن L0 = 5 أسئلة (سؤال واحد من كل m في المستوى)
+
+المعادلة الرسمية:
+
 ```
-
 عدد أسئلة الجلسة = max(عدد m في المستوى، 5)
-
 ```
 
-| المستوى | عدد m | عدد الأسئلة |
-|---|---|---|
-| L0 | 5 | **5** |
-| L1 | 8 | **8** |
-| L2 | 8 | **8** |
-| L3 | 8 | **8** |
-| L4 | 8 | **8** |
-| L5 | 8 | **8** |
-| L6 | 5 | **5** |
-| L7 | 1 | **5** (عشوائي من 25) |
+المستوى عدد m عدد الأسئلة
+L0 5 5
+L1 8 8
+L2 8 8
+L3 8 8
+L4 8 8
+L5 8 8
+L6 5 5
+L7 1 5 (عشوائي من 25)
 
-**قاعدة عدم التكرار**: لا تكرار داخل الجلسة الواحدة.
+قاعدة عدم التكرار: لا تكرار داخل الجلسة الواحدة.
 
-### ④ البنك: من bank-v2 → SRB
+④ البنك: من bank-v2 → SRB
 
-| العنصر | القديم | الجديد |
-|---|---|---|
-| الملفات | `bank-v2/` (4 parts + exams + placement) | `srb/questions/L{0-7}.ts` |
-| الصيغة | `L1-S3-001` | `SRB-L1-S03-m1-A001` |
-| الوحدة | سؤال مستقل | سؤال مع تصنيف تقنية (movement) |
-| الرقم | ~1800 سؤال | **275 سؤالًا** |
+العنصر القديم الجديد
+الملفات bank-v2/ (4 parts + exams + placement) srb/questions/L{0-7}.ts
+الصيغة L1-S3-001 SRB-L1-S03-m1-A001
+الوحدة سؤال مستقل سؤال مع تصنيف تقنية (movement)
+الرقم ~1800 سؤال 275 سؤالًا
 
-⚠️ **SRB أقل عددًا لكن أدق تصنيفًا** — كل سؤال له `movement` محددة.
+⚠️ SRB أقل عددًا لكن أدق تصنيفًا — كل سؤال له movement محددة.
 
-### ⑤ التخزين: من مفتاح لكل درس → مفتاح لكل مستوى
+⑤ التخزين: من مفتاح لكل درس → مفتاح لكل مستوى
 
-- **القديم**: `"L0-S01"`, `"L0-S02"`, ...
-- **الجديد**: `"L0"`, `"L1"`, ...
+· القديم: "L0-S01", "L0-S02", ...
+· الجديد: "L0", "L1", ...
 
-**بنية `srb_progress` الجديدة**:
+بنية srb_progress الجديدة:
 
 ```json
 {
   "L0": {
-    "practice": { "grade": 85, "attempts": 2, "passed": true, "weakSkills": ["SRB-L0-S01-m3"] },
+    "practice": { "grade": 85, "attempts": 2, "passed": true, "weakSkills": ["L0-S01-m3"] },
     "anzanVisualNormal": {},
     "anzanVisualFlash": {},
     "anzanAudio": {},
@@ -162,6 +156,60 @@ src/curriculum/
 ```
 
 النقص: دروس L1-L7 مفقودة — تحتاج نقل.
+
+⑧ تعديلات الجلسة 12 (الشاشات والمنطق) ⚡
+
+في useGameStats.ts (Adapter فوق SRB):
+
+· حذف localStorage['sorobanmind-stats']
+· قراءة XP/streak من progressStore
+· حذف checkBadges (كل 3 ثوانٍ)
+· newBadge = null (دائمًا — للتوافق)
+· incrementStreak → updateStreak
+
+في GuardianDashboard.tsx (SRB-first):
+
+· XP/streak/level من progressStore
+· شارات إنجاز المستوى (8 مشتقة من completedLevels)
+· شارات إتقان المهارات (من masteryBadgesStore + getModuleName)
+· شارات الأنزان (من progressStore.anzanBadges)
+· المهارات الأربع من passedPractice / passedAnzanVisual / passedAnzanAudio / masteryBadges
+
+في AdaptiveFeedback.tsx:
+
+· حذف loadWeakSkills (من bank-v2)
+· استخدام useProgressStore.skillProgress
+· computeWeaknessScore محليًا
+· useMemo للأداء
+
+في AnzanScreen.tsx + AudioAnzanScreen.tsx:
+
+· getAnzanBadgeKey(section) — منح شارات الفئة عند نجاح الجلسة
+· AUDIO_BADGE_LABELS (سمعي)
+· justEarnedBadges — إشعار شارة جديدة
+· wrongModulesRef → wrongSkillsRef: Set<string>
+· Union: (أخطاء + بطيئات) → saved weakSkills
+
+في PracticeScreen.tsx:
+
+· wrongModulesRef → wrongSkillsRef: Set<string>
+· finalizeSession — Union (أخطاء + بطيئات من buildPerformances())
+· زر "🩺 جلسة علاجية مخصصة (N مهارة)" — عند وجود ضعفاء
+· AdaptiveFeedback يستقبل levelNum
+
+في sessionBuilder.parseSkillId:
+
+· regex: ^(?:SRB-)?(L[0-7])-(S\d{2})-(m\d{1,2})$ — يقبل الشكلين
+
+في numberStyle.ts:
+
+· الفاصلة العربية ٫ (U+066B)
+· parseDecimalInput (جديد)
+
+في arabicNumbers.ts:
+
+· numberToArabicWordsDecimal (جديد)
+· numberToArabicWordsDecimalSigned (جديد)
 
 ---
 
@@ -260,6 +308,12 @@ A أساسي
 
 ⚠️ المراحل في allowed_phases — لا في ID.
 
+⚠️ parseSkillId يقبل الشكلين:
+
+```typescript
+/^(?:SRB-)?(L[0-7])-(S\d{2})-(m\d{1,2})$/
+```
+
 ---
 
 🎯 5. نظام المراحل (Phases)
@@ -308,7 +362,7 @@ EN الإثراء ❌
 الاستخدام التكلفة
 🔒 فتح سر سحري 50 XP
 
-التخزين: soroban_xp.
+التخزين: progressStore.totalXP → sorobanmind-v2-progress (بعد الجلسة 12).
 
 ---
 
@@ -391,9 +445,9 @@ src/data/srb/
 ├── curriculum.ts         ✅ محدَّث (15 درسًا · ترتيب الجلسة 12)
 ├── modules.ts            ✅ محدَّث (51 m · ترتيب الجلسة 12)
 ├── index.ts              ✅ يستورد 8 ملفات
-├── sessionBuilder.ts     ✅ على مستوى كامل
+├── sessionBuilder.ts     ✅ على مستوى كامل + parseSkillId مرن
 ├── progress.ts           ✅ تخزين على مستوى
-├── remediation.ts        ✅ بلا section
+├── remediation.ts        ✅ بلا section · weakModules
 ├── srb-adapter.ts        ✅ (خارج srb/)
 └── questions/
     ├── L0.ts             ✅ (25 سؤالًا)
@@ -449,7 +503,7 @@ export default L{n}_QUESTIONS;
 1 WelcomeScreen ✅
 2 RoleSelection ✅
 3 HeroDashboard ✅
-4 GuardianDashboard ⚠️ يحتاج قراءة SRB
+4 GuardianDashboard ✅ (SRB-first — الجلسة 12)
 5 CategoryScreen ✅ (محدَّث — الجلسة 12)
 6 LevelScreen ✅ (محدَّث — الجلسة 12)
 7 LearnScreen ✅ (محدَّث — الجلسة 12)
@@ -458,15 +512,15 @@ export default L{n}_QUESTIONS;
 10 LevelTestScreen ⚠️ يحتاج ربط بـ SRB
 11 FingerMathScreen ✅
 12 MagicSecretsScreen ✅
-13 PracticeScreen ✅ (SRB + section ديناميكي)
-14 AnzanScreen ✅ (SRB + تنويه العشري)
-15 AudioAnzanScreen ✅ (SRB + empty state)
+13 PracticeScreen ✅ (SRB + زر علاجية + union)
+14 AnzanScreen ✅ (SRB + AnzanBadges + union)
+15 AudioAnzanScreen ✅ (SRB + AudioAnzanBadges + union)
 16 PlacementTestScreen ⚠️ يحتاج ربط
 17 CategoryExamScreen ⚠️ يحتاج ربط
 18 SorobanPlayground ✅
 19 CrossMultiplicationScreen ⚠️ غير مربوط
 20 CertificateScreen ⚠️ غير مربوط
-21 RemediationScreen ⚠️ موجود · يحتاج ربط بزر
+21 RemediationScreen ✅ (مربوط بزر في PracticeScreen)
 22 Header ✅ (مكوّن)
 
 ---
@@ -496,9 +550,9 @@ src/
 ├── types.ts                         ✅
 │
 ├── store/
-│   ├── progressStore.ts             ✅
-│   ├── numberStyleStore.ts          ✅
-│   └── masteryBadgesStore.ts        ✅
+│   ├── progressStore.ts             ✅ (المصدر الموحّد للـ XP/streak/الشارات)
+│   ├── numberStyleStore.ts          ✅ (يقرأ من soroban_number_style)
+│   └── masteryBadgesStore.ts        ✅ (شارات المهارات + soroban_mastery_badges)
 │
 ├── curriculum/
 │   ├── types.ts                     ✅ (مجمَّد)
@@ -515,13 +569,23 @@ src/
 │
 ├── data/
 │   ├── srb/                         ✅ (مكتمل)
-│   ├── bank-v2/                     🟡 (موجود · يعمل)
-│   ├── bank-raw/                    🟡 (موجود · يعمل)
+│   ├── bank-v2/                     🟡 (موجود · يعمل · للامتحانات)
+│   ├── bank-raw/                    🟡 (موجود · يعمل · للـ PT)
 │   └── modes.ts                     ✅
 │
+├── hooks/
+│   └── useGameStats.ts              ✅ (Adapter فوق progressStore — الجلسة 12)
+│
+├── utils/
+│   ├── numberStyle.ts               ✅ (فاصلة عربية ٫ + parseDecimalInput)
+│   ├── arabicNumbers.ts             ✅ (numberToArabicWordsDecimal)
+│   ├── skillsChecker.ts             🟡 (قديم — للتنظيف)
+│   ├── anzanBadges.ts               🟡 (قديم — للتنظيف)
+│   ├── audioAnzanBadges.ts          🟡 (قديم — للتنظيف)
+│   └── badgeChecker.ts              🟡 (قديم — للتنظيف)
+│
 ├── components/                      ✅ ~20
-├── hooks/                           ✅ ~7
-└── screens/                         ✅ ~20
+└── screens/                         ✅ ~22
 ```
 
 ---
@@ -529,13 +593,16 @@ src/
 🔑 16. مفاتيح localStorage
 
 # المفتاح الاستخدام
-1 srb_progress تقدّم SRB (جديد)
-2 soroban_xp رصيد XP
-3 soroban_unlocked_secrets الأسرار المفتوحة
-4 sorobanmind-v2-progress متجر Zustand
-5-12 8 مفاتيح قديمة bank-v2 / bank-raw
+1 srb_progress تقدّم SRB (درجات + weakSkills)
+2 sorobanmind-v2-progress متجر Zustand (XP · streak · completedLevels · passedPractice · anzanBadges · ...)
+3 soroban_mastery_badges شارات إتقان المهارات (masteryBadgesStore)
+4 soroban_number_style نمط الأرقام (عربية/لاتينية)
+5 soroban_unlocked_secrets الأسرار المفتوحة
+6 soroban_companion الرفيق المختار
+7 soroban_child_name اسم الطفل
+8-15 مفاتيح قديمة bank-v2 / bank-raw (تُنظَّف تدريجيًا)
 
-الخطة: توحيد تدريجي في srb_progress + soroban_xp.
+الخطة: توحيد تدريجي في progressStore + srb_progress.
 
 ---
 
@@ -575,21 +642,41 @@ src/
 
 الجلسة 12 (اليوم) ⚡
 
-· ✅ كشف خلل تربوي في ترتيب المنهج — الضرب والقسمة كانا منفصلين
+المنهج والهيكلة:
+
+· ✅ كشف خلل تربوي في ترتيب المنهج
 · ✅ إعادة هيكلة المنهج: L2=الضرب · L3=القسمة · L4=السلاسل
-· ✅ تعديل 8 ملفات بشكل متزامن:
+· ✅ تعديل 8 ملفات متزامنًا:
   · L2.ts (ضرب) · L3.ts (قسمة) · L4.ts (سلاسل)
   · curriculum.ts · modules.ts (24 وحدة)
   · LevelScreen.tsx · LearnScreen.tsx · CategoryScreen.tsx
-· ✅ إصلاح خطأ SorobanaCompanion (حالة الأحرف: sorobanaCompanion → SorobanaCompanion)
-· ✅ تنويه العشري في running (بدل solution) — يظهر قبل الإجابة
-· ✅ التعليم التكيفي يعمل 🎉 — الشارات تظهر (L4-S06-m2, L4-S06-m3 🏅)
-· ✅ التحقق من 21 ملفًا في src/screens/
-· ✅ اكتشاف RemediationScreen.tsx (موجود · يحتاج ربط)
-· ✅ اكتشاف CertificateScreen.tsx و GuardianDashboard.tsx (موجودان · يحتاجان ربط)
-· ✅ فحص curriculum/index.ts: 404 (محذوف)
-· ✅ اكتشاف بنية lessons/: L0 فقط (intro, S1, S2, test-pool)
-· ✅ البحث عن مصدر الأسماء الخاطئة — 3 ملفات hardcoded
+
+الشاشات والمنطق:
+
+· ✅ إصلاح خطأ SorobanaCompanion (حالة الأحرف)
+· ✅ تنويه العشري في running (بدل solution)
+· ✅ useGameStats.ts → Adapter SRB (XP/streak من progressStore)
+· ✅ GuardianDashboard.tsx → SRB-first (XP/شارات/مهارات)
+· ✅ AdaptiveFeedback.tsx → SRB (بدل loadWeakSkills)
+· ✅ AnzanScreen + AudioAnzanScreen → setAnzanBadge + justEarnedBadges + AUDIO_BADGE_LABELS
+· ✅ sessionBuilder.parseSkillId → يقبل (?:SRB-)?
+· ✅ PracticeScreen → wrongSkillsRef: Set<string> + Union في finalizeSession
+· ✅ زر "🩺 جلسة علاجية مخصصة (N مهارة)" — يظهر عند وجود ضعفاء
+· ✅ RemediationScreen مربوط بزر في PracticeScreen
+· ✅ AdaptiveFeedback levelNum — يظهر المهارات بأسمائها (L0-S01-m2 — تمثيل 5)
+
+اختبارات ناجحة:
+
+· ✅ 5/5 · XP · زر (5 مهارات) · RemediationScreen (5 أسئلة)
+· ✅ union اكتشف البطيء (3 صح) + الخطأ (2 خطأ) = 5 مهارات
+· ✅ RemediationScreen · المواضيع بصيغة L0-S01-m3
+
+اكتشافات:
+
+· ✅ RemediationScreen.tsx موجود
+· ✅ CertificateScreen.tsx و GuardianDashboard.tsx موجودان
+· ✅ curriculum/index.ts = 404 (محذوف)
+· ✅ lessons/: L0 فقط
 · ✅ البناء أخضر
 
 ---
@@ -597,15 +684,17 @@ src/
 🚨 18. ملاحظات حرجة
 
 1. bank-v2 و bank-raw: لا تُحذف حتى ينتهي SRB. يحتويان ~1800 سؤال · مرتبطان بـ CE1/CE2/PT.
-2. GuardianDashboard: يحتاج قراءة من SRB.
+2. GuardianDashboard: ✅ قراءة من SRB (بعد الجلسة 12).
 3. CrossMultiplicationScreen: موجود لكن غير مربوط.
 4. CertificateScreen: موجود لكن غير مربوط.
 5. المحرك الرياضي: مجمَّد — لا يُلمس.
 6. m3 في S01: تثبيت 0-9 (مكرر مقصود).
-7. الجلسة العلاجية (remediation.ts): الملف جاهز · RemediationScreen.tsx موجود · لا يوجد زر في PracticeScreen.
+7. الجلسة العلاجية (remediation.ts): ✅ الملف جاهز · ✅ RemediationScreen.tsx موجود · ✅ مربوط بزر في PracticeScreen (الجلسة 12).
 8. LevelTestScreen: يعمل حاليًا بـ 5 أسئلة (غير مُربط بالبنك الكامل).
-9. AdaptiveFeedback: يعرض L4-S05-m1 — L4-S05-m1 (تكرار ID بدل الاسم) — بسبب LEVEL_SKILLS قديم (S1-S20).
+9. AdaptiveFeedback: ✅ يعرض الأسماء العربية (بعد إصلاح LEVEL_SKILLS).
 10. curriculum/index.ts: محذوف (404) — تم استبداله بـ srb/curriculum.ts.
+11. الملفات الميتة للتنظيف (anzanBadges.ts · audioAnzanBadges.ts · skillsChecker.ts · badgeChecker.ts): موجودة · لا أحد يستخدمها · للتنظيف لاحقًا.
+12. practiceRange / anzanRange في CategoryScreen: لا زالت تعتمد على [0,3] و [4,7].
 
 ---
 
@@ -614,6 +703,7 @@ src/
 🔴 المرحلة 1: إكمال SRB
 
 · ✅ بنك الأسئلة L0-L7 — مكتمل
+· ✅ التعليم التكيفي — يعمل
 · 🚨 بناء اختبارات المستوى (X phase) — 8 اختبارات
 · 🚨 بناء امتحان القسم 1 (CE)
 · 🚨 بناء اختبار تحديد المستوى (PT)
@@ -621,7 +711,7 @@ src/
 
 🔴 المرحلة 2: ربط الشاشات
 
-· 🚨 ربط RemediationScreen بزر في PracticeScreen
+· ✅ ربط RemediationScreen بزر في PracticeScreen
 · 🚨 ربط LevelTestScreen بـ SRB
 · 🚨 ربط PlacementTestScreen (الجديد + القديم)
 · 🚨 ربط CategoryExamScreen
@@ -640,7 +730,9 @@ src/
 
 🟢 المرحلة 5: التنظيف والربط
 
-· ⏳ GuardianDashboard (قراءة SRB)
+· ✅ GuardianDashboard (قراءة SRB)
+· 🚨 تنظيف الملفات الميتة (anzanBadges.ts · audioAnzanBadges.ts · skillsChecker.ts · badgeChecker.ts)
+· 🚨 تنظيف CategoryScreen (يقرأ من localStorage قديم — dual-write)
 · ⏳ CrossMultiplicationScreen
 · ⏳ CertificateScreen + الشارات
 · ⏳ حذف bank-v2 + bank-raw
@@ -652,10 +744,11 @@ src/
 
 🟡 مهام متفرقة مؤجَّلة
 
-· 🚨 إصلاح AdaptiveFeedback (تكرار L4-S05-m1)
-· 🚨 إزالة LEVEL_SKILLS القديم
-· 🚨 تسمية "سبب الاختيار" → "الحل"
-· 🚨 زر "فتح الكل" (للمطور) — يحتاج توثيق
+· 🚨 CategoryScreen يقرأ من localStorage قديم (soroban_passed_practice) — يعمل حاليًا بسبب dual-write من App.tsx
+· 🚨 markPracticePassed / markAnzanVisualPassed / markAnzanAudioPassed — غير مستدعاة في الشاشات (تُكتب فقط عبر App.tsx في localStorage)
+· 🚨 badgeChecker — يستخدم soroban_anzan_stats (قديم)
+· 🚨 تسمية "سبب الاختيار" → "الحل" في بطاقة العرض
+· 🚨 زر "فتح الكل" (للمطور) — موجود · يحتاج توثيق
 
 ---
 
@@ -664,14 +757,15 @@ src/
 الجلسة المهمة الحالة
 10 SRB + L0 + L1 ✅ مكتمل
 11 L2-L7 + تدقيق L1 + إعادة هيكلة L6 ✅ مكتمل
-12 إعادة هيكلة المنهج (L2/L3/L4) + إصلاحات الشاشات ✅ مكتمل
-13 بناء اختبارات المستوى (X) + ربط الجلسة العلاجية ⏳
-14 فك ارتباط CE1/CE2/PT بالبنوك القديمة ⏳
-15 نقل الدروس L1-L7 + دروس الإثراء ⏳
-16 منطق القفل + العلامة النهائية ⏳
-17 GuardianDashboard + CrossMultiplication ⏳
-18 CertificateScreen + الشارات ⏳
-19 PWA + APK ⏳
+12 إعادة هيكلة المنهج + SRB-first لـ 3 شاشات + union + زر علاجية ✅ مكتمل
+13 اختبار Anzan/Audio Badges + تنظيف CategoryScreen ⏳
+14 بناء اختبارات المستوى (X) + ربط LevelTestScreen ⏳
+15 فك ارتباط CE1/CE2/PT بالبنوك القديمة ⏳
+16 نقل الدروس L1-L7 + دروس الإثراء ⏳
+17 منطق القفل + العلامة النهائية ⏳
+18 GuardianDashboard + CrossMultiplication ⏳
+19 CertificateScreen + الشارات ⏳
+20 PWA + APK ⏳
 
 ---
 
@@ -682,12 +776,12 @@ src/
 الدروس 15
 المهارات m 51
 الأسئلة (SRB) 275 / 275 (100%) ✅
-بنكين قديمين ~1800 سؤال (موجودان · يعملان)
+بنكين قديمين ~1800 سؤال (موجودان · يعملان · للامتحانات)
 الشاشات 22 (20 + Header + RemediationScreen)
 الملفات الصوتية 22
 الرفقاء 4
-نسبة إنجاز SRB ~90% (باقي الاختبارات + الربط)
-نسبة إنجاز المشروع ~85%
+نسبة إنجاز SRB ~95% (باقي الاختبارات + الربط)
+نسبة إنجاز المشروع ~88%
 
 ---
 
@@ -721,25 +815,25 @@ Actions https://github.com/mezo2021/sorobanmind-2/actions
 
 الحالة: 🟢 SRB يعمل · L0-L7 مكتملون · التعليم التكيفي يعمل · البناء أخضر
 
-الخطوة التالية: بناء اختبارات المستوى + ربط الجلسة العلاجية
+الخطوة التالية: اختبار Anzan Badges + تنظيف CategoryScreen
 
 </div>
-```
 
 ---
 
-🌹 ملخص التعديلات
+🌹 ملخص تعديلات الجلسة 12
 
 البند التغيير
-التاريخ 2026-09-30 → 2026-10-01 (الجلسة 12)
-قسم جديد ⑥ إعادة هيكلة المنهج (الجلسة 12)
+التاريخ 2026-09-30 → 2026-10-01
+قسم جديد ⑥ إعادة هيكلة المنهج
 قسم جديد ⑦ بنية src/curriculum/
-الجلسة 12 مُضافة 15 إنجازًا جديدًا
+قسم جديد ⑧ تعديلات الجلسة 12 (الشاشات والمنطق)
+الجلسة 12 18 إنجازًا جديدًا موثقًا
 جدول المنهج (2) محدَّث بالترتيب الجديد
-خارطة الطريق تحديث الجلسات 13-19
-الملاحظات الحرجة إضافة 9 و 10
-المهام المؤجَّلة تحديث المرحلة 1 + المرحلة 2
-الإحصائيات 22 شاشة · نسبة الإنجاز 85%
-الحالة التعليم التكيفي يعمل ✅
+خارطة الطريق 20 جلسة · تحديث 13-20
+الملاحظات الحرجة 12 ملاحظة (إضافة 11 و 12)
+المهام المؤجَّلة تحديث المرحلة 5 + المهام المتفرقة
+الإحصائيات 22 شاشة · 88% إنجاز
+الحالة التعليم التكيفي يعمل · union يعمل · زر العلاجية يعمل ✅
 
 ---
