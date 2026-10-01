@@ -1,801 +1,652 @@
-// ═══════════════════════════════════════════════════════════════════
-// 📚 src/data/srb/questions/L4.ts — أسئلة سلاسل الجمع والطرح
-// ═══════════════════════════════════════════════════════════════════
-//
-// 📊 يحتوي:
-//   - S05 (سلاسل الجمع): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
-//   - S06 (سلاسل الطرح): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
-//
-// الإجمالي: 40 سؤالًا
-// ═══════════════════════════════════════════════════════════════════
+// src/screens/PracticeScreen.tsx
+// ✅ SRB: wrongSkillsRef يحفظ skillId كامل ("L2-S07-m1") بدل "m1"
+// ✅ SRB: weakSkills = union(أخطاء + بطيئات من performances)
+// ✅ SRB: زر الجلسة العلاجية عند وجود مهارات ضعيفة
+// ✅ عرض المعادلة في سطر واحد
+// 📅 آخر تحديث: SRB Migration — Phase 3
 
-import { makeQuestion } from "../generateId";
-import type { SRBQuestion } from "../types";
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import {
+  ArrowRight, CheckCircle2, Trophy, RotateCcw, XCircle,
+  Clock, BookOpen, AlertCircle, Play, ArrowLeft, Square,
+  Lightbulb,
+} from 'lucide-react';
 
-export const L4_QUESTIONS: SRBQuestion[] = [
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // S05 — سلاسل الجمع (Addition Chains)
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
+import { SorobanaCompanion } from '@/components/SorobanaCompanion';
+import { AdaptiveFeedback, type SkillPerformance } from '@/components/AdaptiveFeedback';
+import { RemediationScreen } from './RemediationScreen';
+import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
+import { useProgressStore } from '@/store/progressStore';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { useMasteryBadgesStore, classifySpeed } from '@/store/masteryBadgesStore';
+import { formatText, formatNumber } from '@/utils/numberStyle';
 
-  // S05-m1: سلسلة جمع بسيط (Direct Addition Chains)
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m1",
-    sequence: 1,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 1 + 2 + 1 + 5",
-    operands: [1, 2, 1, 5],
-    operation: "addition",
-    result: 9,
-    solution: "سبب الاختيار: سلسلة جمع بسيط (كل الإضافات مباشرة). 1) +2 = رفع خرزتين سفليتين بالإبهام. 2) +1 = رفع خرزة سفلية واحدة بالإبهام. 3) +5 = إنزال الخرزة العلوية بالسبابة. الناتج 9.",
-    movement: "direct",
-    difficulty: 2,
-    expected_time_ms: 12000,
-    expected_anzan_ms: 8000,
-    tags: ["addition", "chains", "direct"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m1",
-    sequence: 2,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 2 + 1 + 5 + 1",
-    operands: [2, 1, 5, 1],
-    operation: "addition",
-    result: 9,
-    solution: "سبب الاختيار: سلسلة جمع بسيط (كل الإضافات مباشرة). 1) +1 = رفع خرزة سفلية. 2) +5 = إنزال الخرزة العلوية. 3) +1 = رفع خرزة سفلية جديدة. الناتج 9.",
-    movement: "direct",
-    difficulty: 2,
-    expected_time_ms: 12000,
-    expected_anzan_ms: 8000,
-    tags: ["addition", "chains", "direct"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m1",
-    sequence: 3,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 12 + 21 + 10 + 5",
-    operands: [12, 21, 10, 5],
-    operation: "addition",
-    result: 48,
-    solution: "سبب الاختيار: سلسلة جمع بسيط (إضافات مباشرة في العشرات والآحاد). 1) +21 = رفع خرزتين بالعشرات وخرزة بالآحاد. 2) +10 = رفع خرزة بالعشرات. 3) +5 = إنزال الخرزة العلوية بالآحاد. الناتج 48.",
-    movement: "direct",
-    difficulty: 2,
-    expected_time_ms: 12000,
-    expected_anzan_ms: 8000,
-    tags: ["addition", "chains", "direct"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m1",
-    sequence: 4,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 3 + 1 + 5 + 10",
-    operands: [3, 1, 5, 10],
-    operation: "addition",
-    result: 19,
-    solution: "سبب الاختيار: سلسلة جمع بسيط (كل الحركات مباشرة على العداد). 1) +1 = رفع خرزة سفلية بالآحاد ليصبح 4. 2) +5 = إنزال العلوية ليصبح 9. 3) +10 = رفع خرزة بالعشرات. الناتج 19.",
-    movement: "direct",
-    difficulty: 2,
-    expected_time_ms: 12000,
-    expected_anzan_ms: 8000,
-    tags: ["addition", "chains", "direct"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m1",
-    sequence: 5,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 20 + 10 + 5 + 2",
-    operands: [20, 10, 5, 2],
-    operation: "addition",
-    result: 37,
-    solution: "سبب الاختيار: سلسلة جمع بسيط (كل الإضافات مباشرة بدون أصدقاء). 1) +10 = رفع خرزة بالعشرات (30). 2) +5 = إنزال العلوية بالآحاد (35). 3) +2 = رفع خرزتين سفليتين بالآحاد. الناتج 37.",
-    movement: "direct",
-    difficulty: 2,
-    expected_time_ms: 12000,
-    expected_anzan_ms: 8000,
-    tags: ["addition", "chains", "direct"],
-  }),
+import {
+  getPracticeQuestions,
+  saveSectionGrade,
+  countModulesInLevel,
+  type SRBLevel,
+  type SRBSection,
+  type SRBQuestion,
+  type SRBModule,
+} from '@/data/srb-adapter';
 
-  // S05-m2: سلسلة جمع بأصدقاء 5 (Five Friend Addition Chains)
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m2",
-    sequence: 1,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 4 + 1 + 2 + 1",
-    operands: [4, 1, 2, 1],
-    operation: "addition",
-    result: 8,
-    solution: "سبب الاختيار: سلسلة جمع بأصدقاء 5 (تعتمد على قاعدة +1 = +5 - 4 في الخطوة الأولى). 1) +1 = إنزال العلوية (+5) وإبعاد 4 سفليات (-4) ليصبح 5. 2) +2 مباشر = 7. 3) +1 مباشر = 8. الناتج 8.",
-    movement: "five-friend-add",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "five-friend-add"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m2",
-    sequence: 2,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 3 + 2 + 1 + 1",
-    operands: [3, 2, 1, 1],
-    operation: "addition",
-    result: 7,
-    solution: "سبب الاختيار: سلسلة جمع بأصدقاء 5 (تعتمد على قاعدة +2 = +5 - 3). 1) +2 = إنزال العلوية (+5) وإبعاد 3 سفليات (-3) ليصبح 5. 2) +1 مباشر = 6. 3) +1 مباشر = 7. الناتج 7.",
-    movement: "five-friend-add",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "five-friend-add"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m2",
-    sequence: 3,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 2 + 3 + 2 + 1",
-    operands: [2, 3, 2, 1],
-    operation: "addition",
-    result: 8,
-    solution: "سبب الاختيار: سلسلة جمع بأصدقاء 5 (تعتمد على قاعدة +3 = +5 - 2). 1) +3 = إنزال العلوية (+5) وإبعاد خرزتين سفليتين (-2) ليصبح 5. 2) +2 مباشر = 7. 3) +1 مباشر = 8. الناتج 8.",
-    movement: "five-friend-add",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "five-friend-add"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m2",
-    sequence: 4,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 1 + 4 + 3 + 1",
-    operands: [1, 4, 3, 1],
-    operation: "addition",
-    result: 9,
-    solution: "سبب الاختيار: سلسلة جمع بأصدقاء 5 (تعتمد على قاعدة +4 = +5 - 1). 1) +4 = إنزال العلوية (+5) وإبعاد خرزة سفلية واحدة (-1) ليصبح 5. 2) +3 مباشر = 8. 3) +1 مباشر = 9. الناتج 9.",
-    movement: "five-friend-add",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "five-friend-add"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m2",
-    sequence: 5,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 14 + 3 + 1 + 1",
-    operands: [14, 3, 1, 1],
-    operation: "addition",
-    result: 19,
-    solution: "سبب الاختيار: سلسلة جمع بأصدقاء 5 (إضافة 3 إلى 4 بالآحاد تحتاج أصدقاء 5). 1) +3 في الآحاد = +5 - 2 ليصبح 17. 2) +1 مباشر = 18. 3) +1 مباشر = 19. الناتج 19.",
-    movement: "five-friend-add",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "five-friend-add"],
-  }),
+type Phase = 'intro' | 'running' | 'reveal' | 'result';
 
-  // S05-m3: سلسلة جمع بأصدقاء 10 (Ten Friend Addition Chains)
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m3",
-    sequence: 1,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 9 + 1 + 5 + 2",
-    operands: [9, 1, 5, 2],
-    operation: "addition",
-    result: 17,
-    solution: "سبب الاختيار: سلسلة جمع بأصدقاء 10 (خطوة +1 تتجاوز سعة العمود 9 وتستدعي الترحيل للعشرات). 1) +1 = -9 بالآحاد و +10 بالعشرات ليصبح 10. 2) +5 مباشر = 15. 3) +2 مباشر = 17. الناتج 17.",
-    movement: "ten-friend-add",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "ten-friend-add"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m3",
-    sequence: 2,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 8 + 2 + 5 + 1",
-    operands: [8, 2, 5, 1],
-    operation: "addition",
-    result: 16,
-    solution: "سبب الاختيار: سلسلة جمع بأصدقاء 10 (خطوة +2 تستخدم صديق 10: -8 + 10). 1) +2 = نطرح 8 بالآحاد ونرفع خرزة بالعشرات (+10) ليصبح 10. 2) +5 مباشر = 15. 3) +1 مباشر = 16. الناتج 16.",
-    movement: "ten-friend-add",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "ten-friend-add"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m3",
-    sequence: 3,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 7 + 3 + 1 + 5",
-    operands: [7, 3, 1, 5],
-    operation: "addition",
-    result: 16,
-    solution: "سبب الاختيار: سلسلة جمع بأصدقاء 10 (خطوة +3 تستخدم صديق 10: -7 + 10). 1) +3 = نطرح 7 بالآحاد ونضيف 10 بالعشرات ليصبح 10. 2) +1 مباشر = 11. 3) +5 مباشر = 16. الناتج 16.",
-    movement: "ten-friend-add",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "ten-friend-add"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m3",
-    sequence: 4,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 6 + 4 + 2 + 5",
-    operands: [6, 4, 2, 5],
-    operation: "addition",
-    result: 17,
-    solution: "سبب الاختيار: سلسلة جمع بأصدقاء 10 (خطوة +4 تستخدم صديق 10: -6 + 10). 1) +4 = نطرح 6 بالآحاد ونضيف 10 بالعشرات ليصبح 10. 2) +2 مباشر = 12. 3) +5 مباشر = 17. الناتج 17.",
-    movement: "ten-friend-add",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "ten-friend-add"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m3",
-    sequence: 5,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 9 + 6 + 2 + 1",
-    operands: [9, 6, 2, 1],
-    operation: "addition",
-    result: 18,
-    solution: "سبب الاختيار: سلسلة جمع بأصدقاء 10 (إضافة 6 إلى 9 تستدعي طرح الصديق 4 إضافة لـ +10). 1) +6 = -4 بالآحاد و +10 بالعشرات ليصبح 15. 2) +2 مباشر = 17. 3) +1 مباشر = 18. الناتج 18.",
-    movement: "ten-friend-add",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "ten-friend-add"],
-  }),
+interface PracticeScreenProps {
+  level: SRBLevel;
+  section?: SRBSection;
+  onBack: () => void;
+  onComplete?: (passed: boolean, score: number) => void;
+  playSound: (type: 'click' | 'success' | 'error' | 'whoosh' | 'levelup') => void;
+  onXP?: (amount: number) => void;
+  burst?: (x?: number, y?: number) => void;
+}
 
-  // S05-m4: سلسلة جمع مركب (Mixed Addition Chains)
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m4",
-    sequence: 1,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 7 + 6 + 1 + 1",
-    operands: [7, 6, 1, 1],
-    operation: "addition",
-    result: 15,
-    solution: "سبب الاختيار: سلسلة جمع مركب (الآحاد فيه 7 [السفلي 2] وإضافة 6 تحاج طرح 4 غير المتاح مباشرة). 1) +6 = -5 + 1 بالآحاد و +10 بالعشرات ليصبح 13. 2) +1 مباشر = 14. 3) +1 مباشر = 15. الناتج 15.",
-    movement: "mixed",
-    difficulty: 4,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "mixed"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m4",
-    sequence: 2,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 8 + 6 + 2 + 1",
-    operands: [8, 6, 2, 1],
-    operation: "addition",
-    result: 17,
-    solution: "سبب الاختيار: سلسلة جمع مركب (الآحاد فيه 8 وإضافة 6 تحتاج أصدقاء 5 و10 معاً). 1) +6 = -5 + 1 بالآحاد و +10 بالعشرات ليصبح 14. 2) +2 مباشر = 16. 3) +1 مباشر = 17. الناتج 17.",
-    movement: "mixed",
-    difficulty: 4,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "mixed"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m4",
-    sequence: 3,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 7 + 7 + 1 + 1",
-    operands: [7, 7, 1, 1],
-    operation: "addition",
-    result: 16,
-    solution: "سبب الاختيار: سلسلة جمع مركب (الآحاد فيه 7 وإضافة 7 تستدعي -5 + 2 بالآحاد و +10 بالعشرات). 1) +7 = -5 + 2 بالآحاد و +10 بالعشرات ليصبح 14. 2) +1 مباشر = 15. 3) +1 مباشر = 16. الناتج 16.",
-    movement: "mixed",
-    difficulty: 4,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "mixed"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m4",
-    sequence: 4,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 6 + 6 + 2 + 1",
-    operands: [6, 6, 2, 1],
-    operation: "addition",
-    result: 15,
-    solution: "سبب الاختيار: سلسلة جمع مركب (السفلي فيه 1 خرزة ولا يكفي لطرح الصديق 4 مباشرة). 1) +6 = -5 + 1 بالآحاد و +10 بالعشرات ليصبح 12. 2) +2 مباشر = 14. 3) +1 مباشر = 15. الناتج 15.",
-    movement: "mixed",
-    difficulty: 4,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "mixed"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S05",
-    module: "m4",
-    sequence: 5,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 6 + 7 + 1 + 1",
-    operands: [6, 7, 1, 1],
-    operation: "addition",
-    result: 15,
-    solution: "سبب الاختيار: سلسلة جمع مركب (إضافة 7 إلى 6 تعتمد على قاعدة -5 + 2 بالآحاد و +10 بالعشرات). 1) +7 = -5 + 2 بالآحاد و +10 بالعشرات ليصبح 13. 2) +1 مباشر = 14. 3) +1 مباشر = 15. الناتج 15.",
-    movement: "mixed",
-    difficulty: 4,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["addition", "chains", "mixed"],
-  }),
+interface PerfStats {
+  correct: number;
+  attempts: number;
+  totalTimeMs: number;
+  answerMs: number;
+}
 
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // S06 — سلاسل الطرح (Subtraction Chains)
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const XP_PER_CORRECT = 5;
+const PASS_THRESHOLD = 70;
+const WARNING_RATIO = 0.7;
 
-  // S06-m1: سلسلة طرح بسيط (Direct Subtraction Chains)
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m1",
-    sequence: 1,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 9 - 5 - 2 - 1",
-    operands: [9, -5, -2, -1],
-    operation: "subtraction",
-    result: 1,
-    solution: "سبب الاختيار: سلسلة طرح بسيط (كل الطروح مباشرة). 1) -5 = رفع الخرزة العلوية بالسبابة ليصبح 4. 2) -2 = إبعاد خرزتين سفليتين بالإبهام ليصبح 2. 3) -1 = إبعاد خرزة واحدة ليصبح 1. الناتج 1.",
-    movement: "direct",
-    difficulty: 2,
-    expected_time_ms: 12000,
-    expected_anzan_ms: 8000,
-    tags: ["subtraction", "chains", "direct"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m1",
-    sequence: 2,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 9 - 2 - 2 - 5",
-    operands: [9, -2, -2, -5],
-    operation: "subtraction",
-    result: 0,
-    solution: "سبب الاختيار: سلسلة طرح بسيط (طرح مباشر متتابع بدون استعارة). 1) -2 مباشر = 7. 2) -2 مباشر = 5. 3) -5 = رفع العلوية بالسبابة ليصبح 0. الناتج 0.",
-    movement: "direct",
-    difficulty: 2,
-    expected_time_ms: 12000,
-    expected_anzan_ms: 8000,
-    tags: ["subtraction", "chains", "direct"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m1",
-    sequence: 3,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 48 - 10 - 20 - 5",
-    operands: [48, -10, -20, -5],
-    operation: "subtraction",
-    result: 13,
-    solution: "سبب الاختيار: سلسلة طرح بسيط (طرح مباشر في العشرات والآحاد). 1) -10 = إبعاد خرزة من العشرات (38). 2) -20 = إبعاد خرزتين من العشرات (18). 3) -5 = رفع العلوية بالآحاد (13). الناتج 13.",
-    movement: "direct",
-    difficulty: 2,
-    expected_time_ms: 12000,
-    expected_anzan_ms: 8000,
-    tags: ["subtraction", "chains", "direct"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m1",
-    sequence: 4,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 9 - 1 - 3 - 5",
-    operands: [9, -1, -3, -5],
-    operation: "subtraction",
-    result: 0,
-    solution: "سبب الاختيار: سلسلة طرح بسيط (كل الخرزات المطلوبة للطرح مفعّلة ومتاحة مباشرة). 1) -1 مباشر = 8. 2) -3 مباشر = 5. 3) -5 رفع العلوية = 0. الناتج 0.",
-    movement: "direct",
-    difficulty: 2,
-    expected_time_ms: 12000,
-    expected_anzan_ms: 8000,
-    tags: ["subtraction", "chains", "direct"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m1",
-    sequence: 5,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 39 - 15 - 12 - 2",
-    operands: [39, -15, -12, -2],
-    operation: "subtraction",
-    result: 10,
-    solution: "سبب الاختيار: سلسلة طرح بسيط (طرح مكونات الأعداد بشكل مباشر). 1) -15 = -10 بالعشرات و -5 بالآحاد (24). 2) -12 = -10 بالعشرات و -2 بالآحاد (12). 3) -2 بالآحاد (10). الناتج 10.",
-    movement: "direct",
-    difficulty: 2,
-    expected_time_ms: 12000,
-    expected_anzan_ms: 8000,
-    tags: ["subtraction", "chains", "direct"],
-  }),
+// ═══════════════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════════════
 
-  // S06-m2: سلسلة طرح بأصدقاء 5 (Five Friend Subtraction Chains)
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m2",
-    sequence: 1,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 5 - 1 - 2 - 1",
-    operands: [5, -1, -2, -1],
-    operation: "subtraction",
-    result: 1,
-    solution: "سبب الاختيار: سلسلة طرح بأصدقاء 5 (تعتمد على قاعدة -1 = -5 + 4 في الخطوة الأولى). 1) -1 = رفع العلوية (-5) وإضافة 4 سفليات (+4) ليصبح 4. 2) -2 مباشر = 2. 3) -1 مباشر = 1. الناتج 1.",
-    movement: "five-friend-sub",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "five-friend-sub"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m2",
-    sequence: 2,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 6 - 2 - 1 - 1",
-    operands: [6, -2, -1, -1],
-    operation: "subtraction",
-    result: 2,
-    solution: "سبب الاختيار: سلسلة طرح بأصدقاء 5 (تعتمد على قاعدة -2 = -5 + 3). 1) -2 = رفع العلوية (-5) وإضافة 3 سفليات (+3) ليصبح 4. 2) -1 مباشر = 3. 3) -1 مباشر = 2. الناتج 2.",
-    movement: "five-friend-sub",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "five-friend-sub"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m2",
-    sequence: 3,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 7 - 3 - 2 - 1",
-    operands: [7, -3, -2, -1],
-    operation: "subtraction",
-    result: 1,
-    solution: "سبب الاختيار: سلسلة طرح بأصدقاء 5 (تعتمد على قاعدة -3 = -5 + 2). 1) -3 = رفع العلوية (-5) وإضافة خرزتين سفليتين (+2) ليصبح 4. 2) -2 مباشر = 2. 3) -1 مباشر = 1. الناتج 1.",
-    movement: "five-friend-sub",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "five-friend-sub"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m2",
-    sequence: 4,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 8 - 4 - 1 - 1",
-    operands: [8, -4, -1, -1],
-    operation: "subtraction",
-    result: 2,
-    solution: "سبب الاختيار: سلسلة طرح بأصدقاء 5 (تعتمد على قاعدة -4 = -5 + 1). 1) -4 = رفع العلوية (-5) وإضافة خرزة سفلية واحدة (+1) ليصبح 4. 2) -1 مباشر = 3. 3) -1 مباشر = 2. الناتج 2.",
-    movement: "five-friend-sub",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "five-friend-sub"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m2",
-    sequence: 5,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 15 - 1 - 2 - 1",
-    operands: [15, -1, -2, -1],
-    operation: "subtraction",
-    result: 11,
-    solution: "سبب الاختيار: سلسلة طرح بأصدقاء 5 (طرح 1 من الخرزة الخماسية بالآحاد يستدعي أصدقاء 5). 1) -1 بالآحاد = -5 + 4 ليصبح 14. 2) -2 مباشر = 12. 3) -1 مباشر = 11. الناتج 11.",
-    movement: "five-friend-sub",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "five-friend-sub"],
-  }),
+function getDecimalFactor(q: SRBQuestion): number {
+  const decimals = [q.result, ...q.operands].map((n) => {
+    const str = Math.abs(n).toString();
+    const dotIdx = str.indexOf('.');
+    return dotIdx === -1 ? 0 : str.length - dotIdx - 1;
+  });
+  return Math.pow(10, Math.max(...decimals, 0));
+}
 
-  // S06-m3: سلسلة طرح بأصدقاء 10 (Ten Friend Subtraction Chains)
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m3",
-    sequence: 1,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 10 - 1 - 2 - 5",
-    operands: [10, -1, -2, -5],
-    operation: "subtraction",
-    result: 2,
-    solution: "سبب الاختيار: سلسلة طرح بأصدقاء 10 (الآحاد فارغ والـ -1 يستدعي الاستعارة من العشرات). 1) -1 = -10 بالعشرات و +9 بالآحاد ليصبح 9. 2) -2 مباشر = 7. 3) -5 مباشر = 2. الناتج 2.",
-    movement: "ten-friend-sub",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "ten-friend-sub"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m3",
-    sequence: 2,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 10 - 2 - 5 - 1",
-    operands: [10, -2, -5, -1],
-    operation: "subtraction",
-    result: 2,
-    solution: "سبب الاختيار: سلسلة طرح بأصدقاء 10 (تعتمد على قاعدة -2 = -10 + 8). 1) -2 = إبعاد 10 بالعشرات وإضافة 8 بالآحاد ليصبح 8. 2) -5 مباشر = 3. 3) -1 مباشر = 2. الناتج 2.",
-    movement: "ten-friend-sub",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "ten-friend-sub"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m3",
-    sequence: 3,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 10 - 3 - 1 - 5",
-    operands: [10, -3, -1, -5],
-    operation: "subtraction",
-    result: 1,
-    solution: "سبب الاختيار: سلسلة طرح بأصدقاء 10 (تعتمد على قاعدة -3 = -10 + 7). 1) -3 = نطرح 10 بالعشرات ونضيف 7 بالآحاد ليصبح 7. 2) -1 مباشر = 6. 3) -5 مباشر = 1. الناتج 1.",
-    movement: "ten-friend-sub",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "ten-friend-sub"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m3",
-    sequence: 4,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 10 - 4 - 5 - 1",
-    operands: [10, -4, -5, -1],
-    operation: "subtraction",
-    result: 0,
-    solution: "سبب الاختيار: سلسلة طرح بأصدقاء 10 (تعتمد على قاعدة -4 = -10 + 6). 1) -4 = نطرح 10 بالعشرات ونضيف 6 بالآحاد ليصبح 6. 2) -5 مباشر = 1. 3) -1 مباشر = 0. الناتج 0.",
-    movement: "ten-friend-sub",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "ten-friend-sub"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m3",
-    sequence: 5,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 12 - 5 - 1 - 1",
-    operands: [12, -5, -1, -1],
-    operation: "subtraction",
-    result: 5,
-    solution: "سبب الاختيار: سلسلة طرح بأصدقاء 10 (الآحاد فيه 2 والعلوية غير مفعّلة، فطرح 5 يستدعي الاستعارة من العشرات: -5 = -10 + 5). 1) -5 = نطرح 10 ونضيف 5 ليصبح 7. 2) -1 مباشر = 6. 3) -1 مباشر = 5. الناتج 5.",
-    movement: "ten-friend-sub",
-    difficulty: 3,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "ten-friend-sub"],
-  }),
+function extractHint(q: SRBQuestion | undefined): string | null {
+  if (!q?.solution) return null;
+  const m = q.solution.match(/^تلميح:\s*(.+?)(?:\.\s|$)/);
+  return m ? m[1].trim() : null;
+}
 
-  // S06-m4: سلسلة طرح مركب (Mixed Subtraction Chains)
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m4",
-    sequence: 1,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 13 - 6 - 2 - 1",
-    operands: [13, -6, -2, -1],
-    operation: "subtraction",
-    result: 4,
-    solution: "سبب الاختيار: سلسلة طرح مركب (طرح 6 من 13 يستدعي الاستعارة من العشرات وتفعيل الخمسة بالآحاد: -6 = -10 + 5 - 1). 1) -6 = -10 بالعشرات و +5 - 1 بالآحاد ليصبح 7. 2) -2 مباشر = 5. 3) -1 بأصدقاء 5 = 4. الناتج 4.",
-    movement: "mixed",
-    difficulty: 4,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "mixed"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m4",
-    sequence: 2,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 12 - 6 - 1 - 1",
-    operands: [12, -6, -1, -1],
-    operation: "subtraction",
-    result: 4,
-    solution: "سبب الاختيار: سلسلة طرح مركب (طرح 6 من 12 يتطلب -10 بالعشرات و +5 - 1 بالآحاد). 1) -6 = -10 بالعشرات و +5 - 1 بالآحاد ليصبح 6. 2) -1 مباشر = 5. 3) -1 بأصدقاء 5 = 4. الناتج 4.",
-    movement: "mixed",
-    difficulty: 4,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "mixed"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m4",
-    sequence: 3,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 11 - 6 - 2 - 1",
-    operands: [11, -6, -2, -1],
-    operation: "subtraction",
-    result: 2,
-    solution: "سبب الاختيار: سلسلة طرح مركب (طرح 6 من 11 يستوجب -10 بالعشرات و +5 - 1 بالآحاد). 1) -6 = -10 بالعشرات و +5 - 1 بالآحاد ليصبح 5. 2) -2 بأصدقاء 5 = 3. 3) -1 مباشر = 2. الناتج 2.",
-    movement: "mixed",
-    difficulty: 4,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "mixed"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m4",
-    sequence: 4,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 13 - 7 - 1 - 1",
-    operands: [13, -7, -1, -1],
-    operation: "subtraction",
-    result: 4,
-    solution: "سبب الاختيار: سلسلة طرح مركب (طرح 7 من 13 يستدعي -10 بالعشرات و +5 - 2 بالآحاد). 1) -7 = -10 بالعشرات و +5 - 2 بالآحاد ليصبح 6. 2) -1 مباشر = 5. 3) -1 بأصدقاء 5 = 4. الناتج 4.",
-    movement: "mixed",
-    difficulty: 4,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "mixed"],
-  }),
-  makeQuestion({
-    level: "L4",
-    section: "S06",
-    module: "m4",
-    sequence: 5,
-    variant: "A",
-    primary_phase: "P",
-    allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "احسب السلسلة: 12 - 7 - 2 - 1",
-    operands: [12, -7, -2, -1],
-    operation: "subtraction",
-    result: 2,
-    solution: "سبب الاختيار: سلسلة طرح مركب (طرح 7 من 12 يستوجب -10 بالعشرات و +5 - 2 بالآحاد). 1) -7 = -10 بالعشرات و +5 - 2 بالآحاد ليصبح 5. 2) -2 بأصدقاء 5 = 3. 3) -1 مباشر = 2. الناتج 2.",
-    movement: "mixed",
-    difficulty: 4,
-    expected_time_ms: 15000,
-    expected_anzan_ms: 10000,
-    tags: ["subtraction", "chains", "mixed"],
-  }),
-];
+// 🆕 استخراج المعادلة فقط (بدون "احسب السلسلة:" أو "احسب:")
+function extractEquation(question: string): string {
+  return question
+    .replace(/^احسب\s+السلسلة\s*:\s*/u, '')
+    .replace(/^احسب\s*:\s*/u, '')
+    .replace(/\s*=\s*؟\s*$/u, '')
+    .trim();
+}
 
-export default L4_QUESTIONS;
+// 🆕 حجم الخط حسب طول المعادلة
+function equationTextSize(eq: string): string {
+  const len = eq.length;
+  if (len > 22) return 'text-2xl sm:text-3xl';
+  if (len > 16) return 'text-3xl sm:text-4xl';
+  return 'text-4xl sm:text-5xl';
+}
+
+function getSectionFromSkillId(skillId: string): SRBSection | null {
+  const parts = skillId.split('-');
+  if (parts.length !== 3) return null;
+  if (!/^S\d{2}$/.test(parts[1])) return null;
+  return parts[1] as SRBSection;
+}
+
+function getColumnsForQuestion(q: SRBQuestion): number {
+  const candidates: number[] = [
+    Math.abs(q.result),
+    ...q.operands.map((op) => Math.abs(op)),
+  ];
+  const maxAbs = Math.max(...candidates);
+  if (maxAbs < 1000) return 3;
+  if (maxAbs < 1_000_000) return 6;
+  if (maxAbs < 1_000_000_000) return 9;
+  return 13;
+}
+
+function getMaxMs(q: SRBQuestion): number {
+  return q.target_time_ms[1];
+}
+
+function getAnswerMs(q: SRBQuestion): number {
+  return q.target_time_ms[0];
+}
+
+function buildSkillId(level: SRBLevel, section: SRBSection, module: SRBModule): string {
+  return `${level}-${section}-${module}`;
+}
+
+export function PracticeScreen({
+  level, onBack, onComplete, playSound, onXP, burst,
+}: PracticeScreenProps) {
+  const [phase, setPhase] = useState<Phase>('intro');
+  const [questions, setQuestions] = useState<SRBQuestion[]>([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [abacusValue, setAbacusValue] = useState(0);
+  const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
+  const [score, setScore] = useState(0);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [savedTimeMs, setSavedTimeMs] = useState<number | null>(null);
+  const [performances, setPerformances] = useState<SkillPerformance[]>([]);
+
+  const [showRemediation, setShowRemediation] = useState(false);
+  const [remediationSection, setRemediationSection] = useState<SRBSection>('S01');
+
+  const sorobana = useSorobanaVoice();
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const perfRef = useRef<Map<string, PerfStats>>(new Map());
+  const wrongSkillsRef = useRef<Set<string>>(new Set());
+
+  const addXP = useProgressStore((s) => s.addXP);
+  const updateStreak = useProgressStore((s) => s.updateStreak);
+
+  const numberStyle = useNumberStyleStore((s) => s.style);
+  const isArabic = numberStyle === 'arabic';
+
+  const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
+
+  const expectedQuestionCount = useMemo(
+    () => Math.max(countModulesInLevel(level), 5),
+    [level],
+  );
+
+  const currentQ = questions[currentIdx];
+  const currentSection: SRBSection | undefined = currentQ?.section;
+  const levelNum = useMemo(() => Number(level.slice(1)), [level]);
+
+  const maxMs = currentQ ? getMaxMs(currentQ) : 30000;
+  const warningAtMs = maxMs * WARNING_RATIO;
+  const isWarning = elapsedMs >= warningAtMs;
+  const progressPct = Math.min(100, (elapsedMs / maxMs) * 100);
+
+  const weakPerformances = useMemo(
+    () => performances.filter(
+      (p) => p.speedClass === 'slow' || p.correct < p.attempts,
+    ),
+    [performances],
+  );
+
+  const hasWeakSkills = weakPerformances.length > 0;
+
+  const bestWeakSection = useMemo<SRBSection | null>(() => {
+    if (weakPerformances.length === 0) return null;
+
+    const counts = new Map<SRBSection, number>();
+    weakPerformances.forEach((p) => {
+      const s = getSectionFromSkillId(p.skillId);
+      if (s) counts.set(s, (counts.get(s) ?? 0) + 1);
+    });
+
+    let best: SRBSection | null = null;
+    let maxCount = 0;
+    counts.forEach((count, section) => {
+      if (count > maxCount) {
+        maxCount = count;
+        best = section;
+      }
+    });
+
+    return best;
+  }, [weakPerformances]);
+
+  const startSession = useCallback(() => {
+    const qs = getPracticeQuestions(level, Date.now(), []);
+    if (qs.length === 0) { playSound('error'); return; }
+    perfRef.current = new Map();
+    wrongSkillsRef.current = new Set();
+    setQuestions(qs);
+    setCurrentIdx(0);
+    setAbacusValue(0);
+    setFeedback('idle');
+    setScore(0);
+    setElapsedMs(0);
+    setSavedTimeMs(null);
+    setPerformances([]);
+    setShowRemediation(false);
+    setPhase('running');
+    playSound('click');
+  }, [level, playSound]);
+
+  useEffect(() => {
+    if (phase !== 'running') return;
+    if (feedback !== 'idle') return;
+    if (!currentQ) return;
+    timerRef.current = setInterval(() => {
+      setElapsedMs((ms) => {
+        const next = ms + 100;
+        if (next >= maxMs) { handleTimeout(); return maxMs; }
+        return next;
+      });
+    }, 100);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, feedback, maxMs, currentQ]);
+
+  const trackPerformance = useCallback(
+    (isCorrect: boolean, timeMs: number) => {
+      if (!currentQ) return;
+      const skillId = buildSkillId(level, currentQ.section, currentQ.module);
+      const answerMs = getAnswerMs(currentQ);
+      const existing = perfRef.current.get(skillId) ?? {
+        correct: 0, attempts: 0, totalTimeMs: 0, answerMs,
+      };
+      existing.attempts += 1;
+      if (isCorrect) existing.correct += 1;
+      existing.totalTimeMs += timeMs;
+      perfRef.current.set(skillId, existing);
+      if (isCorrect) {
+        const cls = classifySpeed(timeMs, answerMs);
+        if (cls === 'mastery') awardBadge(skillId, timeMs, answerMs);
+      } else {
+        wrongSkillsRef.current.add(skillId);
+      }
+    },
+    [currentQ, level, awardBadge],
+  );
+
+  const handleTimeout = useCallback(() => {
+    if (!currentQ || feedback !== 'idle') return;
+    if (timerRef.current) clearInterval(timerRef.current);
+    trackPerformance(false, maxMs);
+    playSound('error');
+    setFeedback('wrong');
+    setSavedTimeMs(maxMs);
+    sorobana.speakWrong();
+    setPhase('reveal');
+  }, [currentQ, feedback, maxMs, playSound, sorobana, trackPerformance]);
+
+  const handleCheck = useCallback(() => {
+    if (!currentQ || feedback !== 'idle') return;
+    if (timerRef.current) clearInterval(timerRef.current);
+
+    const factor = getDecimalFactor(currentQ);
+    const targetValue = Math.round(currentQ.result * factor);
+    const isCorrect = abacusValue === targetValue;
+
+    const timeMs = elapsedMs;
+    trackPerformance(isCorrect, timeMs);
+    if (isCorrect) {
+      setScore((s) => s + 1);
+      setFeedback('correct');
+      playSound('success');
+      sorobana.speakCorrect();
+      onXP?.(XP_PER_CORRECT);
+      addXP(XP_PER_CORRECT);
+      updateStreak();
+      burst?.(0.5, 0.5);
+    } else {
+      setFeedback('wrong');
+      playSound('error');
+      sorobana.speakWrong();
+    }
+    setSavedTimeMs(timeMs);
+    setPhase('reveal');
+  }, [
+    currentQ, abacusValue, elapsedMs, feedback, playSound, sorobana,
+    onXP, burst, addXP, updateStreak, trackPerformance,
+  ]);
+
+  const buildPerformances = useCallback((): SkillPerformance[] => {
+    const list: SkillPerformance[] = [];
+    perfRef.current.forEach((stats, skillId) => {
+      const avgTimeMs = stats.attempts === 0 ? 0 : stats.totalTimeMs / stats.attempts;
+      list.push({
+        skillId, correct: stats.correct, attempts: stats.attempts,
+        avgTimeMs, answerMs: stats.answerMs,
+        speedClass: classifySpeed(avgTimeMs, stats.answerMs),
+      });
+    });
+    return list;
+  }, []);
+
+  const finalizeSession = useCallback((passed: boolean, finalScore: number) => {
+    const firstSection = questions[0]?.section ?? 'S01';
+    const percentage = Math.round((finalScore / questions.length) * 100);
+
+    const perf = buildPerformances();
+    const weakSkillIds = new Set<string>([
+      ...wrongSkillsRef.current,
+      ...perf
+        .filter((p) => p.speedClass === 'slow' || p.correct < p.attempts)
+        .map((p) => p.skillId),
+    ]);
+
+    saveSectionGrade(
+      level, firstSection, 'practice', percentage,
+      Array.from(weakSkillIds),
+    );
+    setPerformances(perf);
+    setPhase('result');
+    playSound(passed ? 'levelup' : 'whoosh');
+    onComplete?.(passed, finalScore);
+  }, [level, questions, playSound, onComplete, buildPerformances]);
+
+  const nextQuestion = useCallback(() => {
+    sorobana.stop();
+    setAbacusValue(0);
+    setFeedback('idle');
+    setElapsedMs(0);
+    setSavedTimeMs(null);
+    if (currentIdx + 1 >= questions.length) {
+      const percentage = Math.round((score / questions.length) * 100);
+      finalizeSession(percentage >= PASS_THRESHOLD, score);
+    } else {
+      setCurrentIdx((i) => i + 1);
+      setPhase('running');
+    }
+  }, [currentIdx, questions.length, score, sorobana, finalizeSession]);
+
+  const handleEnd = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    sorobana.stop();
+    const percentage = Math.round((score / questions.length) * 100);
+    finalizeSession(percentage >= PASS_THRESHOLD, score);
+  }, [score, questions.length, sorobana, finalizeSession]);
+
+  const handleStartRemediation = useCallback(() => {
+    const section = bestWeakSection ?? currentSection ?? 'S01';
+    setRemediationSection(section);
+    setShowRemediation(true);
+    playSound('click');
+  }, [bestWeakSection, currentSection, playSound]);
+
+  const handleRemediationBack = useCallback(() => {
+    setShowRemediation(false);
+    playSound('click');
+  }, [playSound]);
+
+  // ═══════════════════════════════════════════════════════════
+  // 🩺 عرض الجلسة العلاجية
+  // ═══════════════════════════════════════════════════════════
+
+  if (showRemediation) {
+    return (
+      <RemediationScreen
+        level={level}
+        section={remediationSection}
+        onBack={handleRemediationBack}
+        playSound={playSound}
+      />
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 🎬 العرض
+  // ═══════════════════════════════════════════════════════════
+
+  if (phase === 'intro') {
+    return (
+      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <button type="button" onClick={() => { playSound('click'); onBack(); }}
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
+            <ArrowRight className="w-6 h-6" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-2xl font-extrabold font-display text-white truncate">
+              تمرّن
+            </h2>
+            <p className="text-sm text-white/50 font-body">
+              {level} — {formatNumber(expectedQuestionCount, numberStyle)} أسئلة
+            </p>
+          </div>
+          <BookOpen className="w-6 h-6 text-purple-300" />
+        </div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 mb-6">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-electric-500 flex items-center justify-center shadow-xl shadow-purple-500/40 mx-auto mb-4">
+            <BookOpen className="w-10 h-10 text-white" />
+          </div>
+          <h3 className="text-xl font-extrabold font-display text-white text-center mb-4">قبل أن تبدأ</h3>
+          <div className="space-y-3 text-sm text-white/80 font-body">
+            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">1.</span><p>{formatNumber(expectedQuestionCount, numberStyle)} أسئلة من دروس المستوى</p></div>
+            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">2.</span><p>محاولة واحدة فقط لكل سؤال</p></div>
+            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">3.</span><p>زر "تحقق" متاح دائماً، والانتقال يدوي بزر "التالي"</p></div>
+            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">4.</span><p>{formatNumber(PASS_THRESHOLD, numberStyle)}٪ للنّجاح</p></div>
+            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">5.</span><p>يمكنك إنهاء التدريب في أي لحظة</p></div>
+          </div>
+          <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-200 font-body leading-relaxed">
+                💡 الإجابة بزمن قياسي (أسرع من ٤٠٪) تمنحك <strong>شارة المهارة</strong> 🏅
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <button type="button" onClick={startSession} className="btn-primary w-full !py-4 !text-lg">
+          <Play className="w-6 h-6" />
+          ابدأ الجلسة
+        </button>
+      </div>
+    );
+  }
+
+  if (phase === 'running' && currentQ) {
+    const columns = getColumnsForQuestion(currentQ);
+    const equation = extractEquation(currentQ.question);
+    const formattedPrompt = formatText(equation, numberStyle);
+    const hint = extractHint(currentQ);
+
+    return (
+      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-white truncate">
+              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
+            </h2>
+            <p className="text-xs text-white/50 font-body">
+              {currentSection} · {currentQ.module}
+            </p>
+          </div>
+          <button type="button" onClick={handleEnd}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition">
+            <Square className="w-3.5 h-3.5" />
+            إنهاء
+          </button>
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
+            isWarning ? 'bg-red-500/30 border-red-500/70 shadow-lg shadow-red-500/50 animate-pulse' : 'bg-white/5 border-white/10'
+          }`}>
+            <Clock className={`w-4 h-4 ${isWarning ? 'text-red-300' : 'text-amber-300'}`} />
+            <span className={`font-bold font-mono ${isWarning ? 'text-red-200' : 'text-white'}`}>
+              {formatNumber((elapsedMs / 1000).toFixed(1), numberStyle)}s
+            </span>
+          </div>
+        </div>
+        <div className="mb-5">
+          <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+            <motion.div className={`h-full rounded-full transition-colors ${
+              isWarning ? 'bg-gradient-to-r from-red-500 to-rose-600' : 'bg-gradient-to-r from-purple-500 to-electric-500'
+            }`} animate={{ width: `${progressPct}%` }} transition={{ duration: 0.1 }} />
+          </div>
+        </div>
+        <div className="flex items-center justify-center gap-2 mb-5">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <span className="text-sm text-white/70 font-body">
+            {formatNumber(score, numberStyle)} / {formatNumber(currentIdx + 1, numberStyle)}
+          </span>
+        </div>
+        <div className="glass-card p-5 sm:p-6 mb-5">
+          <p className="text-center text-white/40 font-body text-sm mb-3">مثّل الناتج على السوروبان</p>
+
+          {/* 🆕 المعادلة في سطر واحد */}
+          <p
+            dir="ltr"
+            className={`text-center ${equationTextSize(equation)} font-black font-display text-white mb-6 whitespace-nowrap`}
+          >
+            {formattedPrompt} = ؟
+          </p>
+
+          {hint && (
+            <div className="mb-3 p-2 rounded-lg bg-purple-500/10 border border-purple-400/30">
+              <p className="text-xs text-purple-200 font-body text-center">
+                💡 <strong>تلميح:</strong> {hint}
+              </p>
+            </div>
+          )}
+
+          <div className="flex flex-col items-center gap-3">
+            <Soroban2D5 key={`practice-${currentIdx}`} columns={columns}
+              autoBeadSize={true} interactive={true} showValue={true}
+              onValueChange={setAbacusValue} />
+            <p className="text-xs text-white/50 font-body text-center">
+              💡 حرّك الخرزات لتمثيل الإجابة، ثم اضغط "تحقق"
+            </p>
+            <button type="button" onClick={handleCheck} className="btn-primary !py-3 !px-8">
+              <CheckCircle2 className="w-5 h-5" />
+              تحقق
+            </button>
+          </div>
+        </div>
+        <SorobanaCompanion isSpeaking={sorobana.isSpeaking}
+          onClick={() => sorobana.speakTeaching()} variant="pointing"
+          sizeOverride={150} offsetBottom="8rem" clickThrough={true} />
+      </div>
+    );
+  }
+
+  if (phase === 'reveal' && currentQ) {
+    const isCorrect = feedback === 'correct';
+    const formattedAnswer = formatNumber(currentQ.result, numberStyle);
+    return (
+      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          className="glass-card p-6 mb-6 overflow-hidden relative">
+          <div className={`absolute -top-20 -right-20 w-48 h-48 blur-3xl ${
+            isCorrect ? 'bg-emerald-500/30' : 'bg-red-500/30'
+          }`} />
+          <div className="relative text-center">
+            <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br flex items-center justify-center mx-auto mb-4 ${
+              isCorrect ? 'from-emerald-400 to-teal-600 shadow-xl shadow-emerald-500/40' : 'from-red-400 to-rose-600 shadow-xl shadow-red-500/40'
+            }`}>
+              {isCorrect ? <CheckCircle2 className="w-10 h-10 text-white" /> : <XCircle className="w-10 h-10 text-white" />}
+            </div>
+            <h2 className="text-2xl font-extrabold font-display text-white mb-2">
+              {isCorrect ? 'أحسنت! 🎉' : 'ليس بعد'}
+            </h2>
+            <div className="my-6">
+              <p className="text-sm text-white/60 font-body mb-1">الإجابة الصحيحة</p>
+              <p className="text-5xl font-black font-display text-white" dir={isArabic ? 'rtl' : 'ltr'}>
+                {formattedAnswer}
+              </p>
+            </div>
+            {savedTimeMs !== null && (
+              <div className="p-3 rounded-2xl bg-white/5 border border-white/10 inline-block">
+                <p className="text-xs text-white/60 font-body">وقتك</p>
+                <p className={`text-xl font-bold font-mono ${
+                  isCorrect ? 'text-emerald-300' : 'text-red-300'
+                }`}>
+                  {formatNumber((savedTimeMs / 1000).toFixed(1), numberStyle)}s
+                </p>
+              </div>
+            )}
+            {currentQ.solution && (
+              <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-400/30 text-right">
+                <p className="text-xs text-blue-200 font-body leading-relaxed">
+                  💡 {formatText(currentQ.solution, numberStyle)}
+                </p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+        <button type="button" onClick={nextQuestion} className="btn-primary w-full !py-4 !text-lg">
+          {currentIdx + 1 < questions.length ? 'التالي' : 'إنهاء الجلسة'}
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+      </div>
+    );
+  }
+
+  if (phase === 'result') {
+    const percentage = Math.round((score / questions.length) * 100);
+    const passed = percentage >= PASS_THRESHOLD;
+    const xpEarned = score * XP_PER_CORRECT;
+    return (
+      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto space-y-5">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+          className="glass-card p-6 overflow-hidden relative">
+          <div className={`absolute -top-24 -right-24 w-64 h-64 blur-3xl ${
+            passed ? 'bg-emerald-500/20' : 'bg-amber-500/20'
+          }`} />
+          <div className="relative text-center">
+            <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+              className={`w-24 h-24 rounded-3xl bg-gradient-to-br flex items-center justify-center shadow-2xl mx-auto mb-4 ${
+                passed ? 'from-emerald-400 to-teal-600 shadow-emerald-500/40' : 'from-amber-400 to-orange-600 shadow-amber-500/40'
+              }`}>
+              <Trophy className="w-12 h-12 text-white" />
+            </motion.div>
+            <h2 className="text-2xl font-extrabold font-display text-white mb-2">
+              {passed ? 'أحسنت! نجحت 🎉' : 'حاول مرة أخرى 💪'}
+            </h2>
+            <p className="text-sm text-white/60 font-body mb-6">
+              {passed ? 'لقد أتقنت هذا المستوى' : 'ستُعاد الأسئلة البطيئة قريباً'}
+            </p>
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
+              <p className="text-sm text-white/60 font-body">النتيجة</p>
+              <p className="text-5xl font-black font-display text-white mt-1" dir={isArabic ? 'rtl' : 'ltr'}>
+                {formatNumber(score, numberStyle)} / {formatNumber(questions.length, numberStyle)}
+              </p>
+              <p className={`text-lg font-bold font-body mt-1 ${
+                passed ? 'text-emerald-300' : 'text-amber-300'
+              }`}>
+                {formatNumber(percentage, numberStyle)}٪
+              </p>
+            </div>
+            <div className="p-3 rounded-2xl bg-gold-500/10 border border-gold-400/30">
+              <p className="text-xs text-white/60 font-body">نقاط الخبرة</p>
+              <p className="text-2xl font-black text-gold-300 font-display">
+                +{formatNumber(xpEarned, numberStyle)} XP
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {hasWeakSkills && bestWeakSection && (
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            onClick={handleStartRemediation}
+            className="w-full py-4 rounded-2xl bg-gradient-to-l from-amber-400 to-orange-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/40 hover:shadow-amber-500/60 transition-shadow"
+          >
+            <Lightbulb className="w-5 h-5" />
+            🩺 جلسة علاجية مخصصة ({formatNumber(weakPerformances.length, numberStyle)} مهارة)
+          </motion.button>
+        )}
+
+        {performances.length > 0 && (
+          <AdaptiveFeedback
+            performances={performances}
+            sectionLabel={`تمرّن — ${level}`}
+            levelNum={levelNum}
+          />
+        )}
+
+        <div className="space-y-3">
+          <button type="button" onClick={() => { playSound('click'); startSession(); }}
+            className="btn-primary w-full !py-3">
+            <RotateCcw className="w-5 h-5" />
+            جلسة جديدة
+          </button>
+          <button type="button" onClick={() => { playSound('click'); onBack(); }} className="btn-ghost w-full">
+            رجوع
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+export default PracticeScreen;
