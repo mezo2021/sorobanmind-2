@@ -137,6 +137,7 @@ export function LessonScreen({
   const [choices, setChoices] = useState<number[]>([]);
 
   const [isReadingStory, setIsReadingStory] = useState(false);
+  const [isReadingModuleStory, setIsReadingModuleStory] = useState(false);
   const [companionMsg, setCompanionMsg] = useState<string | null>(null);
   const [introPageIdx, setIntroPageIdx] = useState(0);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
@@ -150,7 +151,17 @@ export function LessonScreen({
       setShowSteps(false);
       setShowDiscrimination(false);
     }
+    sorobana.stop();
+    setIsReadingStory(false);
+    setIsReadingModuleStory(false);
   }, [lessonId]);
+
+  // تنظيف عند إغلاق الشاشة
+  useEffect(() => {
+    return () => {
+      sorobana.stop();
+    };
+  }, []);
 
   const showCompanionMsg = (msg: string, duration = 2200) => {
     setCompanionMsg(msg);
@@ -338,6 +349,8 @@ export function LessonScreen({
   // ─── التنقل بين الوحدات ───
   const switchModule = (mId: string) => {
     playSound('click');
+    sorobana.stop();
+    setIsReadingModuleStory(false);
     setActiveModuleId(mId);
     setExampleIdx(0);
     setTryIdx(0);
@@ -374,6 +387,27 @@ export function LessonScreen({
       audio.play().catch(() => setIsReadingStory(false));
     } else {
       sorobana.speakStory(audioSrc, () => setIsReadingStory(false));
+    }
+  };
+
+  const toggleModuleStory = () => {
+    const src = activeModule?.miniStory?.storyAudioId;
+    if (src === null || src === undefined) return;
+    if (isReadingModuleStory) {
+      sorobana.stop();
+      setIsReadingModuleStory(false);
+      return;
+    }
+    sorobana.stop();
+    playSound('click');
+    setIsReadingModuleStory(true);
+    if (src === 'welcome') {
+      const audio = new Audio('https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3');
+      audio.onended = () => setIsReadingModuleStory(false);
+      audio.onerror = () => setIsReadingModuleStory(false);
+      audio.play().catch(() => setIsReadingModuleStory(false));
+    } else {
+      sorobana.speakStory(src, () => setIsReadingModuleStory(false));
     }
   };
 
@@ -455,6 +489,7 @@ export function LessonScreen({
     playSound('levelup');
     sorobana.stop();
     setIsReadingStory(false);
+    setIsReadingModuleStory(false);
     try {
       const raw = localStorage.getItem(LESSON_PROGRESS_KEY);
       const arr: string[] = raw ? JSON.parse(raw) : [];
@@ -477,6 +512,7 @@ export function LessonScreen({
     playSound('click');
     sorobana.stop();
     setIsReadingStory(false);
+    setIsReadingModuleStory(false);
     onBack();
   };
 
@@ -615,11 +651,30 @@ export function LessonScreen({
               {/* 🎬 قصة الوحدة (L1+) */}
               {hasMod && activeModule?.miniStory && (
                 <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-400/30">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg">{activeModule.miniStory.emoji}</span>
-                    <h3 className="text-sm font-bold text-pink-300">
-                      📖 {activeModule.miniStory.title}
-                    </h3>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{activeModule.miniStory.emoji}</span>
+                      <h3 className="text-sm font-bold text-pink-300">
+                        📖 {activeModule.miniStory.title}
+                      </h3>
+                    </div>
+                    {activeModule.miniStory.storyAudioId !== null
+                      && activeModule.miniStory.storyAudioId !== undefined && (
+                      <button
+                        onClick={toggleModuleStory}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                          isReadingModuleStory
+                            ? 'bg-red-500/30 border border-red-400/50 text-red-200'
+                            : 'bg-rose-500/20 border border-rose-400/40 text-rose-200 hover:bg-rose-500/30'
+                        }`}
+                      >
+                        {isReadingModuleStory ? (
+                          <><Square className="w-3.5 h-3.5" /> إيقاف</>
+                        ) : (
+                          <><Volume2 className="w-3.5 h-3.5" /> موجز القصة</>
+                        )}
+                      </button>
+                    )}
                   </div>
                   <p className="text-sm text-white/85 font-body leading-relaxed">
                     {formatText(activeModule.miniStory.story, numberStyle)}
@@ -632,7 +687,10 @@ export function LessonScreen({
                 <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-gold-400/10 to-gold-600/10 border border-gold-400/30">
                   <h3 className="text-sm font-bold text-gold-300 mb-2">📐 القاعدة</h3>
                   {activeModule.rule.formula && (
-                    <p className="text-center text-base font-display font-bold text-electric-300 mb-2 bg-white/5 p-2 rounded-xl">
+                    <p
+                      dir="ltr"
+                      className="text-center text-base font-display font-bold text-electric-300 mb-2 bg-white/5 p-2 rounded-xl"
+                    >
                       {activeModule.rule.formula}
                     </p>
                   )}
@@ -665,7 +723,10 @@ export function LessonScreen({
                   )}
 
                   <h3 className="text-sm font-bold text-gold-300 mb-1">🔒 الشرط</h3>
-                  <p className="text-center text-sm font-display font-bold text-amber-300 mb-2 bg-white/5 p-2 rounded-xl">
+                  <p
+                    dir="ltr"
+                    className="text-center text-sm font-display font-bold text-amber-300 mb-2 bg-white/5 p-2 rounded-xl"
+                  >
                     {activeModule.condition.formula}
                   </p>
                   <p className="text-sm text-white/75 font-body leading-relaxed">
@@ -1122,7 +1183,7 @@ export function LessonScreen({
       <FloatingCompanion playSound={playSound} />
       <SorobanaCompanion
         isSpeaking={sorobana.isSpeaking}
-        onClick={() => { if (!isReadingStory) sorobana.speakTeaching(); }}
+        onClick={() => { if (!isReadingStory && !isReadingModuleStory) sorobana.speakTeaching(); }}
         mode={tab === 'try' ? 'try' : 'watch'}
       />
     </div>
