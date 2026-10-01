@@ -65,6 +65,23 @@ function getColumnsForQuestion(q: SRBQuestion): number {
   return 13;
 }
 
+// 🆕 استخراج المعادلة فقط (بدون "احسب السلسلة:")
+function extractEquation(question: string): string {
+  return question
+    .replace(/^احسب\s+السلسلة\s*:\s*/u, '')
+    .replace(/^احسب\s*:\s*/u, '')
+    .replace(/\s*=\s*؟\s*$/u, '')
+    .trim();
+}
+
+// 🆕 حجم الخط حسب طول المعادلة
+function equationTextSize(eq: string): string {
+  const len = eq.length;
+  if (len > 22) return 'text-2xl sm:text-3xl';
+  if (len > 16) return 'text-3xl sm:text-4xl';
+  return 'text-4xl sm:text-5xl';
+}
+
 // ═══════════════════════════════════════════════════════════
 // الشاشة الرئيسية
 // ═══════════════════════════════════════════════════════════
@@ -243,10 +260,9 @@ export function RemediationScreen({
   // ═══ running ═══
   if (phase === 'running' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
-    const formattedPrompt = formatText(
-      currentQ.question.replace(/ = ؟$/, ''),
-      numberStyle,
-    );
+    // 🆕 استخرج المعادلة فقط
+    const equation = extractEquation(currentQ.question);
+    const formattedPrompt = formatText(equation, numberStyle);
 
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
@@ -285,9 +301,10 @@ export function RemediationScreen({
           <p className="text-center text-white/40 font-body text-sm mb-3">
             مثّل الناتج على السوروبان
           </p>
+          {/* 🆕 المعادلة في سطر واحد */}
           <p
-            className="text-center text-4xl sm:text-5xl font-black font-display text-white mb-6"
-            dir={isArabic ? 'rtl' : 'ltr'}
+            dir="ltr"
+            className={`text-center ${equationTextSize(equation)} font-black font-display text-white mb-6 whitespace-nowrap`}
           >
             {formattedPrompt} = ؟
           </p>
