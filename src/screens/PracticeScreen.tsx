@@ -2,6 +2,7 @@
 // ✅ SRB: wrongSkillsRef يحفظ skillId كامل ("L2-S07-m1") بدل "m1"
 // ✅ SRB: weakSkills = union(أخطاء + بطيئات من performances)
 // ✅ SRB: زر الجلسة العلاجية عند وجود مهارات ضعيفة
+// ✅ عرض المعادلة في سطر واحد (بدون "احسب السلسلة:" + منع الكسر)
 // 📅 آخر تحديث: SRB Migration — Phase 1.5
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -71,6 +72,23 @@ function extractHint(q: SRBQuestion | undefined): string | null {
   if (!q?.solution) return null;
   const m = q.solution.match(/^تلميح:\s*(.+?)(?:\.\s|$)/);
   return m ? m[1].trim() : null;
+}
+
+// 🆕 استخراج المعادلة فقط (بدون "احسب السلسلة:")
+function extractEquation(question: string): string {
+  return question
+    .replace(/^احسب\s+السلسلة\s*:\s*/u, '')
+    .replace(/^احسب\s*:\s*/u, '')
+    .replace(/\s*=\s*؟\s*$/u, '')
+    .trim();
+}
+
+// 🆕 حجم الخط حسب طول المعادلة
+function equationTextSize(eq: string): string {
+  const len = eq.length;
+  if (len > 22) return 'text-2xl sm:text-3xl';
+  if (len > 16) return 'text-3xl sm:text-4xl';
+  return 'text-4xl sm:text-5xl';
 }
 
 // 🆕 استخراج section من skillId ("L2-S07-m1" → "S07")
@@ -429,7 +447,9 @@ export function PracticeScreen({
 
   if (phase === 'running' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
-    const formattedPrompt = formatText(currentQ.question.replace(/ = ؟$/, ''), numberStyle);
+    // 🆕 استخرج المعادلة فقط (بدون "احسب السلسلة:")
+    const equation = extractEquation(currentQ.question);
+    const formattedPrompt = formatText(equation, numberStyle);
     const hint = extractHint(currentQ);
 
     return (
@@ -473,8 +493,11 @@ export function PracticeScreen({
         </div>
         <div className="glass-card p-5 sm:p-6 mb-5">
           <p className="text-center text-white/40 font-body text-sm mb-3">مثّل الناتج على السوروبان</p>
-          <p className="text-center text-4xl sm:text-5xl font-black font-display text-white mb-6"
-            dir={isArabic ? 'rtl' : 'ltr'}>
+          {/* 🆕 المعادلة في سطر واحد — حجم خط تلقائي + منع الكسر */}
+          <p
+            dir="ltr"
+            className={`text-center ${equationTextSize(equation)} font-black font-display text-white mb-6 whitespace-nowrap`}
+          >
             {formattedPrompt} = ؟
           </p>
 
