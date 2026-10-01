@@ -324,7 +324,7 @@ export default function App() {
     if (screen.startsWith('lesson-view-')) {
       const lessonId = screen.replace('lesson-view-', '');
       const lessonNode = getLessonById(lessonId);
-const levelId = lessonNode?.levelId ?? activeLevelId ?? 'L0';
+const levelId = lessonNode?.levelId ?? 'L0';
 
       return (
         <LessonScreen
