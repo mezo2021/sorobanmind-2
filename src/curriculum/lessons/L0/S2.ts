@@ -1,290 +1,354 @@
-// src/curriculum/lessons/L0/S2.ts
-// 📖 درس S2: القيمة المكانية وبناء الأعداد
+// src/curriculum/lessons/L0/S02.ts
+// 📖 درس S02: القيمة المكانية وبناء الأعداد
 
-import type { LessonNode, LessonExample, TryQuestion } from '../types';
+import type { LessonNode } from "../types";
 
-const EXAMPLES: LessonExample[] = [
-  {
-    id: 'L0-S2-E1',
-    problemText: 'مثّل الرقم 12',
-    answer: 12,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'حدد عدد المراتب: عشرات وآحاد', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [], expectedValueAfter: 0 },
-      { stepIndex: 2, instructionText: 'في الآحاد: ارفع خرزتين (2)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'units', beadsAffected: [1, 2], expectedValueAfter: 2 },
-      { stepIndex: 3, instructionText: 'في العشرات: ارفع خرزة واحدة (10)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'tens', beadsAffected: [1], expectedValueAfter: 12 },
-    ],
-    explanation: 'الرقم 12 = 10 + 2. خرزة عشرات واحدة + خرزتان آحاد.',
-  },
-  {
-    id: 'L0-S2-E2',
-    problemText: 'مثّل الرقم 34',
-    answer: 34,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'في الآحاد: ارفع أربع خرزات (4)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'units', beadsAffected: [1, 2, 3, 4], expectedValueAfter: 4 },
-      { stepIndex: 2, instructionText: 'في العشرات: ارفع ثلاث خرزات (30)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'tens', beadsAffected: [1, 2, 3], expectedValueAfter: 34 },
-    ],
-    explanation: 'الرقم 34 = 30 + 4.',
-  },
-  {
-    id: 'L0-S2-E3',
-    problemText: 'مثّل الرقم 58',
-    answer: 58,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'في الآحاد: أنزل الخرزة العلوية (5) + ارفع 3 (7)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'units', beadsAffected: [5, 1, 2, 3], expectedValueAfter: 8 },
-      { stepIndex: 2, instructionText: 'في العشرات: أنزل الخرزة العلوية (50)', fingerUsed: 'index', direction: 'down', targetColumn: 'tens', beadsAffected: [5], expectedValueAfter: 58 },
-    ],
-    explanation: 'الرقم 58 = 50 + 8.',
-  },
-  {
-    id: 'L0-S2-E4',
-    problemText: 'مثّل الرقم 70',
-    answer: 70,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'في الآحاد: لا خرزة (0)', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [], expectedValueAfter: 0 },
-      { stepIndex: 2, instructionText: 'في العشرات: أنزل الخرزة العلوية (50) + ارفع 2 (70)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'tens', beadsAffected: [5, 1, 2], expectedValueAfter: 70 },
-    ],
-    explanation: 'الرقم 70 = 70 + 0. صفر في الآحاد يعني لا خرزة.',
-  },
-  {
-    id: 'L0-S2-E5',
-    problemText: 'مثّل الرقم 91',
-    answer: 91,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'في الآحاد: ارفع خرزة واحدة (1)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'units', beadsAffected: [1], expectedValueAfter: 1 },
-      { stepIndex: 2, instructionText: 'في العشرات: أنزل العلوية (50) + ارفع 4 (90)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'tens', beadsAffected: [5, 1, 2, 3, 4], expectedValueAfter: 91 },
-    ],
-    explanation: 'الرقم 91 = 90 + 1.',
-  },
-  {
-    id: 'L0-S2-E6',
-    problemText: 'مثّل الرقم 205',
-    answer: 205,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'في الآحاد: أنزل العلوية (5)', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [5], expectedValueAfter: 5 },
-      { stepIndex: 2, instructionText: 'في العشرات: صفر (لا خرزة)', fingerUsed: 'index', direction: 'down', targetColumn: 'tens', beadsAffected: [], expectedValueAfter: 5 },
-      { stepIndex: 3, instructionText: 'في المئات: ارفع خرزتين (200)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'hundreds', beadsAffected: [1, 2], expectedValueAfter: 205 },
-    ],
-    explanation: 'الرقم 205 = 200 + 0 + 5. الصفر في العشرات مهم!',
-  },
-  {
-    id: 'L0-S2-E7',
-    problemText: 'مثّل الرقم 340',
-    answer: 340,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'في الآحاد: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [], expectedValueAfter: 0 },
-      { stepIndex: 2, instructionText: 'في العشرات: ارفع أربع خرزات (40)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'tens', beadsAffected: [1, 2, 3, 4], expectedValueAfter: 40 },
-      { stepIndex: 3, instructionText: 'في المئات: ارفع ثلاث خرزات (300)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'hundreds', beadsAffected: [1, 2, 3], expectedValueAfter: 340 },
-    ],
-    explanation: 'الرقم 340 = 300 + 40 + 0.',
-  },
-  {
-    id: 'L0-S2-E8',
-    problemText: 'مثّل الرقم 406',
-    answer: 406,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'في الآحاد: أنزل العلوية + ارفع 1 (6)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'units', beadsAffected: [5, 1], expectedValueAfter: 6 },
-      { stepIndex: 2, instructionText: 'في العشرات: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'tens', beadsAffected: [], expectedValueAfter: 6 },
-      { stepIndex: 3, instructionText: 'في المئات: ارفع أربع خرزات (400)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'hundreds', beadsAffected: [1, 2, 3, 4], expectedValueAfter: 406 },
-    ],
-    explanation: 'الرقم 406 = 400 + 0 + 6.',
-  },
-  {
-    id: 'L0-S2-E9',
-    problemText: 'مثّل الرقم 583',
-    answer: 583,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'في الآحاد: أنزل العلوية + ارفع 3 (8)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'units', beadsAffected: [5, 1, 2, 3], expectedValueAfter: 8 },
-      { stepIndex: 2, instructionText: 'في العشرات: أنزل العلوية + ارفع 3 (80)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'tens', beadsAffected: [5, 1, 2, 3], expectedValueAfter: 88 },
-      { stepIndex: 3, instructionText: 'في المئات: أنزل العلوية (500)', fingerUsed: 'index', direction: 'down', targetColumn: 'hundreds', beadsAffected: [5], expectedValueAfter: 583 },
-    ],
-    explanation: 'الرقم 583 = 500 + 80 + 3.',
-  },
-  {
-    id: 'L0-S2-E10',
-    problemText: 'مثّل الرقم 709',
-    answer: 709,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'في الآحاد: أنزل العلوية + ارفع 4 (9)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'units', beadsAffected: [5, 1, 2, 3, 4], expectedValueAfter: 9 },
-      { stepIndex: 2, instructionText: 'في العشرات: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'tens', beadsAffected: [], expectedValueAfter: 9 },
-      { stepIndex: 3, instructionText: 'في المئات: أنزل العلوية + ارفع 2 (700)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'hundreds', beadsAffected: [5, 1, 2], expectedValueAfter: 709 },
-    ],
-    explanation: 'الرقم 709 = 700 + 0 + 9.',
-  },
-];
-
-const TRY_QUESTIONS: TryQuestion[] = [
-  {
-    id: 'L0-S2-T1',
-    type: 'build',
-    prompt: 'مثّل الرقم 1024 على المعداد',
-    expectedValue: 1024,
-    steps: [
-      { stepIndex: 1, instructionText: 'آحاد: ارفع 4', fingerUsed: 'thumb', direction: 'up', targetColumn: 'units', beadsAffected: [1, 2, 3, 4], expectedValueAfter: 4 },
-      { stepIndex: 2, instructionText: 'عشرات: ارفع 2', fingerUsed: 'thumb', direction: 'up', targetColumn: 'tens', beadsAffected: [1, 2], expectedValueAfter: 24 },
-      { stepIndex: 3, instructionText: 'مئات: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'hundreds', beadsAffected: [], expectedValueAfter: 24 },
-      { stepIndex: 4, instructionText: 'آلاف: ارفع 1', fingerUsed: 'thumb', direction: 'up', targetColumn: 'thousands', beadsAffected: [1], expectedValueAfter: 1024 },
-    ],
-    explanation: '1024 = 1000 + 0 + 20 + 4',
-  },
-  {
-    id: 'L0-S2-T2',
-    type: 'build',
-    prompt: 'مثّل الرقم 2350 على المعداد',
-    expectedValue: 2350,
-    steps: [
-      { stepIndex: 1, instructionText: 'آحاد: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [], expectedValueAfter: 0 },
-      { stepIndex: 2, instructionText: 'عشرات: أنزل العلوية (50)', fingerUsed: 'index', direction: 'down', targetColumn: 'tens', beadsAffected: [5], expectedValueAfter: 50 },
-      { stepIndex: 3, instructionText: 'مئات: ارفع 3 (300)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'hundreds', beadsAffected: [1, 2, 3], expectedValueAfter: 350 },
-      { stepIndex: 4, instructionText: 'آلاف: ارفع 2 (2000)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'thousands', beadsAffected: [1, 2], expectedValueAfter: 2350 },
-    ],
-    explanation: '2350 = 2000 + 300 + 50 + 0',
-  },
-  {
-    id: 'L0-S2-T3',
-    type: 'build',
-    prompt: 'مثّل الرقم 4007 على المعداد',
-    expectedValue: 4007,
-    steps: [
-      { stepIndex: 1, instructionText: 'آحاد: أنزل العلوية + ارفع 2 (7)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'units', beadsAffected: [5, 1, 2], expectedValueAfter: 7 },
-      { stepIndex: 2, instructionText: 'عشرات: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'tens', beadsAffected: [], expectedValueAfter: 7 },
-      { stepIndex: 3, instructionText: 'مئات: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'hundreds', beadsAffected: [], expectedValueAfter: 7 },
-      { stepIndex: 4, instructionText: 'آلاف: ارفع 4 (4000)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'thousands', beadsAffected: [1, 2, 3, 4], expectedValueAfter: 4007 },
-    ],
-    explanation: '4007 = 4000 + 0 + 0 + 7',
-  },
-  {
-    id: 'L0-S2-T4',
-    type: 'build',
-    prompt: 'مثّل الرقم 6080 على المعداد',
-    expectedValue: 6080,
-    steps: [
-      { stepIndex: 1, instructionText: 'آحاد: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [], expectedValueAfter: 0 },
-      { stepIndex: 2, instructionText: 'عشرات: أنزل العلوية + ارفع 3 (80)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'tens', beadsAffected: [5, 1, 2, 3], expectedValueAfter: 80 },
-      { stepIndex: 3, instructionText: 'مئات: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'hundreds', beadsAffected: [], expectedValueAfter: 80 },
-      { stepIndex: 4, instructionText: 'آلاف: أنزل العلوية + ارفع 1 (6000)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'thousands', beadsAffected: [5, 1], expectedValueAfter: 6080 },
-    ],
-    explanation: '6080 = 6000 + 0 + 80 + 0',
-  },
-  {
-    id: 'L0-S2-T5',
-    type: 'build',
-    prompt: 'مثّل الرقم 9999 على المعداد',
-    expectedValue: 9999,
-    steps: [
-      { stepIndex: 1, instructionText: 'آحاد: 9', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'units', beadsAffected: [5, 1, 2, 3, 4], expectedValueAfter: 9 },
-      { stepIndex: 2, instructionText: 'عشرات: 9', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'tens', beadsAffected: [5, 1, 2, 3, 4], expectedValueAfter: 99 },
-      { stepIndex: 3, instructionText: 'مئات: 9', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'hundreds', beadsAffected: [5, 1, 2, 3, 4], expectedValueAfter: 999 },
-      { stepIndex: 4, instructionText: 'آلاف: 9', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'thousands', beadsAffected: [5, 1, 2, 3, 4], expectedValueAfter: 9999 },
-    ],
-    explanation: '9999 = أكبر رقم من 4 مراتب',
-  },
-  {
-    id: 'L0-S2-T6',
-    type: 'build',
-    prompt: 'مثّل الرقم 5020 على المعداد',
-    expectedValue: 5020,
-    steps: [
-      { stepIndex: 1, instructionText: 'آحاد: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [], expectedValueAfter: 0 },
-      { stepIndex: 2, instructionText: 'عشرات: ارفع 2 (20)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'tens', beadsAffected: [1, 2], expectedValueAfter: 20 },
-      { stepIndex: 3, instructionText: 'مئات: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'hundreds', beadsAffected: [], expectedValueAfter: 20 },
-      { stepIndex: 4, instructionText: 'آلاف: أنزل العلوية (5000)', fingerUsed: 'index', direction: 'down', targetColumn: 'thousands', beadsAffected: [5], expectedValueAfter: 5020 },
-    ],
-    explanation: '5020 = 5000 + 0 + 20 + 0',
-  },
-  {
-    id: 'L0-S2-T7',
-    type: 'build',
-    prompt: 'مثّل الرقم 7840 على المعداد',
-    expectedValue: 7840,
-    steps: [
-      { stepIndex: 1, instructionText: 'آحاد: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [], expectedValueAfter: 0 },
-      { stepIndex: 2, instructionText: 'عشرات: ارفع 4 (40)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'tens', beadsAffected: [1, 2, 3, 4], expectedValueAfter: 40 },
-      { stepIndex: 3, instructionText: 'مئات: أنزل العلوية + ارفع 3 (800)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'hundreds', beadsAffected: [5, 1, 2, 3], expectedValueAfter: 840 },
-      { stepIndex: 4, instructionText: 'آلاف: أنزل العلوية + ارفع 2 (7000)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'thousands', beadsAffected: [5, 1, 2], expectedValueAfter: 7840 },
-    ],
-    explanation: '7840 = 7000 + 800 + 40 + 0',
-  },
-  {
-    id: 'L0-S2-T8',
-    type: 'build',
-    prompt: 'مثّل الرقم 3056 على المعداد',
-    expectedValue: 3056,
-    steps: [
-      { stepIndex: 1, instructionText: 'آحاد: أنزل العلوية + ارفع 1 (6)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'units', beadsAffected: [5, 1], expectedValueAfter: 6 },
-      { stepIndex: 2, instructionText: 'عشرات: أنزل العلوية (50)', fingerUsed: 'index', direction: 'down', targetColumn: 'tens', beadsAffected: [5], expectedValueAfter: 56 },
-      { stepIndex: 3, instructionText: 'مئات: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'hundreds', beadsAffected: [], expectedValueAfter: 56 },
-      { stepIndex: 4, instructionText: 'آلاف: ارفع 3 (3000)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'thousands', beadsAffected: [1, 2, 3], expectedValueAfter: 3056 },
-    ],
-    explanation: '3056 = 3000 + 0 + 50 + 6',
-  },
-  {
-    id: 'L0-S2-T9',
-    type: 'build',
-    prompt: 'مثّل الرقم 8412 على المعداد',
-    expectedValue: 8412,
-    steps: [
-      { stepIndex: 1, instructionText: 'آحاد: ارفع 2', fingerUsed: 'thumb', direction: 'up', targetColumn: 'units', beadsAffected: [1, 2], expectedValueAfter: 2 },
-      { stepIndex: 2, instructionText: 'عشرات: ارفع 1 (10)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'tens', beadsAffected: [1], expectedValueAfter: 12 },
-      { stepIndex: 3, instructionText: 'مئات: ارفع 4 (400)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'hundreds', beadsAffected: [1, 2, 3, 4], expectedValueAfter: 412 },
-      { stepIndex: 4, instructionText: 'آلاف: أنزل العلوية + ارفع 3 (8000)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'thousands', beadsAffected: [5, 1, 2, 3], expectedValueAfter: 8412 },
-    ],
-    explanation: '8412 = 8000 + 400 + 10 + 2',
-  },
-  {
-    id: 'L0-S2-T10',
-    type: 'build',
-    prompt: 'مثّل الرقم 7008 على المعداد',
-    expectedValue: 7008,
-    steps: [
-      { stepIndex: 1, instructionText: 'آحاد: أنزل العلوية + ارفع 3 (8)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'units', beadsAffected: [5, 1, 2, 3], expectedValueAfter: 8 },
-      { stepIndex: 2, instructionText: 'عشرات: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'tens', beadsAffected: [], expectedValueAfter: 8 },
-      { stepIndex: 3, instructionText: 'مئات: صفر', fingerUsed: 'index', direction: 'down', targetColumn: 'hundreds', beadsAffected: [], expectedValueAfter: 8 },
-      { stepIndex: 4, instructionText: 'آلاف: أنزل العلوية + ارفع 2 (7000)', fingerUsed: 'both_pinch', direction: 'pinch_in', targetColumn: 'thousands', beadsAffected: [5, 1, 2], expectedValueAfter: 7008 },
-    ],
-    explanation: '7008 = 7000 + 0 + 0 + 8',
-  },
-];
-
-export const L0_S2: LessonNode = {
-  id: 'L0-S2',
-  skillId: 'S2',
-  levelId: 'L0',
+export const L0_S02: LessonNode = {
+  id: "L0-S02",
+  skillId: "S02",
+  levelId: "L0",
   order: 3,
 
-  title: { ar: 'القيمة المكانية وبناء الأعداد', en: 'Place Value and Building Numbers' },
+  title: {
+    ar: "القيمة المكانية وبناء الأعداد",
+    en: "Place Value and Building Numbers",
+  },
+  emoji: "🏠",
+  tags: ["build", "read", "kids", "L0", "place-value"],
 
+  // ═══════════ 🎬 القصة (ترحيبية — بلا نص بعد) ═══════════
   story: {
-    ar: 'قال حارس القلعة: تذكّروا القاعدة الذهبية — الخرزة التي تلمس الجسر هي التي تُحسب، والباقي نائم لا قيمة له. كل عمود يمثّل منزلة: آحاد، وعشرات، ومئات، وآلاف.',
-    en: 'The castle guard said: Remember the golden rule — only beads touching the beam are counted, the rest sleep with no value. Each column represents a place: units, tens, hundreds, and thousands.',
-  },
-  storyAudioId: 2,
-
-  concept: {
-    ar: 'كل عمود يمثّل منزلة عددية. الانتقال إلى العمود التالي يساراً يضرب القيمة في 10. الأعمدة من اليمين: آحاد ← عشرات ← مئات ← آلاف.',
-    en: 'Each column represents a number place. Moving to the next column to the left multiplies the value by 10. From right: units → tens → hundreds → thousands.',
+    title: "بيوت الأعداد",
+    emoji: "🏠",
+    story: "",
+    storyAudioText: "",
+    storyAudioId: "welcome",
   },
 
-  rule: {
-    ar: 'لوضع رقم متعدد المراتب: ابدأ من الآحاد (يمين)، ثم العشرات، ثم المئات. أرقام الصفر لا تُحرّك أي خرزة.',
-    en: 'To place a multi-digit number: start from units (right), then tens, then hundreds. Zero digits do not move any bead.',
-  },
+  // ═══════════ 🧩 الوحدات ═══════════
+  modules: [
+    // ─────────── m1: الآحاد والعشرات ───────────
+    {
+      id: "m1",
+      ruleCategory: "build",
+      title: "الآحاد والعشرات",
+      titleEn: "Units and Tens",
+      emoji: "🔟",
 
-  examples: EXAMPLES,
-  tryQuestions: TRY_QUESTIONS,
+      rule: {
+        description:
+          "كل عمود في المعداد يمثّل منزلة واحدة. العمود الأيمن للآحاد، والذي يليه للعشرات.",
+      },
+
+      condition: {
+        formula: "n = عشرات × 10 + آحاد",
+        explanation:
+          "لتمثيل عدد من منزلتين: ابدأ من اليسار (العشرات) ثم اليمين (الآحاد).",
+      },
+
+      discrimination: {
+        steps: [
+          {
+            question: "هل العدد يحتوي على عشرات؟",
+            type: "yes-no",
+            answer: "نعم → مثّل العشرات في العمود الأيسر",
+            hint: "الخرزة في العشرات تساوي 10، والخرزة في الآحاد تساوي 1",
+          },
+          {
+            question: "كم عدد الآحاد؟",
+            type: "value",
+            answer: "مثّل الآحاد في العمود الأيمن",
+            hint: "من 0 إلى 9 في عمود الآحاد",
+          },
+        ],
+        decision: "ابدأ بالعشرات، ثم الآحاد!",
+      },
+
+      watchPhase: {
+        examples: [
+          {
+            id: "S02-m1-E1",
+            question: "مثّل الرقم 10",
+            discrimination: "10 = عشرات واحدة + صفر آحاد.",
+            rule: "10 = خرزة واحدة في عمود العشرات",
+            fingerMovement: "الإبهام يرفع خرزة واحدة في عمود العشرات ⬆️",
+            steps: [
+              "اذهب إلى عمود العشرات (العمود الثاني من اليمين)",
+              "ارفع خرزة سفلية واحدة بالإبهام ⬆️",
+              "عمود الآحاد يبقى فارغًا (0)",
+              "الناتج الظاهر: 10",
+            ],
+            result: 10,
+            beadVisual: "1 عشرات + 0 آحاد = 10",
+          },
+          {
+            id: "S02-m1-E2",
+            question: "مثّل الرقم 12",
+            discrimination: "12 = 10 + 2 → عشرات (1) + آحاد (2).",
+            rule: "12 = 1 في العشرات + 2 في الآحاد",
+            fingerMovement: "الإبهام يرفع 1 في العشرات ⬆️، ثم يرفع 2 في الآحاد ⬆️",
+            steps: [
+              "في العشرات: ارفع خرزة واحدة بالإبهام ⬆️",
+              "في الآحاد: ارفع خرزتين سفليتين بالإبهام ⬆️",
+              "الناتج الظاهر: 10 + 2 = 12",
+            ],
+            result: 12,
+            beadVisual: "1 عشرات + 2 آحاد = 12",
+          },
+          {
+            id: "S02-m1-E3",
+            question: "مثّل الرقم 25",
+            discrimination: "25 = 20 + 5 → عشرات (2) + آحاد (5).",
+            rule: "25 = 2 في العشرات + 5 في الآحاد",
+            fingerMovement:
+              "الإبهام يرفع 2 في العشرات ⬆️، والسبابة تُنزل 5 في الآحاد ⬇️",
+            steps: [
+              "في العشرات: ارفع خرزتين سفليتين بالإبهام ⬆️",
+              "في الآحاد: أنزل الخرزة العلوية 5 بالسبابة ⬇️",
+              "الناتج الظاهر: 20 + 5 = 25",
+            ],
+            result: 25,
+            beadVisual: "2 عشرات + 5 آحاد = 25",
+          },
+          {
+            id: "S02-m1-E4",
+            question: "مثّل الرقم 47",
+            discrimination: "47 = 40 + 7 → عشرات (4) + آحاد (7).",
+            rule: "47 = 4 في العشرات + 7 في الآحاد",
+            fingerMovement:
+              "الإبهام يرفع 4 في العشرات ⬆️، ثم السبابة تُنزل 5 والإبهام يرفع 2 في الآحاد",
+            steps: [
+              "في العشرات: ارفع الأربع خرزات السفلية بالإبهام ⬆️",
+              "في الآحاد: أنزل العلوية 5 بالسبابة ⬇️ وارفع 2 سفليين بالإبهام ⬆️",
+              "الناتج الظاهر: 40 + 7 = 47",
+            ],
+            result: 47,
+            beadVisual: "4 عشرات + 7 آحاد = 47",
+          },
+          {
+            id: "S02-m1-E5",
+            question: "مثّل الرقم 99",
+            discrimination: "99 = 90 + 9 → العشرات والآحاد كلاهما ممتلئ.",
+            rule: "99 = 9 في العشرات + 9 في الآحاد",
+            fingerMovement:
+              "في كل عمود: نزّل 5 وارفع 4 (9 كامل)",
+            steps: [
+              "في العشرات: نزّل 5 ⬇️ وارفع 4 ⬆️ = 9 عشرات (90)",
+              "في الآحاد: نزّل 5 ⬇️ وارفع 4 ⬆️ = 9 آحاد",
+              "الناتج الظاهر: 99 (أكبر رقم بمنزلتين)",
+            ],
+            result: 99,
+            beadVisual: "9 عشرات + 9 آحاد = 99",
+          },
+        ],
+      },
+
+      tryPhase: {
+        exercises: [
+          {
+            id: "S02-m1-T1",
+            question: "مثّل الرقم 10",
+            discrimination: "10 = عشرات (1) + آحاد (0)",
+            steps: [
+              "ارفع خرزة واحدة في العشرات بالإبهام ⬆️",
+              "اترك الآحاد فارغًا",
+              "الناتج: 10",
+            ],
+            result: 10,
+          },
+          {
+            id: "S02-m1-T2",
+            question: "مثّل الرقم 12",
+            discrimination: "12 = عشرات (1) + آحاد (2)",
+            steps: [
+              "ارفع 1 في العشرات ⬆️",
+              "ارفع 2 في الآحاد ⬆️",
+              "الناتج: 12",
+            ],
+            result: 12,
+          },
+          {
+            id: "S02-m1-T3",
+            question: "مثّل الرقم 35",
+            discrimination: "35 = عشرات (3) + آحاد (5)",
+            steps: [
+              "ارفع 3 في العشرات ⬆️",
+              "أنزل 5 في الآحاد ⬇️",
+              "الناتج: 35",
+            ],
+            result: 35,
+          },
+          {
+            id: "S02-m1-T4",
+            question: "مثّل الرقم 68",
+            discrimination: "68 = عشرات (6) + آحاد (8)",
+            steps: [
+              "في العشرات: نزّل 5 ⬇️ وارفع 1 ⬆️ = 6",
+              "في الآحاد: نزّل 5 ⬇️ وارفع 3 ⬆️ = 8",
+              "الناتج: 68",
+            ],
+            result: 68,
+          },
+        ],
+      },
+    },
+
+    // ─────────── m2: المئات والآلاف ───────────
+    {
+      id: "m2",
+      ruleCategory: "build",
+      title: "المئات والآلاف",
+      titleEn: "Hundreds and Thousands",
+      emoji: "💯",
+
+      rule: {
+        description:
+          "نُوسّع الخريطة: عمود المئات (الثالث من اليمين) × 100، وعمود الآلاف (الرابع) × 1000.",
+      },
+
+      condition: {
+        formula: "n = آلاف × 1000 + مئات × 100 + عشرات × 10 + آحاد",
+        explanation:
+          "نقرأ العدد من اليسار إلى اليمين، ونمثّل كل منزلة في عمودها.",
+      },
+
+      discrimination: {
+        steps: [
+          {
+            question: "كم عدد المنازل في العدد؟",
+            type: "value",
+            answer: "نبدأ من أكبر منزلة (الأكثر يسارًا)",
+            hint: "الآلاف ← المئات ← العشرات ← الآحاد",
+          },
+        ],
+        decision: "ابدأ من أكبر منزلة وانتقل يمينًا!",
+      },
+
+      watchPhase: {
+        examples: [
+          {
+            id: "S02-m2-E1",
+            question: "مثّل الرقم 100",
+            discrimination: "100 = خرزة واحدة في عمود المئات.",
+            rule: "100 = 1 في المئات",
+            fingerMovement: "الإبهام يرفع خرزة واحدة في عمود المئات ⬆️",
+            steps: [
+              "اذهب إلى عمود المئات (العمود الثالث من اليمين)",
+              "ارفع خرزة واحدة بالإبهام ⬆️",
+              "الناتج الظاهر: 100",
+            ],
+            result: 100,
+            beadVisual: "1 في المئات + 0 + 0 = 100",
+          },
+          {
+            id: "S02-m2-E2",
+            question: "مثّل الرقم 134",
+            discrimination: "134 = 100 + 30 + 4.",
+            rule: "134 = مئات (1) + عشرات (3) + آحاد (4)",
+            fingerMovement:
+              "الإبهام يرفع 1 في المئات ⬆️، ثم 3 في العشرات ⬆️، ثم 4 في الآحاد ⬆️",
+            steps: [
+              "في المئات: ارفع خرزة واحدة بالإبهام ⬆️",
+              "في العشرات: ارفع ثلاث خرزات بالإبهام ⬆️",
+              "في الآحاد: ارفع الأربع خرزات السفلية بالإبهام ⬆️",
+              "الناتج الظاهر: 134",
+            ],
+            result: 134,
+            beadVisual: "1 مئات + 3 عشرات + 4 آحاد = 134",
+          },
+          {
+            id: "S02-m2-E3",
+            question: "مثّل الرقم 1000",
+            discrimination: "1000 = خرزة واحدة في عمود الآلاف.",
+            rule: "1000 = 1 في الآلاف",
+            fingerMovement: "الإبهام يرفع خرزة واحدة في عمود الآلاف ⬆️",
+            steps: [
+              "اذهب إلى عمود الآلاف (العمود الرابع من اليمين)",
+              "ارفع خرزة واحدة بالإبهام ⬆️",
+              "الناتج الظاهر: 1000",
+            ],
+            result: 1000,
+            beadVisual: "1 في الآلاف + 0 + 0 + 0 = 1000",
+          },
+          {
+            id: "S02-m2-E4",
+            question: "مثّل الرقم 2025",
+            discrimination: "2025 = 2000 + 20 + 5.",
+            rule: "2025 = آلاف (2) + عشرات (2) + آحاد (5)",
+            fingerMovement: "الإبهام يرفع 2 في الآلاف ⬆️، ثم 2 في العشرات ⬆️، والسبابة تُنزل 5 في الآحاد ⬇️",
+            steps: [
+              "في الآلاف: ارفع خرزتين سفليتين بالإبهام ⬆️",
+              "في المئات: اتركها فارغة (0)",
+              "في العشرات: ارفع خرزتين بالإبهام ⬆️",
+              "في الآحاد: أنزل العلوية 5 بالسبابة ⬇️",
+              "الناتج الظاهر: 2025",
+            ],
+            result: 2025,
+            beadVisual: "2 آلاف + 0 مئات + 2 عشرات + 5 آحاد = 2025",
+          },
+        ],
+      },
+
+      tryPhase: {
+        exercises: [
+          {
+            id: "S02-m2-T1",
+            question: "مثّل الرقم 100",
+            discrimination: "1 في المئات = 100",
+            steps: [
+              "ارفع 1 في عمود المئات ⬆️",
+              "الناتج: 100",
+            ],
+            result: 100,
+          },
+          {
+            id: "S02-m2-T2",
+            question: "مثّل الرقم 234",
+            discrimination: "234 = مئات (2) + عشرات (3) + آحاد (4)",
+            steps: [
+              "ارفع 2 في المئات ⬆️",
+              "ارفع 3 في العشرات ⬆️",
+              "ارفع 4 في الآحاد ⬆️",
+              "الناتج: 234",
+            ],
+            result: 234,
+          },
+          {
+            id: "S02-m2-T3",
+            question: "مثّل الرقم 1500",
+            discrimination: "1500 = آلاف (1) + مئات (5)",
+            steps: [
+              "ارفع 1 في الآلاف ⬆️",
+              "أنزل 5 في المئات ⬇️",
+              "الناتج: 1500",
+            ],
+            result: 1500,
+          },
+          {
+            id: "S02-m2-T4",
+            question: "مثّل الرقم 9999",
+            discrimination: "9999 = أكبر عدد بأربع منازل",
+            steps: [
+              "في كل عمود: نزّل 5 ⬇️ وارفع 4 ⬆️ = 9",
+              "في الآلاف · المئات · العشرات · الآحاد",
+              "الناتج: 9999",
+            ],
+            result: 9999,
+          },
+        ],
+      },
+    },
+  ],
+
+  outro: {
+    summary:
+      "أتقنت القيمة المكانية! تعرف الآن الآحاد والعشرات والمئات والآلاف — وتستطيع بناء أي عدد على المعداد.",
+    encouragement: "🎉 أنت الآن ملك الأعداد الكبيرة!",
+    totalExamples: 9,
+  },
 
   estimatedMinutes: 15,
   xpReward: 10,
-  isTheoretical: false,
 };
 
-export default L0_S2;
+export default L0_S02;
