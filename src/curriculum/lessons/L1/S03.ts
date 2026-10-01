@@ -5,7 +5,9 @@ import type { LessonNode } from "../types";
 
 export const S03_LESSON: LessonNode = {
   id: "S03",
+  skillId: "S03",
   levelId: "L1",
+  order: 1,
   title: { ar: "الجمع", en: "Addition" },
   emoji: "➕",
   tags: ["addition", "kids", "L1", "direct", "small_friends", "big_friends", "combined"],
