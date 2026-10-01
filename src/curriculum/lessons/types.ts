@@ -77,9 +77,15 @@ export interface MiniStoryBlock {
 // 📐 القاعدة والشرط
 // ═══════════════════════════════════════════════════════════
 
+export interface RuleCase {
+  from: number;
+  formula: string;
+}
+
 export interface RuleBlock {
   formula?: string;
   description: string;
+  cases?: RuleCase[];
 }
 
 export interface ConditionBlock {
