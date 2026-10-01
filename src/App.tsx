@@ -27,6 +27,7 @@ import FingerMathScreen from './screens/FingerMathScreen';
 import MagicSecretsScreen from './screens/MagicSecretsScreen';
 import LearnScreen from './screens/LearnScreen';
 import LessonScreen from './screens/LessonScreen';
+import { getLessonById } from './curriculum/lessons';
 import IntroductionScreen from './screens/IntroductionScreen';
 import LevelTestScreen from './screens/LevelTestScreen';
 
@@ -322,7 +323,8 @@ export default function App() {
     // ═══ 🆕 lesson-view-L0-S1 ... ═══
     if (screen.startsWith('lesson-view-')) {
       const lessonId = screen.replace('lesson-view-', '');
-      const levelId = lessonId.split('-')[0];
+      const lessonNode = getLessonById(lessonId);
+const levelId = lessonNode?.levelId ?? activeLevelId ?? 'L0';
 
       return (
         <LessonScreen
