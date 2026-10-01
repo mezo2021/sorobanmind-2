@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 import { getLessonById, getNextLesson } from '@/curriculum/lessons';
-import type { LessonExample, TryQuestion } from '@/curriculum/lessons';
+import type { LessonExample, LessonExercise, LessonStep, BilingualText } from '@/curriculum/lessons';
 import { FloatingCompanion } from '@/components/FloatingCompanion';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
@@ -40,7 +40,7 @@ interface LessonScreenProps {
 type Tab = 'watch' | 'try';
 
 // ═══════════════════════════════════════════════════════════
-// أدوات
+// أدوات مساعدة
 // ═══════════════════════════════════════════════════════════
 
 function getColumnsForValue(value: number): number {
@@ -67,6 +67,44 @@ function generateChoices(correct: number): number[] {
   return Array.from(set).sort(() => Math.random() - 0.5);
 }
 
+/** نص الخطوة — يدعم الشكلين (string | LessonStep) */
+function getStepText(step: string | LessonStep): string {
+  if (typeof step === 'string') return step;
+  return step.instructionText;
+}
+
+/** نص العنوان — يدعم الشكلين */
+function getTitle(title: BilingualText | string | undefined): string {
+  if (!title) return '';
+  if (typeof title === 'string') return title;
+  return title.ar;
+}
+
+/** نص المثال — يدعم problemText أو question */
+function getExampleText(ex: LessonExample): string {
+  return ex.problemText ?? ex.question ?? '';
+}
+
+/** نتيجة المثال — يدعم answer أو result */
+function getExampleResult(ex: LessonExample): number {
+  return ex.answer ?? ex.result ?? 0;
+}
+
+/** شرح المثال — يدعم explanation */
+function getExampleExplanation(ex: LessonExample): string {
+  return ex.explanation ?? '';
+}
+
+/** نص التمرين — يدعم prompt أو question */
+function getExerciseText(ex: LessonExercise): string {
+  return ex.prompt ?? ex.question ?? '';
+}
+
+/** نتيجة التمرين — يدعم expectedValue أو result */
+function getExerciseResult(ex: LessonExercise): number {
+  return ex.expectedValue ?? ex.result ?? 0;
+}
+
 // ═══════════════════════════════════════════════════════════
 // الشاشة الرئيسية
 // ═══════════════════════════════════════════════════════════
@@ -83,7 +121,6 @@ export function LessonScreen({
   const nextLesson = getNextLesson(lessonId);
   const sorobana = useSorobanaVoice();
   const { style: numberStyle, toggleStyle } = useNumberStyleStore();
-  const isArabic = numberStyle === 'arabic';
 
   // ─── حالة العرض ───
   const [tab, setTab] = useState<Tab>('watch');
@@ -102,7 +139,7 @@ export function LessonScreen({
   // ─── حالة الصوت ───
   const [isReadingStory, setIsReadingStory] = useState(false);
 
-  // ─── 🆕 فقاعة سوروبانا ───
+  // ─── فقاعة سوروبانا ───
   const [companionMsg, setCompanionMsg] = useState<string | null>(null);
 
   const showCompanionMsg = (msg: string, duration = 2200) => {
@@ -122,15 +159,19 @@ export function LessonScreen({
     );
   }
 
-  const examples = lesson.examples;
-  const tryQuestions = lesson.tryQuestions;
+  // ─── بيانات آمنة ───
+  const examples: LessonExample[] = lesson.examples ?? [];
+  const tryQuestions: LessonExercise[] = lesson.tryQuestions ?? [];
   const currentExample: LessonExample | undefined = examples[exampleIdx];
-  const currentTry: TryQuestion | undefined = tryQuestions[tryIdx];
+  const currentTry: LessonExercise | undefined = tryQuestions[tryIdx];
 
   const totalTry = tryQuestions.length;
   const solvedCount = solved.size;
   const allSolved = totalTry > 0 && solvedCount === totalTry;
   const hasTry = totalTry > 0;
+
+  const currentTryExpected = currentTry ? getExerciseResult(currentTry) : 0;
+  const currentTryAttempts = currentTry ? (attempts[currentTry.id] ?? 1) : 1;
 
   // ─── تبديل التاب ───
   const switchTab = (t: Tab) => {
@@ -144,18 +185,29 @@ export function LessonScreen({
 
   // ─── تشغيل/إيقاف القصة ───
   const toggleStory = () => {
-    if (!lesson.storyAudioId) return;
+    const audioSrc = lesson.storyAudioId;
+    if (audioSrc === null || audioSrc === undefined) return;
+
     if (isReadingStory) {
       sorobana.stop();
       setIsReadingStory(false);
       return;
     }
+
     sorobana.stop();
     playSound('click');
     setIsReadingStory(true);
-    sorobana.speakStory(lesson.storyAudioId, () => {
-      setIsReadingStory(false);
-    });
+
+    if (audioSrc === 'welcome') {
+      const audio = new Audio(
+        'https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3',
+      );
+      audio.onended = () => setIsReadingStory(false);
+      audio.onerror = () => setIsReadingStory(false);
+      audio.play().catch(() => setIsReadingStory(false));
+    } else {
+      sorobana.speakStory(audioSrc, () => setIsReadingStory(false));
+    }
   };
 
   // ─── التنقل في الأمثلة ───
@@ -175,21 +227,21 @@ export function LessonScreen({
   // ─── توليد الخيارات ───
   useEffect(() => {
     if (tab === 'try' && currentTry && currentTry.type === 'read') {
-      setChoices(generateChoices(currentTry.expectedValue));
+      setChoices(generateChoices(currentTryExpected));
       setInputValue('');
     }
   }, [tab, tryIdx, currentTry?.id]);
 
-  // ─── 🆕 تفاعل مشترك مع الإجابة ───
+  // ─── تفاعل مشترك مع الإجابة ───
   const reactToAnswer = (isCorrect: boolean, attempt: number) => {
     if (isCorrect) {
       playSound('success');
-      sorobana.speakCorrect();          // 🆕 صوت سوروبانا
-      showCompanionMsg('أحسنت! 🌟');     // 🆕 فقاعة
+      sorobana.speakCorrect();
+      showCompanionMsg('أحسنت! 🌟');
       setFeedback('correct');
     } else {
       playSound('error');
-      sorobana.speakWrong();             // 🆕 صوت سوروبانا
+      sorobana.speakWrong();
       if (attempt >= MAX_TRIES) {
         setFeedback('reveal');
       } else {
@@ -201,7 +253,7 @@ export function LessonScreen({
   // ─── التحقق (read) ───
   const handleCheckRead = (chosen: number) => {
     if (!currentTry || feedback === 'reveal') return;
-    const isCorrect = chosen === currentTry.expectedValue;
+    const isCorrect = chosen === currentTryExpected;
     const key = currentTry.id;
     const attempt = (attempts[key] ?? 0) + 1;
     setAttempts((a) => ({ ...a, [key]: attempt }));
@@ -218,7 +270,7 @@ export function LessonScreen({
   // ─── التحقق (build) ───
   const handleCheckBuild = () => {
     if (!currentTry || feedback === 'reveal') return;
-    const isCorrect = abacusValue === currentTry.expectedValue;
+    const isCorrect = abacusValue === currentTryExpected;
     const key = currentTry.id;
     const attempt = (attempts[key] ?? 0) + 1;
     setAttempts((a) => ({ ...a, [key]: attempt }));
@@ -236,9 +288,7 @@ export function LessonScreen({
     setFeedback('idle');
     setAbacusValue(0);
     setInputValue('');
-    if (tryIdx + 1 >= totalTry) {
-      // آخر سؤال
-    } else {
+    if (tryIdx + 1 < totalTry) {
       setTryIdx((i) => i + 1);
     }
   };
@@ -279,6 +329,9 @@ export function LessonScreen({
     onBack();
   };
 
+  const lessonTitleText = getTitle(lesson.title);
+  const nextLessonTitleText = nextLesson ? getTitle(nextLesson.title) : '';
+
   // ═══════════════════════════════════════════════════════════
   // Render
   // ═══════════════════════════════════════════════════════════
@@ -297,7 +350,7 @@ export function LessonScreen({
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-sm font-bold text-white truncate">
-              {formatText(lesson.title.ar, numberStyle)}
+              {formatText(lessonTitleText, numberStyle)}
             </h1>
             <p className="text-[10px] text-white/50 truncate">
               {lesson.skillId ?? 'مقدمة'} · {lesson.levelId}
@@ -357,47 +410,53 @@ export function LessonScreen({
               className="space-y-4"
             >
               {/* القصة */}
-              <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-400/30">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-pink-300" />
-                    <h3 className="text-sm font-bold text-pink-300">📖 القصة</h3>
+              {lesson.story && (
+                <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-400/30">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-pink-300" />
+                      <h3 className="text-sm font-bold text-pink-300">📖 القصة</h3>
+                    </div>
+                    {lesson.storyAudioId !== null && lesson.storyAudioId !== undefined && (
+                      <button
+                        onClick={toggleStory}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                          isReadingStory
+                            ? 'bg-red-500/30 border border-red-400/50 text-red-200'
+                            : 'bg-rose-500/20 border border-rose-400/40 text-rose-200 hover:bg-rose-500/30'
+                        }`}
+                      >
+                        {isReadingStory ? (
+                          <><Square className="w-3.5 h-3.5" /> إيقاف</>
+                        ) : (
+                          <><Volume2 className="w-3.5 h-3.5" /> موجز القصة</>
+                        )}
+                      </button>
+                    )}
                   </div>
-                  {lesson.storyAudioId !== null && (
-                    <button
-                      onClick={toggleStory}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
-                        isReadingStory
-                          ? 'bg-red-500/30 border border-red-400/50 text-red-200'
-                          : 'bg-rose-500/20 border border-rose-400/40 text-rose-200 hover:bg-rose-500/30'
-                      }`}
-                    >
-                      {isReadingStory ? (
-                        <><Square className="w-3.5 h-3.5" /> إيقاف</>
-                      ) : (
-                        <><Volume2 className="w-3.5 h-3.5" /> موجز القصة</>
-                      )}
-                    </button>
-                  )}
+                  <p className="text-sm text-white/85 font-body leading-relaxed">
+                    {formatText(lesson.story.ar ?? '', numberStyle)}
+                  </p>
                 </div>
-                <p className="text-sm text-white/85 font-body leading-relaxed">
-                  {formatText(lesson.story.ar, numberStyle)}
-                </p>
-              </div>
+              )}
 
               {/* المفهوم + القاعدة */}
               {(lesson.concept || lesson.rule) && (
                 <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-gold-400/10 to-gold-600/10 border border-gold-400/30">
-                  <h3 className="text-sm font-bold text-gold-300 mb-2">💡 المفهوم</h3>
-                  <p className="text-sm text-white/85 font-body leading-relaxed mb-3">
-                    {formatText(lesson.concept.ar, numberStyle)}
-                  </p>
+                  {lesson.concept && (
+                    <>
+                      <h3 className="text-sm font-bold text-gold-300 mb-2">💡 المفهوم</h3>
+                      <p className="text-sm text-white/85 font-body leading-relaxed mb-3">
+                        {formatText(lesson.concept.ar ?? '', numberStyle)}
+                      </p>
+                    </>
+                  )}
 
                   {lesson.rule && (
                     <>
                       <h3 className="text-sm font-bold text-gold-300 mb-1 mt-3">📏 القاعدة</h3>
                       <p className="text-sm text-white/85 font-body leading-relaxed">
-                        {formatText(lesson.rule.ar, numberStyle)}
+                        {formatText(lesson.rule.ar ?? '', numberStyle)}
                       </p>
                     </>
                   )}
@@ -444,14 +503,14 @@ export function LessonScreen({
                   </div>
 
                   <p className="text-center text-xl font-extrabold font-display text-white mb-4">
-                    {formatText(currentExample.problemText, numberStyle)}
+                    {formatText(getExampleText(currentExample), numberStyle)}
                   </p>
 
                   <div className="flex justify-center mb-4">
                     <Soroban2D5
                       key={`ex-${currentExample.id}`}
-                      columns={getColumnsForValue(currentExample.answer)}
-                      demoValue={currentExample.answer}
+                      columns={getColumnsForValue(getExampleResult(currentExample))}
+                      demoValue={getExampleResult(currentExample)}
                       interactive={false}
                       showValue={true}
                     />
@@ -482,14 +541,16 @@ export function LessonScreen({
                               {formatNumber(i + 1, numberStyle)}
                             </span>
                             <p className="text-sm text-white/85 font-body leading-relaxed flex-1">
-                              {formatText(step.instructionText, numberStyle)}
+                              {formatText(getStepText(step), numberStyle)}
                             </p>
                           </div>
                         </motion.div>
                       ))}
-                      <p className="text-xs text-center text-emerald-300 font-bold pt-1">
-                        ✨ {formatText(currentExample.explanation, numberStyle)}
-                      </p>
+                      {getExampleExplanation(currentExample) && (
+                        <p className="text-xs text-center text-emerald-300 font-bold pt-1">
+                          ✨ {formatText(getExampleExplanation(currentExample), numberStyle)}
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -535,14 +596,14 @@ export function LessonScreen({
                   {formatNumber(totalTry, numberStyle)}
                 </h3>
                 <span className="text-xs text-white/50">
-                  محاولة {formatNumber(attempts[currentTry.id] ?? 1, numberStyle)} /{' '}
+                  محاولة {formatNumber(currentTryAttempts, numberStyle)} /{' '}
                   {formatNumber(MAX_TRIES, numberStyle)}
                 </span>
               </div>
 
               <div className="glass-card p-4 sm:p-5 text-center">
                 <p className="text-lg font-extrabold font-display text-white mb-4">
-                  {formatText(currentTry.prompt, numberStyle)}
+                  {formatText(getExerciseText(currentTry), numberStyle)}
                 </p>
 
                 {currentTry.type === 'read' && (
@@ -550,8 +611,8 @@ export function LessonScreen({
                     <div className="flex justify-center mb-4">
                       <Soroban2D5
                         key={`tr-${currentTry.id}`}
-                        columns={getColumnsForValue(currentTry.expectedValue)}
-                        demoValue={currentTry.expectedValue}
+                        columns={getColumnsForValue(currentTryExpected)}
+                        demoValue={currentTryExpected}
                         interactive={false}
                         showValue={false}
                       />
@@ -579,7 +640,7 @@ export function LessonScreen({
                     <div className="flex justify-center mb-3">
                       <Soroban2D5
                         key={`tr-${currentTry.id}`}
-                        columns={getColumnsForValue(currentTry.expectedValue)}
+                        columns={getColumnsForValue(currentTryExpected)}
                         initialValue={0}
                         autoBeadSize={true}
                         interactive={feedback !== 'reveal' && feedback !== 'correct'}
@@ -626,7 +687,7 @@ export function LessonScreen({
               {feedback === 'reveal' && (
                 <div className="p-4 rounded-2xl bg-gold-500/15 border border-gold-400/40">
                   <p className="text-sm font-bold text-gold-300 text-center mb-2">
-                    💡 الإجابة الصحيحة: {formatNumber(currentTry.expectedValue, numberStyle)}
+                    💡 الإجابة الصحيحة: {formatNumber(currentTryExpected, numberStyle)}
                   </p>
 
                   {currentTry.steps && currentTry.steps.length > 0 && (
@@ -636,7 +697,7 @@ export function LessonScreen({
                           <span className="text-gold-300 font-bold">
                             {formatNumber(i + 1, numberStyle)}.
                           </span>{' '}
-                          {formatText(s.instructionText, numberStyle)}
+                          {formatText(getStepText(s), numberStyle)}
                         </p>
                       ))}
                     </div>
@@ -704,7 +765,7 @@ export function LessonScreen({
               onClick={handleNextLesson}
               className="w-full mt-2 py-3 rounded-2xl bg-gradient-to-l from-purple-500 to-electric-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg"
             >
-              الدرس التالي: {formatText(nextLesson.title.ar, numberStyle)}
+              الدرس التالي: {formatText(nextLessonTitleText, numberStyle)}
               <ChevronLeft className="w-4 h-4" />
             </button>
           )}
