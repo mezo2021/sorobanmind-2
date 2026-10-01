@@ -6,8 +6,7 @@ import type { LessonNode } from "../types";
 export const S04_LESSON: LessonNode = {
   id: "S04",
   level: "L1",
-  title: "الطرح",
-  titleEn: "Subtraction",
+  title: { ar: "الطرح", en: "Subtraction" },
   emoji: "➖",
   tags: ["subtraction", "kids", "L1", "direct", "small_friends", "big_friends", "combined"],
 
