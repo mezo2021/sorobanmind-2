@@ -1,15 +1,28 @@
 // src/screens/LessonScreen.tsx
-// 📖 شاشة الدرس: شاهد (قصة + أمثلة) + جرّب (أسئلة تفاعلية)
+// 📖 شاشة الدرس — تدعم 3 أنواع:
+//   1. نظري (L0-INTRO) → introPages Carousel
+//   2. وحدات (S01 · S03 · S04) → module chips + watch/try
+//   3. قديم (احتياطي) → examples + tryQuestions
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, Volume2, Square, Eye, Hand, ChevronRight, ChevronLeft,
-  CheckCircle2, Lightbulb, Sparkles, RotateCcw, Type,
+  CheckCircle2, Lightbulb, Sparkles, RotateCcw, Type, Info, HelpCircle,
 } from 'lucide-react';
 
-import { getLessonById, getNextLesson } from '@/curriculum/lessons';
-import type { LessonExample, LessonExercise, LessonStep, BilingualText } from '@/curriculum/lessons';
+import {
+  getLessonById,
+  getNextLesson,
+  hasModules,
+  isPureIntro,
+  type LessonNode,
+  type LessonExample,
+  type LessonExercise,
+  type LessonModule,
+  type LessonStep,
+  type BilingualText,
+} from '@/curriculum/lessons';
 import { FloatingCompanion } from '@/components/FloatingCompanion';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
@@ -23,10 +36,6 @@ import { formatText, formatNumber } from '@/utils/numberStyle';
 
 const LESSON_PROGRESS_KEY = 'soroban_completed_lessons';
 const MAX_TRIES = 2;
-
-// ═══════════════════════════════════════════════════════════
-// Props
-// ═══════════════════════════════════════════════════════════
 
 interface LessonScreenProps {
   lessonId: string;
@@ -67,40 +76,33 @@ function generateChoices(correct: number): number[] {
   return Array.from(set).sort(() => Math.random() - 0.5);
 }
 
-/** نص الخطوة — يدعم الشكلين (string | LessonStep) */
 function getStepText(step: string | LessonStep): string {
   if (typeof step === 'string') return step;
   return step.instructionText;
 }
 
-/** نص العنوان — يدعم الشكلين */
 function getTitle(title: BilingualText | string | undefined): string {
   if (!title) return '';
   if (typeof title === 'string') return title;
   return title.ar;
 }
 
-/** نص المثال — يدعم problemText أو question */
 function getExampleText(ex: LessonExample): string {
   return ex.problemText ?? ex.question ?? '';
 }
 
-/** نتيجة المثال — يدعم answer أو result */
 function getExampleResult(ex: LessonExample): number {
   return ex.answer ?? ex.result ?? 0;
 }
 
-/** شرح المثال — يدعم explanation */
 function getExampleExplanation(ex: LessonExample): string {
   return ex.explanation ?? '';
 }
 
-/** نص التمرين — يدعم prompt أو question */
 function getExerciseText(ex: LessonExercise): string {
   return ex.prompt ?? ex.question ?? '';
 }
 
-/** نتيجة التمرين — يدعم expectedValue أو result */
 function getExerciseResult(ex: LessonExercise): number {
   return ex.expectedValue ?? ex.result ?? 0;
 }
@@ -122,32 +124,39 @@ export function LessonScreen({
   const sorobana = useSorobanaVoice();
   const { style: numberStyle, toggleStyle } = useNumberStyleStore();
 
-  // ─── حالة العرض ───
   const [tab, setTab] = useState<Tab>('watch');
   const [exampleIdx, setExampleIdx] = useState(0);
   const [tryIdx, setTryIdx] = useState(0);
   const [showSteps, setShowSteps] = useState(false);
+  const [showDiscrimination, setShowDiscrimination] = useState(false);
 
-  // ─── حالة جرب ───
   const [attempts, setAttempts] = useState<Record<string, number>>({});
   const [solved, setSolved] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong' | 'reveal'>('idle');
   const [abacusValue, setAbacusValue] = useState(0);
-  const [inputValue, setInputValue] = useState<string>('');
   const [choices, setChoices] = useState<number[]>([]);
 
-  // ─── حالة الصوت ───
   const [isReadingStory, setIsReadingStory] = useState(false);
-
-  // ─── فقاعة سوروبانا ───
   const [companionMsg, setCompanionMsg] = useState<string | null>(null);
+  const [introPageIdx, setIntroPageIdx] = useState(0);
+  const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
+
+  // مزامنة الوحدة النشطة مع الدرس
+  useEffect(() => {
+    if (lesson && hasModules(lesson)) {
+      setActiveModuleId(lesson.modules![0].id);
+      setExampleIdx(0);
+      setTryIdx(0);
+      setShowSteps(false);
+      setShowDiscrimination(false);
+    }
+  }, [lessonId]);
 
   const showCompanionMsg = (msg: string, duration = 2200) => {
     setCompanionMsg(msg);
     window.setTimeout(() => setCompanionMsg(null), duration);
   };
 
-  // ─── الحماية: لا درس ───
   if (!lesson) {
     return (
       <div dir="rtl" className="min-h-screen flex items-center justify-center p-4">
@@ -159,49 +168,207 @@ export function LessonScreen({
     );
   }
 
-  // ─── بيانات آمنة ───
-  const examples: LessonExample[] = lesson.examples ?? [];
-  const tryQuestions: LessonExercise[] = lesson.tryQuestions ?? [];
-  const currentExample: LessonExample | undefined = examples[exampleIdx];
-  const currentTry: LessonExercise | undefined = tryQuestions[tryIdx];
+  // ═══════════════════════════════════════════════════════════
+  // 🅰️ النوع 1: درس نظري (L0-INTRO)
+  // ═══════════════════════════════════════════════════════════
 
+  if (isPureIntro(lesson) && lesson.introPages && lesson.introPages.length > 0) {
+    const pages = lesson.introPages;
+    const currentPage = pages[introPageIdx];
+    const isLast = introPageIdx === pages.length - 1;
+    const isFirst = introPageIdx === 0;
+    const lessonTitleText = getTitle(lesson.title);
+
+    const handleFinishIntro = () => {
+      playSound('levelup');
+      try {
+        const raw = localStorage.getItem(LESSON_PROGRESS_KEY);
+        const arr: string[] = raw ? JSON.parse(raw) : [];
+        if (!arr.includes(lessonId)) {
+          arr.push(lessonId);
+          localStorage.setItem(LESSON_PROGRESS_KEY, JSON.stringify(arr));
+        }
+      } catch { /* ignore */ }
+      if (lesson.xpReward && onXP) onXP(lesson.xpReward);
+      onComplete(lessonId);
+    };
+
+    return (
+      <div dir="rtl" className="min-h-screen pb-40">
+        {/* Header */}
+        <div className="sticky top-0 z-30 backdrop-blur-lg bg-slate-900/70 border-b border-white/10 px-3 sm:px-6 py-3">
+          <div className="max-w-3xl mx-auto flex items-center gap-2">
+            <button
+              onClick={() => { playSound('click'); onBack(); }}
+              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
+            >
+              <Home className="w-5 h-5 text-white" />
+            </button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-sm font-bold text-white truncate">
+                {formatText(lessonTitleText, numberStyle)}
+              </h1>
+              <p className="text-[10px] text-white/50">مقدمة تعريفية · {lesson.levelId}</p>
+            </div>
+            <button
+              onClick={() => { playSound('click'); toggleStyle(); }}
+              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
+            >
+              <Type className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+
+        {/* Page */}
+        <div className="max-w-3xl mx-auto px-3 sm:px-6 py-5">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentPage.id}
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              transition={{ duration: 0.3 }}
+              className="glass-card p-6 sm:p-8 min-h-[60vh] flex flex-col"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Info className="w-5 h-5 text-electric-300" />
+                <span className="text-xs text-white/50">
+                  صفحة {formatNumber(introPageIdx + 1, numberStyle)} من{' '}
+                  {formatNumber(pages.length, numberStyle)}
+                </span>
+              </div>
+
+              <h2 className="text-2xl font-extrabold text-white mb-4 text-center">
+                {currentPage.title}
+              </h2>
+
+              {currentPage.imageSvg && (
+                <div
+                  className="my-4 flex justify-center"
+                  dangerouslySetInnerHTML={{ __html: currentPage.imageSvg }}
+                />
+              )}
+
+              <p className="text-base text-white/85 font-body leading-loose text-center flex-1 flex items-center justify-center">
+                {currentPage.content}
+              </p>
+
+              {/* Dots */}
+              <div className="flex justify-center gap-1.5 my-4">
+                {pages.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`rounded-full transition-all ${
+                      i === introPageIdx
+                        ? 'w-6 h-2 bg-gold-400'
+                        : 'w-2 h-2 bg-white/20'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => { playSound('click'); setIntroPageIdx((i) => Math.max(0, i - 1)); }}
+                  disabled={isFirst}
+                  className="flex-1 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm disabled:opacity-30 transition flex items-center justify-center gap-1"
+                >
+                  <ChevronRight className="w-4 h-4" /> السابق
+                </button>
+                {!isLast ? (
+                  <button
+                    onClick={() => { playSound('click'); setIntroPageIdx((i) => i + 1); }}
+                    className="flex-1 py-3 rounded-2xl bg-gradient-to-l from-purple-500 to-electric-500 text-white font-bold text-sm transition flex items-center justify-center gap-1"
+                  >
+                    التالي <ChevronLeft className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleFinishIntro}
+                    className="flex-1 py-3 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-bold text-sm transition flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    أكملت المقدمة +{formatNumber(lesson.xpReward, numberStyle)} XP
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <FloatingCompanion playSound={playSound} />
+        <SorobanaCompanion
+          isSpeaking={sorobana.isSpeaking}
+          onClick={() => sorobana.speakTeaching()}
+          mode="watch"
+        />
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 🅱️ النوع 2 و 3: درس تفاعلي (وحدات أو قديم)
+  // ═══════════════════════════════════════════════════════════
+
+  const hasMod = hasModules(lesson);
+  const modules: LessonModule[] = lesson.modules ?? [];
+  const activeModule = hasMod
+    ? modules.find((m) => m.id === activeModuleId) ?? modules[0]
+    : null;
+
+  // محتوى العرض (حسب النوع)
+  const examples: LessonExample[] = hasMod
+    ? activeModule?.watchPhase.examples ?? []
+    : lesson.examples ?? [];
+
+  const tryQuestions: LessonExercise[] = hasMod
+    ? activeModule?.tryPhase.exercises ?? []
+    : lesson.tryQuestions ?? [];
+
+  const currentExample = examples[exampleIdx];
+  const currentTry = tryQuestions[tryIdx];
   const totalTry = tryQuestions.length;
   const solvedCount = solved.size;
   const allSolved = totalTry > 0 && solvedCount === totalTry;
   const hasTry = totalTry > 0;
-
   const currentTryExpected = currentTry ? getExerciseResult(currentTry) : 0;
   const currentTryAttempts = currentTry ? (attempts[currentTry.id] ?? 1) : 1;
 
-  // ─── تبديل التاب ───
+  // ─── التنقل بين الوحدات ───
+  const switchModule = (mId: string) => {
+    playSound('click');
+    setActiveModuleId(mId);
+    setExampleIdx(0);
+    setTryIdx(0);
+    setFeedback('idle');
+    setShowSteps(false);
+    setShowDiscrimination(false);
+    setAbacusValue(0);
+  };
+
   const switchTab = (t: Tab) => {
     playSound('click');
     setTab(t);
     setFeedback('idle');
     setAbacusValue(0);
-    setInputValue('');
     setShowSteps(false);
+    setShowDiscrimination(false);
   };
 
-  // ─── تشغيل/إيقاف القصة ───
   const toggleStory = () => {
     const audioSrc = lesson.storyAudioId;
     if (audioSrc === null || audioSrc === undefined) return;
-
     if (isReadingStory) {
       sorobana.stop();
       setIsReadingStory(false);
       return;
     }
-
     sorobana.stop();
     playSound('click');
     setIsReadingStory(true);
-
     if (audioSrc === 'welcome') {
-      const audio = new Audio(
-        'https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3',
-      );
+      const audio = new Audio('https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3');
       audio.onended = () => setIsReadingStory(false);
       audio.onerror = () => setIsReadingStory(false);
       audio.play().catch(() => setIsReadingStory(false));
@@ -210,7 +377,6 @@ export function LessonScreen({
     }
   };
 
-  // ─── التنقل في الأمثلة ───
   const nextExample = () => {
     if (exampleIdx + 1 >= examples.length) return;
     playSound('click');
@@ -224,15 +390,12 @@ export function LessonScreen({
     setShowSteps(false);
   };
 
-  // ─── توليد الخيارات ───
   useEffect(() => {
     if (tab === 'try' && currentTry && currentTry.type === 'read') {
       setChoices(generateChoices(currentTryExpected));
-      setInputValue('');
     }
-  }, [tab, tryIdx, currentTry?.id]);
+  }, [tab, tryIdx, activeModuleId, currentTry?.id]);
 
-  // ─── تفاعل مشترك مع الإجابة ───
   const reactToAnswer = (isCorrect: boolean, attempt: number) => {
     if (isCorrect) {
       playSound('success');
@@ -242,22 +405,16 @@ export function LessonScreen({
     } else {
       playSound('error');
       sorobana.speakWrong();
-      if (attempt >= MAX_TRIES) {
-        setFeedback('reveal');
-      } else {
-        setFeedback('wrong');
-      }
+      setFeedback(attempt >= MAX_TRIES ? 'reveal' : 'wrong');
     }
   };
 
-  // ─── التحقق (read) ───
   const handleCheckRead = (chosen: number) => {
     if (!currentTry || feedback === 'reveal') return;
     const isCorrect = chosen === currentTryExpected;
     const key = currentTry.id;
     const attempt = (attempts[key] ?? 0) + 1;
     setAttempts((a) => ({ ...a, [key]: attempt }));
-
     if (isCorrect) {
       setSolved((s) => new Set(s).add(key));
       reactToAnswer(true, attempt);
@@ -267,14 +424,12 @@ export function LessonScreen({
     }
   };
 
-  // ─── التحقق (build) ───
   const handleCheckBuild = () => {
     if (!currentTry || feedback === 'reveal') return;
     const isCorrect = abacusValue === currentTryExpected;
     const key = currentTry.id;
     const attempt = (attempts[key] ?? 0) + 1;
     setAttempts((a) => ({ ...a, [key]: attempt }));
-
     if (isCorrect) {
       setSolved((s) => new Set(s).add(key));
       reactToAnswer(true, attempt);
@@ -287,10 +442,7 @@ export function LessonScreen({
   const advanceTry = () => {
     setFeedback('idle');
     setAbacusValue(0);
-    setInputValue('');
-    if (tryIdx + 1 < totalTry) {
-      setTryIdx((i) => i + 1);
-    }
+    if (tryIdx + 1 < totalTry) setTryIdx((i) => i + 1);
   };
 
   const handleRevealNext = () => {
@@ -299,7 +451,6 @@ export function LessonScreen({
     advanceTry();
   };
 
-  // ─── إنهاء الدرس ───
   const handleComplete = () => {
     playSound('levelup');
     sorobana.stop();
@@ -344,7 +495,6 @@ export function LessonScreen({
           <button
             onClick={handleHome}
             className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
-            aria-label="رجوع للقائمة"
           >
             <Home className="w-5 h-5 text-white" />
           </button>
@@ -359,11 +509,31 @@ export function LessonScreen({
           <button
             onClick={() => { playSound('click'); toggleStyle(); }}
             className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
-            aria-label="تبديل نمط الأرقام"
           >
             <Type className="w-5 h-5 text-white" />
           </button>
         </div>
+
+        {/* Module Chips */}
+        {hasMod && modules.length > 1 && (
+          <div className="max-w-3xl mx-auto mt-3 flex gap-1.5 overflow-x-auto pb-1">
+            {modules.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => switchModule(m.id)}
+                className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                  m.id === activeModule?.id
+                    ? 'bg-gold-400/30 border border-gold-400/60 text-gold-200'
+                    : 'bg-white/5 border border-white/10 text-white/60 hover:text-white'
+                }`}
+              >
+                <span>{m.emoji}</span>
+                <span>{m.id}</span>
+                <span className="hidden sm:inline">{m.title}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="max-w-3xl mx-auto mt-3 flex gap-2 p-1 rounded-2xl bg-white/5 border border-white/10">
@@ -402,15 +572,15 @@ export function LessonScreen({
         <AnimatePresence mode="wait">
           {tab === 'watch' && (
             <motion.div
-              key="watch"
+              key={`watch-${activeModule?.id ?? 'legacy'}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.25 }}
               className="space-y-4"
             >
-              {/* القصة */}
-              {lesson.story && (
+              {/* 🎬 القصة (L0 على مستوى الدرس) */}
+              {lesson.story && (lesson.story.ar || lesson.storyAudioId) && (
                 <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-400/30">
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2">
@@ -434,40 +604,149 @@ export function LessonScreen({
                       </button>
                     )}
                   </div>
+                  {lesson.story.ar && (
+                    <p className="text-sm text-white/85 font-body leading-relaxed">
+                      {formatText(lesson.story.ar, numberStyle)}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* 🎬 قصة الوحدة (L1+) */}
+              {hasMod && activeModule?.miniStory && (
+                <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-400/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">{activeModule.miniStory.emoji}</span>
+                    <h3 className="text-sm font-bold text-pink-300">
+                      📖 {activeModule.miniStory.title}
+                    </h3>
+                  </div>
                   <p className="text-sm text-white/85 font-body leading-relaxed">
-                    {formatText(lesson.story.ar ?? '', numberStyle)}
+                    {formatText(activeModule.miniStory.story, numberStyle)}
                   </p>
                 </div>
               )}
 
-              {/* المفهوم + القاعدة */}
-              {(lesson.concept || lesson.rule) && (
+              {/* 📐 القاعدة + الشرط (للـ modules) */}
+              {hasMod && activeModule && (
+                <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-gold-400/10 to-gold-600/10 border border-gold-400/30">
+                  <h3 className="text-sm font-bold text-gold-300 mb-2">📐 القاعدة</h3>
+                  {activeModule.rule.formula && (
+                    <p className="text-center text-base font-display font-bold text-electric-300 mb-2 bg-white/5 p-2 rounded-xl">
+                      {activeModule.rule.formula}
+                    </p>
+                  )}
+                  <p className="text-sm text-white/85 font-body leading-relaxed mb-3">
+                    {activeModule.rule.description}
+                  </p>
+
+                  <h3 className="text-sm font-bold text-gold-300 mb-1">🔒 الشرط</h3>
+                  <p className="text-center text-sm font-display font-bold text-amber-300 mb-2 bg-white/5 p-2 rounded-xl">
+                    {activeModule.condition.formula}
+                  </p>
+                  <p className="text-sm text-white/75 font-body leading-relaxed">
+                    {activeModule.condition.explanation}
+                  </p>
+
+                  {/* جدول الأصدقاء */}
+                  {activeModule.friendsTable && (
+                    <div className="mt-3">
+                      <p className="text-xs font-bold text-gold-300 mb-2">
+                        🤝 {activeModule.friendsTable.title}
+                      </p>
+                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+                        {activeModule.friendsTable.pairs.map((p, i) => (
+                          <div key={i} className="flex items-center justify-center gap-1 p-1.5 rounded-lg bg-white/5 border border-white/10">
+                            <span className="text-xs font-bold text-electric-300 font-display">
+                              {formatNumber(p.from, numberStyle)}
+                            </span>
+                            <span className="text-[10px] text-white/40">↔</span>
+                            <span className="text-xs font-bold text-emerald-300 font-display">
+                              {formatNumber(p.to, numberStyle)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 🔍 دليل التمييز */}
+              {hasMod && activeModule && (
+                <div className="glass-card p-4 bg-gradient-to-br from-electric-500/10 to-purple-500/10 border border-electric-400/30">
+                  <button
+                    onClick={() => { playSound('click'); setShowDiscrimination((v) => !v); }}
+                    className="w-full flex items-center justify-between gap-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <HelpCircle className="w-5 h-5 text-electric-300" />
+                      <h3 className="text-sm font-bold text-electric-300">
+                        🔍 دليل التمييز — كيف أقرر؟
+                      </h3>
+                    </div>
+                    <ChevronLeft className={`w-4 h-4 text-white/60 transition ${showDiscrimination ? 'rotate-90' : '-rotate-90'}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {showDiscrimination && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="space-y-2 pt-3">
+                          {activeModule.discrimination.steps.map((s, i) => (
+                            <div key={i} className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                              <p className="text-xs font-bold text-white/90 mb-1">
+                                {formatNumber(i + 1, numberStyle)}. {s.question}
+                              </p>
+                              <p className="text-xs text-emerald-300 font-body">
+                                ✓ {s.answer}
+                              </p>
+                              {s.hint && (
+                                <p className="text-[10px] text-white/50 italic mt-1">
+                                  💡 {s.hint}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                          <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/40">
+                            <p className="text-xs text-center font-bold text-emerald-200">
+                              ✅ {activeModule.discrimination.decision}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {/* المفهوم + القاعدة (legacy) */}
+              {!hasMod && (lesson.concept || lesson.rule) && (
                 <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-gold-400/10 to-gold-600/10 border border-gold-400/30">
                   {lesson.concept && (
                     <>
                       <h3 className="text-sm font-bold text-gold-300 mb-2">💡 المفهوم</h3>
                       <p className="text-sm text-white/85 font-body leading-relaxed mb-3">
-                        {formatText(lesson.concept.ar ?? '', numberStyle)}
+                        {formatText(lesson.concept.ar, numberStyle)}
                       </p>
                     </>
                   )}
-
                   {lesson.rule && (
                     <>
                       <h3 className="text-sm font-bold text-gold-300 mb-1 mt-3">📏 القاعدة</h3>
                       <p className="text-sm text-white/85 font-body leading-relaxed">
-                        {formatText(lesson.rule.ar ?? '', numberStyle)}
+                        {formatText(lesson.rule.ar, numberStyle)}
                       </p>
                     </>
                   )}
-
                   {lesson.ruleTable && lesson.ruleTable.length > 0 && (
                     <div className="mt-3 grid grid-cols-3 sm:grid-cols-5 gap-1.5">
                       {lesson.ruleTable.map((row, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center justify-center gap-1 p-1.5 rounded-lg bg-white/5 border border-white/10"
-                        >
+                        <div key={i} className="flex items-center justify-center gap-1 p-1.5 rounded-lg bg-white/5 border border-white/10">
                           <span className="text-xs font-bold text-electric-300 font-display">
                             {formatText(row.formula, numberStyle)}
                           </span>
@@ -528,12 +807,27 @@ export function LessonScreen({
 
                   {showSteps && currentExample.steps.length > 0 && (
                     <div className="space-y-2">
+                      {currentExample.discrimination && (
+                        <p className="text-xs text-electric-300 font-body bg-electric-500/10 p-2 rounded-lg">
+                          🔍 {formatText(currentExample.discrimination, numberStyle)}
+                        </p>
+                      )}
+                      {currentExample.rule && (
+                        <p className="text-xs text-gold-300 font-body bg-gold-500/10 p-2 rounded-lg text-center font-display">
+                          📐 {formatText(currentExample.rule, numberStyle)}
+                        </p>
+                      )}
+                      {currentExample.fingerMovement && (
+                        <p className="text-xs text-purple-300 font-body bg-purple-500/10 p-2 rounded-lg">
+                          👆 {formatText(currentExample.fingerMovement, numberStyle)}
+                        </p>
+                      )}
                       {currentExample.steps.map((step, i) => (
                         <motion.div
                           key={i}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.1 }}
+                          transition={{ delay: i * 0.08 }}
                           className="p-3 rounded-xl bg-electric-500/10 border border-electric-400/30"
                         >
                           <div className="flex items-start gap-2">
@@ -549,6 +843,11 @@ export function LessonScreen({
                       {getExampleExplanation(currentExample) && (
                         <p className="text-xs text-center text-emerald-300 font-bold pt-1">
                           ✨ {formatText(getExampleExplanation(currentExample), numberStyle)}
+                        </p>
+                      )}
+                      {currentExample.beadVisual && (
+                        <p className="text-xs text-center text-white/60 italic">
+                          👁️ {formatText(currentExample.beadVisual, numberStyle)}
                         </p>
                       )}
                     </div>
@@ -573,7 +872,7 @@ export function LessonScreen({
                 </div>
               )}
 
-              {examples.length === 0 && (
+              {examples.length === 0 && !hasMod && (
                 <div className="glass-card p-5 text-center text-white/60 text-sm">
                   هذا الدرس نظري — لا يحتوي على أمثلة تفاعلية.
                 </div>
@@ -583,7 +882,7 @@ export function LessonScreen({
 
           {tab === 'try' && currentTry && (
             <motion.div
-              key="try"
+              key={`try-${activeModule?.id ?? 'legacy'}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -617,7 +916,6 @@ export function LessonScreen({
                         showValue={false}
                       />
                     </div>
-
                     {feedback !== 'reveal' && (
                       <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
                         {choices.map((c) => (
@@ -635,7 +933,7 @@ export function LessonScreen({
                   </>
                 )}
 
-                {currentTry.type === 'build' && (
+                {(currentTry.type === 'build' || (!currentTry.type && currentTryExpected > 0)) && (
                   <>
                     <div className="flex justify-center mb-3">
                       <Soroban2D5
@@ -648,13 +946,9 @@ export function LessonScreen({
                         onValueChange={setAbacusValue}
                       />
                     </div>
-
                     {feedback !== 'reveal' && feedback !== 'correct' && (
                       <div className="flex gap-2 justify-center">
-                        <button
-                          onClick={handleCheckBuild}
-                          className="btn-primary !py-2.5 !px-6 !text-sm"
-                        >
+                        <button onClick={handleCheckBuild} className="btn-primary !py-2.5 !px-6 !text-sm">
                           <CheckCircle2 className="w-4 h-4" /> تحقق
                         </button>
                         <button
@@ -678,9 +972,6 @@ export function LessonScreen({
               {feedback === 'wrong' && (
                 <div className="p-3 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-center">
                   <p className="text-sm font-bold text-amber-200">❌ حاول مرة أخرى</p>
-                  <p className="text-[10px] text-amber-200/70 mt-1">
-                    آخر محاولة — إن أخطأت، ستُعرض الإجابة
-                  </p>
                 </div>
               )}
 
@@ -689,7 +980,6 @@ export function LessonScreen({
                   <p className="text-sm font-bold text-gold-300 text-center mb-2">
                     💡 الإجابة الصحيحة: {formatNumber(currentTryExpected, numberStyle)}
                   </p>
-
                   {currentTry.steps && currentTry.steps.length > 0 && (
                     <div className="space-y-1.5 mt-3">
                       {currentTry.steps.map((s, i) => (
@@ -702,17 +992,12 @@ export function LessonScreen({
                       ))}
                     </div>
                   )}
-
                   {currentTry.explanation && (
                     <p className="text-xs text-white/70 text-center mt-2">
                       {formatText(currentTry.explanation, numberStyle)}
                     </p>
                   )}
-
-                  <button
-                    onClick={handleRevealNext}
-                    className="w-full mt-3 btn-primary !py-2.5 !text-sm"
-                  >
+                  <button onClick={handleRevealNext} className="w-full mt-3 btn-primary !py-2.5 !text-sm">
                     فهمت، التالي
                   </button>
                 </div>
@@ -772,7 +1057,7 @@ export function LessonScreen({
         </div>
       </div>
 
-      {/* ───── فقاعة سوروبانا ───── */}
+      {/* فقاعة سوروبانا */}
       <AnimatePresence>
         {companionMsg && (
           <motion.div
@@ -781,11 +1066,7 @@ export function LessonScreen({
             exit={{ opacity: 0, y: 10, scale: 0.8 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="fixed z-[70] pointer-events-none"
-            style={{
-              bottom: 'calc(12rem + 130px)',
-              right: '0.75rem',
-              maxWidth: '170px',
-            }}
+            style={{ bottom: 'calc(12rem + 130px)', right: '0.75rem', maxWidth: '170px' }}
           >
             <div
               className="relative px-3 py-2 rounded-2xl shadow-2xl border-2"
@@ -795,9 +1076,7 @@ export function LessonScreen({
                 color: '#065F46',
               }}
             >
-              <p className="text-xs font-bold text-right" dir="rtl">
-                {companionMsg}
-              </p>
+              <p className="text-xs font-bold text-right" dir="rtl">{companionMsg}</p>
               <div
                 className="absolute"
                 style={{
