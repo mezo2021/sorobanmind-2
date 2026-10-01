@@ -343,6 +343,7 @@ export function LessonScreen({
   const solvedCount = solved.size;
   const allSolved = totalTry > 0 && solvedCount === totalTry;
   const hasTry = totalTry > 0;
+  const isLastTry = tryIdx + 1 >= totalTry;
   const currentTryExpected = currentTry ? getExerciseResult(currentTry) : 0;
   const currentTryAttempts = currentTry ? (attempts[currentTry.id] ?? 1) : 1;
 
@@ -452,7 +453,6 @@ export function LessonScreen({
     if (isCorrect) {
       setSolved((s) => new Set(s).add(key));
       reactToAnswer(true, attempt);
-      setTimeout(() => advanceTry(), 1100);
     } else {
       reactToAnswer(false, attempt);
     }
@@ -467,7 +467,6 @@ export function LessonScreen({
     if (isCorrect) {
       setSolved((s) => new Set(s).add(key));
       reactToAnswer(true, attempt);
-      setTimeout(() => advanceTry(), 1100);
     } else {
       reactToAnswer(false, attempt);
     }
@@ -1001,7 +1000,7 @@ export function LessonScreen({
                         showValue={false}
                       />
                     </div>
-                    {feedback !== 'reveal' && (
+                    {feedback !== 'reveal' && feedback !== 'correct' && (
                       <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
                         {choices.map((c) => (
                           <button
@@ -1048,9 +1047,48 @@ export function LessonScreen({
                 )}
               </div>
 
+              {/* ✅ بطاقة الإجابة الصحيحة + الخطوات + زر الانتقال/الإنهاء */}
               {feedback === 'correct' && (
-                <div className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 text-center">
-                  <p className="text-sm font-bold text-emerald-200">✅ أحسنت! إجابة صحيحة</p>
+                <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/40">
+                  <p className="text-sm font-bold text-emerald-200 text-center mb-2">
+                    ✅ أحسنت! إجابة صحيحة
+                  </p>
+
+                  {currentTry.steps && currentTry.steps.length > 0 && (
+                    <div className="space-y-1.5 mt-3">
+                      {currentTry.steps.map((s, i) => (
+                        <p key={i} className="text-xs text-white/80 font-body">
+                          <span className="text-emerald-300 font-bold">
+                            {formatNumber(i + 1, numberStyle)}.
+                          </span>{' '}
+                          {formatText(getStepText(s), numberStyle)}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+
+                  {currentTry.explanation && (
+                    <p className="text-xs text-white/70 text-center mt-2">
+                      {formatText(currentTry.explanation, numberStyle)}
+                    </p>
+                  )}
+
+                  {isLastTry ? (
+                    <button
+                      onClick={handleComplete}
+                      className="w-full mt-3 py-3 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      أنهيت المستوى +{formatNumber(lesson.xpReward, numberStyle)} XP
+                    </button>
+                  ) : (
+                    <button
+                      onClick={advanceTry}
+                      className="w-full mt-3 btn-primary !py-2.5 !text-sm"
+                    >
+                      السؤال التالي
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -1060,11 +1098,13 @@ export function LessonScreen({
                 </div>
               )}
 
+              {/* 🔓 بطاقة كشف الحل + الخطوات + زر الانتقال/الإنهاء */}
               {feedback === 'reveal' && (
                 <div className="p-4 rounded-2xl bg-gold-500/15 border border-gold-400/40">
                   <p className="text-sm font-bold text-gold-300 text-center mb-2">
                     💡 الإجابة الصحيحة: {formatNumber(currentTryExpected, numberStyle)}
                   </p>
+
                   {currentTry.steps && currentTry.steps.length > 0 && (
                     <div className="space-y-1.5 mt-3">
                       {currentTry.steps.map((s, i) => (
@@ -1077,14 +1117,29 @@ export function LessonScreen({
                       ))}
                     </div>
                   )}
+
                   {currentTry.explanation && (
                     <p className="text-xs text-white/70 text-center mt-2">
                       {formatText(currentTry.explanation, numberStyle)}
                     </p>
                   )}
-                  <button onClick={handleRevealNext} className="w-full mt-3 btn-primary !py-2.5 !text-sm">
-                    فهمت، التالي
-                  </button>
+
+                  {isLastTry ? (
+                    <button
+                      onClick={handleComplete}
+                      className="w-full mt-3 py-3 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      أنهيت المستوى +{formatNumber(lesson.xpReward, numberStyle)} XP
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleRevealNext}
+                      className="w-full mt-3 btn-primary !py-2.5 !text-sm"
+                    >
+                      السؤال التالي
+                    </button>
+                  )}
                 </div>
               )}
 
