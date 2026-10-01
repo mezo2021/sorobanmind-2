@@ -1,170 +1,334 @@
-// src/curriculum/lessons/L0/S1.ts
-// 📖 درس S1: تمثيل الأرقام من 0 إلى 9 على السوروبان
+// src/curriculum/lessons/L0/S01.ts
+// 📖 درس S01: تمثيل الأرقام من 0 إلى 9
 
-import type { LessonNode, LessonExample, TryQuestion } from '../types';
+import type { LessonNode } from "../types";
 
-const EXAMPLES: LessonExample[] = [
-  {
-    id: 'L0-S1-E1',
-    problemText: 'مثّل الرقم 0',
-    answer: 0,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'اترك الخرزات بعيدة عن العارضة', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [], expectedValueAfter: 0 },
-    ],
-    explanation: 'لا توجد خرزة تلمس العارضة — الرقم صفر.',
-  },
-  {
-    id: 'L0-S1-E2',
-    problemText: 'مثّل الرقم 1',
-    answer: 1,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'ارفع خرزة سفلية واحدة نحو العارضة بالإبهام', fingerUsed: 'thumb', direction: 'up', targetColumn: 'units', beadsAffected: [1], expectedValueAfter: 1 },
-    ],
-    explanation: 'خرزة سفلية واحدة = 1.',
-  },
-  {
-    id: 'L0-S1-E3',
-    problemText: 'مثّل الرقم 5',
-    answer: 5,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'أنزل الخرزة العلوية نحو العارضة بالسبابة', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [5], expectedValueAfter: 5 },
-    ],
-    explanation: 'الخرزة العلوية وحدها = 5 (الجدة).',
-  },
-  {
-    id: 'L0-S1-E4',
-    problemText: 'مثّل الرقم 2',
-    answer: 2,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'ارفع خرزتين سفليتين نحو العارضة', fingerUsed: 'thumb', direction: 'up', targetColumn: 'units', beadsAffected: [1, 2], expectedValueAfter: 2 },
-    ],
-    explanation: 'خرزتان سفليتان = 2.',
-  },
-  {
-    id: 'L0-S1-E5',
-    problemText: 'مثّل الرقم 6',
-    answer: 6,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'أنزل الخرزة العلوية (5)', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [5], expectedValueAfter: 5 },
-      { stepIndex: 2, instructionText: 'ارفع خرزة سفلية واحدة (1)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'units', beadsAffected: [1], expectedValueAfter: 6 },
-    ],
-    explanation: '5 + 1 = 6 (الجدة + طفل).',
-  },
-  {
-    id: 'L0-S1-E6',
-    problemText: 'مثّل الرقم 3',
-    answer: 3,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'ارفع ثلاث خرزات سفلية نحو العارضة', fingerUsed: 'thumb', direction: 'up', targetColumn: 'units', beadsAffected: [1, 2, 3], expectedValueAfter: 3 },
-    ],
-    explanation: 'ثلاث خرزات سفلية = 3.',
-  },
-  {
-    id: 'L0-S1-E7',
-    problemText: 'مثّل الرقم 7',
-    answer: 7,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'أنزل الخرزة العلوية (5)', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [5], expectedValueAfter: 5 },
-      { stepIndex: 2, instructionText: 'ارفع خرزتين سفليتين (2)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'units', beadsAffected: [1, 2], expectedValueAfter: 7 },
-    ],
-    explanation: '5 + 2 = 7 (الجدة + طفلان).',
-  },
-  {
-    id: 'L0-S1-E8',
-    problemText: 'مثّل الرقم 4',
-    answer: 4,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'ارفع الأربع خرزات السفلية نحو العارضة', fingerUsed: 'thumb', direction: 'up', targetColumn: 'units', beadsAffected: [1, 2, 3, 4], expectedValueAfter: 4 },
-    ],
-    explanation: 'كل الخرزات السفلية = 4.',
-  },
-  {
-    id: 'L0-S1-E9',
-    problemText: 'مثّل الرقم 8',
-    answer: 8,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'أنزل الخرزة العلوية (5)', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [5], expectedValueAfter: 5 },
-      { stepIndex: 2, instructionText: 'ارفع ثلاث خرزات سفلية (3)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'units', beadsAffected: [1, 2, 3], expectedValueAfter: 8 },
-    ],
-    explanation: '5 + 3 = 8.',
-  },
-  {
-    id: 'L0-S1-E10',
-    problemText: 'مثّل الرقم 9',
-    answer: 9,
-    ruleCategory: 'build',
-    steps: [
-      { stepIndex: 1, instructionText: 'أنزل الخرزة العلوية (5)', fingerUsed: 'index', direction: 'down', targetColumn: 'units', beadsAffected: [5], expectedValueAfter: 5 },
-      { stepIndex: 2, instructionText: 'ارفع الأربع خرزات السفلية (4)', fingerUsed: 'thumb', direction: 'up', targetColumn: 'units', beadsAffected: [1, 2, 3, 4], expectedValueAfter: 9 },
-    ],
-    explanation: '5 + 4 = 9 (الجدة + كل الأطفال).',
-  },
-];
-
-const TRY_QUESTIONS: TryQuestion[] = [
-  { id: 'L0-S1-T1', type: 'read', prompt: 'اقرأ الرقم المثبت: لا توجد خرزة تلامس العارضة', expectedValue: 0 },
-  { id: 'L0-S1-T2', type: 'read', prompt: 'اقرأ الرقم المثبت: خرزة سفلية واحدة نحو العارضة', expectedValue: 1 },
-  { id: 'L0-S1-T3', type: 'read', prompt: 'اقرأ الرقم المثبت: الخرزة العلوية نحو العارضة', expectedValue: 5 },
-  { id: 'L0-S1-T4', type: 'read', prompt: 'اقرأ الرقم المثبت: خرزتان سفليتان نحو العارضة', expectedValue: 2 },
-  { id: 'L0-S1-T5', type: 'read', prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + خرزة سفلية واحدة', expectedValue: 6 },
-  { id: 'L0-S1-T6', type: 'read', prompt: 'اقرأ الرقم المثبت: ثلاث خرزات سفلية نحو العارضة', expectedValue: 3 },
-  { id: 'L0-S1-T7', type: 'read', prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + خرزتان سفليتان', expectedValue: 7 },
-  { id: 'L0-S1-T8', type: 'read', prompt: 'اقرأ الرقم المثبت: أربع خرزات سفلية نحو العارضة', expectedValue: 4 },
-  { id: 'L0-S1-T9', type: 'read', prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + ثلاث خرزات سفلية', expectedValue: 8 },
-  { id: 'L0-S1-T10', type: 'read', prompt: 'اقرأ الرقم المثبت: الخرزة العلوية + أربع خرزات سفلية', expectedValue: 9 },
-];
-
-export const L0_S1: LessonNode = {
-  id: 'L0-S1',
-  skillId: 'S1',
-  levelId: 'L0',
+export const L0_S01: LessonNode = {
+  id: "L0-S01",
+  skillId: "S01",
+  levelId: "L0",
   order: 2,
 
-  title: { ar: 'تمثيل الأرقام من 0 إلى 9', en: 'Representing Numbers 0-9' },
+  title: { ar: "تمثيل الأرقام من 0 إلى 9", en: "Representing Numbers 0-9" },
+  emoji: "🔢",
+  tags: ["build", "read", "kids", "L0"],
 
+  // ═══════════ 🎬 قصة الدرس (واحدة) ═══════════
   story: {
-    ar: 'في يوم مشمس، وصل ثلاثة أبطال صغار — شام وريان وبانة — إلى بوابة خشبية ضخمة نُقش عليها: قلعة السوروبان، من يدخلها يصبح سيد الأرقام. دقّوا الجرس، فانفتح الباب، وظهر حارس القلعة: رجل خشبي اسمه الإطار. قال مبتسماً: في هذه القلعة تسكن عائلة غريبة — أربعة أطفال نشيطون في الطابق السفلي، كل واحد قيمته واحد. وفوق الجسر تسكن الجدة الحنونة، قيمتها خمسة.',
-    en: 'On a sunny day, three young heroes reached a giant wooden gate engraved with: Castle of the Soroban. They rang the bell, and the castle guard — a wooden man named the Frame — appeared. He said with a smile: In this castle lives a strange family — four active children downstairs, each worth one. Above the beam lives the kind grandmother, worth five.',
+    title: "قلعة السوروبان",
+    emoji: "🏰",
+    story:
+      "في يوم مشمس، وصل ثلاثة أبطال صغار — شام وريان وبانة — إلى بوابة خشبية ضخمة نُقش عليها: قلعة السوروبان، من يدخلها يصبح سيد الأرقام. دقّوا الجرس، فانفتح الباب، وظهر حارس القلعة: رجل خشبي اسمه الإطار. قال مبتسماً: في هذه القلعة تسكن عائلة غريبة — أربعة أطفال نشيطون في الطابق السفلي، كل واحد قيمته واحد. وفوق الجسر تسكن الجدة الحنونة، قيمتها خمسة.",
+    storyAudioText:
+      "في يوم مشمس، وصل ثلاثة أبطال صغار إلى بوابة خشبية ضخمة نُقش عليها: قلعة السوروبان، من يدخلها يصبح سيد الأرقام. دقوا الجرس، فانفتح الباب، وظهر حارس القلعة: رجل خشبي اسمه الإطار. قال مبتسماً: في هذه القلعة تسكن عائلة غريبة: أربعة أطفال نشيطون في الطابق السفلي، كل واحد قيمته واحد. وفوق الجسر تسكن الجدة الحنونة، قيمتها خمسة.",
+    storyAudioId: 1,
   },
-  storyAudioId: 1,
 
-  concept: {
-    ar: 'الخرزة العلوية (الجدة) قيمتها 5، وكل خرزة سفلية (طفل) قيمتها 1. الخرزة التي تلمس العارضة فقط هي التي تُحسب.',
-    en: 'The upper bead (grandmother) is worth 5. Each lower bead (child) is worth 1. Only beads touching the beam are counted.',
-  },
+  // ═══════════ 🧩 الوحدات ═══════════
+  modules: [
+    // ─────────── m1: تمثيل 0-4 ───────────
+    {
+      id: "m1",
+      ruleCategory: "build",
+      title: "تمثيل 0-4",
+      titleEn: "Representing 0-4",
+      emoji: "🧒",
 
-  rule: {
-    ar: 'لتمثيل رقم من 0 إلى 9: استخدم الخرزة العلوية للخمسة، والخرزات السفلية للأرقام 1-4.',
-    en: 'To represent 0-9: use the upper bead for 5, and lower beads for 1-4.',
-  },
-  ruleTable: [
-    { formula: '0', result: 'لا خرزة' },
-    { formula: '1', result: 'خرزة سفلية' },
-    { formula: '2', result: 'خرزتان سفليتان' },
-    { formula: '3', result: '3 خرزات سفلية' },
-    { formula: '4', result: '4 خرزات سفلية' },
-    { formula: '5', result: 'الخرزة العلوية' },
-    { formula: '6', result: '5 + 1' },
-    { formula: '7', result: '5 + 2' },
-    { formula: '8', result: '5 + 3' },
-    { formula: '9', result: '5 + 4' },
+      rule: {
+        description: "لتمثيل 0-4: ارفع من 0 إلى 4 خرزات سفلية بالإبهام نحو العارضة.",
+      },
+
+      condition: {
+        formula: "0 ≤ n ≤ 4",
+        explanation: "الأطفال الأربعة يكفون لتمثيل الأرقام من 0 إلى 4.",
+      },
+
+      discrimination: {
+        steps: [
+          {
+            question: "هل الرقم المطلوب بين 0 و 4؟",
+            type: "yes-no",
+            answer: "نعم → استخدم الأطفال (الخرزات السفلية)",
+            hint: "0 = لا خرزات · 1 = خرزة · 2 = خرزتان · 3 = ثلاث · 4 = أربع",
+          },
+        ],
+        decision: "ارفع عددًا من الخرزات السفلية يساوي الرقم!",
+      },
+
+      watchPhase: {
+        examples: [
+          {
+            id: "S01-m1-E1",
+            question: "مثّل الرقم 0",
+            discrimination: "لا خرزة تلامس العارضة = 0.",
+            rule: "0 = لا خرزات ملامسة",
+            fingerMovement: "السبابة تُبعد كل الخرزات عن العارضة ⬇️",
+            steps: [
+              "البداية: المعداد مصفّر",
+              "تأكد أن جميع الخرزات بعيدة عن العارضة",
+              "الناتج الظاهر: لا خرزة تلامس العارضة",
+            ],
+            result: 0,
+            beadVisual: "صفر خرزات",
+          },
+          {
+            id: "S01-m1-E2",
+            question: "مثّل الرقم 1",
+            discrimination: "الأطفال متوفّرون → طفل واحد يكفي.",
+            rule: "1 = خرزة سفلية واحدة",
+            fingerMovement: "الإبهام يرفع خرزة سفلية واحدة نحو العارضة ⬆️",
+            steps: [
+              "ارفع خرزة سفلية واحدة بالإبهام ⬆️",
+              "الناتج الظاهر: خرزة واحدة تلامس العارضة",
+            ],
+            result: 1,
+            beadVisual: "خرزة سفلية واحدة",
+          },
+          {
+            id: "S01-m1-E3",
+            question: "مثّل الرقم 2",
+            discrimination: "المطلوب 2 → الأطفال متوفّرون.",
+            rule: "2 = خرزتان سفليتان",
+            fingerMovement: "الإبهام يرفع خرزتين نحو العارضة ⬆️",
+            steps: [
+              "ارفع خرزتين سفليتين بالإبهام ⬆️",
+              "الناتج الظاهر: خرزتان تلامسان العارضة",
+            ],
+            result: 2,
+            beadVisual: "خرزتان سفليتان",
+          },
+          {
+            id: "S01-m1-E4",
+            question: "مثّل الرقم 3",
+            discrimination: "المطلوب 3 → الأطفال متوفّرون.",
+            rule: "3 = ثلاث خرزات سفلية",
+            fingerMovement: "الإبهام يرفع ثلاث خرزات نحو العارضة ⬆️",
+            steps: [
+              "ارفع ثلاث خرزات سفلية بالإبهام ⬆️",
+              "الناتج الظاهر: ثلاث خرزات تلامس العارضة",
+            ],
+            result: 3,
+            beadVisual: "ثلاث خرزات سفلية",
+          },
+          {
+            id: "S01-m1-E5",
+            question: "مثّل الرقم 4",
+            discrimination: "المطلوب 4 → كل الأطفال متوفّرون.",
+            rule: "4 = الأربع خرزات السفلية",
+            fingerMovement: "الإبهام يرفع الأربع خرزات السفلية نحو العارضة ⬆️",
+            steps: [
+              "ارفع الأربع خرزات السفلية بالإبهام ⬆️",
+              "الناتج الظاهر: أربع خرزات تلامس العارضة",
+            ],
+            result: 4,
+            beadVisual: "أربع خرزات سفلية (العائلة كاملة)",
+          },
+        ],
+      },
+
+      tryPhase: {
+        exercises: [
+          {
+            id: "S01-m1-T1",
+            question: "مثّل الرقم 2",
+            discrimination: "2 ≤ 4 → الأطفال يكفون",
+            steps: ["ارفع خرزتين سفليتين بالإبهام ⬆️", "الناتج: 2"],
+            result: 2,
+          },
+          {
+            id: "S01-m1-T2",
+            question: "مثّل الرقم 4",
+            discrimination: "4 = كل الأطفال",
+            steps: ["ارفع الأربع خرزات السفلية بالإبهام ⬆️", "الناتج: 4"],
+            result: 4,
+          },
+          {
+            id: "S01-m1-T3",
+            question: "مثّل الرقم 1",
+            discrimination: "1 = طفل واحد",
+            steps: ["ارفع خرزة سفلية واحدة بالإبهام ⬆️", "الناتج: 1"],
+            result: 1,
+          },
+          {
+            id: "S01-m1-T4",
+            question: "مثّل الرقم 3",
+            discrimination: "3 = ثلاثة أطفال",
+            steps: ["ارفع ثلاث خرزات سفلية بالإبهام ⬆️", "الناتج: 3"],
+            result: 3,
+          },
+        ],
+      },
+    },
+
+    // ─────────── m2: تمثيل 5-9 ───────────
+    {
+      id: "m2",
+      ruleCategory: "build",
+      title: "تمثيل 5-9",
+      titleEn: "Representing 5-9",
+      emoji: "👵",
+
+      rule: {
+        formula: "5 + k (حيث k = الرقم − 5)",
+        description: "لتمثيل 5-9: أنزل الجدة 5 بالسبابة، ثم ارفع k خرزة سفلية بالإبهام.",
+      },
+
+      condition: {
+        formula: "5 ≤ n ≤ 9",
+        explanation: "نحتاج الجدة 5 + k خرزة سفلية، حيث k = n − 5.",
+      },
+
+      discrimination: {
+        steps: [
+          {
+            question: "هل الرقم المطلوب بين 5 و 9؟",
+            type: "yes-no",
+            answer: "نعم → استخدم الجدة 5 + أطفال",
+          },
+          {
+            question: "كم طفلاً نحتاج (k = الرقم − 5)؟",
+            type: "value",
+            answer: "ارفع عدد k من الخرزات السفلية",
+            hint: "5 = لا أطفال · 6 = طفل · 7 = طفلان · 8 = ثلاثة · 9 = أربعة",
+          },
+        ],
+        decision: "أنزل الجدة 5 بالسبابة ⬇️، ثم ارفع k خرزة بالإبهام ⬆️!",
+      },
+
+      watchPhase: {
+        examples: [
+          {
+            id: "S01-m2-E1",
+            question: "مثّل الرقم 5",
+            discrimination: "5 = الجدة وحدها (بلا أطفال).",
+            rule: "5 = الخرزة العلوية فقط",
+            fingerMovement: "السبابة تُنزل الخرزة العلوية نحو العارضة ⬇️",
+            steps: [
+              "أنزل الخرزة العلوية بالسبابة ⬇️",
+              "الناتج الظاهر: الخرزة العلوية وحدها",
+            ],
+            result: 5,
+            beadVisual: "الخرزة العلوية وحدها = 5",
+          },
+          {
+            id: "S01-m2-E2",
+            question: "مثّل الرقم 6",
+            discrimination: "6 = 5 + 1 → الجدة + طفل واحد.",
+            rule: "6 = العلوية + خرزة سفلية",
+            fingerMovement: "السبابة تُنزل 5 ⬇️، والإبهام يرفع 1 ⬆️",
+            steps: [
+              "أنزل الخرزة العلوية بالسبابة ⬇️",
+              "ارفع خرزة سفلية واحدة بالإبهام ⬆️",
+              "الناتج الظاهر: 5 + 1 = 6",
+            ],
+            result: 6,
+            beadVisual: "العلوية + خرزة = 6",
+          },
+          {
+            id: "S01-m2-E3",
+            question: "مثّل الرقم 7",
+            discrimination: "7 = 5 + 2 → الجدة + طفلان.",
+            rule: "7 = العلوية + خرزتان",
+            fingerMovement: "السبابة تُنزل 5 ⬇️، والإبهام يرفع 2 ⬆️",
+            steps: [
+              "أنزل الخرزة العلوية بالسبابة ⬇️",
+              "ارفع خرزتين سفليتين بالإبهام ⬆️",
+              "الناتج الظاهر: 5 + 2 = 7",
+            ],
+            result: 7,
+            beadVisual: "العلوية + خرزتان = 7",
+          },
+          {
+            id: "S01-m2-E4",
+            question: "مثّل الرقم 8",
+            discrimination: "8 = 5 + 3 → الجدة + ثلاثة أطفال.",
+            rule: "8 = العلوية + ثلاث خرزات",
+            fingerMovement: "السبابة تُنزل 5 ⬇️، والإبهام يرفع 3 ⬆️",
+            steps: [
+              "أنزل الخرزة العلوية بالسبابة ⬇️",
+              "ارفع ثلاث خرزات سفلية بالإبهام ⬆️",
+              "الناتج الظاهر: 5 + 3 = 8",
+            ],
+            result: 8,
+            beadVisual: "العلوية + ثلاث = 8",
+          },
+          {
+            id: "S01-m2-E5",
+            question: "مثّل الرقم 9",
+            discrimination: "9 = 5 + 4 → الجدة + كل الأطفال.",
+            rule: "9 = العلوية + الأربع خرزات",
+            fingerMovement: "السبابة تُنزل 5 ⬇️، والإبهام يرفع 4 ⬆️",
+            steps: [
+              "أنزل الخرزة العلوية بالسبابة ⬇️",
+              "ارفع الأربع خرزات السفلية بالإبهام ⬆️",
+              "الناتج الظاهر: 5 + 4 = 9 (العمود ممتلئ!)",
+            ],
+            result: 9,
+            beadVisual: "العلوية + الأربعة كلهم = 9",
+          },
+        ],
+      },
+
+      tryPhase: {
+        exercises: [
+          {
+            id: "S01-m2-T1",
+            question: "مثّل الرقم 6",
+            discrimination: "6 = 5 + 1",
+            steps: [
+              "أنزل العلوية 5 بالسبابة ⬇️",
+              "ارفع 1 سفلي بالإبهام ⬆️",
+              "الناتج: 6",
+            ],
+            result: 6,
+          },
+          {
+            id: "S01-m2-T2",
+            question: "مثّل الرقم 8",
+            discrimination: "8 = 5 + 3",
+            steps: [
+              "أنزل العلوية 5 بالسبابة ⬇️",
+              "ارفع 3 سفليات بالإبهام ⬆️",
+              "الناتج: 8",
+            ],
+            result: 8,
+          },
+          {
+            id: "S01-m2-T3",
+            question: "مثّل الرقم 7",
+            discrimination: "7 = 5 + 2",
+            steps: [
+              "أنزل العلوية 5 بالسبابة ⬇️",
+              "ارفع 2 سفليات بالإبهام ⬆️",
+              "الناتج: 7",
+            ],
+            result: 7,
+          },
+          {
+            id: "S01-m2-T4",
+            question: "مثّل الرقم 9",
+            discrimination: "9 = 5 + 4",
+            steps: [
+              "أنزل العلوية 5 بالسبابة ⬇️",
+              "ارفع 4 سفليات بالإبهام ⬆️",
+              "الناتج: 9",
+            ],
+            result: 9,
+          },
+        ],
+      },
+    },
   ],
 
-  examples: EXAMPLES,
-  tryQuestions: TRY_QUESTIONS,
+  outro: {
+    summary:
+      "أتقنت تمثيل الأرقام من 0 إلى 9! تعرف الآن: الأطفال الأربعة (1-4)، والجدة 5 معهم (5-9).",
+    encouragement: "🎉 أنت الآن تعرف لغة السوروبان الأولى!",
+    totalExamples: 10,
+  },
 
-  estimatedMinutes: 10,
+  estimatedMinutes: 15,
   xpReward: 10,
-  isTheoretical: false,
 };
 
-export default L0_S1;
+export default L0_S01;
