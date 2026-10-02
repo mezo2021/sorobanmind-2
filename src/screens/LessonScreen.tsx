@@ -28,6 +28,7 @@ import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { useProgressStore } from '@/store/progressStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 
 // ═══════════════════════════════════════════════════════════
@@ -35,6 +36,7 @@ import { formatText, formatNumber } from '@/utils/numberStyle';
 // ═══════════════════════════════════════════════════════════
 
 const LESSON_PROGRESS_KEY = 'soroban_completed_lessons';
+const LESSON_SESSION_PREFIX = 'soroban_lesson_session_';
 const MAX_TRIES = 2;
 
 interface LessonScreenProps {
@@ -48,9 +50,39 @@ interface LessonScreenProps {
 
 type Tab = 'watch' | 'try';
 
+interface SessionData {
+  solved?: string[];
+  attempts?: Record<string, number>;
+  activeModuleId?: string | null;
+  tryIdx?: number;
+  tab?: Tab;
+  exampleIdx?: number;
+}
+
 // ═══════════════════════════════════════════════════════════
 // أدوات مساعدة
 // ═══════════════════════════════════════════════════════════
+
+function loadSession(lessonId: string): SessionData {
+  try {
+    const raw = localStorage.getItem(LESSON_SESSION_PREFIX + lessonId);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSession(lessonId: string, data: SessionData): void {
+  try {
+    localStorage.setItem(LESSON_SESSION_PREFIX + lessonId, JSON.stringify(data));
+  } catch { /* ignore */ }
+}
+
+function clearSession(lessonId: string): void {
+  try {
+    localStorage.removeItem(LESSON_SESSION_PREFIX + lessonId);
+  } catch { /* ignore */ }
+}
 
 function getColumnsForValue(value: number): number {
   const abs = Math.abs(value);
@@ -123,7 +155,10 @@ export function LessonScreen({
   const nextLesson = getNextLesson(lessonId);
   const sorobana = useSorobanaVoice();
   const { style: numberStyle, toggleStyle } = useNumberStyleStore();
+  const markLessonCompleted = useProgressStore((s) => s.markLessonCompleted);
 
+  // ─── جلسة محفوظة مسبقًا ───
+  const [sessionLoaded, setSessionLoaded] = useState(false);
   const [tab, setTab] = useState<Tab>('watch');
   const [exampleIdx, setExampleIdx] = useState(0);
   const [tryIdx, setTryIdx] = useState(0);
@@ -142,25 +177,53 @@ export function LessonScreen({
   const [introPageIdx, setIntroPageIdx] = useState(0);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
 
-  // مزامنة الوحدة النشطة مع الدرس
+  // ═══ استعادة الجلسة عند تغيير الدرس ═══
   useEffect(() => {
+    const session = loadSession(lessonId);
+    setSolved(new Set(session.solved ?? []));
+    setAttempts(session.attempts ?? {});
+    setTryIdx(session.tryIdx ?? 0);
+    setTab(session.tab ?? 'watch');
+    setExampleIdx(session.exampleIdx ?? 0);
+
     if (lesson && hasModules(lesson)) {
-      setActiveModuleId(lesson.modules![0].id);
-      setExampleIdx(0);
-      setTryIdx(0);
-      setShowSteps(false);
-      setShowDiscrimination(false);
+      setActiveModuleId(session.activeModuleId ?? lesson.modules![0].id);
+    } else {
+      setActiveModuleId(null);
     }
+
+    setShowSteps(false);
+    setShowDiscrimination(false);
+    setFeedback('idle');
+    setAbacusValue(0);
+    setSessionLoaded(true);
+
     sorobana.stop();
     setIsReadingStory(false);
     setIsReadingModuleStory(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonId]);
+
+  // ═══ حفظ الجلسة عند كل تغيير ═══
+  useEffect(() => {
+    if (!sessionLoaded || !lesson) return;
+    saveSession(lessonId, {
+      solved: Array.from(solved),
+      attempts,
+      activeModuleId,
+      tryIdx,
+      tab,
+      exampleIdx,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessonId, solved, attempts, activeModuleId, tryIdx, tab, exampleIdx, sessionLoaded]);
 
   // تنظيف عند إغلاق الشاشة
   useEffect(() => {
     return () => {
       sorobana.stop();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const showCompanionMsg = (msg: string, duration = 2200) => {
@@ -192,6 +255,7 @@ export function LessonScreen({
 
     const handleFinishIntro = () => {
       playSound('levelup');
+      // ✅ حفظ في localStorage (توافق)
       try {
         const raw = localStorage.getItem(LESSON_PROGRESS_KEY);
         const arr: string[] = raw ? JSON.parse(raw) : [];
@@ -200,6 +264,10 @@ export function LessonScreen({
           localStorage.setItem(LESSON_PROGRESS_KEY, JSON.stringify(arr));
         }
       } catch { /* ignore */ }
+      // ✅ حفظ في progressStore (نظام جديد)
+      markLessonCompleted(lessonId);
+      clearSession(lessonId);
+
       if (lesson.xpReward && onXP) onXP(lesson.xpReward);
       onComplete(lessonId);
     };
@@ -337,12 +405,22 @@ export function LessonScreen({
     ? activeModule?.tryPhase.exercises ?? []
     : lesson.tryQuestions ?? [];
 
+  // ✅ أسئلة كل الوحدات (لحساب الاكتمال العام)
+  const allQuestions: LessonExercise[] = hasMod
+    ? modules.flatMap((m) => m.tryPhase.exercises)
+    : lesson.tryQuestions ?? [];
+
   const currentExample = examples[exampleIdx];
   const currentTry = tryQuestions[tryIdx];
   const totalTry = tryQuestions.length;
-  const solvedCount = solved.size;
-  const allSolved = totalTry > 0 && solvedCount === totalTry;
-  const hasTry = totalTry > 0;
+
+  // ✅ العدّ الحالي (داخل الوحدة النشطة فقط)
+  const currentModuleSolved = tryQuestions.filter((q) => solved.has(q.id)).length;
+  // ✅ العدّ الكلي (كل الوحدات)
+  const allSolvedCount = allQuestions.filter((q) => solved.has(q.id)).length;
+  const allSolved = allQuestions.length > 0 && allSolvedCount === allQuestions.length;
+
+  const hasTry = allQuestions.length > 0;
   const currentTryExpected = currentTry ? getExerciseResult(currentTry) : 0;
   const currentTryAttempts = currentTry ? (attempts[currentTry.id] ?? 1) : 1;
 
@@ -428,6 +506,7 @@ export function LessonScreen({
     if (tab === 'try' && currentTry && currentTry.type === 'read') {
       setChoices(generateChoices(currentTryExpected));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, tryIdx, activeModuleId, currentTry?.id]);
 
   const reactToAnswer = (isCorrect: boolean, attempt: number) => {
@@ -490,6 +569,7 @@ export function LessonScreen({
     sorobana.stop();
     setIsReadingStory(false);
     setIsReadingModuleStory(false);
+    // ✅ حفظ في localStorage (توافق)
     try {
       const raw = localStorage.getItem(LESSON_PROGRESS_KEY);
       const arr: string[] = raw ? JSON.parse(raw) : [];
@@ -498,6 +578,11 @@ export function LessonScreen({
         localStorage.setItem(LESSON_PROGRESS_KEY, JSON.stringify(arr));
       }
     } catch { /* ignore */ }
+    // ✅ حفظ في progressStore (نظام جديد)
+    markLessonCompleted(lessonId);
+    // ✅ مسح جلسة الدرس
+    clearSession(lessonId);
+
     if (lesson.xpReward && onXP) onXP(lesson.xpReward);
     onComplete(lessonId);
   };
@@ -553,21 +638,29 @@ export function LessonScreen({
         {/* Module Chips */}
         {hasMod && modules.length > 1 && (
           <div className="max-w-3xl mx-auto mt-3 flex gap-1.5 overflow-x-auto pb-1">
-            {modules.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => switchModule(m.id)}
-                className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                  m.id === activeModule?.id
-                    ? 'bg-gold-400/30 border border-gold-400/60 text-gold-200'
-                    : 'bg-white/5 border border-white/10 text-white/60 hover:text-white'
-                }`}
-              >
-                <span>{m.emoji}</span>
-                <span>{m.id}</span>
-                <span className="hidden sm:inline">{m.title}</span>
-              </button>
-            ))}
+            {modules.map((m) => {
+              const moduleSolved = m.tryPhase.exercises.filter((q) => solved.has(q.id)).length;
+              const moduleTotal = m.tryPhase.exercises.length;
+              const moduleDone = moduleTotal > 0 && moduleSolved === moduleTotal;
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => switchModule(m.id)}
+                  className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                    m.id === activeModule?.id
+                      ? 'bg-gold-400/30 border border-gold-400/60 text-gold-200'
+                      : 'bg-white/5 border border-white/10 text-white/60 hover:text-white'
+                  }`}
+                >
+                  <span>{m.emoji}</span>
+                  <span>{m.id}</span>
+                  <span className="hidden sm:inline">{m.title}</span>
+                  {moduleDone && (
+                    <span className="text-emerald-300">✓</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -593,9 +686,9 @@ export function LessonScreen({
               }`}
             >
               <Hand className="w-4 h-4" /> جرّب
-              {solvedCount > 0 && (
+              {currentModuleSolved > 0 && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/30">
-                  {solvedCount}/{totalTry}
+                  {currentModuleSolved}/{totalTry}
                 </span>
               )}
             </button>
@@ -1111,7 +1204,7 @@ export function LessonScreen({
         <div className="mt-6">
           {!allSolved && hasTry && (
             <p className="text-center text-xs text-white/50 mb-2">
-              أكمل {formatNumber(totalTry - solvedCount, numberStyle)} سؤالاً إضافياً لفتح الدرس التالي
+              أكمل {formatNumber(allQuestions.length - allSolvedCount, numberStyle)} سؤالاً إضافياً لفتح الدرس التالي
             </p>
           )}
 
@@ -1126,7 +1219,7 @@ export function LessonScreen({
           >
             <CheckCircle2 className="w-5 h-5" />
             {hasTry && !allSolved
-              ? `أكمل الأسئلة (${formatNumber(solvedCount, numberStyle)}/${formatNumber(totalTry, numberStyle)})`
+              ? `أكمل الأسئلة (${formatNumber(allSolvedCount, numberStyle)}/${formatNumber(allQuestions.length, numberStyle)})`
               : `أكملت الدرس +${formatNumber(lesson.xpReward, numberStyle)} XP`}
           </button>
 
