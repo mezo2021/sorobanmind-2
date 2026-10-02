@@ -13,6 +13,7 @@ import type { Screen } from '@/types';
 import type { LevelId } from '@/store/progressStore';
 import Header from './Header';
 import { useGameStats } from '@/hooks/useGameStats';
+import { getLessonsByLevel } from '@/curriculum/lessons';
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -254,7 +255,10 @@ export function LevelScreen({
     back();
   };
 
-  const isLessonCompleted = progress.completedLevels.includes(levelId);
+  const levelLessons = getLessonsByLevel(levelId as string);
+const isLessonCompleted =
+  levelLessons.length > 0 &&
+  levelLessons.every((l) => progress.completedLessons.includes(l.id));
   const isPracticePassed = progress.passedPractice.includes(level.practiceNum);
   const isAnzanVisualPassed = progress.passedAnzanVisual.includes(level.anzanNum);
   const isAnzanAudioPassed = progress.passedAnzanAudio.includes(level.anzanNum);
