@@ -36,6 +36,42 @@ export interface AnzanAudioBadges {
   master_division_audio?: boolean;
 }
 
+// ═══ درجات الأقسام (0-100) ═══
+export interface LevelGrades {
+  practice: number | null;
+  anzanVisualNormal: number | null;
+  anzanVisualFlash: number | null;
+  anzanAudio: number | null;
+  levelTest: number | null;
+}
+
+// ═══ حالة الجلسة العلاجية الإجبارية ═══
+export type RemediationPhase =
+  | "practice"
+  | "anzanVisualNormal"
+  | "anzanVisualFlash"
+  | "anzanAudio";
+
+export interface PendingRemediation {
+  level: LevelId;
+  phase: RemediationPhase;
+  skills: string[];
+  outcome: "passed" | "failed";
+  createdAt: number;
+}
+
+// ═══ سجل جلسة علاجية ═══
+export interface RemediationSession {
+  id: string;
+  level: LevelId;
+  phase: RemediationPhase;
+  skills: string[];
+  correct: number;
+  total: number;
+  completedAt: number;
+}
+
+// ═══ الحالة الكاملة ═══
 export interface ProgressState {
   // ─── معلومات الطالب ───
   childName: string;
@@ -52,6 +88,15 @@ export interface ProgressState {
   passedPractice: number[];
   passedAnzanVisual: number[];
   passedAnzanAudio: number[];
+
+  // ─── درجات الأقسام (levelKey → LevelGrades) ───
+  grades: Record<string, LevelGrades>;
+
+  // ─── الجلسة العلاجية الإجبارية ───
+  pendingRemediation: PendingRemediation | null;
+
+  // ─── سجل الجلسات العلاجية ───
+  remediationHistory: RemediationSession[];
 
   // ─── الامتحانات ───
   exam1Passed: boolean;
@@ -87,6 +132,23 @@ export interface ProgressState {
   markPracticePassed: (num: number) => void;
   markAnzanVisualPassed: (num: number) => void;
   markAnzanAudioPassed: (num: number) => void;
+
+  // درجات
+  setGrade: (
+    levelKey: string,
+    phase: keyof LevelGrades,
+    grade: number,
+  ) => void;
+  getGrades: (levelKey: string) => LevelGrades;
+  computeFinalScore: (levelKey: string) => number | null;
+
+  // الجلسة العلاجية
+  setPendingRemediation: (p: Omit<PendingRemediation, "createdAt">) => void;
+  clearPendingRemediation: () => void;
+  addRemediationSession: (
+    s: Omit<RemediationSession, "id" | "completedAt">,
+  ) => void;
+
   setExam1Passed: (passed: boolean) => void;
   setExam2Passed: (passed: boolean) => void;
   recordPlacementAttempt: () => void;
@@ -109,6 +171,14 @@ export interface ProgressState {
 // الحالة الابتدائية
 // ═══════════════════════════════════════════════════════════
 
+const EMPTY_GRADES: LevelGrades = {
+  practice: null,
+  anzanVisualNormal: null,
+  anzanVisualFlash: null,
+  anzanAudio: null,
+  levelTest: null,
+};
+
 const initialState = {
   childName: "",
   category: null as Category | null,
@@ -118,6 +188,9 @@ const initialState = {
   passedPractice: [] as number[],
   passedAnzanVisual: [] as number[],
   passedAnzanAudio: [] as number[],
+  grades: {} as Record<string, LevelGrades>,
+  pendingRemediation: null as PendingRemediation | null,
+  remediationHistory: [] as RemediationSession[],
   exam1Passed: false,
   exam2Passed: false,
   placementAttempts: 0,
@@ -160,6 +233,10 @@ function uniqueLevels(arr: LevelId[]): LevelId[] {
 
 function uniqueStrings(arr: string[]): string[] {
   return Array.from(new Set(arr));
+}
+
+function makeRemediationId(): string {
+  return "r-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -218,6 +295,86 @@ export const useProgressStore = create<ProgressState>()(
             passedAnzanAudio: uniqueNums([...state.passedAnzanAudio, num]),
           };
         }),
+
+      // ─── الدرجات ───
+      setGrade: (levelKey, phase, grade) =>
+        set((state) => {
+          const current = state.grades[levelKey] ?? { ...EMPTY_GRADES };
+          const prev = current[phase];
+          // احتفظ بالأفضل (الأعلى)
+          const next =
+            prev === null || grade > prev ? grade : prev;
+          return {
+            grades: {
+              ...state.grades,
+              [levelKey]: { ...current, [phase]: next },
+            },
+          };
+        }),
+
+      getGrades: (levelKey) => {
+        const g = get().grades[levelKey];
+        return g ? { ...g } : { ...EMPTY_GRADES };
+      },
+
+      computeFinalScore: (levelKey) => {
+        const g = get().grades[levelKey];
+        if (!g) return null;
+
+        const test = g.levelTest;
+        const practice = g.practice;
+        const vNormal = g.anzanVisualNormal;
+        const vFlash = g.anzanVisualFlash;
+        const audio = g.anzanAudio;
+
+        if (test === null || practice === null || audio === null) {
+          return null;
+        }
+
+        // بصري = متوسط (عادي + فلاش) — إن وُجد واحد فقط نأخذ الموجود
+        let visual: number | null = null;
+        if (vNormal !== null && vFlash !== null) {
+          visual = Math.round((vNormal + vFlash) / 2);
+        } else if (vNormal !== null) {
+          visual = vNormal;
+        } else if (vFlash !== null) {
+          visual = vFlash;
+        }
+
+        if (visual === null) return null;
+
+        const final =
+          test * 0.7 +
+          practice * 0.1 +
+          visual * 0.1 +
+          audio * 0.1;
+
+        return Math.round(final);
+      },
+
+      // ─── الجلسة العلاجية ───
+      setPendingRemediation: (p) =>
+        set({
+          pendingRemediation: {
+            ...p,
+            createdAt: Date.now(),
+          },
+        }),
+
+      clearPendingRemediation: () =>
+        set({ pendingRemediation: null }),
+
+      addRemediationSession: (s) =>
+        set((state) => ({
+          remediationHistory: [
+            {
+              ...s,
+              id: makeRemediationId(),
+              completedAt: Date.now(),
+            },
+            ...state.remediationHistory,
+          ].slice(0, 100), // احتفظ بآخر 100 جلسة
+        })),
 
       setExam1Passed: (passed) => set({ exam1Passed: passed }),
 
@@ -340,7 +497,7 @@ export const useProgressStore = create<ProgressState>()(
     }),
     {
       name: "sorobanmind-v2-progress",
-      version: 4,
+      version: 5,
       migrate: (persistedState, version) => {
         const old = (persistedState as Record<string, unknown>) || {};
 
@@ -366,6 +523,18 @@ export const useProgressStore = create<ProgressState>()(
             ...initialState,
             ...old,
             completedLessons: (old.completedLessons as string[]) || [],
+          } as ProgressState;
+        }
+
+        if (version < 5) {
+          return {
+            ...initialState,
+            ...old,
+            grades: (old.grades as Record<string, LevelGrades>) || {},
+            pendingRemediation:
+              (old.pendingRemediation as PendingRemediation | null) || null,
+            remediationHistory:
+              (old.remediationHistory as RemediationSession[]) || [],
           } as ProgressState;
         }
 
@@ -398,5 +567,14 @@ export const selectIsAnzanVisualPassed =
 export const selectIsAnzanAudioPassed =
   (num: number) => (state: ProgressState) =>
     state.passedAnzanAudio.includes(num);
+
+export const selectPendingRemediation = (state: ProgressState) =>
+  state.pendingRemediation;
+
+export const selectRecentRemediation = (days: number) =>
+  (state: ProgressState) => {
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    return state.remediationHistory.filter((s) => s.completedAt >= cutoff);
+  };
 
 export default useProgressStore;
