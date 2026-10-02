@@ -3,6 +3,7 @@
 // ✅ SRB: weakSkills = union(أخطاء + بطيئات من performances)
 // ✅ SRB: زر الجلسة العلاجية عند وجود مهارات ضعيفة
 // ✅ عرض المعادلة في سطر واحد (بدون "احسب السلسلة:" + منع الكسر)
+// ✅ كشف الأسئلة النصية بشكل شامل (؟ / ماذا / ضع / ارفع) + عرض يلتف
 // 📅 آخر تحديث: SRB Migration — Phase 1.5
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -481,8 +482,14 @@ export function PracticeScreen({
 
   if (phase === 'running' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
-    // 🆕 استخرج المعادلة فقط (بدون "احسب السلسلة:")
-    const isTextual = currentQ.operation === 'read' || currentQ.operation === 'build';
+    // 🆕 كشف شامل للأسئلة النصية
+    const isTextual =
+      currentQ.operation === 'read' ||
+      currentQ.operation === 'build' ||
+      currentQ.question.includes('؟') ||
+      currentQ.question.includes('ماذا') ||
+      currentQ.question.includes('ضع') ||
+      currentQ.question.includes('ارفع');
     const equation = isTextual
       ? currentQ.question
       : extractEquation(currentQ.question);
@@ -530,10 +537,14 @@ export function PracticeScreen({
         </div>
         <div className="glass-card p-5 sm:p-6 mb-5">
           <p className="text-center text-white/40 font-body text-sm mb-3">مثّل الناتج على السوروبان</p>
-          {/* 🆕 المعادلة في سطر واحد — حجم خط تلقائي + منع الكسر */}
+          {/* 🆕 عرض المعادلة: النصي يلتف بحجم صغير، الرقمي يبقى كبيرًا */}
           <p
-            dir={isTextual ? 'rtl' : 'ltr'}
-            className={`text-center ${equationTextSize(equation)} font-black font-display text-white mb-6`}
+            dir="rtl"
+            className={`text-center font-display text-white mb-6 ${
+              isTextual
+                ? 'text-sm sm:text-base leading-relaxed font-semibold px-2'
+                : `${equationTextSize(equation)} font-black`
+            }`}
           >
             {isTextual ? formattedPrompt : `${formattedPrompt} = ؟`}
           </p>
