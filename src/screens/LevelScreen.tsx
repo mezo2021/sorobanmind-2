@@ -2,7 +2,6 @@
 // شاشة المستوى — الأزرار الرئيسية (تعلم، تمرّن، أنزان، اختبار)
 
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
 import {
   BookOpen, Dumbbell, Eye, Volume2,
   Lock, CheckCircle2, Trophy, Play, Star, GraduationCap,
@@ -13,6 +12,7 @@ import type { Screen } from '@/types';
 import type { LevelId } from '@/store/progressStore';
 import Header from './Header';
 import { useGameStats } from '@/hooks/useGameStats';
+import { useProgressStore } from '@/store/progressStore';
 import { getLessonsByLevel } from '@/curriculum/lessons';
 
 // ═══════════════════════════════════════════════════════════
@@ -126,25 +126,12 @@ function toArabicNumber(value: number | string): string {
   return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 }
 
-function loadProgress() {
+function loadPassedLevelTests(): string[] {
   try {
-    return {
-      completedLevels: JSON.parse(localStorage.getItem('soroban_completed_levels') || '[]') as string[],
-      completedLessons: JSON.parse(localStorage.getItem('soroban_completed_lessons') || '[]') as string[],
-      passedPractice: JSON.parse(localStorage.getItem('soroban_passed_practice') || '[]') as number[],
-      passedAnzanVisual: JSON.parse(localStorage.getItem('soroban_passed_anzan_visual') || '[]') as number[],
-      passedAnzanAudio: JSON.parse(localStorage.getItem('soroban_passed_anzan_audio') || '[]') as number[],
-      passedLevelTests: JSON.parse(localStorage.getItem('soroban_passed_level_tests') || '[]') as string[],
-    };
+    const raw = localStorage.getItem('soroban_passed_level_tests');
+    return raw ? JSON.parse(raw) : [];
   } catch {
-    return {
-      completedLevels: [],
-      completedLessons: [],
-      passedPractice: [],
-      passedAnzanVisual: [],
-      passedAnzanAudio: [],
-      passedLevelTests: [],
-    };
+    return [];
   }
 }
 
@@ -228,11 +215,15 @@ export function LevelScreen({
   const { stats, toggleSound } = useGameStats();
 
   const level = LEVELS_DATA[levelId];
-  const [progress, setProgress] = useState(loadProgress());
 
-  useEffect(() => {
-    setProgress(loadProgress());
-  }, [levelId]);
+  // ─── progressStore ───
+  const completedLessons = useProgressStore((s) => s.completedLessons);
+  const passedPractice = useProgressStore((s) => s.passedPractice);
+  const passedAnzanVisual = useProgressStore((s) => s.passedAnzanVisual);
+  const passedAnzanAudio = useProgressStore((s) => s.passedAnzanAudio);
+
+  // ─── passedLevelTests (localStorage مؤقتًا) ───
+  const passedLevelTests = loadPassedLevelTests();
 
   if (!level) {
     return (
@@ -256,13 +247,14 @@ export function LevelScreen({
   };
 
   const levelLessons = getLessonsByLevel(levelId as string);
-const isLessonCompleted =
-  levelLessons.length > 0 &&
-  levelLessons.every((l) => progress.completedLessons.includes(l.id));
-  const isPracticePassed = progress.passedPractice.includes(level.practiceNum);
-  const isAnzanVisualPassed = progress.passedAnzanVisual.includes(level.anzanNum);
-  const isAnzanAudioPassed = progress.passedAnzanAudio.includes(level.anzanNum);
-  const isLevelTestPassed = progress.passedLevelTests.includes(levelId);
+  const isLessonCompleted =
+    levelLessons.length > 0 &&
+    levelLessons.every((l) => completedLessons.includes(l.id));
+
+  const isPracticePassed = passedPractice.includes(level.practiceNum);
+  const isAnzanVisualPassed = passedAnzanVisual.includes(level.anzanNum);
+  const isAnzanAudioPassed = passedAnzanAudio.includes(level.anzanNum);
+  const isLevelTestPassed = passedLevelTests.includes(levelId);
 
   const practiceLocked = !isLessonCompleted;
   const anzanVisualLocked = !isPracticePassed;
