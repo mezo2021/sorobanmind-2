@@ -180,7 +180,21 @@ export function LessonScreen({
   // ═══ استعادة الجلسة عند تغيير الدرس ═══
   useEffect(() => {
     const session = loadSession(lessonId);
-    setSolved(new Set(session.solved ?? []));
+
+    // ✅ إذا كان الدرس مكتملًا، اعتبر كل الأسئلة محلولة
+    const isLessonCompleted = useProgressStore
+      .getState()
+      .completedLessons.includes(lessonId);
+
+    if (isLessonCompleted && lesson) {
+      const allQ = hasModules(lesson)
+        ? (lesson.modules ?? []).flatMap((m) => m.tryPhase.exercises)
+        : (lesson.tryQuestions ?? []);
+      setSolved(new Set(allQ.map((q) => q.id)));
+    } else {
+      setSolved(new Set(session.solved ?? []));
+    }
+
     setAttempts(session.attempts ?? {});
     setTryIdx(session.tryIdx ?? 0);
     setTab(session.tab ?? 'watch');
