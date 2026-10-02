@@ -196,6 +196,11 @@ const [companion, setCompanion] = useState<CharacterType>('sham');
       localStorage.removeItem('soroban_anzan_badges');
       localStorage.removeItem('soroban_anzan_audio_badges');
 
+      // ⚠️ TEMP-DEV-PREVIEW: يُحذف عند انتهاء التطوير
+      // السبب: يفتح قفل الدروس في وضع المطور (المعاينة)
+      // الحذف: ابحث عن "TEMP-DEV-PREVIEW" في المشروع
+      localStorage.setItem('soroban_dev_preview', 'true');
+
       playSound('click');
       setTimeout(() => window.location.reload(), 500);
     } catch (err) {
