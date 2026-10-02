@@ -1,7 +1,7 @@
 // src/utils/badgeChecker.ts — التحقق من استحقاق الشارات
 import { BADGES, type Badge, type BadgeRequirement } from '../data';
 import { loadAnzanBadges } from './anzanBadges';
-const COMPLETED_KEY = 'soroban-completed-lessons';
+const COMPLETED_KEY = 'soroban_completed_lessons';
 const STATS_KEY = 'sorobanmind-stats';
 const EXAM_KEY = 'soroban_exam_result';
 
