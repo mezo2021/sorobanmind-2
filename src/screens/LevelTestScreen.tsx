@@ -7,6 +7,7 @@ import { Home, Clock, CheckCircle2, XCircle, Trophy, Play, RotateCcw } from 'luc
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { useProgressStore } from '@/store/progressStore';
 import { formatNumber } from '@/utils/numberStyle';
 import {
   buildL0Test,
@@ -146,6 +147,11 @@ export function LevelTestScreen({
           levels.push(levelId);
           localStorage.setItem('soroban_completed_levels', JSON.stringify(levels));
         }
+
+        // ✅ حفظ الدرجة في progressStore + إكمال المستوى
+        const store = useProgressStore.getState();
+        store.setGrade(levelId, 'levelTest', score);
+        store.markLevelComplete(levelId as never);
       }
     } catch { /* ignore */ }
 
@@ -431,8 +437,14 @@ export function LevelTestScreen({
             </motion.div>
 
             <h2 className="text-2xl font-extrabold text-white mb-2">
-              {passed ? '🎉 مبروك! نجحت' : '💪 حاول مرة أخرى'}
+              {passed ? '🎉 اجتزت الاختبار!' : '💪 حاول مرة أخرى'}
             </h2>
+
+            {passed && (
+              <p className="text-lg font-bold text-emerald-300 font-display mb-4">
+                بدرجة {formatNumber(finalScore, numberStyle)}٪
+              </p>
+            )}
 
             <div className="my-6 p-4 rounded-2xl bg-white/5 border border-white/10">
               <p className="text-sm text-white/60 mb-1">النتيجة</p>
