@@ -4,6 +4,7 @@
 // ✅ SRB: زر الجلسة العلاجية عند وجود مهارات ضعيفة
 // ✅ عرض المعادلة في سطر واحد (بدون "احسب السلسلة:" + منع الكسر)
 // ✅ كشف الأسئلة النصية بشكل شامل (؟ / ماذا / ضع / ارفع) + عرض يلتف
+// ✅ زر العلاجية يعتمد على pendingRemediation + إخفاء "جلسة جديدة" عند النجاح/العلاجية
 // 📅 آخر تحديث: SRB Migration — Phase 1.5
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -154,6 +155,7 @@ export function PracticeScreen({
 
   const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
   const setGrade = useProgressStore((s) => s.setGrade);
+  const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
   const setPendingRemediation = useProgressStore((s) => s.setPendingRemediation);
   const markPracticePassed = useProgressStore((s) => s.markPracticePassed);
 
@@ -684,8 +686,8 @@ export function PracticeScreen({
           </div>
         </motion.div>
 
-        {/* 🩺 زر الجلسة العلاجية الإجبارية — يظهر عند وجود مهارات ضعيفة */}
-        {hasWeakSkills && bestWeakSection && (
+        {/* 🩺 زر الجلسة العلاجية الإجبارية */}
+        {pendingRemediation && hasWeakSkills && bestWeakSection && (
           <motion.button
             type="button"
             initial={{ opacity: 0, y: 10 }}
@@ -708,11 +710,14 @@ export function PracticeScreen({
         )}
 
         <div className="space-y-3">
-          <button type="button" onClick={() => { playSound('click'); startSession(); }}
-            className="btn-primary w-full !py-3">
-            <RotateCcw className="w-5 h-5" />
-            جلسة جديدة
-          </button>
+          {/* ✅ زر "جلسة جديدة" يظهر فقط عند الرسوب بدون جلسة علاجية */}
+          {!passed && !pendingRemediation && (
+            <button type="button" onClick={() => { playSound('click'); startSession(); }}
+              className="btn-primary w-full !py-3">
+              <RotateCcw className="w-5 h-5" />
+              جلسة جديدة
+            </button>
+          )}
           <button type="button" onClick={() => { playSound('click'); onBack(); }} className="btn-ghost w-full">
             رجوع
           </button>
