@@ -221,9 +221,20 @@ export function LevelScreen({
   const passedPractice = useProgressStore((s) => s.passedPractice);
   const passedAnzanVisual = useProgressStore((s) => s.passedAnzanVisual);
   const passedAnzanAudio = useProgressStore((s) => s.passedAnzanAudio);
+  const grades = useProgressStore((s) => s.grades);
+  const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
 
   // ─── passedLevelTests (localStorage مؤقتًا) ───
   const passedLevelTests = loadPassedLevelTests();
+
+  // ─── درجات المستوى الحالي ───
+  const levelGrades = grades[levelId] ?? {
+    practice: null,
+    anzanVisualNormal: null,
+    anzanVisualFlash: null,
+    anzanAudio: null,
+    levelTest: null,
+  };
 
   if (!level) {
     return (
@@ -256,10 +267,32 @@ export function LevelScreen({
   const isAnzanAudioPassed = passedAnzanAudio.includes(level.anzanNum);
   const isLevelTestPassed = passedLevelTests.includes(levelId);
 
-  const practiceLocked = !isLessonCompleted;
-  const anzanVisualLocked = !isPracticePassed;
-  const anzanAudioLocked = !isAnzanVisualPassed;
-  const levelTestLocked = !isAnzanAudioPassed;
+  // 🩺 الجلسة العلاجية الإجبارية — إن كانت للمستوى الحالي
+  const hasPendingRemediation =
+    pendingRemediation !== null && pendingRemediation.level === levelId;
+
+  // 🎯 منطق القفل الجديد:
+  // - practiceLocked: يحتاج إنهاء الدروس + عدم وجود جلسة علاجية معلّقة
+  const practiceLocked =
+    !isLessonCompleted || hasPendingRemediation;
+
+  // - anzanVisualLocked: يحتاج النجاح في التمرّن + عدم وجود جلسة علاجية
+  const anzanVisualLocked =
+    !isPracticePassed || hasPendingRemediation;
+
+  // - anzanAudioLocked: يحتاج النجاح في الأنزان البصري + عدم وجود جلسة علاجية
+  const anzanAudioLocked =
+    !isAnzanVisualPassed || hasPendingRemediation;
+
+  // - levelTestLocked: يحتاج النجاح في كل المسارات + عدم وجود جلسة علاجية
+  const levelTestLocked =
+    !isAnzanAudioPassed || hasPendingRemediation;
+
+  // 🎯 المسار "التالي" لفتحه (لإظهار الجلسة العلاجية)
+  const remediationTarget =
+    hasPendingRemediation && pendingRemediation
+      ? pendingRemediation.phase
+      : null;
 
   const completionPct =
     ([isLessonCompleted, isPracticePassed, isAnzanVisualPassed, isAnzanAudioPassed, isLevelTestPassed]
@@ -329,6 +362,19 @@ export function LevelScreen({
           </div>
         </motion.div>
 
+        {/* 🩺 الجلسة العلاجية الإجبارية */}
+        {hasPendingRemediation && remediationTarget && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-3 p-3 rounded-2xl bg-amber-500/15 border-2 border-amber-400/50 text-center"
+          >
+            <p className="text-sm font-bold text-amber-200 mb-2">
+              ⚠️ يجب إتمام الجلسة العلاجية لفتح المسار التالي
+            </p>
+          </motion.div>
+        )}
+
         {/* Sections */}
         <div className="space-y-3">
           {/* 1. تعلّم → قائمة الدروس */}
@@ -347,11 +393,13 @@ export function LevelScreen({
           <SectionCard
             title={`✏️ تمرّن ${toArabicNumber(level.practiceNum)}`}
             subtitle={
-              practiceLocked
-                ? '🔒 يُفتح بعد إنهاء الدروس'
-                : isPracticePassed
-                  ? '✅ نجحت في هذا التمرّن'
-                  : 'أسئلة تكيفية من البنك'
+              hasPendingRemediation && remediationTarget === 'practice'
+                ? '🔒 مقفل — جلسة علاجية إجبارية'
+                : practiceLocked
+                  ? '🔒 يُفتح بعد إنهاء الدروس'
+                  : isPracticePassed
+                    ? `✅ اجتزت بدرجة ${toArabicNumber(levelGrades.practice ?? 0)}٪`
+                    : 'أسئلة تكيفية من البنك'
             }
             icon={Dumbbell}
             gradient="from-blue-500 to-cyan-700"
@@ -365,11 +413,26 @@ export function LevelScreen({
           <SectionCard
             title="🧠 أنزان بصري"
             subtitle={
-              anzanVisualLocked
-                ? '🔒 يُفتح بعد النجاح في تمرّن'
-                : isAnzanVisualPassed
-                  ? '✅ نجحت في الأنزان البصري'
-                  : 'أرقام تومض — احسب بذهنك'
+              hasPendingRemediation && (
+                remediationTarget === 'anzanVisualNormal' ||
+                remediationTarget === 'anzanVisualFlash'
+              )
+                ? '🔒 مقفل — جلسة علاجية إجبارية'
+                : anzanVisualLocked
+                  ? '🔒 يُفتح بعد النجاح في تمرّن'
+                  : isAnzanVisualPassed
+                    ? `✅ اجتزت بدرجة ${
+                        levelGrades.anzanVisualNormal !== null && levelGrades.anzanVisualFlash !== null
+                          ? toArabicNumber(Math.round(
+                              (levelGrades.anzanVisualNormal + levelGrades.anzanVisualFlash) / 2,
+                            ))
+                          : toArabicNumber(
+                              levelGrades.anzanVisualNormal ??
+                              levelGrades.anzanVisualFlash ??
+                              0,
+                            )
+                      }٪`
+                    : 'أرقام تومض — احسب بذهنك'
             }
             icon={Eye}
             gradient="from-purple-500 to-violet-700"
@@ -383,11 +446,13 @@ export function LevelScreen({
           <SectionCard
             title="🎧 أنزان سمعي"
             subtitle={
-              anzanAudioLocked
-                ? '🔒 يُفتح بعد النجاح في الأنزان البصري'
-                : isAnzanAudioPassed
-                  ? '✅ نجحت في الأنزان السمعي'
-                  : 'اسمع الأرقام واحسب ذهنياً'
+              hasPendingRemediation && remediationTarget === 'anzanAudio'
+                ? '🔒 مقفل — جلسة علاجية إجبارية'
+                : anzanAudioLocked
+                  ? '🔒 يُفتح بعد النجاح في الأنزان البصري'
+                  : isAnzanAudioPassed
+                    ? `✅ اجتزت بدرجة ${toArabicNumber(levelGrades.anzanAudio ?? 0)}٪`
+                    : 'اسمع الأرقام واحسب ذهنياً'
             }
             icon={Volume2}
             gradient="from-rose-500 to-pink-700"
@@ -401,11 +466,13 @@ export function LevelScreen({
           <SectionCard
             title={`🎓 اختبار ${toArabicNumber(level.number)}`}
             subtitle={
-              levelTestLocked
-                ? '🔒 يُفتح بعد إتمام كل المسارات'
-                : isLevelTestPassed
-                  ? '✅ نجحت في اختبار المستوى'
-                  : '10 أسئلة صعبة — 60 ثانية — 80%'
+              hasPendingRemediation
+                ? '🔒 مقفل — أتمّ الجلسة العلاجية أولًا'
+                : levelTestLocked
+                  ? '🔒 يُفتح بعد إتمام كل المسارات'
+                  : isLevelTestPassed
+                    ? `✅ اجتزت بدرجة ${toArabicNumber(levelGrades.levelTest ?? 0)}٪`
+                    : '10 أسئلة صعبة — 60 ثانية — 80%'
             }
             icon={GraduationCap}
             gradient="from-gold-400 to-amber-600"
