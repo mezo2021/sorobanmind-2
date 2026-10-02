@@ -375,11 +375,18 @@ export function LevelScreen({
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-3 p-3 rounded-2xl bg-amber-500/15 border-2 border-amber-400/50 text-center"
+            className="mb-4 p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-400/50 text-center"
           >
-            <p className="text-sm font-bold text-amber-200 mb-2">
+            <p className="text-sm font-bold text-amber-200 mb-3">
               ⚠️ يجب إتمام الجلسة العلاجية لفتح المسار التالي
             </p>
+            <button
+              type="button"
+              onClick={() => handleNav(`remediation-${levelId}` as Screen)}
+              className="w-full py-3 rounded-2xl bg-gradient-to-l from-amber-400 to-orange-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/40 animate-pulse"
+            >
+              🩺 ابدأ الجلسة العلاجية الإجبارية
+            </button>
           </motion.div>
         )}
 
@@ -411,7 +418,7 @@ export function LevelScreen({
             }
             icon={Dumbbell}
             gradient="from-blue-500 to-cyan-700"
-            locked={practiceLocked}
+            locked={practiceLocked || isPracticePassed}
             completed={isPracticePassed}
             onClick={() => handleNav(`practice-${level.practiceNum}` as Screen)}
             playSound={sound}
@@ -444,7 +451,7 @@ export function LevelScreen({
             }
             icon={Eye}
             gradient="from-purple-500 to-violet-700"
-            locked={anzanVisualLocked}
+            locked={anzanVisualLocked || isAnzanVisualPassed}
             completed={isAnzanVisualPassed}
             onClick={() => handleNav(`anzan-${level.anzanNum}` as Screen)}
             playSound={sound}
@@ -464,7 +471,7 @@ export function LevelScreen({
             }
             icon={Volume2}
             gradient="from-rose-500 to-pink-700"
-            locked={anzanAudioLocked}
+            locked={anzanAudioLocked || isAnzanAudioPassed}
             completed={isAnzanAudioPassed}
             onClick={() => handleNav(`audio-anzan-${level.anzanNum}` as Screen)}
             playSound={sound}
@@ -484,7 +491,7 @@ export function LevelScreen({
             }
             icon={GraduationCap}
             gradient="from-gold-400 to-amber-600"
-            locked={levelTestLocked}
+            locked={levelTestLocked || isLevelTestPassed}
             completed={isLevelTestPassed}
             onClick={() => handleNav(`level-test-${levelId}` as Screen)}
             playSound={sound}
