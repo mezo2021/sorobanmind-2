@@ -238,6 +238,9 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     return passedPractice.includes(practiceNum);
   };
 
+  const isLevelBlocked = (levelId: string): boolean =>
+    pendingRemediation !== null && pendingRemediation.level === levelId;
+
   const isAnzanVisualUnlocked = (levelIndex: number): boolean => {
     return isPracticePassed(levelIndex);
   };
@@ -337,8 +340,8 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
             <button
               type="button"
-              onClick={() => practiceUnlocked && handleNav(`practice-${practiceNum}` as Screen)}
-              disabled={!practiceUnlocked}
+              onClick={() => practiceUnlocked && !practicePassed && !isLevelBlocked(level.id) && handleNav(`practice-${practiceNum}` as Screen)}
+              disabled={!practiceUnlocked || practicePassed || isLevelBlocked(level.id)}
               className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition ${
                 practicePassed
                   ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/40'
@@ -355,8 +358,8 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
             <button
               type="button"
-              onClick={() => anzanVUnlocked && handleNav(`anzan-${anzanNum}` as Screen)}
-              disabled={!anzanVUnlocked}
+              onClick={() => anzanVUnlocked && !anzanVPassed && !isLevelBlocked(level.id) && handleNav(`anzan-${anzanNum}` as Screen)}
+              disabled={!anzanVUnlocked || anzanVPassed || isLevelBlocked(level.id)}
               className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition ${
                 anzanVPassed
                   ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/40'
@@ -371,8 +374,8 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
             <button
               type="button"
-              onClick={() => anzanAUnlocked && handleNav(`audio-anzan-${anzanNum}` as Screen)}
-              disabled={!anzanAUnlocked}
+              onClick={() => anzanAUnlocked && !anzanAPassed && !isLevelBlocked(level.id) && handleNav(`audio-anzan-${anzanNum}` as Screen)}
+              disabled={!anzanAUnlocked || anzanAPassed || isLevelBlocked(level.id)}
               className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition ${
                 anzanAPassed
                   ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/40'
