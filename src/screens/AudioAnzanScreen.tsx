@@ -188,6 +188,7 @@ export function AudioAnzanScreen({
   const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
   const setGrade = useProgressStore((s) => s.setGrade);
   const setPendingRemediation = useProgressStore((s) => s.setPendingRemediation);
+  const markAnzanAudioPassed = useProgressStore((s) => s.markAnzanAudioPassed);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioSequenceRef = useRef<number>(0);
@@ -396,6 +397,11 @@ export function AudioAnzanScreen({
       // ✅ حفظ الدرجة في progressStore
       setGrade(level, 'anzanAudio', percentage);
 
+      // ✅ تسجيل نجاح الأنزان السمعي
+      if (passed) {
+        markAnzanAudioPassed(Number(level.slice(1)));
+      }
+
       // ✅ جلسة علاجية إجبارية عند وجود مهارات ضعيفة
       if (weakSkillIds.size > 0) {
         setPendingRemediation({
@@ -410,7 +416,7 @@ export function AudioAnzanScreen({
     },
     [
       level, questions, anzanAudioBadges, setAnzanAudioBadge, buildPerformances,
-      setGrade, setPendingRemediation,
+      setGrade, setPendingRemediation, markAnzanAudioPassed,
     ],
   );
 
