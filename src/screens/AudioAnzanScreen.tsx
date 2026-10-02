@@ -186,6 +186,8 @@ export function AudioAnzanScreen({
   const isArabic = numberStyle === 'arabic';
 
   const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
+  const setGrade = useProgressStore((s) => s.setGrade);
+  const setPendingRemediation = useProgressStore((s) => s.setPendingRemediation);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioSequenceRef = useRef<number>(0);
@@ -376,7 +378,6 @@ export function AudioAnzanScreen({
         }
       }
 
-      // 🆕 weakSkills = union(أخطاء + بطيئات)
       const perf = buildPerformances();
       const weakSkillIds = new Set<string>([
         ...wrongSkillsRef.current,
@@ -386,13 +387,31 @@ export function AudioAnzanScreen({
       ]);
 
       const firstSection = questions[0]?.section ?? 'S01';
+
       saveSectionGrade(
         level, firstSection, 'anzanAudio', percentage,
         Array.from(weakSkillIds),
       );
+
+      // ✅ حفظ الدرجة في progressStore
+      setGrade(level, 'anzanAudio', percentage);
+
+      // ✅ جلسة علاجية إجبارية عند وجود مهارات ضعيفة
+      if (weakSkillIds.size > 0) {
+        setPendingRemediation({
+          level,
+          phase: 'anzanAudio',
+          skills: Array.from(weakSkillIds),
+          outcome: passed ? 'passed' : 'failed',
+        });
+      }
+
       return passed;
     },
-    [level, questions, anzanAudioBadges, setAnzanAudioBadge, buildPerformances],
+    [
+      level, questions, anzanAudioBadges, setAnzanAudioBadge, buildPerformances,
+      setGrade, setPendingRemediation,
+    ],
   );
 
   const nextQuestion = useCallback(() => {
@@ -737,9 +756,19 @@ export function AudioAnzanScreen({
               <Trophy className="w-12 h-12 text-white" />
             </motion.div>
             <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-              {passed ? 'أحسنت! نجحت 🎉' : 'حاول مرة أخرى 💪'}
+              {passed ? '🎉 اجتزت الأنزان السمعي!' : '💪 حاول مرة أخرى'}
             </h2>
-            <p className="text-sm text-white/60 font-body mb-6">الأنزان السمعي</p>
+            {passed && (
+              <p className="text-lg font-bold text-emerald-300 font-display mb-2">
+                بدرجة {formatNumber(percentage, numberStyle)}٪
+              </p>
+            )}
+            <p className="text-sm text-white/60 font-body mb-6">
+              الأنزان السمعي
+              {passed && performances.some((p) => p.speedClass === 'slow' || p.correct < p.attempts) && (
+                <> — 🔒 جلسة علاجية إجبارية</>
+              )}
+            </p>
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
               <p className="text-sm text-white/60 font-body">النتيجة</p>
               <p className="text-5xl font-black font-display text-white mt-1" dir={isArabic ? 'rtl' : 'ltr'}>
