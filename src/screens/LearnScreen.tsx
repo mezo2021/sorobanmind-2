@@ -2,7 +2,6 @@
 // 📖 قائمة دروس المستوى (Level → Lessons)
 // يعرض دروس المستوى (مقدمة، S1، S2...) مع القفل المتسلسل
 
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Home, BookOpen, CheckCircle2, Lock, Star, Type, ChevronRight,
@@ -11,6 +10,7 @@ import {
 import { getLessonsByLevel } from '@/curriculum/lessons';
 import { FloatingCompanion } from '@/components/FloatingCompanion';
 import { useGameStats } from '@/hooks/useGameStats';
+import { useProgressStore } from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 
@@ -46,19 +46,6 @@ const LEVEL_META: Record<string, {
 };
 
 // ═══════════════════════════════════════════════════════════
-// قراءة التقدم
-// ═══════════════════════════════════════════════════════════
-
-function loadCompletedLessons(): string[] {
-  try {
-    const raw = localStorage.getItem('soroban_completed_lessons');
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
 // الشاشة
 // ═══════════════════════════════════════════════════════════
 
@@ -70,13 +57,9 @@ export function LearnScreen({
 }: LearnScreenProps) {
   const meta = LEVEL_META[levelId];
   const lessons = getLessonsByLevel(levelId);
-  const [completedLessons, setCompletedLessons] = useState<string[]>(loadCompletedLessons());
+  const completedLessons = useProgressStore((s) => s.completedLessons);
   const { stats } = useGameStats();
   const { style: numberStyle, toggleStyle } = useNumberStyleStore();
-
-  useEffect(() => {
-    setCompletedLessons(loadCompletedLessons());
-  }, [levelId]);
 
   // ─── الحماية ───
   if (!meta) {
