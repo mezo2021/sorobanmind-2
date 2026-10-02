@@ -250,6 +250,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     pendingRemediation !== null && pendingRemediation.level === levelId;
 
   const isAnzanVisualUnlocked = (levelIndex: number): boolean => {
+    if (isPreviewMode) return true;
     return isPracticePassed(levelIndex);
   };
 
@@ -260,6 +261,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   };
 
   const isAnzanAudioUnlocked = (levelIndex: number): boolean => {
+    if (isPreviewMode) return true;
     return isAnzanVisualPassed(levelIndex);
   };
 
