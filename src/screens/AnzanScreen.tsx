@@ -236,6 +236,8 @@ export function AnzanScreen({
   const isArabic = numberStyle === 'arabic';
 
   const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
+  const setGrade = useProgressStore((s) => s.setGrade);
+  const setPendingRemediation = useProgressStore((s) => s.setPendingRemediation);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const displayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -438,13 +440,31 @@ export function AnzanScreen({
 
       const gradeMode = mode === 'flash' ? 'anzanVisualFlash' : 'anzanVisualNormal';
       const firstSection = questions[0]?.section ?? 'S01';
+
       saveSectionGrade(
         level, firstSection, gradeMode, percentage,
         Array.from(weakSkillIds),
       );
+
+      // ✅ حفظ الدرجة في progressStore (للشهادة ولوحة ولي الأمر)
+      setGrade(level, gradeMode, percentage);
+
+      // ✅ جلسة علاجية إجبارية عند وجود مهارات ضعيفة
+      if (weakSkillIds.size > 0) {
+        setPendingRemediation({
+          level,
+          phase: gradeMode,
+          skills: Array.from(weakSkillIds),
+          outcome: passed ? 'passed' : 'failed',
+        });
+      }
+
       return passed;
     },
-    [level, mode, questions, anzanBadges, setAnzanBadge, buildPerformances],
+    [
+      level, mode, questions, anzanBadges, setAnzanBadge, buildPerformances,
+      setGrade, setPendingRemediation,
+    ],
   );
 
   const nextQuestion = useCallback(() => {
@@ -820,10 +840,18 @@ export function AnzanScreen({
               <Trophy className="w-12 h-12 text-white" />
             </motion.div>
             <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-              {passed ? 'أحسنت! نجحت 🎉' : 'حاول مرة أخرى 💪'}
+              {passed ? '🎉 اجتزت الأنزان البصري!' : '💪 حاول مرة أخرى'}
             </h2>
+            {passed && (
+              <p className="text-lg font-bold text-emerald-300 font-display mb-2">
+                بدرجة {formatNumber(percentage, numberStyle)}٪
+              </p>
+            )}
             <p className="text-sm text-white/60 font-body mb-6">
               {mode === 'flash' ? 'الوضع السريع (Flash)' : 'الوضع العادي'}
+              {passed && performances.some((p) => p.speedClass === 'slow' || p.correct < p.attempts) && (
+                <> — 🔒 جلسة علاجية إجبارية</>
+              )}
             </p>
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
               <p className="text-sm text-white/60 font-body">النتيجة</p>
