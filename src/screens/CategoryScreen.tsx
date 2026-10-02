@@ -213,8 +213,14 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     onNavigate('hero-dashboard');
   };
 
+  // ⚠️ TEMP-DEV-PREVIEW: يُحذف عند انتهاء التطوير
+  const isPreviewMode =
+    typeof window !== 'undefined' &&
+    localStorage.getItem('soroban_dev_preview') === 'true';
+
   // ✅ المستوى يُفتح إذا: كان الأول، أو المستوى السابق مكتملًا
   const isLevelUnlocked = (_levelId: LevelId, index: number): boolean => {
+    if (isPreviewMode) return true;
     if (index === 0) return true;
     const prevLevel = data.levels[index - 1];
     return completedLevels.includes(prevLevel.id);
@@ -222,6 +228,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
   // ✅ المستوى "مكتمل" = كل دروسه مكتملة
   const isLevelCompleted = (levelId: LevelId): boolean => {
+    if (isPreviewMode) return true;
     const lessons = getLessonsByLevel(levelId as string);
     if (lessons.length === 0) {
       return completedLevels.includes(levelId);
@@ -234,6 +241,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   };
 
   const isPracticePassed = (levelIndex: number): boolean => {
+    if (isPreviewMode) return false;
     const practiceNum = data.practiceRange[0] + levelIndex;
     return passedPractice.includes(practiceNum);
   };
@@ -246,6 +254,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   };
 
   const isAnzanVisualPassed = (levelIndex: number): boolean => {
+    if (isPreviewMode) return false;
     const anzanNum = data.anzanRange[0] + levelIndex;
     return passedAnzanVisual.includes(anzanNum);
   };
@@ -255,6 +264,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   };
 
   const isAnzanAudioPassed = (levelIndex: number): boolean => {
+    if (isPreviewMode) return false;
     const anzanNum = data.anzanRange[0] + levelIndex;
     return passedAnzanAudio.includes(anzanNum);
   };
