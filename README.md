@@ -1,5 +1,3 @@
-📄 README.md — الملف الشامل
-
 
 ```markdown
 <div align="center">
