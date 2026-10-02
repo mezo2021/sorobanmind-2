@@ -45,6 +45,9 @@ export interface ProgressState {
   // ─── المستويات ───
   completedLevels: LevelId[];
 
+  // ─── الدروس ───
+  completedLessons: string[];
+
   // ─── المسارات ───
   passedPractice: number[];
   passedAnzanVisual: number[];
@@ -80,6 +83,7 @@ export interface ProgressState {
   setChildName: (name: string) => void;
   setCategory: (category: Category) => void;
   markLevelComplete: (levelId: LevelId) => void;
+  markLessonCompleted: (lessonId: string) => void;
   markPracticePassed: (num: number) => void;
   markAnzanVisualPassed: (num: number) => void;
   markAnzanAudioPassed: (num: number) => void;
@@ -110,6 +114,7 @@ const initialState = {
   category: null as Category | null,
   categoryChosenAt: null as string | null,
   completedLevels: [] as LevelId[],
+  completedLessons: [] as string[],
   passedPractice: [] as number[],
   passedAnzanVisual: [] as number[],
   passedAnzanAudio: [] as number[],
@@ -179,6 +184,14 @@ export const useProgressStore = create<ProgressState>()(
           if (state.completedLevels.includes(levelId)) return state;
           return {
             completedLevels: uniqueLevels([...state.completedLevels, levelId]),
+          };
+        }),
+
+      markLessonCompleted: (lessonId) =>
+        set((state) => {
+          if (state.completedLessons.includes(lessonId)) return state;
+          return {
+            completedLessons: uniqueStrings([...state.completedLessons, lessonId]),
           };
         }),
 
@@ -327,7 +340,7 @@ export const useProgressStore = create<ProgressState>()(
     }),
     {
       name: "sorobanmind-v2-progress",
-      version: 3,
+      version: 4,
       migrate: (persistedState, version) => {
         const old = (persistedState as Record<string, unknown>) || {};
 
@@ -344,7 +357,16 @@ export const useProgressStore = create<ProgressState>()(
             lastPlayedDate: (old.lastPlayedDate as string) || null,
             completedLevels:
               (old.completedLevels as LevelId[]) || [],
+            completedLessons: [] as string[],
           };
+        }
+
+        if (version < 4) {
+          return {
+            ...initialState,
+            ...old,
+            completedLessons: (old.completedLessons as string[]) || [],
+          } as ProgressState;
         }
 
         return persistedState as ProgressState;
@@ -360,6 +382,10 @@ export const useProgressStore = create<ProgressState>()(
 export const selectIsLevelComplete =
   (levelId: LevelId) => (state: ProgressState) =>
     state.completedLevels.includes(levelId);
+
+export const selectIsLessonCompleted =
+  (lessonId: string) => (state: ProgressState) =>
+    state.completedLessons.includes(lessonId);
 
 export const selectIsPracticePassed =
   (num: number) => (state: ProgressState) =>
