@@ -1,4 +1,3 @@
-
 <div align="center">
 
 # 🧮 SorobanMind v2
