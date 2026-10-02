@@ -197,6 +197,8 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   const passedPractice = useProgressStore((s) => s.passedPractice);
   const passedAnzanVisual = useProgressStore((s) => s.passedAnzanVisual);
   const passedAnzanAudio = useProgressStore((s) => s.passedAnzanAudio);
+  const grades = useProgressStore((s) => s.grades);
+  const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
 
   // ─── placement / exams (localStorage مؤقتًا) ───
   const placement = loadPlacementData();
@@ -346,7 +348,9 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               }`}
             >
               {!practiceUnlocked ? <Lock className="w-3.5 h-3.5" /> : <Dumbbell className="w-3.5 h-3.5" />}
-              تمرّن {toArabicNumber(practiceNum)}
+              {practicePassed && grades[level.id]?.practice !== null && grades[level.id]?.practice !== undefined
+                ? `تمرّن ✓ ${toArabicNumber(grades[level.id]!.practice!)}٪`
+                : `تمرّن ${toArabicNumber(practiceNum)}`}
             </button>
 
             <button
