@@ -3,27 +3,28 @@
 // ═══════════════════════════════════════════════════════════════════
 //
 // الوظيفة:
-//   - جلسة علاجية مخصصة
-//   - بلا درجات — تُظهر الحل بعد كل سؤال
-//   - تُبنى من المواضيع الضعيفة (m)
+//   - جلسة علاجية مخصصة (بلا درجات)
+//   - تُبنى من المواضيع الضعيفة
+//   - عند الإنهاء: تُسجَّل في progressStore + تُزيل الإجبار
 //
 // 📊 الفرق عن الجلسات العادية:
 //   - لا تُسجَّل درجات
-//   - تُظهر "اشرح لي" و"الحل" بعد كل سؤال
-//   - زر "تخطّي" متاح دائمًا
+//   - تُظهر الحل بعد كل سؤال
+//   - زر "إنهاء" يظهر في النهاية
 //
 // ═══════════════════════════════════════════════════════════════════
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
-  ArrowRight, ArrowLeft, CheckCircle2, XCircle, Clock,
+  ArrowRight, ArrowLeft, CheckCircle2, XCircle,
   Lightbulb, Play, RotateCcw, Square, BookOpen,
 } from 'lucide-react';
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
+import { useProgressStore } from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 
@@ -47,6 +48,8 @@ interface RemediationScreenProps {
   section: SRBSection;
   onBack: () => void;
   playSound: (type: 'click' | 'success' | 'error' | 'whoosh') => void;
+  /** حالة الإجبار — إن وُجدت، يُسجَّل في progressStore عند الإنهاء */
+  isMandatory?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -65,7 +68,6 @@ function getColumnsForQuestion(q: SRBQuestion): number {
   return 13;
 }
 
-// 🆕 استخراج المعادلة فقط (بدون "احسب السلسلة:")
 function extractEquation(question: string): string {
   return question
     .replace(/^احسب\s+السلسلة\s*:\s*/u, '')
@@ -74,7 +76,6 @@ function extractEquation(question: string): string {
     .trim();
 }
 
-// 🆕 حجم الخط حسب طول المعادلة
 function equationTextSize(eq: string): string {
   const len = eq.length;
   if (len > 22) return 'text-2xl sm:text-3xl';
@@ -91,6 +92,7 @@ export function RemediationScreen({
   section,
   onBack,
   playSound,
+  isMandatory = false,
 }: RemediationScreenProps) {
   const [phase, setPhase] = useState<Phase>('intro');
   const [questions, setQuestions] = useState<SRBQuestion[]>([]);
@@ -98,10 +100,14 @@ export function RemediationScreen({
   const [abacusValue, setAbacusValue] = useState(0);
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
   const [showHint, setShowHint] = useState(false);
+  const [correctCount, setCorrectCount] = useState(0);
 
   const sorobana = useSorobanaVoice();
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic';
+
+  const addRemediationSession = useProgressStore((s) => s.addRemediationSession);
+  const clearPendingRemediation = useProgressStore((s) => s.clearPendingRemediation);
 
   const currentQ = questions[currentIdx];
 
@@ -119,6 +125,7 @@ export function RemediationScreen({
     setAbacusValue(0);
     setFeedback('idle');
     setShowHint(false);
+    setCorrectCount(0);
     setPhase('running');
     playSound('click');
   }, [level, section, playSound]);
@@ -131,6 +138,7 @@ export function RemediationScreen({
 
     if (isCorrect) {
       setFeedback('correct');
+      setCorrectCount((c) => c + 1);
       playSound('success');
       sorobana.speakCorrect();
     } else {
@@ -143,6 +151,27 @@ export function RemediationScreen({
     setPhase('reveal');
   }, [currentQ, abacusValue, feedback, playSound, sorobana]);
 
+  // ═══ حفظ الجلسة وإنهاء الإجبار ═══
+  const finalizeSession = useCallback(() => {
+    if (isMandatory) {
+      addRemediationSession({
+        level,
+        phase: 'practice', // سيُحدّد حسب المستوى إن احتاج
+        skills: questions.map((q) => `${level}-${q.section}-${q.module}`),
+        correct: correctCount,
+        total: questions.length,
+      });
+      clearPendingRemediation();
+    }
+
+    sorobana.stop();
+    setPhase('done');
+    playSound('whoosh');
+  }, [
+    isMandatory, level, questions, correctCount,
+    addRemediationSession, clearPendingRemediation, sorobana, playSound,
+  ]);
+
   // ═══ السؤال التالي ═══
   const nextQuestion = useCallback(() => {
     sorobana.stop();
@@ -151,20 +180,18 @@ export function RemediationScreen({
     setShowHint(false);
 
     if (currentIdx + 1 >= questions.length) {
-      setPhase('done');
-      playSound('whoosh');
+      finalizeSession();
     } else {
       setCurrentIdx((i) => i + 1);
       setPhase('running');
     }
-  }, [currentIdx, questions.length, sorobana, playSound]);
+  }, [currentIdx, questions.length, sorobana, finalizeSession]);
 
-  // ═══ إنهاء ═══
+  // ═══ إنهاء مبكر ═══
   const handleEnd = useCallback(() => {
     sorobana.stop();
-    setPhase('done');
-    playSound('whoosh');
-  }, [sorobana, playSound]);
+    finalizeSession();
+  }, [sorobana, finalizeSession]);
 
   // ═══ intro ═══
   if (phase === 'intro') {
@@ -190,6 +217,18 @@ export function RemediationScreen({
           </div>
           <BookOpen className="w-6 h-6 text-amber-300" />
         </div>
+
+        {isMandatory && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-3 rounded-2xl bg-amber-500/15 border-2 border-amber-400/50 text-center"
+          >
+            <p className="text-sm font-bold text-amber-200">
+              ⚠️ جلسة إجبارية — يجب إتمامها لفتح المسار التالي
+            </p>
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -260,13 +299,11 @@ export function RemediationScreen({
   // ═══ running ═══
   if (phase === 'running' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
-    // 🆕 استخرج المعادلة فقط
     const equation = extractEquation(currentQ.question);
     const formattedPrompt = formatText(equation, numberStyle);
 
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
-        {/* Header */}
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-bold text-white truncate">
@@ -286,7 +323,6 @@ export function RemediationScreen({
           </button>
         </div>
 
-        {/* Progress */}
         <div className="mb-5">
           <div className="h-2 rounded-full bg-white/10 overflow-hidden">
             <motion.div
@@ -296,12 +332,10 @@ export function RemediationScreen({
           </div>
         </div>
 
-        {/* Question */}
         <div className="glass-card p-5 sm:p-6 mb-5">
           <p className="text-center text-white/40 font-body text-sm mb-3">
             مثّل الناتج على السوروبان
           </p>
-          {/* 🆕 المعادلة في سطر واحد */}
           <p
             dir="ltr"
             className={`text-center ${equationTextSize(equation)} font-black font-display text-white mb-6 whitespace-nowrap`}
@@ -319,7 +353,6 @@ export function RemediationScreen({
               onValueChange={setAbacusValue}
             />
 
-            {/* زر التلميح */}
             {showHint && (
               <motion.button
                 type="button"
@@ -400,7 +433,6 @@ export function RemediationScreen({
               </p>
             </div>
 
-            {/* شرح الحل */}
             {currentQ.solution && (
               <div className="mt-4 p-4 rounded-2xl bg-blue-500/10 border border-blue-400/30 text-right">
                 <p className="text-xs text-blue-200 font-body leading-relaxed">
@@ -409,7 +441,6 @@ export function RemediationScreen({
               </div>
             )}
 
-            {/* الحركة */}
             {currentQ.movement && (
               <div className="mt-3 p-3 rounded-xl bg-purple-500/10 border border-purple-400/30 text-right">
                 <p className="text-xs text-purple-200 font-body">
@@ -452,15 +483,22 @@ export function RemediationScreen({
             <p className="text-sm text-white/60 font-body mb-6">
               أكملت الجلسة العلاجية
             </p>
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-6">
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
               <p className="text-sm text-white/60 font-body">تم التدريب على</p>
               <p className="text-2xl font-black font-display text-amber-300 mt-1">
                 {level} · {section}
               </p>
+              <p className="text-xs text-white/50 mt-2">
+                {formatNumber(correctCount, numberStyle)} / {formatNumber(questions.length, numberStyle)} إجابة صحيحة
+              </p>
             </div>
-            <p className="text-xs text-white/40 font-body">
-              💡 أعد الاختبار لقياس تحسّنك
-            </p>
+            {isMandatory && (
+              <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-400/30">
+                <p className="text-xs text-emerald-200 font-body">
+                  ✅ تم إتمام الجلسة الإجبارية — يمكنك المتابعة
+                </p>
+              </div>
+            )}
           </div>
         </motion.div>
 
