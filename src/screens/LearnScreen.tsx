@@ -73,9 +73,16 @@ export function LearnScreen({
     );
   }
 
+  // ⚠️ TEMP-DEV-PREVIEW: يُحذف عند انتهاء التطوير
+  // السبب: يتجاهل قفل الدروس في وضع المطور
+  // الحذف: ابحث عن "TEMP-DEV-PREVIEW" في المشروع
+  const isPreviewMode =
+    typeof window !== 'undefined' &&
+    localStorage.getItem('soroban_dev_preview') === 'true';
+
   const isLessonDone = (id: string) => completedLessons.includes(id);
   const isLessonUnlocked = (idx: number) =>
-    idx === 0 || isLessonDone(lessons[idx - 1].id);
+    isPreviewMode || idx === 0 || isLessonDone(lessons[idx - 1].id);
 
   const doneCount = lessons.filter((l) => isLessonDone(l.id)).length;
   const progressPct = lessons.length > 0 ? Math.round((doneCount / lessons.length) * 100) : 0;
