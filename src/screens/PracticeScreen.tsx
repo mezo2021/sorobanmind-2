@@ -152,6 +152,8 @@ export function PracticeScreen({
   const isArabic = numberStyle === 'arabic';
 
   const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
+  const setGrade = useProgressStore((s) => s.setGrade);
+  const setPendingRemediation = useProgressStore((s) => s.setPendingRemediation);
 
   // 🎯 عدد الأسئلة الفعلي: max(عدد مهارات المستوى، 5)
   const expectedQuestionCount = useMemo(
@@ -318,11 +320,9 @@ export function PracticeScreen({
   }, []);
 
   const finalizeSession = useCallback((passed: boolean, finalScore: number) => {
-    // 🎯 استخدم section من أول سؤال
     const firstSection = questions[0]?.section ?? 'S01';
     const percentage = Math.round((finalScore / questions.length) * 100);
 
-    // 🆕 اجمع: الأخطاء + البطيئات من performances
     const perf = buildPerformances();
     const weakSkillIds = new Set<string>([
       ...wrongSkillsRef.current,
@@ -331,15 +331,43 @@ export function PracticeScreen({
         .map((p) => p.skillId),
     ]);
 
+    // حفظ الدرجة في srb_progress (للـ AdaptiveFeedback)
     saveSectionGrade(
       level, firstSection, 'practice', percentage,
       Array.from(weakSkillIds),
     );
+
+    // ✅ حفظ الدرجة في progressStore (للشهادة ولوحة ولي الأمر)
+    setGrade(level, 'practice', percentage);
+
+    // ✅ إذا نجح + توجد مهارات ضعيفة → جلسة علاجية إجبارية
+    if (passed && weakSkillIds.size > 0) {
+      setPendingRemediation({
+        level,
+        phase: 'practice',
+        skills: Array.from(weakSkillIds),
+        outcome: 'passed',
+      });
+    }
+
+    // ✅ إذا رسب → جلسة علاجية إجبارية (outcome: failed)
+    if (!passed && weakSkillIds.size > 0) {
+      setPendingRemediation({
+        level,
+        phase: 'practice',
+        skills: Array.from(weakSkillIds),
+        outcome: 'failed',
+      });
+    }
+
     setPerformances(perf);
     setPhase('result');
     playSound(passed ? 'levelup' : 'whoosh');
     onComplete?.(passed, finalScore);
-  }, [level, questions, playSound, onComplete, buildPerformances]);
+  }, [
+    level, questions, playSound, onComplete, buildPerformances,
+    setGrade, setPendingRemediation,
+  ]);
 
   const nextQuestion = useCallback(() => {
     sorobana.stop();
@@ -602,10 +630,19 @@ export function PracticeScreen({
               <Trophy className="w-12 h-12 text-white" />
             </motion.div>
             <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-              {passed ? 'أحسنت! نجحت 🎉' : 'حاول مرة أخرى 💪'}
+              {passed ? '🎉 اجتزت التمرّن!' : '💪 حاول مرة أخرى'}
             </h2>
+            {passed && (
+              <p className="text-lg font-bold text-emerald-300 font-display mb-2">
+                بدرجة {formatNumber(percentage, numberStyle)}٪
+              </p>
+            )}
             <p className="text-sm text-white/60 font-body mb-6">
-              {passed ? 'لقد أتقنت هذا المستوى' : 'ستُعاد الأسئلة البطيئة قريباً'}
+              {passed
+                ? (weakPerformances.length > 0
+                  ? '🔒 تمرّن مقفل — جلسة علاجية إجبارية'
+                  : '✅ جاهز للأنزان البصري')
+                : 'ستُعاد الأسئلة البطيئة قريباً'}
             </p>
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
               <p className="text-sm text-white/60 font-body">النتيجة</p>
@@ -627,7 +664,7 @@ export function PracticeScreen({
           </div>
         </motion.div>
 
-        {/* 🆕 زر الجلسة العلاجية — يظهر عند وجود مهارات ضعيفة */}
+        {/* 🩺 زر الجلسة العلاجية الإجبارية — يظهر عند وجود مهارات ضعيفة */}
         {hasWeakSkills && bestWeakSection && (
           <motion.button
             type="button"
@@ -635,10 +672,10 @@ export function PracticeScreen({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
             onClick={handleStartRemediation}
-            className="w-full py-4 rounded-2xl bg-gradient-to-l from-amber-400 to-orange-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/40 hover:shadow-amber-500/60 transition-shadow"
+            className="w-full py-4 rounded-2xl bg-gradient-to-l from-amber-400 to-orange-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/40 hover:shadow-amber-500/60 transition-shadow animate-pulse"
           >
             <Lightbulb className="w-5 h-5" />
-            🩺 جلسة علاجية مخصصة ({formatNumber(weakPerformances.length, numberStyle)} مهارة)
+            🩺 جلسة علاجية إجبارية ({formatNumber(weakPerformances.length, numberStyle)} مهارة)
           </motion.button>
         )}
 
