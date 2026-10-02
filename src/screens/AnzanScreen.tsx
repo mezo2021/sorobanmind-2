@@ -461,7 +461,6 @@ export function AnzanScreen({
     markAnzanVisualPassed(Number(level.slice(1)));
   }
 }
-      }
 
       // ✅ جلسة علاجية إجبارية عند وجود مهارات ضعيفة
       if (weakSkillIds.size > 0) {
