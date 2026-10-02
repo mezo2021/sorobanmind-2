@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { QUESTS } from '../data';
 import type { Quest } from '../types';
 
-const COMPLETED_STORAGE_KEY = 'soroban-completed-lessons';
+const COMPLETED_STORAGE_KEY = 'soroban_completed_lessons';
 const ANZAN_STORAGE_KEY = 'soroban_anzan_stats';
 const PRACTICE_STORAGE_KEY = 'soroban_practice_stats';
 const STATS_STORAGE_KEY = 'sorobanmind-stats';
