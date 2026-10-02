@@ -9,7 +9,7 @@ import {
   Brain, Calendar, Zap, CheckCircle2, BarChart3,
   Star, Eye, Crown, Diamond, Trophy, Lock as LockBadge,
   Swords, ShieldCheck, Circle, Lock, Volume2, RefreshCw,
-  Home, Sparkles, PlayCircle, Timer,
+  Home, Sparkles, PlayCircle, Timer, Lightbulb,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -184,12 +184,47 @@ export function GuardianDashboard({
   const passedAnzanAudio = useProgressStore((s) => s.passedAnzanAudio);
   const anzanBadges = useProgressStore((s) => s.anzanBadges);
   const anzanAudioBadges = useProgressStore((s) => s.anzanAudioBadges);
+  const grades = useProgressStore((s) => s.grades);
+  const remediationHistory = useProgressStore((s) => s.remediationHistory);
 
   // ═══ masteryBadgesStore ═══
   const masteryBadges = useMasteryBadgesStore((s) => s.badges);
 
   // ═══ Quests ═══
   const quests = useQuests();
+
+  // ═══ 🩺 الجلسات العلاجية (آخر 7 أيام) ═══
+  const recentRemediation = useMemo(() => {
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    return remediationHistory.filter((s) => s.completedAt >= cutoff);
+  }, [remediationHistory]);
+
+  // مجموعة المهارات الفريدة مع عدد الجلسات
+  const remediationSummary = useMemo(() => {
+    const map = new Map<string, {
+      skillId: string;
+      count: number;
+      lastAt: number;
+    }>();
+
+    recentRemediation.forEach((s) => {
+      s.skills.forEach((skillId) => {
+        const existing = map.get(skillId);
+        if (existing) {
+          existing.count += 1;
+          existing.lastAt = Math.max(existing.lastAt, s.completedAt);
+        } else {
+          map.set(skillId, {
+            skillId,
+            count: 1,
+            lastAt: s.completedAt,
+          });
+        }
+      });
+    });
+
+    return Array.from(map.values()).sort((a, b) => b.lastAt - a.lastAt);
+  }, [recentRemediation]);
 
   // ═══ اسم الطفل ═══
   const savedName = storedName || childName;
@@ -787,6 +822,81 @@ export function GuardianDashboard({
           ))}
         </div>
       </motion.div>
+
+      {/* ═══ 🩺 الجلسات العلاجية (آخر 7 أيام) ═══ */}
+      {remediationSummary.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.32 }}
+          className="glass-card p-5 sm:p-6 mb-6"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 text-amber-300" />
+              <h3 className="text-xl font-extrabold font-display text-white">
+                🩺 الجلسات العلاجية
+              </h3>
+            </div>
+            <span className="badge bg-amber-400/15 border-amber-400/20 text-amber-200 text-xs">
+              {toArabicNumber(remediationSummary.length)} مهارة
+            </span>
+          </div>
+
+          <p className="text-xs text-white/50 font-body mb-4 leading-relaxed">
+            آخر ٧ أيام — المهارات التي خضع لها الطفل لجلسات علاجية
+          </p>
+
+          <div className="space-y-2">
+            {remediationSummary.slice(0, 8).map((item) => {
+              const parsed = parseSkillId(item.skillId);
+              const label = parsed
+                ? getModuleName(parsed.section, parsed.module)
+                : item.skillId;
+              const daysAgo = Math.floor(
+                (Date.now() - item.lastAt) / (24 * 60 * 60 * 1000),
+              );
+              const daysLabel =
+                daysAgo === 0
+                  ? 'اليوم'
+                  : daysAgo === 1
+                    ? 'أمس'
+                    : `منذ ${toArabicNumber(daysAgo)} أيام`;
+
+              return (
+                <motion.div
+                  key={item.skillId}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-400/30"
+                >
+                  <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg">
+                    <Lightbulb className="w-5 h-5 text-white" />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-white truncate">
+                      {item.skillId}
+                    </p>
+                    <p className="text-[10px] text-amber-200 truncate">
+                      {label}
+                    </p>
+                    <p className="text-[10px] text-white/50 mt-0.5">
+                      {daysLabel} · {toArabicNumber(item.count)} جلسة
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {remediationSummary.length > 8 && (
+            <p className="text-center text-white/40 font-body text-xs mt-3">
+              و {toArabicNumber(remediationSummary.length - 8)} مهارة أخرى...
+            </p>
+          )}
+        </motion.div>
+      )}
 
       {/* ═══ 🗺️ خارطة المستويات ═══ */}
       <motion.div
