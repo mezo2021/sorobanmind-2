@@ -262,7 +262,7 @@ const [companion, setCompanion] = useState<CharacterType>('sham');
         Object.entries(data).forEach(([key, value]) => {
           localStorage.setItem(key, value as string);
         });
-        playSound('levelup');
+        playSound('click');
         setTimeout(() => window.location.reload(), 300);
       } catch (err) {
         window.alert('ملف غير صالح: ' + String(err));
