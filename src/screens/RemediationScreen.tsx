@@ -299,7 +299,16 @@ export function RemediationScreen({
   // ═══ running ═══
   if (phase === 'running' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
-    const equation = extractEquation(currentQ.question);
+    const isTextual =
+      currentQ.operation === 'read' ||
+      currentQ.operation === 'build' ||
+      currentQ.question.includes('؟') ||
+      currentQ.question.includes('ماذا') ||
+      currentQ.question.includes('ضع') ||
+      currentQ.question.includes('ارفع');
+    const equation = isTextual
+      ? currentQ.question
+      : extractEquation(currentQ.question);
     const formattedPrompt = formatText(equation, numberStyle);
 
     return (
@@ -337,10 +346,14 @@ export function RemediationScreen({
             مثّل الناتج على السوروبان
           </p>
           <p
-            dir="ltr"
-            className={`text-center ${equationTextSize(equation)} font-black font-display text-white mb-6 whitespace-nowrap`}
+            dir={isTextual ? 'rtl' : 'ltr'}
+            className={`text-center font-display text-white mb-6 ${
+              isTextual
+                ? 'text-sm sm:text-base leading-relaxed font-semibold px-2'
+                : `${equationTextSize(equation)} font-black`
+            }`}
           >
-            {formattedPrompt} = ؟
+            {isTextual ? formattedPrompt : `${formattedPrompt} = ؟`}
           </p>
 
           <div className="flex flex-col items-center gap-3">
