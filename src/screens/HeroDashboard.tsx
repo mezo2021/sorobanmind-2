@@ -167,42 +167,9 @@ const [companion, setCompanion] = useState<CharacterType>('sham');
    */
   const handleTestUnlock = () => {
     try {
-      // ✅ يُبقي: الدروس مفتوحة + المسارات مُجتازة
-      localStorage.setItem(
-        'soroban_completed_levels',
-        JSON.stringify(['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7']),
-      );
-      localStorage.setItem(
-        'soroban_passed_practice',
-        JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]),
-      );
-      localStorage.setItem(
-        'soroban_passed_anzan_visual',
-        JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]),
-      );
-      localStorage.setItem(
-        'soroban_passed_anzan_audio',
-        JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]),
-      );
-
-      // ❌ لا نضع: soroban_exam1_passed = true
-      // ❌ لا نضع: soroban_exam2_passed = true
-      // ❌ لا نضع: soroban_exam_result
-      // ❌ لا نضع: soroban_anzan_badges
-      // ❌ لا نضع: soroban_anzan_audio_badges
-
-      // ✅ تنظيف المفاتيح القديمة (لتصفير حالة الامتحانات)
-      localStorage.removeItem('soroban_exam1_passed');
-      localStorage.removeItem('soroban_exam2_passed');
-      localStorage.removeItem('soroban_exam_result');
-      localStorage.removeItem('soroban_anzan_badges');
-      localStorage.removeItem('soroban_anzan_audio_badges');
-
       // ⚠️ TEMP-DEV-PREVIEW: يُحذف عند انتهاء التطوير
-      // السبب: يفتح قفل الدروس في وضع المطور (المعاينة)
-      // الحذف: ابحث عن "TEMP-DEV-PREVIEW" في المشروع
+      // الزر يكتب علَمًا واحدًا فقط — لا يمس بيانات الطفل
       localStorage.setItem('soroban_dev_preview', 'true');
-
       playSound('click');
       setTimeout(() => window.location.reload(), 500);
     } catch (err) {
