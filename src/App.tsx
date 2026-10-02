@@ -37,6 +37,7 @@ import SorobanPlayground from './screens/SorobanPlayground';
 
 // ═══ Category Exam ═══
 import CategoryExamScreen from './screens/CategoryExamScreen';
+import RemediationScreen from './screens/RemediationScreen';
 import type { SRBLevel, SRBSection } from './data/srb-adapter';
 
 // ═══ Debug ═══
@@ -352,6 +353,27 @@ const levelId = lessonNode?.levelId ?? 'L0';
           }}
           playSound={handleSound}
           onXP={(amount) => console.log('XP:', amount)}
+        />
+      );
+    }
+
+    // ═══ 🩺 remediation-L0 ... remediation-L7 ═══
+    if (screen.startsWith('remediation-')) {
+      const levelId = screen.replace('remediation-', '');
+      const isKids = ['L0', 'L1', 'L2', 'L3'].includes(levelId);
+
+      const pending = useProgressStore.getState().pendingRemediation;
+      const firstSkill = pending?.skills[0] ?? `${levelId}-S01-m1`;
+      const parts = firstSkill.split('-');
+      const section = (parts[1] ?? 'S01') as SRBSection;
+
+      return (
+        <RemediationScreen
+          level={levelId as SRBLevel}
+          section={section}
+          onBack={() => handleBackToCategory(isKids ? 'kids' : 'teens')}
+          playSound={handleSound}
+          isMandatory={true}
         />
       );
     }
