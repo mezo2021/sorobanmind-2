@@ -452,7 +452,15 @@ export function AnzanScreen({
 
       // ✅ تسجيل نجاح الأنزان البصري
       if (passed) {
-        markAnzanVisualPassed(Number(level.slice(1)));
+  const lg = useProgressStore.getState().grades[level];
+  const normalOk =
+    lg?.anzanVisualNormal !== null && lg?.anzanVisualNormal !== undefined;
+  const flashOk =
+    lg?.anzanVisualFlash !== null && lg?.anzanVisualFlash !== undefined;
+  if (normalOk && flashOk) {
+    markAnzanVisualPassed(Number(level.slice(1)));
+  }
+}
       }
 
       // ✅ جلسة علاجية إجبارية عند وجود مهارات ضعيفة
