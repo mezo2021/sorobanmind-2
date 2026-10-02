@@ -154,6 +154,7 @@ export function PracticeScreen({
   const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
   const setGrade = useProgressStore((s) => s.setGrade);
   const setPendingRemediation = useProgressStore((s) => s.setPendingRemediation);
+  const markPracticePassed = useProgressStore((s) => s.markPracticePassed);
 
   // 🎯 عدد الأسئلة الفعلي: max(عدد مهارات المستوى، 5)
   const expectedQuestionCount = useMemo(
@@ -337,8 +338,13 @@ export function PracticeScreen({
       Array.from(weakSkillIds),
     );
 
-    // ✅ حفظ الدرجة في progressStore (للشهادة ولوحة ولي الأمر)
+    // ✅ حفظ الدرجة في progressStore
     setGrade(level, 'practice', percentage);
+
+    // ✅ تسجيل نجاح التمرّن
+    if (passed) {
+      markPracticePassed(Number(level.slice(1)));
+    }
 
     // ✅ إذا نجح + توجد مهارات ضعيفة → جلسة علاجية إجبارية
     if (passed && weakSkillIds.size > 0) {
@@ -366,7 +372,7 @@ export function PracticeScreen({
     onComplete?.(passed, finalScore);
   }, [
     level, questions, playSound, onComplete, buildPerformances,
-    setGrade, setPendingRemediation,
+    setGrade, setPendingRemediation, markPracticePassed,
   ]);
 
   const nextQuestion = useCallback(() => {
@@ -476,7 +482,10 @@ export function PracticeScreen({
   if (phase === 'running' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
     // 🆕 استخرج المعادلة فقط (بدون "احسب السلسلة:")
-    const equation = extractEquation(currentQ.question);
+    const isTextual = currentQ.operation === 'read' || currentQ.operation === 'build';
+    const equation = isTextual
+      ? currentQ.question
+      : extractEquation(currentQ.question);
     const formattedPrompt = formatText(equation, numberStyle);
     const hint = extractHint(currentQ);
 
@@ -523,10 +532,10 @@ export function PracticeScreen({
           <p className="text-center text-white/40 font-body text-sm mb-3">مثّل الناتج على السوروبان</p>
           {/* 🆕 المعادلة في سطر واحد — حجم خط تلقائي + منع الكسر */}
           <p
-            dir="ltr"
-            className={`text-center ${equationTextSize(equation)} font-black font-display text-white mb-6 whitespace-nowrap`}
+            dir={isTextual ? 'rtl' : 'ltr'}
+            className={`text-center ${equationTextSize(equation)} font-black font-display text-white mb-6`}
           >
-            {formattedPrompt} = ؟
+            {isTextual ? formattedPrompt : `${formattedPrompt} = ؟`}
           </p>
 
           {/* 🆕 التلميح قبل المعداد */}
