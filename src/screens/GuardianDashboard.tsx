@@ -1,15 +1,17 @@
 // src/screens/GuardianDashboard.tsx
 // ✅ SRB-first: يقرأ من progressStore + masteryBadgesStore
 // ✅ Props محفوظة للتوافق (deprecated — تُقرأ من store)
+// ✅ أزرار إدارية: حفظ نسخة + استعادة + فتح الكل + تصفير
 
-import { motion } from 'framer-motion';
-import { useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useMemo, useState, useRef } from 'react';
 import {
   ArrowRight, TrendingUp, Target, Award,
   Brain, Calendar, Zap, CheckCircle2, BarChart3,
   Star, Eye, Crown, Diamond, Trophy, Lock as LockBadge,
   Swords, ShieldCheck, Circle, Lock, Volume2, RefreshCw,
   Home, Sparkles, PlayCircle, Timer, Lightbulb,
+  Upload, Download, Trash2, Unlock,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -192,6 +194,10 @@ export function GuardianDashboard({
 
   // ═══ Quests ═══
   const quests = useQuests();
+
+  // ═══ 🛠️ الأزرار الإدارية ═══
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ═══ 🩺 الجلسات العلاجية (آخر 7 أيام) ═══
   const recentRemediation = useMemo(() => {
@@ -419,6 +425,87 @@ export function GuardianDashboard({
     window.location.reload();
   };
 
+  // ═══════════════════════════════════════════════════════════
+  // 🛠️ دوال الأزرار الإدارية
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * ✅ "فتح الكل" — يفتح الدروس والمسارات للمعاينة،
+   * لكن لا يُعلّم الامتحانات كـ"مُجتازة".
+   */
+  const handleTestUnlock = () => {
+    try {
+      // ⚠️ TEMP-DEV-PREVIEW: يُحذف عند انتهاء التطوير
+      // الزر يكتب علَمًا واحدًا فقط — لا يمس بيانات الطفل
+      localStorage.setItem('soroban_dev_preview', 'true');
+      playSound('click');
+      setTimeout(() => window.location.reload(), 500);
+    } catch (err) {
+      window.alert('خطأ: ' + String(err));
+    }
+  };
+
+  /**
+   * ✅ "تصفير" — يمسح كل شيء ما عدا الاسم والرفيق.
+   */
+  const handleReset = () => {
+    const keysToKeep = ['soroban_companion', 'soroban_child_name'];
+    Object.keys(localStorage).forEach((key) => {
+      if (!keysToKeep.includes(key)) localStorage.removeItem(key);
+    });
+    playSound('whoosh');
+    setShowResetConfirm(false);
+    window.location.reload();
+  };
+
+  // ✅ حفظ نسخة احتياطية
+  const handleBackup = () => {
+    try {
+      const data: Record<string, string> = {};
+      Object.keys(localStorage).forEach((key) => {
+        if (
+          key.startsWith('soroban') ||
+          key.startsWith('srb_') ||
+          key.startsWith('sorobanmind')
+        ) {
+          data[key] = localStorage.getItem(key) || '';
+        }
+      });
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sorobanmind-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      playSound('click');
+    } catch (err) {
+      window.alert('خطأ: ' + String(err));
+    }
+  };
+
+  // ✅ استعادة نسخة
+  const handleRestore = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        Object.entries(data).forEach(([key, value]) => {
+          localStorage.setItem(key, value as string);
+        });
+        playSound('click');
+        setTimeout(() => window.location.reload(), 300);
+      } catch (err) {
+        window.alert('ملف غير صالح: ' + String(err));
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="px-3 sm:px-6 py-6 max-w-5xl mx-auto" dir="rtl">
       {/* ═══ رأس الصفحة ═══ */}
@@ -470,6 +557,54 @@ export function GuardianDashboard({
             <span>وضع البطل</span>
           </button>
         )}
+
+        {/* ═══ 🛠️ الأزرار الإدارية ═══ */}
+        <button
+          type="button"
+          onClick={handleBackup}
+          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-500/20 border border-blue-400/40 text-blue-100 hover:bg-blue-500/30 transition-all text-xs font-body"
+          title="حفظ نسخة احتياطية"
+        >
+          <Download className="w-4 h-4" />
+          <span>حفظ نسخة</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-body"
+          title="استعادة نسخة احتياطية"
+        >
+          <Upload className="w-4 h-4" />
+          <span>استعادة</span>
+        </button>
+
+        <input
+          type="file"
+          accept=".json"
+          ref={fileInputRef}
+          onChange={handleRestore}
+          style={{ display: 'none' }}
+        />
+
+        <button
+          type="button"
+          onClick={handleTestUnlock}
+          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-bold font-body"
+          title="فتح الدروس والمسارات فقط (لا الامتحانات)"
+        >
+          <Unlock className="w-4 h-4" />
+          <span>فتح الكل</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { playSound('click'); setShowResetConfirm(true); }}
+          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-red-500/10 border border-red-400/30 text-red-300 hover:bg-red-500/20 transition-all text-xs font-body"
+        >
+          <Trash2 className="w-4 h-4" />
+          <span>تصفير</span>
+        </button>
 
         <div className="flex-1" />
 
@@ -1148,6 +1283,72 @@ export function GuardianDashboard({
           )}
         </div>
       </motion.div>
+
+      {/* ═══ 🗑️ مودال تأكيد التصفير ═══ */}
+      <AnimatePresence>
+        {showResetConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 30 }}
+              transition={{ type: 'spring', stiffness: 250, damping: 25 }}
+              className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-red-500/30 text-center"
+              dir="rtl"
+            >
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-500/20 border border-red-400/30 flex items-center justify-center">
+                <Trash2 className="w-8 h-8 text-red-300" />
+              </div>
+              <h3 className="text-xl font-extrabold font-display text-white mb-2">
+                تصفير التقدم؟
+              </h3>
+              <p className="text-sm text-white/60 font-body mb-4 leading-relaxed">
+                سيتم حذف جميع نقاط الخبرة، الشارات، والدروس المكتملة.
+                <br />
+                <span className="text-emerald-300">الرفيق والاسم سيُحفظان.</span>
+              </p>
+
+              {/* ⚠️ تنبيه النسخة الاحتياطية */}
+              <div className="mb-5 p-3 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-right">
+                <p className="text-xs text-amber-200 font-body leading-relaxed mb-3">
+                  💡 <strong>تنبيه:</strong> يُنصح بحفظ نسخة احتياطية قبل التصفير.
+                  ستتمكن من استعادة تقدمك لاحقًا.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleBackup}
+                  className="w-full py-2.5 rounded-xl bg-blue-500/25 border border-blue-400/50 text-blue-100 font-bold text-xs flex items-center justify-center gap-2 hover:bg-blue-500/35 transition"
+                >
+                  <Download className="w-4 h-4" />
+                  حفظ نسخة احتياطية الآن
+                </button>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="btn-primary flex-1 !bg-gradient-to-br !from-red-500 !to-red-700"
+                >
+                  نعم، صفّر
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { playSound('click'); setShowResetConfirm(false); }}
+                  className="btn-ghost flex-1"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
