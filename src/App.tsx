@@ -5,6 +5,7 @@ import { useGameStats } from './hooks/useGameStats';
 import { useSound } from './hooks/useSound';
 import { useConfetti } from './hooks/useConfetti';
 import type { Screen as V1Screen, Role } from './types';
+import { useProgressStore } from './store/progressStore';
 import type { LevelId } from './store/progressStore';
 
 // ═══ Screens ═══
@@ -304,6 +305,8 @@ export default function App() {
                 localStorage.setItem('soroban_completed_lessons', JSON.stringify(arr));
               }
             } catch { /* ignore */ }
+            // ✅ حفظ في progressStore (النظام الجديد)
+            useProgressStore.getState().markLessonCompleted(lessonId);
             setScreen(('learn-' + levelId) as AppScreen);
           }}
           playSound={handleSound}
