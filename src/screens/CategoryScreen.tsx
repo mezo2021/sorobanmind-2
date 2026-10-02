@@ -1,6 +1,5 @@
 // src/screens/CategoryScreen.tsx
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
 import {
   Lock, CheckCircle2, BookOpen, Dumbbell, Eye,
   Volume2, Trophy, Sparkles, Play, Star,
@@ -10,6 +9,8 @@ import {
 import type { Screen, CategoryId, LevelId } from '@/types';
 import Header from './Header';
 import { useGameStats } from '@/hooks/useGameStats';
+import { useProgressStore } from '@/store/progressStore';
+import { getLessonsByLevel } from '@/curriculum/lessons';
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -83,43 +84,31 @@ const CATEGORY_DATA: Record<CategoryId, CategoryData> = {
       },
     ],
     levels: [
-  {
-    id: 'L0',
-    number: 0,
-    titleAr: 'التمهيدي',
-    titleEn: 'Foundation',
-    desc: 'التعرّف على السوروبان + الأرقام + القيمة المكانية',
-    icon: Star,
-    gradient: 'from-emerald-500 to-teal-700',
-  },
-  {
-    id: 'L1',
-    number: 1,
-    titleAr: 'الجمع والطرح',
-    titleEn: 'Add & Subtract',
-    desc: 'جمع وطرح بسيط + أصدقاء 5 + أصدقاء 10',
-    icon: BookOpen,
-    gradient: 'from-blue-500 to-cyan-700',
-  },
-  {
-    id: 'L2',
-    number: 2,
-    titleAr: 'الضرب',
-    titleEn: 'Multiplication',
-    desc: 'الضرب على السوروبان بطريقة تاكاشي',
-    icon: Dumbbell,
-    gradient: 'from-amber-500 to-orange-700',
-  },
-  {
-    id: 'L3',
-    number: 3,
-    titleAr: 'القسمة',
-    titleEn: 'Division',
-    desc: 'القسمة على السوروبان — التقدير والطرح المتتالي',
-    icon: Dumbbell,
-    gradient: 'from-blue-500 to-indigo-700',
-  },
-],
+      {
+        id: 'L0', number: 0,
+        titleAr: 'التمهيدي', titleEn: 'Foundation',
+        desc: 'التعرّف على السوروبان + الأرقام + القيمة المكانية',
+        icon: Star, gradient: 'from-emerald-500 to-teal-700',
+      },
+      {
+        id: 'L1', number: 1,
+        titleAr: 'الجمع والطرح', titleEn: 'Add & Subtract',
+        desc: 'جمع وطرح بسيط + أصدقاء 5 + أصدقاء 10',
+        icon: BookOpen, gradient: 'from-blue-500 to-cyan-700',
+      },
+      {
+        id: 'L2', number: 2,
+        titleAr: 'الضرب', titleEn: 'Multiplication',
+        desc: 'الضرب على السوروبان بطريقة تاكاشي',
+        icon: Dumbbell, gradient: 'from-amber-500 to-orange-700',
+      },
+      {
+        id: 'L3', number: 3,
+        titleAr: 'القسمة', titleEn: 'Division',
+        desc: 'القسمة على السوروبان — التقدير والطرح المتتالي',
+        icon: Dumbbell, gradient: 'from-blue-500 to-indigo-700',
+      },
+    ],
   },
 
   teens: {
@@ -141,43 +130,31 @@ const CATEGORY_DATA: Record<CategoryId, CategoryData> = {
       },
     ],
     levels: [
-  {
-    id: 'L4',
-    number: 4,
-    titleAr: 'سلاسل الجمع والطرح',
-    titleEn: 'Add & Sub Chains',
-    desc: 'سلاسل الجمع والطرح المتعددة',
-    icon: BookOpen,
-    gradient: 'from-purple-500 to-violet-700',
-  },
-  {
-    id: 'L5',
-    number: 5,
-    titleAr: 'ضرب وقسمة متقدم',
-    titleEn: 'Advanced Mul & Div',
-    desc: 'الضرب والقسمة بطرق متقدمة',
-    icon: Dumbbell,
-    gradient: 'from-purple-500 to-fuchsia-700',
-  },
-  {
-    id: 'L6',
-    number: 6,
-    titleAr: 'الكسور العشرية',
-    titleEn: 'Decimals',
-    desc: 'العمليات على الأعداد العشرية',
-    icon: Star,
-    gradient: 'from-amber-500 to-rose-700',
-  },
-  {
-    id: 'L7',
-    number: 7,
-    titleAr: 'الجذور',
-    titleEn: 'Roots',
-    desc: 'الجذور التربيعية الكاملة',
-    icon: Sparkles,
-    gradient: 'from-rose-500 to-purple-700',
-  },
-],
+      {
+        id: 'L4', number: 4,
+        titleAr: 'سلاسل الجمع والطرح', titleEn: 'Add & Sub Chains',
+        desc: 'سلاسل الجمع والطرح المتعددة',
+        icon: BookOpen, gradient: 'from-purple-500 to-violet-700',
+      },
+      {
+        id: 'L5', number: 5,
+        titleAr: 'ضرب وقسمة متقدم', titleEn: 'Advanced Mul & Div',
+        desc: 'الضرب والقسمة بطرق متقدمة',
+        icon: Dumbbell, gradient: 'from-purple-500 to-fuchsia-700',
+      },
+      {
+        id: 'L6', number: 6,
+        titleAr: 'الكسور العشرية', titleEn: 'Decimals',
+        desc: 'العمليات على الأعداد العشرية',
+        icon: Star, gradient: 'from-amber-500 to-rose-700',
+      },
+      {
+        id: 'L7', number: 7,
+        titleAr: 'الجذور', titleEn: 'Roots',
+        desc: 'الجذور التربيعية الكاملة',
+        icon: Sparkles, gradient: 'from-rose-500 to-purple-700',
+      },
+    ],
   },
 };
 
@@ -189,38 +166,20 @@ function toArabicNumber(value: number | string): string {
   return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 }
 
-function loadProgress() {
+function loadPlacementData() {
   try {
-    const completedRaw = localStorage.getItem('soroban_completed_levels');
-    const practiceRaw = localStorage.getItem('soroban_passed_practice');
-    const anzanVRaw = localStorage.getItem('soroban_passed_anzan_visual');
-    const anzanARaw = localStorage.getItem('soroban_passed_anzan_audio');
-    const exam1Raw = localStorage.getItem('soroban_exam1_passed');
-    const exam2Raw = localStorage.getItem('soroban_exam2_passed');
     const weakSkillsRaw = localStorage.getItem('soroban_placement_weak_skills');
     const recommendedRaw = localStorage.getItem('soroban_placement_recommended');
-
+    const exam1Raw = localStorage.getItem('soroban_exam1_passed');
+    const exam2Raw = localStorage.getItem('soroban_exam2_passed');
     return {
-      completedLevels: completedRaw ? JSON.parse(completedRaw) : [],
-      passedPractice: practiceRaw ? JSON.parse(practiceRaw) : [],
-      passedAnzanVisual: anzanVRaw ? JSON.parse(anzanVRaw) : [],
-      passedAnzanAudio: anzanARaw ? JSON.parse(anzanARaw) : [],
-      exam1Passed: exam1Raw ? JSON.parse(exam1Raw) : false,
-      exam2Passed: exam2Raw ? JSON.parse(exam2Raw) : false,
       weakSkills: weakSkillsRaw ? JSON.parse(weakSkillsRaw) : [],
       recommendedLevel: recommendedRaw || null,
+      exam1Passed: exam1Raw ? JSON.parse(exam1Raw) : false,
+      exam2Passed: exam2Raw ? JSON.parse(exam2Raw) : false,
     };
   } catch {
-    return {
-      completedLevels: [],
-      passedPractice: [],
-      passedAnzanVisual: [],
-      passedAnzanAudio: [],
-      exam1Passed: false,
-      exam2Passed: false,
-      weakSkills: [],
-      recommendedLevel: null,
-    };
+    return { weakSkills: [], recommendedLevel: null, exam1Passed: false, exam2Passed: false };
   }
 }
 
@@ -230,12 +189,17 @@ function loadProgress() {
 
 export function CategoryScreen({ category, onNavigate, playSound }: CategoryScreenProps) {
   const data = CATEGORY_DATA[category];
-  const [progress, setProgress] = useState(loadProgress());
   const { stats, toggleSound } = useGameStats();
 
-  useEffect(() => {
-    setProgress(loadProgress());
-  }, [category]);
+  // ─── progressStore ───
+  const completedLevels = useProgressStore((s) => s.completedLevels);
+  const completedLessons = useProgressStore((s) => s.completedLessons);
+  const passedPractice = useProgressStore((s) => s.passedPractice);
+  const passedAnzanVisual = useProgressStore((s) => s.passedAnzanVisual);
+  const passedAnzanAudio = useProgressStore((s) => s.passedAnzanAudio);
+
+  // ─── placement / exams (localStorage مؤقتًا) ───
+  const placement = loadPlacementData();
 
   const handleNav = (screen: Screen) => {
     playSound('click');
@@ -247,24 +211,29 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     onNavigate('hero-dashboard');
   };
 
-  const isLevelUnlocked = (levelId: LevelId, index: number): boolean => {
+  // ✅ المستوى يُفتح إذا: كان الأول، أو المستوى السابق مكتملًا
+  const isLevelUnlocked = (_levelId: LevelId, index: number): boolean => {
     if (index === 0) return true;
     const prevLevel = data.levels[index - 1];
-    return progress.completedLevels.includes(prevLevel.id);
+    return completedLevels.includes(prevLevel.id);
   };
 
+  // ✅ المستوى "مكتمل" = كل دروسه مكتملة
   const isLevelCompleted = (levelId: LevelId): boolean => {
-    return progress.completedLevels.includes(levelId);
+    const lessons = getLessonsByLevel(levelId as string);
+    if (lessons.length === 0) {
+      return completedLevels.includes(levelId);
+    }
+    return lessons.every((l) => completedLessons.includes(l.id));
   };
 
   const isPracticeUnlocked = (levelIndex: number): boolean => {
-    const level = data.levels[levelIndex];
-    return progress.completedLevels.includes(level.id);
+    return isLevelCompleted(data.levels[levelIndex].id);
   };
 
   const isPracticePassed = (levelIndex: number): boolean => {
     const practiceNum = data.practiceRange[0] + levelIndex;
-    return progress.passedPractice.includes(practiceNum);
+    return passedPractice.includes(practiceNum);
   };
 
   const isAnzanVisualUnlocked = (levelIndex: number): boolean => {
@@ -273,7 +242,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
   const isAnzanVisualPassed = (levelIndex: number): boolean => {
     const anzanNum = data.anzanRange[0] + levelIndex;
-    return progress.passedAnzanVisual.includes(anzanNum);
+    return passedAnzanVisual.includes(anzanNum);
   };
 
   const isAnzanAudioUnlocked = (levelIndex: number): boolean => {
@@ -282,7 +251,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
   const isAnzanAudioPassed = (levelIndex: number): boolean => {
     const anzanNum = data.anzanRange[0] + levelIndex;
-    return progress.passedAnzanAudio.includes(anzanNum);
+    return passedAnzanAudio.includes(anzanNum);
   };
 
   const isExamUnlocked = (): boolean => {
@@ -294,7 +263,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     );
   };
 
-  const isExamPassed = category === 'kids' ? progress.exam1Passed : progress.exam2Passed;
+  const isExamPassed = category === 'kids' ? placement.exam1Passed : placement.exam2Passed;
 
   const renderLevelCard = (level: LevelItem, idx: number) => {
     const Icon = level.icon;
@@ -310,7 +279,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     const practiceNum = data.practiceRange[0] + idx;
     const anzanNum = data.anzanRange[0] + idx;
 
-    const isRecommended = progress.recommendedLevel === level.id;
+    const isRecommended = placement.recommendedLevel === level.id;
 
     return (
       <div
