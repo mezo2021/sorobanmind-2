@@ -257,10 +257,18 @@ export function LevelScreen({
     back();
   };
 
+  // ⚠️ TEMP-DEV-PREVIEW: يُحذف عند انتهاء التطوير
+  // السبب: يعتبر كل الدروس مكتملة في وضع المطور
+  // الحذف: ابحث عن "TEMP-DEV-PREVIEW" في المشروع
+  const isPreviewMode =
+    typeof window !== 'undefined' &&
+    localStorage.getItem('soroban_dev_preview') === 'true';
+
   const levelLessons = getLessonsByLevel(levelId as string);
   const isLessonCompleted =
-    levelLessons.length > 0 &&
-    levelLessons.every((l) => completedLessons.includes(l.id));
+    isPreviewMode ||
+    (levelLessons.length > 0 &&
+      levelLessons.every((l) => completedLessons.includes(l.id)));
 
   const isPracticePassed = passedPractice.includes(level.practiceNum);
   const isAnzanVisualPassed = passedAnzanVisual.includes(level.anzanNum);
