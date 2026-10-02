@@ -238,6 +238,7 @@ export function AnzanScreen({
   const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
   const setGrade = useProgressStore((s) => s.setGrade);
   const setPendingRemediation = useProgressStore((s) => s.setPendingRemediation);
+  const markAnzanVisualPassed = useProgressStore((s) => s.markAnzanVisualPassed);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const displayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -446,8 +447,13 @@ export function AnzanScreen({
         Array.from(weakSkillIds),
       );
 
-      // ✅ حفظ الدرجة في progressStore (للشهادة ولوحة ولي الأمر)
+      // ✅ حفظ الدرجة في progressStore
       setGrade(level, gradeMode, percentage);
+
+      // ✅ تسجيل نجاح الأنزان البصري
+      if (passed) {
+        markAnzanVisualPassed(Number(level.slice(1)));
+      }
 
       // ✅ جلسة علاجية إجبارية عند وجود مهارات ضعيفة
       if (weakSkillIds.size > 0) {
@@ -463,7 +469,7 @@ export function AnzanScreen({
     },
     [
       level, mode, questions, anzanBadges, setAnzanBadge, buildPerformances,
-      setGrade, setPendingRemediation,
+      setGrade, setPendingRemediation, markAnzanVisualPassed,
     ],
   );
 
