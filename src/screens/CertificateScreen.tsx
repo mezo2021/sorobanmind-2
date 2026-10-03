@@ -1,8 +1,9 @@
-// src/screens/CertificateScreen.tsx — شهادة الإتمام الدولية
+// src/screens/CertificateScreen.tsx
+// شهادة الإتمام الدولية — القسم الثاني (ذهبية · لغة واحدة · قابلة للطباعة على أندرويد)
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Printer, Award, Home, Edit3, Sparkles } from 'lucide-react';
+import { ArrowRight, Printer, Award, Home, Edit3, Sparkles, Languages } from 'lucide-react';
 import CertificateLogo from '@/components/CertificateLogo';
 import CertificateMedal from '@/components/CertificateMedal';
 import {
@@ -10,6 +11,8 @@ import {
   getLevelColors,
   type CertificateData,
 } from '@/utils/certificateGenerator';
+
+type Lang = 'ar' | 'en';
 
 function toArabicNumber(value: number | string): string {
   return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
@@ -27,6 +30,7 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
   const [studentName, setStudentName] = useState('');
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState('');
+  const [lang, setLang] = useState<Lang>('ar');
 
   useEffect(() => {
     try {
@@ -59,6 +63,7 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
 
   const data: CertificateData = getCertificateData(studentName, exam1Score, exam2Score);
   const colors = getLevelColors(data.level);
+  const isAr = lang === 'ar';
 
   const handlePrint = () => {
     if (!studentName || studentName === 'اكتب اسمك الثلاثي') {
@@ -70,16 +75,67 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 text-white p-2 sm:p-6 pb-24" dir="rtl">
+    <div
+      className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 text-white p-2 sm:p-6 pb-24 cert-root"
+      dir={isAr ? 'rtl' : 'ltr'}
+    >
+      {/* أنماط الطباعة — متوافقة مع أندرويد */}
+      <style>{`
+        @media print {
+          @page { size: A4 portrait; margin: 8mm; }
+          html, body { background: #fff !important; }
+          .no-print { display: none !important; }
+          .cert-root {
+            background: #fff !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            min-height: auto !important;
+          }
+          .cert-card {
+            box-shadow: none !important;
+            page-break-inside: avoid;
+            transform: none !important;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+      `}</style>
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-3 sm:mb-4 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-3 sm:mb-4 max-w-4xl mx-auto no-print">
         <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
-          <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+          <ArrowRight className={`w-5 h-5 sm:w-6 sm:h-6 ${isAr ? '' : 'rotate-180'}`} />
         </button>
-        <h1 className="text-sm sm:text-lg font-bold bg-gradient-to-r from-amber-300 to-purple-400 bg-clip-text text-transparent">
-          شهادة الإتمام الدولية
-        </h1>
+        <div className="text-center">
+          <h1 className="text-sm sm:text-lg font-bold bg-gradient-to-r from-amber-300 to-purple-400 bg-clip-text text-transparent">
+            {isAr ? 'شهادة الإتمام الدولية' : 'International Certificate of Completion'}
+          </h1>
+        </div>
         <Award className="w-5 h-5 sm:w-6 sm:h-6 text-amber-300" />
+      </div>
+
+      {/* تبديل اللغة */}
+      <div className="max-w-4xl mx-auto mb-3 flex justify-center no-print">
+        <div className="inline-flex bg-white/10 rounded-2xl p-1 gap-1">
+          <button
+            onClick={() => { playSound('click'); setLang('ar'); }}
+            className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition ${
+              isAr ? 'bg-gradient-to-l from-amber-500 to-amber-700 text-white shadow' : 'text-white/60'
+            }`}
+          >
+            <Languages className="w-3.5 h-3.5" /> عربي
+          </button>
+          <button
+            onClick={() => { playSound('click'); setLang('en'); }}
+            className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition ${
+              !isAr ? 'bg-gradient-to-l from-amber-500 to-amber-700 text-white shadow' : 'text-white/60'
+            }`}
+          >
+            <Languages className="w-3.5 h-3.5" /> English
+          </button>
+        </div>
       </div>
 
       {/* تنبيه اسم */}
@@ -87,26 +143,26 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-amber-500/15 border border-amber-400/40 rounded-2xl p-3 sm:p-4 mb-3 sm:mb-4 max-w-4xl mx-auto"
+          className="bg-amber-500/15 border border-amber-400/40 rounded-2xl p-3 sm:p-4 mb-3 sm:mb-4 max-w-4xl mx-auto no-print"
         >
           <p className="text-xs sm:text-sm text-amber-100 font-body mb-2 sm:mb-3">
-            📝 اكتب اسمك الثلاثي ليظهر على الشهادة:
+            {isAr ? '📝 اكتب اسمك الثلاثي ليظهر على الشهادة' : '📝 Write your full name to appear on the certificate'}
           </p>
           <div className="flex gap-2">
             <input
               type="text"
               value={tempName}
               onChange={(e) => setTempName(e.target.value)}
-              placeholder="اكتب اسمك الثلاثي"
+              placeholder={isAr ? 'اكتب اسمك الثلاثي' : 'Enter your full name'}
               className="flex-1 bg-slate-800 border-2 border-amber-500/50 rounded-xl px-3 sm:px-4 py-2 text-white text-sm outline-none focus:border-amber-400"
-              dir="rtl"
+              dir={isAr ? 'rtl' : 'ltr'}
             />
             <button
               onClick={handleSaveName}
               disabled={!tempName.trim()}
               className="px-3 sm:px-4 py-2 bg-gradient-to-l from-amber-500 to-amber-600 rounded-xl font-bold text-sm disabled:opacity-40"
             >
-              حفظ
+              {isAr ? 'حفظ' : 'Save'}
             </button>
           </div>
         </motion.div>
@@ -118,7 +174,7 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="w-full print:my-0 origin-top"
+          className="cert-card w-full print:my-0 origin-top"
           style={{
             maxWidth: '720px',
             background: 'linear-gradient(135deg, #B8860B 0%, #FFD700 25%, #B8860B 50%, #FFD700 75%, #8B6914 100%)',
@@ -185,12 +241,25 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
               </div>
 
               {/* اسم الأكاديمية */}
-              <p className="font-serif font-bold text-[9px] sm:text-[10px] tracking-widest" style={{ color: '#7B5D0A' }}>
-                INTERNATIONAL SOROBAN ACADEMY
-              </p>
-              <p className="font-serif font-black text-xs sm:text-sm mt-0.5" style={{ color: '#5D3A1A' }}>
-                أكاديمية السوروبان الدولية
-              </p>
+              {isAr ? (
+                <>
+                  <p className="font-serif font-bold text-[9px] sm:text-[10px] tracking-widest" style={{ color: '#7B5D0A' }}>
+                    INTERNATIONAL SOROBAN ACADEMY
+                  </p>
+                  <p className="font-serif font-black text-xs sm:text-sm mt-0.5" style={{ color: '#5D3A1A' }}>
+                    أكاديمية السوروبان الدولية
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-serif font-black text-xs sm:text-sm" style={{ color: '#5D3A1A' }}>
+                    INTERNATIONAL SOROBAN ACADEMY
+                  </p>
+                  <p className="font-serif font-bold text-[9px] sm:text-[10px] tracking-widest mt-0.5" style={{ color: '#7B5D0A' }} dir="rtl">
+                    أكاديمية السوروبان الدولية
+                  </p>
+                </>
+              )}
 
               {/* فاصل */}
               <div className="flex items-center justify-center gap-2 my-2">
@@ -208,15 +277,14 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
                   textShadow: '1px 1px 0 #FFD700, 1.5px 1.5px 2px rgba(0,0,0,0.15)',
                 }}
               >
-                شهادة إتمام دولية
+                {isAr ? 'شهادة إتمام دولية' : 'International Certificate of Completion'}
               </h1>
-              <p className="font-serif italic text-[9px] sm:text-[10px] mt-0.5" style={{ color: '#7B5D0A' }}>
-                International Certificate of Completion
-              </p>
 
               {/* الدورة */}
               <p className="font-bold text-[11px] sm:text-sm mt-1.5" style={{ color: '#5D3A1A' }}>
-                دورة السوروبان الدولية في الحساب الذهني
+                {isAr
+                  ? 'دورة السوروبان الدولية في الحساب الذهني'
+                  : 'International Soroban Mental Arithmetic Course'}
               </p>
 
               {/* شريط المستوى */}
@@ -231,10 +299,10 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
                 <CertificateMedal level={data.level} size={26} />
                 <div className="flex flex-col items-start">
                   <span className="font-black leading-tight" style={{ color: colors.text, fontSize: '11px' }}>
-                    المستوى {data.levelAr}
+                    {isAr ? `المستوى ${data.levelAr}` : `${data.levelEn} Level`}
                   </span>
                   <span className="font-bold leading-tight" style={{ color: colors.dark, fontSize: '7px', letterSpacing: '0.8px' }}>
-                    {data.levelEn.toUpperCase()} LEVEL
+                    {isAr ? data.levelEn.toUpperCase() + ' LEVEL' : data.levelAr}
                   </span>
                 </div>
               </div>
@@ -248,7 +316,7 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
 
               {/* التقديم */}
               <p className="text-[10px] sm:text-xs" style={{ color: '#5D3A1A' }}>
-                تشهد الأكاديمية بأن الطالب/ة المتميز/ة
+                {isAr ? 'تشهد الأكاديمية بأن الطالب/ة المتميز/ة' : 'The academy certifies that the distinguished student'}
               </p>
 
               {/* اسم الطالب */}
@@ -266,10 +334,17 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
               <div className="mx-auto mb-2" style={{ width: '55%', maxWidth: '260px', height: '1.2px', background: 'linear-gradient(to right, transparent, #B8860B, transparent)' }} />
 
               {/* نص الإتمام */}
-              <p className="text-[10px] sm:text-[11px] leading-relaxed px-2 sm:px-6" style={{ color: '#5D3A1A' }}>
-                قد أكمل/ت بنجاح متطلبات الدورة الدولية للحساب الذهني بالسوروبان،
-                وأثبت/ت إتقان/اً للمهارات الأساسية والمتقدمة وفق معايير الأكاديمية الدولية.
-              </p>
+              {isAr ? (
+                <p className="text-[10px] sm:text-[11px] leading-relaxed px-2 sm:px-6" style={{ color: '#5D3A1A' }}>
+                  قد أكمل/ت بنجاح متطلبات الدورة الدولية للحساب الذهني بالسوروبان،
+                  وأثبت/ت إتقان/اً للمهارات الأساسية والمتقدمة وفق معايير الأكاديمية الدولية.
+                </p>
+              ) : (
+                <p className="text-[10px] sm:text-[11px] leading-relaxed px-2 sm:px-6" style={{ color: '#5D3A1A' }}>
+                  has successfully completed the requirements of the International Soroban Mental Arithmetic Course,
+                  demonstrating mastery of the fundamental and advanced skills according to the International Academy standards.
+                </p>
+              )}
 
               {/* بطاقات النتيجة والمستوى */}
               <div className="grid grid-cols-2 gap-1.5 sm:gap-3 my-3 px-1 sm:px-2">
@@ -281,13 +356,13 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
                   }}
                 >
                   <p className="text-[8px] sm:text-[9px] font-bold" style={{ color: '#7B5D0A' }}>
-                    الدرجة النهائية
+                    {isAr ? 'الدرجة النهائية' : 'Final Score'}
                   </p>
-                  <p className="font-black font-serif leading-none mt-0.5" style={{ fontSize: 'clamp(15px, 3.5vw, 22px)', color: '#8B6914' }}>
-                    {toArabicNumber(data.averageScore.toFixed(1))}
+                  <p className="font-black font-serif leading-none mt-0.5" style={{ fontSize: 'clamp(15px, 3.5vw, 22px)', color: '#8B6914' }} dir="ltr">
+                    {isAr ? toArabicNumber(data.averageScore.toFixed(1)) : data.averageScore.toFixed(1)}
                   </p>
                   <p className="text-[8px] sm:text-[9px] mt-0.5" style={{ color: '#7B5D0A' }}>
-                    من {toArabicNumber(100)} / 100
+                    {isAr ? `من ${toArabicNumber(100)} / 100` : 'out of 100'}
                   </p>
                   <div
                     className="mt-1 mx-auto rounded-full overflow-hidden"
@@ -312,13 +387,13 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
                   }}
                 >
                   <p className="text-[8px] sm:text-[9px] font-bold" style={{ color: colors.text }}>
-                    التقدير
+                    {isAr ? 'التقدير' : 'Appreciation'}
                   </p>
                   <div className="-my-1">
                     <CertificateMedal level={data.level} size={38} />
                   </div>
                   <p className="font-black font-serif leading-none" style={{ fontSize: 'clamp(11px, 2.5vw, 15px)', color: colors.text }}>
-                    {data.appreciation}
+                    {isAr ? data.appreciation : data.levelEn}
                   </p>
                 </div>
               </div>
@@ -343,10 +418,7 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
                   </div>
                   <div style={{ height: '1px', background: '#B8860B', margin: '3px 8px' }} />
                   <p className="text-[9px] sm:text-xs font-bold" style={{ color: '#5D3A1A' }}>
-                    المشرف الأكاديمي
-                  </p>
-                  <p className="text-[7px] sm:text-[9px] italic" style={{ color: '#7B5D0A' }}>
-                    Academic Supervisor
+                    {isAr ? 'المشرف الأكاديمي' : 'Academic Supervisor'}
                   </p>
                 </div>
 
@@ -369,10 +441,10 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
                   </div>
                   <div style={{ height: '1px', background: '#B8860B', margin: '3px 8px' }} />
                   <p className="text-[9px] sm:text-xs font-black" style={{ color: '#5D3A1A' }}>
-                    مصطفى علي أكر
+                    {isAr ? 'مصطفى علي أكر' : 'Mustafa Ali Akr'}
                   </p>
                   <p className="text-[7px] sm:text-[9px]" style={{ color: '#7B5D0A' }}>
-                    المدير والمؤسس
+                    {isAr ? 'المدير والمؤسس' : 'Founder & Director'}
                   </p>
                 </div>
               </div>
@@ -382,8 +454,10 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
                 className="flex items-center justify-between gap-1.5 mt-2 px-1.5 py-1.5 rounded-md"
                 style={{ background: 'rgba(184,134,11,0.08)', border: '1px solid rgba(184,134,11,0.3)' }}
               >
-                <div className="text-right flex-1 min-w-0">
-                  <p className="text-[7px] sm:text-[9px]" style={{ color: '#7B5D0A' }}>رقم الشهادة</p>
+                <div className={`${isAr ? 'text-right' : 'text-left'} flex-1 min-w-0`}>
+                  <p className="text-[7px] sm:text-[9px]" style={{ color: '#7B5D0A' }}>
+                    {isAr ? 'رقم الشهادة' : 'Certificate No.'}
+                  </p>
                   <p className="text-[8px] sm:text-[10px] font-bold truncate" style={{ color: '#5D3A1A' }} dir="ltr">
                     {data.certificateNumber}
                   </p>
@@ -403,17 +477,23 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
                       loading="lazy"
                     />
                   </div>
-                  <p className="text-[6px] mt-0.5" style={{ color: '#7B5D0A' }}>للتحقق</p>
+                  <p className="text-[6px] mt-0.5" style={{ color: '#7B5D0A' }}>
+                    {isAr ? 'للتحقق' : 'Verify'}
+                  </p>
                 </div>
 
-                <div className="text-left flex-1 min-w-0">
-                  <p className="text-[7px] sm:text-[9px]" style={{ color: '#7B5D0A' }}>تاريخ الإصدار</p>
+                <div className={`${isAr ? 'text-left' : 'text-right'} flex-1 min-w-0`}>
+                  <p className="text-[7px] sm:text-[9px]" style={{ color: '#7B5D0A' }}>
+                    {isAr ? 'تاريخ الإصدار' : 'Date of Issue'}
+                  </p>
                   <p className="text-[8px] sm:text-[10px] font-bold" style={{ color: '#5D3A1A' }} dir="ltr">
                     {data.issueDate}
                   </p>
-                  <p className="text-[7px] sm:text-[9px] font-bold mt-0.5" style={{ color: '#7B5D0A' }} dir="ltr">
-                    {data.issueDateHijri}
-                  </p>
+                  {isAr && (
+                    <p className="text-[7px] sm:text-[9px] font-bold mt-0.5" style={{ color: '#7B5D0A' }} dir="ltr">
+                      {data.issueDateHijri}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -423,34 +503,34 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
       </div>
 
       {/* أزرار التحكم */}
-      <div className="max-w-4xl mx-auto flex gap-2 print:hidden mt-4">
+      <div className="max-w-4xl mx-auto flex gap-2 print:hidden mt-4 no-print">
         <button
           onClick={() => setEditingName(true)}
           className="flex-1 py-2.5 sm:py-3 rounded-2xl bg-white/10 hover:bg-white/20 font-bold flex items-center justify-center gap-2 text-xs sm:text-sm"
         >
-          <Edit3 className="w-4 h-4" /> تعديل الاسم
+          <Edit3 className="w-4 h-4" /> {isAr ? 'تعديل الاسم' : 'Edit Name'}
         </button>
         <button
           onClick={handlePrint}
           disabled={!studentName || studentName === 'اكتب اسمك الثلاثي'}
           className="flex-1 py-2.5 sm:py-3 rounded-2xl bg-gradient-to-l from-amber-500 to-amber-600 font-bold flex items-center justify-center gap-2 disabled:opacity-40 text-xs sm:text-sm"
         >
-          <Printer className="w-4 h-4 sm:w-5 sm:h-5" /> طباعة / PDF
+          <Printer className="w-4 h-4 sm:w-5 sm:h-5" /> {isAr ? 'طباعة / PDF' : 'Print / PDF'}
         </button>
       </div>
 
       {onGoHome && (
         <button
           onClick={() => { playSound('click'); onGoHome(); }}
-          className="max-w-4xl mx-auto w-full mt-2 py-2.5 sm:py-3 rounded-2xl bg-white/5 hover:bg-white/10 font-bold flex items-center justify-center gap-2 text-white/70 text-xs sm:text-sm print:hidden"
+          className="max-w-4xl mx-auto w-full mt-2 py-2.5 sm:py-3 rounded-2xl bg-white/5 hover:bg-white/10 font-bold flex items-center justify-center gap-2 text-white/70 text-xs sm:text-sm print:hidden no-print"
         >
-          <Home className="w-4 h-4 sm:w-5 sm:h-5" /> الصفحة الرئيسية
+          <Home className="w-4 h-4 sm:w-5 sm:h-5" /> {isAr ? 'الصفحة الرئيسية' : 'Home'}
         </button>
       )}
 
-      <div className="max-w-4xl mx-auto mt-3 text-center text-[10px] sm:text-xs text-white/40 print:hidden flex items-center justify-center gap-2">
+      <div className="max-w-4xl mx-auto mt-3 text-center text-[10px] sm:text-xs text-white/40 print:hidden no-print flex items-center justify-center gap-2">
         <Sparkles className="w-3 h-3" />
-        <span>لطباعة الشهادة أو حفظها كـ PDF، اضغط زر "طباعة / PDF"</span>
+        <span>{isAr ? 'اضغط "طباعة / PDF" للحفظ' : 'Press "Print / PDF" to save'}</span>
       </div>
     </div>
   );
