@@ -1,6 +1,12 @@
 // src/curriculum/lessons/types.ts
 
-// ═══════════════════════════════════════════════════════════
+//
+// src/curriculum/lessons/types.ts
+//
+// 📝 التعديل: IntroPage يقبل نصوصًا ثنائية اللغة
+// 🎯 الوظيفة: تمكين ترجمة صفحات المقدمة
+// 📅 الجلسة: 14
+// ✅ الحالة: قيد الاختبار ═══════════════════════════════════════════════════════════
 // 🎯 التصنيفات
 // ═══════════════════════════════════════════════════════════
 
@@ -19,12 +25,19 @@ export interface BilingualText {
   en: string;
 }
 
+/**
+ * نص يقبل الشكلين:
+ *  - string (قديم — عربي فقط)
+ *  - BilingualText (جديد — عربي + إنجليزي)
+ */
+export type LocalizableText = string | BilingualText;
+
 export interface IntroPage {
   id: string;
-  title: string;
-  content: string;
+  title: LocalizableText;
+  content: LocalizableText;
   imageSvg?: string;
-  imageAlt?: string;
+  imageAlt?: LocalizableText;
 }
 
 export interface TactileActivity {
@@ -174,7 +187,7 @@ export interface LessonModule {
   title: string;
   titleEn: string;
   emoji: string;
-  miniStory?: MiniStoryBlock;  // ← optional (L0 لا يستخدمه)
+  miniStory?: MiniStoryBlock;
   rule: RuleBlock;
   condition: ConditionBlock;
   friendsTable?: FriendsTable;
@@ -205,14 +218,14 @@ export interface LessonNode {
   order: number;
 
   // ─── العنوان ───
-  title: BilingualText;  // ← دائمًا {ar, en}
+  title: BilingualText;
   emoji?: string;
 
-  // ─── القصة (L0 — الشكل القديم) ───
+  // ─── القصة ───
   story?: BilingualText;
   storyAudioId?: StoryAudioSource;
 
-  // ─── البنية القديمة (L0-INTRO) ───
+  // ─── البنية القديمة ───
   concept?: BilingualText;
   rule?: BilingualText;
   ruleTable?: RuleTableRow[];
@@ -281,4 +294,17 @@ export function countExercises(lesson: LessonNode): number {
 
 export function getModule(lesson: LessonNode, moduleId: string): LessonModule | undefined {
   return lesson.modules?.find((m) => m.id === moduleId);
+}
+
+/**
+ * استخراج نص من قيمة محتملة الثنائية.
+ * يُستخدم في الشاشات لعرض اللغة الصحيحة.
+ */
+export function resolveLocalized(
+  value: LocalizableText | undefined,
+  lang: "ar" | "en" = "ar",
+): string {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  return lang === "en" ? (value.en || value.ar) : value.ar;
 }
