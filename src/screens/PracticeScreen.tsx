@@ -5,6 +5,8 @@
 // ✅ عرض المعادلة في سطر واحد (بدون "احسب السلسلة:" + منع الكسر)
 // ✅ كشف الأسئلة النصية بشكل شامل (؟ / ماذا / ضع / ارفع) + عرض يلتف
 // ✅ زر العلاجية يعتمد على pendingRemediation + إخفاء "جلسة جديدة" عند النجاح/العلاجية
+// ✅ الشارات تُمنح فقط عند نجاح الجلسة (pendingBadgesRef)
+// ✅ زر "إنهاء" يخرج بلا تقييم
 // 📅 آخر تحديث: SRB Migration — Phase 1.5
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -146,6 +148,7 @@ export function PracticeScreen({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
   const wrongSkillsRef = useRef<Set<string>>(new Set());
+  const pendingBadgesRef = useRef<Array<{ skillId: string; timeMs: number; answerMs: number }>>([]);
 
   const addXP = useProgressStore((s) => s.addXP);
   const updateStreak = useProgressStore((s) => s.updateStreak);
@@ -216,6 +219,7 @@ export function PracticeScreen({
     if (qs.length === 0) { playSound('error'); return; }
     perfRef.current = new Map();
     wrongSkillsRef.current = new Set();
+    pendingBadgesRef.current = [];
     setQuestions(qs);
     setCurrentIdx(0);
     setAbacusValue(0);
@@ -258,13 +262,15 @@ export function PracticeScreen({
       perfRef.current.set(skillId, existing);
       if (isCorrect) {
         const cls = classifySpeed(timeMs, answerMs);
-        if (cls === 'mastery') awardBadge(skillId, timeMs, answerMs);
+        if (cls === 'mastery') {
+          pendingBadgesRef.current.push({ skillId, timeMs, answerMs });
+        }
       } else {
         // ✅ SRB: احفظ skillId كامل ("L2-S07-m1")
         wrongSkillsRef.current.add(skillId);
       }
     },
-    [currentQ, level, awardBadge],
+    [currentQ, level],
   );
 
   const handleTimeout = useCallback(() => {
@@ -369,13 +375,21 @@ export function PracticeScreen({
       });
     }
 
+    // ✅ منح الشارات فقط عند نجاح الجلسة
+    if (passed) {
+      pendingBadgesRef.current.forEach((b) => {
+        awardBadge(b.skillId, b.timeMs, b.answerMs);
+      });
+    }
+    pendingBadgesRef.current = [];
+
     setPerformances(perf);
     setPhase('result');
     playSound(passed ? 'levelup' : 'whoosh');
     onComplete?.(passed, finalScore);
   }, [
     level, questions, playSound, onComplete, buildPerformances,
-    setGrade, setPendingRemediation, markPracticePassed,
+    setGrade, setPendingRemediation, markPracticePassed, awardBadge,
   ]);
 
   const nextQuestion = useCallback(() => {
@@ -393,12 +407,14 @@ export function PracticeScreen({
     }
   }, [currentIdx, questions.length, score, sorobana, finalizeSession]);
 
+  // ✅ "إنهاء" — خروج بلا تقييم (لا حفظ درجة، لا شارات، لا علاجية)
   const handleEnd = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     sorobana.stop();
-    const percentage = Math.round((score / questions.length) * 100);
-    finalizeSession(percentage >= PASS_THRESHOLD, score);
-  }, [score, questions.length, sorobana, finalizeSession]);
+    pendingBadgesRef.current = [];
+    playSound('whoosh');
+    onBack();
+  }, [sorobana, playSound, onBack]);
 
   // 🆕 بدء الجلسة العلاجية
   const handleStartRemediation = useCallback(() => {
