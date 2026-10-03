@@ -1,126 +1,100 @@
-// src/curriculum/lessons/L0/intro.ts
-import type { LessonNode } from '../types';
+// src/curriculum/lessons/L0/S01.ts
+import type { LessonNode } from "../types";
 
-export const L0_INTRO: LessonNode = {
-  id: 'L0-intro',
-  skillId: null,
-  levelId: 'L0',
-  order: 1,
-
-  title: { ar: 'التعرّف على السوروبان', en: 'Getting to Know the Soroban' },
+export const L0_S01: LessonNode = {
+  id: "L0-S01",
+  skillId: "S01",
+  levelId: "L0",
+  order: 2,
+  title: { ar: "تمثيل الأرقام من 0 إلى 9", en: "Representing Numbers 0-9" },
+  emoji: "🔢",
+  tags: ["build", "read", "kids", "L0"],
 
   story: {
-    ar: 'مرحباً يا بطل! اليوم سنلتقي بالسوروبان ونتعلم كيف تتحدث خرزاته بلغة الأرقام.',
-    en: 'Hello, little hero! Today we will meet the soroban and learn how its beads speak the language of numbers.',
+    ar: "في يوم مشمس، وصل ثلاثة أبطال صغار — شام وريان وبانة — إلى بوابة خشبية ضخمة نُقش عليها: قلعة السوروبان، من يدخلها يصبح سيد الأرقام. دقّوا الجرس، فانفتح الباب، وظهر حارس القلعة: رجل خشبي اسمه الإطار. قال مبتسماً: في هذه القلعة تسكن عائلة غريبة — أربعة أطفال نشيطون في الطابق السفلي، كل واحد قيمته واحد. وفوق الجسر تسكن الجدة الحنونة، قيمتها خمسة.",
+    en: "In the Castle of Soroban, four children live below the beam, each worth 1. Above the beam lives the kind grandmother, worth 5.",
   },
-  storyAudioId: null,
+  storyAudioId: 1,
 
-  concept: {
-    ar: 'السوروبان هو المعداد الياباني المستخدم لتعلّم الحساب. في كل عمود توجد خرزة علوية قيمتها 5، وأربع خرزات سفلية قيمة كل واحدة منها 1. العارضة الأفقية تفصل بينهما. القاعدة الأساسية: الخرزة التي تلامس العارضة هي التي نحسب قيمتها، والخرزة البعيدة عن العارضة لا تُحسب.',
-    en: 'The soroban is the Japanese abacus used for learning calculation. Each column has one upper bead worth 5 and four lower beads worth 1 each. The horizontal beam separates them. The basic rule: a bead touching the beam is counted; a bead away from the beam is not counted.',
-  },
-
-  isTheoretical: true,
-  examples: [],
-  tryQuestions: [],
-
-  introPages: [
+  modules: [
     {
-      id: 'L0-intro-p1',
-      title: '🧮 السوروبان',
-      content:
-        'مرحباً يا بطل! 🌟\n\n' +
-        'هذا هو السوروبان، المعداد الياباني.\n\n' +
-        'سنستخدمه لنتعلم الأرقام والحساب بطريقة سهلة وممتعة.\n\n' +
-        'السوروبان ليس مجرد خرزات؛ كل خرزة لها مكان وقيمة، وأنت ستتعلم كيف تجعلها تمثّل الأرقام.',
+      id: "m1",
+      ruleCategory: "build",
+      title: "تمثيل 0-4",
+      titleEn: "Representing 0-4",
+      emoji: "🧒",
+      rule: { description: "لتمثيل 0-4: ارفع من 0 إلى 4 خرزات سفلية بالإبهام نحو العارضة." },
+      condition: { formula: "0 ≤ n ≤ 4", explanation: "الأطفال الأربعة يكفون لتمثيل الأرقام من 0 إلى 4." },
+      discrimination: {
+        steps: [{
+          question: "هل الرقم المطلوب بين 0 و 4؟",
+          type: "yes-no",
+          answer: "نعم → استخدم الأطفال (الخرزات السفلية)",
+          hint: "0 = لا خرزات · 1 = خرزة · 2 = خرزتان · 3 = ثلاث · 4 = أربع",
+        }],
+        decision: "ارفع عددًا من الخرزات السفلية يساوي الرقم!",
+      },
+      watchPhase: {
+        examples: [
+          { id: "S01-m1-E1", question: "مثّل الرقم 0", discrimination: "لا خرزة تلامس العارضة = 0.", rule: "0 = لا خرزات", fingerMovement: "السبابة تُبعد كل الخرزات عن العارضة ⬇️", steps: ["المعداد مصفّر", "الخرزات بعيدة عن العارضة", "الناتج: 0"], result: 0, beadVisual: "صفر خرزات" },
+          { id: "S01-m1-E2", question: "مثّل الرقم 1", discrimination: "الأطفال متوفّرون → طفل واحد يكفي.", rule: "1 = خرزة سفلية", fingerMovement: "الإبهام يرفع خرزة سفلية ⬆️", steps: ["ارفع خرزة سفلية بالإبهام ⬆️", "الناتج: 1"], result: 1, beadVisual: "خرزة سفلية واحدة" },
+          { id: "S01-m1-E3", question: "مثّل الرقم 2", discrimination: "المطلوب 2 → الأطفال متوفّرون.", rule: "2 = خرزتان", fingerMovement: "الإبهام يرفع خرزتين ⬆️", steps: ["ارفع خرزتين بالإبهام ⬆️", "الناتج: 2"], result: 2, beadVisual: "خرزتان سفليتان" },
+          { id: "S01-m1-E4", question: "مثّل الرقم 3", discrimination: "المطلوب 3 → الأطفال متوفّرون.", rule: "3 = ثلاث خرزات", fingerMovement: "الإبهام يرفع ثلاث خرزات ⬆️", steps: ["ارفع ثلاث خرزات بالإبهام ⬆️", "الناتج: 3"], result: 3, beadVisual: "ثلاث خرزات" },
+          { id: "S01-m1-E5", question: "مثّل الرقم 4", discrimination: "المطلوب 4 → كل الأطفال.", rule: "4 = الأربع خرزات", fingerMovement: "الإبهام يرفع الأربع خرزات ⬆️", steps: ["ارفع الأربع خرزات بالإبهام ⬆️", "الناتج: 4"], result: 4, beadVisual: "أربع خرزات (العائلة كاملة)" },
+        ],
+      },
+      tryPhase: {
+        exercises: [
+          { id: "S01-m1-T1", question: "مثّل 2", discrimination: "2 ≤ 4", steps: ["ارفع خرزتين بالإبهام ⬆️", "الناتج: 2"], result: 2 },
+          { id: "S01-m1-T2", question: "مثّل 4", discrimination: "4 = كل الأطفال", steps: ["ارفع الأربع خرزات ⬆️", "الناتج: 4"], result: 4 },
+          { id: "S01-m1-T3", question: "مثّل 1", discrimination: "1 = طفل", steps: ["ارفع خرزة واحدة ⬆️", "الناتج: 1"], result: 1 },
+          { id: "S01-m1-T4", question: "مثّل 3", discrimination: "3 = ثلاثة أطفال", steps: ["ارفع ثلاث خرزات ⬆️", "الناتج: 3"], result: 3 },
+        ],
+      },
     },
     {
-      id: 'L0-intro-p2',
-      title: '📜 قصة السوروبان',
-      content:
-        'استخدم الناس المعداد منذ زمن بعيد ليساعدهم على العد والحساب.\n\n' +
-        'وصلت أدوات العد إلى اليابان، ثم تطوّر المعداد الياباني حتى أصبح السوروبان الذي نتعلم عليه اليوم.\n\n' +
-        'السوروبان الذي ستستخدمه يحتوي على خرزة علوية قيمتها 5، وأربع خرزات سفلية قيمة كل واحدة منها 1.\n\n' +
-        'والآن، لنترك القصة ونبدأ بالتعرّف إلى خرزات السوروبان! 👀',
-    },
-    {
-      id: 'L0-intro-p3',
-      title: '🔍 تعرّف على السوروبان',
-      content:
-        'انظر إلى السوروبان جيداً. 👀\n\n' +
-        'ستجد فيه:\n\n' +
-        '• الإطار: الجزء الذي يمسك السوروبان.\n' +
-        '• العارضة: الخط الأفقي في المنتصف.\n' +
-        '• الأعمدة: الخطوط الرأسية التي تتحرك عليها الخرزات.\n' +
-        '• خرزة علوية واحدة في كل عمود: قيمتها 5.\n' +
-        '• أربع خرزات سفلية في كل عمود: قيمة كل واحدة 1.\n\n' +
-        'لا تحتاج إلى حفظ كل شيء الآن. المهم أن تعرف مكان العارضة والخرزات.',
-      imageSvg: 'soroban-parts-animated',
-      imageAlt: 'أجزاء السوروبان',
-    },
-    {
-      id: 'L0-intro-p4',
-      title: '🔑 القاعدة الذهبية',
-      content:
-        'تذكّر هذه القاعدة جيداً:\n\n' +
-        '✨ الخرزة التي تلامس العارضة هي التي تُحسب.\n\n' +
-        'أما الخرزة البعيدة عن العارضة فلا تُحسب.\n\n' +
-        'مثلاً:\n' +
-        '• خرزة سفلية تلامس العارضة = 1\n' +
-        '• خرزة سفلية بعيدة عن العارضة = 0\n' +
-        '• الخرزة العلوية تلامس العارضة = 5\n' +
-        '• الخرزة العلوية بعيدة عن العارضة = 0\n\n' +
-        'هذه القاعدة سترافقك في كل دروس السوروبان. 🧠',
-    },
-    {
-      id: 'L0-intro-p5',
-      title: '🖐️ حرّك الخرزات',
-      content:
-        'الآن جرّب بيدك على السوروبان.\n\n' +
-        'حرّك خرزة سفلية إلى العارضة.\n' +
-        'ماذا حدث؟ أصبحت قيمتها 1. ✨\n\n' +
-        'ثم أبعدها عن العارضة.\n' +
-        'ماذا حدث؟ أصبحت قيمتها 0.\n\n' +
-        'جرّب الآن الخرزة العلوية.\n' +
-        'عندما تلامس العارضة تكون قيمتها 5.\n\n' +
-        'تذكّر:\n' +
-        'نحن لا نحسب الخرزة لمجرد وجودها؛ نحسبها عندما تلامس العارضة.',
-      imageSvg: 'soroban-interactive',
-      imageAlt: 'سوروبان تفاعلي',
-    },
-    {
-      id: 'L0-intro-p6',
-      title: '🌟 لماذا نتعلم السوروبان؟',
-      content:
-        'السوروبان يساعدك على التدريب على:\n\n' +
-        '1. التركيز والانتباه 👀\n' +
-        '2. فهم قيمة الأرقام 🔢\n' +
-        '3. ترتيب الأعداد بطريقة واضحة\n' +
-        '4. تحريك الخرزات بدقة وسرعة\n' +
-        '5. تذكّر صور الأعداد على السوروبان\n' +
-        '6. الانتقال تدريجياً من السوروبان الحقيقي إلى الحساب الذهني 🧠\n\n' +
-        'لن نحاول أن نتعلم كل شيء في يوم واحد.\n' +
-        'سنتعلم خطوة صغيرة، ثم نتدرب عليها حتى تصبح سهلة.',
-    },
-    {
-      id: 'L0-intro-p7',
-      title: '🎯 هل أنت مستعد؟',
-      content:
-        'رائع يا بطل! 🎉\n\n' +
-        'أصبحت تعرف الآن:\n\n' +
-        '• أن السوروبان أداة يابانية للحساب.\n' +
-        '• مكان العارضة.\n' +
-        '• أن لكل عمود خرزة علوية وأربع خرزات سفلية.\n' +
-        '• أن الخرزة العلوية قيمتها 5.\n' +
-        '• أن كل خرزة سفلية قيمتها 1.\n' +
-        '• أن الخرزة التي تلامس العارضة هي التي تُحسب.\n\n' +
-        'في الدرس القادم ستتعلم كيف تمثّل الأعداد من 0 إلى 9 على السوروبان.\n\n' +
-        'هيا بنا! 🚀',
+      id: "m2",
+      ruleCategory: "build",
+      title: "تمثيل 5-9",
+      titleEn: "Representing 5-9",
+      emoji: "👵",
+      rule: { formula: "5 + k (حيث k = n − 5)", description: "أنزل الجدة 5 بالسبابة، ثم ارفع k خرزة سفلية بالإبهام." },
+      condition: { formula: "5 ≤ n ≤ 9", explanation: "الجدة 5 + k خرزة سفلية." },
+      discrimination: {
+        steps: [
+          { question: "هل الرقم بين 5 و 9؟", type: "yes-no", answer: "نعم → الجدة + أطفال" },
+          { question: "كم طفلاً (k = n − 5)؟", type: "value", answer: "ارفع k خرزات", hint: "5=0 · 6=1 · 7=2 · 8=3 · 9=4" },
+        ],
+        decision: "أنزل 5 بالسبابة ⬇️، ارفع k بالإبهام ⬆️!",
+      },
+      watchPhase: {
+        examples: [
+          { id: "S01-m2-E1", question: "مثّل 5", discrimination: "5 = الجدة وحدها.", rule: "5 = العلوية", fingerMovement: "السبابة تُنزل العلوية ⬇️", steps: ["أنزل العلوية ⬇️", "الناتج: 5"], result: 5, beadVisual: "العلوية = 5" },
+          { id: "S01-m2-E2", question: "مثّل 6", discrimination: "6 = 5+1.", rule: "6 = العلوية + 1", fingerMovement: "السبابة 5 ⬇️، الإبهام 1 ⬆️", steps: ["أنزل 5 ⬇️", "ارفع 1 ⬆️", "الناتج: 6"], result: 6, beadVisual: "5+1 = 6" },
+          { id: "S01-m2-E3", question: "مثّل 7", discrimination: "7 = 5+2.", rule: "7 = العلوية + 2", fingerMovement: "5 ⬇️ ثم 2 ⬆️", steps: ["أنزل 5 ⬇️", "ارفع 2 ⬆️", "الناتج: 7"], result: 7, beadVisual: "5+2 = 7" },
+          { id: "S01-m2-E4", question: "مثّل 8", discrimination: "8 = 5+3.", rule: "8 = العلوية + 3", fingerMovement: "5 ⬇️ ثم 3 ⬆️", steps: ["أنزل 5 ⬇️", "ارفع 3 ⬆️", "الناتج: 8"], result: 8, beadVisual: "5+3 = 8" },
+          { id: "S01-m2-E5", question: "مثّل 9", discrimination: "9 = 5+4.", rule: "9 = العلوية + 4", fingerMovement: "5 ⬇️ ثم 4 ⬆️", steps: ["أنزل 5 ⬇️", "ارفع 4 ⬆️", "الناتج: 9"], result: 9, beadVisual: "5+4 = 9" },
+        ],
+      },
+      tryPhase: {
+        exercises: [
+          { id: "S01-m2-T1", question: "مثّل 6", discrimination: "6 = 5+1", steps: ["5 ⬇️", "1 ⬆️", "الناتج: 6"], result: 6 },
+          { id: "S01-m2-T2", question: "مثّل 8", discrimination: "8 = 5+3", steps: ["5 ⬇️", "3 ⬆️", "الناتج: 8"], result: 8 },
+          { id: "S01-m2-T3", question: "مثّل 7", discrimination: "7 = 5+2", steps: ["5 ⬇️", "2 ⬆️", "الناتج: 7"], result: 7 },
+          { id: "S01-m2-T4", question: "مثّل 9", discrimination: "9 = 5+4", steps: ["5 ⬇️", "4 ⬆️", "الناتج: 9"], result: 9 },
+        ],
+      },
     },
   ],
 
-  estimatedMinutes: 5,
-  xpReward: 0,
+  outro: {
+    summary: "أتقنت تمثيل الأرقام من 0 إلى 9!",
+    encouragement: "🎉 أنت الآن تعرف لغة السوروبان الأولى!",
+    totalExamples: 10,
+  },
+
+  estimatedMinutes: 15,
+  xpReward: 10,
 };
 
-export default L0_INTRO;
+export default L0_S01;
