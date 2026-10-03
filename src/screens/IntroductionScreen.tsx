@@ -8,6 +8,13 @@ import { FloatingCompanion } from '@/components/FloatingCompanion';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 
+// ─── مساعد: تحويل نص ثنائي إلى نص مفرد ───
+function localize(v: string | { ar: string; en: string } | undefined): string {
+  if (v === undefined) return '';
+  if (typeof v === 'string') return v;
+  return v.ar || v.en || '';
+}
+
 interface IntroductionScreenProps {
   lessonId: string;
   onBack: () => void;
@@ -95,10 +102,10 @@ export function IntroductionScreen({
           /* صفحة تفاعلية — بلا motion wrapper */
           <div className="glass-card p-5 sm:p-7 mb-6">
             <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white mb-4">
-              {page.title}
+              {localize(page.title)}
             </h2>
             <div className="text-sm sm:text-base text-white/80 font-body leading-relaxed whitespace-pre-line">
-              {page.content}
+              {localize(page.content)}
             </div>
 
             <div
@@ -136,17 +143,17 @@ export function IntroductionScreen({
               className="glass-card p-5 sm:p-7 mb-6"
             >
               <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white mb-4">
-                {page.title}
+                {localize(page.title)}
               </h2>
               <div className="text-sm sm:text-base text-white/80 font-body leading-relaxed whitespace-pre-line">
-                {page.content}
+                {localize(page.content)}
               </div>
 
               {page.imageSvg && (
                 <div className="mt-6 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
                   <img
                     src={`${import.meta.env.BASE_URL}images/${page.imageSvg}.svg`}
-                    alt={page.imageAlt || ''}
+                    alt={localize(page.imageAlt)}
                     className="w-full h-auto"
                     loading="lazy"
                   />
