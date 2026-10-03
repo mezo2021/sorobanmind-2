@@ -512,15 +512,30 @@ export function computeLevelFinalScore(
 ): number | null {
   const stats = getLevelStats(level);
 
-  if (stats.average === null) return null;
-
-  if (stats.test === null) {
-    // لا يوجد اختبار — نُرجع المتوسط فقط
-    return stats.average;
+  if (stats.test === null) return null;
+  if (stats.practice === null) return null;
+  if (stats.anzanAudio === null) return null;
+  if (stats.anzanVisualNormal === null && stats.anzanVisualFlash === null) {
+    return null;
   }
 
-  // المعادلة: 70% اختبار + 30% متوسط
-  return Math.round(
-    0.7 * stats.test.grade + 0.3 * stats.average,
-  );
+  const test = stats.test.grade;
+  const practice = stats.practice.grade;
+  const audio = stats.anzanAudio.grade;
+
+  let visualWeighted = 0;
+  if (stats.anzanVisualNormal !== null) {
+    visualWeighted += stats.anzanVisualNormal.grade * 0.05;
+  }
+  if (stats.anzanVisualFlash !== null) {
+    visualWeighted += stats.anzanVisualFlash.grade * 0.05;
+  }
+
+  const raw =
+    test * 0.7 +
+    practice * 0.1 +
+    audio * 0.1 +
+    visualWeighted;
+
+  return Math.round(raw);
 }
