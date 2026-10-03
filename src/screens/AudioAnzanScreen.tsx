@@ -4,7 +4,7 @@
 // ✅ SRB: يمنح شارة الأنزان السماعي عند اجتياز الجلسة (≥ 70%)
 // ✅ الشارات تُمنح فقط عند نجاح الجلسة (pendingBadgesRef)
 // ✅ زر "إنهاء" يخرج بلا تقييم
-// 🩺 جلسة علاجية إجبارية داخلية (RemediationScreen)
+// 🩺 جلسة علاجية إجبارية داخلية (RemediationScreen) — أولوية عرض عليا
 // 📅 آخر تحديث: SRB Migration — Phase 2 + Remediation
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -473,19 +473,7 @@ export function AudioAnzanScreen({
     onBack();
   }, [sorobana, stopSpeech, playSound, onBack]);
 
-  // ═══ إذا المتصفح لا يدعم الصوت ═══
-  if (!isSupported) {
-    return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
-        <Volume2 className="w-16 h-16 text-red-300 mb-4" />
-        <h2 className="text-2xl font-bold text-white mb-2">المتصفح لا يدعم الصوت</h2>
-        <p className="text-white/60 text-center mb-6">جرّب متصفحاً آخر</p>
-        <button onClick={() => { playSound('click'); onBack(); }} className="btn-primary">رجوع</button>
-      </div>
-    );
-  }
-
-  // ═══ 🩺 جلسة علاجية داخلية ═══
+  // ═══ 🩺 جلسة علاجية داخلية — أولوية عرض عليا ═══
   if (showRemediation) {
     return (
       <RemediationScreen
@@ -495,6 +483,18 @@ export function AudioAnzanScreen({
         playSound={playSound}
         isMandatory={true}
       />
+    );
+  }
+
+  // ═══ إذا المتصفح لا يدعم الصوت ═══
+  if (!isSupported) {
+    return (
+      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
+        <Volume2 className="w-16 h-16 text-red-300 mb-4" />
+        <h2 className="text-2xl font-bold text-white mb-2">المتصفح لا يدعم الصوت</h2>
+        <p className="text-white/60 text-center mb-6">جرّب متصفحاً آخر</p>
+        <button onClick={() => { playSound('click'); onBack(); }} className="btn-primary">رجوع</button>
+      </div>
     );
   }
 
