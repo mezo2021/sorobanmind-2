@@ -1,13 +1,15 @@
 // src/screens/KidsCertificateScreen.tsx
-// شهادة إتمام قسم الصغار — L3 (تصميم فضي)
+// شهادة إتمام قسم الصغار — L3 (فضية · لغة واحدة فقط · قابلة للطباعة)
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Printer, Award, Home, Edit3, Sparkles } from 'lucide-react';
+import { ArrowRight, Printer, Award, Home, Edit3, Sparkles, Languages } from 'lucide-react';
 import CertificateLogo from '@/components/CertificateLogo';
 import CertificateMedal from '@/components/CertificateMedal';
 import { useProgressStore } from '@/store/progressStore';
 import type { CertificateLevel } from '@/utils/certificateGenerator';
+
+type Lang = 'ar' | 'en';
 
 function toArabicNumber(value: number | string): string {
   return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
@@ -17,32 +19,27 @@ function getKidsLevel(score: number): {
   level: CertificateLevel;
   levelAr: string;
   levelEn: string;
-  appreciation: string;
+  appreciationAr: string;
+  appreciationEn: string;
   hasMedal: boolean;
 } {
   if (score >= 90) {
-    return { level: 'silver', levelAr: 'فضي', levelEn: 'Silver', appreciation: 'ممتاز', hasMedal: true };
+    return { level: 'silver', levelAr: 'فضي', levelEn: 'Silver', appreciationAr: 'ممتاز', appreciationEn: 'Excellent', hasMedal: true };
   }
   if (score >= 85) {
-    return { level: 'bronze', levelAr: 'برونزي', levelEn: 'Bronze', appreciation: 'جيد جداً', hasMedal: true };
+    return { level: 'bronze', levelAr: 'برونزي', levelEn: 'Bronze', appreciationAr: 'جيد جداً', appreciationEn: 'Very Good', hasMedal: true };
   }
   if (score >= 80) {
-    return { level: 'pass', levelAr: 'ناجح', levelEn: 'Pass', appreciation: 'جيد', hasMedal: false };
+    return { level: 'pass', levelAr: 'ناجح', levelEn: 'Pass', appreciationAr: 'جيد', appreciationEn: 'Good', hasMedal: false };
   }
-  return { level: 'fail', levelAr: 'راسب', levelEn: 'Fail', appreciation: 'حاول مرة أخرى', hasMedal: false };
+  return { level: 'fail', levelAr: 'راسب', levelEn: 'Fail', appreciationAr: 'حاول مرة أخرى', appreciationEn: 'Try Again', hasMedal: false };
 }
 
 const SILVER = {
-  border1: '#A8A8A8',
-  border2: '#C0C0C0',
-  border3: '#808080',
-  bg1: '#FAFAFA',
-  bg2: '#EDEDED',
-  bg3: '#E0E0E0',
-  accent: '#7A7A7A',
   text: '#3A3A3A',
   textSoft: '#5A5A5A',
   textTitle: '#606060',
+  accent: '#7A7A7A',
 };
 
 interface Props {
@@ -56,15 +53,14 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState('');
   const [finalScore, setFinalScore] = useState<number>(0);
+  const [lang, setLang] = useState<Lang>('ar');
 
   useEffect(() => {
-    // النتيجة التراكمية من L3
     try {
       const s = useProgressStore.getState().computeFinalScore('L3');
       if (s !== null) setFinalScore(s);
     } catch { /* ignore */ }
 
-    // الاسم
     const savedName = localStorage.getItem('soroban_child_full_name');
     if (savedName) {
       setStudentName(savedName);
@@ -84,6 +80,7 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
   };
 
   const info = getKidsLevel(finalScore);
+  const isAr = lang === 'ar';
 
   const handlePrint = () => {
     if (!studentName) {
@@ -95,25 +92,72 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
   };
 
   const now = new Date();
-  const issueDate =
-    now.getFullYear() +
-    ' / ' +
-    String(now.getMonth() + 1).padStart(2, '0') +
-    ' / ' +
-    String(now.getDate()).padStart(2, '0') +
-    ' م';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const issueDateAr = `${now.getFullYear()} / ${pad(now.getMonth() + 1)} / ${pad(now.getDate())} م`;
+  const issueDateEn = `${pad(now.getDate())} / ${pad(now.getMonth() + 1)} / ${now.getFullYear()}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white p-2 sm:p-6 pb-24" dir="rtl">
+    <div
+      className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white p-2 sm:p-6 pb-24 cert-root"
+      dir={isAr ? 'rtl' : 'ltr'}
+    >
+      {/* أنماط الطباعة — متوافقة مع أندرويد */}
+      <style>{`
+        @media print {
+          @page { size: A4 portrait; margin: 8mm; }
+          html, body { background: #fff !important; }
+          .no-print { display: none !important; }
+          .cert-root {
+            background: #fff !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            min-height: auto !important;
+          }
+          .cert-card {
+            box-shadow: none !important;
+            page-break-inside: avoid;
+            transform: none !important;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+      `}</style>
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-3 sm:mb-4 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-3 sm:mb-4 max-w-4xl mx-auto no-print">
         <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
-          <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+          <ArrowRight className={`w-5 h-5 sm:w-6 sm:h-6 ${isAr ? '' : 'rotate-180'}`} />
         </button>
-        <h1 className="text-sm sm:text-lg font-bold bg-gradient-to-r from-gray-200 to-gray-400 bg-clip-text text-transparent">
-          شهادة إتمام — الأبطال الصغار
-        </h1>
+        <div className="text-center">
+          <h1 className="text-sm sm:text-lg font-bold bg-gradient-to-r from-gray-200 to-gray-400 bg-clip-text text-transparent">
+            {isAr ? 'شهادة إتمام — الأبطال الصغار' : 'Kids Certificate of Completion'}
+          </h1>
+        </div>
         <Award className="w-5 h-5 sm:w-6 sm:h-6 text-gray-300" />
+      </div>
+
+      {/* تبديل اللغة */}
+      <div className="max-w-4xl mx-auto mb-3 flex justify-center no-print">
+        <div className="inline-flex bg-white/10 rounded-2xl p-1 gap-1">
+          <button
+            onClick={() => { playSound('click'); setLang('ar'); }}
+            className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition ${
+              isAr ? 'bg-gradient-to-l from-gray-400 to-gray-600 text-white shadow' : 'text-white/60'
+            }`}
+          >
+            <Languages className="w-3.5 h-3.5" /> عربي
+          </button>
+          <button
+            onClick={() => { playSound('click'); setLang('en'); }}
+            className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition ${
+              !isAr ? 'bg-gradient-to-l from-gray-400 to-gray-600 text-white shadow' : 'text-white/60'
+            }`}
+          >
+            <Languages className="w-3.5 h-3.5" /> English
+          </button>
+        </div>
       </div>
 
       {/* تنبيه اسم */}
@@ -121,26 +165,26 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-400/15 border border-gray-300/40 rounded-2xl p-3 sm:p-4 mb-3 sm:mb-4 max-w-4xl mx-auto"
+          className="bg-gray-400/15 border border-gray-300/40 rounded-2xl p-3 sm:p-4 mb-3 sm:mb-4 max-w-4xl mx-auto no-print"
         >
           <p className="text-xs sm:text-sm text-gray-100 font-body mb-2 sm:mb-3">
-            📝 اكتب اسمك الثلاثي ليظهر على الشهادة:
+            {isAr ? '📝 اكتب اسمك الثلاثي ليظهر على الشهادة' : '📝 Write your full name to appear on the certificate'}
           </p>
           <div className="flex gap-2">
             <input
               type="text"
               value={tempName}
               onChange={(e) => setTempName(e.target.value)}
-              placeholder="اكتب اسمك الثلاثي"
+              placeholder={isAr ? 'اكتب اسمك الثلاثي' : 'Enter your full name'}
               className="flex-1 bg-slate-800 border-2 border-gray-400/50 rounded-xl px-3 sm:px-4 py-2 text-white text-sm outline-none focus:border-gray-200"
-              dir="rtl"
+              dir={isAr ? 'rtl' : 'ltr'}
             />
             <button
               onClick={handleSaveName}
               disabled={!tempName.trim()}
               className="px-3 sm:px-4 py-2 bg-gradient-to-l from-gray-400 to-gray-600 rounded-xl font-bold text-sm disabled:opacity-40"
             >
-              حفظ
+              {isAr ? 'حفظ' : 'Save'}
             </button>
           </div>
         </motion.div>
@@ -152,7 +196,7 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="w-full print:my-0 origin-top"
+          className="cert-card w-full print:my-0 origin-top"
           style={{
             maxWidth: '720px',
             background:
@@ -221,12 +265,25 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
               </div>
 
               {/* اسم الأكاديمية */}
-              <p className="font-serif font-bold text-[9px] sm:text-[10px] tracking-widest" style={{ color: SILVER.textTitle }}>
-                INTERNATIONAL SOROBAN ACADEMY
-              </p>
-              <p className="font-serif font-black text-xs sm:text-sm mt-0.5" style={{ color: SILVER.text }}>
-                أكاديمية السوروبان الدولية
-              </p>
+              {isAr ? (
+                <>
+                  <p className="font-serif font-bold text-[9px] sm:text-[10px] tracking-widest" style={{ color: SILVER.textTitle }}>
+                    INTERNATIONAL SOROBAN ACADEMY
+                  </p>
+                  <p className="font-serif font-black text-xs sm:text-sm mt-0.5" style={{ color: SILVER.text }}>
+                    أكاديمية السوروبان الدولية
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-serif font-black text-xs sm:text-sm" style={{ color: SILVER.text }}>
+                    INTERNATIONAL SOROBAN ACADEMY
+                  </p>
+                  <p className="font-serif font-bold text-[9px] sm:text-[10px] tracking-widest mt-0.5" style={{ color: SILVER.textTitle }} dir="rtl">
+                    أكاديمية السوروبان الدولية
+                  </p>
+                </>
+              )}
 
               {/* فاصل */}
               <div className="flex items-center justify-center gap-2 my-2">
@@ -244,15 +301,14 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
                   textShadow: '1px 1px 0 #E8E8E8, 1.5px 1.5px 2px rgba(0,0,0,0.15)',
                 }}
               >
-                شهادة إتمام
+                {isAr ? 'شهادة إتمام' : 'Certificate of Completion'}
               </h1>
-              <p className="font-serif italic text-[9px] sm:text-[10px] mt-0.5" style={{ color: SILVER.textSoft }}>
-                Certificate of Completion
-              </p>
 
-              {/* المستوى */}
+              {/* الدورة */}
               <p className="font-bold text-[11px] sm:text-sm mt-1.5" style={{ color: SILVER.text }}>
-                دورة السوروبان في الحساب الذهني — الأبطال الصغار
+                {isAr
+                  ? 'دورة السوروبان في الحساب الذهني — الأبطال الصغار'
+                  : 'Soroban Mental Arithmetic Course — Young Heroes'}
               </p>
 
               {/* شريط المستوى */}
@@ -265,12 +321,12 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
                 }}
               >
                 {info.hasMedal && <CertificateMedal level={info.level} size={26} />}
-                <div className="flex flex-col items-start">
+                <div className={`flex flex-col ${isAr ? 'items-start' : 'items-start'}`}>
                   <span className="font-black leading-tight" style={{ color: SILVER.text, fontSize: '11px' }}>
-                    المستوى {info.levelAr}
+                    {isAr ? `المستوى ${info.levelAr}` : `${info.levelEn} Level`}
                   </span>
                   <span className="font-bold leading-tight" style={{ color: SILVER.accent, fontSize: '7px', letterSpacing: '0.8px' }}>
-                    {info.levelEn.toUpperCase()} LEVEL
+                    {isAr ? info.levelEn.toUpperCase() + ' LEVEL' : info.levelAr}
                   </span>
                 </div>
               </div>
@@ -284,7 +340,7 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
 
               {/* التقديم */}
               <p className="text-[10px] sm:text-xs" style={{ color: SILVER.text }}>
-                تشهد الأكاديمية بأن الطالب/ة المتميز/ة
+                {isAr ? 'تشهد الأكاديمية بأن الطالب/ة المتميز/ة' : 'The academy certifies that the distinguished student'}
               </p>
 
               {/* اسم الطالب */}
@@ -302,10 +358,17 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
               <div className="mx-auto mb-2" style={{ width: '55%', maxWidth: '260px', height: '1.2px', background: 'linear-gradient(to right, transparent, #808080, transparent)' }} />
 
               {/* نص الإتمام */}
-              <p className="text-[10px] sm:text-[11px] leading-relaxed px-2 sm:px-6" style={{ color: SILVER.text }}>
-                أتم بنجاح <strong>المستوى الثالث (L3)</strong> من دورة السوروبان في الحساب الذهني،
-                وأثبت إتقانًا للمهارات الأساسية وفق معايير الأكاديمية الدولية.
-              </p>
+              {isAr ? (
+                <p className="text-[10px] sm:text-[11px] leading-relaxed px-2 sm:px-6" style={{ color: SILVER.text }}>
+                  أتم بنجاح <strong>المستوى الثالث (L3)</strong> من دورة السوروبان في الحساب الذهني،
+                  وأثبت إتقانًا للمهارات الأساسية وفق معايير الأكاديمية الدولية.
+                </p>
+              ) : (
+                <p className="text-[10px] sm:text-[11px] leading-relaxed px-2 sm:px-6" style={{ color: SILVER.text }}>
+                  has successfully completed <strong>Level 3 (L3)</strong> of the Soroban Mental Arithmetic Course,
+                  demonstrating mastery of the fundamental skills according to the International Academy standards.
+                </p>
+              )}
 
               {/* بطاقات النتيجة والمستوى */}
               <div className="grid grid-cols-2 gap-1.5 sm:gap-3 my-3 px-1 sm:px-2">
@@ -317,13 +380,13 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
                   }}
                 >
                   <p className="text-[8px] sm:text-[9px] font-bold" style={{ color: SILVER.accent }}>
-                    النتيجة التراكمية
+                    {isAr ? 'النتيجة التراكمية' : 'Final Score'}
                   </p>
-                  <p className="font-black font-serif leading-none mt-0.5" style={{ fontSize: 'clamp(15px, 3.5vw, 22px)', color: SILVER.textTitle }}>
-                    {toArabicNumber(finalScore)}
+                  <p className="font-black font-serif leading-none mt-0.5" style={{ fontSize: 'clamp(15px, 3.5vw, 22px)', color: SILVER.textTitle }} dir="ltr">
+                    {isAr ? toArabicNumber(finalScore) : finalScore}
                   </p>
                   <p className="text-[8px] sm:text-[9px] mt-0.5" style={{ color: SILVER.accent }}>
-                    من {toArabicNumber(100)} / 100
+                    {isAr ? `من ${toArabicNumber(100)} / 100` : 'out of 100'}
                   </p>
                   <div
                     className="mt-1 mx-auto rounded-full overflow-hidden"
@@ -348,7 +411,7 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
                   }}
                 >
                   <p className="text-[8px] sm:text-[9px] font-bold" style={{ color: SILVER.accent }}>
-                    التقدير
+                    {isAr ? 'التقدير' : 'Appreciation'}
                   </p>
                   {info.hasMedal ? (
                     <div className="-my-1">
@@ -358,7 +421,7 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
                     <div className="my-2 text-2xl">🎖️</div>
                   )}
                   <p className="font-black font-serif leading-none" style={{ fontSize: 'clamp(11px, 2.5vw, 15px)', color: SILVER.text }}>
-                    {info.appreciation}
+                    {isAr ? info.appreciationAr : info.appreciationEn}
                   </p>
                 </div>
               </div>
@@ -383,10 +446,7 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
                   </div>
                   <div style={{ height: '1px', background: '#808080', margin: '3px 8px' }} />
                   <p className="text-[9px] sm:text-xs font-bold" style={{ color: SILVER.text }}>
-                    المشرف الأكاديمي
-                  </p>
-                  <p className="text-[7px] sm:text-[9px] italic" style={{ color: SILVER.accent }}>
-                    Academic Supervisor
+                    {isAr ? 'المشرف الأكاديمي' : 'Academic Supervisor'}
                   </p>
                 </div>
 
@@ -409,10 +469,10 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
                   </div>
                   <div style={{ height: '1px', background: '#808080', margin: '3px 8px' }} />
                   <p className="text-[9px] sm:text-xs font-black" style={{ color: SILVER.text }}>
-                    مصطفى علي أكر
+                    {isAr ? 'مصطفى علي أكر' : 'Mustafa Ali Akr'}
                   </p>
                   <p className="text-[7px] sm:text-[9px]" style={{ color: SILVER.accent }}>
-                    المدير والمؤسس
+                    {isAr ? 'المدير والمؤسس' : 'Founder & Director'}
                   </p>
                 </div>
               </div>
@@ -423,9 +483,11 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
                 style={{ background: 'rgba(128,128,128,0.08)', border: '1px solid rgba(128,128,128,0.3)' }}
               >
                 <div className="text-center">
-                  <p className="text-[7px] sm:text-[9px]" style={{ color: SILVER.accent }}>تاريخ الإصدار</p>
+                  <p className="text-[7px] sm:text-[9px]" style={{ color: SILVER.accent }}>
+                    {isAr ? 'تاريخ الإصدار' : 'Date of Issue'}
+                  </p>
                   <p className="text-[8px] sm:text-[10px] font-bold" style={{ color: SILVER.text }} dir="ltr">
-                    {issueDate}
+                    {isAr ? issueDateAr : issueDateEn}
                   </p>
                 </div>
               </div>
@@ -436,34 +498,34 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
       </div>
 
       {/* أزرار التحكم */}
-      <div className="max-w-4xl mx-auto flex gap-2 print:hidden mt-4">
+      <div className="max-w-4xl mx-auto flex gap-2 print:hidden mt-4 no-print">
         <button
           onClick={() => setEditingName(true)}
           className="flex-1 py-2.5 sm:py-3 rounded-2xl bg-white/10 hover:bg-white/20 font-bold flex items-center justify-center gap-2 text-xs sm:text-sm"
         >
-          <Edit3 className="w-4 h-4" /> تعديل الاسم
+          <Edit3 className="w-4 h-4" /> {isAr ? 'تعديل الاسم' : 'Edit Name'}
         </button>
         <button
           onClick={handlePrint}
           disabled={!studentName}
           className="flex-1 py-2.5 sm:py-3 rounded-2xl bg-gradient-to-l from-gray-400 to-gray-600 font-bold flex items-center justify-center gap-2 disabled:opacity-40 text-xs sm:text-sm"
         >
-          <Printer className="w-4 h-4 sm:w-5 sm:h-5" /> طباعة / PDF
+          <Printer className="w-4 h-4 sm:w-5 sm:h-5" /> {isAr ? 'طباعة / PDF' : 'Print / PDF'}
         </button>
       </div>
 
       {onGoHome && (
         <button
           onClick={() => { playSound('click'); onGoHome(); }}
-          className="max-w-4xl mx-auto w-full mt-2 py-2.5 sm:py-3 rounded-2xl bg-white/5 hover:bg-white/10 font-bold flex items-center justify-center gap-2 text-white/70 text-xs sm:text-sm print:hidden"
+          className="max-w-4xl mx-auto w-full mt-2 py-2.5 sm:py-3 rounded-2xl bg-white/5 hover:bg-white/10 font-bold flex items-center justify-center gap-2 text-white/70 text-xs sm:text-sm print:hidden no-print"
         >
-          <Home className="w-4 h-4 sm:w-5 sm:h-5" /> الصفحة الرئيسية
+          <Home className="w-4 h-4 sm:w-5 sm:h-5" /> {isAr ? 'الصفحة الرئيسية' : 'Home'}
         </button>
       )}
 
-      <div className="max-w-4xl mx-auto mt-3 text-center text-[10px] sm:text-xs text-white/40 print:hidden flex items-center justify-center gap-2">
+      <div className="max-w-4xl mx-auto mt-3 text-center text-[10px] sm:text-xs text-white/40 print:hidden no-print flex items-center justify-center gap-2">
         <Sparkles className="w-3 h-3" />
-        <span>لطباعة الشهادة أو حفظها كـ PDF، اضغط زر "طباعة / PDF"</span>
+        <span>{isAr ? 'اضغط "طباعة / PDF" للحفظ' : 'Press "Print / PDF" to save'}</span>
       </div>
     </div>
   );
