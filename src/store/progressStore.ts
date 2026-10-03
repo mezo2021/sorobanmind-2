@@ -1,5 +1,9 @@
 // src/store/progressStore.ts
-// متجر التقدّم المُدمَج — Zustand + persist + localStorage
+//
+// 📝 التعديل: computeFinalScore — وزن البصري ٥٪ عادي + ٥٪ فلاش
+// 🎯 الوظيفة: مطابقة قاعدة التقريب (٠٫٥ → أعلى) مع تسلسل التقريب المتفق عليه
+// 📅 الجلسة: 14
+// ✅ الحالة: البناء أخضر
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -73,58 +77,34 @@ export interface RemediationSession {
 
 // ═══ الحالة الكاملة ═══
 export interface ProgressState {
-  // ─── معلومات الطالب ───
   childName: string;
   category: Category | null;
   categoryChosenAt: string | null;
-
-  // ─── المستويات ───
   completedLevels: LevelId[];
-
-  // ─── الدروس ───
   completedLessons: string[];
-
-  // ─── المسارات ───
   passedPractice: number[];
   passedAnzanVisual: number[];
   passedAnzanAudio: number[];
-
-  // ─── درجات الأقسام (levelKey → LevelGrades) ───
   grades: Record<string, LevelGrades>;
-
-  // ─── الجلسة العلاجية الإجبارية ───
   pendingRemediation: PendingRemediation | null;
-
-  // ─── سجل الجلسات العلاجية ───
   remediationHistory: RemediationSession[];
-
-  // ─── الامتحانات ───
   exam1Passed: boolean;
   exam2Passed: boolean;
   placementAttempts: number;
   lastPlacementAttempt: number | null;
-
-  // ─── التكيفي ───
   skillProgress: Record<string, SkillProgress>;
   levelExams: Record<string, ExamResult>;
-
-  // ─── الإحصاءات ───
   totalXP: number;
   currentStreak: number;
   lastPlayedDate: string | null;
-
-  // ─── الشارات ───
   anzanBadges: AnzanBadges;
   anzanAudioBadges: AnzanAudioBadges;
   completedEnrichment: string[];
-
-  // ─── الإعدادات ───
   language: "ar" | "en";
   soundEnabled: boolean;
   voiceEnabled: boolean;
   hapticsEnabled: boolean;
 
-  // ─── الأفعال ───
   setChildName: (name: string) => void;
   setCategory: (category: Category) => void;
   markLevelComplete: (levelId: LevelId) => void;
@@ -133,7 +113,6 @@ export interface ProgressState {
   markAnzanVisualPassed: (num: number) => void;
   markAnzanAudioPassed: (num: number) => void;
 
-  // درجات
   setGrade: (
     levelKey: string,
     phase: keyof LevelGrades,
@@ -142,7 +121,6 @@ export interface ProgressState {
   getGrades: (levelKey: string) => LevelGrades;
   computeFinalScore: (levelKey: string) => number | null;
 
-  // الجلسة العلاجية
   setPendingRemediation: (p: Omit<PendingRemediation, "createdAt">) => void;
   clearPendingRemediation: () => void;
   addRemediationSession: (
@@ -301,9 +279,7 @@ export const useProgressStore = create<ProgressState>()(
         set((state) => {
           const current = state.grades[levelKey] ?? { ...EMPTY_GRADES };
           const prev = current[phase];
-          // احتفظ بالأفضل (الأعلى)
-          const next =
-            prev === null || grade > prev ? grade : prev;
+          const next = prev === null || grade > prev ? grade : prev;
           return {
             grades: {
               ...state.grades,
@@ -317,6 +293,11 @@ export const useProgressStore = create<ProgressState>()(
         return g ? { ...g } : { ...EMPTY_GRADES };
       },
 
+      // ─── النتيجة التراكمية ───
+      // المعادلة:
+      //   الاختبار × ٧٠٪  +  التمرّن × ١٠٪  +  السمعي × ١٠٪
+      //   + (البصري العادي × ٥٪ + البصري الفلاش × ٥٪)
+      // التقريب: ٠٫٥ → أعلى (Math.round)
       computeFinalScore: (levelKey) => {
         const g = get().grades[levelKey];
         if (!g) return null;
@@ -331,25 +312,21 @@ export const useProgressStore = create<ProgressState>()(
           return null;
         }
 
-        // بصري = متوسط (عادي + فلاش) — إن وُجد واحد فقط نأخذ الموجود
-        let visual: number | null = null;
-        if (vNormal !== null && vFlash !== null) {
-          visual = Math.round((vNormal + vFlash) / 2);
-        } else if (vNormal !== null) {
-          visual = vNormal;
-        } else if (vFlash !== null) {
-          visual = vFlash;
-        }
+        // البصري: يحتاج مكوّنًا واحدًا على الأقل
+        if (vNormal === null && vFlash === null) return null;
 
-        if (visual === null) return null;
+        // وزن البصري: ٥٪ لكل مكوّن
+        let visualWeighted = 0;
+        if (vNormal !== null) visualWeighted += vNormal * 0.05;
+        if (vFlash !== null) visualWeighted += vFlash * 0.05;
 
-        const final =
+        const raw =
           test * 0.7 +
           practice * 0.1 +
-          visual * 0.1 +
-          audio * 0.1;
+          audio * 0.1 +
+          visualWeighted;
 
-        return Math.round(final);
+        return Math.round(raw);
       },
 
       // ─── الجلسة العلاجية ───
@@ -373,7 +350,7 @@ export const useProgressStore = create<ProgressState>()(
               completedAt: Date.now(),
             },
             ...state.remediationHistory,
-          ].slice(0, 100), // احتفظ بآخر 100 جلسة
+          ].slice(0, 100),
         })),
 
       setExam1Passed: (passed) => set({ exam1Passed: passed }),
