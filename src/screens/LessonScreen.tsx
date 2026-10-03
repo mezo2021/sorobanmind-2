@@ -464,35 +464,48 @@ export function LessonScreen({
   const toggleStory = () => {
   const audioSrc = lesson.storyAudioId;
   if (audioSrc === null || audioSrc === undefined) return;
-  if (isReadingStory) {
-    sorobana.stop();
-    setIsReadingStory(false);
-    return;
-  }
-  sorobana.stop();
-  playSound('click');
-  setIsReadingStory(true);
-  sorobana.speakStory(audioSrc, () => setIsReadingStory(false));
-};
 
-  const toggleStory = () => {
-  const audioSrc = lesson.storyAudioId;
-  if (audioSrc === null || audioSrc === undefined) return;
   if (isReadingStory) {
     sorobana.stop();
     setIsReadingStory(false);
     return;
   }
+
   sorobana.stop();
   playSound('click');
   setIsReadingStory(true);
+
   if (audioSrc === 'welcome') {
     sorobana.speakFiles(
       ['https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3'],
-      () => setIsReadingStory(false),
     );
+    setIsReadingStory(false);
   } else {
     sorobana.speakStory(audioSrc, () => setIsReadingStory(false));
+  }
+};
+
+const toggleModuleStory = () => {
+  const src = activeModule?.miniStory?.storyAudioId;
+  if (src === null || src === undefined) return;
+
+  if (isReadingModuleStory) {
+    sorobana.stop();
+    setIsReadingModuleStory(false);
+    return;
+  }
+
+  sorobana.stop();
+  playSound('click');
+  setIsReadingModuleStory(true);
+
+  if (src === 'welcome') {
+    sorobana.speakFiles(
+      ['https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3'],
+    );
+    setIsReadingModuleStory(false);
+  } else {
+    sorobana.speakStory(src, () => setIsReadingModuleStory(false));
   }
 };
 
