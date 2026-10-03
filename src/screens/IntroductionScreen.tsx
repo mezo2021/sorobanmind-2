@@ -91,58 +91,56 @@ export function IntroductionScreen({
 
       {/* محتوى الصفحة */}
       <div className="max-w-3xl mx-auto px-3 sm:px-6 py-6">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={page.id}
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
-            transition={{ duration: 0.25 }}
-            className="glass-card p-5 sm:p-7 mb-6"
-          >
+        {isInteractive ? (
+          /* صفحة تفاعلية — بلا motion wrapper */
+          <div className="glass-card p-5 sm:p-7 mb-6">
             <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white mb-4">
               {page.title}
             </h2>
             <div className="text-sm sm:text-base text-white/80 font-body leading-relaxed whitespace-pre-line">
               {page.content}
             </div>
+            <div className="mt-6 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
+              <Soroban2D5
+                columns={3}
+                size="sm"
+                interactive={true}
+                showValue={false}
+                autoBeadSize={true}
+              />
+            </div>
+          </div>
+        ) : (
+          /* صفحات الصور — مع motion */
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={page.id}
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.25 }}
+              className="glass-card p-5 sm:p-7 mb-6"
+            >
+              <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white mb-4">
+                {page.title}
+              </h2>
+              <div className="text-sm sm:text-base text-white/80 font-body leading-relaxed whitespace-pre-line">
+                {page.content}
+              </div>
 
-            {isInteractive ? (
-              <div
-                className="mt-6 p-2 rounded-2xl bg-black/20 border border-white/10 flex justify-center"
-                style={{ touchAction: 'manipulation' }}
-              >
-                <div
-                  style={{
-                    width: 280,
-                    maxWidth: '100%',
-                    transform: 'scale(0.72)',
-                    transformOrigin: 'top center',
-                    marginBottom: -90,
-                    pointerEvents: 'auto',
-                  }}
-                >
-                  <Soroban2D5
-                    columns={3}
-                    size="sm"
-                    interactive={true}
-                    showValue={false}
-                    autoBeadSize={false}
+              {page.imageSvg && (
+                <div className="mt-6 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
+                  <img
+                    src={`${import.meta.env.BASE_URL}images/${page.imageSvg}.svg`}
+                    alt={page.imageAlt || ''}
+                    className="w-full h-auto"
+                    loading="lazy"
                   />
                 </div>
-              </div>
-            ) : page.imageSvg ? (
-              <div className="mt-6 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
-                <img
-                  src={`${import.meta.env.BASE_URL}images/${page.imageSvg}.svg`}
-                  alt={page.imageAlt || ''}
-                  className="w-full h-auto"
-                  loading="lazy"
-                />
-              </div>
-            ) : null}
-          </motion.div>
-        </AnimatePresence>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        )}
 
         {/* نقاط التقدم */}
         <div className="flex justify-center gap-1.5 mb-6">
