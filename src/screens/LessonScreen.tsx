@@ -63,6 +63,12 @@ interface SessionData {
 // أدوات مساعدة
 // ═══════════════════════════════════════════════════════════
 
+function localize(v: string | { ar: string; en: string } | undefined): string {
+  if (v === undefined) return '';
+  if (typeof v === 'string') return v;
+  return v.ar || v.en || '';
+}
+
 function loadSession(lessonId: string): SessionData {
   try {
     const raw = localStorage.getItem(LESSON_SESSION_PREFIX + lessonId);
@@ -181,7 +187,6 @@ export function LessonScreen({
   useEffect(() => {
     const session = loadSession(lessonId);
 
-    // ✅ إذا كان الدرس مكتملًا، اعتبر كل الأسئلة محلولة
     const isLessonCompleted = useProgressStore
       .getState()
       .completedLessons.includes(lessonId);
@@ -232,7 +237,6 @@ export function LessonScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonId, solved, attempts, activeModuleId, tryIdx, tab, exampleIdx, sessionLoaded]);
 
-  // تنظيف عند إغلاق الشاشة
   useEffect(() => {
     return () => {
       sorobana.stop();
@@ -269,7 +273,6 @@ export function LessonScreen({
 
     const handleFinishIntro = () => {
       playSound('levelup');
-      // ✅ حفظ في localStorage (توافق)
       try {
         const raw = localStorage.getItem(LESSON_PROGRESS_KEY);
         const arr: string[] = raw ? JSON.parse(raw) : [];
@@ -278,7 +281,6 @@ export function LessonScreen({
           localStorage.setItem(LESSON_PROGRESS_KEY, JSON.stringify(arr));
         }
       } catch { /* ignore */ }
-      // ✅ حفظ في progressStore (نظام جديد)
       markLessonCompleted(lessonId);
       clearSession(lessonId);
 
@@ -332,7 +334,7 @@ export function LessonScreen({
               </div>
 
               <h2 className="text-2xl font-extrabold text-white mb-4 text-center">
-                {currentPage.title}
+                {localize(currentPage.title)}
               </h2>
 
               {currentPage.imageSvg && (
@@ -343,7 +345,7 @@ export function LessonScreen({
               )}
 
               <p className="text-base text-white/85 font-body leading-loose text-center flex-1 flex items-center justify-center">
-                {currentPage.content}
+                {localize(currentPage.content)}
               </p>
 
               {/* Dots */}
@@ -410,7 +412,6 @@ export function LessonScreen({
     ? modules.find((m) => m.id === activeModuleId) ?? modules[0]
     : null;
 
-  // محتوى العرض (حسب النوع)
   const examples: LessonExample[] = hasMod
     ? activeModule?.watchPhase.examples ?? []
     : lesson.examples ?? [];
@@ -419,7 +420,6 @@ export function LessonScreen({
     ? activeModule?.tryPhase.exercises ?? []
     : lesson.tryQuestions ?? [];
 
-  // ✅ أسئلة كل الوحدات (لحساب الاكتمال العام)
   const allQuestions: LessonExercise[] = hasMod
     ? modules.flatMap((m) => m.tryPhase.exercises)
     : lesson.tryQuestions ?? [];
@@ -428,9 +428,7 @@ export function LessonScreen({
   const currentTry = tryQuestions[tryIdx];
   const totalTry = tryQuestions.length;
 
-  // ✅ العدّ الحالي (داخل الوحدة النشطة فقط)
   const currentModuleSolved = tryQuestions.filter((q) => solved.has(q.id)).length;
-  // ✅ العدّ الكلي (كل الوحدات)
   const allSolvedCount = allQuestions.filter((q) => solved.has(q.id)).length;
   const allSolved = allQuestions.length > 0 && allSolvedCount === allQuestions.length;
 
@@ -438,7 +436,6 @@ export function LessonScreen({
   const currentTryExpected = currentTry ? getExerciseResult(currentTry) : 0;
   const currentTryAttempts = currentTry ? (attempts[currentTry.id] ?? 1) : 1;
 
-  // ─── التنقل بين الوحدات ───
   const switchModule = (mId: string) => {
     playSound('click');
     sorobana.stop();
@@ -462,52 +459,52 @@ export function LessonScreen({
   };
 
   const toggleStory = () => {
-  const audioSrc = lesson.storyAudioId;
-  if (audioSrc === null || audioSrc === undefined) return;
+    const audioSrc = lesson.storyAudioId;
+    if (audioSrc === null || audioSrc === undefined) return;
 
-  if (isReadingStory) {
+    if (isReadingStory) {
+      sorobana.stop();
+      setIsReadingStory(false);
+      return;
+    }
+
     sorobana.stop();
-    setIsReadingStory(false);
-    return;
-  }
+    playSound('click');
+    setIsReadingStory(true);
 
-  sorobana.stop();
-  playSound('click');
-  setIsReadingStory(true);
+    if (audioSrc === 'welcome') {
+      sorobana.speakFiles(
+        ['https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3'],
+      );
+      setIsReadingStory(false);
+    } else {
+      sorobana.speakStory(audioSrc, () => setIsReadingStory(false));
+    }
+  };
 
-  if (audioSrc === 'welcome') {
-    sorobana.speakFiles(
-      ['https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3'],
-    );
-    setIsReadingStory(false);
-  } else {
-    sorobana.speakStory(audioSrc, () => setIsReadingStory(false));
-  }
-};
+  const toggleModuleStory = () => {
+    const src = activeModule?.miniStory?.storyAudioId;
+    if (src === null || src === undefined) return;
 
-const toggleModuleStory = () => {
-  const src = activeModule?.miniStory?.storyAudioId;
-  if (src === null || src === undefined) return;
+    if (isReadingModuleStory) {
+      sorobana.stop();
+      setIsReadingModuleStory(false);
+      return;
+    }
 
-  if (isReadingModuleStory) {
     sorobana.stop();
-    setIsReadingModuleStory(false);
-    return;
-  }
+    playSound('click');
+    setIsReadingModuleStory(true);
 
-  sorobana.stop();
-  playSound('click');
-  setIsReadingModuleStory(true);
-
-  if (src === 'welcome') {
-    sorobana.speakFiles(
-      ['https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3'],
-    );
-    setIsReadingModuleStory(false);
-  } else {
-    sorobana.speakStory(src, () => setIsReadingModuleStory(false));
-  }
-};
+    if (src === 'welcome') {
+      sorobana.speakFiles(
+        ['https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3'],
+      );
+      setIsReadingModuleStory(false);
+    } else {
+      sorobana.speakStory(src, () => setIsReadingModuleStory(false));
+    }
+  };
 
   const nextExample = () => {
     if (exampleIdx + 1 >= examples.length) return;
@@ -589,7 +586,6 @@ const toggleModuleStory = () => {
     sorobana.stop();
     setIsReadingStory(false);
     setIsReadingModuleStory(false);
-    // ✅ حفظ في localStorage (توافق)
     try {
       const raw = localStorage.getItem(LESSON_PROGRESS_KEY);
       const arr: string[] = raw ? JSON.parse(raw) : [];
@@ -598,9 +594,7 @@ const toggleModuleStory = () => {
         localStorage.setItem(LESSON_PROGRESS_KEY, JSON.stringify(arr));
       }
     } catch { /* ignore */ }
-    // ✅ حفظ في progressStore (نظام جديد)
     markLessonCompleted(lessonId);
-    // ✅ مسح جلسة الدرس
     clearSession(lessonId);
 
     if (lesson.xpReward && onXP) onXP(lesson.xpReward);
@@ -623,10 +617,6 @@ const toggleModuleStory = () => {
 
   const lessonTitleText = getTitle(lesson.title);
   const nextLessonTitleText = nextLesson ? getTitle(nextLesson.title) : '';
-
-  // ═══════════════════════════════════════════════════════════
-  // Render
-  // ═══════════════════════════════════════════════════════════
 
   return (
     <div dir="rtl" className="min-h-screen pb-40">
@@ -728,7 +718,7 @@ const toggleModuleStory = () => {
               transition={{ duration: 0.25 }}
               className="space-y-4"
             >
-              {/* 🎬 القصة (L0 على مستوى الدرس) */}
+              {/* 🎬 القصة */}
               {lesson.story && (lesson.story.ar || lesson.storyAudioId) && (
                 <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-400/30">
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -761,7 +751,7 @@ const toggleModuleStory = () => {
                 </div>
               )}
 
-              {/* 🎬 قصة الوحدة (L1+) */}
+              {/* 🎬 قصة الوحدة */}
               {hasMod && activeModule?.miniStory && (
                 <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-400/30">
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -795,7 +785,7 @@ const toggleModuleStory = () => {
                 </div>
               )}
 
-              {/* 📐 القاعدة + الشرط (للـ modules) */}
+              {/* 📐 القاعدة + الشرط */}
               {hasMod && activeModule && (
                 <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-gold-400/10 to-gold-600/10 border border-gold-400/30">
                   <h3 className="text-sm font-bold text-gold-300 mb-2">📐 القاعدة</h3>
@@ -846,7 +836,6 @@ const toggleModuleStory = () => {
                     {activeModule.condition.explanation}
                   </p>
 
-                  {/* جدول الأصدقاء */}
                   {activeModule.friendsTable && (
                     <div className="mt-3">
                       <p className="text-xs font-bold text-gold-300 mb-2">
