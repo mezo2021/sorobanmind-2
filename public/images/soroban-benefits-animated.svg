@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 340" width="100%" direction="rtl">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF8E7"/>
+      <stop offset="1" stop-color="#EAF7EE"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="340" rx="18" fill="url(#bg)"/>
+
+  <rect x="90" y="12" width="220" height="40" rx="20" fill="#5B2C87"/>
+  <text x="200" y="39" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#fff">لماذا نتعلم السوروبان؟</text>
+
+  <text x="20" y="70" font-size="16" text-anchor="middle" fill="#F5C518" opacity="0">✦<animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="0s" repeatCount="indefinite"/></text>
+  <text x="382" y="80" font-size="16" text-anchor="middle" fill="#F5C518" opacity="0">✦<animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="1s" repeatCount="indefinite"/></text>
+  <text x="14" y="320" font-size="16" text-anchor="middle" fill="#F5C518" opacity="0">✦<animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="0.7s" repeatCount="indefinite"/></text>
+  <text x="386" y="318" font-size="16" text-anchor="middle" fill="#F5C518" opacity="0">✦<animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="1.6s" repeatCount="indefinite"/></text>
+
+  <g transform="translate(330 120)">
+    <g>
+      <rect x="-58" y="-48" width="116" height="98" rx="22" fill="#E74C3C"/>
+      <rect x="-58" y="-48" width="116" height="40" rx="22" fill="#fff" opacity=".15"/>
+      <text x="0" y="8" text-anchor="middle" font-size="38">👀</text>
+      <text x="0" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#fff">التركيز</text>
+      <animateTransform attributeName="transform" type="scale" values="0;0;1.15;1;1;0;0" keyTimes="0;0.050;0.090;0.120;0.9;0.94;1" dur="14s" repeatCount="indefinite"/>
+    </g>
+  </g>
+
+  <g transform="translate(200 120)">
+    <g>
+      <rect x="-58" y="-48" width="116" height="98" rx="22" fill="#E67E22"/>
+      <rect x="-58" y="-48" width="116" height="40" rx="22" fill="#fff" opacity=".15"/>
+      <text x="0" y="8" text-anchor="middle" font-size="38">🔢</text>
+      <text x="0" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#fff">قيمة الأرقام</text>
+      <animateTransform attributeName="transform" type="scale" values="0;0;1.15;1;1;0;0" keyTimes="0;0.140;0.180;0.210;0.9;0.94;1" dur="14s" repeatCount="indefinite"/>
+    </g>
+  </g>
+
+  <g transform="translate(70 120)">
+    <g>
+      <rect x="-58" y="-48" width="116" height="98" rx="22" fill="#27AE60"/>
+      <rect x="-58" y="-48" width="116" height="40" rx="22" fill="#fff" opacity=".15"/>
+      <text x="0" y="8" text-anchor="middle" font-size="38">🧩</text>
+      <text x="0" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#fff">ترتيب الأعداد</text>
+      <animateTransform attributeName="transform" type="scale" values="0;0;1.15;1;1;0;0" keyTimes="0;0.230;0.270;0.300;0.9;0.94;1" dur="14s" repeatCount="indefinite"/>
+    </g>
+  </g>
+
+  <g transform="translate(330 235)">
+    <g>
+      <rect x="-58" y="-48" width="116" height="98" rx="22" fill="#2980B9"/>
+      <rect x="-58" y="-48" width="116" height="40" rx="22" fill="#fff" opacity=".15"/>
+      <text x="0" y="8" text-anchor="middle" font-size="38">⚡</text>
+      <text x="0" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#fff">دقة وسرعة</text>
+      <animateTransform attributeName="transform" type="scale" values="0;0;1.15;1;1;0;0" keyTimes="0;0.320;0.360;0.390;0.9;0.94;1" dur="14s" repeatCount="indefinite"/>
+    </g>
+  </g>
+
+  <g transform="translate(200 235)">
+    <g>
+      <rect x="-58" y="-48" width="116" height="98" rx="22" fill="#8E44AD"/>
+      <rect x="-58" y="-48" width="116" height="40" rx="22" fill="#fff" opacity=".15"/>
+      <text x="0" y="8" text-anchor="middle" font-size="38">🖼️</text>
+      <text x="0" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#fff">تذكّر الصور</text>
+      <animateTransform attributeName="transform" type="scale" values="0;0;1.15;1;1;0;0" keyTimes="0;0.410;0.450;0.480;0.9;0.94;1" dur="14s" repeatCount="indefinite"/>
+    </g>
+  </g>
+
+  <g transform="translate(70 235)">
+    <g>
+      <rect x="-58" y="-48" width="116" height="98" rx="22" fill="#C2185B"/>
+      <rect x="-58" y="-48" width="116" height="40" rx="22" fill="#fff" opacity=".15"/>
+      <text x="0" y="8" text-anchor="middle" font-size="38">🧠</text>
+      <text x="0" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#fff">الحساب الذهني</text>
+      <animateTransform attributeName="transform" type="scale" values="0;0;1.15;1;1;0;0" keyTimes="0;0.500;0.540;0.570;0.9;0.94;1" dur="14s" repeatCount="indefinite"/>
+    </g>
+  </g>
+
+  <text x="200" y="324" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#5B2C87" font-weight="bold">خطوة صغيرة كل يوم تصنع بطلًا!</text>
+</svg>
