@@ -1,6 +1,4 @@
 // src/curriculum/lessons/L0/intro.ts
-// 🎬 درس المقدمة: التعرّف على السوروبان (نظري — بلا مهارة)
-
 import type { LessonNode } from '../types';
 
 export const L0_INTRO: LessonNode = {
@@ -9,10 +7,7 @@ export const L0_INTRO: LessonNode = {
   levelId: 'L0',
   order: 1,
 
-  title: {
-    ar: 'التعرّف على السوروبان',
-    en: 'Getting to Know the Soroban',
-  },
+  title: { ar: 'التعرّف على السوروبان', en: 'Getting to Know the Soroban' },
 
   story: {
     ar: 'مرحباً يا بطل! اليوم سنلتقي بالسوروبان ونتعلم كيف تتحدث خرزاته بلغة الأرقام.',
