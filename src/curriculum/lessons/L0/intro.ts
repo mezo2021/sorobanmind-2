@@ -1,30 +1,41 @@
 // src/curriculum/lessons/L0/intro.ts
+// 🎬 درس المقدمة: التعرّف على السوروبان (نظري — بلا مهارة)
+
 import type { LessonNode } from '../types';
 
 export const L0_INTRO: LessonNode = {
+  // ═══════════ الهوية ═══════════
   id: 'L0-intro',
   skillId: null,
   levelId: 'L0',
   order: 1,
 
-  title: { ar: 'التعرّف على السوروبان', en: 'Getting to Know the Soroban' },
+  // ═══════════ العنوان ═══════════
+  title: {
+    ar: 'التعرّف على السوروبان',
+    en: 'Getting to Know the Soroban',
+  },
 
+  // ═══════════ القصة ═══════════
   story: {
     ar: 'مرحباً يا بطل! اليوم سنلتقي بالسوروبان ونتعلم كيف تتحدث خرزاته بلغة الأرقام.',
     en: 'Hello, little hero! Today we will meet the soroban and learn how its beads speak the language of numbers.',
   },
   storyAudioId: null,
 
+  // ═══════════ المفهوم ═══════════
   concept: {
     ar: 'السوروبان هو المعداد الياباني المستخدم لتعلّم الحساب. في كل عمود توجد خرزة علوية قيمتها 5، وأربع خرزات سفلية قيمة كل واحدة منها 1. العارضة الأفقية تفصل بينهما. القاعدة الأساسية: الخرزة التي تلامس العارضة هي التي نحسب قيمتها، والخرزة البعيدة عن العارضة لا تُحسب.',
     en: 'The soroban is the Japanese abacus used for learning calculation. Each column has one upper bead worth 5 and four lower beads worth 1 each. The horizontal beam separates them. The basic rule: a bead touching the beam is counted; a bead away from the beam is not counted.',
   },
 
   isTheoretical: true,
+
   examples: [],
   tryQuestions: [],
 
   introPages: [
+    // ─────────────── p1 ───────────────
     {
       id: 'L0-intro-p1',
       title: '🧮 السوروبان',
@@ -33,7 +44,11 @@ export const L0_INTRO: LessonNode = {
         'هذا هو السوروبان، المعداد الياباني.\n\n' +
         'سنستخدمه لنتعلم الأرقام والحساب بطريقة سهلة وممتعة.\n\n' +
         'السوروبان ليس مجرد خرزات؛ كل خرزة لها مكان وقيمة، وأنت ستتعلم كيف تجعلها تمثّل الأرقام.',
+      imageSvg: 'soroban-welcome-animated',
+      imageAlt: 'مرحباً بك في عالم السوروبان',
     },
+
+    // ─────────────── p2 ───────────────
     {
       id: 'L0-intro-p2',
       title: '📜 قصة السوروبان',
@@ -42,7 +57,11 @@ export const L0_INTRO: LessonNode = {
         'وصلت أدوات العد إلى اليابان، ثم تطوّر المعداد الياباني حتى أصبح السوروبان الذي نتعلم عليه اليوم.\n\n' +
         'السوروبان الذي ستستخدمه يحتوي على خرزة علوية قيمتها 5، وأربع خرزات سفلية قيمة كل واحدة منها 1.\n\n' +
         'والآن، لنترك القصة ونبدأ بالتعرّف إلى خرزات السوروبان! 👀',
+      imageSvg: 'soroban-story-animated',
+      imageAlt: 'رحلة السوروبان عبر الزمن',
     },
+
+    // ─────────────── p3 ───────────────
     {
       id: 'L0-intro-p3',
       title: '🔍 تعرّف على السوروبان',
@@ -56,8 +75,10 @@ export const L0_INTRO: LessonNode = {
         '• أربع خرزات سفلية في كل عمود: قيمة كل واحدة 1.\n\n' +
         'لا تحتاج إلى حفظ كل شيء الآن. المهم أن تعرف مكان العارضة والخرزات.',
       imageSvg: 'soroban-parts-animated',
-      imageAlt: 'أجزاء السوروبان',
+      imageAlt: 'أجزاء السوروبان المتحركة',
     },
+
+    // ─────────────── p4 ───────────────
     {
       id: 'L0-intro-p4',
       title: '🔑 القاعدة الذهبية',
@@ -71,7 +92,11 @@ export const L0_INTRO: LessonNode = {
         '• الخرزة العلوية تلامس العارضة = 5\n' +
         '• الخرزة العلوية بعيدة عن العارضة = 0\n\n' +
         'هذه القاعدة سترافقك في كل دروس السوروبان. 🧠',
+      imageSvg: 'soroban-rule-animated',
+      imageAlt: 'القاعدة الذهبية: الخرزة التي تلامس العارضة تُحسب',
     },
+
+    // ─────────────── p5 ───────────────
     {
       id: 'L0-intro-p5',
       title: '🖐️ حرّك الخرزات',
@@ -88,6 +113,8 @@ export const L0_INTRO: LessonNode = {
       imageSvg: 'soroban-interactive',
       imageAlt: 'سوروبان تفاعلي',
     },
+
+    // ─────────────── p6 ───────────────
     {
       id: 'L0-intro-p6',
       title: '🌟 لماذا نتعلم السوروبان؟',
@@ -101,7 +128,11 @@ export const L0_INTRO: LessonNode = {
         '6. الانتقال تدريجياً من السوروبان الحقيقي إلى الحساب الذهني 🧠\n\n' +
         'لن نحاول أن نتعلم كل شيء في يوم واحد.\n' +
         'سنتعلم خطوة صغيرة، ثم نتدرب عليها حتى تصبح سهلة.',
+      imageSvg: 'soroban-benefits-animated',
+      imageAlt: 'فوائد تعلّم السوروبان',
     },
+
+    // ─────────────── p7 ───────────────
     {
       id: 'L0-intro-p7',
       title: '🎯 هل أنت مستعد؟',
@@ -116,6 +147,8 @@ export const L0_INTRO: LessonNode = {
         '• أن الخرزة التي تلامس العارضة هي التي تُحسب.\n\n' +
         'في الدرس القادم ستتعلم كيف تمثّل الأعداد من 0 إلى 9 على السوروبان.\n\n' +
         'هيا بنا! 🚀',
+      imageSvg: 'soroban-ready-animated',
+      imageAlt: 'أنت مستعد يا بطل',
     },
   ],
 
