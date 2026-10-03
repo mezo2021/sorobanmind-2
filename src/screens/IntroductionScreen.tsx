@@ -122,7 +122,7 @@ export function IntroductionScreen({
             ) : page.imageSvg ? (
               <div className="mt-6 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
                 <img
-                  src={`/images/${page.imageSvg}.svg`}
+                  src={`${import.meta.env.BASE_URL}images/${page.imageSvg}.svg`}
                   alt={page.imageAlt || ''}
                   className="w-full h-auto"
                   loading="lazy"
