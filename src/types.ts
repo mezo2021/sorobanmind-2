@@ -52,6 +52,7 @@ export type Screen =
   // الامتحانات
   | 'placement-test'
   | 'category-exam-1'
+  | 'certificate'
   | 'category-exam-2'
   | 'certificate'
   // الإثراء
