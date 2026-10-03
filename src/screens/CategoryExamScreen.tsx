@@ -224,6 +224,7 @@ export function CategoryExamScreen({
         }
         // فتح القسم الثاني (يُدار عبر App)
         localStorage.setItem('soroban_section2_unlocked', JSON.stringify(true));
+        localStorage.setItem('soroban_kids_certificate_ready', 'true'); // ← جديد
       } catch { /* ignore */ }
     }
 
