@@ -1,6 +1,4 @@
 // src/screens/IntroductionScreen.tsx
-// 🎬 شاشة المقدمة: عرض صفحات الدرس النظري (تمرير)
-
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
@@ -66,6 +64,8 @@ export function IntroductionScreen({
     onBack();
   };
 
+  const isInteractive = page.imageSvg === 'soroban-interactive';
+
   return (
     <div dir="rtl" className="min-h-screen pb-36">
       {/* Header ثابت */}
@@ -107,15 +107,27 @@ export function IntroductionScreen({
               {page.content}
             </div>
 
-            {page.imageSvg === 'soroban-interactive' ? (
-              <div className="mt-6 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
-                <div className="mx-auto" style={{ maxWidth: 260 }}>
+            {isInteractive ? (
+              <div
+                className="mt-6 p-2 rounded-2xl bg-black/20 border border-white/10 flex justify-center"
+                style={{ touchAction: 'manipulation' }}
+              >
+                <div
+                  style={{
+                    width: 280,
+                    maxWidth: '100%',
+                    transform: 'scale(0.72)',
+                    transformOrigin: 'top center',
+                    marginBottom: -90,
+                    pointerEvents: 'auto',
+                  }}
+                >
                   <Soroban2D5
                     columns={3}
                     size="sm"
                     interactive={true}
                     showValue={false}
-                    autoBeadSize={true}
+                    autoBeadSize={false}
                   />
                 </div>
               </div>
@@ -179,7 +191,6 @@ export function IntroductionScreen({
         </div>
       </div>
 
-      {/* البطل العائم */}
       <FloatingCompanion playSound={playSound} />
     </div>
   );
