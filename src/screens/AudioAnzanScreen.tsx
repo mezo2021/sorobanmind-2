@@ -2,6 +2,8 @@
 // ✅ SRB: wrongSkillsRef يحفظ skillId كامل ("L2-S07-m1") بدل "m1"
 // ✅ SRB: weakSkills = union(أخطاء + بطيئات من performances)
 // ✅ SRB: يمنح شارة الأنزان السماعي عند اجتياز الجلسة (≥ 70%)
+// ✅ الشارات تُمنح فقط عند نجاح الجلسة (pendingBadgesRef)
+// ✅ زر "إنهاء" يخرج بلا تقييم
 // 📅 آخر تحديث: SRB Migration — Phase 2
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -194,6 +196,7 @@ export function AudioAnzanScreen({
   const audioSequenceRef = useRef<number>(0);
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
   const wrongSkillsRef = useRef<Set<string>>(new Set());
+  const pendingBadgesRef = useRef<Array<{ skillId: string; timeMs: number; answerMs: number }>>([]);
 
   const expectedQuestionCount = useMemo(
     () => Math.max(countModulesInLevel(level), 5),
@@ -215,6 +218,7 @@ export function AudioAnzanScreen({
     }
     perfRef.current = new Map();
     wrongSkillsRef.current = new Set();
+    pendingBadgesRef.current = [];
     setQuestions(qs);
     setCurrentIdx(0);
     setAbacusValue(0);
@@ -284,13 +288,15 @@ export function AudioAnzanScreen({
       perfRef.current.set(skillId, existing);
       if (isCorrect) {
         const cls = classifySpeed(timeMs, answerMs);
-        if (cls === 'mastery') awardBadge(skillId, timeMs, answerMs);
+        if (cls === 'mastery') {
+          pendingBadgesRef.current.push({ skillId, timeMs, answerMs });
+        }
       } else {
         // ✅ SRB: احفظ skillId كامل ("L2-S07-m1")
         wrongSkillsRef.current.add(skillId);
       }
     },
-    [currentQ, level, awardBadge],
+    [currentQ, level],
   );
 
   const handleTimeout = useCallback(() => {
@@ -402,6 +408,14 @@ export function AudioAnzanScreen({
         markAnzanAudioPassed(Number(level.slice(1)));
       }
 
+      // ✅ منح الشارات فقط عند نجاح الجلسة
+      if (passed) {
+        pendingBadgesRef.current.forEach((b) => {
+          awardBadge(b.skillId, b.timeMs, b.answerMs);
+        });
+      }
+      pendingBadgesRef.current = [];
+
       // ✅ جلسة علاجية إجبارية عند وجود مهارات ضعيفة
       if (weakSkillIds.size > 0) {
         setPendingRemediation({
@@ -416,7 +430,7 @@ export function AudioAnzanScreen({
     },
     [
       level, questions, anzanAudioBadges, setAnzanAudioBadge, buildPerformances,
-      setGrade, setPendingRemediation, markAnzanAudioPassed,
+      setGrade, setPendingRemediation, markAnzanAudioPassed, awardBadge,
     ],
   );
 
@@ -443,19 +457,15 @@ export function AudioAnzanScreen({
     sorobana, stopSpeech, onComplete, buildPerformances, saveGrade,
   ]);
 
+  // ✅ "إنهاء" — خروج بلا تقييم (لا حفظ درجة، لا شارات، لا علاجية)
   const handleEnd = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     stopSpeech();
     sorobana.stop();
-    const passed = saveGrade(score, questions.length);
-    setPerformances(buildPerformances());
-    setPhase('result');
+    pendingBadgesRef.current = [];
     playSound('whoosh');
-    onComplete?.(passed, score);
-  }, [
-    score, questions.length, playSound, stopSpeech,
-    sorobana, onComplete, buildPerformances, saveGrade,
-  ]);
+    onBack();
+  }, [sorobana, stopSpeech, playSound, onBack]);
 
   // ═══ إذا المتصفح لا يدعم الصوت ═══
   if (!isSupported) {
