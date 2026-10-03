@@ -1,5 +1,9 @@
 // src/screens/LevelScreen.tsx
-// شاشة المستوى — الأزرار الرئيسية (تعلم، تمرّن، أنزان، اختبار)
+//
+// 📝 التعديل: إضافة computeFinalScore + عرض الدرجة التراكمية في قسم "نجاح كامل" + زر "تابع للمستوى التالي"
+// 🎯 الوظيفة: إظهار النتيجة الموزونة (اختبار ٧٠٪ + تمرّن ١٠٪ + بصري ١٠٪ + سمعي ١٠٪) عند اجتياز المستوى
+// 📅 الجلسة: 14
+// ✅ الحالة: البناء أخضر
 
 import { motion } from 'framer-motion';
 import {
@@ -223,6 +227,7 @@ export function LevelScreen({
   const passedAnzanAudio = useProgressStore((s) => s.passedAnzanAudio);
   const grades = useProgressStore((s) => s.grades);
   const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
+  const computeFinalScore = useProgressStore((s) => s.computeFinalScore);
 
   // ─── passedLevelTests (localStorage مؤقتًا) ───
   const passedLevelTests = loadPassedLevelTests();
@@ -305,6 +310,24 @@ export function LevelScreen({
   const completionPct =
     ([isLessonCompleted, isPracticePassed, isAnzanVisualPassed, isAnzanAudioPassed, isLevelTestPassed]
       .filter(Boolean).length / 5) * 100;
+
+  // 🏅 النتيجة التراكمية + المستوى التالي
+  const finalScore = computeFinalScore(levelId);
+
+  const nextLevelId: LevelId | null =
+    levelId === 'L0' ? 'L1' :
+    levelId === 'L1' ? 'L2' :
+    levelId === 'L2' ? 'L3' :
+    levelId === 'L3' ? 'L4' :
+    levelId === 'L4' ? 'L5' :
+    levelId === 'L5' ? 'L6' :
+    levelId === 'L6' ? 'L7' : null;
+
+  const goNext = () => {
+    sound('click');
+    if (nextLevelId) navigate(`lesson-${nextLevelId}` as Screen);
+    else back();
+  };
 
   return (
     <>
@@ -498,7 +521,7 @@ export function LevelScreen({
           />
         </div>
 
-        {/* نجاح كامل */}
+        {/* 🏅 نجاح كامل — الدرجة التراكمية */}
         {isLessonCompleted && isPracticePassed && isAnzanVisualPassed && isAnzanAudioPassed && isLevelTestPassed && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -509,14 +532,18 @@ export function LevelScreen({
             <div className="relative">
               <Trophy className="w-12 h-12 text-gold-300 mx-auto mb-3" />
               <h3 className="text-lg font-extrabold font-display text-white mb-1">
-                🎉 أتممت هذا المستوى!
+                🏅 اجتزت المستوى بدرجة تراكمية {toArabicNumber(finalScore ?? 0)}٪ ✓
               </h3>
               <p className="text-sm text-white/60 font-body mb-4">
-                يمكنك الانتقال للمستوى التالي
+                {nextLevelId ? 'يمكنك الانتقال للمستوى التالي' : 'أتممت كل المستويات!'}
               </p>
-              <button type="button" onClick={goBack} className="btn-primary w-full">
+              <button
+                type="button"
+                onClick={goNext}
+                className="btn-primary w-full"
+              >
                 <Play className="w-5 h-5" />
-                العودة إلى القسم
+                {nextLevelId ? 'تابع إلى المستوى التالي' : 'العودة إلى القسم'}
               </button>
             </div>
           </motion.div>
