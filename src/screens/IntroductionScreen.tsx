@@ -92,7 +92,7 @@ export function IntroductionScreen({
       {/* محتوى الصفحة */}
       <div className="max-w-3xl mx-auto px-3 sm:px-6 py-6">
         {isInteractive ? (
-          /* صفحة تفاعلية — بلا motion wrapper · حاوية ضيقة · لمس مفعّل */
+          /* صفحة تفاعلية — بلا motion wrapper */
           <div className="glass-card p-5 sm:p-7 mb-6">
             <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white mb-4">
               {page.title}
@@ -116,12 +116,12 @@ export function IntroductionScreen({
               }}
             >
               <Soroban2D5
-  columns={3}
-  size="sm"
-  interactive={true}
-  showValue={true}        ← يعرض الرقم تحت المعداد
-  autoBeadSize={false}
-/>
+                columns={3}
+                size="sm"
+                interactive={true}
+                showValue={true}
+                autoBeadSize={false}
+              />
             </div>
           </div>
         ) : (
