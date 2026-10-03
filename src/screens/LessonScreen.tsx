@@ -462,25 +462,18 @@ export function LessonScreen({
   };
 
   const toggleStory = () => {
-    const audioSrc = lesson.storyAudioId;
-    if (audioSrc === null || audioSrc === undefined) return;
-    if (isReadingStory) {
-      sorobana.stop();
-      setIsReadingStory(false);
-      return;
-    }
+  const audioSrc = lesson.storyAudioId;
+  if (audioSrc === null || audioSrc === undefined) return;
+  if (isReadingStory) {
     sorobana.stop();
-    playSound('click');
-    setIsReadingStory(true);
-    if (audioSrc === 'welcome') {
-      const audio = new Audio('https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3');
-      audio.onended = () => setIsReadingStory(false);
-      audio.onerror = () => setIsReadingStory(false);
-      audio.play().catch(() => setIsReadingStory(false));
-    } else {
-      sorobana.speakStory(audioSrc, () => setIsReadingStory(false));
-    }
-  };
+    setIsReadingStory(false);
+    return;
+  }
+  sorobana.stop();
+  playSound('click');
+  setIsReadingStory(true);
+  sorobana.speakStory(audioSrc, () => setIsReadingStory(false));
+};
 
   const toggleModuleStory = () => {
     const src = activeModule?.miniStory?.storyAudioId;
