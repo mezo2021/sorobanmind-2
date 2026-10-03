@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 340" width="100%" direction="rtl">
+  <defs>
+    <linearGradient id="gy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE580"/>
+      <stop offset=".45" stop-color="#F5C518"/>
+      <stop offset="1" stop-color="#C99A0A"/>
+    </linearGradient>
+    <linearGradient id="gb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6BA8E8"/>
+      <stop offset=".45" stop-color="#2E7DD1"/>
+      <stop offset="1" stop-color="#1B5799"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF8E7"/>
+      <stop offset="1" stop-color="#E9F3FF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="340" rx="18" fill="url(#bg)"/>
+
+  <text x="24" y="40" font-size="16" text-anchor="middle" fill="#F5C518" opacity="0">✦<animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="0s" repeatCount="indefinite"/></text>
+  <text x="376" y="50" font-size="16" text-anchor="middle" fill="#F5C518" opacity="0">✦<animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="1s" repeatCount="indefinite"/></text>
+  <text x="18" y="300" font-size="16" text-anchor="middle" fill="#F5C518" opacity="0">✦<animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="0.6s" repeatCount="indefinite"/></text>
+  <text x="384" y="296" font-size="16" text-anchor="middle" fill="#F5C518" opacity="0">✦<animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="1.5s" repeatCount="indefinite"/></text>
+  <text x="200" y="24" font-size="16" text-anchor="middle" fill="#F5C518" opacity="0">✦<animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="2s" repeatCount="indefinite"/></text>
+
+  <rect x="60" y="12" width="280" height="40" rx="20.0" fill="#B8860B"/>
+  <text x="200.0" y="39.7" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#fff">✨ القاعدة الذهبية</text>
+
+  <rect x="90" y="150" width="220" height="12" rx="3" fill="#2B2B2B" stroke="#4A4A4A" stroke-width="2"/>
+  <rect x="197" y="62" width="6" height="250" fill="#BFBFBF"/>
+
+  <g>
+    <ellipse cx="200" cy="100" rx="34" ry="16" fill="url(#gy)"/>
+    <animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 34;0 34;0 0;0 0" keyTimes="0;.40;.48;.90;.98;1" dur="8s" repeatCount="indefinite"/>
+  </g>
+  <g>
+    <ellipse cx="200" cy="228" rx="34" ry="16" fill="url(#gb)"/>
+    <animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 -52;0 -52;0 0;0 0" keyTimes="0;.40;.48;.90;.98;1" dur="8s" repeatCount="indefinite"/>
+  </g>
+
+  <text x="300" y="112" font-family="Arial, sans-serif" font-size="38" font-weight="bold" text-anchor="middle" fill="#C0392B" opacity="1">0<animate attributeName="opacity" values="1;1;0;0;1;1" keyTimes="0;.38;.43;.94;.99;1" dur="8s" repeatCount="indefinite"/></text>
+  <text x="300" y="112" font-family="Arial, sans-serif" font-size="38" font-weight="bold" text-anchor="middle" fill="#2E8B57" opacity="0">5<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.45;.5;.9;.95;1" dur="8s" repeatCount="indefinite"/></text>
+
+  <text x="300" y="244" font-family="Arial, sans-serif" font-size="38" font-weight="bold" text-anchor="middle" fill="#C0392B" opacity="1">0<animate attributeName="opacity" values="1;1;0;0;1;1" keyTimes="0;.38;.43;.94;.99;1" dur="8s" repeatCount="indefinite"/></text>
+  <text x="300" y="244" font-family="Arial, sans-serif" font-size="38" font-weight="bold" text-anchor="middle" fill="#2E8B57" opacity="0">1<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.45;.5;.9;.95;1" dur="8s" repeatCount="indefinite"/></text>
+
+  <g opacity="0">
+    <rect x="35" y="282" width="330" height="48" rx="24" fill="#C0392B"/>
+    <text x="200" y="313" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#fff">بعيدة عن العارضة = لا تُحسب ✗</text>
+    <animate attributeName="opacity" values="1;1;0;0;1;1" keyTimes="0;.38;.43;.94;.99;1" dur="8s" repeatCount="indefinite"/>
+  </g>
+  <g opacity="0">
+    <rect x="35" y="282" width="330" height="48" rx="24" fill="#2E8B57"/>
+    <text x="200" y="313" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#fff">تلامس العارضة = تُحسب ✓</text>
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.45;.5;.9;.95;1" dur="8s" repeatCount="indefinite"/>
+  </g>
+</svg>
