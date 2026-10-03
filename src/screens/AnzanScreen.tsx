@@ -3,6 +3,8 @@
 // ✅ SRB: weakSkills = union(أخطاء + بطيئات من performances)
 // ✅ SRB: يمنح شارة الأنزان البصري عند اجتياز الجلسة (≥ 70%)
 // ✅ عرض المعادلة في سطر واحد (مع تصغير تلقائي)
+// ✅ الشارات تُمنح فقط عند نجاح الجلسة (pendingBadgesRef)
+// ✅ زر "إنهاء" يخرج بلا تقييم
 // 📅 آخر تحديث: SRB Migration — Phase 3
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -244,6 +246,7 @@ export function AnzanScreen({
   const displayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const perfRef = useRef<Map<string, PerfStats>>(new Map());
   const wrongSkillsRef = useRef<Set<string>>(new Set());
+  const pendingBadgesRef = useRef<Array<{ skillId: string; timeMs: number; answerMs: number }>>([]);
 
   const expectedQuestionCount = useMemo(
     () => Math.max(countModulesInLevel(level), 5),
@@ -267,6 +270,7 @@ export function AnzanScreen({
     }
     perfRef.current = new Map();
     wrongSkillsRef.current = new Set();
+    pendingBadgesRef.current = [];
     setQuestions(qs);
     setCurrentIdx(0);
     setCurrentTermIdx(0);
@@ -346,12 +350,14 @@ export function AnzanScreen({
       perfRef.current.set(skillId, existing);
       if (isCorrect) {
         const cls = classifySpeed(timeMs, answerMs);
-        if (cls === 'mastery') awardBadge(skillId, timeMs, answerMs);
+        if (cls === 'mastery') {
+          pendingBadgesRef.current.push({ skillId, timeMs, answerMs });
+        }
       } else {
         wrongSkillsRef.current.add(skillId);
       }
     },
-    [currentQ, level, awardBadge],
+    [currentQ, level],
   );
 
   const handleTimeout = useCallback(() => {
@@ -450,17 +456,25 @@ export function AnzanScreen({
       // ✅ حفظ الدرجة في progressStore
       setGrade(level, gradeMode, percentage);
 
-      // ✅ تسجيل نجاح الأنزان البصري
+      // ✅ تسجيل نجاح الأنزان البصري — فقط بعد نجاح النوعين (عادي + Flash)
       if (passed) {
-  const lg = useProgressStore.getState().grades[level];
-  const normalOk =
-    lg?.anzanVisualNormal !== null && lg?.anzanVisualNormal !== undefined;
-  const flashOk =
-    lg?.anzanVisualFlash !== null && lg?.anzanVisualFlash !== undefined;
-  if (normalOk && flashOk) {
-    markAnzanVisualPassed(Number(level.slice(1)));
-  }
-}
+        const lg = useProgressStore.getState().grades[level];
+        const normalOk =
+          lg?.anzanVisualNormal !== null && lg?.anzanVisualNormal !== undefined;
+        const flashOk =
+          lg?.anzanVisualFlash !== null && lg?.anzanVisualFlash !== undefined;
+        if (normalOk && flashOk) {
+          markAnzanVisualPassed(Number(level.slice(1)));
+        }
+      }
+
+      // ✅ منح الشارات فقط عند نجاح الجلسة
+      if (passed) {
+        pendingBadgesRef.current.forEach((b) => {
+          awardBadge(b.skillId, b.timeMs, b.answerMs);
+        });
+      }
+      pendingBadgesRef.current = [];
 
       // ✅ جلسة علاجية إجبارية عند وجود مهارات ضعيفة
       if (weakSkillIds.size > 0) {
@@ -476,7 +490,7 @@ export function AnzanScreen({
     },
     [
       level, mode, questions, anzanBadges, setAnzanBadge, buildPerformances,
-      setGrade, setPendingRemediation, markAnzanVisualPassed,
+      setGrade, setPendingRemediation, markAnzanVisualPassed, awardBadge,
     ],
   );
 
@@ -503,19 +517,15 @@ export function AnzanScreen({
     sorobana, stopSpeech, onComplete, buildPerformances, saveGrade,
   ]);
 
+  // ✅ "إنهاء" — خروج بلا تقييم (لا حفظ درجة، لا شارات، لا علاجية)
   const handleEnd = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     stopSpeech();
     sorobana.stop();
-    const passed = saveGrade(score, questions.length);
-    setPerformances(buildPerformances());
-    setPhase('result');
+    pendingBadgesRef.current = [];
     playSound('whoosh');
-    onComplete?.(passed, score);
-  }, [
-    score, questions.length, playSound, stopSpeech,
-    sorobana, onComplete, buildPerformances, saveGrade,
-  ]);
+    onBack();
+  }, [sorobana, stopSpeech, playSound, onBack]);
 
   // ═══ 🚧 empty ═══
   if (phase === 'empty') {
