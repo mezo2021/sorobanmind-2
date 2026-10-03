@@ -5,16 +5,19 @@
 // ✅ عرض المعادلة في سطر واحد (مع تصغير تلقائي)
 // ✅ الشارات تُمنح فقط عند نجاح الجلسة (pendingBadgesRef)
 // ✅ زر "إنهاء" يخرج بلا تقييم
-// 📅 آخر تحديث: SRB Migration — Phase 3
+// 🩺 جلسة علاجية إجبارية داخلية (RemediationScreen)
+// 📅 آخر تحديث: SRB Migration — Phase 3 + Remediation
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, ArrowLeft, CheckCircle2, XCircle, Clock,
   Trophy, RotateCcw, Play, Brain, Zap, Eye, AlertCircle, Square,
+  Lightbulb,
 } from 'lucide-react';
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
+import { RemediationScreen } from './RemediationScreen';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { AdaptiveFeedback, type SkillPerformance } from '@/components/AdaptiveFeedback';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
@@ -111,7 +114,6 @@ function getAnzanBadgeKey(section: SRBSection): keyof AnzanBadges | null {
     case 'S12':
       return 'master_mixed';
     default:
-      // S13, S14, S15 → تجاهل حاليًا
       return null;
   }
 }
@@ -224,6 +226,8 @@ export function AnzanScreen({
   const [savedTimeMs, setSavedTimeMs] = useState<number | null>(null);
   const [performances, setPerformances] = useState<SkillPerformance[]>([]);
   const [justEarnedBadges, setJustEarnedBadges] = useState<string[]>([]);
+  const [showRemediation, setShowRemediation] = useState(false);
+  const [remediationSection, setRemediationSection] = useState<SRBSection>('S01');
 
   const sorobana = useSorobanaVoice();
   const { speak, stop: stopSpeech, isSpeaking, isSupported } = useSpeech();
@@ -233,6 +237,7 @@ export function AnzanScreen({
 
   const anzanBadges = useProgressStore((s) => s.anzanBadges);
   const setAnzanBadge = useProgressStore((s) => s.setAnzanBadge);
+  const pendingRemediation = useProgressStore((s) => s.pendingRemediation); // 🆕
 
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic';
@@ -453,10 +458,8 @@ export function AnzanScreen({
         Array.from(weakSkillIds),
       );
 
-      // ✅ حفظ الدرجة في progressStore
       setGrade(level, gradeMode, percentage);
 
-      // ✅ تسجيل نجاح الأنزان البصري — فقط بعد نجاح النوعين (عادي + Flash)
       if (passed) {
         const lg = useProgressStore.getState().grades[level];
         const normalOk =
@@ -468,7 +471,6 @@ export function AnzanScreen({
         }
       }
 
-      // ✅ منح الشارات فقط عند نجاح الجلسة
       if (passed) {
         pendingBadgesRef.current.forEach((b) => {
           awardBadge(b.skillId, b.timeMs, b.answerMs);
@@ -476,7 +478,6 @@ export function AnzanScreen({
       }
       pendingBadgesRef.current = [];
 
-      // ✅ جلسة علاجية إجبارية عند وجود مهارات ضعيفة
       if (weakSkillIds.size > 0) {
         setPendingRemediation({
           level,
@@ -526,6 +527,19 @@ export function AnzanScreen({
     playSound('whoosh');
     onBack();
   }, [sorobana, stopSpeech, playSound, onBack]);
+
+  // ═══ 🩺 جلسة علاجية داخلية ═══
+  if (showRemediation) {
+    return (
+      <RemediationScreen
+        level={level}
+        section={remediationSection}
+        onBack={() => { setShowRemediation(false); playSound('click'); }}
+        playSound={playSound}
+        isMandatory={true}
+      />
+    );
+  }
 
   // ═══ 🚧 empty ═══
   if (phase === 'empty') {
@@ -634,7 +648,6 @@ export function AnzanScreen({
   if (phase === 'showing' && currentQ) {
     const isBuildOrRead = currentQ.operation === 'build' || currentQ.operation === 'read';
 
-    // 🆕 نص العرض + حجم الخط
     const displayText = isBuildOrRead
       ? formatText(currentQ.question, numberStyle)
       : `${formatText(buildFullQuestionText(currentQ), numberStyle)} = ؟`;
@@ -692,7 +705,6 @@ export function AnzanScreen({
             <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
               className="text-center w-full">
               <p className="text-sm text-white/50 font-body mb-4">اقرأ السؤال</p>
-              {/* 🆕 سطر واحد — بلا كسر */}
               <p
                 dir={isBuildOrRead ? (isArabic ? 'rtl' : 'ltr') : 'ltr'}
                 className={`font-black font-display text-white ${sizeClass} whitespace-nowrap`}
@@ -923,12 +935,32 @@ export function AnzanScreen({
           <AdaptiveFeedback performances={performances} sectionLabel="أنزان بصري" levelNum={0} />
         )}
 
+        {pendingRemediation && (
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => {
+              const s = (pendingRemediation.skills[0]?.split('-')[1] ?? 'S01') as SRBSection;
+              setRemediationSection(s);
+              setShowRemediation(true);
+              playSound('click');
+            }}
+            className="w-full py-4 rounded-2xl bg-gradient-to-l from-amber-400 to-orange-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/40 animate-pulse"
+          >
+            <Lightbulb className="w-5 h-5" />
+            🩺 جلسة علاجية إجبارية
+          </motion.button>
+        )}
+
         <div className="space-y-3">
-          <button type="button" onClick={() => { playSound('click'); startSession(); }}
-            className="btn-primary w-full !py-3">
-            <RotateCcw className="w-5 h-5" />
-            جلسة جديدة
-          </button>
+          {!passed && !pendingRemediation && (
+            <button type="button" onClick={() => { playSound('click'); startSession(); }}
+              className="btn-primary w-full !py-3">
+              <RotateCcw className="w-5 h-5" />
+              جلسة جديدة
+            </button>
+          )}
           <button type="button" onClick={() => { playSound('click'); onBack(); }} className="btn-ghost w-full">
             رجوع
           </button>
