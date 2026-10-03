@@ -116,12 +116,12 @@ export function IntroductionScreen({
               }}
             >
               <Soroban2D5
-                columns={3}
-                size="sm"
-                interactive={true}
-                showValue={false}
-                autoBeadSize={false}
-              />
+  columns={3}
+  size="sm"
+  interactive={true}
+  showValue={true}        ← يعرض الرقم تحت المعداد
+  autoBeadSize={false}
+/>
             </div>
           </div>
         ) : (
