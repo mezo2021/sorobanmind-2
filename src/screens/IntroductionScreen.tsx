@@ -92,7 +92,7 @@ export function IntroductionScreen({
       {/* محتوى الصفحة */}
       <div className="max-w-3xl mx-auto px-3 sm:px-6 py-6">
         {isInteractive ? (
-          /* صفحة تفاعلية — بلا motion wrapper */
+          /* صفحة تفاعلية — بلا motion wrapper · حاوية ضيقة · لمس مفعّل */
           <div className="glass-card p-5 sm:p-7 mb-6">
             <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white mb-4">
               {page.title}
@@ -100,13 +100,27 @@ export function IntroductionScreen({
             <div className="text-sm sm:text-base text-white/80 font-body leading-relaxed whitespace-pre-line">
               {page.content}
             </div>
-            <div className="mt-6 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
+
+            <div
+              style={{
+                margin: '24px auto 0',
+                padding: '12px',
+                borderRadius: 16,
+                background: 'rgba(0,0,0,0.2)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                maxWidth: 320,
+                pointerEvents: 'auto',
+                touchAction: 'manipulation',
+                position: 'relative',
+                zIndex: 10,
+              }}
+            >
               <Soroban2D5
                 columns={3}
                 size="sm"
                 interactive={true}
                 showValue={false}
-                autoBeadSize={true}
+                autoBeadSize={false}
               />
             </div>
           </div>
