@@ -337,12 +337,16 @@ export function LessonScreen({
                 {localize(currentPage.title)}
               </h2>
 
-              {currentPage.imageSvg && (
-                <div
-                  className="my-4 flex justify-center"
-                  dangerouslySetInnerHTML={{ __html: currentPage.imageSvg }}
-                />
-              )}
+              {currentPage.imageSvg && currentPage.imageSvg !== 'soroban-interactive' && (
+  <div className="my-4 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
+    <img
+      src={`${import.meta.env.BASE_URL}images/${currentPage.imageSvg}.svg`}
+      alt={localize(currentPage.imageAlt)}
+      className="w-full h-auto"
+      loading="lazy"
+    />
+  </div>
+)}
 
               <p className="text-base text-white/85 font-body leading-loose text-center flex-1 flex items-center justify-center">
                 {localize(currentPage.content)}
