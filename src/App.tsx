@@ -31,6 +31,7 @@ import LessonScreen from './screens/LessonScreen';
 import { getLessonById } from './curriculum/lessons';
 import IntroductionScreen from './screens/IntroductionScreen';
 import LevelTestScreen from './screens/LevelTestScreen';
+import KidsCertificateScreen from './screens/KidsCertificateScreen'; // ← جديد
 
 // ═══ Playground ═══
 import SorobanPlayground from './screens/SorobanPlayground';
@@ -394,6 +395,15 @@ const levelId = lessonNode?.levelId ?? 'L0';
     }
 
     switch (screen) {
+      case 'kids-certificate': // ← جديد
+        return (
+          <KidsCertificateScreen
+            onBack={handleBackToHero}
+            onGoHome={handleBackToHero}
+            playSound={handleSound}
+          />
+        );
+
       case 'welcome':
         return <WelcomeScreen onStart={handleWelcomeStart} />;
 
@@ -474,7 +484,7 @@ const levelId = lessonNode?.levelId ?? 'L0';
                 try {
                   localStorage.setItem('soroban_section2_unlocked', 'true');
                 } catch { /* ignore */ }
-                setScreen('category-teens');
+                setScreen('kids-certificate'); // ← كان 'category-teens'
               } else {
                 setScreen('category-kids');
               }
