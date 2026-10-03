@@ -1,12 +1,11 @@
 // src/curriculum/lessons/types.ts
-
 //
-// src/curriculum/lessons/types.ts
-//
-// 📝 التعديل: IntroPage يقبل نصوصًا ثنائية اللغة
-// 🎯 الوظيفة: تمكين ترجمة صفحات المقدمة
+// 📝 التعديل: إضافة flashSvg + storyFlashSvg + الحقول الثنائية *En
+// 🎯 الوظيفة: دعم الصور المتحركة + الترجمة الكاملة
 // 📅 الجلسة: 14
-// ✅ الحالة: قيد الاختبار ═══════════════════════════════════════════════════════════
+// ✅ الحالة: قيد الاختبار
+
+// ═══════════════════════════════════════════════════════════
 // 🎯 التصنيفات
 // ═══════════════════════════════════════════════════════════
 
@@ -42,9 +41,11 @@ export interface IntroPage {
 
 export interface TactileActivity {
   title: string;
+  titleEn?: string;
   materials: string[];
   steps: string[];
   goal: string;
+  goalEn?: string;
 }
 
 export interface RuleTableRow {
@@ -53,7 +54,7 @@ export interface RuleTableRow {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 📘 الرموز القديمة (للتوافق مع intro.ts و LessonScreen القديمة)
+// 📘 الرموز القديمة (للتوافق)
 // ═══════════════════════════════════════════════════════════
 
 export type FingerUsed = "thumb" | "index" | "both_pinch" | "left_index";
@@ -63,6 +64,7 @@ export type TargetColumn = "units" | "tens" | "hundreds" | "thousands";
 export interface LessonStep {
   stepIndex: number;
   instructionText: string;
+  instructionTextEn?: string;
   fingerUsed: FingerUsed;
   direction: Direction;
   targetColumn: TargetColumn;
@@ -80,8 +82,10 @@ export type StoryAudioSource = number | "welcome" | null;
 
 export interface MiniStoryBlock {
   title: string;
+  titleEn?: string;
   emoji: string;
   story: string;
+  storyEn?: string;
   storyAudioText: string;
   storyAudioId: StoryAudioSource;
 }
@@ -97,13 +101,17 @@ export interface RuleCase {
 
 export interface RuleBlock {
   formula?: string;
+  formulaEn?: string;
   description: string;
+  descriptionEn?: string;
   cases?: RuleCase[];
 }
 
 export interface ConditionBlock {
   formula: string;
+  formulaEn?: string;
   explanation: string;
+  explanationEn?: string;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -111,7 +119,7 @@ export interface ConditionBlock {
 // ═══════════════════════════════════════════════════════════
 
 export interface FriendsPair { from: number; to: number; }
-export interface FriendsTable { title: string; pairs: FriendsPair[]; }
+export interface FriendsTable { title: string; titleEn?: string; pairs: FriendsPair[]; }
 
 // ═══════════════════════════════════════════════════════════
 // 🔍 دليل التمييز
@@ -119,15 +127,21 @@ export interface FriendsTable { title: string; pairs: FriendsPair[]; }
 
 export interface DiscriminationStep {
   question: string;
+  questionEn?: string;
   type: DiscriminationStepType;
   actual?: string | number;
   answer: string;
+  answerEn?: string;
   hint?: string;
+  hintEn?: string;
+  options?: string[];
+  optionsEn?: string[];
 }
 
 export interface DiscriminationBlock {
   steps: DiscriminationStep[];
   decision: string;
+  decisionEn?: string;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -139,20 +153,28 @@ export interface LessonExample {
 
   // ─── قديم (L0 legacy) ───
   problemText?: string;
+  problemTextEn?: string;
   answer?: number;
   explanation?: string;
+  explanationEn?: string;
   ruleCategory?: RuleCategory;
 
   // ─── جديد (L1+) ───
   question?: string;
+  questionEn?: string;
   discrimination?: string;
+  discriminationEn?: string;
   rule?: string;
+  ruleEn?: string;
   fingerMovement?: string;
+  fingerMovementEn?: string;
   result?: number;
   beadVisual?: string;
+  beadVisualEn?: string;
 
   // ─── مشترك — يقبل الشكلين ───
   steps: string[] | LessonStep[];
+  stepsEn?: string[];
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -163,18 +185,23 @@ export interface LessonExercise {
   id: string;
   // جديد
   question?: string;
+  questionEn?: string;
   discrimination?: string;
+  discriminationEn?: string;
   result?: number;
   // قديم (توافق TryQuestion)
   type?: TryQuestionType;
   prompt?: string;
+  promptEn?: string;
   expectedValue?: number;
   explanation?: string;
+  explanationEn?: string;
   // مشترك
   steps?: string[] | LessonStep[];
+  stepsEn?: string[];
 }
 
-/** اسم قديم للتوافق مع الاستيرادات الحالية */
+/** اسم قديم للتوافق */
 export type TryQuestion = LessonExercise;
 
 // ═══════════════════════════════════════════════════════════
@@ -187,6 +214,14 @@ export interface LessonModule {
   title: string;
   titleEn: string;
   emoji: string;
+
+  // 🎬 صورة متحركة للوحدة
+  flashSvg?: string;
+  flashAlt?: LocalizableText;
+
+  // 💡 نصيحة للطفل
+  kidTip?: LocalizableText;
+
   miniStory?: MiniStoryBlock;
   rule: RuleBlock;
   condition: ConditionBlock;
@@ -202,7 +237,9 @@ export interface LessonModule {
 
 export interface LessonOutro {
   summary: string;
+  summaryEn?: string;
   encouragement: string;
+  encouragementEn?: string;
   totalExamples: number;
 }
 
@@ -224,6 +261,10 @@ export interface LessonNode {
   // ─── القصة ───
   story?: BilingualText;
   storyAudioId?: StoryAudioSource;
+
+  // 🎬 صورة متحركة للقصة
+  storyFlashSvg?: string;
+  storyFlashAlt?: LocalizableText;
 
   // ─── البنية القديمة ───
   concept?: BilingualText;
@@ -298,7 +339,6 @@ export function getModule(lesson: LessonNode, moduleId: string): LessonModule | 
 
 /**
  * استخراج نص من قيمة محتملة الثنائية.
- * يُستخدم في الشاشات لعرض اللغة الصحيحة.
  */
 export function resolveLocalized(
   value: LocalizableText | undefined,
