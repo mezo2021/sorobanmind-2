@@ -1,4 +1,4 @@
-الحالي
+
 // src/curriculum/lessons/L0/S01.ts
 import type { LessonNode } from "../types";
 
