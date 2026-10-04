@@ -1,3 +1,4 @@
+
 <div align="center">
 
 # 🧮 SorobanMind v2
@@ -380,3 +381,46 @@ S01 الجديد (مع التقريص) 🟡 قيد الاختبار
 الموقع · المستودع · المرجع الكامل
 
 </div>
+
+ما أنجزناه اليوم — يعمل
+
+١) شهادات
+
+· ✅ KidsCertificateScreen.tsx — جديد · شهادة L3 فضية · بلغتين · طباعة أندرويد.
+· ✅ CertificateScreen.tsx — معدّل · زر تبديل اللغة · طباعة أندرويد.
+· ✅ types.ts — 'kids-certificate' مضاف.
+· ✅ App.tsx — مسار الشهادة الجديد.
+· ✅ CategoryExamScreen.tsx — علم soroban_kids_certificate_ready.
+
+٢) النتيجة التراكمية
+
+· ✅ LevelScreen.tsx — قسم «نجاح كامل» يعرض الدرجة الموزونة.
+· ✅ progressStore.ts — computeFinalScore موزونة (٧٠٪ اختبار + ١٠٪ + ٥٪ + ٥٪ + ١٠٪).
+
+٣) صور متحركة جديدة
+
+· ✅ soroban-numbers-0-4-animated.svg
+· ✅ soroban-number-5-animated.svg
+· ✅ soroban-pinch-animated.svg (منظّف)
+
+٤) بنية الدروس
+
+· ✅ lessons/types.ts — flashSvg · flashAlt · kidTip · storyFlashSvg · storyFlashAlt · *En كاملة · options · optionsEn.
+
+---
+
+❌ ما فشل
+
+· ❌ S01.ts — ألغيت watchPhase من m1 → الدرس صار جافًا.
+· ❌ types.ts (commit #683) — فشل.
+· ❌ S01.ts (commit #682) — فشل.
+
+---
+
+🎯 الوضع الحالي
+
+آخر بناء #684 = ✅ يعمل.
+
+لكن — S01.ts الحالي ليس النسخة النهائية.
+
+المطلوب: إعادة بناء S01.ts بالشكل الصحيح:
