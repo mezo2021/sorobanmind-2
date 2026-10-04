@@ -1,12 +1,10 @@
-📄 PROJECT_MASTER.md — النسخة المحدّثة والمتوافقة مع AL-ISLAH.md
-
 ```markdown
 <div dir="rtl">
 
 # 🧮 SorobanMind v2 — المرجع الموحّد
 
-> **آخر تحديث:** 2026-10-04 — بعد الفحص الشامل (GPT · Claude · فحص يدوي)
-> **الحالة:** 🟢 البناء #684 أخضر · التطبيق منشور · AL-ISLAH.md مرجع الحماية
+> **آخر تحديث:** 2026-10-05 — بعد تنفيذ 8 إصلاحات P-1 + FIX 7 + ربط الشهادات
+> **الحالة:** 🟢 البناء أخضر · التطبيق منشور · AL-ISLAH.md مرجع الحماية
 > **القاعدة الذهبية:** لا حذف إلا ما أُلغي صريحًا
 > **المرجع الأساسي:** [`AL-ISLAH.md`](./AL-ISLAH.md) — وثيقة الحماية والإصلاح
 
@@ -16,17 +14,17 @@
 
 1. [نظرة عامة](#1-نظرة-عامة)
 2. [الرؤية والأهداف](#2-الرؤية-والأهداف)
-3. [القواعد الذهبية](#3-القواعد-الذهبية)
+3. [القواعد الذهبية — 14 قاعدة](#3-القواعد-الذهبية)
 4. [المنهج](#4-المنهج)
 5. [بنك SRB](#5-بنك-srb)
 6. [البنية التقنية](#6-البنية-التقنية)
 7. [بنية الملفات ووظائفها](#7-بنية-الملفات-ووظائفها)
-8. [التخزين](#8-التخزين)
+8. [التخزين — 37 مفتاحًا](#8-التخزين)
 9. [نظام التقييم](#9-نظام-التقييم)
-10. [نظام القفل والفتح](#10-نظام-القفل-والفتح)
+10. [نظام القفل والفتح + وضع المعاينة](#10-نظام-القفل-والفتح)
 11. [خريطة الترابط](#11-خريطة-الترابط)
-12. [**Attempt Record — الحلقة المفقودة**](#12-attempt-record)
-13. [**قواعد العشرية**](#13-قواعد-العشرية)
+12. [Attempt Record — الحلقة المفقودة](#12-attempt-record)
+13. [قواعد العشرية](#13-قواعد-العشرية)
 14. [الحالة الحالية](#14-الحالة-الحالية)
 15. [خطة العمل — 12 مرحلة](#15-خطة-العمل)
 16. [المشاكل المعروفة](#16-المشاكل-المعروفة)
@@ -60,7 +58,7 @@
 | `README.md` | نظرة عامة للمستخدمين |
 | `PROJECT_MASTER.md` | هذا الملف — المرجع التقني الموحّد |
 | `AL-ISLAH.md` | ⚠️ **وثيقة الحماية والإصلاح — اقرأها أولًا** |
-| `ACHIEVEMENTS.md` | سجل الجلسات |
+| `ACHIEVEMENTS.md` | سجل الجلسات + التقييم |
 | `PROJECT_PLAN.md` | المخطط المعماري للانتقال |
 
 ---
@@ -86,11 +84,12 @@
 - **4 رفقاء** (شام · ريان · جود · بانة)
 - **نظام شارات** (🥉 برونزية · 🥈 فضية · 🥇 ذهبية)
 - **إثراء تفاعلي** (أسرار سحرية · رياضيات الأصابع · رياضيات فيدية)
-- **شهادات** بعد اجتياز الامتحانات
+- **شهادات** بعد اجتياز الامتحانات — **Kids + Adults مربوطتان**
 - **تحديد مستوى ذكي** للطلاب الجدد
 - **سوروبان تفاعلي 2D5**
 - **درس مقدمة بصور SVG متحركة**
 - **بنية ترجمة للدروس** (`LocalizableText`)
+- **👁️ وضع المعاينة** — أداة موحّدة للمطوّر (جديد جلسة 20)
 
 ---
 
@@ -121,13 +120,15 @@
 13. ❌ **حذف `badgeChecker.ts` · `useQuests.ts`** قبل إعادة كتابة الشارات على `progressStore`.
 14. ❌ **حذف/استبدال/إعادة بناء `progressStore.ts`** — يبقى دائمًا.
 
-### 📌 حقائق مؤكدة (بأدلة مصورة — 24 دليلًا)
+### 📌 حقائق مؤكدة (بأدلة مصورة — 25 دليلًا)
 
 - **37 مفتاح localStorage** (لا 35).
 - **بنك bank-v2 = 583 سؤالًا** (لا 935).
 - **bank-exam = 370 سؤالًا** (180 + 190).
 - **4 مفاتيح يتيمة** (تُقرأ ولا تُكتب).
 - **`src/engine/` = 5 ملفات** = أساس المستقبل — لم يُبنَ بعد.
+- **8 إصلاحات P-1 مكتملة** (جلسة 20).
+- **FIX 7 — وضع المعاينة** (7 ملفات · جلسة 20).
 
 ---
 
@@ -362,7 +363,7 @@ CORS لا مشكلة مشكلة حاسمة
 sorobanmind-2/
 ├── public/
 │   ├── audio/            12 ملف صوتي
-│   ├── images/           6 ملفات SVG متحركة
+│   ├── images/           9 ملفات SVG متحركة
 │   └── stories/          10 ملفات قصص
 ├── src/
 ├── index.html
@@ -393,7 +394,7 @@ public/images/
 └── soroban-pinch-animated.svg            ✅ (جلسة 15)
 ```
 
-ملاحظة: جميع الصور تُستدعى عبر import.meta.env.BASE_URL — إصلاح جلسة 14.
+ملاحظة: جميع الصور تُستدعى عبر import.meta.env.BASE_URL.
 
 7.2 البنية العامة لـ src/
 
@@ -407,6 +408,7 @@ src/
 ├── data/                         ← البيانات (SRB + البنوك)
 ├── store/                        ← المتاجر (Zustand)
 ├── utils/                        ← الأدوات المساعدة
+│   └── previewMode.ts            ← [FIX 7] أداة المعاينة (جلسة 20)
 ├── hooks/                        ← الخطافات
 ├── components/                   ← المكوّنات
 └── screens/                      ← الشاشات (22)
@@ -522,7 +524,7 @@ store/
 
 · ✅ progressStore موجود — مصدر موحّد.
 · ✅ 7+ مستوردين.
-· ⚠️ 12 شاشة تكتب فيه (جلسة 13).
+· ⚠️ 12 شاشة تكتب فيه.
 
 7.8 src/utils/
 
@@ -531,6 +533,7 @@ utils/
 ├── numberStyle.ts                ← تنسيق الأرقام ✅
 ├── arabicNumbers.ts              ← تحويل الرقم لكلمات ✅
 ├── numerals.ts                   ← أدوات الأرقام ✅
+├── previewMode.ts                ← ✅ [FIX 7] أداة المعاينة (جديد جلسة 20)
 ├── anzanBadges.ts                ← 🟡 مصدر قديم معزول
 ├── audioAnzanBadges.ts           ← 🔴 ملف ميت — صفر استيراد
 ├── badgeChecker.ts               ← 🟡 مستخدم · يقرأ من مصدر مهجور
@@ -556,10 +559,6 @@ hooks/
 ├── useQuests.ts                  ← 🟡 يستخدم مفاتيح قديمة
 └── (2 خطافات أخرى)
 ```
-
-المطلوب (المرحلة 11):
-
-· إعادة كتابة useQuests على progressStore.
 
 7.10 src/components/
 
@@ -588,13 +587,13 @@ components/
 1 WelcomeScreen ✅
 2 RoleSelection ✅
 3 HeroDashboard ✅ (يقرأ exam2Passed — ميت)
-4 GuardianDashboard ✅ (يقرأ من progressStore)
+4 GuardianDashboard ✅ (زر وضع المعاينة)
 5 CategoryScreen ✅
 6 LevelScreen ✅
 7 LearnScreen ✅
 8 LessonScreen ✅
 9 IntroductionScreen ✅
-10 LevelTestScreen 🔴 يستخدم buildL0Test لكل المستويات
+10 LevelTestScreen 🔴 يستخدم buildL0Test (V4)
 11 FingerMathScreen ✅
 12 MagicSecretsScreen ✅
 13 PracticeScreen ✅ (يحتاج Attempt Record)
@@ -604,8 +603,8 @@ components/
 17 CategoryExamScreen 🔴 يستورد من bank-v2
 18 SorobanPlayground ✅
 19 CrossMultiplicationScreen 🟡 غير مربوط
-20 CertificateScreen 🟡 غير مستدعى
-21 KidsCertificateScreen ✅ (جلسة 15)
+20 CertificateScreen ✅ مربوط الآن (جلسة 20)
+21 KidsCertificateScreen ✅
 22 RemediationScreen ✅
 
 ---
@@ -699,8 +698,8 @@ XP ✅ ✅ —
 🚨 المفاتيح الحرجة:
 
 # المفتاح المشكلة
-33 soroban-kids_certificate_ready يُكتب ولا يُقرأ
-34 soroban_dev_preview مفتاح مخفي
+33 soroban_kids_certificate_ready يُكتب ولا يُقرأ
+34 soroban_dev_preview ✅ أداة موحّدة (FIX 7)
 35 soroban-completed-lessons (بـ -) مكرر خطأً — يبحث فيه badgeChecker + useQuests
 36 sorobanmind-stats قديم — موجود في badgeChecker + useQuests
 37 soroban_exam_result مفتاح ثالث لحالة الامتحان
@@ -794,13 +793,8 @@ XP ✅ ✅ —
 
 الوضع الحالي:
 
-· KidsCertificateScreen — موجود (جلسة 15) · يحتاج ربط.
-· CertificateScreen — موجود · غير مستدعى.
-
-المطلوب:
-
-· شهادة قسم الصغار (L0-L3).
-· شهادة قسم الكبار (L4-L7).
+· ✅ KidsCertificateScreen — مربوط (App.tsx:34,400).
+· ✅ CertificateScreen — مربوط الآن (جلسة 20).
 
 المحتوى:
 
@@ -810,6 +804,7 @@ XP ✅ ✅ —
 · الميدالية.
 · رقم الشهادة.
 · التاريخ + رابط التحقق.
+· 🆕 وضع المعاينة — درجات افتراضية (95% · 92%).
 
 9.6 تصنيف الميداليات
 
@@ -849,7 +844,7 @@ XP ✅ ✅ —
 
 ---
 
-10. نظام القفل والفتح
+10. نظام القفل والفتح + وضع المعاينة
 
 10.1 التسلسل
 
@@ -878,15 +873,44 @@ XP ✅ ✅ —
 فتح اختبار progressStore.passedPractice + passedAnzan*
 فتح المستوى التالي progressStore.completedLevels
 
-10.3 زر "فتح الكل" (GuardianDashboard)
+10.3 👁️ وضع المعاينة (FIX 7 — جلسة 20)
 
-مشكلة حالية: الزر يُقفل الأقسام بدل فتحها — يعطّل المعاينة.
+الحل الجديد — بدل زر "فتح الكل" القديم:
 
-الحل (المرحلة 3):
+```
+GuardianDashboard → زر toggle
+    ↓
+"👁️ وضع المعاينة" / "🚪 خروج من المعاينة"
+    ↓
+localStorage: soroban_dev_preview = 'true'/'false'
+    ↓
+كل شيء يفتح:
+    · Levels: كل الأقسام مفتوحة
+    · Category: كل المستويات مفتوحة
+    · CategoryExam: تجاوز cooldown
+    · Certificates: درجات افتراضية (95% · 92%)
+    · Exam: لا تُلمس بيانات الطفل الحقيقية
+    ↓
+"🚪 خروج" → كل شيء يعود للحالة الأصلية
+```
 
-· فصل "وضع المعاينة" عن الحالة الحقيقية.
-· حالة preview مؤقتة.
-· الخروج يرجع الحالة الأصلية.
+أداة موحّدة: src/utils/previewMode.ts
+
+```ts
+export function isPreviewMode(): boolean;
+export function setPreviewMode(on: boolean): void;
+export function togglePreviewMode(): boolean;
+```
+
+الملفات المعدّلة (7):
+
+1. utils/previewMode.ts (جديد)
+2. screens/GuardianDashboard.tsx
+3. screens/LevelScreen.tsx
+4. screens/CategoryScreen.tsx
+5. screens/CategoryExamScreen.tsx
+6. screens/CertificateScreen.tsx
+7. screens/KidsCertificateScreen.tsx
 
 ---
 
@@ -1099,16 +1123,14 @@ const isCorrect = abacusValue === targetValue;
 
 13.2 الملفات التي تحتاج تعديلًا
 
-# الملف السبب
-1 srb/questions/L6.ts الأسئلة الـ25
-2 AnzanScreen.getColumnsForQuestion القاعدة الجديدة
-3 PracticeScreen القاعدة الجديدة
-4 AudioAnzanScreen يحتاج فحص + القاعدة
-5 CategoryExamScreen N60 + الأعمدة
-6 PlacementTestScreen N60-ب + الأعمدة
-7 LevelTestScreen بعد نقل X إلى SRB
-
-⬅️ التفاصيل الكاملة في AL-ISLAH.md — القسم 2.
+# الملف الحالة
+~~1~~ ~~CategoryExamScreen.tsx~~ ✅ تم (N60 — جلسة 20)
+~~2~~ ~~PlacementTestScreen.tsx~~ ✅ تم (N60-ب — جلسة 20)
+3 srb/questions/L6.ts ⏳ الأسئلة الـ25
+4 AnzanScreen.getColumnsForQuestion ⏳ القاعدة الجديدة
+5 PracticeScreen ⏳ القاعدة الجديدة
+6 AudioAnzanScreen ⏳ يحتاج فحص
+7 LevelTestScreen ⏳ بعد نقل X إلى SRB
 
 ---
 
@@ -1126,23 +1148,27 @@ const isCorrect = abacusValue === targetValue;
 الجلسة العلاجية ✅ مربوطة
 GuardianDashboard ✅ يقرأ من progressStore
 النسخ الاحتياطي ✅ يعمل (JSON)
-وضع المعاينة 🟡 يعمل — لكن يُقفل الأقسام
-البناء ✅ #684 أخضر
+وضع المعاينة ✅ يعمل (FIX 7)
+البناء ✅ أخضر
 صفحة الهبوط ✅ تعمل باحترافية
+الشهادات ✅ Kids + Adults — مربوطتان
+XP ✅ يعمل في كل الشاشات (N42)
+العشرية في CE1 · CE2 · PT ✅ يعمل (N60 · N60-ب)
+الأنزان البصري (AND) ✅ موحّد (B4)
+LevelId ✅ آمن (B5)
 
 14.2 ما يحتاج إصلاحًا 🔴
 
 العنصر المشكلة
-XP مفقود 4 شاشات — onXP = console.log
-زر "فتح الكل" يُقفل الأقسام بدل فتحها
-الأنزان البصري computeFinalScore يقبل OR
-Number(level.slice(1)) هشّ مع L00
-recordPlacementAttempt ميت
-العشرية N60 + N60-ب
-الشهادات غير مربوطة
-37 مفتاح localStorage موزّعة · مكررة · ميتة
+LevelTestScreen يستخدم buildL0Test لكل المستويات (V4)
+passedLevelTests غير تفاعلي (N19)
+exam2Passed + examPassed في HeroDashboard ميتان (N52)
+5 أنماط لحالة الامتحان متعدد (N53)
 badgeChecker · useQuests مفاتيح ميتة
+37 مفتاح localStorage موزّعة · مكررة · ميتة
+audioAnzanBadges · skillsChecker ملفان ميتان
 TTS للإنجليزية لم يُنفَّذ
+LessonScreen لا يقرأ اللغة الحالية
 
 14.3 ما لم يُبنَ بعد 🟡
 
@@ -1156,80 +1182,87 @@ CrossMultiplicationScreen 🟡 غير مربوط
 ترجمة L0 · L1 🟡 قيد التنفيذ
 TTS للإنجليزية 🟡 مؤجل
 
-14.4 ما أُنجز في جلسة 15 ✅
+14.4 ✅ ما أُنجز في جلسة 20 (2026-10-05)
 
-· KidsCertificateScreen.tsx — جديد.
-· CertificateScreen.tsx — معدّل.
-· types.ts — 'kids-certificate' مضاف.
-· App.tsx — مسار الشهادة الجديد.
-· CategoryExamScreen.tsx — علم soroban_kids_certificate_ready.
-· LevelScreen.tsx — قسم «نجاح كامل» بالدرجة الموزونة.
-· progressStore.ts — computeFinalScore موزونة.
-· 3 SVG جديدة (numbers-0-4 · number-5 · pinch).
-· lessons/types.ts — flashSvg · flashAlt · kidTip · *En.
+الإصلاحات السبعة P-1:
 
-❌ ما فشل:
+# الإصلاح الملف
+1 N42 — XP مفقود App.tsx
+2 B9 — recordPlacementAttempt App.tsx
+3 B1 — reload() ميت progressStore.ts
+4 B4 — AND × OR progressStore.ts + srb/progress.ts
+5 B5 — Number(level.slice(1)) AnzanScreen.tsx + PracticeScreen.tsx
+6 N60 — العشرية في CE CategoryExamScreen.tsx
+7 N60-ب — العشرية في PT PlacementTestScreen.tsx
 
-· S01.ts (commits #682 · #683).
+FIX 7 — وضع المعاينة (7 ملفات):
 
-14.5 ما أُنجز في جلسة 16-19 ✅
+# الملف التعديل
+1 utils/previewMode.ts 🆕 أداة موحّدة
+2 screens/GuardianDashboard.tsx زر toggle
+3 screens/LevelScreen.tsx توسيع 5 فحوصات
+4 screens/CategoryScreen.tsx فتح المستويات
+5 screens/CategoryExamScreen.tsx تجاوز cooldown + حماية البيانات
+6 screens/CertificateScreen.tsx درجات افتراضية 95%
+7 screens/KidsCertificateScreen.tsx درجات افتراضية 92%
 
-· فحص شامل (GPT · Claude · 24 دليلًا مصورًا).
-· إنشاء AL-ISLAH.md — وثيقة الحماية.
-· اكتشاف 36 خطأ مؤكد + 7 مرفوض.
-· تصحيح الأرقام: 37 مفتاحًا · 583 سؤالًا · 370 bank-exam.
-· تحديد 12 مرحلة للتنفيذ.
+ربط CertificateScreen (5 تعديلات):
+
+# التعديل
+1 استيراد CertificateScreen في App.tsx
+2 case 'certificate'
+3 category-exam-2.onComplete → 'certificate'
+4 حذف من getComingSoonTitle
+5 حذف من ComingSoon
+
+📊 الحصيلة:
+
+· ✅ 8 إصلاحات منفّذة.
+· ✅ البناء أخضر بعد كل إصلاح.
+· ✅ نسبة الإنجاز: 85% → 88%.
+· ✅ 4 من 12 مرحلة مكتملة.
 
 ---
 
 15. خطة العمل — 12 مرحلة
 
-المرحلة 0 — الحماية (يوم واحد)
+✅ المرحلة 0 — الحماية (مكتملة)
 
-# الخطوة
-0.1 رفع AL-ISLAH.md إلى المستودع
-0.2 Tag: baseline-2026-10-04
-0.3 ZIP احتياطي على الجوال
+· رفع AL-ISLAH.md
+· Tag: baseline-2026-10-04
+· ZIP احتياطي
 
-المرحلة 1 — إصلاحات صغيرة (يومان)
+✅ المرحلة 1 — إصلاحات P-1 (مكتملة 2026-10-05)
 
-# الإصلاح
-1.1 N42 — XP مفقود في 4 شاشات
-1.2 B1 — حذف reload() الميت
-1.3 B4 — توحيد الأنزان البصري (AND + متوسط)
-1.4 B5 — فحص LevelId
-1.5 B9 — recordPlacementAttempt
-1.6 N60 · N60-ب — دالة عشرية مشتركة
+· N42 · B9 · B1 · B4 · B5 · N60 · N60-ب
 
-المرحلة 2 — توثيق ما يعمل (يوم)
+⏳ المرحلة 2 — توثيق ما يعمل (يوم)
 
-المرحلة 3 — حل زر "فتح الكل" للمعاينة (يوم)
+✅ المرحلة 3 — وضع المعاينة (FIX 7 — مكتملة 2026-10-05)
 
-المرحلة 4 — إكمال المنهج (أسبوع)
+🟡 المرحلة 4 — إكمال المنهج (أسبوع)
 
-# المهمة
-4.1 إعادة بناء S02
-4.2 ترجمة L0 كامل
-4.3 ترجمة L1 كامل
-4.4 بناء L2 · L3
-4.5 بناء L4 · L5
-4.6 بناء L6 · L7
+· إعادة S02 · ترجمة L0 · L1 · L2-L7
 
-المرحلة 5 — الشهادات (يوم)
+✅ المرحلة 5 — الشهادات (مكتملة 2026-10-05)
 
-المرحلة 6 — srb/exams/ (أسبوعان)
+⏳ المرحلة 6 — srb/exams/ (أسبوعان)
 
-المرحلة 7 — Attempt Record (أسبوع)
+· CE1 · CE2 · PT — انتقاء من البنوك القديمة
 
-المرحلة 8 — masteryTracker (يومان)
+⏳ المرحلة 7 — Attempt Record (أسبوع) ← الأهم تعليميًا
 
-المرحلة 9 — adaptiveEngine (أسبوع)
+⏳ المرحلة 8 — masteryTracker (يومان)
 
-المرحلة 10 — تنظيف البنوك القديمة (يومان)
+⏳ المرحلة 9 — adaptiveEngine (أسبوع)
 
-المرحلة 11 — تنظيف عام (أسبوع)
+⏳ المرحلة 10 — تنظيف البنوك القديمة (يومان)
 
-المرحلة 12 — الإصدار (أسبوع)
+⏳ المرحلة 11 — تنظيف عام (أسبوع)
+
+⏳ المرحلة 12 — الإصدار (أسبوع)
+
+⬅️ 4 من 12 مكتملة · 4 أسابيع متبقية.
 
 ⬅️ التفاصيل الكاملة في AL-ISLAH.md — القسم 7.
 
@@ -1237,36 +1270,42 @@ TTS للإنجليزية 🟡 مؤجل
 
 16. المشاكل المعروفة
 
-16.1 حرجة (تُكسر وظائف)
+16.1 حرجة — لم تُحلّ (تُكسر وظائف)
 
 # المشكلة
-1 XP مفقود في 4 شاشات (N42)
-2 زر "فتح الكل" يُقفل الأقسام
-3 تعارض AND × OR (B4)
-4 دروس L2-L7 مفقودة
-5 srb/exams/ غير موجود
-6 N60 · N60-ب (العشرية في الامتحانات)
+1 LevelTestScreen يستخدم buildL0Test (V4)
+2 دروس L2-L7 مفقودة
+3 srb/exams/ غير موجود
+4 badgeChecker · useQuests — مفاتيح ميتة
 
 16.2 متوسطة
 
 # المشكلة
-7 reload() = reset() (B1)
-8 Number(level.slice(1)) (B5)
-9 recordPlacementAttempt ميت (B9)
-10 HeroDashboard يقرأ مفاتيح ميتة (N52)
-11 useQuests يعتمد على مفاتيح قديمة
-12 badgeChecker يقرأ من مصدر مهجور
-13 4 مفاتيح يتيمة
-14 LessonScreen لا يستخدم localize
+5 HeroDashboard يقرأ مفاتيح ميتة (N52)
+6 passedLevelTests غير تفاعلي (N19)
+7 4 مفاتيح يتيمة
+8 LessonScreen لا يستخدم localize
+9 5 أنماط لحالة الامتحان (N53)
 
 16.3 بسيطة
 
 # المشكلة
-15 SRBModule محدود بـ m1-m10
-16 SRBSection محدود بـ S01-S15
-17 i18n مفاتيح قديمة
-18 CrossMultiplicationScreen غير مربوط
-19 CertificateScreen غير مستدعى
+10 SRBModule محدود بـ m1-m10
+11 SRBSection محدود بـ S01-S15
+12 i18n مفاتيح قديمة
+13 CrossMultiplicationScreen غير مربوط
+
+✅ مُصلحة في جلسة 20
+
+· ~~XP مفقود (N42)~~ ✅
+· ~~B1 — reload() ميت~~ ✅
+· ~~B4 — AND × OR~~ ✅
+· ~~B5 — Number(level.slice(1))~~ ✅
+· ~~B9 — recordPlacementAttempt ميت~~ ✅
+· ~~N60 · N60-ب — العشرية في الامتحانات~~ ✅
+· ~~زر "فتح الكل" يُقفل الأقسام~~ ✅ (FIX 7)
+· ~~CertificateScreen غير مستدعى~~ ✅ (ربط جلسة 20)
+· ~~soroban_dev_preview مخفي (N20)~~ ✅ (FIX 7)
 
 ⬅️ التفاصيل الكاملة مع الأدلة في AL-ISLAH.md.
 
@@ -1291,7 +1330,7 @@ TTS للإنجليزية 🟡 مؤجل
 README.md نظرة عامة للمستخدمين
 PROJECT_MASTER.md هذا الملف — المرجع التقني
 AL-ISLAH.md ⚠️ وثيقة الحماية — اقرأها أولًا
-ACHIEVEMENTS.md سجل الجلسات
+ACHIEVEMENTS.md سجل الجلسات + التقييم
 PROJECT_PLAN.md المخطط المعماري
 
 الروابط
@@ -1315,7 +1354,7 @@ Actions
 2. مراجعة AL-ISLAH.md — كاملًا.
 3. اسأل قبل التنفيذ — لا افتراضات.
 
-القواعد الذهبية — مُحدَّثة (14 قاعدة)
+القواعد الذهبية — 14 قاعدة
 
 1. لا حذف إلا ما أُلغي صريحًا.
 2. المحرك الرياضي مجمّد.
@@ -1358,9 +1397,9 @@ Actions
 
 صُنع بحب لأطفال العالم العربي 🌍
 
-آخر تحديث: 2026-10-04 — بعد الفحص الشامل
+آخر تحديث: 2026-10-05 — بعد 8 إصلاحات P-1
 
-الحالة: 🟢 البناء #684 أخضر · التطبيق منشور · AL-ISLAH.md مرجع الحماية
+الحالة: 🟢 البناء أخضر · 4/12 مرحلة مكتملة · نسبة الإنجاز 88%
 
 المرجع الأساسي: AL-ISLAH.md
 
@@ -1371,25 +1410,22 @@ Actions
 
 ---
 
-✅ ملخص ما تم تعديله
+✅ ملخص التعديلات
 
 # التعديل
-1 إضافة مرجع AL-ISLAH.md في الرأس + 4 مواضع
-2 تحديث الجلسة: 14 → 19
-3 إضافة 4 قواعد ذهبية جديدة (11-14)
-4 تحديث الأرقام: 37 مفتاحًا · 583 bank-v2 · 370 bank-exam · 4 يتيمة
-5 تصحيح src/engine/ — "أساس المستقبل" لا "معزول"
-6 إضافة قسم 12 — Attempt Record كامل
-7 إضافة قسم 13 — قواعد العشرية
-8 إعادة ترقيم الأقسام (14 → 17)
-9 تحديث خارطة الطريق — 12 مرحلة
-10 تصحيح B4 — AND + متوسط (لا OR)
-11 تحديث الحالة (14.1-14.5)
-12 إضافة سجل الجلسة 15-19
-13 تحديث المشاكل المعروفة (16.1-16.3)
-14 إضافة PROJECT_PLAN.md للمراجع
-15 توحيد اللغة مع AL-ISLAH.md
-16 إضافة 3 SVG جديدة للـimages
-17 تحديث "5 ملفات engine" — مع تفاصيل
+1 رأس الملف: جلسة 19 → جلسة 20 · 8 إصلاحات
+2 القسم 3: إضافة حقائق جديدة (8 إصلاحات · FIX 7)
+3 القسم 2: الشهادات Kids + Adults مربوطتان · وضع المعاينة
+4 القسم 7.2: previewMode.ts في البنية
+5 القسم 7.11: CertificateScreen ✅ مربوط
+6 القسم 8.2: soroban_dev_preview ✅ أداة موحّدة
+7 القسم 9.5: الشهادات مربوطتان + وضع المعاينة
+8 القسم 10: إضافة 10.3 وضع المعاينة (FIX 7) كامل
+9 القسم 13.2: N60 · N60-ب ✅ تم
+10 القسم 14.1: XP · العشرية · AND · LevelId · الشهادات ✅
+11 القسم 14.4: جلسة 20 كاملة (8 إصلاحات · FIX 7 · الربط)
+12 القسم 15: المراحل 0 · 1 · 3 · 5 ✅ مكتملة
+13 القسم 16: قسم "مُصلحة في جلسة 20"
+14 التذييل: 2026-10-05 · 4/12 مرحلة
 
----
+جاهز للنسخ إلى المستودع.
