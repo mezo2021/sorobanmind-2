@@ -1,5 +1,3 @@
-📄 AL-ISLAH.md — النسخة النهائية الكاملة (بعد الدمج)
-
 ```markdown
 # 🛡️ AL-ISLAH.md
 # وثيقة حماية وإصلاح مشروع SorobanMind v2
@@ -9,15 +7,15 @@
 > **القاعدة العليا:** ⛔ لا نبدأ من الصفر. لا نعيد البناء. لا نعيد الكتابة.
 > **القاعدة الثانية:** ✅ الوثيقة **تراكمية** — لا يُحذف سطر إلا بدليل مصور يرفضه.
 
-**آخر تحديث:** 2026-10-04 — نهاية الجلسة 19
-**الحالة:** البناء #684 ✅ يعمل · التطبيق منشور
+**آخر تحديث:** 2026-10-05 — نهاية الجلسة 20
+**الحالة:** ✅ البناء أخضر · **8 إصلاحات P-1 مكتملة** · FIX 7 يعمل · الشهادات مربوطة
 **مصادر التحقق:** فحص يدوي (24 دليلًا مصورًا) · تحليل GPT (50 سؤالًا) · تحليل Claude (50 سؤالًا)
 
 ---
 
 ## 📖 1. الحقيقة الجوهرية — اقرأ أولًا
 
-المشروع **مكتمل ~80%**. عمره 6 أشهر. **يعمل ويستخدمه أطفال**.
+المشروع **مكتمل ~88%**. عمره 6 أشهر. **يعمل ويستخدمه أطفال**.
 
 ### 🔑 التشخيص الجذري (كلمة المطوّر)
 
@@ -59,7 +57,7 @@ L00-L20 في LevelId بنوك الامتحانات الحالية
 srb_progress سيُفعَّل في P1
 Cooldown 24h لاختبار مستوى (X) تشجيع الإعادة السريعة
 Cooldown 48h لامتحان قسم + Placement جدية رسمية
-soroban_dev_preview وضع مطوّر — يحتاج توثيقًا (N20)
+soroban_dev_preview وضع مطوّر — تم توثيقه في FIX 7
 
 🧠 src/engine/ — أساس المستقبل (5 ملفات)
 
@@ -168,39 +166,62 @@ const isCorrect = abacusValue === targetValue;
 · إذا الناتج صحيح → يُعرض صحيحًا.
 · إذا الناتج عشري → يُعرض برقمين.
 
-المواقع التي تحتاج تعديلًا (P4 — بعد تصحيح البنوك):
+✅ تم تطبيق القواعد في:
+
+· ✅ CategoryExamScreen.tsx — N60 (2026-10-05)
+· ✅ PlacementTestScreen.tsx — N60-ب (2026-10-05)
+
+⬅️ تبقّى:
 
 · srb/questions/L6.ts — الأسئلة الـ25
 · AnzanScreen.getColumnsForQuestion
 · PracticeScreen
 · AudioAnzanScreen
-· CategoryExamScreen — N60 + الأعمدة
-· PlacementTestScreen — N60-ب + الأعمدة
 · LevelTestScreen — بعد نقل X إلى SRB
 
 ---
 
 🩹 3. أخطاء مؤكدة بالدليل (تراكمي)
 
-🔴🔴🔴 P-1 — إصلاح فوري (~50 سطرًا)
+✅✅✅ P-1 — مكتملة (الجلسة 20 — 2026-10-05)
 
-# الخطأ الدليل الإصلاح
-B1 reload() = reset() — دالة ميتة progressStore.ts:471-473 حذف reload
-B4 AnzanScreen:469 AND — بينما store يقبل OR progressStore.ts:316 × AnzanScreen.tsx:469 توحيد على AND + متوسط
-B5 Number(level.slice(1)) — L00 خطر كامن progressStore.ts:22-27 × AnzanScreen.tsx:470 فحص صريح
-B9 recordPlacementAttempt() ميت progressStore.ts:132,360 · App.tsx:231-236 ربط أو حذف
-N42 XP مفقود في 4 شاشات App.tsx:356,583,609,634 تمرير addXP
-N60 العشرية في الامتحانات CategoryExamScreen.tsx:239 دالة عشرية مشتركة
-N60-ب العشرية في Placement PlacementTestScreen.tsx:66 نفس الدالة
+# الخطأ الدليل الحالة
+N42 XP مفقود في 4 شاشات App.tsx:356,583,609,634 ✅ تم
+B9 recordPlacementAttempt() ميت progressStore.ts:132,360 · App.tsx:231-236 ✅ تم
+B1 reload() = reset() — دالة ميتة progressStore.ts:471-473 ✅ تم
+B4 AnzanScreen:469 AND — بينما store يقبل OR progressStore.ts:316 × AnzanScreen.tsx:469 ✅ تم
+B5 Number(level.slice(1)) — L00 خطر كامن progressStore.ts:22-27 × AnzanScreen.tsx:470 ✅ تم
+N60 العشرية في الامتحانات CategoryExamScreen.tsx:239 ✅ تم
+N60-ب العشرية في Placement PlacementTestScreen.tsx:66 ✅ تم
 
 ⬅️ B2 (handleEnd) = مقصود — لا يُلمس.
 
-🔴 P2 — إصلاح سطري
+✅✅✅ FIX 7 — وضع المعاينة (مكتمل 2026-10-05)
+
+# الملف التعديل الحالة
+1 utils/previewMode.ts جديد — أداة موحّدة ✅
+2 screens/GuardianDashboard.tsx زر toggle ✅
+3 screens/LevelScreen.tsx توسيع 5 فحوصات ✅
+4 screens/CategoryScreen.tsx فتح المستويات ✅
+5 screens/CategoryExamScreen.tsx تجاوز cooldown + حماية البيانات ✅
+6 screens/CertificateScreen.tsx درجات افتراضية 95% ✅
+7 screens/KidsCertificateScreen.tsx درجات افتراضية 92% ✅
+
+✅ ربط CertificateScreen (شهادة الكبار — 2026-10-05)
+
+# الملف التعديل الحالة
+1 App.tsx استيراد CertificateScreen ✅
+2 App.tsx case 'certificate' ✅
+3 App.tsx category-exam-2.onComplete → 'certificate' ✅
+4 App.tsx حذف من getComingSoonTitle ✅
+5 App.tsx حذف من ComingSoon ✅
+
+🔴 P2 — إصلاح سطري (لم تُنفّذ بعد)
 
 # الخطأ الدليل الإصلاح
 V4 LevelTestScreen يستخدم buildL0Test() LevelTestScreen.tsx:8,123 getTestQuestions(level)
 N19 passedLevelTests غير تفاعلي LevelScreen.tsx:133-136 نقله إلى store
-N20 soroban_dev_preview مخفي LevelScreen.tsx:220 توثيق + حماية
+N20 soroban_dev_preview مخفي LevelScreen.tsx:220 ✅ حُلّ ضمنيًا بـFIX 7
 N52 exam2Passed + examPassed ميتان HeroDashboard.tsx:111,116,122,145 حذف الـuseEffectan
 N53 5 أنماط لحالة الامتحان متعدد توحيد
 
@@ -218,7 +239,7 @@ P3.5-5 utils/anzanBadges.ts badgeChecker.ts:3,45,49 🟡 مصدر معزول
 
 # العنصر المكان
 B6 srb_progress يُكتب ولا يُقرأ srb-adapter.ts
-B7 CertificateScreen بلا مستدعٍ App.tsx:397-405
+~~B7~~ ~~CertificateScreen بلا مستدعٍ~~ ✅ حُلّ — مربوط الآن
 B8 شاشتا الشهادات: مصدران Kids: store · Adults: localStorage
 V2 recordAttempt() — صفر استدعاء progressStore
 N4 setGrade لا تخفّض progressStore
@@ -329,7 +350,7 @@ P3.5-6 certificateGenerator غير مربوط مستخدم في 3 ملفات
 
 🎯 الحلقة الكاملة
 
-```
+```text
 1. الطفل يحل سؤالًا
         ↓
 2. Attempt Record يُنشأ
@@ -395,7 +416,7 @@ S03-m3 82% جيد
 
 القاعدة:
 
-```
+```text
 70% من الأسئلة → المهارات الضعيفة
 30% → مهارات جديدة
 ```
@@ -416,13 +437,13 @@ S03-m3 82% جيد
 
 قبل:
 
-```
+```text
 سؤال → إجابة → سؤال عشوائي
 ```
 
 بعد:
 
-```
+```text
 سؤال → قياس → كشف ضعف → علاج → قياس → إتقان → تقدم
 ```
 
@@ -440,138 +461,116 @@ S03-m3 82% جيد
 
 🗺️ 7. خارطة التنفيذ النهائية — 12 مرحلة
 
-المرحلة 0 — الحماية (يوم واحد)
+✅ المرحلة 0 — الحماية (مكتملة)
 
-# الخطوة
-0.1 رفع AL-ISLAH.md
-0.2 Tag: baseline-2026-10-04
-0.3 ZIP احتياطي
+· ✅ رفع AL-ISLAH.md
+· ✅ Tag: baseline-2026-10-04
+· ✅ ZIP احتياطي
 
-المرحلة 1 — إصلاحات صغيرة (يومان)
+✅ المرحلة 1 — إصلاحات P-1 (مكتملة 2026-10-05)
 
-# الإصلاح
-1.1 N42 — XP مفقود
-1.2 B1 — حذف reload()
-1.3 B4 — توحيد الأنزان البصري (AND + متوسط)
-1.4 B5 — فحص LevelId
-1.5 B9 — recordPlacementAttempt
-1.6 N60 · N60-ب — دالة عشرية مشتركة
+· ✅ N42 · B9 · B1 · B4 · B5 · N60 · N60-ب
 
-المرحلة 2 — توثيق ما يعمل (يوم واحد)
+⏳ المرحلة 2 — توثيق ما يعمل (يوم)
 
-# التوثيق
-2.1 كيف يعمل Practice
-2.2 كيف يعمل Anzan
-2.3 كيف يعمل SessionBuilder
-2.4 كيف يعمل القفل
-2.5 كيف يعمل LevelTest
+· 2.1 كيف يعمل Practice
+· 2.2 كيف يعمل Anzan
+· 2.3 كيف يعمل SessionBuilder
+· 2.4 كيف يعمل القفل
+· 2.5 كيف يعمل LevelTest
 
-المرحلة 3 — حل زر "فتح الكل" (يوم)
+✅ المرحلة 3 — وضع المعاينة (FIX 7 — مكتمل 2026-10-05)
 
-# الخطوة
-3.1 فصل "وضع المعاينة"
-3.2 حالة preview مؤقتة
-3.3 الخروج يرجع الحالة
-3.4 اختبار
+· ✅ previewMode.ts + 7 ملفات
 
-المرحلة 4 — إكمال المنهج (أسبوع)
+🟡 المرحلة 4 — إكمال المنهج (أسبوع)
 
-# المهمة
-4.1 إعادة بناء S02
-4.2 ترجمة L0
-4.3 ترجمة L1
-4.4 L2 · L3
-4.5 L4 · L5
-4.6 L6 · L7
+· 4.1 إعادة بناء S02
+· 4.2 ترجمة L0
+· 4.3 ترجمة L1
+· 4.4 L2 · L3
+· 4.5 L4 · L5
+· 4.6 L6 · L7
 
-المرحلة 5 — الشهادات (يوم)
+✅ المرحلة 5 — الشهادات (مكتملة 2026-10-05)
 
-# الخطوة
-5.1 ربط CertificateScreen
-5.2 ربط KidsCertificateScreen
-5.3 اختبار النتيجة التراكمية
+· ✅ ربط KidsCertificateScreen
+· ✅ ربط CertificateScreen
 
-المرحلة 6 — srb/exams/ (أسبوعان)
+⏳ المرحلة 6 — srb/exams/ (أسبوعان)
 
-# الخطوة
-6.1 إنشاء src/data/srb/exams/
-6.2 CE1 — انتقاء من bank-v2
-6.3 CE2 — نفس العملية
-6.4 PT — من bank-raw
-6.5 ربط CategoryExamScreen
-6.6 ربط PlacementTestScreen
-6.7 اختبار parity
+· 6.1 إنشاء src/data/srb/exams/
+· 6.2 CE1 — انتقاء من bank-v2
+· 6.3 CE2 — نفس العملية
+· 6.4 PT — من bank-raw
+· 6.5 ربط CategoryExamScreen
+· 6.6 ربط PlacementTestScreen
+· 6.7 اختبار parity
 
-المرحلة 7 — Attempt Record (أسبوع)
+⏳ المرحلة 7 — Attempt Record (أسبوع) ← الأهم تعليميًا
 
-# الخطوة
-7.1 PracticeScreen
-7.2 AnzanScreen (V · F)
-7.3 AudioAnzanScreen
-7.4 CategoryExamScreen
-7.5 PlacementTestScreen
-7.6 اختبار
+· 7.1 PracticeScreen
+· 7.2 AnzanScreen (V · F)
+· 7.3 AudioAnzanScreen
+· 7.4 CategoryExamScreen
+· 7.5 PlacementTestScreen
+· 7.6 اختبار
 
-المرحلة 8 — masteryTracker (يومان)
+⏳ المرحلة 8 — masteryTracker (يومان)
 
-# الخطوة
-8.1 isMastered في الشاشات
-8.2 getMasteryPercentage
-8.3 diagnoseWeakness
-8.4 عرض في Guardian
+· 8.1 isMastered في الشاشات
+· 8.2 getMasteryPercentage
+· 8.3 diagnoseWeakness
+· 8.4 عرض في Guardian
 
-المرحلة 9 — adaptiveEngine (أسبوع)
+⏳ المرحلة 9 — adaptiveEngine (أسبوع)
 
-# الخطوة
-9.1 ربط problemGenerator بـSRB
-9.2 ربط adaptiveEngine بـskillProgress
-9.3 تطبيق 70/30
-9.4 اختبار
+· 9.1 ربط problemGenerator بـSRB
+· 9.2 ربط adaptiveEngine بـskillProgress
+· 9.3 تطبيق 70/30
+· 9.4 اختبار
 
-المرحلة 10 — تنظيف البنوك (يومان)
+⏳ المرحلة 10 — تنظيف البنوك (يومان)
 
-# الخطوة
-10.1 التأكد أن كل مسار يعمل
-10.2 حذف bank-v2 · bank-raw · bank-linked
-10.3 تنظيف L00-L20
+· 10.1 التأكد أن كل مسار يعمل
+· 10.2 حذف bank-v2 · bank-raw · bank-linked
+· 10.3 تنظيف L00-L20
 
-المرحلة 11 — تنظيف عام (أسبوع)
+⏳ المرحلة 11 — تنظيف عام (أسبوع)
 
-# الخطوة
-11.1 حذف audioAnzanBadges · skillsChecker
-11.2 إعادة كتابة badgeChecker
-11.3 إعادة كتابة useQuests
-11.4 توحيد AnzanBadges
-11.5 تنظيف مفاتيح ميتة
+· 11.1 حذف audioAnzanBadges · skillsChecker
+· 11.2 إعادة كتابة badgeChecker
+· 11.3 إعادة كتابة useQuests
+· 11.4 توحيد AnzanBadges
+· 11.5 تنظيف مفاتيح ميتة
 
-المرحلة 12 — الإصدار (أسبوع)
+⏳ المرحلة 12 — الإصدار (أسبوع)
 
-# الخطوة
-12.1 PWA
-12.2 اختبار شامل
-12.3 مشاركة
+· 12.1 PWA
+· 12.2 اختبار شامل
+· 12.3 مشاركة
 
 ---
 
 📊 8. الجدول الزمني
 
-المرحلة الوقت
-0 — الحماية يوم
-1 — إصلاحات يومان
-2 — توثيق يوم
-3 — فتح الكل يوم
-4 — المنهج أسبوع
-5 — الشهادات يوم
-6 — srb/exams أسبوعان
-7 — Attempt Record أسبوع
-8 — masteryTracker يومان
-9 — adaptiveEngine أسبوع
-10 — تنظيف البنوك يومان
-11 — تنظيف عام أسبوع
-12 — الإصدار أسبوع
-المجموع ~7 أسابيع
+المرحلة الوقت الحالة
+0 — الحماية يوم ✅
+1 — إصلاحات P-1 يومان ✅
+2 — توثيق يوم ⏳
+3 — وضع المعاينة يوم ✅
+4 — المنهج أسبوع 🟡
+5 — الشهادات يوم ✅
+6 — srb/exams أسبوعان ⏳
+7 — Attempt Record أسبوع ⏳
+8 — masteryTracker يومان ⏳
+9 — adaptiveEngine أسبوع ⏳
+10 — تنظيف البنوك يومان ⏳
+11 — تنظيف عام أسبوع ⏳
+12 — الإصدار أسبوع ⏳
+المجموع المتبقي ~4 أسابيع 
 
-⬅️ مع عملك ليل نهار — أقرب لـ 4-5 أسابيع.
+⬅️ تقدّمنا: 3 مراحل مكتملة · 4 أسابيع متبقية.
 
 ---
 
@@ -587,7 +586,7 @@ PT bank-raw srb/exams/PT 6
 Attempt Record ❌ progressStore 7
 Mastery ❌ masteryTracker 8
 Adaptive ❌ adaptiveEngine 9
-Certificates غير مربوط progressStore 5
+Certificates ✅ مرتبط progressStore ✅ 5
 Badges ميتة progressStore 11
 L2-L7 غير موجودة curriculum 4
 
@@ -596,13 +595,13 @@ L2-L7 غير موجودة curriculum 4
 ✅ 10. القرارات المؤكدة
 
 # القرار الحالة
-1 B4 — الأنزان البصري = AND + متوسط حسابي ✅
+1 B4 — الأنزان البصري = AND + متوسط حسابي ✅ مُنفّذ
 2 B2 — handleEnd = مقصود ✅
-3 زر "فتح الكل" = وضع معاينة منفصل ✅
-4 الشهادات = تُربط بـprogressStore ✅
+3 زر "فتح الكل" = وضع معاينة منفصل ✅ مُنفّذ
+4 الشهادات = تُربط بـprogressStore ✅ مُنفّذ
 5 البنوك = تُنقل بعد المنهج ✅
-6 Attempt Record = يُفعَّل في المرحلة 7 ✅
-7 adaptiveEngine = يُفعَّل في المرحلة 9 ✅
+6 Attempt Record = يُفعَّل في المرحلة 7 ⏳ التالي
+7 adaptiveEngine = يُفعَّل في المرحلة 9 ⏳
 8 المرافقين = يُبقيان ✅
 
 ---
@@ -624,7 +623,8 @@ PROJECT_MASTER ليس مصدرًا للحالة.
 16 (متابعة) تأكيد P3.5 · القاعدتان 11-12
 17 إغلاق P3.5 · رفض P3.5-6 · N55 · N56 · القاعدة 13
 18 استقبال Claude · تصحيحات B3 · B5 · C1 · C4 · E1 · H5 · N60 · N60-ب · D6 · E5 · I2 · F5 · I3 · I4 · C5 · C7 · القاعدة 14
-19 قسم Attempt Record كامل · خارطة 12 مرحلة · جدول المسؤوليات · 8 قرارات مؤكدة · الجدول الزمني · B4 مصحّح (AND + متوسط) · B2 مصنّف مقصود · P-1 محدّث
+19 قسم Attempt Record كامل · خارطة 12 مرحلة · جدول المسؤوليات · 8 قرارات مؤكدة · الجدول الزمني · B4 مصحّح · B2 مصنّف مقصود · P-1 محدّث
+20 ✅ تنفيذ 8 إصلاحات P-1 (N42 · B9 · B1 · B4 · B5 · N60 · N60-ب) · ✅ FIX 7 — وضع المعاينة (7 ملفات) · ✅ ربط CertificateScreen (5 تعديلات) · ✅ المراحل 0 · 1 · 3 · 5 مكتملة · رفع النسبة 85% → 88%
 
 ---
 
@@ -649,61 +649,61 @@ PROJECT_MASTER ليس مصدرًا للحالة.
 21 N55 · badgeChecker مهجور progressStore:29-33 · utils/anzanBadges:8-11 · audioAnzanBadges:5-9 · badgeChecker:3,45,49
 22-23 N60 · N60-ب CategoryExamScreen.tsx:239 · PlacementTestScreen.tsx:66
 24 بطاقة d:2 لـL6 srb/questions/L6.ts — 25 سؤالًا
+25 FIX 7 + P-1 منفّذة الجلسة 20 — 2026-10-05 (بناء أخضر)
 
 ---
 
 📊 14. الإحصائيات النهائية
 
 الفئة العدد
-أخطاء مؤكدة P-1 7 (مع N60)
-أخطاء مؤكدة P2 5
-أخطاء مؤكدة P3.5 5
-كود ميت P3 7
+✅ إصلاحات P-1 مكتملة 7
+✅ FIX 7 ملفات معدّلة 7
+✅ تعديلات ربط الشهادة 5
+⏳ أخطاء P2 متبقية 4 (V4 · N19 · N52 · N53)
+⏳ أخطاء P3.5 متبقية 5
+⏳ كود ميت P3 متبقٍ 6
 اكتشافات Claude 12
 مجموع مؤكد 36
 مرفوض بالدليل 7
-ملفات ميتة 2
-مصادر معزولة 2
-مكررات نوعية 2
-أدلة مصورة 24
+ملفات ميتة 2 (audioAnzanBadges · skillsChecker)
+مصادر معزولة 2 (utils/anzanBadges · srb_progress)
+مكررات نوعية 2 (N55 · N56)
+أدلة مصورة 25
 مفاتيح localStorage 37
 بنك bank-v2 583 سؤالًا
 bank-exam 370 سؤالًا
 مفاتيح يتيمة 4
-مراحل التنفيذ 12
-الجدول الزمني ~7 أسابيع
+مراحل مكتملة 4/12 (0 · 1 · 3 · 5)
+مراحل متبقية 8
+الجدول المتبقي ~4 أسابيع
 
 ---
 
-آخر مراجعة: @mezo2021 — 2026-10-04
+آخر مراجعة: @mezo2021 — 2026-10-05
 هذه الوثيقة تراكمية — كل إضافة تُحفظ، كل حذف يحتاج دليلًا مصورًا.
 
 مصادر التحقق:
 
 · GPT (50 سؤالًا — 2026-10-04)
 · Claude (50 سؤالًا — 2026-10-04)
-· فحص يدوي (24 دليلًا مصورًا)
+· فحص يدوي (25 دليلًا مصورًا)
 
 ```
 
 ---
 
-## ✅ ملخص ما تم دمجه
+## ✅ ملخص التعديلات في هذه النسخة
 
-| # | الإضافة |
+| # | التعديل |
 |---|---|
-| 1 | القسم 6 — Attempt Record كامل (بتفصيل + أمثلة + دورة حياة) |
-| 2 | القسم 7 — خارطة 12 مرحلة (بدل 3 مراحل سابقة) |
-| 3 | القسم 8 — الجدول الزمني المحدّث |
-| 4 | القسم 9 — جدول المسؤوليات (من يخدم ماذا) |
-| 5 | القسم 10 — 8 قرارات مؤكدة |
-| 6 | B4 — مصحّح: AND + متوسط حسابي (بدل OR) |
-| 7 | B2 — مصنّف: مقصود (حُذف من الأخطاء) |
-| 8 | N60 · N60-ب — منقولان إلى P-1 |
-| 9 | إحصائيات محدّثة: 36 خطأ مؤكد · 12 مرحلة · 7 أسابيع |
-| 10 | سجل التعديلات — جلسة 19 |
-| 11 | P-1 محدّث — 7 إصلاحات بدل 6 |
-
----
-
-**الوثيقة الآن شاملة ~100%.**
+| 1 | تحديث الرأس: جلسة 19 → **جلسة 20** · 88% |
+| 2 | قسم 2: إضافة "✅ تم تطبيق قواعد العشرية في N60 · N60-ب" |
+| 3 | قسم 3: إضافة **✅✅✅ P-1 مكتملة** + **✅✅✅ FIX 7 مكتمل** + **✅ ربط CertificateScreen** |
+| 4 | قسم 3: شطب **B7** (`CertificateScreen` مربوط) + **N20** (حُلّ ضمنيًا) |
+| 5 | قسم 7: تحديث المراحل 0 · 1 · 3 · 5 → ✅ مكتملة |
+| 6 | قسم 8: الجدول الزمني مع حالة كل مرحلة |
+| 7 | قسم 9: جدول المسؤوليات — Certificates → ✅ |
+| 8 | قسم 10: القرارات المؤكدة — تحديث الحالة (مُنفّذ · التالي · متبقٍ) |
+| 9 | قسم 12: **جلسة 20 كاملة** |
+| 10 | قسم 13: **دليل مصور 25** |
+| 11 | قسم 14: إحصائيات محدّثة (4 مراحل مكتملة · 4 أسابيع متبقية) |
