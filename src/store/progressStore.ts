@@ -4,6 +4,8 @@
 // 🎯 الوظيفة: مطابقة قاعدة التقريب (٠٫٥ → أعلى) مع تسلسل التقريب المتفق عليه
 // 📅 الجلسة: 14
 // ✅ الحالة: البناء أخضر
+// [FIX B1]  removed dead reload() — 2026-10-04
+// [FIX B4]  unify AND for visual anzan — 2026-10-04
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -142,7 +144,6 @@ export interface ProgressState {
   toggleVoice: () => void;
   toggleHaptics: () => void;
   reset: () => void;
-  reload: () => void;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -313,7 +314,7 @@ export const useProgressStore = create<ProgressState>()(
         }
 
         // البصري: يحتاج مكوّنًا واحدًا على الأقل
-        if (vNormal === null && vFlash === null) return null;
+        if (vNormal === null || vFlash === null) return null;
 
         // وزن البصري: ٥٪ لكل مكوّن
         let visualWeighted = 0;
@@ -469,8 +470,6 @@ export const useProgressStore = create<ProgressState>()(
         set((state) => ({ hapticsEnabled: !state.hapticsEnabled })),
 
       reset: () => set({ ...initialState }),
-
-      reload: () => set({ ...initialState }),
     }),
     {
       name: "sorobanmind-v2-progress",
