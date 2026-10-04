@@ -7,6 +7,7 @@
 // ✅ أسهم تنقل + زر إنهاء
 // ✅ شارة عدد الأعمدة
 // ✅ 80% للنجاح + 48 ساعة انتظار بعد الفشل
+// [FIX 7] — فحص المعاينة (تجاوز cooldown + عدم لمس بيانات الطفل)
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +19,9 @@ import {
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
+
+// [FIX 7] — أداة المعاينة
+import { isPreviewMode } from '@/utils/previewMode';
 
 import {
   buildExam1Category,
@@ -113,6 +117,9 @@ export function CategoryExamScreen({
   const { style: numberStyle, toggleStyle } = useNumberStyleStore();
   const isArabic = numberStyle === 'arabic';
 
+  // [FIX 7] — وضع المعاينة
+  const inPreview = isPreviewMode();
+
   const [phase, setPhase] = useState<Phase>('intro');
   const [questions, setQuestions] = useState<BankQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -133,6 +140,11 @@ export function CategoryExamScreen({
 
   // ─── فحص الـ cooldown عند البدء ───
   useEffect(() => {
+    // [FIX 7] — في وضع المعاينة: تجاهل الـ cooldown تمامًا
+    if (inPreview) {
+      setPhase('intro');
+      return;
+    }
     try {
       const raw = localStorage.getItem(`${cfg.storageKey}_last_attempt`);
       if (raw) {
@@ -150,7 +162,7 @@ export function CategoryExamScreen({
       }
     } catch { /* ignore */ }
     setPhase('intro');
-  }, [cfg.storageKey]);
+  }, [cfg.storageKey, inPreview]);
 
   // ─── عدّاد الـ cooldown (للعرض فقط) ───
   useEffect(() => {
@@ -211,30 +223,33 @@ export function CategoryExamScreen({
     setFinalScore(score);
     setFinalPassed(passed);
 
-    // حفظ النتيجة
-    try {
-      localStorage.setItem(`${cfg.storageKey}_passed`, JSON.stringify(passed));
-      localStorage.setItem(`${cfg.storageKey}_score`, JSON.stringify(score));
-      localStorage.setItem(`${cfg.storageKey}_last_attempt`, String(Date.now()));
-    } catch { /* ignore */ }
-
-    // لو نجح Exam 1 → افتح L4
-    if (passed && category === 'kids') {
+    // [FIX 7] — في وضع المعاينة: لا تلمس بيانات الطفل الحقيقية
+    if (!inPreview) {
+      // حفظ النتيجة
       try {
-        const raw = localStorage.getItem('soroban_completed_levels');
-        const arr = raw ? JSON.parse(raw) : [];
-        if (!arr.includes('L4')) {
-          // لا نضعها كـ "completed" — بل نفتح القسم الثاني
-        }
-        // فتح القسم الثاني (يُدار عبر App)
-        localStorage.setItem('soroban_section2_unlocked', JSON.stringify(true));
-        localStorage.setItem('soroban_kids_certificate_ready', 'true'); // ← جديد
+        localStorage.setItem(`${cfg.storageKey}_passed`, JSON.stringify(passed));
+        localStorage.setItem(`${cfg.storageKey}_score`, JSON.stringify(score));
+        localStorage.setItem(`${cfg.storageKey}_last_attempt`, String(Date.now()));
       } catch { /* ignore */ }
+
+      // لو نجح Exam 1 → افتح L4
+      if (passed && category === 'kids') {
+        try {
+          const raw = localStorage.getItem('soroban_completed_levels');
+          const arr = raw ? JSON.parse(raw) : [];
+          if (!arr.includes('L4')) {
+            // لا نضعها كـ "completed" — بل نفتح القسم الثاني
+          }
+          // فتح القسم الثاني (يُدار عبر App)
+          localStorage.setItem('soroban_section2_unlocked', JSON.stringify(true));
+          localStorage.setItem('soroban_kids_certificate_ready', 'true'); // ← جديد
+        } catch { /* ignore */ }
+      }
     }
 
     setPhase('result');
     playSound(passed ? 'levelup' : 'whoosh');
-  }, [questions.length, cfg.storageKey, category, playSound]);
+  }, [questions.length, cfg.storageKey, category, playSound, inPreview]);
 
   // ─── التحقق ───
   const handleCheck = useCallback(() => {
