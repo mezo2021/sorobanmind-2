@@ -7,6 +7,7 @@
 // ✅ زر "إنهاء" يخرج بلا تقييم
 // 🩺 جلسة علاجية إجبارية داخلية (RemediationScreen)
 // 📅 آخر تحديث: SRB Migration — Phase 3 + Remediation
+// [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -467,7 +468,11 @@ export function AnzanScreen({
         const flashOk =
           lg?.anzanVisualFlash !== null && lg?.anzanVisualFlash !== undefined;
         if (normalOk && flashOk) {
-          markAnzanVisualPassed(Number(level.slice(1)));
+          // [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
+          const levelNum = parseInt(level.replace('L', ''), 10);
+          if (!isNaN(levelNum) && levelNum >= 0 && levelNum <= 7) {
+            markAnzanVisualPassed(levelNum);
+          }
         }
       }
 
