@@ -1,10 +1,14 @@
+📄 PROJECT_MASTER.md — النسخة المحدّثة والمتوافقة مع AL-ISLAH.md
+
+```markdown
 <div dir="rtl">
 
 # 🧮 SorobanMind v2 — المرجع الموحّد
 
-> **آخر تحديث:** 2026-10-04 — نهاية الجلسة 14
-> **الحالة:** 🟢 البناء أخضر · المقدمة مكتملة · الترجمة بدأت · S01 جاهز للاختبار
+> **آخر تحديث:** 2026-10-04 — بعد الفحص الشامل (GPT · Claude · فحص يدوي)
+> **الحالة:** 🟢 البناء #684 أخضر · التطبيق منشور · AL-ISLAH.md مرجع الحماية
 > **القاعدة الذهبية:** لا حذف إلا ما أُلغي صريحًا
+> **المرجع الأساسي:** [`AL-ISLAH.md`](./AL-ISLAH.md) — وثيقة الحماية والإصلاح
 
 ---
 
@@ -21,10 +25,12 @@
 9. [نظام التقييم](#9-نظام-التقييم)
 10. [نظام القفل والفتح](#10-نظام-القفل-والفتح)
 11. [خريطة الترابط](#11-خريطة-الترابط)
-12. [الحالة الحالية](#12-الحالة-الحالية)
-13. [خطة العمل](#13-خطة-العمل)
-14. [المشاكل المعروفة](#14-المشاكل-المعروفة)
-15. [المصادر والمراجع](#15-المصادر-والمراجع)
+12. [**Attempt Record — الحلقة المفقودة**](#12-attempt-record)
+13. [**قواعد العشرية**](#13-قواعد-العشرية)
+14. [الحالة الحالية](#14-الحالة-الحالية)
+15. [خطة العمل — 12 مرحلة](#15-خطة-العمل)
+16. [المشاكل المعروفة](#16-المشاكل-المعروفة)
+17. [المصادر والمراجع](#17-المصادر-والمراجع)
 
 ---
 
@@ -37,18 +43,25 @@
 | **الهدف** | تعليم السوروبان الياباني (منهج تاكاشي كوجيما) للأطفال والكبار |
 
 **الميزات الأساسية:**
-
 - بدون إنترنت (offline)
 - بدون إعلانات
 - خصوصية كاملة (البيانات على جهاز المستخدم)
 
 **الروابط:**
-
 - الموقع: <https://mezo2021.github.io/sorobanmind-2>
 - المستودع: <https://github.com/mezo2021/sorobanmind-2>
 - Actions: <https://github.com/mezo2021/sorobanmind-2/actions>
 
 **المطوّر:** مصطفى علي أكر ([@mezo2021](https://github.com/mezo2021))
+
+**وثائق المشروع:**
+| الملف | الغرض |
+|---|---|
+| `README.md` | نظرة عامة للمستخدمين |
+| `PROJECT_MASTER.md` | هذا الملف — المرجع التقني الموحّد |
+| `AL-ISLAH.md` | ⚠️ **وثيقة الحماية والإصلاح — اقرأها أولًا** |
+| `ACHIEVEMENTS.md` | سجل الجلسات |
+| `PROJECT_PLAN.md` | المخطط المعماري للانتقال |
 
 ---
 
@@ -63,7 +76,7 @@
 - 🧒 **الأبطال الصغار** (5-12 سنة) → L0-L3
 - 🧑 **الأبطال الكبار** (13+ سنة) → L4-L7
 
-> **ملاحظة الجلسة 14:** العمر مذكور في وصف التطبيق فقط — **لا يُذكر في نصوص الدروس**. الدروس موجّهة للعمر كله.
+> **ملاحظة:** العمر مذكور في وصف التطبيق فقط — **لا يُذكر في نصوص الدروس**.
 
 ### الميزات
 
@@ -72,14 +85,12 @@
 - **بنك SRB الموحّد** — كل الأسئلة مصنّفة بدقة
 - **4 رفقاء** (شام · ريان · جود · بانة)
 - **نظام شارات** (🥉 برونزية · 🥈 فضية · 🥇 ذهبية)
-- **إثراء تفاعلي:**
-  - 🧒 للصغار: أسرار سحرية + رياضيات الأصابع
-  - 🧑 للكبار: أسرار سحرية + رياضيات فيدية (الضرب التقاطعي)
-- **شهادة** بعد اجتياز الامتحانات (يحتاج ربطًا)
+- **إثراء تفاعلي** (أسرار سحرية · رياضيات الأصابع · رياضيات فيدية)
+- **شهادات** بعد اجتياز الامتحانات
 - **تحديد مستوى ذكي** للطلاب الجدد
 - **سوروبان تفاعلي 2D5**
-- **درس مقدمة (L0-intro) بصور SVG متحركة** ← جديد جلسة 14
-- **بنية ترجمة للدروس** (`LocalizableText`) ← جديد جلسة 14
+- **درس مقدمة بصور SVG متحركة**
+- **بنية ترجمة للدروس** (`LocalizableText`)
 
 ---
 
@@ -87,19 +98,36 @@
 
 > هذه القواعد **لا تُخرَق** أبدًا:
 
+### القواعد الأصلية (1-7)
+
 1. **لا حذف** إلا ما أُلغي صريحًا.
-2. **المحرك الرياضي مجمّد** (`engine/` — `sorobanEngine.ts` + `sorobanMoves.ts`) — لا يُلمس.
-3. **`bank-v2/` + `bank-raw/`** لا يُحذفان قبل فك ارتباط CE1 · CE2 · PT بهما.
+2. **المحرك الرياضي مجمّد** (`sorobanEngine.ts` + `sorobanMoves.ts`) — لا يُلمس.
+3. **`bank-v2/` + `bank-raw/`** لا يُحذفان قبل فك ارتباط CE1 · CE2 · PT.
 4. **`curriculum/types.ts`** مجمَّد — عقد أساسي (14 مستورد).
 5. **SRB هو البنك الوحيد** لكل الأسئلة الجديدة.
 6. **ملف واحد في المرة** — ثم اختبار.
 7. **نسخة احتياطية قبل أي تعديل.**
 
-### قواعد جديدة (اعتُمدت جلسة 14)
+### القواعد المعتمدة (8-10)
 
 8. **رأس موحّد لكل ملف معدّل** — يوثّق: التعديل · الوظيفة · الجلسة · الحالة.
-9. **قيد `ACHIEVEMENTS.md` في نهاية الجلسة فقط** — لا مع كل تعديل.
+9. **قيد `ACHIEVEMENTS.md` في نهاية الجلسة فقط**.
 10. **تحديث `PROJECT_MASTER.md`** عند التعديلات البنيوية فقط.
+
+### القواعد الحرجة (11-14) — من AL-ISLAH
+
+11. ❌ **حذف سطر من AL-ISLAH.md بدون دليل مصور**.
+12. ❌ **إصلاحات بنيوية دون قراءة قسم "مقصود"** في AL-ISLAH.
+13. ❌ **حذف `badgeChecker.ts` · `useQuests.ts`** قبل إعادة كتابة الشارات على `progressStore`.
+14. ❌ **حذف/استبدال/إعادة بناء `progressStore.ts`** — يبقى دائمًا.
+
+### 📌 حقائق مؤكدة (بأدلة مصورة — 24 دليلًا)
+
+- **37 مفتاح localStorage** (لا 35).
+- **بنك bank-v2 = 583 سؤالًا** (لا 935).
+- **bank-exam = 370 سؤالًا** (180 + 190).
+- **4 مفاتيح يتيمة** (تُقرأ ولا تُكتب).
+- **`src/engine/` = 5 ملفات** = أساس المستقبل — لم يُبنَ بعد.
 
 ---
 
@@ -111,72 +139,75 @@
 
 | المستوى | الاسم | الدروس | عدد m | الفئة |
 |---|---|---|---|---|
-| **L0** | التمهيدي | S01, S02 | 5 | 🧒 |
-| **L1** | الجمع والطرح | S03, S04 | 8 | 🧒 |
-| **L2** | الضرب | S07, S08 | 8 | 🧒 |
-| **L3** | القسمة | S09, S10 | 8 | 🧒 |
-| **L4** | سلاسل الجمع والطرح | S05, S06 | 8 | 🧑 |
-| **L5** | ضرب وقسمة متقدم | S11, S12 | 8 | 🧑 |
-| **L6** | الكسور العشرية | S13, S14 | 5 | 🧑 |
+| **L0** | التمهيدي | intro · S01 · S02 | 5 | 🧒 |
+| **L1** | الجمع والطرح | S03 · S04 | 8 | 🧒 |
+| **L2** | الضرب | S07 · S08 | 8 | 🧒 |
+| **L3** | القسمة | S09 · S10 | 8 | 🧒 |
+| **L4** | سلاسل الجمع والطرح | S05 · S06 | 8 | 🧑 |
+| **L5** | ضرب وقسمة متقدم | S11 · S12 | 8 | 🧑 |
+| **L6** | الكسور العشرية | S13 · S14 | 5 | 🧑 |
 | **L7** | الجذور | S15 | 1 | 🧑 |
 
 ### تفصيل الدروس والمهارات
 
 **L0 — التمهيدي:**
-
-- **intro** (مقدمة — نظري): 7 صفحات · بدون مهارة (skillId: null) · صورة SVG متحركة لكل صفحة · سوروبان تفاعلي في p5
+- **intro** (نظري): 7 صفحات · `skillId: null` · SVG متحركة · سوروبان تفاعلي في p5
 - **S01** (تمثيل الأرقام 0-9): m1 (0-4) · m2 (5) · m3 (6-9)
 - **S02** (القيمة المكانية): m1 (آحاد) · m2 (عشرات)
 
 **L1 — الجمع والطرح:**
-
 - **S03** (الجمع): m1 (بسيط) · m2 (أصدقاء 5) · m3 (أصدقاء 10) · m4 (مركب)
-- **S04** (الطرح): نفس البنية (m1-m4)
+- **S04** (الطرح): نفس البنية
 
 **L2 — الضرب:**
-
 - **S07** (ضرب 1×2): m1-m4
 - **S08** (ضرب 2×2): m1-m4
 
 **L3 — القسمة:**
-
 - **S09** (÷1): m1-m4
 - **S10** (÷2): m1-m4
 
 **L4 — سلاسل:**
-
 - **S05** (سلاسل الجمع): m1-m4
 - **S06** (سلاسل الطرح): m1-m4
 
 **L5 — ضرب وقسمة متقدم:**
-
 - **S11** (ضرب 2×3): m1-m4
 - **S12** (قسمة متقدمة): m1-m4
 
 **L6 — الكسور العشرية:**
-
-- **S13** (عشري جمع/طرح): m1 (بسيط) · m2 (أصدقاء 5و10) · m3 (مركب)
-- **S14** (عشري ضرب/قسمة): m1 (ضرب) · m2 (قسمة)
+- **S13** (عشري جمع/طرح): m1 · m2 · m3
+- **S14** (عشري ضرب/قسمة): m1 · m2
 
 **L7 — الجذور:**
-
 - **S15** (الجذور التربيعية): m1
 
-> ⚠️ **ملاحظة:** الدروس `L2-L7` النصية **مفقودة** في `curriculum/lessons/` — المجلد يحوي `L0` و `L1` فقط.
+### ⚠️ حالة الدروس الفعلية
+
+| الملف | الحالة |
+|---|---|
+| `curriculum/lessons/L0/intro.ts` | ✅ موجود |
+| `curriculum/lessons/L0/S01.ts` | ✅ موجود (قيد إعادة الكتابة) |
+| `curriculum/lessons/L0/S02.ts` | ✅ موجود (قيد إعادة البناء) |
+| `curriculum/lessons/L1/S03.ts` | ✅ موجود |
+| `curriculum/lessons/L1/S04.ts` | ✅ موجود |
+| `curriculum/lessons/L2-L7/` | 🔴 **لم تُبنَ** |
+
+**⬅️ 4 دروس فعلية + intro — الباقي قيد البناء.**
 
 ---
 
-### 4.1 قواعد الأصابع — كوجيما (محدث جلسة 14)
+### 4.1 قواعد الأصابع — كوجيما
 
 **من كتاب Kojima — The Japanese Abacus (1954):**
 
 | الإصبع | الوظيفة |
 |---|---|
-| **الإبهام** (Thumb) | يرفع الخرزات السفلية (1-4) نحو العارضة |
-| **السبابة** (Index) | يُنزل الخرزة العلوية (5) · ويُبعد الخرزات السفلية عند التصفير |
-| **التقريص** (Pinch) | الإبهام والسبابة **معًا في وقت واحد** لتشكيل 6-9 |
+| **الإبهام** | يرفع الخرزات السفلية (1-4) نحو العارضة |
+| **السبابة** | يُنزل الخرزة العلوية (5) · ويُبعد الخرزات السفلية عند التصفير |
+| **التقريص** (Pinch) | الإبهام والسبابة **معًا** لتشكيل 6-9 |
 
-**الدليل من الكتاب (ص 29):**
+**الدليل (ص 29):**
 > *"Push LOWER beads UP (thumb) and an UPPER bead DOWN (finger) simultaneously. We call this move the pinch."*
 
 ---
@@ -210,9 +241,9 @@ src/data/srb/
 ├── questions/
 │   └── L0.ts → L7.ts     ✅ 8 ملفات — 275 سؤالًا
 └── exams/                🔴 لم يُبنَ بعد
-    ├── CE1.ts            (امتحان القسم 1)
-    ├── CE2.ts            (امتحان القسم 2)
-    └── PT.ts             (تحديد المستوى)
+    ├── CE1.ts            (امتحان القسم 1 — قيد البناء)
+    ├── CE2.ts            (امتحان القسم 2 — قيد البناء)
+    └── PT.ts             (تحديد المستوى — قيد البناء)
 ```
 
 نظام المراحل (Phases)
@@ -225,24 +256,42 @@ ANZ-V أنزان بصري عادي ✅
 ANZ-F أنزان Flash ✅
 ANZ-A أنزان سمعي ✅
 X اختبار المستوى ✅
-CE امتحان القسم ✅
-PT تحديد المستوى ✅
+CE امتحان القسم ⚠️ نوع موجود · تطبيق قيد البناء
+PT تحديد المستوى ⚠️ نوع موجود · تطبيق قيد البناء
 EN الإثراء ❌
 
 بنية السؤال
 
-الصيغة: SRB-L{L}-S{S}-m{m}-{V}{NNN}
-
-مثال: SRB-L1-S03-m1-A001
+```ts
+{
+  id: "SRB-L1-S03-m1-A001",
+  level: "L1",
+  section: "S03",
+  module: "m1",
+  sequence: 1,
+  variant: "A",
+  primary_phase: "P",
+  allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
+  question: "...",
+  operands: [...],
+  operation: "...",
+  result: ...,
+  solution: "...",
+  movement: "direct",
+  difficulty: 2,
+  expected_time_ms: 12000,
+  expected_anzan_ms: 7000,
+  tags: [...]
+}
+```
 
 قواعد:
 
 · 5 أسئلة لكل (L, S, m) على الأقل.
-· التسلسل يعاد ترقيمه لكل (L, S, m).
+· التسلسل يُعاد ترقيمه لكل (L, S, m).
 · variant: A = أساسي · B = متقدم (للمستقبل).
-· allowed_phases: E · T · P · ANZ-V · ANZ-F · ANZ-A · X.
 
-الـ movements الممكنة:
+الـ movements الممكنة
 
 القيمة المعنى
 direct حركة مباشرة
@@ -254,7 +303,7 @@ carry حمل
 borrow استلاف
 mixed مختلط
 
-قاعدة الجلسة:
+قاعدة الجلسة
 
 ```text
 عدد الأسئلة = max(عدد m في المستوى، 5)
@@ -277,7 +326,8 @@ mixed مختلط
 النشر GitHub Pages (GitHub Actions)
 التخزين localStorage (مستقبلًا: IndexedDB)
 الحركات Framer Motion
-الأصوات Web Speech API (للإنجليزية) + MP3 (للعربية)
+الأصوات Web Speech API (إنجليزية) + MP3 (عربية)
+الاختبارات vitest (مُعدّ · لا اختبارات بعد)
 
 6.2 بيئة التشغيل
 
@@ -285,11 +335,10 @@ mixed مختلط
 · بدون سيرفر — ملفات ثابتة.
 · بدون قاعدة بيانات — البيانات على الجهاز.
 
-6.3 قرار صوتي (جلسة 14)
+6.3 قرار صوتي
 
-للغة العربية: Sorobana MP3 (كما هو — قصة مسجلة).
-
-للغة الإنجليزية: Web Speech API — صوت المتصفح المدمج.
+· العربية: Sorobana MP3 (قصة مسجلة).
+· الإنجليزية: Web Speech API (صوت المتصفح).
 
 السبب في اختيار Web Speech بدل Edge TTS:
 
@@ -298,7 +347,7 @@ mixed مختلط
 يعمل offline ✅ ❌
 يحتاج API خارجي ❌ ✅
 CORS لا مشكلة مشكلة حاسمة
-رسمي ✅ ⚠️ غير موثّق
+رسمي ✅ ⚠️
 يعمل في PWA ✅ ⚠️
 
 التبديل: عند تغيير اللغة إلى الإنجليزية → يتوقف كل صوت Sorobana تلقائيًا.
@@ -313,7 +362,7 @@ CORS لا مشكلة مشكلة حاسمة
 sorobanmind-2/
 ├── public/
 │   ├── audio/            12 ملف صوتي
-│   ├── images/           ← جديد جلسة 14 (6 ملفات SVG متحركة)
+│   ├── images/           6 ملفات SVG متحركة
 │   └── stories/          10 ملفات قصص
 ├── src/
 ├── index.html
@@ -323,10 +372,12 @@ sorobanmind-2/
 ├── tsconfig.json
 ├── README.md
 ├── PROJECT_MASTER.md     ← هذا الملف
+├── AL-ISLAH.md           ← وثيقة الحماية
+├── PROJECT_PLAN.md       ← المخطط المعماري
 └── ACHIEVEMENTS.md       ← سجل الجلسات
 ```
 
-7.1.1 public/images/ — ملفات SVG (جديد جلسة 14)
+7.1.1 public/images/ — ملفات SVG
 
 ```text
 public/images/
@@ -336,10 +387,13 @@ public/images/
 ├── soroban-parts-animated.svg            ✅ (p3)
 ├── soroban-rule-animated.svg             ✅ (p4)
 ├── soroban-benefits-animated.svg         ✅ (p6)
-└── soroban-ready-animated.svg            ✅ (p7)
+├── soroban-ready-animated.svg            ✅ (p7)
+├── soroban-numbers-0-4-animated.svg      ✅ (جلسة 15)
+├── soroban-number-5-animated.svg         ✅ (جلسة 15)
+└── soroban-pinch-animated.svg            ✅ (جلسة 15)
 ```
 
-ملاحظة مهمة: جميع الصور تُستدعى عبر import.meta.env.BASE_URL — إصلاح جلسة 14 لمشكلة المسار على GitHub Pages.
+ملاحظة: جميع الصور تُستدعى عبر import.meta.env.BASE_URL — إصلاح جلسة 14.
 
 7.2 البنية العامة لـ src/
 
@@ -349,7 +403,7 @@ src/
 ├── types.ts                      ← الأنواع العامة
 ├── i18n/                         ← الترجمة
 ├── curriculum/                   ← المنهج (الدروس النصية)
-├── engine/                       ← المحرك الرياضي (مجمّد)
+├── engine/                       ← المحرك (5 ملفات · أساس المستقبل)
 ├── data/                         ← البيانات (SRB + البنوك)
 ├── store/                        ← المتاجر (Zustand)
 ├── utils/                        ← الأدوات المساعدة
@@ -383,8 +437,8 @@ curriculum/
     ├── index.ts                  ← الفهرس الموحّد
     ├── types.ts                  ← أنواع الدروس (معدّل جلسة 14)
     ├── L0/
-    │   ├── intro.ts              ← مقدمة L0 (معدّل جلسة 14)
-    │   ├── S01.ts                ← تمثيل الأرقام (معاد كتابته جلسة 14)
+    │   ├── intro.ts              ← مقدمة L0
+    │   ├── S01.ts                ← تمثيل الأرقام
     │   ├── S02.ts                ← القيمة المكانية
     │   └── test-pool.ts          ← أسئلة اختبار L0
     └── L1/
@@ -394,80 +448,32 @@ curriculum/
 
 الحالة:
 
-· ✅ L0 مكتمل.
-· ✅ L1 مكتمل.
+· ✅ L0 مكتمل (4 ملفات).
+· ✅ L1 مكتمل (2 ملفين).
 · 🔴 L2-L7 مفقودة.
 
-7.4.1 lessons/types.ts — تعديل جلسة 14
-
-إضافة نوع جديد:
-
-```ts
-export type LocalizableText = string | BilingualText;
-```
-
-تعديل IntroPage:
-
-```ts
-export interface IntroPage {
-  id: string;
-  title: LocalizableText;      // ← كان: string
-  content: LocalizableText;    // ← كان: string
-  imageSvg?: string;
-  imageAlt?: LocalizableText;  // ← كان: string
-}
-```
-
-إضافة دالة:
-
-```ts
-export function resolveLocalized(
-  value: LocalizableText | undefined,
-  lang: "ar" | "en" = "ar",
-): string
-```
-
-الغرض: تمكين الترجمة دون كسر البناء الحالي.
-
-7.4.2 lessons/L0/intro.ts — تعديل جلسة 14
-
-التغييرات:
-
-· إضافة imageSvg لكل صفحة (7 صفحات).
-· p5 → imageSvg: 'soroban-interactive' (مكوّن تفاعلي).
-· إزالة ذكر «13 عمودًا».
-
-7.5 src/engine/
+7.5 src/engine/ — 5 ملفات (أساس المستقبل)
 
 ```text
 engine/
-├── sorobanMoves.ts               ← قواعد الحركات — 🔒 معزول
-├── sorobanEngine.ts              ← محرك الحساب — 🔒 معزول
-├── masteryTracker.ts             ← تتبع الإتقان — ✅ نظيف · معزول
-├── problemGenerator.ts           ← مولّد المسائل — 🟡 يعتمد على bank
-└── adaptiveEngine.ts             ← المحرك التكيفي — 🟡 يعتمد على bank
+├── sorobanMoves.ts               ← قواعد الحركات — 🔒 مجمّد
+├── sorobanEngine.ts              ← محرك الحساب — 🔒 مجمّد
+├── masteryTracker.ts             ← تتبع الإتقان — أساس المستقبل
+├── problemGenerator.ts           ← مولّد المسائل — أساس المستقبل
+└── adaptiveEngine.ts             ← المحرك التكيفي — أساس المستقبل
 ```
 
-الحقيقة:
-src/engine/ كلها معزولة — لا أحد يستدعيها.
+الحالة:
 
-الملف مُستخدَم؟ يستورد من bank؟
-sorobanMoves.ts ❌ ❌
-sorobanEngine.ts ❌ ❌
-masteryTracker.ts ❌ ❌
-problemGenerator.ts ❌ ✅ bank-linked
-adaptiveEngine.ts ❌ ✅ bank-linked
-
-السبب:
-
-· السوروبان التفاعلي (Soroban2D5.tsx) يحسب بنفسه.
-· التمارين والأنزان تُبنى من SRB مباشرة.
+· أساس المستقبل — لم يُبنَ بالكامل.
+· masteryTracker مستخدم من adaptiveEngine:71 (استخدام داخلي).
+· sorobanMoves مستخدم من sorobanEngine:15 + SorobanEngineDebug:18.
+· لا يمس التدريبات أو الأنزان.
 
 القرار:
 
 · 🔒 مجمّد حاليًا.
-· 📌 يُدمج مع SRB لاحقًا — بعد إصلاح التخزين الشامل.
-· المنطق الرياضي لا يُلمس — فقط الاستيرادات.
+· 📌 يُدمج مع SRB بعد Attempt Record (المرحلة 9).
 
 7.6 src/data/
 
@@ -482,19 +488,15 @@ data/
 │   ├── progress.ts
 │   ├── remediation.ts
 │   ├── index.ts
-│   ├── questions/
-│   │   └── L0.ts → L7.ts         (8 ملفات — 275 سؤالًا)
-│   └── exams/                    🔴 لم يُبنَ
-│       ├── CE1.ts
-│       ├── CE2.ts
-│       └── PT.ts
+│   ├── questions/                (8 ملفات — 275 سؤالًا)
+│   └── exams/                    🔴 قيد البناء
 │
 ├── srb-adapter.ts                ← واجهة موحّدة SRB ✅ مستقل
 │
 ├── bank.ts                       ← v1 — معزول تمامًا
 ├── bank-linked.ts                ← يربط v2 + raw — 🟡
 ├── bank-adapter.ts               ← مربوط بـ bank-linked
-├── bank-v2/                      ← ~935 سؤالًا — 🟡 للامتحانات
+├── bank-v2/                      ← 583 سؤالًا — 🟡 للامتحانات
 ├── bank-raw/                     ← 400 سؤال — 🟡 لتحديد المستوى
 ├── curriculum.ts                 ← بيانات المنهج القديم
 ├── modes.ts                      ← أنماط اللعب
@@ -503,23 +505,24 @@ data/
 
 الحالة:
 
-· ✅ SRB مكتمل ومستقل تمامًا (srb-adapter يستورد من ./srb فقط).
-· 🔴 srb/exams/ لم يُبنَ.
-· 🟡 البنوك القديمة تنتظر فك الارتباط.
+· ✅ SRB مكتمل ومستقل تمامًا.
+· 🔴 srb/exams/ قيد البناء.
+· 🟡 البنوك القديمة تنتظر النقل.
 
 7.7 src/store/
 
 ```text
 store/
-├── progressStore.ts              ← المتجر الرئيسي
+├── progressStore.ts              ← المتجر الرئيسي — يبقى دائمًا
 ├── masteryBadgesStore.ts         ← شارات الإتقان
 └── numberStyleStore.ts           ← نمط الأرقام
 ```
 
 الحالة:
 
-· ✅ progressStore موجود — مصدر موحّد نظريًا.
-· ✅ عمليًا — يُكتب فيه من 12 شاشة (جلسة 13).
+· ✅ progressStore موجود — مصدر موحّد.
+· ✅ 7+ مستوردين.
+· ⚠️ 12 شاشة تكتب فيه (جلسة 13).
 
 7.8 src/utils/
 
@@ -528,12 +531,18 @@ utils/
 ├── numberStyle.ts                ← تنسيق الأرقام ✅
 ├── arabicNumbers.ts              ← تحويل الرقم لكلمات ✅
 ├── numerals.ts                   ← أدوات الأرقام ✅
-├── anzanBadges.ts                ← 🟡 للتنظيف
-├── audioAnzanBadges.ts           ← 🟡 للتنظيف
-├── badgeChecker.ts               ← 🟡 للتنظيف (فيه خطأ - × _)
-├── skillsChecker.ts              ← 🟡 للتنظيف
-└── certificateGenerator.ts       ← 🔴 غير مربوط
+├── anzanBadges.ts                ← 🟡 مصدر قديم معزول
+├── audioAnzanBadges.ts           ← 🔴 ملف ميت — صفر استيراد
+├── badgeChecker.ts               ← 🟡 مستخدم · يقرأ من مصدر مهجور
+├── skillsChecker.ts              ← 🔴 ملف ميت — صفر استيراد
+└── certificateGenerator.ts       ← ✅ مستخدم من 3 ملفات
 ```
+
+المطلوب (المرحلة 11):
+
+· حذف audioAnzanBadges.ts · skillsChecker.ts (ميتان).
+· إعادة كتابة badgeChecker.ts على progressStore.
+· توحيد AnzanBadges (3 تعريفات → 1).
 
 7.9 src/hooks/
 
@@ -544,18 +553,23 @@ hooks/
 ├── useConfetti.ts                ← الاحتفالات ✅
 ├── useSpeech.ts                  ← النطق الصوتي ✅
 ├── useSorobanaVoice.ts           ← صوت سوروبانا ✅
-├── useQuests.ts                  ← 🟡 يعتمد على مفاتيح قديمة
+├── useQuests.ts                  ← 🟡 يستخدم مفاتيح قديمة
 └── (2 خطافات أخرى)
 ```
+
+المطلوب (المرحلة 11):
+
+· إعادة كتابة useQuests على progressStore.
 
 7.10 src/components/
 
 ```text
 components/
-├── AdaptiveFeedback.tsx          ← 🔴 يستورد من bank-v2
+├── AdaptiveFeedback.tsx          ← 🔴 يقرأ من skillProgress (فارغ)
 ├── SorobanaCompanion.tsx         ← رفيق سوروبانا ✅
 ├── FloatingCompanion.tsx         ← الرفيق العائم ✅
 ├── DebugOverlay.tsx              ← لوحة المطور ✅
+├── SorobanEngineDebug.tsx        ← لوحة المحرك ✅
 ├── soroban2d5/                   ← السوروبان التفاعلي ✅
 │   ├── Soroban2D5.tsx
 │   ├── Rod2D5.tsx
@@ -563,7 +577,9 @@ components/
 │   ├── useSorobanLogic.ts
 │   ├── useBeadSound.ts
 │   └── useBeadHaptics.ts
-└── (~15 مكوّن آخر)
+├── CertificateLogo.tsx           ← ✅
+├── CertificateMedal.tsx          ← ✅
+└── (~12 مكوّن آخر)
 ```
 
 7.11 src/screens/ — 22 شاشة
@@ -571,42 +587,26 @@ components/
 # الشاشة الحالة
 1 WelcomeScreen ✅
 2 RoleSelection ✅
-3 HeroDashboard ✅ (يزر "فتح الكل")
-4 GuardianDashboard ✅ (SRB-first)
-5 CategoryScreen ⚠️ يقرأ من localStorage قديم
-6 LevelScreen ⚠️ يقرأ من localStorage قديم
+3 HeroDashboard ✅ (يقرأ exam2Passed — ميت)
+4 GuardianDashboard ✅ (يقرأ من progressStore)
+5 CategoryScreen ✅
+6 LevelScreen ✅
 7 LearnScreen ✅
-8 LessonScreen ✅ (معدّل جلسة 14)
-9 IntroductionScreen ✅ (معدّل جلسة 14)
-10 LevelTestScreen 🔴 يحتاج ربطًا بـ SRB
+8 LessonScreen ✅
+9 IntroductionScreen ✅
+10 LevelTestScreen 🔴 يستخدم buildL0Test لكل المستويات
 11 FingerMathScreen ✅
 12 MagicSecretsScreen ✅
-13 PracticeScreen ⚠️ يكتب في localStorage قديم
-14 AnzanScreen ⚠️ يكتب في localStorage قديم
-15 AudioAnzanScreen ⚠️ يكتب في localStorage قديم
+13 PracticeScreen ✅ (يحتاج Attempt Record)
+14 AnzanScreen ✅ (يحتاج Attempt Record)
+15 AudioAnzanScreen ✅ (يحتاج Attempt Record)
 16 PlacementTestScreen 🔴 يستورد من bank-v2
 17 CategoryExamScreen 🔴 يستورد من bank-v2
 18 SorobanPlayground ✅
-19 CrossMultiplicationScreen 🔴 غير مربوط
-20 CertificateScreen 🔴 غير مربوط
-21 RemediationScreen ✅ (مربوط بـ PracticeScreen)
-22 Header ✅ مكوّن
-
-7.11.1 IntroductionScreen.tsx — تعديل جلسة 14
-
-التغييرات:
-
-· إصلاح المسار: import.meta.env.BASE_URL بدل /images/.
-· إضافة Soroban2D5 لعرض المعداد التفاعلي في p5.
-· إضافة دالة localize() لتحويل LocalizableText إلى string.
-
-7.11.2 LessonScreen.tsx — تعديل جلسة 14
-
-التغييرات:
-
-· إضافة دالة localize().
-· إصلاح خطأ dangerouslySetInnerHTML → استخدام <img> مع BASE_URL.
-· إصلاح أخطاء TS2322 السبعة.
+19 CrossMultiplicationScreen 🟡 غير مربوط
+20 CertificateScreen 🟡 غير مستدعى
+21 KidsCertificateScreen ✅ (جلسة 15)
+22 RemediationScreen ✅
 
 ---
 
@@ -617,31 +617,24 @@ components/
 3 أنظمة تخزين متوازية:
 
 المعلومة progressStore localStorage قديم utils/*.ts
-اسم الطفل ✅ childName ✅ soroban_child_name —
-المستويات المكتملة ✅ completedLevels ✅ soroban_completed_levels —
-الدروس المكتملة ✅ completedLessons ⚠️ soroban_completed_lessons —
-تمارين ناجحة ✅ passedPractice ✅ soroban_passed_practice —
-أنزان بصري ✅ passedAnzanVisual ✅ soroban_passed_anzan_visual ✅ soroban_anzan_stats
-أنزان سمعي ✅ passedAnzanAudio ✅ soroban_passed_anzan_audio —
-شارات الأنزان ✅ anzanBadges ✅ soroban_anzan_badges ✅ anzanBadges.ts
-شارات الأنزان السمعي ✅ anzanAudioBadges ✅ soroban_anzan_audio_badges ✅ audioAnzanBadges.ts
-شارات الإتقان ✅ masteryBadgesStore ✅ soroban_mastery_badges —
-XP ✅ totalXP ✅ sorobanmind-stats —
-الستريك ✅ currentStreak ✅ sorobanmind-stats —
-الدرجات ✅ grades — —
-الجلسة العلاجية ✅ pendingRemediation — —
-سجل العلاجي ✅ remediationHistory — —
+اسم الطفل ✅ ✅ —
+المستويات المكتملة ✅ ✅ —
+الدروس المكتملة ✅ ⚠️ —
+تمارين ناجحة ✅ ✅ —
+أنزان بصري ✅ ✅ ✅
+أنزان سمعي ✅ ✅ —
+شارات الأنزان ✅ ✅ ✅
+شارات الأنزان السمعي ✅ ✅ ✅
+شارات الإتقان ✅ ✅ —
+XP ✅ ✅ —
+الستريك ✅ ✅ —
+الدرجات ✅ — —
+الجلسة العلاجية ✅ — —
+سجل العلاجي ✅ — —
 
 النتيجة: المعلومات موزعة على 2-3 أماكن.
 
-8.2 الأعراض
-
-· الكتابة في مكان، القراءة من مكان آخر.
-· لا مزامنة.
-· مثال: عند إكمال درس → يُكتب في localStorage، لكن progressStore يبقى فارغًا.
-· GuardianDashboard يقرأ من progressStore → 0%.
-
-8.3 خريطة المفاتيح (28 مفتاحًا)
+8.2 خريطة المفاتيح (37 مفتاحًا)
 
 المجموعة 1 — نظيفة ✅
 
@@ -654,14 +647,14 @@ XP ✅ totalXP ✅ sorobanmind-stats —
 المجموعة 2 — مكررة 🟡
 
 # المفتاح
-5 soroban_child_name
-6 soroban_companion
+5 soroban_child_name · soroban_child_full_name
+6 soroban_companion · CHARACTER_STORAGE_KEY
 7 soroban_number_style
 
 المجموعة 3 — التقدم الرئيسية 🔴
 
 # المفتاح يُكتب من يُقرأ من
-8 soroban_completed_lessons LessonScreen LearnScreen · LevelScreen
+8 soroban_completed_lessons App · LessonScreen App · useQuests · badgeChecker
 9 soroban_completed_levels HeroDashboard · CategoryExamScreen CategoryScreen · LevelScreen
 10 soroban_passed_practice HeroDashboard · App.tsx CategoryScreen · LevelScreen
 11 soroban_passed_anzan_visual HeroDashboard CategoryScreen · LevelScreen
@@ -672,54 +665,68 @@ XP ✅ totalXP ✅ sorobanmind-stats —
 # المفتاح
 13 soroban_passed_level_tests
 14 soroban_exam1_passed · soroban_exam2_passed
-15 soroban_exam_result
-16 soroban_weak_skills_v2
-17 soroban_section2_unlocked
+15 soroban_exam1_score · soroban_exam2_score
+16 soroban_exam1_last_attempt · soroban_exam2_last_attempt
+17 soroban_exam_result
+18 soroban_weak_skills_v2
+19 soroban_section2_unlocked
 
 المجموعة 5 — إحصاءات وشارات 🔴
 
 # المفتاح
-18 soroban_anzan_stats
-19 soroban_practice_stats
-20 soroban_anzan_badges
-21 soroban_anzan_audio_badges
+20 soroban_anzan_stats
+21 soroban_practice_stats
+22 soroban_anzan_badges
+23 soroban_anzan_audio_badges
 
 المجموعة 6 — ثانوية ✅
 
 # المفتاح
-22 soroban_unlocked_secrets
-23 soroban_welcome_seen
+24 soroban_unlocked_secrets · soroban_secrets_best_scores
+25 soroban_welcome_seen
+26 soroban_completed_enrichment
 
 المجموعة 7 — مؤقتة 🟡
 
 # المفتاح
-24 soroban_placement_recommended
-25 soroban_placement_weak_skills
-26 soroban_level_test_last_attempt_L0
+27 soroban_placement_recommended
+28 soroban_placement_weak_skills
+29 soroban_placement_last_attempt
+30 soroban_placement_result
+31 soroban_level_test_last_attempt_L0
+32 soroban_lesson_session_*
 
-🚨 المجموعة 8 — خطيرة
+🚨 المفاتيح الحرجة:
 
 # المفتاح المشكلة
-27 soroban-completed-lessons (بـ -) 🔴 مكرر خطأً — يبحث فيه badgeChecker + useQuests
-28 sorobanmind-stats 🔴 قديم — موجود في badgeChecker + useQuests
+33 soroban-kids_certificate_ready يُكتب ولا يُقرأ
+34 soroban_dev_preview مفتاح مخفي
+35 soroban-completed-lessons (بـ -) مكرر خطأً — يبحث فيه badgeChecker + useQuests
+36 sorobanmind-stats قديم — موجود في badgeChecker + useQuests
+37 soroban_exam_result مفتاح ثالث لحالة الامتحان
 
-8.4 الإصلاح الشامل
+⬅️ 4 مفاتيح يتيمة (تُقرأ ولا تُكتب):
+
+· soroban_anzan_stats
+· soroban_practice_stats
+· sorobanmind-stats
+· soroban_exam_result
+
+8.3 الإصلاح الشامل (المرحلة 11)
 
 المبدأ: progressStore + srb_progress = المصدران الوحيدان.
 
 الخطوات:
 
-1. إضافة completedLessons إلى srb_progress.
-2. تعديل App.tsx — الكتابة في progressStore.
-3. تعديل LevelScreen — القراءة من progressStore.
-4. تعديل CategoryScreen — القراءة من progressStore.
-5. تعديل LessonScreen — الكتابة في progressStore.
-6. تعديل PracticeScreen → markPracticePassed.
-7. تعديل AnzanScreen → markAnzanVisualPassed + setAnzanBadge.
-8. تعديل AudioAnzanScreen → markAnzanAudioPassed + setAnzanAudioBadge.
-9. إصلاح - × _ في badgeChecker + useQuests.
-10. إصلاح زر "فتح الكل" — يكتب في progressStore.
-11. ربط awardBadge — عند الإجابة بزمن قياسي.
+1. ترحيل soroban_completed_lessons → progressStore.
+2. ترحيل soroban_passed_* → progressStore.
+3. ترحيل soroban_anzan_badges → progressStore.
+4. ترحيل soroban_placement_* → progressStore.
+5. ترحيل soroban_exam* → progressStore.
+6. إعادة كتابة badgeChecker على progressStore.
+7. إعادة كتابة useQuests على progressStore.
+8. حذف الملفات الميتة (audioAnzanBadges · skillsChecker).
+9. توحيد AnzanBadges (N55).
 
 ---
 
@@ -727,51 +734,48 @@ XP ✅ totalXP ✅ sorobanmind-stats —
 
 9.1 نظرة عامة
 
-كل مستوى يُقيَّم بأربعة أقسام منفصلة. كل قسم له درجة كاملة = ١٠٠.
+كل مستوى يُقيَّم بأربعة أقسام منفصلة. كل قسم له درجة كاملة = 100.
 
 القسم الدرجة الكاملة النجاح
-✏️ تمرّن (P) ١٠٠ ٧٠٪
-🧠 أنزان بصري عادي (ANZ-V) ١٠٠ ٧٠٪
-⚡ أنزان بصري فلاش (ANZ-F) ١٠٠ ٧٠٪
-🎧 أنزان سمعي (ANZ-A) ١٠٠ ٧٠٪
-🎓 اختبار المستوى (X) ١٠٠ ٨٠٪
+✏️ تمرّن (P) 100 70%
+🧠 أنزان بصري عادي (ANZ-V) 100 70%
+⚡ أنزان بصري فلاش (ANZ-F) 100 70%
+🎧 أنزان سمعي (ANZ-A) 100 70%
+🎓 اختبار المستوى (X) 100 80%
 
 9.2 التسلسل الكامل
 
 ```text
-١. تعلّم (الدروس النصية)
+1. تعلّم (الدروس النصية)
         ↓
-٢. "أنهيت المستوى" — عند آخر "جرّب" في آخر درس
+2. "أنهيت المستوى" — عند آخر "جرّب" في آخر درس
         ↓
-٣. يُفتح: تمرّن + أنزان (بصري عادي · بصري فلاش · سمعي)
+3. يُفتح: تمرّن + أنزان (بصري عادي · بصري فلاش · سمعي)
         ↓
-٤. عند نجاح كل قسم (٧٠٪) → شارة "مجتاز بدرجة كذا"
+4. عند نجاح كل قسم (70%) → شارة
    · لا إعادة بعد النجاح
         ↓
-٥. عند نجاح التمرّن + كل أقسام الأنزان → يُفتح اختبار المستوى
+5. عند نجاح التمرّن + كل أقسام الأنزان → يُفتح اختبار المستوى
         ↓
-٦. عند نجاح الاختبار (٨٠٪) → الشهادة
+6. عند نجاح الاختبار (80%) → الشهادة
 ```
 
-9.3 توزيع العلامة النهائية (الشهادة)
+9.3 توزيع العلامة النهائية
 
 ```text
 العلامة النهائية =
-    (درجة الاختبار        × ٧٠٪)
-  + (درجة التمرّن         × ١٠٪)
-  + (درجة الأنزان البصري  × ١٠٪)
-  + (درجة الأنزان السمعي  × ١٠٪)
-  = ١٠٠٪
+    (درجة الاختبار × 70%)
+  + (درجة التمرّن × 10%)
+  + (درجة الأنزان البصري × 10%)  ← متوسط (عادي + فلاش) ÷ 2
+  + (درجة الأنزان السمعي × 10%)
+  = 100%
 ```
 
-الأنزان البصري = متوسط (عادي + فلاش) ÷ ٢.
+⬅️ الأنزان البصري = متوسط حسابي (عادي + فلاش) ÷ 2.
 
-9.4 قواعد التقريب
+⬅️ علامة الفتح: يشترط الاثنين (AND) — عادي + فلاش.
 
-· كل درجة تُقرَّب لأقرب ١ دون كسور.
-· النسبة النهائية تُقرَّب لأقرب ١ دون كسور.
-
-9.5 قواعد النجاح والإعادة
+9.4 قواعد النجاح والإعادة
 
 الحالة القاعدة
 نجاح تمرّن لا إعادة
@@ -781,60 +785,56 @@ XP ✅ totalXP ✅ sorobanmind-stats —
 نجاح اختبار المستوى لا إعادة
 رسوب اختبار إعادة بعد فترة انتظار
 
-⚠️ فترة الانتظار: الكود الحالي = ٤٨ ساعة (EXAM_COOLDOWN_MS)، الواجهة تعرض ٢٤ ساعة. يحتاج توحيد.
+⬅️ فترة الانتظار:
 
-9.6 الشهادات
+· اختبار مستوى (X): 24 ساعة (L0_TEST_COOLDOWN_MS).
+· امتحان قسم + Placement: 48 ساعة (EXAM_COOLDOWN_MS).
+
+9.5 الشهادات
 
 الوضع الحالي:
 
-· شاشة CertificateScreen موجودة — غير مربوطة.
-· الشهادة الحالية للقسم الأخير.
+· KidsCertificateScreen — موجود (جلسة 15) · يحتاج ربط.
+· CertificateScreen — موجود · غير مستدعى.
 
 المطلوب:
 
-· شهادة قسم الصغار — تصميم جديد (L0-L3).
-· شهادة قسم الكبار — موجودة، تحتاج ربطًا (L4-L7).
+· شهادة قسم الصغار (L0-L3).
+· شهادة قسم الكبار (L4-L7).
 
 المحتوى:
 
 · اسم الطفل.
-· الدرجات الأربعة (اختبار · تمرّن · بصري · سمعي).
+· الدرجات الأربعة.
 · العلامة النهائية.
 · الميدالية.
 · رقم الشهادة.
 · التاريخ + رابط التحقق.
 
-9.7 تصنيف الميداليات
+9.6 تصنيف الميداليات
 
 العلامة الميدالية التصنيف
-٩٥-١٠٠ 🥇 ذهبية ممتاز
-٩٠-٩٤ 🥈 فضية ممتاز مرتفع
-٨٥-٨٩ 🥉 برونزية جيد جدًا
-٨٠-٨٤ 🎖️ نجاح جيد
-< ٨٠ ❌ لا شهادة
+95-100 🥇 ذهبية ممتاز
+90-94 🥈 فضية ممتاز مرتفع
+85-89 🥉 برونزية جيد جدًا
+80-84 🎖️ نجاح جيد
+< 80 ❌ لا شهادة —
 
-9.8 شارات السرعة (Mastery Badges)
+9.7 شارات السرعة (Mastery Badges)
 
 الشارة الشرط
-🥇 ذهبية (mastery) إجابة ≤ ٥٠٪ من الزمن المعياري
-👍 مقبول (accepted) إجابة ≤ ٧٥٪
-🐢 بطيء (slow) إجابة > ٧٥٪
+🥇 ذهبية (mastery) إجابة ≤ 50% من الزمن المعياري
+👍 مقبول (accepted) إجابة ≤ 75%
+🐢 بطيء (slow) إجابة > 75%
 
-9.9 Adaptive Speed
-
-```text
-كل ٥ إجابات صحيحة متتالية → -٥٪ من الزمن المعياري
-الحد الأدنى: ٥٠٪ من الأصلي
-```
-
-9.10 الجلسة العلاجية
+9.8 الجلسة العلاجية
 
 المعادلة:
 
 ```text
 الضعف = (1 - accuracy) × 60
-        + 20 إذا accuracy < 50%
-        + 20 إذا avgTimeMs > 15000
+      + 20 إذا accuracy < 50%
+      + 20 إذا avgTimeMs > 15000
 
 عتبة "ضعيف" = 50
 نسبة الأسئلة العلاجية = 70%
@@ -843,22 +843,15 @@ XP ✅ totalXP ✅ sorobanmind-stats —
 الخصائص:
 
 · بلا درجات.
-· إظهار الحل فورًا بعد كل سؤال.
+· إظهار الحل فورًا.
 · مخصصة لـ m ضعيف.
-
-التصنيفات:
-
-· 🏆 أتقنتها بزمن قياسي (≤ ٥٠٪)
-· 👍 جيدة (زمن مقبول ≤ ٧٥٪)
-· ⚠️ تحتاج تقوية (> ٧٥٪ أو خطأ)
-
-ملاحظة: movement غير مطبَّق حاليًا — مؤجل.
+· يجب إعادة قياس Accuracy · Speed · Consecutive قبل إزالة الضعف.
 
 ---
 
 10. نظام القفل والفتح
 
-10.1 التسلسل الحقيقي (يعمل ✅)
+10.1 التسلسل
 
 ```text
 داخل الدرس:
@@ -867,14 +860,13 @@ XP ✅ totalXP ✅ sorobanmind-stats —
     آخر "جرّب" → "أنهيت المستوى"
         ↓
 داخل المستوى:
-    يُفتح: تمرّن + أنزان (بصري عادي · فلاش · سمعي)
+    يُفتح: تمرّن + أنزان
         ↓
-    نجاح التمرّن (٧٠٪) + كل أنزان (٧٠٪) → يُفتح الاختبار
+    نجاح التمرّن (70%) + كل أنزان (70%) → يُفتح الاختبار
         ↓
-    نجاح الاختبار (٨٠٪) → يُفتح المستوى التالي
+    نجاح الاختبار (80%) → يُفتح المستوى التالي
         ↓
-التنقل:
-    L0 → L1 → L2 → ... → L7
+التنقل: L0 → L1 → L2 → ... → L7
 ```
 
 10.2 مصادر القفل
@@ -885,27 +877,16 @@ XP ✅ totalXP ✅ sorobanmind-stats —
 فتح أنزان progressStore.completedLessons
 فتح اختبار progressStore.passedPractice + passedAnzan*
 فتح المستوى التالي progressStore.completedLevels
-فتح القسم 2 progressStore (جديد)
-
-✅ تم توحيدها في جلسة 13.
 
 10.3 زر "فتح الكل" (GuardianDashboard)
 
-يكتب في:
+مشكلة حالية: الزر يُقفل الأقسام بدل فتحها — يعطّل المعاينة.
 
-· progressStore.completedLevels
-· progressStore.passedPractice
-· progressStore.passedAnzanVisual
-· progressStore.passedAnzanAudio
-· progressStore.completedLessons ← جديد جلسة 13
+الحل (المرحلة 3):
 
-يمسح:
-
-· soroban_exam1_passed
-· soroban_exam2_passed
-· soroban_exam_result
-· soroban_anzan_badges
-· soroban_anzan_audio_badges
+· فصل "وضع المعاينة" عن الحالة الحقيقية.
+· حالة preview مؤقتة.
+· الخروج يرجع الحالة الأصلية.
 
 ---
 
@@ -915,54 +896,50 @@ XP ✅ totalXP ✅ sorobanmind-stats —
 
 📚 المنهج:
 
-· curriculum/types.ts ← 14 مستوردًا (مجمّد)
-· curriculum/lessons/types.ts ← 5 مستوردين (قابل للتعديل — معدّل جلسة 14)
-· curriculum/lessons/index.ts ← LearnScreen · LessonScreen · App.tsx · IntroductionScreen
+· curriculum/types.ts ← 14 مستوردًا (مجمّد).
+· curriculum/lessons/types.ts ← 5 مستوردين.
+· curriculum/lessons/index.ts ← 4 شاشات.
 
 🏦 بنك SRB (مستقل ✅):
 
-· data/srb/ ← 9 ملفات + 8 ملفات أسئلة
-· data/srb-adapter.ts ← 5 شاشات
+· data/srb/ ← 9 ملفات + 8 ملفات أسئلة.
+· data/srb-adapter.ts ← 5 شاشات.
 
 🏦 البنوك القديمة:
 
-· data/bank-v2/ ← CategoryExam · PlacementTest
-· data/bank-raw/ ← bank-v2/bank-exam + bank-adapter
-· data/bank-linked.ts ← adaptiveEngine · problemGenerator (معزولة)
+· data/bank-v2/ ← CategoryExam · PlacementTest.
+· data/bank-raw/ ← bank-v2/bank-exam + bank-adapter.
+· data/bank-linked.ts ← adaptiveEngine · problemGenerator.
 
-🧠 المحرك (معزول):
+🧠 المحرك (5 ملفات — أساس المستقبل):
 
-· كل الملفات معزولة — لا أحد يستدعيها.
+· استخدام داخلي بين الملفات نفسها.
 
 📦 المتاجر:
 
-· progressStore.ts ← 7+ مستوردين
-· masteryBadgesStore.ts ← GuardianDashboard · useGameStats
-· numberStyleStore.ts ← كل الشاشات
+· progressStore.ts ← 7+ مستوردين.
+· masteryBadgesStore.ts ← GuardianDashboard · useGameStats.
+· numberStyleStore.ts ← كل الشاشات.
 
 11.2 خريطة البنوك
 
 ```text
 bank-raw/ (400 سؤال — 7 ملفات)
     raw-01 → S1-S3
-    raw-02 → S4-S5
-    raw-03 → S6-S7
-    raw-04 → S8-S10
-    raw-05 → S11-S12
-    raw-06 → S13-S14
+    ...
     raw-07 → S15-S17
         ↓
-bank-v2/ (~935 سؤال — 4 parts + امتحانات)
+bank-v2/ (583 سؤال — 4 parts + امتحانات)
     part-01 → L0-L1
     part-02 → L2-L3
     part-03 → L4-L5
     part-04 → L6-L7
-    bank-exam.ts → EXAM_POOL_1 + EXAM_POOL_2
+    bank-exam.ts → 370 سؤالًا (180 + 190)
     placement-engine.ts → يستهلك Pools
         ↓
 bank-linked.ts ← يجمع v2 + raw
         ↓
-adaptiveEngine.ts · problemGenerator.ts (معزولة)
+adaptiveEngine.ts · problemGenerator.ts (أساس المستقبل)
 ```
 
 من يستورد من bank-v2:
@@ -972,8 +949,8 @@ adaptiveEngine.ts · problemGenerator.ts (معزولة)
 
 من يستورد من bank-linked:
 
-· adaptiveEngine.ts (معزول)
-· problemGenerator.ts (معزول)
+· adaptiveEngine.ts
+· problemGenerator.ts
 
 بنك SRB مستقل تمامًا:
 
@@ -981,204 +958,321 @@ adaptiveEngine.ts · problemGenerator.ts (معزولة)
 
 ---
 
-12. الحالة الحالية
+12. Attempt Record — الحلقة المفقودة
 
-نهاية الجلسة 14
+12.1 ما هو؟
 
-12.1 ما يعمل ✅
+سجل محاولة واحدة · سطر واحد لكل إجابة.
+
+مثال:
+
+```json
+{
+  "attemptId": "A-000184",
+  "timestamp": 1760000000000,
+  "level": "L1",
+  "section": "S03",
+  "skill": "S03-m2",
+  "questionId": "L1-S03-m2-017",
+  "phase": "P",
+  "correct": false,
+  "timeMs": 6200
+}
+```
+
+12.2 الحالة الحالية — الفجوة
+
+موجود:
+
+# العنصر الموقع
+1 نوع Attempt curriculum/types.ts
+2 دالة createAttempt() engine/masteryTracker.ts
+3 دالة recordAttempt() store/progressStore.ts
+4 حقول skillProgress progressStore
+
+مفقود:
+
+# العنصر
+1 استدعاء recordAttempt من الشاشات
+2 استدعاء createAttempt عند كل إجابة
+
+⬅️ النتيجة: skillProgress فارغ · التطبيق "أعمى" · لا تكييف.
+
+12.3 الحلقة الكاملة
+
+```text
+1. الطفل يحل سؤالًا
+        ↓
+2. Attempt Record يُنشأ
+        ↓
+3. recordAttempt يحفظه في skillProgress
+        ↓
+4. masteryTracker يحلّل
+        ↓
+5. adaptiveEngine يختار السؤال التالي
+        ↓
+   (يعود إلى 1)
+```
+
+12.4 التصميم في التمارين (3 أسطر)
+
+```ts
+const isCorrect = userAnswer === currentQ.result;
+const timeMs = Date.now() - questionStartTime;
+
+const attempt = {
+  skillId: currentQ.skillId,
+  questionId: currentQ.id,
+  phase: "P",
+  correct: isCorrect,
+  timeMs,
+  timestamp: Date.now(),
+};
+
+useProgressStore.getState().recordAttempt(attempt);
+```
+
+⬅️ نفس المنطق في 5 شاشات:
+
+· PracticeScreen.tsx — phase: "P"
+· AnzanScreen.tsx — phase: "ANZ-V" / "ANZ-F"
+· AudioAnzanScreen.tsx — phase: "ANZ-A"
+· CategoryExamScreen.tsx — phase: "CE"
+· PlacementTestScreen.tsx — phase: "PT"
+
+12.5 الفائدة
+
+قبل:
+
+```
+سؤال → إجابة → سؤال عشوائي
+```
+
+بعد:
+
+```
+سؤال → قياس → كشف ضعف → علاج → قياس → إتقان → تقدم
+```
+
+⬅️ التفاصيل الكاملة في AL-ISLAH.md — القسم 6.
+
+---
+
+13. قواعد العشرية
+
+13.1 القواعد
+
+قاعدة 1 — تحديد الحالة:
+
+· result % 1 === 0 → عدد صحيح → عرض كما هو.
+· result % 1 !== 0 → عشري → عرض برقمين بعد الفاصلة.
+
+قاعدة 2 — العرض:
+
+· صحيح: 4 → 4.
+· عشري: 3.8 → 3.80.
+
+قاعدة 3 — الإدخال:
+
+· صحيح: 4 → 4.
+· عشري: 3.80 → 380.
+· عشري: 0.48 → 48.
+
+قاعدة 4 — الأعمدة:
+
+· صحيح: عدد خانات الناتج.
+· عشري: عدد خانات الجزء الصحيح + 2.
+
+قاعدة 5 — المقارنة:
+
+```ts
+const factor = result % 1 !== 0 ? 100 : 1;
+const targetValue = Math.round(result * factor);
+const isCorrect = abacusValue === targetValue;
+```
+
+قاعدة 6 — القسمة:
+
+· كل أسئلة القسمة بدون باقٍ.
+· إذا الناتج صحيح → يُعرض صحيحًا.
+· إذا الناتج عشري → يُعرض برقمين.
+
+13.2 الملفات التي تحتاج تعديلًا
+
+# الملف السبب
+1 srb/questions/L6.ts الأسئلة الـ25
+2 AnzanScreen.getColumnsForQuestion القاعدة الجديدة
+3 PracticeScreen القاعدة الجديدة
+4 AudioAnzanScreen يحتاج فحص + القاعدة
+5 CategoryExamScreen N60 + الأعمدة
+6 PlacementTestScreen N60-ب + الأعمدة
+7 LevelTestScreen بعد نقل X إلى SRB
+
+⬅️ التفاصيل الكاملة في AL-ISLAH.md — القسم 2.
+
+---
+
+14. الحالة الحالية
+
+14.1 ما يعمل ✅
 
 العنصر الحالة
 بنك SRB ✅ 275 سؤالًا
 المنهج (بنية) ✅ 8 مستويات · 15 درسًا · 51 m
-درس المقدمة (L0-intro) ✅ 7 صفحات · صور متحركة · سوروبان تفاعلي
-القفل المتتابع ✅ يعمل (L0 · L1)
-التمرّن والأنزان ✅ يعملان
+درس المقدمة ✅ 7 صفحات · SVG متحركة
+القفل المتتابع ✅ يعمل
+التمرّن والأنزان ✅ يعملان من SRB
 التنقل بين المستويات ✅ يعمل
-الجلسة العلاجية ✅ مربوطة بزر
-التعليم التكيفي ✅ يعمل
+الجلسة العلاجية ✅ مربوطة
 GuardianDashboard ✅ يقرأ من progressStore
 النسخ الاحتياطي ✅ يعمل (JSON)
-وضع المعاينة ✅ يعمل
-البناء ✅ أخضر
+وضع المعاينة 🟡 يعمل — لكن يُقفل الأقسام
+البناء ✅ #684 أخضر
+صفحة الهبوط ✅ تعمل باحترافية
 
-12.2 ما يحتاج إصلاحًا 🔴
+14.2 ما يحتاج إصلاحًا 🔴
 
 العنصر المشكلة
-زر "فتح الكل" تم إصلاحه في جلسة 13
-الشارات لا تُمنح (تعارض - × _) — يحتاج فحصًا
-المهارات الأربع في GuardianDashboard 0% — يحتاج فحصًا
-الدروس L2-L7 مفقودة
-الامتحانات تعتمد على bank-v2
+XP مفقود 4 شاشات — onXP = console.log
+زر "فتح الكل" يُقفل الأقسام بدل فتحها
+الأنزان البصري computeFinalScore يقبل OR
+Number(level.slice(1)) هشّ مع L00
+recordPlacementAttempt ميت
+العشرية N60 + N60-ب
 الشهادات غير مربوطة
-28 مفتاح localStorage موزّعة، مكررة، بعضها ميت
-TTS للإنجليزية لم يُنفَّذ بعد
-lesson.story.ar يُستخدم مباشرة في LessonScreen (بلا localize)
-lesson.concept.ar · lesson.rule.ar نفس المشكلة
+37 مفتاح localStorage موزّعة · مكررة · ميتة
+badgeChecker · useQuests مفاتيح ميتة
+TTS للإنجليزية لم يُنفَّذ
 
-12.3 ما لم يُبنَ بعد 🟡
+14.3 ما لم يُبنَ بعد 🟡
 
 العنصر الحالة
-srb/exams/ 🔴 لم يُبنَ
+srb/exams/ (CE1 · CE2 · PT) 🔴 قيد البناء
 دروس L2-L7 🔴 لم تُبنَ
-شهادة قسم الصغار 🔴 لم تُصمَّم
+Attempt Record 🔴 غير مفعّل
+masteryTracker 🔴 غير مربوط
+adaptiveEngine 🔴 غير مفعّل
 CrossMultiplicationScreen 🟡 غير مربوط
-تعليم تكيفي حسب movement 🟡 مؤجل
-دمج المحرك مع SRB 🟡 مؤجل
-ترجمة L0-intro 🟡 البنية جاهزة · الترجمة لم تبدأ
-ترجمة S01 🟡 S01 يحتاج اختبارًا أولًا
-TTS للإنجليزية 🟡 القرار متخذ · التنفيذ مؤجل
+ترجمة L0 · L1 🟡 قيد التنفيذ
+TTS للإنجليزية 🟡 مؤجل
 
-12.4 ما أُنجز في جلسة 14 (جديد) ✅
+14.4 ما أُنجز في جلسة 15 ✅
 
-العنصر الحالة
-6 ملفات SVG متحركة ✅ في public/images/
-إصلاح مسار BASE_URL ✅ يعمل على GitHub Pages
-السوروبان التفاعلي في p5 ✅ يعمل
-بنية LocalizableText ✅ في lessons/types.ts
-دالة localize() ✅ في IntroductionScreen + LessonScreen
-إصلاح خطأ dangerouslySetInnerHTML ✅
-إصلاح 7 أخطاء TS2322 ✅ البناء أخضر
-S01 — إعادة كتابة (قيد الاختبار) 🟡
-قرار صوت TTS ✅ Web Speech API
-قواعد توثيق جديدة ✅ رأس موحّد + قيد نهاية جلسة
+· KidsCertificateScreen.tsx — جديد.
+· CertificateScreen.tsx — معدّل.
+· types.ts — 'kids-certificate' مضاف.
+· App.tsx — مسار الشهادة الجديد.
+· CategoryExamScreen.tsx — علم soroban_kids_certificate_ready.
+· LevelScreen.tsx — قسم «نجاح كامل» بالدرجة الموزونة.
+· progressStore.ts — computeFinalScore موزونة.
+· 3 SVG جديدة (numbers-0-4 · number-5 · pinch).
+· lessons/types.ts — flashSvg · flashAlt · kidTip · *En.
 
----
+❌ ما فشل:
 
-13. خطة العمل
+· S01.ts (commits #682 · #683).
 
-المرحلة 1 — إصلاح التخزين الشامل ✅ مكتملة (جلسة 13)
+14.5 ما أُنجز في جلسة 16-19 ✅
 
-الهدف: توحيد 28 مفتاحًا في 4 مفاتيح.
-
-الخطوات:
-
-1. ✅ إضافة completedLessons إلى srb_progress.
-2. ✅ تعديل App.tsx — الكتابة في progressStore.
-3. ✅ تعديل LevelScreen — القراءة من progressStore.
-4. ✅ تعديل CategoryScreen — القراءة من progressStore.
-5. ✅ تعديل LessonScreen — الكتابة في progressStore.
-6. ✅ تعديل PracticeScreen → markPracticePassed.
-7. ✅ تعديل AnzanScreen → markAnzanVisualPassed.
-8. ✅ تعديل AudioAnzanScreen → markAnzanAudioPassed.
-9. ⏳ إصلاح خطأ - × _ في badgeChecker + useQuests.
-10. ✅ إصلاح زر "فتح الكل".
-11. ⏳ ربط awardBadge.
-
-المرحلة 1.5 — المقدمة والترجمة (جلسة 14)
-
-1.5.1 — درس المقدمة ✅ مكتمل
-
-· ✅ 6 ملفات SVG متحركة.
-· ✅ إصلاح BASE_URL.
-· ✅ السوروبان التفاعلي في p5.
-
-1.5.2 — الأساس البنيوي للترجمة ✅ مكتمل
-
-· ✅ LocalizableText في lessons/types.ts.
-· ✅ localize() في IntroductionScreen + LessonScreen.
-· ✅ إصلاح 7 أخطاء البناء.
-
-1.5.3 — S01 🟡 قيد الاختبار
-
-· ✅ إعادة كتابة شاملة.
-· ✅ حركة التقريص (Pinch).
-· ⏳ اختبار في التطبيق.
-
-المرحلة 2 — ترجمة الدروس ⏳
-
-الخطوات:
-
-1. ترجمة L0-intro (7 صفحات × 3 حقول = 21 نصًا).
-2. تعديل LessonScreen لدعم تبديل اللغة.
-3. تفعيل TTS للإنجليزية (Web Speech API).
-4. ترجمة S01 · S02 · S03 · S04.
-5. ترجمة باقي الدروس عند بنائها.
-
-المرحلة 3 — بناء srb/exams/ 🔴
-
-الخطوات:
-
-1. إنشاء src/data/srb/exams/:
-   · index.ts · constants.ts · CE1.ts · CE2.ts · PT.ts
-2. الجسر المؤقت: export from bank-v2.
-3. تعديل الشاشتين — استيراد من srb/exams.
-4. النقل التدريجي لأسئلة bank-raw + bank-v2 → SRB.
-5. حذف البنوك القديمة.
-
-المرحلة 4 — بناء دروس L2-L7 🔴
-
-الخطوات:
-
-1. البحث في sorobanmind-platform-2026 عن دروس قديمة.
-2. بناء البنية لكل مستوى.
-3. تأليف المحتوى (شرح + أمثلة + قصة + تمارين).
-4. تحديث curriculum/lessons/index.ts.
-
-المرحلة 5 — الشهادات 🟡
-
-الخطوات:
-
-1. تصميم شهادة قسم الصغار.
-2. ربط CertificateScreen بالعلامة النهائية.
-3. اختبار.
-
-المرحلة 6 — تنظيف 🟢
-
-الخطوات:
-
-1. حذف الملفات الميتة:
-   · utils/anzanBadges.ts · audioAnzanBadges.ts · skillsChecker.ts · badgeChecker.ts
-   · hooks/useQuests.ts (أو تحديثه)
-2. توحيد فترة الانتظار (٢٤ أم ٤٨).
-3. تنظيف CategoryScreen.
-
-المرحلة 7 — دمج المحرك (مؤجل) 🟡
-
-1. نقل problemGenerator + adaptiveEngine → srb-adapter.
-2. ربط masteryTracker.
-3. إضافة movement للتعليم التكيفي.
-
-المرحلة 8 — النشر 🟢
-
-1. PWA.
-2. APK.
+· فحص شامل (GPT · Claude · 24 دليلًا مصورًا).
+· إنشاء AL-ISLAH.md — وثيقة الحماية.
+· اكتشاف 36 خطأ مؤكد + 7 مرفوض.
+· تصحيح الأرقام: 37 مفتاحًا · 583 سؤالًا · 370 bank-exam.
+· تحديد 12 مرحلة للتنفيذ.
 
 ---
 
-14. المشاكل المعروفة
+15. خطة العمل — 12 مرحلة
 
-14.1 حرجة (تُكسر وظائف)
+المرحلة 0 — الحماية (يوم واحد)
+
+# الخطوة
+0.1 رفع AL-ISLAH.md إلى المستودع
+0.2 Tag: baseline-2026-10-04
+0.3 ZIP احتياطي على الجوال
+
+المرحلة 1 — إصلاحات صغيرة (يومان)
+
+# الإصلاح
+1.1 N42 — XP مفقود في 4 شاشات
+1.2 B1 — حذف reload() الميت
+1.3 B4 — توحيد الأنزان البصري (AND + متوسط)
+1.4 B5 — فحص LevelId
+1.5 B9 — recordPlacementAttempt
+1.6 N60 · N60-ب — دالة عشرية مشتركة
+
+المرحلة 2 — توثيق ما يعمل (يوم)
+
+المرحلة 3 — حل زر "فتح الكل" للمعاينة (يوم)
+
+المرحلة 4 — إكمال المنهج (أسبوع)
+
+# المهمة
+4.1 إعادة بناء S02
+4.2 ترجمة L0 كامل
+4.3 ترجمة L1 كامل
+4.4 بناء L2 · L3
+4.5 بناء L4 · L5
+4.6 بناء L6 · L7
+
+المرحلة 5 — الشهادات (يوم)
+
+المرحلة 6 — srb/exams/ (أسبوعان)
+
+المرحلة 7 — Attempt Record (أسبوع)
+
+المرحلة 8 — masteryTracker (يومان)
+
+المرحلة 9 — adaptiveEngine (أسبوع)
+
+المرحلة 10 — تنظيف البنوك القديمة (يومان)
+
+المرحلة 11 — تنظيف عام (أسبوع)
+
+المرحلة 12 — الإصدار (أسبوع)
+
+⬅️ التفاصيل الكاملة في AL-ISLAH.md — القسم 7.
+
+---
+
+16. المشاكل المعروفة
+
+16.1 حرجة (تُكسر وظائف)
 
 # المشكلة
-1 تعارض soroban-completed-lessons × soroban_completed_lessons — يحتاج فحصًا
-2 progressStore لا يُكتب فيه من بعض الشاشات
-3 زر "فتح الكل" — تم إصلاحه (تحتاج تحققًا)
+1 XP مفقود في 4 شاشات (N42)
+2 زر "فتح الكل" يُقفل الأقسام
+3 تعارض AND × OR (B4)
 4 دروس L2-L7 مفقودة
+5 srb/exams/ غير موجود
+6 N60 · N60-ب (العشرية في الامتحانات)
 
-14.2 متوسطة
-
-# المشكلة
-5 sorobanmind-stats موجود رغم أن README يقول حُذف
-6 HeroDashboard يمسح مفاتيح لكن لا يُحدّث store
-7 CategoryScreen dual-write
-8 useQuests يعتمد على مفاتيح قديمة
-9 EXAM_COOLDOWN_MS = ٤٨ ساعة · الواجهة ٢٤ ساعة
-10 LessonScreen لا يقرأ اللغة (lesson.story.ar مباشرة)
-11 lesson.concept.ar · lesson.rule.ar — بلا localize
-12 LessonScreen السطر 335 — type خطأ محتمل
-
-14.3 بسيطة
+16.2 متوسطة
 
 # المشكلة
-13 SRBModule محدود بـ m1-m10
-14 SRBSection محدود بـ S01-S15
-15 i18n مفاتيح قديمة
-16 certificateGenerator يحتاج مراجعة
-17 CrossMultiplicationScreen غير مربوط
+7 reload() = reset() (B1)
+8 Number(level.slice(1)) (B5)
+9 recordPlacementAttempt ميت (B9)
+10 HeroDashboard يقرأ مفاتيح ميتة (N52)
+11 useQuests يعتمد على مفاتيح قديمة
+12 badgeChecker يقرأ من مصدر مهجور
+13 4 مفاتيح يتيمة
+14 LessonScreen لا يستخدم localize
+
+16.3 بسيطة
+
+# المشكلة
+15 SRBModule محدود بـ m1-m10
+16 SRBSection محدود بـ S01-S15
+17 i18n مفاتيح قديمة
+18 CrossMultiplicationScreen غير مربوط
+19 CertificateScreen غير مستدعى
+
+⬅️ التفاصيل الكاملة مع الأدلة في AL-ISLAH.md.
 
 ---
 
-15. المصادر والمراجع
+17. المصادر والمراجع
 
 مصادر المنهج
 
@@ -1187,28 +1281,25 @@ S01 — إعادة كتابة (قيد الاختبار) 🟡
 
 مصادر التقريص (Pinch)
 
-دليل من الكتاب (Kojima, 1954, ص 29):
+من الكتاب (Kojima, 1954, ص 29):
 
 "Push LOWER beads UP (thumb) and an UPPER bead DOWN (finger) simultaneously. We call this move the pinch."
 
-مصادر مستقلة تؤكد:
-
-· "When both top and bottom beads are required simultaneously, they are 'pinched' between thumb and forefinger. eg to set numbers 6-9."
-· "Pinching together one heaven bead and two earth beads sets a value of 7."
-
 مراجع المشروع
 
-· PROJECT_MASTER.md — هذا الملف.
-· ACHIEVEMENTS.md — سجل الجلسات.
-· README.md — نظرة عامة.
+الملف الغرض
+README.md نظرة عامة للمستخدمين
+PROJECT_MASTER.md هذا الملف — المرجع التقني
+AL-ISLAH.md ⚠️ وثيقة الحماية — اقرأها أولًا
+ACHIEVEMENTS.md سجل الجلسات
+PROJECT_PLAN.md المخطط المعماري
 
-روابط
+الروابط
 
 العنصر الرابط
 الموقع 
 المستودع 
 Actions 
-المستودع القديم  (مهجور)
 
 المطوّر
 
@@ -1221,10 +1312,10 @@ Actions
 قبل أي تعديل
 
 1. نسخة احتياطية (ZIP).
-2. مراجعة هذا المرجع.
+2. مراجعة AL-ISLAH.md — كاملًا.
 3. اسأل قبل التنفيذ — لا افتراضات.
 
-القواعد الذهبية
+القواعد الذهبية — مُحدَّثة (14 قاعدة)
 
 1. لا حذف إلا ما أُلغي صريحًا.
 2. المحرك الرياضي مجمّد.
@@ -1233,13 +1324,18 @@ Actions
 5. SRB هو البنك الوحيد.
 6. ملف واحد في المرة — ثم اختبار.
 7. نسخة احتياطية قبل أي تعديل.
-8. رأس موحّد لكل ملف معدّل (جلسة 14).
-9. قيد ACHIEVEMENTS.md في نهاية الجلسة فقط (جلسة 14).
-10. تحديث PROJECT_MASTER.md عند التعديلات البنيوية (جلسة 14).
+8. رأس موحّد لكل ملف معدّل.
+9. قيد ACHIEVEMENTS.md في نهاية الجلسة فقط.
+10. تحديث PROJECT_MASTER.md عند التعديلات البنيوية.
+11. لا حذف سطر من AL-ISLAH.md بدون دليل مصور.
+12. لا إصلاحات بنيوية دون قراءة قسم "مقصود".
+13. لا حذف badgeChecker · useQuests قبل إعادة الكتابة.
+14. لا حذف/استبدال/إعادة بناء progressStore.ts.
 
 مبدأ التعامل
 
-· الكود هو الحقيقة — لا الملفات النصية.
+· الكود الفعلي هو الحقيقة — لا الملفات النصية.
+· AL-ISLAH.md = الدرع الحامي.
 · اسأل قبل التنفيذ.
 · الخطة أهم من البناء السريع.
 
@@ -1262,10 +1358,38 @@ Actions
 
 صُنع بحب لأطفال العالم العربي 🌍
 
-آخر تحديث: 2026-10-04 — نهاية الجلسة 14
+آخر تحديث: 2026-10-04 — بعد الفحص الشامل
 
-الحالة: 🟢 البناء أخضر · المقدمة مكتملة · الترجمة بدأت · S01 جاهز للاختبار
+الحالة: 🟢 البناء #684 أخضر · التطبيق منشور · AL-ISLAH.md مرجع الحماية
+
+المرجع الأساسي: AL-ISLAH.md
 
 </div>
 
 </div>
+```
+
+---
+
+✅ ملخص ما تم تعديله
+
+# التعديل
+1 إضافة مرجع AL-ISLAH.md في الرأس + 4 مواضع
+2 تحديث الجلسة: 14 → 19
+3 إضافة 4 قواعد ذهبية جديدة (11-14)
+4 تحديث الأرقام: 37 مفتاحًا · 583 bank-v2 · 370 bank-exam · 4 يتيمة
+5 تصحيح src/engine/ — "أساس المستقبل" لا "معزول"
+6 إضافة قسم 12 — Attempt Record كامل
+7 إضافة قسم 13 — قواعد العشرية
+8 إعادة ترقيم الأقسام (14 → 17)
+9 تحديث خارطة الطريق — 12 مرحلة
+10 تصحيح B4 — AND + متوسط (لا OR)
+11 تحديث الحالة (14.1-14.5)
+12 إضافة سجل الجلسة 15-19
+13 تحديث المشاكل المعروفة (16.1-16.3)
+14 إضافة PROJECT_PLAN.md للمراجع
+15 توحيد اللغة مع AL-ISLAH.md
+16 إضافة 3 SVG جديدة للـimages
+17 تحديث "5 ملفات engine" — مع تفاصيل
+
+---
