@@ -2,6 +2,7 @@
 // ✅ SRB-first: يقرأ من progressStore + masteryBadgesStore
 // ✅ Props محفوظة للتوافق (deprecated — تُقرأ من store)
 // ✅ أزرار إدارية: حفظ نسخة + استعادة + فتح الكل + تصفير
+// [FIX 7] — زر المعاينة (بدل فتح الكل)
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMemo, useState, useRef } from 'react';
@@ -16,6 +17,9 @@ import {
 } from 'lucide-react';
 
 import { useQuests } from '../hooks/useQuests';
+
+// [FIX 7] — وضع المعاينة (toggle)
+import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
 
 // ═══ SRB Stores ═══
 import { useProgressStore } from '../store/progressStore';
@@ -198,6 +202,9 @@ export function GuardianDashboard({
   // ═══ 🛠️ الأزرار الإدارية ═══
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // [FIX 7] — وضع المعاينة
+  const inPreview = isPreviewMode();
 
   // ═══ 🩺 الجلسات العلاجية (آخر 7 أيام) ═══
   const recentRemediation = useMemo(() => {
@@ -429,20 +436,11 @@ export function GuardianDashboard({
   // 🛠️ دوال الأزرار الإدارية
   // ═══════════════════════════════════════════════════════════
 
-  /**
-   * ✅ "فتح الكل" — يفتح الدروس والمسارات للمعاينة،
-   * لكن لا يُعلّم الامتحانات كـ"مُجتازة".
-   */
-  const handleTestUnlock = () => {
-    try {
-      // ⚠️ TEMP-DEV-PREVIEW: يُحذف عند انتهاء التطوير
-      // الزر يكتب علَمًا واحدًا فقط — لا يمس بيانات الطفل
-      localStorage.setItem('soroban_dev_preview', 'true');
-      playSound('click');
-      setTimeout(() => window.location.reload(), 500);
-    } catch (err) {
-      window.alert('خطأ: ' + String(err));
-    }
+  // [FIX 7] — وضع المعاينة (toggle)
+  const handlePreviewToggle = () => {
+    togglePreviewMode();
+    playSound('click');
+    setTimeout(() => window.location.reload(), 300);
   };
 
   /**
@@ -587,14 +585,15 @@ export function GuardianDashboard({
           style={{ display: 'none' }}
         />
 
+        {/* [FIX 7] — زر المعاينة (بدل فتح الكل) */}
         <button
           type="button"
-          onClick={handleTestUnlock}
+          onClick={handlePreviewToggle}
           className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-bold font-body"
-          title="فتح الدروس والمسارات فقط (لا الامتحانات)"
+          title={inPreview ? 'الخروج من وضع المعاينة' : 'تفعيل وضع المعاينة'}
         >
           <Unlock className="w-4 h-4" />
-          <span>فتح الكل</span>
+          <span>{inPreview ? '🚪 خروج من المعاينة' : '👁️ وضع المعاينة'}</span>
         </button>
 
         <button
