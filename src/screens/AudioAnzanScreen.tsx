@@ -6,6 +6,7 @@
 // ✅ زر "إنهاء" يخرج بلا تقييم
 // 🩺 جلسة علاجية إجبارية داخلية (RemediationScreen) — أولوية عرض عليا
 // 📅 آخر تحديث: SRB Migration — Phase 2 + Remediation
+// [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -411,7 +412,11 @@ export function AudioAnzanScreen({
 
       // ✅ تسجيل نجاح الأنزان السمعي
       if (passed) {
-        markAnzanAudioPassed(Number(level.slice(1)));
+        // [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
+        const levelNum = parseInt(level.replace('L', ''), 10);
+        if (!isNaN(levelNum) && levelNum >= 0 && levelNum <= 7) {
+          markAnzanAudioPassed(levelNum);
+        }
       }
 
       // ✅ منح الشارات فقط عند نجاح الجلسة
