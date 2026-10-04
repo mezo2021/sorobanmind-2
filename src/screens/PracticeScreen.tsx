@@ -8,6 +8,7 @@
 // ✅ الشارات تُمنح فقط عند نجاح الجلسة (pendingBadgesRef)
 // ✅ زر "إنهاء" يخرج بلا تقييم
 // 📅 آخر تحديث: SRB Migration — Phase 1.5
+// [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -174,7 +175,11 @@ export function PracticeScreen({
   const currentSection: SRBSection | undefined = currentQ?.section;
 
   // 🎯 رقم المستوى (0-7) لتمريره إلى AdaptiveFeedback
-  const levelNum = useMemo(() => Number(level.slice(1)), [level]);
+  // [FIX B5] — فحص صريح (بدل slice الهشّ)
+  const levelNum = useMemo(() => {
+    const n = parseInt(level.replace('L', ''), 10);
+    return !isNaN(n) && n >= 0 && n <= 7 ? n : 0;
+  }, [level]);
 
   const maxMs = currentQ ? getMaxMs(currentQ) : 30000;
   const warningAtMs = maxMs * WARNING_RATIO;
@@ -352,7 +357,11 @@ export function PracticeScreen({
 
     // ✅ تسجيل نجاح التمرّن
     if (passed) {
-      markPracticePassed(Number(level.slice(1)));
+      // [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
+      const levelNum = parseInt(level.replace('L', ''), 10);
+      if (!isNaN(levelNum) && levelNum >= 0 && levelNum <= 7) {
+        markPracticePassed(levelNum);
+      }
     }
 
     // ✅ إذا نجح + توجد مهارات ضعيفة → جلسة علاجية إجبارية
