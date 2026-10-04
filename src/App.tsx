@@ -1,6 +1,8 @@
 // src/App.tsx
 // [FIX N42] XP now wired to real addXP — 2026-10-04
 // [FIX B9]  call recordPlacementAttempt — 2026-10-04
+// [FIX 7]  ربط الشهادة الذهبية (CertificateScreen) — 2026-10-05
+
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useGameStats } from './hooks/useGameStats';
@@ -34,6 +36,7 @@ import { getLessonById } from './curriculum/lessons';
 import IntroductionScreen from './screens/IntroductionScreen';
 import LevelTestScreen from './screens/LevelTestScreen';
 import KidsCertificateScreen from './screens/KidsCertificateScreen'; // ← جديد
+import CertificateScreen from './screens/CertificateScreen'; // [FIX 7] ← الشهادة الذهبية
 
 // ═══ Playground ═══
 import SorobanPlayground from './screens/SorobanPlayground';
@@ -111,7 +114,7 @@ function getComingSoonTitle(screen: string): string {
     secrets: 'الأسرار السحرية',
     'cross-multiplication': 'الضرب التقاطعي',
     division: 'القسمة',
-    certificate: 'الشهادة',
+    // [FIX 7] — 'certificate' أُزيلت — لها case خاص الآن
     'final-exam': 'الامتحان النهائي',
   };
   return titles[screen] || 'قيد التطوير';
@@ -394,9 +397,19 @@ const levelId = lessonNode?.levelId ?? 'L0';
     }
 
     switch (screen) {
-      case 'kids-certificate': // ← جديد
+      case 'kids-certificate':
         return (
           <KidsCertificateScreen
+            onBack={handleBackToHero}
+            onGoHome={handleBackToHero}
+            playSound={handleSound}
+          />
+        );
+
+      // [FIX 7] — الشهادة الذهبية (القسم الثاني / الكبار)
+      case 'certificate':
+        return (
+          <CertificateScreen
             onBack={handleBackToHero}
             onGoHome={handleBackToHero}
             playSound={handleSound}
@@ -497,8 +510,9 @@ const levelId = lessonNode?.levelId ?? 'L0';
           <CategoryExamScreen
             category="teens"
             onBack={() => handleBackToCategory('teens')}
+            // [FIX 7] — عند النجاح → الشهادة الذهبية
             onComplete={(passed, _score) => {
-              setScreen(passed ? 'hero-dashboard' : 'category-teens');
+              setScreen(passed ? 'certificate' : 'category-teens');
             }}
             playSound={handleSound}
           />
@@ -641,7 +655,7 @@ case 'audio-anzan-7': {
       case 'secrets':
       case 'cross-multiplication':
       case 'division':
-      case 'certificate':
+      // [FIX 7] — 'certificate' أُزيلت من هنا — لها case خاص
       case 'final-exam':
         return (
           <ComingSoonScreen
