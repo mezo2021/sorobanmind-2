@@ -1,4 +1,6 @@
 // src/screens/CategoryScreen.tsx
+// [FIX 7] — فحص المعاينة موحّد عبر الأداة
+
 import { motion } from 'framer-motion';
 import {
   Lock, CheckCircle2, BookOpen, Dumbbell, Eye,
@@ -11,6 +13,9 @@ import Header from './Header';
 import { useGameStats } from '@/hooks/useGameStats';
 import { useProgressStore } from '@/store/progressStore';
 import { getLessonsByLevel } from '@/curriculum/lessons';
+
+// [FIX 7] — أداة المعاينة
+import { isPreviewMode } from '@/utils/previewMode';
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -213,14 +218,12 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     onNavigate('hero-dashboard');
   };
 
-  // ⚠️ TEMP-DEV-PREVIEW: يُحذف عند انتهاء التطوير
-  const isPreviewMode =
-    typeof window !== 'undefined' &&
-    localStorage.getItem('soroban_dev_preview') === 'true';
+  // [FIX 7] — استخدام أداة المعاينة
+  const inPreview = isPreviewMode();
 
   // ✅ المستوى يُفتح إذا: كان الأول، أو المستوى السابق مكتملًا
   const isLevelUnlocked = (_levelId: LevelId, index: number): boolean => {
-    if (isPreviewMode) return true;
+    if (inPreview) return true;
     if (index === 0) return true;
     const prevLevel = data.levels[index - 1];
     return completedLevels.includes(prevLevel.id);
@@ -228,7 +231,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
   // ✅ المستوى "مكتمل" = كل دروسه مكتملة
   const isLevelCompleted = (levelId: LevelId): boolean => {
-    if (isPreviewMode) return true;
+    if (inPreview) return true;
     const lessons = getLessonsByLevel(levelId as string);
     if (lessons.length === 0) {
       return completedLevels.includes(levelId);
@@ -241,7 +244,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   };
 
   const isPracticePassed = (levelIndex: number): boolean => {
-    if (isPreviewMode) return false;
+    if (inPreview) return false;
     const practiceNum = data.practiceRange[0] + levelIndex;
     return passedPractice.includes(practiceNum);
   };
@@ -250,28 +253,29 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     pendingRemediation !== null && pendingRemediation.level === levelId;
 
   const isAnzanVisualUnlocked = (levelIndex: number): boolean => {
-    if (isPreviewMode) return true;
+    if (inPreview) return true;
     return isPracticePassed(levelIndex);
   };
 
   const isAnzanVisualPassed = (levelIndex: number): boolean => {
-    if (isPreviewMode) return false;
+    if (inPreview) return false;
     const anzanNum = data.anzanRange[0] + levelIndex;
     return passedAnzanVisual.includes(anzanNum);
   };
 
   const isAnzanAudioUnlocked = (levelIndex: number): boolean => {
-    if (isPreviewMode) return true;
+    if (inPreview) return true;
     return isAnzanVisualPassed(levelIndex);
   };
 
   const isAnzanAudioPassed = (levelIndex: number): boolean => {
-    if (isPreviewMode) return false;
+    if (inPreview) return false;
     const anzanNum = data.anzanRange[0] + levelIndex;
     return passedAnzanAudio.includes(anzanNum);
   };
 
   const isExamUnlocked = (): boolean => {
+    if (inPreview) return true;
     return data.levels.every((_, idx) =>
       isLevelCompleted(data.levels[idx].id) &&
       isPracticePassed(idx) &&
