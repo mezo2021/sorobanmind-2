@@ -1,5 +1,6 @@
 // src/screens/KidsCertificateScreen.tsx
 // شهادة إتمام قسم الصغار — L3 (فضية · لغة واحدة فقط · قابلة للطباعة)
+// [FIX 7] — وضع المعاينة: درجات افتراضية لعرض الشهادة
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -8,6 +9,9 @@ import CertificateLogo from '@/components/CertificateLogo';
 import CertificateMedal from '@/components/CertificateMedal';
 import { useProgressStore } from '@/store/progressStore';
 import type { CertificateLevel } from '@/utils/certificateGenerator';
+
+// [FIX 7] — أداة المعاينة
+import { isPreviewMode } from '@/utils/previewMode';
 
 type Lang = 'ar' | 'en';
 
@@ -56,6 +60,18 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
   const [lang, setLang] = useState<Lang>('ar');
 
   useEffect(() => {
+    // [FIX 7] — في وضع المعاينة: درجات افتراضية لرؤية شكل الشهادة
+    const inPreview = isPreviewMode();
+
+    if (inPreview) {
+      // درجة افتراضية (فضية — 92%)
+      setFinalScore(92);
+      const savedName = localStorage.getItem('soroban_child_full_name');
+      setStudentName(savedName || 'اسم الطالب التجريبي');
+      return;
+    }
+
+    // الحالة الحقيقية — قراءة عادية
     try {
       const s = useProgressStore.getState().computeFinalScore('L3');
       if (s !== null) setFinalScore(s);
