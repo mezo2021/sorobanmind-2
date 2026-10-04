@@ -1,4 +1,6 @@
 // src/App.tsx
+// [FIX N42] XP now wired to real addXP — 2026-10-04
+// [FIX B9]  call recordPlacementAttempt — 2026-10-04
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useGameStats } from './hooks/useGameStats';
@@ -230,10 +232,7 @@ export default function App() {
         }),
       );
 
-      localStorage.setItem(
-        'soroban_placement_last_attempt',
-        String(Date.now()),
-      );
+      useProgressStore.getState().recordPlacementAttempt();
     } catch { /* ignore */ }
 
     const isKids = ['L0', 'L1', 'L2', 'L3'].includes(recommendedLevel);
@@ -353,7 +352,7 @@ const levelId = lessonNode?.levelId ?? 'L0';
             } catch { /* ignore */ }
           }}
           playSound={handleSound}
-          onXP={(amount) => console.log('XP:', amount)}
+          onXP={(amount) => useProgressStore.getState().addXP(amount)}
         />
       );
     }
@@ -580,7 +579,7 @@ case 'practice-7': {
         }
       }}
       playSound={handleSound}
-      onXP={(amount) => console.log('XP:', amount)}
+      onXP={(amount) => useProgressStore.getState().addXP(amount)}
       burst={_burst}
     />
   );
@@ -606,7 +605,7 @@ case 'anzan-7': {
         handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
       }
       playSound={handleSound}
-      onXP={(amount) => console.log('XP:', amount)}
+      onXP={(amount) => useProgressStore.getState().addXP(amount)}
       burst={_burst}
     />
   );
@@ -631,7 +630,7 @@ case 'audio-anzan-7': {
         handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
       }
       playSound={handleSound}
-      onXP={(amount) => console.log('XP:', amount)}
+      onXP={(amount) => useProgressStore.getState().addXP(amount)}
       burst={_burst}
     />
   );
