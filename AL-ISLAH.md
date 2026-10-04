@@ -1,4 +1,4 @@
-```markdown
+
 # 🛡️ AL-ISLAH.md
 # وثيقة حماية وإصلاح مشروع SorobanMind v2
 
