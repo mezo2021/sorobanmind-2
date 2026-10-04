@@ -4,6 +4,7 @@
 // 🎯 الوظيفة: إظهار النتيجة الموزونة (اختبار ٧٠٪ + تمرّن ١٠٪ + بصري ١٠٪ + سمعي ١٠٪) عند اجتياز المستوى
 // 📅 الجلسة: 14
 // ✅ الحالة: البناء أخضر
+// [FIX 7] — استخدام أداة المعاينة
 
 import { motion } from 'framer-motion';
 import {
@@ -18,6 +19,9 @@ import Header from './Header';
 import { useGameStats } from '@/hooks/useGameStats';
 import { useProgressStore } from '@/store/progressStore';
 import { getLessonsByLevel } from '@/curriculum/lessons';
+
+// [FIX 7] — استخدام أداة المعاينة
+import { isPreviewMode } from '@/utils/previewMode';
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -262,23 +266,21 @@ export function LevelScreen({
     back();
   };
 
-  // ⚠️ TEMP-DEV-PREVIEW: يُحذف عند انتهاء التطوير
-  // السبب: يعتبر كل الدروس مكتملة في وضع المطور
-  // الحذف: ابحث عن "TEMP-DEV-PREVIEW" في المشروع
-  const isPreviewMode =
-    typeof window !== 'undefined' &&
-    localStorage.getItem('soroban_dev_preview') === 'true';
+  // [FIX 7] — استخدام أداة المعاينة
+  const inPreview = isPreviewMode();
 
   const levelLessons = getLessonsByLevel(levelId as string);
+
+  // [FIX 7] — في وضع المعاينة: كل شيء مفتوح
   const isLessonCompleted =
-    isPreviewMode ||
+    inPreview ||
     (levelLessons.length > 0 &&
       levelLessons.every((l) => completedLessons.includes(l.id)));
 
-  const isPracticePassed = passedPractice.includes(level.practiceNum);
-  const isAnzanVisualPassed = passedAnzanVisual.includes(level.anzanNum);
-  const isAnzanAudioPassed = passedAnzanAudio.includes(level.anzanNum);
-  const isLevelTestPassed = passedLevelTests.includes(levelId);
+  const isPracticePassed = inPreview || passedPractice.includes(level.practiceNum);
+  const isAnzanVisualPassed = inPreview || passedAnzanVisual.includes(level.anzanNum);
+  const isAnzanAudioPassed = inPreview || passedAnzanAudio.includes(level.anzanNum);
+  const isLevelTestPassed = inPreview || passedLevelTests.includes(levelId);
 
   // 🩺 الجلسة العلاجية الإجبارية — إن كانت للمستوى الحالي
   const hasPendingRemediation =
