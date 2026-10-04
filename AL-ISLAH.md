@@ -1,8 +1,4 @@
-📄 AL-ISLAH.md — النسخة النهائية الكاملة
-
-بكل التصحيحات والإضافات — 21 دليلًا مصورًا · 30+ خطأ مؤكد · 6 مرفوض · خارطة كاملة.
-
----
+📄 AL-ISLAH.md — النسخة النهائية الكاملة (بعد الدمج)
 
 ```markdown
 # 🛡️ AL-ISLAH.md
@@ -13,9 +9,9 @@
 > **القاعدة العليا:** ⛔ لا نبدأ من الصفر. لا نعيد البناء. لا نعيد الكتابة.
 > **القاعدة الثانية:** ✅ الوثيقة **تراكمية** — لا يُحذف سطر إلا بدليل مصور يرفضه.
 
-**آخر تحديث:** 2026-10-04 — نهاية الفحص الرابع
+**آخر تحديث:** 2026-10-04 — نهاية الجلسة 19
 **الحالة:** البناء #684 ✅ يعمل · التطبيق منشور
-**مصادر التحقق:** فحص يدوي (21+ دليلًا مصورًا) · تحليل GPT (50 سؤالًا) · تحليل Claude (50 سؤالًا)
+**مصادر التحقق:** فحص يدوي (24 دليلًا مصورًا) · تحليل GPT (50 سؤالًا) · تحليل Claude (50 سؤالًا)
 
 ---
 
@@ -103,7 +99,7 @@ progressStore — حالة الطفل:
 قاعدة الفصل: كلاهما يبقى دائمًا — لا حذف · لا استبدال · لا إعادة بناء.
 التوزيع النهائي: يُحسم في P1.
 
-⚠️ مفاتيح في المكان الخطأ (C8 — جديد)
+⚠️ مفاتيح في المكان الخطأ (C8)
 
 بعض المفاتيح كان يجب أن تكون داخل progressStore لكنها كُتبت في localStorage:
 
@@ -175,9 +171,9 @@ const isCorrect = abacusValue === targetValue;
 المواقع التي تحتاج تعديلًا (P4 — بعد تصحيح البنوك):
 
 · srb/questions/L6.ts — الأسئلة الـ25
-· AnzanScreen.getColumnsForQuestion — يحتاج القاعدة الجديدة
-· PracticeScreen — يحتاج القاعدة الجديدة
-· AudioAnzanScreen — يحتاج فحص + القاعدة
+· AnzanScreen.getColumnsForQuestion
+· PracticeScreen
+· AudioAnzanScreen
 · CategoryExamScreen — N60 + الأعمدة
 · PlacementTestScreen — N60-ب + الأعمدة
 · LevelTestScreen — بعد نقل X إلى SRB
@@ -189,96 +185,74 @@ const isCorrect = abacusValue === targetValue;
 🔴🔴🔴 P-1 — إصلاح فوري (~50 سطرًا)
 
 # الخطأ الدليل الإصلاح
-B1 reload() = reset() — دالة ميتة (صفر استدعاء) progressStore.ts:471-473 حذف reload من interface + store
-B2 handleEnd يمسح pendingBadgesRef بلا حفظ PracticeScreen.tsx:414 · AnzanScreen.tsx:522 حفظ قبل المسح
-B4 AnzanScreen:469 يشترط AND — بينما progressStore:316 وsrb/progress.ts يقبلان OR progressStore.ts:316 × AnzanScreen.tsx:469 توحيد على OR (تصميم مقصود)
-B5 Number(level.slice(1)) — L00 نظريًا يتصادم مع L0 (لا ضرر حالي — البيانات الحالية L0-L7 فقط) progressStore.ts:22-27 × AnzanScreen.tsx:470 فحص صريح للـLevelId — 🟡 خطر كامن
-B9 recordPlacementAttempt() — صفر استدعاء · App يكتب localStorage progressStore.ts:132,360 · App.tsx:231-236 ربط أو حذف
-N42 XP مفقود في 4 شاشات — onXP = console.log فقط App.tsx:356,583,609,634 · MagicSecrets:407 · FingerMath:151 · LessonScreen:287,604 تمرير addXP حقيقي
+B1 reload() = reset() — دالة ميتة progressStore.ts:471-473 حذف reload
+B4 AnzanScreen:469 AND — بينما store يقبل OR progressStore.ts:316 × AnzanScreen.tsx:469 توحيد على AND + متوسط
+B5 Number(level.slice(1)) — L00 خطر كامن progressStore.ts:22-27 × AnzanScreen.tsx:470 فحص صريح
+B9 recordPlacementAttempt() ميت progressStore.ts:132,360 · App.tsx:231-236 ربط أو حذف
+N42 XP مفقود في 4 شاشات App.tsx:356,583,609,634 تمرير addXP
+N60 العشرية في الامتحانات CategoryExamScreen.tsx:239 دالة عشرية مشتركة
+N60-ب العشرية في Placement PlacementTestScreen.tsx:66 نفس الدالة
+
+⬅️ B2 (handleEnd) = مقصود — لا يُلمس.
 
 🔴 P2 — إصلاح سطري
 
 # الخطأ الدليل الإصلاح
-V4 LevelTestScreen يستخدم buildL0Test() (10 أسئلة L0: 3+7) لكل المستويات LevelTestScreen.tsx:8,123 × test-pool.ts:60-64 استبدال بـgetTestQuestions(level) — جاهزة في srb-adapter
-N19 passedLevelTests يُقرأ في render بلا اشتراك LevelScreen.tsx:133-136 نقله إلى progressStore
-N20 مفتاح soroban_dev_preview مخفي — يعطّل التحقق التعليمي LevelScreen.tsx:220 توثيق + حماية بكلمة سر
-N52 exam2Passed + examPassed في HeroDashboard — كتابة بلا قراءة HeroDashboard.tsx:111,116,122,145 حذف الـuseEffectan الميتان
-N53 5 أنماط لتخزين حالة الامتحان (passed/result/score/ready) متعدد توحيد على progressStore
-N60 CategoryExamScreen يقارن abacusValue === correctAnswer بلا معامل عشري CategoryExamScreen.tsx:239 4 من 5 أسئلة L6 في الامتحان مستحيلة
-N60-ب PlacementTestScreen يستخدم Math.abs(question.correctAnswer) بلا معامل PlacementTestScreen.tsx:66 أسئلة L6 في PT تفشل
+V4 LevelTestScreen يستخدم buildL0Test() LevelTestScreen.tsx:8,123 getTestQuestions(level)
+N19 passedLevelTests غير تفاعلي LevelScreen.tsx:133-136 نقله إلى store
+N20 soroban_dev_preview مخفي LevelScreen.tsx:220 توثيق + حماية
+N52 exam2Passed + examPassed ميتان HeroDashboard.tsx:111,116,122,145 حذف الـuseEffectan
+N53 5 أنماط لحالة الامتحان متعدد توحيد
 
-🟠 P3.5 — كود يعمل على مفاتيح ميتة + ملفات ميتة
+🟠 P3.5 — كود يعمل على مفاتيح ميتة
 
-🎯 هذا القسم ليس اكتشافًا جديدًا — كان موثقًا في PROJECT_PLAN.md وACHIEVEMENTS.md سابقًا.
+# الملف مستورد من التصنيف
+P3.5-1 badgeChecker.ts useGameStats.ts:14 🟡 مستخدم · مصدر مهجور
+P3.5-2 useQuests.ts GuardianDashboard.tsx:18,196 🟡 مستخدم · 4 مفاتيح قديمة
+P3.5-3 audioAnzanBadges.ts صفر استيراد 🔴 ملف ميت
+P3.5-4 skillsChecker.ts صفر استيراد 🔴 ملف ميت
+P3.5-5 utils/anzanBadges.ts badgeChecker.ts:3,45,49 🟡 مصدر معزول
+~~P3.5-6~~ ~~certificateGenerator.ts~~ مستخدم في 3 ملفات ❌ مرفوض
 
-📌 توثيق رسمي — PROJECT_PLAN.md:1129-1131:
+🟡 P3 — كود ميت
 
-"حذف الملفات الميتة: utils/anzanBadges.ts · audioAnzanBadges.ts · skillsChecker.ts · badgeChecker.ts · hooks/useQuests.ts (أو تحديثه)"
+# العنصر المكان
+B6 srb_progress يُكتب ولا يُقرأ srb-adapter.ts
+B7 CertificateScreen بلا مستدعٍ App.tsx:397-405
+B8 شاشتا الشهادات: مصدران Kids: store · Adults: localStorage
+V2 recordAttempt() — صفر استدعاء progressStore
+N4 setGrade لا تخفّض progressStore
+N7 SkillProgress بلا تفاصيل recordAttempt
+N21 4 تعريفات للمستويات متعدد
 
-# الملف مستورد من التصنيف الفعلي
-P3.5-1 badgeChecker.ts useGameStats.ts:14 🟡 مستخدم · يقرأ من مصدر مهجور
-P3.5-2 useQuests.ts GuardianDashboard.tsx:18,196 🟡 مستخدم · على 4 مفاتيح قديمة
-P3.5-3 audioAnzanBadges.ts صفر استيراد 🔴 ملف ميت مؤكد
-P3.5-4 skillsChecker.ts صفر استيراد 🔴 ملف ميت مؤكد
-P3.5-5 utils/anzanBadges.ts badgeChecker.ts:3,45,49 🟡 مصدر قديم معزول
-~~P3.5-6~~ ~~certificateGenerator.ts~~ مستخدم في 3 ملفات ❌ مرفوض — مستخدم فعليًا
+🟣 اكتشافات Claude
 
-🔴 السبب الجذري لـ"بعض الشارات تعمل والبعض لا":
-
-```
-AnzanScreen (جديد)
-    ↓ يكتب في progressStore.anzanBadges ✅
-GuardianDashboard
-    ↓ يقرأ من progressStore.anzanBadges ✅ (يعمل)
-    
-badgeChecker
-    ↓ يقرأ من utils/anzanBadges.loadAnzanBadges() ❌
-    ↓ الذي يقرأ من soroban_anzan_badges (لا أحد يكتب فيه)
-    ↓ النتيجة = false دائمًا
-```
-
-🟡 P3 — كود ميت يحتاج تنظيف
-
-# العنصر المكان الأثر
-B6 srb_progress يُكتب ولا يُقرأ srb-adapter.ts + صفر استيراد كتابة ميتة
-B7 CertificateScreen بلا مستدعٍ App.tsx:397-405 شاشة يتيمة
-B8 شاشتا الشهادات: مصدران مختلفان Kids: store · Adults: localStorage تعارض بيانات
-V2 recordAttempt() — صفر استدعاء progressStore جدول skillProgress ميت
-N4 setGrade لا تسمح بتخفيض الدرجة progressStore يمنع قياس تحسّن العلاجي
-N7 SkillProgress بلا errorType/movement/phase recordAttempt AdaptiveFeedback محدود
-N21 4 تعريفات للمستويات متعدد لا مرجع واحد
-
-🟣 اكتشافات إضافية (Claude)
-
-# العنصر الدليل الأثر
-B3 masteryTracker مستخدم من adaptiveEngine:71 adaptiveEngine.ts:71 استخدام داخلي — لا يغيّر التصنيف
-B5 sorobanMoves مستخدم من مكانين SorobanEngineDebug.tsx:18 · sorobanEngine.ts:15 جزء من المحرك
-C1 37 مفتاحًا (لا 35) إضافة soroban_exam{1,2}_last_attempt · soroban_lesson_session_* تصحيح
-C4 4 مفاتيح يتيمة (لا 2) soroban_anzan_stats · soroban_practice_stats · sorobanmind-stats · soroban_exam_result تصحيح
-C5 مفتاحان بنفس المعنى soroban_weak_skills_v2 ≈ soroban_placement_weak_skills · soroban_passed_practice ≈ passedPractice تكرار بيانات
-C7 لا migration بين المفاتيح CharacterSelector.tsx:94 ترحيل قيمة معرّف الرفيق فقط
-D6 attemptLog.ts في حزمة S15 (غير مرفوع) data/srb/attemptLog.ts إضافة مرتقبة
-E1 bank-exam = 370 سؤالًا (180 + 190) — لا 400 bank-exam.ts:288-293 تصحيح
-E5 srb/exams/ في حزمة S15 (غير مرفوع) data/srb/exams/ إضافة مرتقبة
-F5 LessonId = string (لا union) curriculum/lessons/types.ts:36 تصلب نوعي ضعيف
-I2 vitest مُعدّ في package.json package.json:10-11,34 بنية اختبارات جاهزة
-I3 scripts: dev · build · preview · test · test:run · deploy package.json:6-13 موثق
-I4 .github/workflows/deploy.yml — ينشر على GitHub Pages deploy.yml:1-50 موثق
-N55 AnzanBadges interface معرَّف 3 مرات progressStore:29-33 · utils/anzanBadges:8-11 · audioAnzanBadges:5-9 3 مصادر نوعية
-N56 loadAudioAnzanBadges() مكررة audioAnzanBadges.ts:11 · skillsChecker.ts:103 كود منسوخ
+# العنصر الأثر
+B3 masteryTracker مستخدم من adaptiveEngine:71 استخدام داخلي
+C1 37 مفتاحًا (لا 35) تصحيح
+C4 4 مفاتيح يتيمة تصحيح
+C5 مفتاحان بنفس المعنى تكرار
+C7 لا migration بين المفاتيح ترحيل محدود
+D6 attemptLog.ts في S15 (غير مرفوع) إضافة مرتقبة
+E1 bank-exam = 370 سؤالًا (لا 400) تصحيح
+E5 srb/exams/ في S15 إضافة مرتقبة
+F5 LessonId = string تصلب ضعيف
+I2 vitest مُعدّ بنية جاهزة
+N55 AnzanBadges × 3 مكرر
+N56 loadAudioAnzanBadges() × 2 منسوخ
 
 ---
 
 ❌ 4. ادعاءات مرفوضة بالدليل
 
-# الادعاء سبب الرفض الدليل
-B3 saveSectionGrade يسجّل S03 فقط srb-adapter.ts:332-345 يتجاهل section قراءة كود
-N11 تعارض cooldown (24h × 48h) تصميم مقصود: 24h لاختبار مستوى · 48h لامتحان + PT types.ts:334 · test-pool.ts:68 · bank-v2/index.ts:559
-N36 العشريات معطوبة screenshot يُظهر التلميح "مثّل بدون فاصلة" صورة runtime S13·m3
-N36-1 مثال التلميح لا يطابق السؤال تصميم تربوي: مثال عام للفهم ثم تطبيق صورة + نية تعليمية
-N51 HeroDashboard يجب أن يقرأ exam1 الشهادات تظهر في CategoryScreen صور HeroDashboard + CategoryScreen
-H5 L00 يتصادم مع L0 فعليًا البيانات الحالية لا تمرّر L00-L20 — نظري فقط AnzanScreen.tsx:470
-P3.5-6 certificateGenerator.ts غير مربوط مستخدم في 3 ملفات فعليًا KidsCertificateScreen:10 · CertificateMedal:1 · CertificateScreen:10-13
+# الادعاء سبب الرفض
+B3-قديم saveSectionGrade S03 فقط srb-adapter.ts:332-345 يتجاهل section
+N11 تعارض cooldown تصميم مقصود: 24h × 48h
+N36 العشريات معطوبة screenshot يُظهر التلميح
+N36-1 مثال التلميح لا يطابق السؤال تصميم تربوي
+N51 HeroDashboard يقرأ exam1 الشهادات في CategoryScreen
+H5 L00 تصادم فعلي البيانات الحالية L0-L7 فقط
+P3.5-6 certificateGenerator غير مربوط مستخدم في 3 ملفات
 
 ---
 
@@ -295,70 +269,345 @@ P3.5-6 certificateGenerator.ts غير مربوط مستخدم في 3 ملفات 
 7. ❌ إضافة نظام تخزين رابع
 8. ❌ حزمة تعديلات دفعة واحدة
 9. ❌ اعتبار README/PROJECT_MASTER "مصدر الحالة"
-10. ❌ إعادة كتابة دوال srb-adapter.ts الجاهزة
-11. ❌ حذف سطر من هذه الوثيقة بدون دليل مصور
-12. ❌ اقتراح "إصلاحات بنيوية" دون قراءة القسم 2 (مقصود)
-13. ❌ حذف badgeChecker.ts أو useQuests.ts قبل إعادة كتابة الشارات على progressStore
-14. ❌ حذف/استبدال/إعادة بناء progressStore.ts — يبقى دائمًا
+10. ❌ إعادة كتابة دوال srb-adapter.ts
+11. ❌ حذف سطر من الوثيقة بدون دليل مصور
+12. ❌ إصلاحات بنيوية دون قراءة القسم 2
+13. ❌ حذف badgeChecker · useQuests قبل إعادة الكتابة
+14. ❌ حذف/استبدال/إعادة بناء progressStore.ts
 
 يُطلب من كل مساعد
 
-1. ✅ اقرأ هذا الملف أولًا — كاملًا
-2. ✅ اسأل "هل هذا مقصود؟" قبل الحكم
+1. ✅ اقرأ الملف كاملًا
+2. ✅ اسأل "هل هذا مقصود؟"
 3. ✅ اطلب screenshot لأي ادعاء UI
-4. ✅ إصلاح جراحي — لا بنيوي
+4. ✅ إصلاح جراحي
 5. ✅ ملف واحد — ثم اختبار
-6. ✅ نسخة احتياطية قبل أي تعديل
-7. ✅ أضف اكتشافًا جديدًا — لا تحذف قديمًا
+6. ✅ نسخة احتياطية
+7. ✅ أضف — لا تحذف
 
 ---
 
-🗺️ 6. خارطة التنفيذ النهائية
+🔗 6. Attempt Record — الحلقة المفقودة
 
-المرحلة 1 — الإصلاحات التقنية
+ما هو؟
 
-```
-P-1  إصلاح 6 أخطاء (B1 · B2 · B4 · B5 · B9 · N42)      ⏳ يومان
-P0   تثبيت المنهج · المهارات · الحركات · التصنيف        ⏳ أسبوع
-P1   توحيد سجل الأداء (Attempt Record موحد)              ⏳ أسبوعان
-     · إصلاح B6 · B7 · B8
-     · حسم قرار التوزيع بين SRB و progressStore
-P2   ربط SRB + المحرك التكيفي                            ⏳ 3 أسابيع
-     · إصلاح V4 · N19 · N20 · N52 · N53
-P3   Remediation التكيفي + تنظيف P3.5                    ⏳ أسبوعان
-     · إعادة كتابة badgeChecker + useQuests على progressStore
-     · حذف audioAnzanBadges + skillsChecker (ميتان)
-     · توحيد N55 (AnzanBadges) على progressStore
-     · إصلاح قواعد العشرية (الأعمدة + factor)
-```
+سجل محاولة واحدة · سطر لكل إجابة.
 
-المرحلة 2 — المنهج
+مثال: طفل في L1-S03-m2 حل 7+8=؟ وأجاب 14 خلال 6.2 ثانية:
 
-```
-M1   إعادة بناء S02 (L0) — كتابة + ترجمة                ⏳ أسبوع
-M2   ترجمة L0 كامل (intro + S01 + S02)                   ⏳ أسبوع
-M3   ترجمة L1 كامل (S03 + S04)                           ⏳ أسبوع
-M4   بناء L2 · L3 (4 دروس) — نص عربي + إنجليزي           ⏳ 4 أسابيع
-M5   بناء L4 · L5 (4 دروس)                               ⏳ 4 أسابيع
-M6   بناء L6 · L7 (3 دروس)                               ⏳ 3 أسابيع
+```json
+{
+  "attemptId": "A-000184",
+  "timestamp": 1760000000000,
+  "level": "L1",
+  "section": "S03",
+  "skill": "S03-m2",
+  "questionId": "L1-S03-m2-017",
+  "phase": "P",
+  "correct": false,
+  "timeMs": 6200
+}
 ```
 
-المرحلة 3 — البنوك القديمة
+⚠️ الحالة الحالية — الفجوة
+
+موجود في المشروع:
+
+# العنصر الموقع
+1 نوع Attempt curriculum/types.ts
+2 دالة createAttempt() engine/masteryTracker.ts
+3 دالة recordAttempt() store/progressStore.ts
+4 حقول skillProgress progressStore
+
+مفقود:
+
+# العنصر الأثر
+1 استدعاء recordAttempt skillProgress فارغ
+2 استدعاء createAttempt لا Attempt يُنشأ
+
+⬅️ النتيجة: التطبيق "أعمى" — لا يعرف الطفل، لا يكشف ضعفه، لا يتكيّف.
+
+🎯 الحلقة الكاملة
 
 ```
-B1   تصحيح جذري: توحيد IDs مثل SRB                       ⏳ أسبوعان
-B2   تصنيف الأسئلة وفق المنهج الجديد                     ⏳ 3 أسابيع
-B3   ربط CE1 · CE2 · PT                                  ⏳ أسبوع
-B4   إصلاح N60 · N60-ب · مشكلة الأعمدة                    ⏳ أسبوع
-B5   اختبار شامل + parity                                ⏳ أسبوع
-B6   حذف البنوك القديمة                                  ⏳ يومان
+1. الطفل يحل سؤالًا
+        ↓
+2. Attempt Record يُنشأ
+        ↓
+3. recordAttempt يحفظه في skillProgress
+        ↓
+4. masteryTracker يحلّل
+        ↓
+5. adaptiveEngine يختار السؤال التالي
+        ↓
+   (يعود إلى 1)
 ```
 
-⚠️ لا تنفيذ لمرحلة قبل نجاح ما قبلها.
+🔧 التصميم في التمارين (3 أسطر)
+
+داخل PracticeScreen — بعد كل إجابة:
+
+```ts
+const isCorrect = userAnswer === currentQ.result;
+const timeMs = Date.now() - questionStartTime;
+
+const attempt = {
+  skillId: currentQ.skillId,
+  questionId: currentQ.id,
+  phase: "P",
+  correct: isCorrect,
+  timeMs,
+  timestamp: Date.now(),
+};
+
+useProgressStore.getState().recordAttempt(attempt);
+```
+
+⬅️ نفس المنطق في:
+
+· PracticeScreen.tsx — phase: "P"
+· AnzanScreen.tsx — phase: "ANZ-V" / "ANZ-F"
+· AudioAnzanScreen.tsx — phase: "ANZ-A"
+· CategoryExamScreen.tsx — phase: "CE"
+· PlacementTestScreen.tsx — phase: "PT"
+
+📊 ربط masteryTracker — مثال
+
+بعد 10 محاولات لـS03-m2:
+
+الحقل القيمة
+attempts 10
+correct 8
+accuracy 80%
+avgTimeMs 4.8 ث
+consecutiveCorrect 4
+
+recordAttempt يحسب تلقائيًا (الكود موجود).
+
+🧠 تفعيل adaptiveEngine
+
+بعد أن يصبح skillProgress مليئًا:
+
+المهارة الدقة التصنيف
+S03-m1 95% قوي
+S03-m2 58% ضعيف
+S03-m3 82% جيد
+
+القاعدة:
+
+```
+70% من الأسئلة → المهارات الضعيفة
+30% → مهارات جديدة
+```
+
+🎬 دورة كاملة — مثال
+
+السؤال: 8 + 7 = ؟ · الإجابة: 14 · الزمن: 5.8 ث
+
+# الخطوة
+1 PracticeScreen يحسب: correct=false
+2 createAttempt يُنشئ Attempt
+3 recordAttempt يُحدّث skillProgress
+4 masteryTracker يُحلّل
+5 adaptiveEngine يُقرّر
+6 PracticeScreen يعرض 6 + 9 = ؟
+
+✅ الفائدة
+
+قبل:
+
+```
+سؤال → إجابة → سؤال عشوائي
+```
+
+بعد:
+
+```
+سؤال → قياس → كشف ضعف → علاج → قياس → إتقان → تقدم
+```
+
+📌 الخلاصة
+
+# البند الوظيفة
+1 Attempt Record ماذا حدث؟
+2 masteryTracker ماذا تعني؟
+3 adaptiveEngine ماذا أعطي الآن؟
+4 Practice/Anzan المكان
+
+⬅️ recordAttempt = الحلقة المفقودة.
 
 ---
 
-📌 7. القاعدة الأخيرة
+🗺️ 7. خارطة التنفيذ النهائية — 12 مرحلة
+
+المرحلة 0 — الحماية (يوم واحد)
+
+# الخطوة
+0.1 رفع AL-ISLAH.md
+0.2 Tag: baseline-2026-10-04
+0.3 ZIP احتياطي
+
+المرحلة 1 — إصلاحات صغيرة (يومان)
+
+# الإصلاح
+1.1 N42 — XP مفقود
+1.2 B1 — حذف reload()
+1.3 B4 — توحيد الأنزان البصري (AND + متوسط)
+1.4 B5 — فحص LevelId
+1.5 B9 — recordPlacementAttempt
+1.6 N60 · N60-ب — دالة عشرية مشتركة
+
+المرحلة 2 — توثيق ما يعمل (يوم واحد)
+
+# التوثيق
+2.1 كيف يعمل Practice
+2.2 كيف يعمل Anzan
+2.3 كيف يعمل SessionBuilder
+2.4 كيف يعمل القفل
+2.5 كيف يعمل LevelTest
+
+المرحلة 3 — حل زر "فتح الكل" (يوم)
+
+# الخطوة
+3.1 فصل "وضع المعاينة"
+3.2 حالة preview مؤقتة
+3.3 الخروج يرجع الحالة
+3.4 اختبار
+
+المرحلة 4 — إكمال المنهج (أسبوع)
+
+# المهمة
+4.1 إعادة بناء S02
+4.2 ترجمة L0
+4.3 ترجمة L1
+4.4 L2 · L3
+4.5 L4 · L5
+4.6 L6 · L7
+
+المرحلة 5 — الشهادات (يوم)
+
+# الخطوة
+5.1 ربط CertificateScreen
+5.2 ربط KidsCertificateScreen
+5.3 اختبار النتيجة التراكمية
+
+المرحلة 6 — srb/exams/ (أسبوعان)
+
+# الخطوة
+6.1 إنشاء src/data/srb/exams/
+6.2 CE1 — انتقاء من bank-v2
+6.3 CE2 — نفس العملية
+6.4 PT — من bank-raw
+6.5 ربط CategoryExamScreen
+6.6 ربط PlacementTestScreen
+6.7 اختبار parity
+
+المرحلة 7 — Attempt Record (أسبوع)
+
+# الخطوة
+7.1 PracticeScreen
+7.2 AnzanScreen (V · F)
+7.3 AudioAnzanScreen
+7.4 CategoryExamScreen
+7.5 PlacementTestScreen
+7.6 اختبار
+
+المرحلة 8 — masteryTracker (يومان)
+
+# الخطوة
+8.1 isMastered في الشاشات
+8.2 getMasteryPercentage
+8.3 diagnoseWeakness
+8.4 عرض في Guardian
+
+المرحلة 9 — adaptiveEngine (أسبوع)
+
+# الخطوة
+9.1 ربط problemGenerator بـSRB
+9.2 ربط adaptiveEngine بـskillProgress
+9.3 تطبيق 70/30
+9.4 اختبار
+
+المرحلة 10 — تنظيف البنوك (يومان)
+
+# الخطوة
+10.1 التأكد أن كل مسار يعمل
+10.2 حذف bank-v2 · bank-raw · bank-linked
+10.3 تنظيف L00-L20
+
+المرحلة 11 — تنظيف عام (أسبوع)
+
+# الخطوة
+11.1 حذف audioAnzanBadges · skillsChecker
+11.2 إعادة كتابة badgeChecker
+11.3 إعادة كتابة useQuests
+11.4 توحيد AnzanBadges
+11.5 تنظيف مفاتيح ميتة
+
+المرحلة 12 — الإصدار (أسبوع)
+
+# الخطوة
+12.1 PWA
+12.2 اختبار شامل
+12.3 مشاركة
+
+---
+
+📊 8. الجدول الزمني
+
+المرحلة الوقت
+0 — الحماية يوم
+1 — إصلاحات يومان
+2 — توثيق يوم
+3 — فتح الكل يوم
+4 — المنهج أسبوع
+5 — الشهادات يوم
+6 — srb/exams أسبوعان
+7 — Attempt Record أسبوع
+8 — masteryTracker يومان
+9 — adaptiveEngine أسبوع
+10 — تنظيف البنوك يومان
+11 — تنظيف عام أسبوع
+12 — الإصدار أسبوع
+المجموع ~7 أسابيع
+
+⬅️ مع عملك ليل نهار — أقرب لـ 4-5 أسابيع.
+
+---
+
+📋 9. جدول المسؤوليات
+
+العنصر المصدر الحالي الهدف المرحلة
+Practice SRB SRB ✅ جاهز
+Anzan V · F · A SRB SRB ✅ جاهز
+Level Test (X) buildL0Test SRB-X 6
+CE1 bank-v2 srb/exams/CE1 6
+CE2 bank-v2 srb/exams/CE2 6
+PT bank-raw srb/exams/PT 6
+Attempt Record ❌ progressStore 7
+Mastery ❌ masteryTracker 8
+Adaptive ❌ adaptiveEngine 9
+Certificates غير مربوط progressStore 5
+Badges ميتة progressStore 11
+L2-L7 غير موجودة curriculum 4
+
+---
+
+✅ 10. القرارات المؤكدة
+
+# القرار الحالة
+1 B4 — الأنزان البصري = AND + متوسط حسابي ✅
+2 B2 — handleEnd = مقصود ✅
+3 زر "فتح الكل" = وضع معاينة منفصل ✅
+4 الشهادات = تُربط بـprogressStore ✅
+5 البنوك = تُنقل بعد المنهج ✅
+6 Attempt Record = يُفعَّل في المرحلة 7 ✅
+7 adaptiveEngine = يُفعَّل في المرحلة 9 ✅
+8 المرافقين = يُبقيان ✅
+
+---
+
+📌 11. القاعدة الأخيرة
 
 README ليس مصدرًا للحالة.
 PROJECT_MASTER ليس مصدرًا للحالة.
@@ -367,64 +616,62 @@ PROJECT_MASTER ليس مصدرًا للحالة.
 
 ---
 
-📝 8. سجل التعديلات
+📝 12. سجل التعديلات
 
 الجلسة الإضافة
-15 الشهادات (Kids + Adults) · النتيجة الموزونة · 3 SVG · فشل S01
-16 إنشاء AL-ISLAH.md · فحص 6 ملفات · 15 خطأ مؤكد · 5 مرفوض · اكتشاف السبب الجذري (خطة عزل نصف مُنفّذة)
-16 (متابعة) تأكيد P3.5 (badgeChecker · useQuests) · إضافة القاعدتين 11-12
-17 إغلاق P3.5 نهائيًا · رفض P3.5-6 · N55 · N56 · القاعدة 13
-18 استقبال Claude (50 إجابة) · تصحيح B3 · B5 · C1 · C4 · E1 · H5 · P3.5-6 · إضافة N60 · N60-ب · D6 · E5 · I2 · F5 · I3 · I4 · C5 · C7 · القاعدة 14 · قسم معمارية التخزين · قسم قواعد العشرية · قسم ملفات المكان الخطأ
+15 الشهادات · النتيجة الموزونة · 3 SVG · فشل S01
+16 إنشاء AL-ISLAH.md · 15 خطأ مؤكد · 5 مرفوض · السبب الجذري
+16 (متابعة) تأكيد P3.5 · القاعدتان 11-12
+17 إغلاق P3.5 · رفض P3.5-6 · N55 · N56 · القاعدة 13
+18 استقبال Claude · تصحيحات B3 · B5 · C1 · C4 · E1 · H5 · N60 · N60-ب · D6 · E5 · I2 · F5 · I3 · I4 · C5 · C7 · القاعدة 14
+19 قسم Attempt Record كامل · خارطة 12 مرحلة · جدول المسؤوليات · 8 قرارات مؤكدة · الجدول الزمني · B4 مصحّح (AND + متوسط) · B2 مصنّف مقصود · P-1 محدّث
 
 ---
 
-📋 9. سجل الأدلة المصورة
+📋 13. سجل الأدلة المصورة
 
 # العنصر الدليل
 1 reload=reset progressStore.ts:471-473
-2 handleEnd يمسح pendingBadgesRef PracticeScreen.tsx:414 · AnzanScreen.tsx:522
+2 handleEnd PracticeScreen.tsx:414 · AnzanScreen.tsx:522
 3 OR×AND progressStore.ts:316 × AnzanScreen.tsx:469
 4 L00 يظهر progressStore.ts:22-27
 5 buildL0Test 10 أسئلة test-pool.ts:60-64
-6 exam2Passed ميتة HeroDashboard.tsx:111,116
-7 examPassed ميتة HeroDashboard.tsx:122,145
+6-7 exam2Passed · examPassed HeroDashboard.tsx:111,116,122,145
 8 EXAM_KEY badgeChecker.ts:5-6
-9 Cooldown 24h test-pool.ts:68
-10 Cooldown 48h bank-v2/index.ts:559 · types.ts:334 · srb-adapter.ts:359
-11 recordPlacementAttempt ميتة progressStore.ts:132,360
+9-10 Cooldowns test-pool.ts:68 · bank-v2/index.ts:559 · types.ts:334
+11 recordPlacementAttempt progressStore.ts:132,360
 12 onXP = console.log App.tsx:356,583,609,634
 13 srb_progress يُكتب PracticeScreen.tsx:344-347
 14 Placement path App.tsx:194-236
-15 useQuests مفاتيح ميتة useQuests.ts:6-9
-16 badgeChecker مفاتيح ميتة badgeChecker.ts:4-6
-17 badgeChecker مستورد useGameStats.ts:14
-18 useQuests مستورد GuardianDashboard.tsx:18,196
-19 توثيق سابق في ACHIEVEMENTS ACHIEVEMENTS.md:128-129
-20 توثيق سابق في PROJECT_PLAN PROJECT_PLAN.md:547,703-704,720,1063,1153
-21 N55 (3 تعريفات AnzanBadges) + badgeChecker من مصدر مهجور progressStore:29-33 · utils/anzanBadges:8-11 · audioAnzanBadges:5-9 · badgeChecker:3,45,49
-22 N60 CategoryExamScreen CategoryExamScreen.tsx:239
-23 N60-ب PlacementTestScreen PlacementTestScreen.tsx:66
-24 بطاقة d:2 لدروس SRB srb/questions/L6.ts — 25 سؤالًا
+15-16 useQuests · badgeChecker useQuests.ts:6-9 · badgeChecker.ts:4-6
+17-18 المستوردون useGameStats.ts:14 · GuardianDashboard.tsx:18,196
+19-20 توثيق سابق ACHIEVEMENTS.md:128-129 · PROJECT_PLAN.md:547,703-704,720,1063,1153
+21 N55 · badgeChecker مهجور progressStore:29-33 · utils/anzanBadges:8-11 · audioAnzanBadges:5-9 · badgeChecker:3,45,49
+22-23 N60 · N60-ب CategoryExamScreen.tsx:239 · PlacementTestScreen.tsx:66
+24 بطاقة d:2 لـL6 srb/questions/L6.ts — 25 سؤالًا
 
 ---
 
-📊 10. الإحصائيات النهائية
+📊 14. الإحصائيات النهائية
 
 الفئة العدد
-أخطاء مؤكدة P-1 (فورية) 6
-أخطاء مؤكدة P2 (سطرية) 7 (مع N60 · N60-ب)
-أخطاء مؤكدة P3.5 (مفاتيح ميتة + ملفات) 5
+أخطاء مؤكدة P-1 7 (مع N60)
+أخطاء مؤكدة P2 5
+أخطاء مؤكدة P3.5 5
 كود ميت P3 7
-مجموع مؤكد 25
+اكتشافات Claude 12
+مجموع مؤكد 36
 مرفوض بالدليل 7
-ملفات ميتة مؤكدة 2 (audioAnzanBadges · skillsChecker)
-مصادر قديمة معزولة 2 (utils/anzanBadges · srb_progress)
-مكررات نوعية 2 (N55 · N56)
+ملفات ميتة 2
+مصادر معزولة 2
+مكررات نوعية 2
 أدلة مصورة 24
-مفاتيح localStorage 37 (بدل 35)
-بنك bank-v2 583 سؤالًا (بدل 595)
-bank-exam 370 سؤالًا (بدل 400)
-مفاتيح يتيمة 4 (بدل 2)
+مفاتيح localStorage 37
+بنك bank-v2 583 سؤالًا
+bank-exam 370 سؤالًا
+مفاتيح يتيمة 4
+مراحل التنفيذ 12
+الجدول الزمني ~7 أسابيع
 
 ---
 
@@ -441,30 +688,22 @@ bank-exam 370 سؤالًا (بدل 400)
 
 ---
 
-## ✅ ما تم إضافته
+## ✅ ملخص ما تم دمجه
 
-| # | التصحيح/الإضافة |
+| # | الإضافة |
 |---|---|
-| 1 | تصحيح `src/engine/` — 5 ملفات أساس المستقبل |
-| 2 | إضافة `progressStore.ts` إلى المجمّدات |
-| 3 | القاعدة 14 — لا حذف/استبدال/إعادة بناء progressStore |
-| 4 | إضافة قسم معمارية التخزين (SRB × progressStore) |
-| 5 | إضافة قسم قواعد العشرية النهائية (6 قواعد) |
-| 6 | إضافة قسم مفاتيح المكان الخطأ (C8) |
-| 7 | إضافة B3 · B5 (Claude) |
-| 8 | إضافة N60 · N60-ب |
-| 9 | إضافة D6 · E5 (حزمة S15) |
-| 10 | إضافة C1 · C4 · C5 · C7 (تصحيحات Claude) |
-| 11 | إضافة E1 · F5 · I2 · I3 · I4 |
-| 12 | تصحيح H5 — نظري فقط (لا تصادم) |
-| 13 | تحديث خارطة التنفيذ — 3 مراحل |
-| 14 | إضافة المرحلة 2 (المنهج) · المرحلة 3 (البنوك) |
-| 15 | إضافة 3 أدلة مصورة جديدة (22 · 23 · 24) |
-| 16 | تحديث الإحصائيات النهائية |
-| 17 | تحديث سجل التعديلات — جلسة 18 |
+| 1 | القسم 6 — Attempt Record كامل (بتفصيل + أمثلة + دورة حياة) |
+| 2 | القسم 7 — خارطة 12 مرحلة (بدل 3 مراحل سابقة) |
+| 3 | القسم 8 — الجدول الزمني المحدّث |
+| 4 | القسم 9 — جدول المسؤوليات (من يخدم ماذا) |
+| 5 | القسم 10 — 8 قرارات مؤكدة |
+| 6 | B4 — مصحّح: AND + متوسط حسابي (بدل OR) |
+| 7 | B2 — مصنّف: مقصود (حُذف من الأخطاء) |
+| 8 | N60 · N60-ب — منقولان إلى P-1 |
+| 9 | إحصائيات محدّثة: 36 خطأ مؤكد · 12 مرحلة · 7 أسابيع |
+| 10 | سجل التعديلات — جلسة 19 |
+| 11 | P-1 محدّث — 7 إصلاحات بدل 6 |
 
 ---
 
-## ⏭️ الخطوة التالية
-
-**الوثيقة الآن كاملة ~100%.**
+**الوثيقة الآن شاملة ~100%.**
