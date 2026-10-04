@@ -1,4 +1,5 @@
 // src/screens/PlacementTestScreen.tsx
+// [FIX N60-ب] — معامل عشري للأسئلة العشرية
 // شاشة امتحان تحديد المستوى (Placement Test)
 // 40 سؤالاً — 20 دقيقة — 200 نقطة
 // ✅ الإجابة على السوروبان
@@ -63,7 +64,8 @@ function getColumnsForQuestion(question: PlacementQuestion): number {
   // ✅ استخراج الأرقام من نص السؤال (لأن PlacementQuestion لا يحتوي على operands)
   const nums = (question.prompt.match(/\d+/g) ?? []).map(Number);
   const candidates: number[] = [
-    Math.abs(question.correctAnswer),
+    // [FIX N60-ب] — معامل عشري للأسئلة العشرية
+    Math.abs(Math.round(question.correctAnswer * (question.correctAnswer % 1 !== 0 ? 100 : 1))),
     ...nums.map(Math.abs),
   ];
   const maxAbs = Math.max(...candidates, 0);
