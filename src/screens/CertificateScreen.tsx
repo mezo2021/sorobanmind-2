@@ -1,5 +1,6 @@
 // src/screens/CertificateScreen.tsx
 // شهادة الإتمام الدولية — القسم الثاني (ذهبية · لغة واحدة · قابلة للطباعة على أندرويد)
+// [FIX 7] — وضع المعاينة: درجات افتراضية لعرض الشهادة
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -11,6 +12,9 @@ import {
   getLevelColors,
   type CertificateData,
 } from '@/utils/certificateGenerator';
+
+// [FIX 7] — أداة المعاينة
+import { isPreviewMode } from '@/utils/previewMode';
 
 type Lang = 'ar' | 'en';
 
@@ -33,6 +37,19 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
   const [lang, setLang] = useState<Lang>('ar');
 
   useEffect(() => {
+    // [FIX 7] — في وضع المعاينة: درجات افتراضية لرؤية شكل الشهادة
+    const inPreview = isPreviewMode();
+
+    if (inPreview) {
+      // درجات افتراضية عالية (لعرض شهادة ذهبية)
+      setExam1Score(95);
+      setExam2Score(95);
+      const savedName = localStorage.getItem('soroban_child_full_name');
+      setStudentName(savedName || 'اسم الطالب التجريبي');
+      return;
+    }
+
+    // الحالة الحقيقية — قراءة عادية
     try {
       const score1 = localStorage.getItem('soroban_exam1_score');
       if (score1) setExam1Score(parseFloat(score1));
