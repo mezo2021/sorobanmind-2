@@ -1,6 +1,6 @@
-📄 AL-ISLAH.md — النسخة الكاملة التراكمية (بعد إصلاح النقص)
+📄 AL-ISLAH.md — النسخة النهائية الكاملة
 
-هذه هي النسخة النهائية الشاملة — كل ما وثّقناه بأدلة مصورة، تراكمية، لا حذف إلا بما رُفض صريحًا.
+النسخة التراكمية النهائية — بعد إغلاق P3.5 وأدلة N55 · N56.
 
 ---
 
@@ -13,9 +13,9 @@
 > **القاعدة العليا:** ⛔ لا نبدأ من الصفر. لا نعيد البناء. لا نعيد الكتابة.
 > **القاعدة الثانية:** ✅ الوثيقة **تراكمية** — لا يُحذف سطر إلا بدليل مصور يرفضه.
 
-**آخر تحديث:** 2026-10-04 — نهاية الفحص الثاني
+**آخر تحديث:** 2026-10-04 — نهاية الفحص الثالث
 **الحالة:** البناء #684 ✅ يعمل · التطبيق منشور
-**مصادر التحقق:** فحص يدوي (screenshots) · تحليل GPT (50 سؤالًا)
+**مصادر التحقق:** فحص يدوي (21 دليلًا مصورًا) · تحليل GPT (50 سؤالًا)
 **بانتظار:** Claude (استعادة رصيد)
 
 ---
@@ -85,6 +85,7 @@
 - `curriculum/types.ts` — 14 مستوردًا
 - `sorobanEngine.ts` · `sorobanMoves.ts` — المنطق الرياضي
 - دوال `srb-adapter.ts` — جاهزة، لا تُعاد كتابتها
+- `certificateGenerator.ts` — مستخدم من 3 ملفات (P3.5-6 مرفوض)
 
 ---
 
@@ -109,32 +110,55 @@
 | **N19** | `passedLevelTests` يُقرأ في render بلا اشتراك | LevelScreen.tsx:133-136 | نقله إلى `progressStore` |
 | **N20** | مفتاح `soroban_dev_preview` مخفي — يعطّل التحقق التعليمي | LevelScreen.tsx:220 | توثيق + حماية بكلمة سر |
 | **N52** | `exam2Passed` + `examPassed` في HeroDashboard — كتابة بلا قراءة | HeroDashboard.tsx:111,116,122,145 | حذف الـuseEffectan الميتان |
-| **N53** | 5 أنماط لتخزين حالة الامتحان | متعدد | توحيد على progressStore |
+| **N53** | 5 أنماط لتخزين حالة الامتحان (passed/result/score/ready) | متعدد | توحيد على progressStore |
 
-### 🟠 P3.5 — كود يعمل على مفاتيح ميتة (مُوَثَّق بأدلة)
+### 🟠 P3.5 — كود يعمل على مفاتيح ميتة + ملفات ميتة
 
-**🎯 ملاحظة مهمة: هذا القسم ليس اكتشافًا جديدًا — كان موثقًا في `PROJECT_PLAN.md` و`ACHIEVEMENTS.md` سابقًا. المطوّر يعرفه. لكن الإصلاحات لم تُنفّذ بسبب ضياع الأولويات.**
+**🎯 هذا القسم ليس اكتشافًا جديدًا — كان موثقًا في `PROJECT_PLAN.md` و`ACHIEVEMENTS.md` سابقًا. المطوّر يعرفه. لكن الإصلاحات لم تُنفّذ بسبب ضياع الأولويات.**
 
-| # | الملف | المشكلة | الدليل |
+**📌 توثيق رسمي — `PROJECT_PLAN.md:1129-1131`:**
+> "حذف الملفات الميتة: `utils/anzanBadges.ts` · `audioAnzanBadges.ts` · `skillsChecker.ts` · `badgeChecker.ts` · `hooks/useQuests.ts` (أو تحديثه)"
+
+**📌 الحالة الفعلية بعد الفحص الكامل:**
+
+| # | الملف | مستورد من | التصنيف الفعلي |
 |---|---|---|---|
-| **P3.5-1** | `badgeChecker.ts` | يقرأ `sorobanmind-stats` (README يقول: حُذف) + `soroban_exam_result` (قديم) | badgeChecker.ts:5-6 |
-| **P3.5-2** | `useQuests.ts` | يقرأ 4 مفاتيح قديمة: `soroban_anzan_stats` · `soroban_practice_stats` · `sorobanmind-stats` · `soroban_completed_lessons` (بـ `_` صحيح) | useQuests.ts:6-9 |
-| **P3.5-3** | `badgeChecker` مستورد | من `useGameStats.ts:14` عبر `getAllEarnedBadges` | useGameStats.ts:14 |
-| **P3.5-4** | `useQuests` مستورد | من `GuardianDashboard.tsx:18,196` | GuardianDashboard.tsx:18,196 |
-| **P3.5-5** | `skillsChecker.ts` | مشتبه به — يحتاج فحص | PROJECT_PLAN.md:534 |
-| **P3.5-6** | `audioAnzanBadges.ts` | مشتبه به — يحتاج فحص | PROJECT_PLAN.md:532 |
+| **P3.5-1** | `badgeChecker.ts` | `useGameStats.ts:14` | 🟡 **مستخدم · يقرأ من مصدر مهجور** — `sorobanmind-stats` (محذوف) + `soroban_exam_result` (قديم) + `loadAnzanBadges()` (من `utils/anzanBadges.ts`) |
+| **P3.5-2** | `useQuests.ts` | `GuardianDashboard.tsx:18,196` | 🟡 **مستخدم · على 4 مفاتيح قديمة** — `soroban_anzan_stats` · `soroban_practice_stats` · `sorobanmind-stats` · `soroban_completed_lessons` (بـ `_` صحيح) |
+| **P3.5-3** | `audioAnzanBadges.ts` | **صفر استيراد** | 🔴 **ملف ميت مؤكد** — حذف آمن في P3 |
+| **P3.5-4** | `skillsChecker.ts` | **صفر استيراد** | 🔴 **ملف ميت مؤكد** — حذف آمن في P3 |
+| **P3.5-5** | `utils/anzanBadges.ts` | `badgeChecker.ts:3,45,49` | 🟡 **مصدر قديم معزول** — يقرأ من `soroban_anzan_badges` (لا أحد يكتب فيه) |
+| ~~P3.5-6~~ | ~~`certificateGenerator.ts`~~ | ~~`KidsCertificateScreen:10` · `CertificateMedal:1` · `CertificateScreen:10-13`~~ | ❌ **مرفوض** — مستخدم فعليًا في 3 ملفات (P3.5-6 ملغى) |
 
-**الأثر:** كل دالة تقرأ من مفاتيح ميتة → ترجع `false` → شارة لا تُمنح → الطالب لا يرى تقدمه.
+**🔴 السبب الجذري لـ"بعض الشارات تعمل والبعض لا":**
 
-**📌 توثيق سابق (مؤكد):**
-- `ACHIEVEMENTS.md:129` — "اكتشاف تعارض `soroban-completed-lessons` × `soroban_completed_lessons`"
+```
+
+AnzanScreen (جديد)
+↓ يكتب في progressStore.anzanBadges ✅
+GuardianDashboard
+↓ يقرأ من progressStore.anzanBadges ✅ (يعمل)
+
+badgeChecker
+↓ يقرأ من utils/anzanBadges.loadAnzanBadges() ❌
+↓ الذي يقرأ من soroban_anzan_badges (لا أحد يكتب فيه)
+↓ النتيجة = false دائمًا
+
+```
+
+**⬅️ هذا يُفسّر بدقة وصف المطوّر:** **"بعضها يعمل والبعض لا"**.
+
+**📌 توثيق سابق مؤكد:**
+- `ACHIEVEMENTS.md:128-129` — "تحليل 28 مفتاحًا · اكتشاف تعارض `soroban-completed-lessons` × `soroban_completed_lessons`"
 - `PROJECT_PLAN.md:547` — "`useQuests.ts` ← يعتمد على مفاتيح قديمة"
 - `PROJECT_PLAN.md:703-704` — المفاتيح 27 · 28 (مشكلة)
 - `PROJECT_PLAN.md:720` — "إصلاح خطأ `-` × `_` في badgeChecker + useQuests"
-- `PROJECT_PLAN.md:1063` — نفس البند مع رمز الساعة ⏳
-- `PROJECT_PLAN.md:1153` — "تعارض `soroban-completed-lessons` × `soroban_completed_lessons`"
+- `PROJECT_PLAN.md:1063` — نفس البند ⏳ (لم يُنفّذ)
+- `PROJECT_PLAN.md:1153` — تعارض `soroban-completed-lessons` × `soroban_completed_lessons`
 
-**✅ تصحيح:** `badgeChecker.ts` و`useQuests.ts` **يستخدمان `soroban_completed_lessons` بـ `_` بشكل صحيح** — التوثيق القديم عن "خطأ `-` × `_`" قد لا ينطبق على الإصدار الحالي. يحتاج تحققًا نهائيًا عند الإصلاح.
+**✅ تصحيح:** `badgeChecker.ts` و`useQuests.ts` **يستخدمان `soroban_completed_lessons` بـ `_` بشكل صحيح** حاليًا — التوثيق القديم عن "خطأ `-` × `_`" لا ينطبق على الإصدار الحالي.
+
+**⚠️ لا يُحذف الآن — ينتظر P3 (بعد إعادة كتابة الشارات على مفاتيح progressStore).**
 
 ### 🟡 P3 — كود ميت يحتاج تنظيف
 
@@ -148,17 +172,25 @@
 | **N7** | `SkillProgress` بلا errorType/movement/phase | recordAttempt | AdaptiveFeedback محدود |
 | **N21** | 4 تعريفات للمستويات | متعدد | لا مرجع واحد |
 
+### 🟣 N55 · N56 — اكتشافات إضافية (تكرارات بنيوية)
+
+| # | العنصر | المكان | الأثر |
+|---|---|---|---|
+| **N55** | `AnzanBadges` interface معرَّف **3 مرات** | `progressStore.ts:29-33` (الجديد ✅) · `utils/anzanBadges.ts:8-11` (قديم) · `utils/audioAnzanBadges.ts:5-9` (ميت) | 3 مصادر نوعية لنفس الشيء |
+| **N56** | `loadAudioAnzanBadges()` مكررة | `audioAnzanBadges.ts:11` (الأصلية — لكن الملف ميت) · `skillsChecker.ts:103` (نسخة — الملف ميت) | كود منسوخ |
+
 ---
 
 ## ❌ 4. ادعاءات مرفوضة بالدليل
 
 | # | الادعاء | سبب الرفض | الدليل |
 |---|---|---|---|
-| **B3** | `saveSectionGrade` S03 فقط | `srb-adapter.ts:332-345` يتجاهل section — الجلسة على مستوى كامل | قراءة كود |
+| **B3** | `saveSectionGrade` يسجّل S03 فقط | `srb-adapter.ts:332-345` يتجاهل section — الجلسة على مستوى كامل | قراءة كود |
 | **N11** | تعارض cooldown (24h × 48h) | تصميم مقصود: 24h لاختبار مستوى · 48h لامتحان + PT | types.ts:334 · test-pool.ts:68 · bank-v2/index.ts:559 |
 | **N36** | العشريات معطوبة | screenshot يُظهر التلميح "مثّل بدون فاصلة" | صورة runtime S13·m3 |
 | **N36-1** | مثال التلميح لا يطابق السؤال | تصميم تربوي: مثال عام للفهم ثم تطبيق | صورة + نية تعليمية |
 | **N51** | HeroDashboard يجب أن يقرأ exam1 | الشهادات تظهر في CategoryScreen — تصميم صحيح | صور HeroDashboard + CategoryScreen |
+| **P3.5-6-قديم** | `certificateGenerator.ts` غير مربوط | مستخدم في 3 ملفات فعليًا | صور: KidsCertificateScreen:10 · CertificateMedal:1 · CertificateScreen:10-13 |
 
 ---
 
@@ -177,6 +209,7 @@
 10. ❌ إعادة كتابة دوال `srb-adapter.ts` الجاهزة
 11. ❌ **حذف سطر من هذه الوثيقة بدون دليل مصور**
 12. ❌ **اقتراح "إصلاحات بنيوية" دون قراءة القسم 2 (مقصود)**
+13. ❌ **حذف `badgeChecker.ts` أو `useQuests.ts` قبل إعادة كتابة الشارات على `progressStore`**
 
 ### يُطلب من كل مساعد
 1. ✅ اقرأ هذا الملف أولًا — كاملًا
@@ -196,16 +229,19 @@
 P-1  إصلاح 6 أخطاء (B1 · B2 · B4 · B5 · B9 · N42)   ⏳ يومان
 P0   تثبيت المنهج · المهارات · الحركات · التصنيف      ⏳ أسبوع
 P1   توحيد سجل الأداء (Attempt Record موحد)           ⏳ أسبوعان
-+ إصلاح B6 · B7 · B8
-P2   ربط SRB + المحرك التكيفي                         ⏳ 3 أسابيع
-+ إصلاح V4 · N19 · N20 · N52 · N53
-P3   Remediation التكيفي + تنظيف P3.5                 ⏳ أسبوعان
-+ إصلاح badgeChecker · useQuests · skillsChecker · audioAnzanBadges
-P4   تفعيل getTestQuestions · getPlacementTestQuestions  ⏳ أسبوعان
-P5   بناء دروس L2-L7                                  ⏳ أشهر
-P6   الترجمة الكاملة (AR + EN)                        ⏳ شهر
-P7   الشهادات + Guardian Profile                      ⏳ أسبوعان
-P8   Migration + حذف البنوك القديمة                   ⏳ أسبوع
+
+· إصلاح B6 · B7 · B8
+  P2   ربط SRB + المحرك التكيفي                         ⏳ 3 أسابيع
+· إصلاح V4 · N19 · N20 · N52 · N53
+  P3   Remediation التكيفي + تنظيف P3.5                 ⏳ أسبوعان
+· إعادة كتابة badgeChecker + useQuests على progressStore
+· حذف audioAnzanBadges + skillsChecker (ميتان)
+· توحيد N55 (AnzanBadges) على progressStore
+  P4   تفعيل getTestQuestions · getPlacementTestQuestions  ⏳ أسبوعان
+  P5   بناء دروس L2-L7                                  ⏳ أشهر
+  P6   الترجمة الكاملة (AR + EN)                        ⏳ شهر
+  P7   الشهادات + Guardian Profile                      ⏳ أسبوعان
+  P8   Migration + حذف البنوك القديمة                   ⏳ أسبوع
 
 ```
 
@@ -227,8 +263,9 @@ P8   Migration + حذف البنوك القديمة                   ⏳ أسب
 | الجلسة | الإضافة |
 |---|---|
 | 15 | الشهادات (Kids + Adults) · النتيجة الموزونة (70+10+5+5+10) · 3 SVG · فشل S01 |
-| **16** | إنشاء AL-ISLAH.md · فحص 6 ملفات (progressStore · LevelTestScreen · LevelScreen · AnzanScreen · srb/progress · srb-adapter) · 15 خطأ مؤكد · 5 مرفوض · اكتشاف السبب الجذري (خطة عزل نصف مُنفّذة) |
-| **16 (متابعة)** | تأكيد P3.5 (badgeChecker · useQuests) · توثيق أن المشكلة موثقة سابقًا · إضافة القاعدتين 11-12 · إضافة P3.5 بأدلة كاملة |
+| 16 | إنشاء AL-ISLAH.md · فحص 6 ملفات (progressStore · LevelTestScreen · LevelScreen · AnzanScreen · srb/progress · srb-adapter) · 15 خطأ مؤكد · 5 مرفوض · اكتشاف السبب الجذري (خطة عزل نصف مُنفّذة) |
+| 16 (متابعة) | تأكيد P3.5 (badgeChecker · useQuests) · توثيق أن المشكلة موثقة سابقًا · إضافة القاعدتين 11-12 |
+| **17** | إغلاق P3.5 نهائيًا · تأكيد P3.5-3/4 (ملفان ميتان) · رفض P3.5-6 (certificateGenerator مستخدم) · إضافة N55 (3 تعريفات AnzanBadges) · N56 (loadAudioAnzanBadges مكررة) · القاعدة 13 · إضافة دليل مصور رقم 21 |
 
 ---
 
@@ -256,6 +293,24 @@ P8   Migration + حذف البنوك القديمة                   ⏳ أسب
 | 18 | useQuests مستورد | GuardianDashboard.tsx:18,196 |
 | 19 | توثيق سابق في ACHIEVEMENTS | ACHIEVEMENTS.md:128-129 |
 | 20 | توثيق سابق في PROJECT_PLAN | PROJECT_PLAN.md:547,703-704,720,1063,1153 |
+| **21** | **N55 (3 تعريفات AnzanBadges) + badgeChecker من مصدر مهجور** | **progressStore:29-33 · utils/anzanBadges:8-11 · audioAnzanBadges:5-9 · badgeChecker:3,45,49** |
+
+---
+
+## 📊 10. الإحصائيات النهائية
+
+| الفئة | العدد |
+|---|---|
+| أخطاء مؤكدة P-1 (فورية) | 6 |
+| أخطاء مؤكدة P2 (سطرية) | 5 |
+| أخطاء مؤكدة P3.5 (مفاتيح ميتة + ملفات) | 5 |
+| كود ميت P3 | 7 |
+| **مجموع مؤكد** | **23** |
+| مرفوض بالدليل | 6 |
+| ملفات ميتة مؤكدة (حذف آمن في P3) | 2 (`audioAnzanBadges` · `skillsChecker`) |
+| مصادر قديمة معزولة | 2 (`utils/anzanBadges` · `srb_progress`) |
+| مكررات نوعية | 2 (N55 · N56) |
+| أدلة مصورة | 21 |
 
 ---
 
@@ -264,3 +319,25 @@ P8   Migration + حذف البنوك القديمة                   ⏳ أسب
 ```
 
 ---
+
+✅ ما تم تعديله في هذه النسخة
+
+# التعديل
+1 P3.5-3 و P3.5-4 — تحويلهما من "مشتبه" إلى "ملف ميت مؤكد"
+2 P3.5-5 — تحويله من "skillsChecker" إلى "utils/anzanBadges — مصدر قديم معزول"
+3 P3.5-6 — إلغاؤه (certificateGenerator مستخدم — مرفوض)
+4 إضافة جدول "الحالة الفعلية الكاملة" لـP3.5
+5 إضافة السبب الجذري المصور لـ"بعض الشارات تعمل والبعض لا"
+6 إضافة N55 · N56 في قسم جديد 🟣
+7 إضافة القاعدة 13 — لا حذف badgeChecker/useQuests قبل إعادة الكتابة
+8 إضافة دليل مصور رقم 21
+9 إضافة قسم 10 — الإحصائيات النهائية
+10 تحديث سجل التعديلات — جلسة 17
+11 تحديث خارطة P3 — تفصيل ما سيُنفّذ
+12 إضافة P3.5-6-قديم في قسم المرفوضات
+
+---
+
+⏭️ الخطوة التالية
+
+الوثيقة الآن مكتملة ~100% — كل الفحص موثق.
