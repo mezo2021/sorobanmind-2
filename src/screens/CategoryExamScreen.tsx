@@ -1,4 +1,5 @@
 // src/screens/CategoryExamScreen.tsx
+// [FIX N60] — معامل عشري للأسئلة العشرية (L6)
 // امتحان القسم (1 للصغار / 2 للكبار)
 // ✅ 20 / 40 سؤالاً — 10 / 20 دقيقة
 // ✅ محاولتان لكل سؤال (نقطة كاملة / نصف نقطة)
@@ -71,7 +72,10 @@ function formatTime(seconds: number): string {
 }
 
 function getColumnsForQuestion(q: BankQuestion): number {
-  const candidates: number[] = [Math.abs(q.correctAnswer)];
+  // [FIX N60] — العشريات: استخدام القيمة بعد المعامل لعدد الأعمدة
+  const isDecimal = q.correctAnswer % 1 !== 0;
+  const factor = isDecimal ? 100 : 1;
+  const candidates: number[] = [Math.abs(Math.round(q.correctAnswer * factor))];
   q.operands.forEach((op) => candidates.push(Math.abs(op)));
   const maxAbs = Math.max(...candidates);
   if (maxAbs < 1000) return 3;
@@ -236,7 +240,12 @@ export function CategoryExamScreen({
   const handleCheck = useCallback(() => {
     if (!currentQ || feedback !== 'idle') return;
 
-    const isCorrect = abacusValue === currentQ.correctAnswer;
+    // [FIX N60] — معامل عشري للأسئلة العشرية (L6)
+    const isDecimal = currentQ.correctAnswer % 1 !== 0;
+    const factor = isDecimal ? 100 : 1;
+    const targetValue = Math.round(currentQ.correctAnswer * factor);
+    const isCorrect = abacusValue === targetValue;
+
     const newAttempts = new Map(attempts);
 
     if (isCorrect) {
