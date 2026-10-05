@@ -6,6 +6,7 @@
 // ✅ الحالة: البناء أخضر
 // [FIX B1]  removed dead reload() — 2026-10-04
 // [FIX B4]  unify AND for visual anzan — 2026-10-04
+// [FIX N62] outcome انتقل إلى RemediationSession (اختياري) — 2026-10-05
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -62,7 +63,7 @@ export interface PendingRemediation {
   level: LevelId;
   phase: RemediationPhase;
   skills: string[];
-  outcome: "passed" | "failed";
+  // [FIX N62] — أُزيل outcome (انتقل إلى RemediationSession)
   createdAt: number;
 }
 
@@ -75,6 +76,8 @@ export interface RemediationSession {
   correct: number;
   total: number;
   completedAt: number;
+  // [FIX N62] — نتيجة الجلسة (اختياري — توافق مع البيانات القديمة)
+  outcome?: "passed" | "failed";
 }
 
 // ═══ الحالة الكاملة ═══
@@ -313,7 +316,7 @@ export const useProgressStore = create<ProgressState>()(
           return null;
         }
 
-        // البصري: يحتاج مكوّنًا واحدًا على الأقل
+        // [FIX N62] البصري: يشترط المكوّنين معًا (عادي + Flash) — مطابقة لقاعدة الفتح
         if (vNormal === null || vFlash === null) return null;
 
         // وزن البصري: ٥٪ لكل مكوّن
