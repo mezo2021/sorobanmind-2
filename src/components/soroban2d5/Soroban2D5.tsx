@@ -43,35 +43,35 @@ function useResponsiveSize() {
 
 const SIZE_CONFIG = {
   sm: {
-    beadSize: 34,
-    gap: 10,
-    framePadding: 14,
-    innerPadding: 12,
-    height: 380,
-    topPadding: 34,
-    bottomPadding: 10,
+    beadSize: 34,          // ← كما هو (لا تلمسه)
+    gap: 10,               // ← كما هو
+    framePadding: 10,      // 14 → 10
+    innerPadding: 10,      // 12 → 10
+    height: 260,           // 380 → 260 (-120px)
+    topPadding: 22,        // 34 → 22
+    bottomPadding: 8,      // 10 → 8
     titleSize: 'text-base',
     valueSize: 'text-2xl',
   },
   md: {
-    beadSize: 44,
-    gap: 14,
-    framePadding: 18,
-    innerPadding: 14,
-    height: 440,
-    topPadding: 40,
-    bottomPadding: 12,
+    beadSize: 44,          // ← كما هو (لا تلمسه)
+    gap: 14,               // ← كما هو
+    framePadding: 12,      // 18 → 12
+    innerPadding: 10,      // 14 → 10
+    height: 300,           // 440 → 300 (-140px)
+    topPadding: 24,        // 40 → 24
+    bottomPadding: 10,     // 12 → 10
     titleSize: 'text-lg',
     valueSize: 'text-3xl',
   },
   lg: {
-    beadSize: 56,
-    gap: 20,
-    framePadding: 26,
-    innerPadding: 18,
-    height: 520,
-    topPadding: 48,
-    bottomPadding: 14,
+    beadSize: 56,          // ← كما هو (لا تلمسه)
+    gap: 20,               // ← كما هو
+    framePadding: 14,      // 26 → 14
+    innerPadding: 12,      // 18 → 12
+    height: 360,           // 520 → 360 (-160px)
+    topPadding: 28,        // 48 → 28
+    bottomPadding: 12,     // 14 → 12
     titleSize: 'text-2xl',
     valueSize: 'text-5xl',
   },
