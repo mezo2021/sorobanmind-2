@@ -370,7 +370,6 @@ export function PracticeScreen({
         level,
         phase: 'practice',
         skills: Array.from(weakSkillIds),
-        outcome: 'passed',
       });
     }
 
@@ -380,7 +379,6 @@ export function PracticeScreen({
         level,
         phase: 'practice',
         skills: Array.from(weakSkillIds),
-        outcome: 'failed',
       });
     }
 
