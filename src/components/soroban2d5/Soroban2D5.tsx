@@ -43,44 +43,49 @@ function useResponsiveSize() {
 
 const SIZE_CONFIG = {
   sm: {
-    beadSize: 34,          // ← كما هو (لا تلمسه)
-    gap: 10,               // ← كما هو
-    framePadding: 10,      // 14 → 10
-    innerPadding: 10,      // 12 → 10
-    height: 260,           // 380 → 260 (-120px)
-    topPadding: 22,        // 34 → 22
-    bottomPadding: 8,      // 10 → 8
+    beadSize: 34,
+    gap: 10,
+    framePadding: 10,
+    innerPadding: 10,
+    height: 260,
+    topPadding: 22,
+    bottomPadding: 8,
     titleSize: 'text-base',
     valueSize: 'text-2xl',
   },
   md: {
-    beadSize: 44,          // ← كما هو (لا تلمسه)
-    gap: 14,               // ← كما هو
-    framePadding: 12,      // 18 → 12
-    innerPadding: 10,      // 14 → 10
-    height: 300,           // 440 → 300 (-140px)
-    topPadding: 24,        // 40 → 24
-    bottomPadding: 10,     // 12 → 10
+    beadSize: 44,
+    gap: 14,
+    framePadding: 12,
+    innerPadding: 10,
+    height: 300,
+    topPadding: 24,
+    bottomPadding: 10,
     titleSize: 'text-lg',
     valueSize: 'text-3xl',
   },
   lg: {
-    beadSize: 56,          // ← كما هو (لا تلمسه)
-    gap: 20,               // ← كما هو
-    framePadding: 14,      // 26 → 14
-    innerPadding: 12,      // 18 → 12
-    height: 360,           // 520 → 360 (-160px)
-    topPadding: 28,        // 48 → 28
-    bottomPadding: 12,     // 14 → 12
+    beadSize: 56,
+    gap: 20,
+    framePadding: 14,
+    innerPadding: 12,
+    height: 360,
+    topPadding: 28,
+    bottomPadding: 12,
     titleSize: 'text-2xl',
     valueSize: 'text-5xl',
   },
 };
 
+// [FIX N71] — أحجام محسّنة للأعمدة الكثيرة (مع تقليص الحشوات)
 function getAutoBeadSize(columns: number): number {
   if (columns <= 2) return 52;
-  // [FIX N70] — 3+ أعمدة: حجم ثابت 44px (قابل للنقر دائمًا)
-  return 44;
+  if (columns <= 3) return 46;
+  if (columns <= 4) return 40;   // 38 → 40
+  if (columns <= 5) return 34;   // 32 → 34
+  if (columns <= 6) return 32;   // 28 → 32
+  if (columns <= 9) return 24;   // 20 → 24
+  return 16;                     // 16 → 16 (يناسب بعد التقليص)
 }
 
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
@@ -140,6 +145,12 @@ export function Soroban2D5({
     ? Math.round(cfg.height * (effectiveBeadSize / cfg.beadSize))
     : cfg.height;
 
+  // [FIX N71] — تقليص الحشوات والفراغات عند كثرة الأعمدة
+  const isDense = autoBeadSize && displayedStates.length > 4;
+  const framePaddingEff = isDense ? 4 : cfg.framePadding;
+  const innerPaddingEff = isDense ? 4 : cfg.innerPadding;
+  const gapEff = isDense ? 4 : cfg.gap;
+
   useEffect(() => {
     if (initialValue > 0) setValue(initialValue);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -173,7 +184,7 @@ export function Soroban2D5({
         transition={{ type: 'spring', stiffness: 200, damping: 20 }}
         className="relative rounded-2xl sm:rounded-3xl"
         style={{
-          padding: cfg.framePadding,
+          padding: framePaddingEff,
           background:
             'linear-gradient(135deg, #8b6f47 0%, #6b4423 50%, #4a2e15 100%)',
           boxShadow:
@@ -185,51 +196,39 @@ export function Soroban2D5({
         <div
           className="relative rounded-xl sm:rounded-2xl"
           style={{
-            padding: cfg.innerPadding,
+            padding: innerPaddingEff,
             background: 'linear-gradient(180deg, #fef9f0 0%, #f5e6c8 100%)',
             boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.15)',
             overflow: 'visible',
           }}
         >
           <div
+            className="flex flex-row-reverse items-center justify-center"
             style={{
-              overflowX: 'auto',
-              overflowY: 'visible',
-              maxWidth: '100%',
-              WebkitOverflowScrolling: 'touch',
-              paddingBottom: 4,
+              gap: gapEff,
+              paddingTop: cfg.topPadding,
+              paddingBottom: cfg.bottomPadding,
             }}
+            dir="rtl"
           >
-            <div
-              className="flex flex-row-reverse items-center justify-center"
-              style={{
-                gap: cfg.gap,
-                paddingTop: cfg.topPadding,
-                paddingBottom: cfg.bottomPadding,
-                minWidth: displayedStates.length * (effectiveBeadSize + cfg.gap) + 20,
-                margin: '0 auto',
-              }}
-              dir="rtl"
-            >
-              {displayedStates.map((state, idx) => {
-                const originalIdx = idx + displayOffset;
-                const displayOrder = columns - 1 - originalIdx;
-                return (
-                  <Rod2D5
-                    key={originalIdx}
-                    state={state}
-                    columnIndex={originalIdx}
-                    displayOrder={displayOrder}
-                    totalColumns={displayedStates.length}
-                    onToggleUpper={() => interactive && toggleUpper(originalIdx)}
-                    onSetLower={(count) => interactive && setLower(originalIdx, count)}
-                    onReset={() => interactive && resetColumn(originalIdx)}
-                    height={effectiveHeight}
-                    beadSize={effectiveBeadSize}
-                  />
-                );
-              })}
-            </div>
+            {displayedStates.map((state, idx) => {
+              const originalIdx = idx + displayOffset;
+              const displayOrder = columns - 1 - originalIdx;
+              return (
+                <Rod2D5
+                  key={originalIdx}
+                  state={state}
+                  columnIndex={originalIdx}
+                  displayOrder={displayOrder}
+                  totalColumns={displayedStates.length}
+                  onToggleUpper={() => interactive && toggleUpper(originalIdx)}
+                  onSetLower={(count) => interactive && setLower(originalIdx, count)}
+                  onReset={() => interactive && resetColumn(originalIdx)}
+                  height={effectiveHeight}
+                  beadSize={effectiveBeadSize}
+                />
+              );
+            })}
           </div>
 
           {displayOffset > 0 && (
