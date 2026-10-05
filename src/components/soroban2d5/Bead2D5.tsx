@@ -1,125 +1,302 @@
-// src/components/soroban2d5/Bead2D5.tsx
-import { motion } from 'framer-motion';
+// src/components/soroban2d5/Soroban2D5.tsx
+import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { useSorobanLogic } from './useSorobanLogic';
+import { Rod2D5 } from './Rod2D5';
 import { useBeadSound } from './useBeadSound';
 import { useBeadHaptics } from './useBeadHaptics';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
 
-interface Bead2D5Props {
-  color: 'wood' | 'gold' | 'dark' | 'red';
-  active: boolean;
-  position: 'upper' | 'lower';
-  size?: number;
-  onClick?: () => void;
-  animateOffset?: boolean;
+interface Soroban2D5Props {
+  columns?: number;
+  initialValue?: number;
+  onValueChange?: (value: number) => void;
+  showValue?: boolean;
+  interactive?: boolean;
+  demoValue?: number;
+  size?: 'sm' | 'md' | 'lg' | 'landscape' | 'auto';
+  autoBeadSize?: boolean;
 }
 
-const COLORS = {
-  wood: {
-    light: 'linear-gradient(180deg, #c19a6b 0%, #a67c52 50%, #8b6344 100%)',
-    shadow:
-      'inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -3px 6px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.3)',
+type ResponsiveSize = 'sm' | 'md' | 'lg' | 'landscape';
+
+function useResponsiveSize() {
+  const compute = (): ResponsiveSize => {
+    if (typeof window === 'undefined') return 'md';
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+
+    // [FIX N72] — Landscape على الجوال
+    if (w > 600 && h < 500) return 'landscape';
+
+    if (w < 480) return 'sm';
+    if (w < 768) return 'md';
+    return 'lg';
+  };
+
+  const [size, setSize] = useState<ResponsiveSize>(compute);
+
+  useEffect(() => {
+    const handleResize = () => setSize(compute());
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+
+  return size;
+}
+
+const SIZE_CONFIG = {
+  landscape: {
+    beadSize: 44,
+    gap: 12,
+    framePadding: 10,
+    innerPadding: 8,
+    height: 220,
+    topPadding: 14,
+    bottomPadding: 6,
+    titleSize: 'text-base',
+    valueSize: 'text-2xl',
   },
-  gold: {
-    light: 'linear-gradient(180deg, #f4d47c 0%, #d4a574 50%, #b8860b 100%)',
-    shadow:
-      'inset 0 2px 6px rgba(255,240,200,0.6), inset 0 -3px 6px rgba(100,60,0,0.4), 0 4px 10px rgba(184,134,11,0.5)',
+  sm: {
+    beadSize: 34,          // ← كما هو (لا تلمسه)
+    gap: 10,               // ← كما هو
+    framePadding: 10,      // 14 → 10
+    innerPadding: 10,      // 12 → 10
+    height: 260,           // 380 → 260 (-120px)
+    topPadding: 22,        // 34 → 22
+    bottomPadding: 8,      // 10 → 8
+    titleSize: 'text-base',
+    valueSize: 'text-2xl',
   },
-  dark: {
-    light: 'linear-gradient(180deg, #8b6f47 0%, #5a3a1f 50%, #3d2817 100%)',
-    shadow:
-      'inset 0 2px 4px rgba(255,200,150,0.2), inset 0 -3px 6px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.4)',
+  md: {
+    beadSize: 44,          // ← كما هو (لا تلمسه)
+    gap: 14,               // ← كما هو
+    framePadding: 12,      // 18 → 12
+    innerPadding: 10,      // 14 → 10
+    height: 300,           // 440 → 300 (-140px)
+    topPadding: 24,        // 40 → 24
+    bottomPadding: 10,     // 12 → 10
+    titleSize: 'text-lg',
+    valueSize: 'text-3xl',
   },
-  red: {
-    light: 'linear-gradient(180deg, #ff7b7b 0%, #c94040 50%, #8b1a1a 100%)',
-    shadow:
-      'inset 0 2px 4px rgba(255,200,200,0.4), inset 0 -3px 6px rgba(80,0,0,0.5), 0 4px 10px rgba(200,0,0,0.4)',
+  lg: {
+    beadSize: 56,          // ← كما هو (لا تلمسه)
+    gap: 20,               // ← كما هو
+    framePadding: 14,      // 26 → 14
+    innerPadding: 12,      // 18 → 12
+    height: 360,           // 520 → 360 (-160px)
+    topPadding: 28,        // 48 → 28
+    bottomPadding: 12,     // 14 → 12
+    titleSize: 'text-2xl',
+    valueSize: 'text-5xl',
   },
 };
 
-export function Bead2D5({
-  color,
-  active,
-  position,
-  size = 30,
-  onClick,
-  animateOffset = true,
-}: Bead2D5Props) {
+function getAutoBeadSize(columns: number): number {
+  if (columns <= 2) return 52;
+  // [FIX N70] — 3+ أعمدة: حجم ثابت 44px (قابل للنقر دائمًا)
+  return 44;
+}
+
+const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+function formatByStyle(value: number, style: 'arabic' | 'latin'): string {
+  const str = String(value);
+  if (style === 'arabic') {
+    return str.replace(/[0-9]/g, (d) => ARABIC_DIGITS[Number(d)]);
+  }
+  return str;
+}
+
+export function Soroban2D5({
+  columns = 4,
+  initialValue = 0,
+  onValueChange,
+  showValue = true,
+  interactive = true,
+  demoValue,
+  size = 'auto',
+  autoBeadSize = false,
+}: Soroban2D5Props) {
+  const {
+    columns: colStates,
+    totalValue,
+    toggleUpper,
+    setLower,
+    resetColumn,
+    resetAll,
+    setValue,
+  } = useSorobanLogic(columns);
+
   const playSound = useBeadSound();
   const vibrate = useBeadHaptics();
 
-  const handleClick = () => {
-    playSound('hit', active ? 0.7 : 1);
-    vibrate('light');
-    onClick?.();
+  const numberStyle = useNumberStyleStore((s) => s.style);
+  const isArabic = numberStyle === 'arabic';
+
+  const responsiveSize = useResponsiveSize();
+  const finalSize = size === 'auto' ? responsiveSize : size;
+  const cfg = SIZE_CONFIG[finalSize];
+
+  const visibleColumns = (() => {
+    if (!autoBeadSize && finalSize === 'sm' && columns > 4) {
+      return Math.min(4, columns);
+    }
+    return columns;
+  })();
+
+  const displayedStates = colStates.slice(-visibleColumns);
+  const displayOffset = columns - visibleColumns;
+
+  const effectiveBeadSize = autoBeadSize
+    ? getAutoBeadSize(displayedStates.length)
+    : cfg.beadSize;
+
+  const effectiveHeight = autoBeadSize
+    ? Math.round(cfg.height * (effectiveBeadSize / cfg.beadSize))
+    : cfg.height;
+
+  useEffect(() => {
+    if (initialValue > 0) setValue(initialValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (demoValue !== undefined) setValue(demoValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoValue]);
+
+  useEffect(() => {
+    onValueChange?.(totalValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalValue]);
+
+  const handleResetAll = () => {
+    playSound('slide');
+    vibrate('medium');
+    resetAll();
   };
 
-  const offset = animateOffset
-    ? position === 'upper'
-      ? active
-        ? size * 0.5
-        : 0
-      : active
-      ? -size * 0.6
-      : 0
-    : 0;
-
-  const { light, shadow } = COLORS[color];
-
   return (
-    <motion.button
-      type="button"
-      aria-label={`خرزة ${color} ${active ? 'مفعّلة' : 'غير مفعّلة'}`}
-      onClick={handleClick}
-      initial={false}
-      animate={{ y: offset }}
-      transition={{
-        type: 'spring',
-        stiffness: 500,
-        damping: 28,
-        mass: 0.8,
-      }}
-      whileHover={{ scale: 1.08 }}
-      whileTap={{ scale: 0.92 }}
-      style={{
-        width: size,
-        height: size * 0.42,
-        background: light,
-        boxShadow: shadow,
-        borderRadius: '50%',
-        border: '1px solid rgba(0,0,0,0.15)',
-        cursor: 'pointer',
-        position: 'relative',
-        transformStyle: 'preserve-3d',
-      }}
-    >
-      <span
+    <div className="w-full flex flex-col items-center gap-3 sm:gap-5">
+      <h3 className={`${cfg.titleSize} font-bold text-amber-900`}>
+        🧮 عداد السوروبان
+      </h3>
+
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+        className="relative rounded-2xl sm:rounded-3xl"
         style={{
-          position: 'absolute',
-          top: '15%',
-          left: '20%',
-          width: '40%',
-          height: '20%',
+          padding: cfg.framePadding,
           background:
-            'radial-gradient(ellipse at center, rgba(255,255,255,0.7) 0%, transparent 70%)',
-          borderRadius: '50%',
-          pointerEvents: 'none',
+            'linear-gradient(135deg, #8b6f47 0%, #6b4423 50%, #4a2e15 100%)',
+          boxShadow:
+            'inset 0 4px 12px rgba(255,200,150,0.15), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35), 0 8px 16px rgba(0,0,0,0.25)',
+          border: '2px solid rgba(0,0,0,0.25)',
+          maxWidth: '100%',
         }}
-      />
-      <span
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: size * 0.08,
-          height: size * 0.08,
-          background:
-            'radial-gradient(circle, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)',
-          borderRadius: '50%',
-          pointerEvents: 'none',
-        }}
-      />
-    </motion.button>
+      >
+        <div
+          className="relative rounded-xl sm:rounded-2xl"
+          style={{
+            padding: cfg.innerPadding,
+            background: 'linear-gradient(180deg, #fef9f0 0%, #f5e6c8 100%)',
+            boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.15)',
+            overflow: 'visible',
+          }}
+        >
+          <div
+            style={{
+              overflowX: 'auto',
+              overflowY: 'visible',
+              maxWidth: '100%',
+              WebkitOverflowScrolling: 'touch',
+              paddingBottom: 4,
+            }}
+          >
+            <div
+              className="flex flex-row-reverse items-center justify-center"
+              style={{
+                gap: cfg.gap,
+                paddingTop: cfg.topPadding,
+                paddingBottom: cfg.bottomPadding,
+                minWidth: displayedStates.length * (effectiveBeadSize + cfg.gap) + 20,
+                margin: '0 auto',
+              }}
+              dir="rtl"
+            >
+              {displayedStates.map((state, idx) => {
+                const originalIdx = idx + displayOffset;
+                const displayOrder = columns - 1 - originalIdx;
+                return (
+                  <Rod2D5
+                    key={originalIdx}
+                    state={state}
+                    columnIndex={originalIdx}
+                    displayOrder={displayOrder}
+                    totalColumns={displayedStates.length}
+                    onToggleUpper={() => interactive && toggleUpper(originalIdx)}
+                    onSetLower={(count) => interactive && setLower(originalIdx, count)}
+                    onReset={() => interactive && resetColumn(originalIdx)}
+                    height={effectiveHeight}
+                    beadSize={effectiveBeadSize}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {displayOffset > 0 && (
+            <p className="text-center text-[10px] text-amber-700 mt-1 font-body">
+              ✨ يتم عرض {formatByStyle(visibleColumns, numberStyle)} أعمدة
+            </p>
+          )}
+        </div>
+
+        {interactive && (
+          <div className="flex justify-center gap-2 mt-3 sm:mt-4">
+            <button
+              type="button"
+              onClick={handleResetAll}
+              className="px-4 py-1.5 sm:px-6 sm:py-2 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold shadow-lg backdrop-blur-sm transition text-xs sm:text-sm"
+            >
+              ↺ إعادة الكل
+            </button>
+          </div>
+        )}
+      </motion.div>
+
+      {showValue && (
+        <AnimatePresence mode="popLayout">
+          <motion.div
+            key={`${totalValue}-${numberStyle}`}
+            initial={{ scale: 0.6, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.6, opacity: 0, y: -20 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            className={`${cfg.valueSize} font-black text-amber-900 tabular-nums`}
+            style={{
+              fontFamily: 'monospace',
+              textShadow: '0 4px 8px rgba(139,111,71,0.3)',
+            }}
+            dir={isArabic ? 'rtl' : 'ltr'}
+          >
+            {formatByStyle(totalValue, numberStyle)}
+          </motion.div>
+        </AnimatePresence>
+      )}
+
+      <p className="text-[10px] sm:text-sm text-amber-700 text-center max-w-md px-2">
+        💡 اضغط على الخرزة لتفعيلها. الخرزة العلوية = <strong>{formatByStyle(5, numberStyle)}</strong>،
+        السفلية = <strong>{formatByStyle(1, numberStyle)}</strong>.
+      </p>
+    </div>
   );
 }
 
-export default Bead2D5;
+export default Soroban2D5;
