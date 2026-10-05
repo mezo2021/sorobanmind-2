@@ -11,6 +11,7 @@
 // 📅 آخر تحديث: 2026-09-30 — الجلسة 10
 //   - إعادة تقسيم S01: m2 = 5-9 · m3 = تثبيت 0-9
 //   - كل الأسئلة تبدأ من الصفر
+// 📅 تحديث إضافي: حذف "ماذا تمثل؟" من 5 أسئلة (اختصار العرض)
 // ═══════════════════════════════════════════════════════════════════
 
 import { makeQuestion } from "../generateId";
@@ -39,7 +40,7 @@ export const L0_QUESTIONS: SRBQuestion[] = [
     level: "L0", section: "S01", module: "m1", sequence: 2, variant: "A",
     primary_phase: "P",
     allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "ارفع خرزة سفلية واحدة. ماذا تمثل؟",
+    question: "ارفع خرزة سفلية واحدة",
     operands: [1], operation: "read", result: 1,
     solution: "سبب الاختيار: حركة واحدة من الصفر. ارفع خرزة سفلية واحدة بالإبهام نحو العارضة. الخرزة السفلية الواحدة تمثل 1.",
     movement: "direct", difficulty: 1,
@@ -63,7 +64,7 @@ export const L0_QUESTIONS: SRBQuestion[] = [
     level: "L0", section: "S01", module: "m1", sequence: 4, variant: "A",
     primary_phase: "P",
     allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "ارفع 3 خرزات سفلية. ماذا تمثل؟",
+    question: "ارفع 3 خرزات سفلية",
     operands: [3], operation: "read", result: 3,
     solution: "سبب الاختيار: حركة من الصفر. ارفع 3 خرزات سفلية معًا بالإبهام. الثلاث خرزات تمثل 3.",
     movement: "direct", difficulty: 1,
@@ -89,7 +90,7 @@ export const L0_QUESTIONS: SRBQuestion[] = [
     level: "L0", section: "S01", module: "m2", sequence: 1, variant: "A",
     primary_phase: "P",
     allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "أنزل الخرزة العلوية. ماذا تمثل؟",
+    question: "أنزل الخرزة العلوية",
     operands: [5], operation: "read", result: 5,
     solution: "سبب الاختيار: حركة العلوية من الصفر. أنزل الخرزة العلوية بالسبابة نحو العارضة. الخرزة العلوية تمثل 5.",
     movement: "direct", difficulty: 2,
@@ -113,7 +114,7 @@ export const L0_QUESTIONS: SRBQuestion[] = [
     level: "L0", section: "S01", module: "m2", sequence: 3, variant: "A",
     primary_phase: "P",
     allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "أنزل العلوية وارفع خرزتين. ماذا تمثل؟",
+    question: "أنزل العلوية وارفع خرزتين",
     operands: [7], operation: "read", result: 7,
     solution: "سبب الاختيار: حركة القرص من الصفر. أنزل الخرزة العلوية (5) وارفع خرزتين سفليتين (2) معًا. النتيجة 5+2 = 7.",
     movement: "direct", difficulty: 3,
@@ -137,7 +138,7 @@ export const L0_QUESTIONS: SRBQuestion[] = [
     level: "L0", section: "S01", module: "m2", sequence: 5, variant: "A",
     primary_phase: "P",
     allowed_phases: ["E", "T", "P", "ANZ-V", "ANZ-F", "ANZ-A", "X"],
-    question: "أنزل العلوية وارفع 4 سفليات. ماذا تمثل؟",
+    question: "أنزل العلوية وارفع 4 سفليات",
     operands: [9], operation: "read", result: 9,
     solution: "سبب الاختيار: حركة القرص من الصفر. أنزل الخرزة العلوية (5) وارفع 4 خرزات سفلية (4) معًا. النتيجة 5+4 = 9.",
     movement: "direct", difficulty: 3,
