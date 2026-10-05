@@ -8,6 +8,7 @@
 // 🩺 جلسة علاجية إجبارية داخلية (RemediationScreen)
 // 📅 آخر تحديث: SRB Migration — Phase 3 + Remediation
 // [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
+// [FIX N68] — قفل الوضع بعد النجاح بـ 70%+ + رسالة ذكية لكلا الوضعين
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -247,6 +248,9 @@ export function AnzanScreen({
   const setGrade = useProgressStore((s) => s.setGrade);
   const setPendingRemediation = useProgressStore((s) => s.setPendingRemediation);
   const markAnzanVisualPassed = useProgressStore((s) => s.markAnzanVisualPassed);
+
+  // [FIX N68] قفل الوضع بعد النجاح
+  const levelGrades = useProgressStore((s) => s.grades[level]);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const displayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -571,6 +575,15 @@ export function AnzanScreen({
 
   // ═══ intro ═══
   if (phase === 'intro') {
+    // [FIX N68] — فحص الوضع الحالي
+    const currentGrade = mode === 'flash'
+      ? levelGrades?.anzanVisualFlash
+      : levelGrades?.anzanVisualNormal;
+    const isCurrentModePassed =
+      currentGrade !== null &&
+      currentGrade !== undefined &&
+      currentGrade >= 70;
+
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
@@ -640,10 +653,39 @@ export function AnzanScreen({
           </div>
         </motion.div>
 
-        <button type="button" onClick={startSession} className="btn-primary w-full !py-4 !text-lg">
-          <Play className="w-6 h-6" />
-          ابدأ الجلسة
-        </button>
+        {/* [FIX N68] — قفل الوضع بعد النجاح بـ70%+ */}
+        {isCurrentModePassed ? (
+          <div className="p-5 rounded-2xl bg-emerald-500/10 border-2 border-emerald-400/40 text-center">
+            <CheckCircle2 className="w-12 h-12 text-emerald-300 mx-auto mb-3" />
+            <p className="text-base font-bold text-emerald-200 font-display">
+              ✅ أنهيت هذا الوضع بدرجة {formatNumber(currentGrade ?? 0, numberStyle)}٪
+            </p>
+            {(() => {
+              const normalDone =
+                levelGrades?.anzanVisualNormal !== null &&
+                levelGrades?.anzanVisualNormal !== undefined;
+              const flashDone =
+                levelGrades?.anzanVisualFlash !== null &&
+                levelGrades?.anzanVisualFlash !== undefined;
+              const bothDone = normalDone && flashDone;
+
+              return (
+                <p className="text-xs text-emerald-300/70 font-body mt-2">
+                  {bothDone
+                    ? '✅ أكملت كلا الوضعين — الأنزان البصري مكتمل'
+                    : mode === 'flash'
+                      ? 'بدّل إلى "عادي" لإتمام الأنزان البصري'
+                      : 'بدّل إلى "Flash" لإتمام الأنزان البصري'}
+                </p>
+              );
+            })()}
+          </div>
+        ) : (
+          <button type="button" onClick={startSession} className="btn-primary w-full !py-4 !text-lg">
+            <Play className="w-6 h-6" />
+            ابدأ الجلسة
+          </button>
+        )}
       </div>
     );
   }
