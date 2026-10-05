@@ -1,5 +1,6 @@
 // src/screens/CategoryScreen.tsx
 // [FIX 7] — فحص المعاينة موحّد عبر الأداة
+// [FIX N69] — عرض درجات الأنزان البصري (متوسط) والسمعي في الأزرار
 
 import { motion } from 'framer-motion';
 import {
@@ -385,7 +386,13 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               }`}
             >
               {!anzanVUnlocked ? <Lock className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              أنزان بصري
+              {anzanVPassed &&
+               grades[level.id]?.anzanVisualNormal !== null &&
+               grades[level.id]?.anzanVisualNormal !== undefined &&
+               grades[level.id]?.anzanVisualFlash !== null &&
+               grades[level.id]?.anzanVisualFlash !== undefined
+                ? `بصري ✓ ${toArabicNumber(Math.round((grades[level.id]!.anzanVisualNormal! + grades[level.id]!.anzanVisualFlash!) / 2))}٪`
+                : 'أنزان بصري'}
             </button>
 
             <button
@@ -401,7 +408,11 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               }`}
             >
               {!anzanAUnlocked ? <Lock className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-              أنزان سمعي
+              {anzanAPassed &&
+               grades[level.id]?.anzanAudio !== null &&
+               grades[level.id]?.anzanAudio !== undefined
+                ? `سمعي ✓ ${toArabicNumber(grades[level.id]!.anzanAudio!)}٪`
+                : 'أنزان سمعي'}
             </button>
           </div>
         )}
