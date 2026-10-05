@@ -433,7 +433,6 @@ export function AudioAnzanScreen({
           level,
           phase: 'anzanAudio',
           skills: Array.from(weakSkillIds),
-          outcome: passed ? 'passed' : 'failed',
         });
       }
 
