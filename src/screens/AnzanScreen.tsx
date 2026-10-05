@@ -488,7 +488,6 @@ export function AnzanScreen({
           level,
           phase: gradeMode,
           skills: Array.from(weakSkillIds),
-          outcome: passed ? 'passed' : 'failed',
         });
       }
 
