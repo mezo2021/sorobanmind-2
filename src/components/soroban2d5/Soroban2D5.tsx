@@ -79,12 +79,8 @@ const SIZE_CONFIG = {
 
 function getAutoBeadSize(columns: number): number {
   if (columns <= 2) return 52;
-  if (columns <= 3) return 46;
-  if (columns <= 4) return 38;
-  if (columns <= 5) return 32;
-  if (columns <= 6) return 28;
-  if (columns <= 9) return 20;
-  return 16;
+  // [FIX N70] — 3+ أعمدة: حجم ثابت 44px (قابل للنقر دائمًا)
+  return 44;
 }
 
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
@@ -196,32 +192,44 @@ export function Soroban2D5({
           }}
         >
           <div
-            className="flex flex-row-reverse items-center justify-center"
             style={{
-              gap: cfg.gap,
-              paddingTop: cfg.topPadding,
-              paddingBottom: cfg.bottomPadding,
+              overflowX: 'auto',
+              overflowY: 'visible',
+              maxWidth: '100%',
+              WebkitOverflowScrolling: 'touch',
+              paddingBottom: 4,
             }}
-            dir="rtl"
           >
-            {displayedStates.map((state, idx) => {
-              const originalIdx = idx + displayOffset;
-              const displayOrder = columns - 1 - originalIdx;
-              return (
-                <Rod2D5
-                  key={originalIdx}
-                  state={state}
-                  columnIndex={originalIdx}
-                  displayOrder={displayOrder}
-                  totalColumns={displayedStates.length}
-                  onToggleUpper={() => interactive && toggleUpper(originalIdx)}
-                  onSetLower={(count) => interactive && setLower(originalIdx, count)}
-                  onReset={() => interactive && resetColumn(originalIdx)}
-                  height={effectiveHeight}
-                  beadSize={effectiveBeadSize}
-                />
-              );
-            })}
+            <div
+              className="flex flex-row-reverse items-center justify-center"
+              style={{
+                gap: cfg.gap,
+                paddingTop: cfg.topPadding,
+                paddingBottom: cfg.bottomPadding,
+                minWidth: displayedStates.length * (effectiveBeadSize + cfg.gap) + 20,
+                margin: '0 auto',
+              }}
+              dir="rtl"
+            >
+              {displayedStates.map((state, idx) => {
+                const originalIdx = idx + displayOffset;
+                const displayOrder = columns - 1 - originalIdx;
+                return (
+                  <Rod2D5
+                    key={originalIdx}
+                    state={state}
+                    columnIndex={originalIdx}
+                    displayOrder={displayOrder}
+                    totalColumns={displayedStates.length}
+                    onToggleUpper={() => interactive && toggleUpper(originalIdx)}
+                    onSetLower={(count) => interactive && setLower(originalIdx, count)}
+                    onReset={() => interactive && resetColumn(originalIdx)}
+                    height={effectiveHeight}
+                    beadSize={effectiveBeadSize}
+                  />
+                );
+              })}
+            </div>
           </div>
 
           {displayOffset > 0 && (
