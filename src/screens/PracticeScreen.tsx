@@ -444,11 +444,12 @@ export function PracticeScreen({
   if (showRemediation) {
     return (
       <RemediationScreen
-        level={level}
-        section={remediationSection}
-        onBack={handleRemediationBack}
-        playSound={playSound}
-      />
+  level={level}
+  section={remediationSection}
+  onBack={handleRemediationBack}
+  playSound={playSound}
+  isMandatory={true}
+/>
     );
   }
 
