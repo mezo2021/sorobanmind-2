@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // 🩺 src/screens/RemediationScreen.tsx — الجلسة العلاجية
+// [FIX N62] — فصل الإتمام عن الخروج + شرط 70% للإزالة
 // ═══════════════════════════════════════════════════════════════════
 //
 // الوظيفة:
@@ -108,6 +109,8 @@ export function RemediationScreen({
 
   const addRemediationSession = useProgressStore((s) => s.addRemediationSession);
   const clearPendingRemediation = useProgressStore((s) => s.clearPendingRemediation);
+  // [FIX N62] — لاستخدام phase الحقيقي
+  const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
 
   const currentQ = questions[currentIdx];
 
@@ -151,17 +154,27 @@ export function RemediationScreen({
     setPhase('reveal');
   }, [currentQ, abacusValue, feedback, playSound, sorobana]);
 
-  // ═══ حفظ الجلسة وإنهاء الإجبار ═══
-  const finalizeSession = useCallback(() => {
+  // ═══ [FIX N62] إتمام الجلسة — عند إكمال كل الأسئلة فقط ═══
+  const completeSession = useCallback(() => {
     if (isMandatory) {
+      const total = questions.length;
+      const accuracy = total > 0 ? (correctCount / total) * 100 : 0;
+      const passed = accuracy >= 70;
+
       addRemediationSession({
         level,
-        phase: 'practice', // سيُحدّد حسب المستوى إن احتاج
+        // [FIX N62] — phase الحقيقي
+        phase: pendingRemediation?.phase ?? 'practice',
         skills: questions.map((q) => `${level}-${q.section}-${q.module}`),
         correct: correctCount,
-        total: questions.length,
+        total,
       });
-      clearPendingRemediation();
+
+      // [FIX N62] — لا نُزيل الإجبار إلا عند تحقيق 70%
+      if (passed) {
+        clearPendingRemediation();
+      }
+      // إذا فشل → يبقى الإجبار → جلسة أخرى
     }
 
     sorobana.stop();
@@ -169,7 +182,8 @@ export function RemediationScreen({
     playSound('whoosh');
   }, [
     isMandatory, level, questions, correctCount,
-    addRemediationSession, clearPendingRemediation, sorobana, playSound,
+    pendingRemediation, addRemediationSession,
+    clearPendingRemediation, sorobana, playSound,
   ]);
 
   // ═══ السؤال التالي ═══
@@ -180,18 +194,19 @@ export function RemediationScreen({
     setShowHint(false);
 
     if (currentIdx + 1 >= questions.length) {
-      finalizeSession();
+      completeSession();  // [FIX N62]
     } else {
       setCurrentIdx((i) => i + 1);
       setPhase('running');
     }
-  }, [currentIdx, questions.length, sorobana, finalizeSession]);
+  }, [currentIdx, questions.length, sorobana, completeSession]);
 
-  // ═══ إنهاء مبكر ═══
+  // ═══ [FIX N62] إنهاء مبكر — خروج فقط (لا يُحتسب كإتمام) ═══
   const handleEnd = useCallback(() => {
     sorobana.stop();
-    finalizeSession();
-  }, [sorobana, finalizeSession]);
+    playSound('whoosh');
+    onBack();  // ← رجوع مباشر، لا finalize
+  }, [sorobana, playSound, onBack]);
 
   // ═══ intro ═══
   if (phase === 'intro') {
@@ -478,6 +493,10 @@ export function RemediationScreen({
 
   // ═══ done ═══
   if (phase === 'done') {
+    const total = questions.length;
+    const accuracy = total > 0 ? (correctCount / total) * 100 : 0;
+    const passed = accuracy >= 70;
+
     return (
       <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div
@@ -505,10 +524,19 @@ export function RemediationScreen({
                 {formatNumber(correctCount, numberStyle)} / {formatNumber(questions.length, numberStyle)} إجابة صحيحة
               </p>
             </div>
-            {isMandatory && (
+
+            {/* [FIX N62] — رسالة الإجبار تتبع النتيجة الفعلية */}
+            {isMandatory && passed && (
               <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-400/30">
                 <p className="text-xs text-emerald-200 font-body">
                   ✅ تم إتمام الجلسة الإجبارية — يمكنك المتابعة
+                </p>
+              </div>
+            )}
+            {isMandatory && !passed && (
+              <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/30">
+                <p className="text-xs text-amber-200 font-body">
+                  ⚠️ دقة أقل من 70% — لا تزال الجلسة الإجبارية قائمة، حاول مرة أخرى
                 </p>
               </div>
             )}
