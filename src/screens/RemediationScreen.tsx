@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // 🩺 src/screens/RemediationScreen.tsx — الجلسة العلاجية
-// [FIX N62] — فصل الإتمام عن الخروج + شرط 70% للإزالة
+// [FIX N62] — فصل الإتمام عن الخروج + شرط 70% + outcome
 // ═══════════════════════════════════════════════════════════════════
 //
 // الوظيفة:
@@ -168,6 +168,8 @@ export function RemediationScreen({
         skills: questions.map((q) => `${level}-${q.section}-${q.module}`),
         correct: correctCount,
         total,
+        // [FIX N62] — outcome في السجل
+        outcome: passed ? 'passed' : 'failed',
       });
 
       // [FIX N62] — لا نُزيل الإجبار إلا عند تحقيق 70%
