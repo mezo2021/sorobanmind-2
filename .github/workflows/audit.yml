@@ -62,6 +62,21 @@ jobs:
           echo "=== محتوى package.json ===" >> audit-report.txt
           cat package.json >> audit-report.txt || true
           
+          echo "" >> audit-report.txt
+          echo "=== من يستورد i18n ===" >> audit-report.txt
+          grep -rn "from '@/i18n\|from './i18n'\|from '../i18n'" src >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== من يستورد useTranslation ===" >> audit-report.txt
+          grep -rn "useTranslation" src >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== من يستورد arabicNumbers ===" >> audit-report.txt
+          grep -rn "arabicNumbers" src >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== زر تبديل اللغة ===" >> audit-report.txt
+          grep -rn "toggleLanguage\|switchLanguage\|setLanguage\|currentLang\|LanguageToggle" src >> audit-report.txt || true
       - uses: actions/upload-artifact@v4
         with:
           name: audit-report-v3
