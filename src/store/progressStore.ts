@@ -34,13 +34,16 @@ export interface AnzanBadges {
   master_addition?: boolean;
   master_multiplication?: boolean;
   master_division?: boolean;
-  master_mixed?: boolean;
+  master_chains?: boolean;      // ✅ تمت الإضافة (L4: سلاسل)
+  master_mixed?: boolean;       // ✅ تمت الإضافة (L5: مختلط)
 }
 
 export interface AnzanAudioBadges {
   master_addition_audio?: boolean;
   master_multiplication_audio?: boolean;
   master_division_audio?: boolean;
+  master_chains_audio?: boolean;   // ✅ تمت الإضافة
+  master_mixed_audio?: boolean;    // ✅ تمت الإضافة
 }
 
 // ═══ درجات الأقسام (0-100) ═══
