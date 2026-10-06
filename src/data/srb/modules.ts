@@ -2,23 +2,20 @@
 // 🎯 src/data/srb/modules.ts — المهارات الفرعية (m)
 // ═══════════════════════════════════════════════════════════════════
 //
-// الوظيفة:
-//   - يُعرِّف المهارات الفرعية (m) لكل درس
-//   - لكل درس: قائمة m بأسماء واضحة
-//   - الأسماء للعرض فقط — ID يستخدم m1, m2, ...
+// 🔑 الترتيب النهائي:
+//   L0 = S01 · S02
+//   L1 = S03 · S04
+//   L2 = S05 · S06 (ضرب)
+//   L3 = S07 · S08 (قسمة)
+//   L4 = S09 · S10 (سلاسل)
+//   L5 = S11 · S12
+//   L6 = S13 · S14
+//   L7 = S15
 //
-// 🔑 قاعدة:
-//   - m مرتبط بـ S (إعادة ترقيم في كل درس)
-//   - كل S يُعيد الترقيم من m1
-//
-// 📅 آخر تحديث: 2026-10-01 — إعادة ترتيب L2-L4
+// 📅 آخر تحديث: 2026-10-06
 // ═══════════════════════════════════════════════════════════════════
 
 import type { SRBSection, SRBModule, SRBLevel } from "./types";
-
-// ═══════════════════════════════════════════════════════════
-// 📋 تعريف المهارة (Module Definition)
-// ═══════════════════════════════════════════════════════════
 
 export interface SRBModuleDef {
   id: SRBModule;
@@ -28,10 +25,6 @@ export interface SRBModuleDef {
   description: string;
   order: number;
 }
-
-// ═══════════════════════════════════════════════════════════
-// 📚 قائمة المهارات الكاملة (51 m)
-// ═══════════════════════════════════════════════════════════
 
 export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   // ═══════════════ L0 — التمهيدي (5 m) ═══════════════
@@ -150,82 +143,12 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
     order: 4,
   },
 
-  // ═══════════════ L4 — سلاسل الجمع والطرح (8 m) ═══════════════
-
-  // ─── S05: سلاسل الجمع (4 m) ───
-  {
-    id: "m1",
-    section: "S05",
-    level: "L4",
-    name: "جمع بسيط (سلاسل)",
-    description: "سلاسل جمع مباشرة",
-    order: 1,
-  },
-  {
-    id: "m2",
-    section: "S05",
-    level: "L4",
-    name: "جمع بأصدقاء 5 (سلاسل)",
-    description: "سلاسل جمع بأصدقاء 5",
-    order: 2,
-  },
-  {
-    id: "m3",
-    section: "S05",
-    level: "L4",
-    name: "جمع بأصدقاء 10 (سلاسل)",
-    description: "سلاسل جمع بأصدقاء 10",
-    order: 3,
-  },
-  {
-    id: "m4",
-    section: "S05",
-    level: "L4",
-    name: "جمع مركب (سلاسل)",
-    description: "سلاسل جمع مركّبة",
-    order: 4,
-  },
-
-  // ─── S06: سلاسل الطرح (4 m) ───
-  {
-    id: "m1",
-    section: "S06",
-    level: "L4",
-    name: "طرح بسيط (سلاسل)",
-    description: "سلاسل طرح مباشرة",
-    order: 1,
-  },
-  {
-    id: "m2",
-    section: "S06",
-    level: "L4",
-    name: "طرح بأصدقاء 5 (سلاسل)",
-    description: "سلاسل طرح بأصدقاء 5",
-    order: 2,
-  },
-  {
-    id: "m3",
-    section: "S06",
-    level: "L4",
-    name: "طرح بأصدقاء 10 (سلاسل)",
-    description: "سلاسل طرح بأصدقاء 10",
-    order: 3,
-  },
-  {
-    id: "m4",
-    section: "S06",
-    level: "L4",
-    name: "طرح مركب (سلاسل)",
-    description: "سلاسل طرح مركّبة",
-    order: 4,
-  },
-
   // ═══════════════ L2 — الضرب (8 m) ═══════════════
 
-  // ─── S07: ضرب 1×2 (4 m) ───
+  // ─── S05: ضرب 1×2 (4 m) ───
   {
     id: "m1",
-    section: "S07",
+    section: "S05",
     level: "L2",
     name: "ضرب بسيط",
     description: "إضافات مباشرة",
@@ -233,7 +156,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   },
   {
     id: "m2",
-    section: "S07",
+    section: "S05",
     level: "L2",
     name: "ضرب بأصدقاء 5",
     description: "إضافة 1-4 إلى عمود فيه 1-4",
@@ -241,7 +164,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   },
   {
     id: "m3",
-    section: "S07",
+    section: "S05",
     level: "L2",
     name: "ضرب بأصدقاء 10",
     description: "ترحيل بعد 9",
@@ -249,17 +172,17 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   },
   {
     id: "m4",
-    section: "S07",
+    section: "S05",
     level: "L2",
     name: "ضرب مركب",
     description: "أصدقاء 10 + أصدقاء 5",
     order: 4,
   },
 
-  // ─── S08: ضرب 2×2 (4 m) ───
+  // ─── S06: ضرب 2×2 (4 m) ───
   {
     id: "m1",
-    section: "S08",
+    section: "S06",
     level: "L2",
     name: "ضرب بسيط",
     description: "إضافات مباشرة",
@@ -267,7 +190,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   },
   {
     id: "m2",
-    section: "S08",
+    section: "S06",
     level: "L2",
     name: "ضرب بأصدقاء 5",
     description: "إضافة 1-4 إلى عمود فيه 1-4",
@@ -275,7 +198,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   },
   {
     id: "m3",
-    section: "S08",
+    section: "S06",
     level: "L2",
     name: "ضرب بأصدقاء 10",
     description: "ترحيل بعد 9",
@@ -283,7 +206,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   },
   {
     id: "m4",
-    section: "S08",
+    section: "S06",
     level: "L2",
     name: "ضرب مركب",
     description: "أصدقاء 10 + أصدقاء 5",
@@ -292,10 +215,10 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
 
   // ═══════════════ L3 — القسمة (8 m) ═══════════════
 
-  // ─── S09: القسمة ÷1 (4 m) ───
+  // ─── S07: القسمة ÷1 (4 m) ───
   {
     id: "m1",
-    section: "S09",
+    section: "S07",
     level: "L3",
     name: "قسمة بسيطة",
     description: "طرح مباشر للنواتج الجزئية",
@@ -303,7 +226,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   },
   {
     id: "m2",
-    section: "S09",
+    section: "S07",
     level: "L3",
     name: "قسمة بأصدقاء 5",
     description: "طرح باستخدام مكمّلات 5",
@@ -311,7 +234,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   },
   {
     id: "m3",
-    section: "S09",
+    section: "S07",
     level: "L3",
     name: "قسمة بأصدقاء 10",
     description: "استعارة من العمود المجاور",
@@ -319,17 +242,17 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   },
   {
     id: "m4",
-    section: "S09",
+    section: "S07",
     level: "L3",
     name: "قسمة مركبة",
     description: "أصدقاء 10 + أصدقاء 5",
     order: 4,
   },
 
-  // ─── S10: القسمة ÷2 (4 m) ───
+  // ─── S08: القسمة ÷2 (4 m) ───
   {
     id: "m1",
-    section: "S10",
+    section: "S08",
     level: "L3",
     name: "قسمة بسيطة",
     description: "طرح مباشر للنواتج الجزئية",
@@ -337,7 +260,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   },
   {
     id: "m2",
-    section: "S10",
+    section: "S08",
     level: "L3",
     name: "قسمة بأصدقاء 5",
     description: "طرح باستخدام مكمّلات 5",
@@ -345,7 +268,7 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   },
   {
     id: "m3",
-    section: "S10",
+    section: "S08",
     level: "L3",
     name: "قسمة بأصدقاء 10",
     description: "استعارة من العمود المجاور",
@@ -353,10 +276,80 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   },
   {
     id: "m4",
-    section: "S10",
+    section: "S08",
     level: "L3",
     name: "قسمة مركبة",
     description: "أصدقاء 10 + أصدقاء 5",
+    order: 4,
+  },
+
+  // ═══════════════ L4 — سلاسل الجمع والطرح (8 m) ═══════════════
+
+  // ─── S09: سلاسل الجمع (4 m) ───
+  {
+    id: "m1",
+    section: "S09",
+    level: "L4",
+    name: "جمع بسيط (سلاسل)",
+    description: "سلاسل جمع مباشرة",
+    order: 1,
+  },
+  {
+    id: "m2",
+    section: "S09",
+    level: "L4",
+    name: "جمع بأصدقاء 5 (سلاسل)",
+    description: "سلاسل جمع بأصدقاء 5",
+    order: 2,
+  },
+  {
+    id: "m3",
+    section: "S09",
+    level: "L4",
+    name: "جمع بأصدقاء 10 (سلاسل)",
+    description: "سلاسل جمع بأصدقاء 10",
+    order: 3,
+  },
+  {
+    id: "m4",
+    section: "S09",
+    level: "L4",
+    name: "جمع مركب (سلاسل)",
+    description: "سلاسل جمع مركّبة",
+    order: 4,
+  },
+
+  // ─── S10: سلاسل الطرح (4 m) ───
+  {
+    id: "m1",
+    section: "S10",
+    level: "L4",
+    name: "طرح بسيط (سلاسل)",
+    description: "سلاسل طرح مباشرة",
+    order: 1,
+  },
+  {
+    id: "m2",
+    section: "S10",
+    level: "L4",
+    name: "طرح بأصدقاء 5 (سلاسل)",
+    description: "سلاسل طرح بأصدقاء 5",
+    order: 2,
+  },
+  {
+    id: "m3",
+    section: "S10",
+    level: "L4",
+    name: "طرح بأصدقاء 10 (سلاسل)",
+    description: "سلاسل طرح بأصدقاء 10",
+    order: 3,
+  },
+  {
+    id: "m4",
+    section: "S10",
+    level: "L4",
+    name: "طرح مركب (سلاسل)",
+    description: "سلاسل طرح مركّبة",
     order: 4,
   },
 
@@ -489,13 +482,6 @@ export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
   },
 ]);
 
-// ═══════════════════════════════════════════════════════════
-// 🛠️ دوال مساعدة
-// ═══════════════════════════════════════════════════════════
-
-/**
- * الحصول على كل مهارات درس معين.
- */
 export function getModulesBySection(
   section: SRBSection,
 ): SRBModuleDef[] {
@@ -504,9 +490,6 @@ export function getModulesBySection(
   );
 }
 
-/**
- * الحصول على تعريف مهارة محددة.
- */
 export function getModuleDef(
   section: SRBSection,
   module: SRBModule,
@@ -516,9 +499,6 @@ export function getModuleDef(
   );
 }
 
-/**
- * الحصول على اسم مهارة (للعرض).
- */
 export function getModuleName(
   section: SRBSection,
   module: SRBModule,
@@ -527,28 +507,16 @@ export function getModuleName(
   return def?.name ?? module;
 }
 
-/**
- * عدد المهارات في درس.
- */
 export function getModuleCount(section: SRBSection): number {
   return getModulesBySection(section).length;
 }
 
-/**
- * كل مهارات مستوى معين.
- */
 export function getModulesByLevel(level: SRBLevel): SRBModuleDef[] {
   return SRB_MODULES.filter((m) => m.level === level);
 }
 
-/**
- * إجمالي عدد المهارات.
- */
 export const TOTAL_MODULES = SRB_MODULES.length;
 
-/**
- * التحقق: هل (section, module) موجودان؟
- */
 export function isValidModule(
   section: SRBSection,
   module: SRBModule,
