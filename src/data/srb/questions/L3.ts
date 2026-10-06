@@ -3,8 +3,8 @@
 // ═══════════════════════════════════════════════════════════════════
 //
 // 📊 يحتوي:
-//   - S09 (قسمة ÷ 1): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
-//   - S10 (قسمة ÷ 2): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
+//   - S07 (قسمة ÷ 1): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
+//   - S08 (قسمة ÷ 2): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
 //
 // الإجمالي: 40 سؤالًا
 // ═══════════════════════════════════════════════════════════════════
@@ -14,13 +14,13 @@ import type { SRBQuestion } from "../types";
 
 export const L3_QUESTIONS: SRBQuestion[] = [
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // S09 — قسمة ÷ 1
+  // S07 — قسمة ÷ 1
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  // ── S09-m1: قسمة بسيطة ───────────────────────────────────────────
+  // ── S07-m1: قسمة بسيطة ───────────────────────────────────────────
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m1",
     sequence: 1,
     variant: "A",
@@ -39,7 +39,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m1",
     sequence: 2,
     variant: "A",
@@ -58,7 +58,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m1",
     sequence: 3,
     variant: "A",
@@ -77,7 +77,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m1",
     sequence: 4,
     variant: "A",
@@ -96,7 +96,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m1",
     sequence: 5,
     variant: "A",
@@ -114,10 +114,10 @@ export const L3_QUESTIONS: SRBQuestion[] = [
     tags: ["division", "1-digit", "direct"],
   }),
 
-  // ── S09-m2: قسمة بأصدقاء 5 ───────────────────────────────────────
+  // ── S07-m2: قسمة بأصدقاء 5 ───────────────────────────────────────
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m2",
     sequence: 1,
     variant: "A",
@@ -136,7 +136,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m2",
     sequence: 2,
     variant: "A",
@@ -155,7 +155,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m2",
     sequence: 3,
     variant: "A",
@@ -174,7 +174,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m2",
     sequence: 4,
     variant: "A",
@@ -193,7 +193,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m2",
     sequence: 5,
     variant: "A",
@@ -211,10 +211,10 @@ export const L3_QUESTIONS: SRBQuestion[] = [
     tags: ["division", "1-digit", "five-friend-sub"],
   }),
 
-  // ── S09-m3: قسمة بأصدقاء 10 ──────────────────────────────────────
+  // ── S07-m3: قسمة بأصدقاء 10 ──────────────────────────────────────
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m3",
     sequence: 1,
     variant: "A",
@@ -233,7 +233,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m3",
     sequence: 2,
     variant: "A",
@@ -252,7 +252,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m3",
     sequence: 3,
     variant: "A",
@@ -271,7 +271,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m3",
     sequence: 4,
     variant: "A",
@@ -290,7 +290,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m3",
     sequence: 5,
     variant: "A",
@@ -308,10 +308,10 @@ export const L3_QUESTIONS: SRBQuestion[] = [
     tags: ["division", "1-digit", "ten-friend-sub"],
   }),
 
-  // ── S09-m4: قسمة مركبة ───────────────────────────────────────────
+  // ── S07-m4: قسمة مركبة ───────────────────────────────────────────
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m4",
     sequence: 1,
     variant: "A",
@@ -330,7 +330,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m4",
     sequence: 2,
     variant: "A",
@@ -349,7 +349,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m4",
     sequence: 3,
     variant: "A",
@@ -368,7 +368,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m4",
     sequence: 4,
     variant: "A",
@@ -387,7 +387,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S09",
+    section: "S07",
     module: "m4",
     sequence: 5,
     variant: "A",
@@ -406,13 +406,13 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // S10 — قسمة ÷ 2
+  // S08 — قسمة ÷ 2
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  // ── S10-m1: قسمة بسيطة ───────────────────────────────────────────
+  // ── S08-m1: قسمة بسيطة ───────────────────────────────────────────
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m1",
     sequence: 1,
     variant: "A",
@@ -431,7 +431,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m1",
     sequence: 2,
     variant: "A",
@@ -450,7 +450,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m1",
     sequence: 3,
     variant: "A",
@@ -469,7 +469,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m1",
     sequence: 4,
     variant: "A",
@@ -488,7 +488,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m1",
     sequence: 5,
     variant: "A",
@@ -506,10 +506,10 @@ export const L3_QUESTIONS: SRBQuestion[] = [
     tags: ["division", "2-digit", "direct"],
   }),
 
-  // ── S10-m2: قسمة بأصدقاء 5 ───────────────────────────────────────
+  // ── S08-m2: قسمة بأصدقاء 5 ───────────────────────────────────────
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m2",
     sequence: 1,
     variant: "A",
@@ -528,7 +528,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m2",
     sequence: 2,
     variant: "A",
@@ -547,7 +547,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m2",
     sequence: 3,
     variant: "A",
@@ -566,7 +566,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m2",
     sequence: 4,
     variant: "A",
@@ -585,7 +585,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m2",
     sequence: 5,
     variant: "A",
@@ -603,10 +603,10 @@ export const L3_QUESTIONS: SRBQuestion[] = [
     tags: ["division", "2-digit", "five-friend-sub"],
   }),
 
-  // ── S10-m3: قسمة بأصدقاء 10 ──────────────────────────────────────
+  // ── S08-m3: قسمة بأصدقاء 10 ──────────────────────────────────────
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m3",
     sequence: 1,
     variant: "A",
@@ -625,7 +625,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m3",
     sequence: 2,
     variant: "A",
@@ -644,7 +644,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m3",
     sequence: 3,
     variant: "A",
@@ -663,7 +663,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m3",
     sequence: 4,
     variant: "A",
@@ -682,7 +682,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m3",
     sequence: 5,
     variant: "A",
@@ -700,10 +700,10 @@ export const L3_QUESTIONS: SRBQuestion[] = [
     tags: ["division", "2-digit", "ten-friend-sub"],
   }),
 
-  // ── S10-m4: قسمة مركبة ───────────────────────────────────────────
+  // ── S08-m4: قسمة مركبة ───────────────────────────────────────────
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m4",
     sequence: 1,
     variant: "A",
@@ -722,7 +722,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m4",
     sequence: 2,
     variant: "A",
@@ -741,7 +741,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m4",
     sequence: 3,
     variant: "A",
@@ -760,7 +760,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m4",
     sequence: 4,
     variant: "A",
@@ -779,7 +779,7 @@ export const L3_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L3",
-    section: "S10",
+    section: "S08",
     module: "m4",
     sequence: 5,
     variant: "A",
