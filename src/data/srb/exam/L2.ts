@@ -1,21 +1,21 @@
 // src/data/srb/exam/L2.ts
 // بنك أسئلة الامتحان — المستوى L2
 // المجموع: 80 سؤالًا
-// S07 — الضرب (1×2) — 40 سؤالًا
-// S08 — الضرب (2×2) — 40 سؤالًا
+// S05 — الضرب (1×2) — 40 سؤالًا
+// S06 — الضرب (2×2) — 40 سؤالًا
 
 import { makeQuestion } from "../generateId";
 import type { SRBQuestion } from "../types";
 
 export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   // ═══════════════════════════════════════════════════════════
-  // S07 — الضرب (1×2) — 40 سؤالًا
+  // S05 — الضرب (1×2) — 40 سؤالًا
   // ═══════════════════════════════════════════════════════════
 
-  // ─── L2-S07-m1 (10 أسئلة) ───
+  // ─── L2-S05-m1 (10 أسئلة) ───
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 1,
     variant: "B",
@@ -34,7 +34,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 2,
     variant: "B",
@@ -53,7 +53,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 3,
     variant: "B",
@@ -72,7 +72,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 4,
     variant: "B",
@@ -91,7 +91,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 5,
     variant: "B",
@@ -110,7 +110,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 6,
     variant: "B",
@@ -129,7 +129,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 7,
     variant: "B",
@@ -148,7 +148,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 8,
     variant: "B",
@@ -167,7 +167,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 9,
     variant: "B",
@@ -186,7 +186,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 10,
     variant: "B",
@@ -204,10 +204,10 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
     tags: ["multiplication", "L2", "1x2", "direct"],
   }),
 
-  // ─── L2-S07-m2 (10 أسئلة) ───
+  // ─── L2-S05-m2 (10 أسئلة) ───
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 1,
     variant: "B",
@@ -226,7 +226,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 2,
     variant: "B",
@@ -245,7 +245,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 3,
     variant: "B",
@@ -264,7 +264,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 4,
     variant: "B",
@@ -283,7 +283,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 5,
     variant: "B",
@@ -302,7 +302,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 6,
     variant: "B",
@@ -321,7 +321,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 7,
     variant: "B",
@@ -340,7 +340,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 8,
     variant: "B",
@@ -359,7 +359,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 9,
     variant: "B",
@@ -378,7 +378,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 10,
     variant: "B",
@@ -396,10 +396,10 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
     tags: ["multiplication", "L2", "1x2", "five-friend-add"],
   }),
 
-  // ─── L2-S07-m3 (10 أسئلة) ───
+  // ─── L2-S05-m3 (10 أسئلة) ───
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 1,
     variant: "B",
@@ -418,7 +418,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 2,
     variant: "B",
@@ -437,7 +437,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 3,
     variant: "B",
@@ -456,7 +456,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 4,
     variant: "B",
@@ -475,7 +475,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 5,
     variant: "B",
@@ -494,7 +494,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 6,
     variant: "B",
@@ -513,7 +513,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 7,
     variant: "B",
@@ -532,7 +532,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 8,
     variant: "B",
@@ -551,7 +551,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 9,
     variant: "B",
@@ -570,7 +570,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 10,
     variant: "B",
@@ -588,10 +588,10 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
     tags: ["multiplication", "L2", "1x2", "ten-friend-add"],
   }),
 
-  // ─── L2-S07-m4 (10 أسئلة) ───
+  // ─── L2-S05-m4 (10 أسئلة) ───
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 1,
     variant: "B",
@@ -610,7 +610,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 2,
     variant: "B",
@@ -629,7 +629,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 3,
     variant: "B",
@@ -648,7 +648,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 4,
     variant: "B",
@@ -667,7 +667,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 5,
     variant: "B",
@@ -686,7 +686,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 6,
     variant: "B",
@@ -705,7 +705,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 7,
     variant: "B",
@@ -724,7 +724,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 8,
     variant: "B",
@@ -743,7 +743,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 9,
     variant: "B",
@@ -762,7 +762,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 10,
     variant: "B",
@@ -780,13 +780,13 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
     tags: ["multiplication", "L2", "1x2", "mixed"],
   }),
   // ═══════════════════════════════════════════════════════════
-  // S08 — الضرب (2×2) — 40 سؤالًا
+  // S06 — الضرب (2×2) — 40 سؤالًا
   // ═══════════════════════════════════════════════════════════
 
-  // ─── L2-S08-m1 (10 أسئلة) ───
+  // ─── L2-S06-m1 (10 أسئلة) ───
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 1,
     variant: "B",
@@ -805,7 +805,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 2,
     variant: "B",
@@ -824,7 +824,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 3,
     variant: "B",
@@ -843,7 +843,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 4,
     variant: "B",
@@ -862,7 +862,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 5,
     variant: "B",
@@ -881,7 +881,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 6,
     variant: "B",
@@ -900,7 +900,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 7,
     variant: "B",
@@ -919,7 +919,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 8,
     variant: "B",
@@ -938,7 +938,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 9,
     variant: "B",
@@ -957,7 +957,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 10,
     variant: "B",
@@ -975,10 +975,10 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
     tags: ["multiplication", "L2", "2x2", "direct"],
   }),
 
-  // ─── L2-S08-m2 (10 أسئلة) ───
+  // ─── L2-S06-m2 (10 أسئلة) ───
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 1,
     variant: "B",
@@ -997,7 +997,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 2,
     variant: "B",
@@ -1016,7 +1016,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 3,
     variant: "B",
@@ -1035,7 +1035,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 4,
     variant: "B",
@@ -1054,7 +1054,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 5,
     variant: "B",
@@ -1073,7 +1073,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 6,
     variant: "B",
@@ -1092,7 +1092,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 7,
     variant: "B",
@@ -1111,7 +1111,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 8,
     variant: "B",
@@ -1130,7 +1130,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 9,
     variant: "B",
@@ -1149,7 +1149,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 10,
     variant: "B",
@@ -1167,10 +1167,10 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
     tags: ["multiplication", "L2", "2x2", "five-friend-add"],
   }),
 
-  // ─── L2-S08-m3 (10 أسئلة) ───
+  // ─── L2-S06-m3 (10 أسئلة) ───
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 1,
     variant: "B",
@@ -1189,7 +1189,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 2,
     variant: "B",
@@ -1208,7 +1208,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 3,
     variant: "B",
@@ -1227,7 +1227,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 4,
     variant: "B",
@@ -1246,7 +1246,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 5,
     variant: "B",
@@ -1265,7 +1265,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 6,
     variant: "B",
@@ -1284,7 +1284,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 7,
     variant: "B",
@@ -1303,7 +1303,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 8,
     variant: "B",
@@ -1322,7 +1322,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 9,
     variant: "B",
@@ -1341,7 +1341,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 10,
     variant: "B",
@@ -1359,10 +1359,10 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
     tags: ["multiplication", "L2", "2x2", "ten-friend-add"],
   }),
 
-  // ─── L2-S08-m4 (10 أسئلة) ───
+  // ─── L2-S06-m4 (10 أسئلة) ───
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 1,
     variant: "B",
@@ -1381,7 +1381,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 2,
     variant: "B",
@@ -1400,7 +1400,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 3,
     variant: "B",
@@ -1419,7 +1419,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 4,
     variant: "B",
@@ -1438,7 +1438,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 5,
     variant: "B",
@@ -1457,7 +1457,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 6,
     variant: "B",
@@ -1476,7 +1476,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 7,
     variant: "B",
@@ -1495,7 +1495,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 8,
     variant: "B",
@@ -1514,7 +1514,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 9,
     variant: "B",
@@ -1533,7 +1533,7 @@ export const L2_EXAM_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 10,
     variant: "B",
