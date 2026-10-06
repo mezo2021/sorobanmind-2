@@ -4,6 +4,7 @@
 //
 // 📅 آخر تحديث: 2026-10-06
 //   - إضافة compound-sub إلى SRBMovementType (لقسمة ÷2 المركّبة)
+//   - إضافة compound-add إلى SRBMovementType (لسلاسل الجمع المركّبة L4+)
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -70,6 +71,7 @@ export type SRBMovementType =
   | "five-friend-sub"
   | "ten-friend-add"
   | "ten-friend-sub"
+  | "compound-add"
   | "compound-sub"
   | "carry"
   | "borrow"
