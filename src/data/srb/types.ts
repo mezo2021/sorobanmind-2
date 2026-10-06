@@ -2,8 +2,8 @@
 // 📘 src/data/srb/types.ts — أنواع بنك الأسئلة SRB
 // ═══════════════════════════════════════════════════════════════════
 //
-// 📅 آخر تحديث: 2026-09-30 — الجلسة 10
-//   - إضافة anzan_time_ms (وقت الأنزان)
+// 📅 آخر تحديث: 2026-10-06
+//   - إضافة compound-sub إلى SRBMovementType (لقسمة ÷2 المركّبة)
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -70,6 +70,7 @@ export type SRBMovementType =
   | "five-friend-sub"
   | "ten-friend-add"
   | "ten-friend-sub"
+  | "compound-sub"
   | "carry"
   | "borrow"
   | "mixed";
