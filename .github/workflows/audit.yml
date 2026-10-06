@@ -19,22 +19,6 @@ jobs:
           grep -rn "bank-raw" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
           
           echo "" >> audit-report.txt
-          echo "=== من يستورد srb ===" >> audit-report.txt
-          grep -rn "from '@/data/srb" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
-          echo "" >> audit-report.txt
-          echo "=== srb-adapter / bank-linked / bank-adapter ===" >> audit-report.txt
-          grep -rn "srb-adapter\|bank-linked\|bank-adapter" src >> audit-report.txt || true
-          
-          echo "" >> audit-report.txt
-          echo "=== progressStore ===" >> audit-report.txt
-          grep -rn "progressStore" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
-          echo "" >> audit-report.txt
-          echo "=== كل localStorage ===" >> audit-report.txt
-          grep -rn "localStorage" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
-          echo "" >> audit-report.txt
           echo "=== حالات App.tsx ===" >> audit-report.txt
           grep -n "case '" src/App.tsx >> audit-report.txt || true
           
@@ -51,32 +35,24 @@ jobs:
           grep -rn "LevelScreen\|LevelTestScreen" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
           
           echo "" >> audit-report.txt
-          echo "=== من يستورد curriculum ===" >> audit-report.txt
-          grep -rn "from.*curriculum" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+          echo "=== من يستورد data/curriculum ===" >> audit-report.txt
+          grep -rn "from '@/data/curriculum'\|from '../data/curriculum'" src >> audit-report.txt || true
           
           echo "" >> audit-report.txt
-          echo "=== من يستورد srb/progress ===" >> audit-report.txt
-          grep -rn "srb/progress" src >> audit-report.txt || true
+          echo "=== من يستورد CURRICULUM_GROUPS أو LEVELS ===" >> audit-report.txt
+          grep -rn "CURRICULUM_GROUPS\|CURRICULUM_LEVELS" src >> audit-report.txt || true
           
           echo "" >> audit-report.txt
-          echo "=== من يستورد bank.ts ===" >> audit-report.txt
-          grep -rn "from '@/data/bank'\|from './bank'\|from '../data/bank'" src >> audit-report.txt || true
+          echo "=== من يستورد utils/numberStyle ===" >> audit-report.txt
+          grep -rn "utils/numberStyle" src >> audit-report.txt || true
           
           echo "" >> audit-report.txt
-          echo "=== من يستورد numberStyleStore ===" >> audit-report.txt
-          grep -rn "numberStyleStore" src >> audit-report.txt || true
+          echo "=== من يستورد utils/numerals ===" >> audit-report.txt
+          grep -rn "utils/numerals" src >> audit-report.txt || true
           
           echo "" >> audit-report.txt
-          echo "=== adaptiveEngine / problemGenerator / masteryTracker ===" >> audit-report.txt
-          grep -rn "adaptiveEngine\|problemGenerator\|masteryTracker" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
-          echo "" >> audit-report.txt
-          echo "=== sorobanEngine / sorobanMoves / SorobanEngineDebug ===" >> audit-report.txt
-          grep -rn "sorobanEngine\|sorobanMoves\|SorobanEngineDebug" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
-          echo "" >> audit-report.txt
-          echo "=== audioAnzanBadges / skillsChecker / anzanBadges ===" >> audit-report.txt
-          grep -rn "audioAnzanBadges\|skillsChecker\|anzanBadges" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+          echo "=== من يستورد data/index ===" >> audit-report.txt
+          grep -rn "from '@/data'\|from './data'" src >> audit-report.txt || true
           
           echo "" >> audit-report.txt
           echo "=== من يستورد srb/exam ===" >> audit-report.txt
@@ -88,5 +64,5 @@ jobs:
           
       - uses: actions/upload-artifact@v4
         with:
-          name: audit-report-v2
+          name: audit-report-v3
           path: audit-report.txt
