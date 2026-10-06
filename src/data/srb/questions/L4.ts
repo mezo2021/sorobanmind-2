@@ -3,8 +3,8 @@
 // ═══════════════════════════════════════════════════════════════════
 //
 // 📊 يحتوي:
-//   - S05 (سلاسل الجمع): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
-//   - S06 (سلاسل الطرح): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
+//   - S09 (سلاسل الجمع): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
+//   - S10 (سلاسل الطرح): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
 //
 // الإجمالي: 40 سؤالًا
 // ═══════════════════════════════════════════════════════════════════
@@ -14,13 +14,13 @@ import type { SRBQuestion } from "../types";
 
 export const L4_QUESTIONS: SRBQuestion[] = [
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // S05 — سلاسل الجمع (Addition Chains)
+  // S09 — سلاسل الجمع (Addition Chains)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  // S05-m1: سلسلة جمع بسيط (Direct Addition Chains)
+  // S09-m1: سلسلة جمع بسيط (Direct Addition Chains)
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m1",
     sequence: 1,
     variant: "A",
@@ -39,7 +39,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m1",
     sequence: 2,
     variant: "A",
@@ -58,7 +58,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m1",
     sequence: 3,
     variant: "A",
@@ -77,7 +77,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m1",
     sequence: 4,
     variant: "A",
@@ -96,7 +96,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m1",
     sequence: 5,
     variant: "A",
@@ -114,10 +114,10 @@ export const L4_QUESTIONS: SRBQuestion[] = [
     tags: ["addition", "chains", "direct"],
   }),
 
-  // S05-m2: سلسلة جمع بأصدقاء 5 (Five Friend Addition Chains)
+  // S09-m2: سلسلة جمع بأصدقاء 5 (Five Friend Addition Chains)
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m2",
     sequence: 1,
     variant: "A",
@@ -136,7 +136,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m2",
     sequence: 2,
     variant: "A",
@@ -155,7 +155,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m2",
     sequence: 3,
     variant: "A",
@@ -174,7 +174,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m2",
     sequence: 4,
     variant: "A",
@@ -193,7 +193,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m2",
     sequence: 5,
     variant: "A",
@@ -211,10 +211,10 @@ export const L4_QUESTIONS: SRBQuestion[] = [
     tags: ["addition", "chains", "five-friend-add"],
   }),
 
-  // S05-m3: سلسلة جمع بأصدقاء 10 (Ten Friend Addition Chains)
+  // S09-m3: سلسلة جمع بأصدقاء 10 (Ten Friend Addition Chains)
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m3",
     sequence: 1,
     variant: "A",
@@ -233,7 +233,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m3",
     sequence: 2,
     variant: "A",
@@ -252,7 +252,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m3",
     sequence: 3,
     variant: "A",
@@ -271,7 +271,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m3",
     sequence: 4,
     variant: "A",
@@ -290,7 +290,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m3",
     sequence: 5,
     variant: "A",
@@ -308,10 +308,10 @@ export const L4_QUESTIONS: SRBQuestion[] = [
     tags: ["addition", "chains", "ten-friend-add"],
   }),
 
-  // S05-m4: سلسلة جمع مركب (Mixed Addition Chains)
+  // S09-m4: سلسلة جمع مركب (Mixed Addition Chains)
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m4",
     sequence: 1,
     variant: "A",
@@ -330,7 +330,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m4",
     sequence: 2,
     variant: "A",
@@ -349,7 +349,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m4",
     sequence: 3,
     variant: "A",
@@ -368,7 +368,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m4",
     sequence: 4,
     variant: "A",
@@ -387,7 +387,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S05",
+    section: "S09",
     module: "m4",
     sequence: 5,
     variant: "A",
@@ -406,13 +406,13 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // S06 — سلاسل الطرح (Subtraction Chains)
+  // S10 — سلاسل الطرح (Subtraction Chains)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  // S06-m1: سلسلة طرح بسيط (Direct Subtraction Chains)
+  // S10-m1: سلسلة طرح بسيط (Direct Subtraction Chains)
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m1",
     sequence: 1,
     variant: "A",
@@ -431,7 +431,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m1",
     sequence: 2,
     variant: "A",
@@ -450,7 +450,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m1",
     sequence: 3,
     variant: "A",
@@ -469,7 +469,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m1",
     sequence: 4,
     variant: "A",
@@ -488,7 +488,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m1",
     sequence: 5,
     variant: "A",
@@ -506,10 +506,10 @@ export const L4_QUESTIONS: SRBQuestion[] = [
     tags: ["subtraction", "chains", "direct"],
   }),
 
-  // S06-m2: سلسلة طرح بأصدقاء 5 (Five Friend Subtraction Chains)
+  // S10-m2: سلسلة طرح بأصدقاء 5 (Five Friend Subtraction Chains)
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m2",
     sequence: 1,
     variant: "A",
@@ -528,7 +528,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m2",
     sequence: 2,
     variant: "A",
@@ -547,7 +547,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m2",
     sequence: 3,
     variant: "A",
@@ -566,7 +566,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m2",
     sequence: 4,
     variant: "A",
@@ -585,7 +585,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m2",
     sequence: 5,
     variant: "A",
@@ -603,10 +603,10 @@ export const L4_QUESTIONS: SRBQuestion[] = [
     tags: ["subtraction", "chains", "five-friend-sub"],
   }),
 
-  // S06-m3: سلسلة طرح بأصدقاء 10 (Ten Friend Subtraction Chains)
+  // S10-m3: سلسلة طرح بأصدقاء 10 (Ten Friend Subtraction Chains)
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m3",
     sequence: 1,
     variant: "A",
@@ -625,7 +625,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m3",
     sequence: 2,
     variant: "A",
@@ -644,7 +644,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m3",
     sequence: 3,
     variant: "A",
@@ -663,7 +663,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m3",
     sequence: 4,
     variant: "A",
@@ -682,7 +682,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m3",
     sequence: 5,
     variant: "A",
@@ -700,10 +700,10 @@ export const L4_QUESTIONS: SRBQuestion[] = [
     tags: ["subtraction", "chains", "ten-friend-sub"],
   }),
 
-  // S06-m4: سلسلة طرح مركب (Mixed Subtraction Chains)
+  // S10-m4: سلسلة طرح مركب (Mixed Subtraction Chains)
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m4",
     sequence: 1,
     variant: "A",
@@ -722,7 +722,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m4",
     sequence: 2,
     variant: "A",
@@ -741,7 +741,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m4",
     sequence: 3,
     variant: "A",
@@ -760,7 +760,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m4",
     sequence: 4,
     variant: "A",
@@ -779,7 +779,7 @@ export const L4_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L4",
-    section: "S06",
+    section: "S10",
     module: "m4",
     sequence: 5,
     variant: "A",
