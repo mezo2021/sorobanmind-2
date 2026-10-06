@@ -1,0 +1,56 @@
+name: Audit
+on: workflow_dispatch
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan
+        run: |
+          echo "=== بنية الملفات ===" > audit-report.txt
+          find src -name "*.ts" -o -name "*.tsx" | xargs wc -l | sort -n >> audit-report.txt
+          
+          echo "" >> audit-report.txt
+          echo "=== من يستورد bank-v2 ===" >> audit-report.txt
+          grep -rn "bank-v2" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== من يستورد bank-raw ===" >> audit-report.txt
+          grep -rn "bank-raw" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== من يستورد srb ===" >> audit-report.txt
+          grep -rn "from '@/data/srb" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== من يستورد engine ===" >> audit-report.txt
+          grep -rn "from '@/engine\|from '../engine\|from './engine" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== srb-adapter / bank-linked / bank-adapter ===" >> audit-report.txt
+          grep -rn "srb-adapter\|bank-linked\|bank-adapter" src >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== progressStore ===" >> audit-report.txt
+          grep -rn "progressStore" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== كل localStorage ===" >> audit-report.txt
+          grep -rn "localStorage" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== الشاشات ===" >> audit-report.txt
+          ls -la src/screens/ >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== حالات App.tsx ===" >> audit-report.txt
+          grep -n "case '" src/App.tsx >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== بنك srb/exam ===" >> audit-report.txt
+          ls -la src/data/srb/exam/ >> audit-report.txt || true
+          grep -c "makeQuestion" src/data/srb/exam/L*.ts >> audit-report.txt || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audit-report
+          path: audit-report.txt
