@@ -99,26 +99,29 @@ function displayTextSize(len: number, isBuildOrRead: boolean): string {
 }
 
 // 🆕 خريطة section → مفتاح شارة الأنزان البصري
+// ⬇️⬇️⬇️ تم التعديل هنا بناءً على طلبك ⬇️⬇️⬇️
 function getAnzanBadgeKey(section: SRBSection): keyof AnzanBadges | null {
   switch (section) {
     case 'S03':
     case 'S04':
+      return 'master_addition';
     case 'S05':
     case 'S06':
-      return 'master_addition';
+      return 'master_multiplication'; // L2: ضرب
     case 'S07':
     case 'S08':
-      return 'master_multiplication';
+      return 'master_division';       // L3: قسمة
     case 'S09':
     case 'S10':
-      return 'master_division';
+      return 'master_chains';         // L4: سلاسل (جمع وطرح)
     case 'S11':
     case 'S12':
-      return 'master_mixed';
+      return 'master_mixed';          // L5: مختلط (كما كان)
     default:
       return null;
   }
 }
+// ⬆️⬆️⬆️ نهاية التعديل ⬆️⬆️⬆️
 
 function getColumnsForQuestion(q: SRBQuestion): number {
   const candidates: number[] = [
@@ -903,6 +906,7 @@ export function AnzanScreen({
       master_multiplication: '✖️ خبير ضرب',
       master_division: '➗ خبير قسمة',
       master_mixed: '🔀 خبير مختلط',
+      master_chains: '🔗 خبير سلاسل', // ⬅️ تمت الإضافة
     };
 
     return (
