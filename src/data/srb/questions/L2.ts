@@ -3,8 +3,8 @@
 // ═══════════════════════════════════════════════════════════════════
 //
 // 📊 يحتوي:
-//   - S07 (ضرب 1 × 2): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
-//   - S08 (ضرب 2 × 2): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
+//   - S05 (ضرب 1 × 2): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
+//   - S06 (ضرب 2 × 2): m1 (بسيط), m2 (أصدقاء 5), m3 (أصدقاء 10), m4 (مركب)
 //
 // الإجمالي: 40 سؤالًا
 // ═══════════════════════════════════════════════════════════════════
@@ -14,13 +14,13 @@ import type { SRBQuestion } from "../types";
 
 export const L2_QUESTIONS: SRBQuestion[] = [
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // S07 — ضرب 1 × 2
+  // S05 — ضرب 1 × 2
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  // ── S07-m1: ضرب بسيط ─────────────────────────────────────────────
+  // ── S05-m1: ضرب بسيط ─────────────────────────────────────────────
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 1,
     variant: "A",
@@ -40,7 +40,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 2,
     variant: "A",
@@ -60,7 +60,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 3,
     variant: "A",
@@ -80,7 +80,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 4,
     variant: "A",
@@ -100,7 +100,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m1",
     sequence: 5,
     variant: "A",
@@ -119,10 +119,10 @@ export const L2_QUESTIONS: SRBQuestion[] = [
     tags: ["multiplication", "1x2", "direct"],
   }),
 
-  // ── S07-m2: ضرب بأصدقاء 5 ────────────────────────────────────────
+  // ── S05-m2: ضرب بأصدقاء 5 ────────────────────────────────────────
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 1,
     variant: "A",
@@ -142,7 +142,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 2,
     variant: "A",
@@ -162,7 +162,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 3,
     variant: "A",
@@ -182,7 +182,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 4,
     variant: "A",
@@ -202,7 +202,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m2",
     sequence: 5,
     variant: "A",
@@ -221,10 +221,10 @@ export const L2_QUESTIONS: SRBQuestion[] = [
     tags: ["multiplication", "1x2", "five-friend-add"],
   }),
 
-  // ── S07-m3: ضرب بأصدقاء 10 ───────────────────────────────────────
+  // ── S05-m3: ضرب بأصدقاء 10 ───────────────────────────────────────
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 1,
     variant: "A",
@@ -244,7 +244,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 2,
     variant: "A",
@@ -264,7 +264,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 3,
     variant: "A",
@@ -284,7 +284,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 4,
     variant: "A",
@@ -304,7 +304,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m3",
     sequence: 5,
     variant: "A",
@@ -323,10 +323,10 @@ export const L2_QUESTIONS: SRBQuestion[] = [
     tags: ["multiplication", "1x2", "ten-friend-add"],
   }),
 
-  // ── S07-m4: ضرب مركب ─────────────────────────────────────────────
+  // ── S05-m4: ضرب مركب ─────────────────────────────────────────────
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 1,
     variant: "A",
@@ -346,7 +346,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 2,
     variant: "A",
@@ -366,7 +366,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 3,
     variant: "A",
@@ -386,7 +386,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 4,
     variant: "A",
@@ -406,7 +406,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S07",
+    section: "S05",
     module: "m4",
     sequence: 5,
     variant: "A",
@@ -426,13 +426,13 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // S08 — ضرب 2 × 2
+  // S06 — ضرب 2 × 2
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  // ── S08-m1: ضرب بسيط ─────────────────────────────────────────────
+  // ── S06-m1: ضرب بسيط ─────────────────────────────────────────────
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 1,
     variant: "A",
@@ -452,7 +452,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 2,
     variant: "A",
@@ -472,7 +472,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 3,
     variant: "A",
@@ -492,7 +492,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 4,
     variant: "A",
@@ -512,7 +512,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m1",
     sequence: 5,
     variant: "A",
@@ -531,10 +531,10 @@ export const L2_QUESTIONS: SRBQuestion[] = [
     tags: ["multiplication", "2x2", "direct"],
   }),
 
-  // ── S08-m2: ضرب بأصدقاء 5 ────────────────────────────────────────
+  // ── S06-m2: ضرب بأصدقاء 5 ────────────────────────────────────────
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 1,
     variant: "A",
@@ -554,7 +554,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 2,
     variant: "A",
@@ -574,7 +574,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 3,
     variant: "A",
@@ -594,7 +594,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 4,
     variant: "A",
@@ -614,7 +614,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m2",
     sequence: 5,
     variant: "A",
@@ -633,10 +633,10 @@ export const L2_QUESTIONS: SRBQuestion[] = [
     tags: ["multiplication", "2x2", "five-friend-add"],
   }),
 
-  // ── S08-m3: ضرب بأصدقاء 10 ───────────────────────────────────────
+  // ── S06-m3: ضرب بأصدقاء 10 ───────────────────────────────────────
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 1,
     variant: "A",
@@ -656,7 +656,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 2,
     variant: "A",
@@ -676,7 +676,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 3,
     variant: "A",
@@ -696,7 +696,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 4,
     variant: "A",
@@ -716,7 +716,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m3",
     sequence: 5,
     variant: "A",
@@ -735,10 +735,10 @@ export const L2_QUESTIONS: SRBQuestion[] = [
     tags: ["multiplication", "2x2", "ten-friend-add"],
   }),
 
-  // ── S08-m4: ضرب مركب ─────────────────────────────────────────────
+  // ── S06-m4: ضرب مركب ─────────────────────────────────────────────
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 1,
     variant: "A",
@@ -758,7 +758,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 2,
     variant: "A",
@@ -778,7 +778,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 3,
     variant: "A",
@@ -798,7 +798,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 4,
     variant: "A",
@@ -818,7 +818,7 @@ export const L2_QUESTIONS: SRBQuestion[] = [
   }),
   makeQuestion({
     level: "L2",
-    section: "S08",
+    section: "S06",
     module: "m4",
     sequence: 5,
     variant: "A",
