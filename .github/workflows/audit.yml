@@ -124,6 +124,17 @@ jobs:
           echo "" >> audit-report.txt
           echo "=== من يمنح mastery badge ===" >> audit-report.txt
           grep -rn "masteryBadges\." src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+          echo "" >> audit-report.txt
+          echo "=== محتوى utils/anzanBadges.ts كاملًا ===" >> audit-report.txt
+          cat src/utils/anzanBadges.ts >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== محتوى utils/audioAnzanBadges.ts كاملًا ===" >> audit-report.txt
+          cat src/utils/audioAnzanBadges.ts >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== مكان getAnzanBadgeKey ===" >> audit-report.txt
+          grep -rn "getAnzanBadgeKey\|getAudioAnzanBadgeKey" src >> audit-report.txt || true
       - uses: actions/upload-artifact@v4
         with:
           name: audit-report-v4
