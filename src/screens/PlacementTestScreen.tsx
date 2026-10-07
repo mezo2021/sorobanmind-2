@@ -584,7 +584,7 @@ export function PlacementTestScreen({
           <div className="space-y-2">
             {result.levels.map((lvl) => (
               <div
-                key={lvl.level}
+                key={lvl.levelId}
                 className={`p-3 rounded-xl border ${
                   lvl.passed
                     ? 'bg-emerald-500/10 border-emerald-400/30'
@@ -599,7 +599,7 @@ export function PlacementTestScreen({
                       <XCircle className="w-4 h-4 text-red-400" />
                     )}
                     <span className="font-bold text-white text-sm">
-                      {lvl.level} — {getLevelName(lvl.level)}
+                      {lvl.levelId} — {getLevelName(lvl.levelId)}
                     </span>
                   </div>
                   <span className={`text-xs font-bold ${
