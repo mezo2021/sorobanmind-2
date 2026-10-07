@@ -8,9 +8,9 @@ jobs:
       - name: Scan
         run: |
           echo "═══════════════════════════════════════════════" > audit-report.txt
-          echo "📊 SorobanMind v2 — فحص شامل" >> audit-report.txt
+          echo "📊 SorobanMind v2 — فحص شامل (v6)" >> audit-report.txt
           echo "═══════════════════════════════════════════════" >> audit-report.txt
-          
+
           # ═══════════════════════════════════════
           # 1. البنية العامة
           # ═══════════════════════════════════════
@@ -19,7 +19,7 @@ jobs:
           echo "📦 القسم 1: بنية الملفات" >> audit-report.txt
           echo "═══════════════════════════════════════════════" >> audit-report.txt
           find src -name "*.ts" -o -name "*.tsx" | xargs wc -l | sort -n >> audit-report.txt
-          
+
           # ═══════════════════════════════════════
           # 2. البنوك — من يستورد ماذا
           # ═══════════════════════════════════════
@@ -27,43 +27,43 @@ jobs:
           echo "═══════════════════════════════════════════════" >> audit-report.txt
           echo "🏦 القسم 2: البنوك (Banks)" >> audit-report.txt
           echo "═══════════════════════════════════════════════" >> audit-report.txt
-          
+
           echo "" >> audit-report.txt
           echo "=== [2.1] من يستورد bank-v2 ===" >> audit-report.txt
           grep -rn "from.*bank-v2\|from '@/data/bank-v2'" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [2.2] من يستورد bank-raw ===" >> audit-report.txt
           grep -rn "from.*bank-raw" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [2.3] من يستورد bank-linked ===" >> audit-report.txt
           grep -rn "from.*bank-linked" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [2.4] من يستورد bank-adapter ===" >> audit-report.txt
           grep -rn "from.*bank-adapter" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [2.5] من يستورد srb/exam ===" >> audit-report.txt
           grep -rn "from.*srb/exam" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [2.6] من يستورد srb/questions ===" >> audit-report.txt
           grep -rn "from.*srb/questions" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [2.7] من يستورد srb-adapter ===" >> audit-report.txt
           grep -rn "from.*srb-adapter" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [2.8] عدد أسئلة srb/exam (makeQuestion) ===" >> audit-report.txt
           grep -c "makeQuestion" src/data/srb/exam/L*.ts >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [2.9] عدد أسئلة srb/questions (makeQuestion) ===" >> audit-report.txt
           grep -c "makeQuestion" src/data/srb/questions/L*.ts >> audit-report.txt || true
-          
+
           # ═══════════════════════════════════════
           # 3. المتاجر (Stores)
           # ═══════════════════════════════════════
@@ -71,35 +71,35 @@ jobs:
           echo "═══════════════════════════════════════════════" >> audit-report.txt
           echo "💾 القسم 3: المتاجر (Stores)" >> audit-report.txt
           echo "═══════════════════════════════════════════════" >> audit-report.txt
-          
+
           echo "" >> audit-report.txt
           echo "=== [3.1] من يستورد progressStore ===" >> audit-report.txt
           grep -rn "from.*progressStore" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [3.2] من يستورد masteryBadgesStore ===" >> audit-report.txt
           grep -rn "masteryBadgesStore" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [3.3] من يستورد numberStyleStore ===" >> audit-report.txt
           grep -rn "numberStyleStore" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [3.4] من يستورد srb/progress ===" >> audit-report.txt
           grep -rn "from.*srb/progress" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [3.5] كل استدعاءات recordAttempt ===" >> audit-report.txt
           grep -rn "recordAttempt" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [3.6] كل استدعاءات awardBadge ===" >> audit-report.txt
           grep -rn "awardBadge" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [3.7] كل استدعاءات setAnzanBadge + setAnzanAudioBadge ===" >> audit-report.txt
           grep -rn "setAnzanBadge\|setAnzanAudioBadge" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           # ═══════════════════════════════════════
           # 4. الشارات (Badges)
           # ═══════════════════════════════════════
@@ -107,55 +107,55 @@ jobs:
           echo "═══════════════════════════════════════════════" >> audit-report.txt
           echo "🏅 القسم 4: الشارات (Badges)" >> audit-report.txt
           echo "═══════════════════════════════════════════════" >> audit-report.txt
-          
+
           echo "" >> audit-report.txt
           echo "=== [4.1] من يستخدم AdaptiveFeedback ===" >> audit-report.txt
           grep -rn "AdaptiveFeedback" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [4.2] من يستخدم BadgeModal ===" >> audit-report.txt
           grep -rn "BadgeModal" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [4.3] من يستخدم badgeChecker ===" >> audit-report.txt
           grep -rn "badgeChecker" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [4.4] من يستخدم useQuests ===" >> audit-report.txt
           grep -rn "useQuests" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [4.5] من يستخدم skillsChecker ===" >> audit-report.txt
           grep -rn "skillsChecker" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [4.6] من يستخدم audioAnzanBadges ===" >> audit-report.txt
           grep -rn "audioAnzanBadges" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [4.7] من يستخدم utils/anzanBadges ===" >> audit-report.txt
           grep -rn "utils/anzanBadges\|from.*anzanBadges" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [4.8] من يستخدم useGameStats ===" >> audit-report.txt
           grep -rn "useGameStats" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [4.9] من يمنح شارات الأنزان (setAnzanBadge) ===" >> audit-report.txt
           grep -rn "setAnzanBadge\|getAnzanBadgeKey" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [4.10] من يمنح شارات الأنزان السمعي ===" >> audit-report.txt
           grep -rn "setAnzanAudioBadge\|getAudioAnzanBadgeKey" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [4.11] من يستخدم BADGES الـ8 ===" >> audit-report.txt
           grep -rn "BADGES\b" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [4.12] من يستورد data/index ===" >> audit-report.txt
           grep -rn "from '@/data'\|from '../data'\|from './data'" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           # ═══════════════════════════════════════
           # 5. المفاتيح (localStorage)
           # ═══════════════════════════════════════
@@ -163,19 +163,19 @@ jobs:
           echo "═══════════════════════════════════════════════" >> audit-report.txt
           echo "🔑 القسم 5: المفاتيح (localStorage)" >> audit-report.txt
           echo "═══════════════════════════════════════════════" >> audit-report.txt
-          
+
           echo "" >> audit-report.txt
           echo "=== [5.1] كل الكتابات (setItem) ===" >> audit-report.txt
           grep -rn "localStorage.setItem" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [5.2] كل القراءات (getItem) ===" >> audit-report.txt
           grep -rn "localStorage.getItem" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [5.3] كل الحذف (removeItem) ===" >> audit-report.txt
           grep -rn "localStorage.removeItem" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           # ═══════════════════════════════════════
           # 6. المحرك (engine)
           # ═══════════════════════════════════════
@@ -183,27 +183,27 @@ jobs:
           echo "═══════════════════════════════════════════════" >> audit-report.txt
           echo "🧠 القسم 6: المحرك (engine)" >> audit-report.txt
           echo "═══════════════════════════════════════════════" >> audit-report.txt
-          
+
           echo "" >> audit-report.txt
           echo "=== [6.1] من يستورد من engine ===" >> audit-report.txt
           grep -rn "from.*engine" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [6.2] من يستخدم masteryTracker ===" >> audit-report.txt
           grep -rn "masteryTracker\|createAttempt\|updateProgress" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [6.3] من يستخدم adaptiveEngine ===" >> audit-report.txt
           grep -rn "adaptiveEngine" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [6.4] من يستخدم problemGenerator ===" >> audit-report.txt
           grep -rn "problemGenerator" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [6.5] من يستخدم sorobanEngine / sorobanMoves ===" >> audit-report.txt
           grep -rn "sorobanEngine\|sorobanMoves\|SorobanEngineDebug" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           # ═══════════════════════════════════════
           # 7. i18n
           # ═══════════════════════════════════════
@@ -211,19 +211,19 @@ jobs:
           echo "═══════════════════════════════════════════════" >> audit-report.txt
           echo "🌐 القسم 7: الترجمة (i18n)" >> audit-report.txt
           echo "═══════════════════════════════════════════════" >> audit-report.txt
-          
+
           echo "" >> audit-report.txt
           echo "=== [7.1] من يستورد i18n ===" >> audit-report.txt
           grep -rn "from '@/i18n\|from './i18n'\|from '../i18n'" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [7.2] من يستخدم useTranslation ===" >> audit-report.txt
           grep -rn "useTranslation" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [7.3] من يستخدم setLanguage ===" >> audit-report.txt
           grep -rn "setLanguage\|toggleLanguage\|switchLanguage" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+
           # ═══════════════════════════════════════
           # 8. الشاشات
           # ═══════════════════════════════════════
@@ -231,15 +231,15 @@ jobs:
           echo "═══════════════════════════════════════════════" >> audit-report.txt
           echo "🖥️ القسم 8: الشاشات" >> audit-report.txt
           echo "═══════════════════════════════════════════════" >> audit-report.txt
-          
+
           echo "" >> audit-report.txt
           echo "=== [8.1] كل الحالات في App.tsx ===" >> audit-report.txt
           grep -n "case '" src/App.tsx >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [8.2] كل الشاشات المستوردة في App.tsx ===" >> audit-report.txt
           grep -n "^import.*screens" src/App.tsx >> audit-report.txt || true
-          
+
           # ═══════════════════════════════════════
           # 9. محتوى ملفات حاسمة
           # ═══════════════════════════════════════
@@ -247,28 +247,145 @@ jobs:
           echo "═══════════════════════════════════════════════" >> audit-report.txt
           echo "📄 القسم 9: محتوى ملفات حاسمة" >> audit-report.txt
           echo "═══════════════════════════════════════════════" >> audit-report.txt
-          
+
           echo "" >> audit-report.txt
           echo "=== [9.1] محتوى utils/anzanBadges.ts ===" >> audit-report.txt
           cat src/utils/anzanBadges.ts >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [9.2] محتوى utils/audioAnzanBadges.ts ===" >> audit-report.txt
           cat src/utils/audioAnzanBadges.ts >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [9.3] محتوى data/index.ts (أول 120 سطرًا — يحتوي BADGES) ===" >> audit-report.txt
           head -120 src/data/index.ts >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [9.4] محتوى masteryBadgesStore.ts ===" >> audit-report.txt
           cat src/store/masteryBadgesStore.ts >> audit-report.txt || true
-          
+
           echo "" >> audit-report.txt
           echo "=== [9.5] محتوى package.json ===" >> audit-report.txt
           cat package.json >> audit-report.txt || true
-          
+
+          # ═══════════════════════════════════════
+          # 10. تحقق المصالحة (P0-Pre-Flight) — جديد v6
+          # ═══════════════════════════════════════
+          echo "" >> audit-report.txt
+          echo "═══════════════════════════════════════════════" >> audit-report.txt
+          echo "🔬 القسم 10: تحقق المصالحة — P0-Pre-Flight (v6)" >> audit-report.txt
+          echo "═══════════════════════════════════════════════" >> audit-report.txt
+
+          echo "" >> audit-report.txt
+          echo "=== [10.1] Attempt — من أين يُستورد؟ ===" >> audit-report.txt
+          grep -rn "import type.*Attempt\|import.*Attempt" src/store/progressStore.ts src/engine/masteryTracker.ts src/curriculum/types.ts >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [10.2] Attempt — التعريف الفعلي (interface/type) ===" >> audit-report.txt
+          grep -rn "interface Attempt\|type Attempt" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [10.3] srb/index.ts — هل يُصدِّر questions/? ===" >> audit-report.txt
+          grep -n "questions/" src/data/srb/index.ts >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [10.4] soroban_section2_unlocked — كل ذكر (كاتب/قارئ) ===" >> audit-report.txt
+          grep -rn "soroban_section2_unlocked" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [10.5] soroban_kids_certificate_ready — كل ذكر ===" >> audit-report.txt
+          grep -rn "soroban_kids_certificate_ready" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [10.6] 🔴 saveAnzanBadges / saveAudioAnzanBadges — من يستدعي؟ (موت BADGES-8) ===" >> audit-report.txt
+          grep -rn "saveAnzanBadges\|saveAudioAnzanBadges" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [10.7] 🔴 soroban_anzan_badges — من يكتب المفتاح؟ ===" >> audit-report.txt
+          grep -rn "soroban_anzan_badges" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [10.8] 🔴 soroban_anzan_audio_badges — من يكتب المفتاح؟ ===" >> audit-report.txt
+          grep -rn "soroban_anzan_audio_badges" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+
+          # ═══════════════════════════════════════
+          # 11. محتوى P0-Pre-Flight — جديد v6
+          # ═══════════════════════════════════════
+          echo "" >> audit-report.txt
+          echo "═══════════════════════════════════════════════" >> audit-report.txt
+          echo "📖 القسم 11: مقتطفات P0-Pre-Flight (v6)" >> audit-report.txt
+          echo "═══════════════════════════════════════════════" >> audit-report.txt
+
+          echo "" >> audit-report.txt
+          echo "=== [11.1] curriculum/types.ts — تعريف Attempt (30 سطرًا) ===" >> audit-report.txt
+          sed -n '/interface Attempt/,/^}/p' src/curriculum/types.ts | head -30 >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [11.2] srb/index.ts — كامل (282 سطرًا) ===" >> audit-report.txt
+          cat src/data/srb/index.ts >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [11.3] srb-adapter.ts — كامل (360 سطرًا) ===" >> audit-report.txt
+          cat src/data/srb-adapter.ts >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [11.4] progressStore.ts — الاستيرادات (أول 30 سطرًا) ===" >> audit-report.txt
+          head -30 src/store/progressStore.ts >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [11.5] masteryTracker.ts — دالة createAttempt ===" >> audit-report.txt
+          sed -n '/export function createAttempt/,/^}/p' src/engine/masteryTracker.ts >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [11.6] adaptiveEngine.ts — أول 60 سطرًا ===" >> audit-report.txt
+          head -60 src/engine/adaptiveEngine.ts >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [11.7] adaptiveEngine.ts — آخر 60 سطرًا ===" >> audit-report.txt
+          tail -60 src/engine/adaptiveEngine.ts >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [11.8] problemGenerator.ts — أول 60 سطرًا ===" >> audit-report.txt
+          head -60 src/engine/problemGenerator.ts >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [11.9] problemGenerator.ts — آخر 60 سطرًا ===" >> audit-report.txt
+          tail -60 src/engine/problemGenerator.ts >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [11.10] useGameStats.ts — كامل (98 سطرًا) ===" >> audit-report.txt
+          cat src/hooks/useGameStats.ts >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== [11.11] badgeChecker.ts — كامل (112 سطرًا) ===" >> audit-report.txt
+          cat src/utils/badgeChecker.ts >> audit-report.txt || true
+
+          # ═══════════════════════════════════════
+          # 12. تحقق كتابة المفاتيح اليتيمة — جديد v6
+          # ═══════════════════════════════════════
+          echo "" >> audit-report.txt
+          echo "═══════════════════════════════════════════════" >> audit-report.txt
+          echo "🕳️ القسم 12: المفاتيح اليتيمة — قارئ/كاتب (v6)" >> audit-report.txt
+          echo "═══════════════════════════════════════════════" >> audit-report.txt
+
+          for key in \
+            soroban_passed_level_tests \
+            soroban_exam_result \
+            soroban_placement_recommended \
+            soroban_placement_last_attempt \
+            soroban_placement_result \
+            soroban_placement_weak_skills \
+            soroban_weak_skills_v2 \
+          ; do
+            echo "" >> audit-report.txt
+            echo "=== [$key] ===" >> audit-report.txt
+            echo "  -- كتابة:" >> audit-report.txt
+            grep -rn "setItem.*$key\|$key.*setItem" src --include="*.ts" --include="*.tsx" >> audit-report.txt || echo "    (لا كاتب)" >> audit-report.txt
+            echo "  -- قراءة:" >> audit-report.txt
+            grep -rn "getItem.*$key\|$key.*getItem" src --include="*.ts" --include="*.tsx" >> audit-report.txt || echo "    (لا قارئ)" >> audit-report.txt
+          done
+
       - uses: actions/upload-artifact@v4
         with:
-          name: audit-report-v5
+          name: audit-report-v6
           path: audit-report.txt
