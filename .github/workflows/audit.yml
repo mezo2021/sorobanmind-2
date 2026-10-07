@@ -65,19 +65,48 @@ jobs:
           echo "" >> audit-report.txt
           echo "=== من يستورد i18n ===" >> audit-report.txt
           grep -rn "from '@/i18n\|from './i18n'\|from '../i18n'" src >> audit-report.txt || true
-
+          
           echo "" >> audit-report.txt
           echo "=== من يستورد useTranslation ===" >> audit-report.txt
           grep -rn "useTranslation" src >> audit-report.txt || true
-
+          
           echo "" >> audit-report.txt
           echo "=== من يستورد arabicNumbers ===" >> audit-report.txt
           grep -rn "arabicNumbers" src >> audit-report.txt || true
-
+          
           echo "" >> audit-report.txt
           echo "=== زر تبديل اللغة ===" >> audit-report.txt
           grep -rn "toggleLanguage\|switchLanguage\|setLanguage\|currentLang\|LanguageToggle" src >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== كيف تُبنى skillProgress في progressStore ===" >> audit-report.txt
+          grep -n -B 3 -A 10 "skillProgress" src/store/progressStore.ts >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== recordAttempt في progressStore ===" >> audit-report.txt
+          grep -n -B 5 -A 20 "recordAttempt" src/store/progressStore.ts >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== كيف يُستدعى recordAttempt في الشاشات ===" >> audit-report.txt
+          grep -rn "recordAttempt" src/screens >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== skillId في masteryTracker ===" >> audit-report.txt
+          grep -n "skillId" src/engine/masteryTracker.ts >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== كيف يُستدعى createAttempt في masteryTracker ===" >> audit-report.txt
+          grep -n -A 15 "createAttempt" src/engine/masteryTracker.ts >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== getSkillId مُستخدَم في الكود ===" >> audit-report.txt
+          grep -rn "getSkillId\|getSectionId\|generateSrbId\|parseSrbId" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+          
+          echo "" >> audit-report.txt
+          echo "=== صيغة skillId في SRB (بحث L0-S01-m1) ===" >> audit-report.txt
+          grep -rn "L0-S01-m1\|SRB-L0-S01-m1" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
+          
       - uses: actions/upload-artifact@v4
         with:
-          name: audit-report-v3
+          name: audit-report-v4
           path: audit-report.txt
