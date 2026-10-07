@@ -25,7 +25,7 @@ import {
   getLevelName,
   type PlacementQuestion,
   type PlacementResult,
-} from '@/data/bank-v2';
+} from '@/data/srb/exam';
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -62,10 +62,10 @@ function formatTime(seconds: number): string {
  */
 function getColumnsForQuestion(question: PlacementQuestion): number {
   // ✅ استخراج الأرقام من نص السؤال (لأن PlacementQuestion لا يحتوي على operands)
-  const nums = (question.prompt.match(/\d+/g) ?? []).map(Number);
+  const nums = (question.question.match(/\d+/g) ?? []).map(Number);
   const candidates: number[] = [
     // [FIX N60-ب] — معامل عشري للأسئلة العشرية
-    Math.abs(Math.round(question.correctAnswer * (question.correctAnswer % 1 !== 0 ? 100 : 1))),
+    Math.abs(Math.round(question.result * (question.result % 1 !== 0 ? 100 : 1))),
     ...nums.map(Math.abs),
   ];
   const maxAbs = Math.max(...candidates, 0);
@@ -336,7 +336,7 @@ export function PlacementTestScreen({
     const isFirstQuestion = currentIdx === 0;
 
     const formattedPrompt = formatText(
-      currentQ.prompt.replace(/ = ؟$/, ''),
+      currentQ.question.replace(/ = ؟$/, ''),
       numberStyle,
     );
 
@@ -349,7 +349,7 @@ export function PlacementTestScreen({
               السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-[10px] text-white/50 font-body truncate">
-              {getLevelName(currentQ.levelId)} · {currentQ.skillId}
+              {getLevelName(currentQ.level)} · {currentQ.section}
             </p>
           </div>
 
@@ -584,7 +584,7 @@ export function PlacementTestScreen({
           <div className="space-y-2">
             {result.levels.map((lvl) => (
               <div
-                key={lvl.levelId}
+                key={lvl.level}
                 className={`p-3 rounded-xl border ${
                   lvl.passed
                     ? 'bg-emerald-500/10 border-emerald-400/30'
@@ -599,7 +599,7 @@ export function PlacementTestScreen({
                       <XCircle className="w-4 h-4 text-red-400" />
                     )}
                     <span className="font-bold text-white text-sm">
-                      {lvl.levelId} — {getLevelName(lvl.levelId)}
+                      {lvl.level} — {getLevelName(lvl.level)}
                     </span>
                   </div>
                   <span className={`text-xs font-bold ${
