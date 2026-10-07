@@ -518,6 +518,16 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
           <Play className="w-6 h-6" />
           ابدأ الامتحان
         </button>
+
+        {inPreview && (
+          <button
+            type="button"
+            onClick={() => startTest(true)}
+            className="w-full mt-3 py-3 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-100 font-bold text-sm flex items-center justify-center gap-2 transition"
+          >
+            🎯 اختبار حقيقي (بدون اختصار)
+          </button>
+        )}
       </div>
     );
   }
