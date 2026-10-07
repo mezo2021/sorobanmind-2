@@ -1,10 +1,11 @@
+
 # 📋 AL-ISLAH-V2.md
 # وثيقة الإصلاح الشاملة — مبنية على فحص فعلي
 
-> **آخر تحديث:** 2026-10-07
-> **الطريقة:** فحص آلي كامل (GitHub Actions) + قراءة يدوية لأكثر من 15 ملفًا
-> **القاعدة:** لا تخمين · كل سطر له دليل
-> **الحالة:** البناء أخضر · 51,181 سطرًا · 119 ملفًا
+> **آخر تحديث:** 2026-10-07 — بعد تنفيذ P4 (ربط Bank B)
+> **الطريقة:** فحص آلي شامل (GitHub Actions · audit-report-v5) + قراءة يدوية لأكثر من 20 ملفًا
+> **القاعدة:** لا تخمين · كل سطر له دليل من الكود
+> **الحالة:** البناء أخضر · 51,573 سطرًا · 119 ملفًا · ~92% مكتمل
 
 ---
 
@@ -12,9 +13,17 @@
 
 **التطبيق يعمل · يستخدمه أطفال · 92% مكتمل فعليًا.**
 
-**المشكلة الحقيقية:** نظامان يعملان بالتوازي (قديم + جديد) → فوضى هجينة.
+**المشكلة الحقيقية:** نظامان يعملان بالتوازي (قديم + جديد) → هجرة معمارية نصف مكتملة.
 
 **السبب:** المنهاج تغيّر (20 درسًا → 15 درسًا · كوجيما الأصلي). بُني SRB جديد · لكن القديم لم يُحذف · الشاشات لم تُحدَّث كليًا.
+
+**ما تم إنجازه في الجلسة الأخيرة:**
+- ✅ `srb/exam/index.ts` — Bank B مُجمَّع + CE + PT
+- ✅ ربط `CategoryExamScreen` بـ`srb/exam`
+- ✅ ربط `PlacementTestScreen` بـ`srb/exam`
+- ✅ إصلاح العشرية في PT
+- ✅ `recordAttempt` مُفعَّل في 3 شاشات (Practice · Anzan · AudioAnzan)
+- ✅ زر "اختبار حقيقي" في CE1 · CE2
 
 **الحل:** إكمال التوصيل · لا إعادة بناء.
 
@@ -27,7 +36,7 @@
 | البند | القيمة |
 |---|---|
 | المسار | `src/data/srb/questions/` |
-| الحجم | **275 سؤالًا** |
+| الحجم الفعلي | **275 سؤالًا** (283 نتيجة grep − 8 ترويسات) |
 | `variant` | "A" |
 | `primary_phase` | "P" |
 | `allowed_phases` | E · T · P · ANZ-V · ANZ-F · ANZ-A · X |
@@ -36,7 +45,7 @@
 | **الدور** | تقويم تكويني |
 | **الحالة** | ✅ **يعمل** |
 
-**المسار:**
+**المسار الفعلي:**
 ```
 
 PracticeScreen · AnzanScreen · AudioAnzanScreen · RemediationScreen
@@ -50,14 +59,14 @@ srb-adapter → srb/index → srb/questions (Bank A)
 | البند | القيمة |
 |---|---|
 | المسار | `src/data/srb/exam/` |
-| الحجم | **666 سؤالًا** |
+| الحجم الفعلي | **666 سؤالًا** (674 نتيجة grep − 8 ترويسات) |
 | `variant` | "B" |
 | `primary_phase` | "CE" |
 | `allowed_phases` | CE · PT · X |
 | `anzan_time_ms` | 0 (غير مطلوب) |
 | `solution` | معادلة مباشرة |
-| **الدور** | تقييم ختامي |
-| **الحالة** | 🔴 **معزول** |
+| **الدور** | تقييم ختامي (CE1 · CE2 · PT) |
+| **الحالة** | ✅ **مربوط (جلسة 24)** |
 
 **التوزيع الفعلي:**
 | المستوى | الأسئلة |
@@ -72,114 +81,135 @@ srb-adapter → srb/index → srb/questions (Bank A)
 | L7 | 27 |
 | **المجموع** | **666** |
 
-### 2.3 bank-v2 + bank-raw — للقطع
+**ملاحظة:** البحث `grep -c "makeQuestion"` يعطي 674 — الفرق 8 ناتج عن تعليق في رأس كل ملف.
+
+### 2.3 بنية `srb/exam/`
+
+```
+
+src/data/srb/exam/
+├── L0.ts (503)
+├── L1.ts (4347)
+├── L2.ts (1554)
+├── L3.ts (1552)
+├── L4.ts (1552)
+├── L5.ts (1232)
+├── L6.ts (778)
+├── L7.ts (421)
+└── index.ts (352) ← ملف واحد يجمع + buildExam1/2 + PT
+
+```
+
+### 2.4 البنوك القديمة — للقطع
 
 | الملف | الحجم | يُستخدم من |
 |---|---|---|
-| `bank-v2/` | 583 سؤالًا | CategoryExamScreen · PlacementTestScreen |
+| `bank-v2/` | 583 سؤالًا | bank-linked فقط |
 | `bank-raw/` | ~600 سؤالًا | bank-v2/bank-exam |
-| `bank-linked.ts` | 475 | engine (معزول) |
+| `bank-linked.ts` | 475 | engine (adaptiveEngine · problemGenerator) |
 | `bank-adapter.ts` | 375 | bank-linked |
 | `bank.ts` | **1200** | ❌ لا أحد |
 
-**القرار:** تُعزل عن الشاشات (Phase 2) · ثم تُحذف (Phase 6).
+**الوضع الفعلي (من التقرير v5):**
+- `bank-v2` يُستورد فقط من `bank-linked`
+- `bank-linked` يُستورد فقط من `engine/adaptiveEngine` + `engine/problemGenerator`
+- `engine/` **معزول بالكامل** عن الشاشات
+
+**القرار:** تُحذف بعد ترحيل `adaptiveEngine` (المرحلة A2).
 
 ---
 
-## 📁 3. الكود الميت — مؤكد بالدليل
+## 📁 3. الكود الميت — مؤكد بالدليل (تقرير v5)
 
-| الملف | الأسطر | الدليل | الحالة |
-|---|---|---|---|
-| `src/data/bank.ts` | 1,200 | صفر استيراد | 🔴 حذف |
-| `src/data/curriculum.ts` | 312 | صفر استيراد | 🔴 حذف |
-| `src/data/index.ts` | 189 | **يحتوي BADGES** | ⚠️ يُفحص قبل الحذف |
-| `src/utils/skillsChecker.ts` | 176 | صفر استيراد | 🔴 حذف |
-| `src/utils/numerals.ts` | 126 | صفر استيراد | 🔴 حذف |
-| `src/utils/audioAnzanBadges.ts` | 27 | صفر استيراد | 🔴 حذف |
-| `src/utils/anzanBadges.ts` | 34 | يُستورد من badgeChecker (ميت) | 🔴 حذف |
-| `src/utils/badgeChecker.ts` | 112 | صفر استيراد | 🔴 حذف |
-| **المجموع** | **~2,176** | | |
+| # | الملف | الأسطر | الدليل | الحالة |
+|:-:|---|:-:|---|---|
+| 1 | `data/bank.ts` | 1,200 | صفر استيراد | 🔴 حذف |
+| 2 | `data/curriculum.ts` | 312 | صفر استيراد | 🔴 حذف |
+| 3 | `data/index.ts` | 189 | **يحتوي BADGES** | ⚠️ يُبقى · يُربط |
+| 4 | `utils/skillsChecker.ts` | 176 | صفر استيراد | 🔴 حذف |
+| 5 | `utils/numerals.ts` | 126 | صفر استيراد (نسخة قديمة من numberStyle) | 🔴 حذف |
+| 6 | `utils/audioAnzanBadges.ts` | 27 | صفر استيراد | 🔴 حذف |
+| 7 | `utils/anzanBadges.ts` | 34 | يُستورد من badgeChecker (معزول) | 🔴 حذف |
+| 8 | `utils/badgeChecker.ts` | 112 | يُستورد فقط من useGameStats | ⚠️ يُفحص |
+| **المجموع** | | **~2,176** | | |
 
-**⚠️ قبل الحذف:**
-- فحص `data/index.ts` — قد يحتوي BADGES (مؤكد)
-- فحص استيراد ديناميكي (`import(...)`)
+**⚠️ ملاحظات:**
+- `badgeChecker.ts` **ليس ميتًا تمامًا** — يُستورد من `useGameStats.ts:14`
+- `data/index.ts` يحتوي **BADGES الـ8** — يُربط في المرحلة B
+- `anzanBadges.ts` + `audioAnzanBadges.ts` — نسخ قديمة من `progressStore.anzanBadges`
 
 ---
 
-## 🐛 4. الأخطاء المؤكدة
+## 🐛 4. الأخطاء المؤكدة والملغاة
 
-### 4.1 🔴 خطأ فادح — `getAnzanBadgeKey` في `AnzanScreen:103`
+### ✅ 4.1 ملغى — `getAnzanBadgeKey` **صحيح**
 
-**الكود الحالي:**
-```ts
-S03·S04 → master_addition       ✅ صحيح
-S05·S06 → master_multiplication ❌ خطأ
-S07·S08 → master_division       ❌ خطأ
-S09·S10 → master_chains         ❌ خطأ
-S11·S12 → master_mixed          ✅ صحيح
-```
-
-الصحيح (حسب المنهاج):
+**كان مذكورًا كخطأ · لكن الكود الحالي صحيح:**
 
 ```ts
-S03·S04 → master_addition       (L1: جمع وطرح)
-S05·S06 → master_chains         (L4: سلاسل)
-S07·S08 → master_multiplication (L2: ضرب)
-S09·S10 → master_division       (L3: قسمة)
-S11·S12 → master_mixed          (L5: مختلط)
+S03·S04 → master_addition       ✅ (L1 · جمع وطرح)
+S05·S06 → master_multiplication ✅ (L2 · ضرب)
+S07·S08 → master_division       ✅ (L3 · قسمة)
+S09·S10 → master_chains         ✅ (L4 · سلاسل)
+S11·S12 → master_mixed          ✅ (L5 · مختلط)
 ```
 
-الأثر:
+يطابق srb/questions/L2.ts · L3.ts · L4.ts الفعلية.
 
-· طفل L2 (ضرب) → يحصل على شارة قسمة
-· طفل L3 (قسمة) → يحصل على شارة سلاسل
-· طفل L4 (سلاسل) → يحصل على شارة ضرب
+السبب: الوثيقة القديمة اعتمدت على ترتيب GEMINI_PLAYBOOK المهجور.
 
-نفس الخطأ محتمل في AudioAnzanScreen:87 — يحتاج فحصًا.
-
-4.2 🔴 recordAttempt لا يُستدعى
+✅ 4.2 مُصلَح — recordAttempt يعمل في 3 شاشات
 
 ```
-=== كيف يُستدعى recordAttempt في الشاشات ===
-(فارغ)
+src/screens/PracticeScreen.tsx:308:  useProgressStore.getState().recordAttempt(attempt);
+src/screens/AnzanScreen.tsx:402:    useProgressStore.getState().recordAttempt(attempt);
+src/screens/AudioAnzanScreen.tsx:343:  useProgressStore.getState().recordAttempt(attempt);
 ```
 
-الأثر: skillProgress فارغ · adaptiveEngine معزول · لا تعليم تكيفي.
+متبقٍ:
 
-الحل: إضافة 4 أسطر في 5 شاشات.
+· CategoryExamScreen.tsx — يحتاج إضافة
+· PlacementTestScreen.tsx — يحتاج إضافة
 
-4.3 🔴 srb-adapter فيه 3 دوال معطوبة
+✅ 4.3 مُصلَح — srb/exam مربوط
 
-```ts
-getTestQuestions → buildSession(phase: "X") → Bank A (خطأ)
-getPlacementTestQuestions → buildSession(phase: "PT") → Bank A (فارغ)
-getExamQuestions → ❌ غير موجودة
+```
+src/screens/PlacementTestScreen.tsx:28:  from '@/data/srb/exam';
+src/screens/CategoryExamScreen.tsx:34:    from '@/data/srb/exam';
 ```
 
-الأثر: Bank B معزول · الامتحانات على bank-v2 القديم.
+bank-v2 لم يعد يُستورد من الشاشات.
 
-4.4 🔴 فجوة UI — 3 شارات مفقودة
+🔴 4.4 قائم — فجوة UI في GuardianDashboard
 
-البصري: Store فيه 5 · UI يعرض 4 → master_chains مفقود
-السمعي: Store فيه 5 · UI يعرض 3 → master_chains_audio + master_mixed_audio مفقودان
+البصري: Store فيه 5 شارات · UI يعرض 4 → master_chains مفقود.
+السمعي: Store فيه 5 شارات · UI يعرض 3 → master_chains_audio + master_mixed_audio مفقودان.
 
-الحل: إضافة 3 أسطر في GuardianDashboard.anzanBadgeList + audioAnzanBadgeList.
+الحل: إضافة 3 أسطر في anzanBadgeList + audioAnzanBadgeList.
 
-4.5 🟡 BADGES معزولة في data/index.ts
+🟡 4.5 قائم — BADGES الـ8 معزولة
 
-8 شارات جاهزة: مبتدئ · متدرب · سيد الأنزان · ماهر · خبير السوروبان · محترف · أسطورة · أسطورة خالدة.
+8 شارات جاهزة في data/index.ts:
+مبتدئ · متدرب · سيد الأنزان · ماهر · خبير السوروبان · محترف · أسطورة · أسطورة خالدة.
 
-لا تُعرض في أي مكان حاليًا.
+useGameStats.ts:14 يستورد getAllEarnedBadges من badgeChecker — الذي يقرأ BADGES لكن لا يمنحها.
 
-الحل: ربطها في GuardianDashboard (لا ملفات جديدة).
+الحل: ربط منطق المنح في useGameStats أو progressStore.
+
+🔴 4.6 قائم — 3 مفاتيح يتيمة (تُقرأ ولا تُكتب)
+
+المفتاح القارئ
+soroban_passed_level_tests LevelScreen:139
+soroban_exam_result HeroDashboard:142
+soroban_placement_recommended CategoryScreen:178
 
 ---
 
 🔒 5. المحمي — لا يُلمس
 
 الملف السبب
-store/progressStore.ts قلب المشروع · 26 action
-curriculum/types.ts 12 مستوردًا
+store/progressStore.ts قلب المشروع · 26 action · version 5
+curriculum/types.ts 12 مستوردًا · عقد أساسي
 data/srb/generateId.ts صيغة ID موحّدة
 data/srb/types.ts نموذج البيانات
 utils/numberStyle.ts 14 مستوردًا
@@ -193,9 +223,9 @@ src/engine/problemGenerator.ts لا يُعاد كتابة
 
 ---
 
-🎯 6. الحلقة المفقودة — Attempt Record
+🎯 6. Attempt Record — الحالة الفعلية
 
-القطع الجاهزة
+6.1 القطع الجاهزة
 
 القطعة المكان الحالة
 SRBQuestion srb/types.ts ✅
@@ -205,32 +235,40 @@ recordAttempt() progressStore.ts:394 ✅
 skillProgress progressStore (state) ✅
 masteryTracker engine/masteryTracker.ts ✅
 adaptiveEngine engine/adaptiveEngine.ts ⚠️ على bank-linked
-استدعاء recordAttempt الشاشات ❌ مفقود
+استدعاء recordAttempt 3 شاشات ✅ مربوط
 
-الحل (4 أسطر × 5 شاشات)
+6.2 الشاشات — الحالة
+
+الشاشة الحالة
+PracticeScreen.tsx ✅ مُفعَّل (سطر 308)
+AnzanScreen.tsx ✅ مُفعَّل (سطر 402)
+AudioAnzanScreen.tsx ✅ مُفعَّل (سطر 343)
+CategoryExamScreen.tsx 🔴 مفقود
+PlacementTestScreen.tsx 🔴 مفقود
+
+6.3 التصميم المعتمد
 
 ```ts
-import { createAttempt } from '@/engine/masteryTracker';
-import { useProgressStore } from '@/store/progressStore';
-
-const attempt = createAttempt(skillId, userAnswer, correctAnswer, timeMs);
+// في handleCheck · بعد حساب isCorrect:
+const attempt = {
+  skillId: `${currentQ.level}-${currentQ.section}-${currentQ.module}`,
+  correct: isCorrect,
+  timeMs: elapsedMs,
+  timestamp: Date.now(),
+};
 useProgressStore.getState().recordAttempt(attempt);
 ```
-
-الشاشات: PracticeScreen · AnzanScreen · AudioAnzanScreen · CategoryExamScreen · PlacementTestScreen.
 
 ---
 
 🌍 7. نظام الترجمة
 
-البنية
-
-المكون الحالة
+المكوّن الحالة
 i18n/ar.ts (311) 💀 ميت · جاهز
 i18n/en.ts (311) 💀 ميت · جاهز
-i18n/useTranslation.ts (41) 💀 ميت
+i18n/useTranslation.ts (41) 💀 ميت (يُستورد فقط من SorobanEngineDebug)
 i18n/index.ts (29) 💀 ميت
-setLanguage في progressStore ⏳ موجود
+setLanguage في progressStore ⏳ موجود · غير مستخدم
 LanguageToggle ❌ غير موجود
 lessons/types.ts ✅ BilingualText · resolveLocalized
 numberStyle.ts ✅ 14 مستوردًا
@@ -240,106 +278,174 @@ arabicNumbers.ts ✅ للنطق
 
 ---
 
-🖥️ 8. الشاشات
+🖥️ 8. الشاشات — 22 شاشة
 
-المربوطة (13)
+8.1 المربوطة في App.tsx (21 حالة)
 
-HeroDashboard · RoleSelection · WelcomeScreen · CategoryScreen · LevelScreen · LevelTestScreen · PracticeScreen · AnzanScreen · AudioAnzanScreen · RemediationScreen · LearnScreen · LessonScreen · IntroductionScreen · CertificateScreen · KidsCertificateScreen · MagicSecretsScreen · FingerMathScreen · SorobanPlayground · GuardianDashboard
+```
+welcome · role · hero-dashboard · guardian-dashboard
+placement-test · soroban
+category-exam-1 · category-exam-2
+category-kids · category-teens
+lesson-L0 … L7 (8 حالات)
+practice-0 … 7 (8 حالات)
+anzan-0 … 7 (8 حالات)
+audio-anzan-0 … 7 (8 حالات)
+quests · multiplication · secrets · cross-multiplication · division · final-exam
+kids-certificate · certificate
+```
 
-تحتاج نقلة (Phase 2)
+8.2 الشاشات الـ22
 
-· CategoryExamScreen (→ Bank B)
-· PlacementTestScreen (→ Bank B)
-· LevelTestScreen (→ Bank B)
+# الشاشة الحالة
+1 WelcomeScreen ✅
+2 RoleSelection ✅
+3 HeroDashboard ✅
+4 GuardianDashboard ✅
+5 CategoryScreen ✅
+6 LevelScreen ✅
+7 LearnScreen ✅
+8 LessonScreen ✅
+9 IntroductionScreen ✅
+10 LevelTestScreen 🟡 يستخدم buildL0Test
+11 FingerMathScreen ✅
+12 MagicSecretsScreen ✅
+13 PracticeScreen ✅
+14 AnzanScreen ✅
+15 AudioAnzanScreen ✅
+16 PlacementTestScreen ✅ (مربوط بـBank B)
+17 CategoryExamScreen ✅ (مربوط بـBank B)
+18 SorobanPlayground ✅
+19 Header ✅
+20 CertificateScreen ✅
+21 KidsCertificateScreen ✅
+22 RemediationScreen ✅
 
 ---
 
-📊 9. المفاتيح
+📊 9. المفاتيح — خريطة كاملة (35 مفتاحًا)
 
-الرئيسي: sorobanmind-v2-progress (progressStore · version 5)
-الشارات: soroban_mastery_badges (masteryBadgesStore)
-الأرقام: soroban_number_style
-المرافق: soroban_companion · soroban_child_name
+9.1 الكاتب والقارئ
 
-مفاتيح مبعثرة: ~32.
+# المفتاح الكاتب القارئ
+1 sorobanmind-v2-progress progressStore (persist) progressStore
+2 sorobanmind-v2-lang progressStore progressStore
+3 soroban_mastery_badges masteryBadgesStore masteryBadgesStore
+4 srb_progress srb/progress:252,263 srb/progress:130
+5 soroban_companion HeroDashboard · RoleSelection FloatingCompanion · HeroDashboard · RoleSelection
+6 soroban_child_name RoleSelection · HeroDashboard App:462
+7 soroban_child_full_name CertificateScreen · KidsCertificateScreen نفسها
+8 soroban_completed_lessons App:309,353 App:305,349
+9 soroban_completed_levels LevelTestScreen:148 · CategoryExamScreen:239 LevelTestScreen:144
+10 soroban_passed_practice App:587 App:583
+11 soroban_passed_level_tests ❌ LevelScreen:139
+12 soroban_exam1_passed CategoryExamScreen:231 (ديناميكي) CategoryScreen:179
+13 soroban_exam2_passed CategoryExamScreen:231 (ديناميكي) CategoryScreen:180 · HeroDashboard:115
+14 soroban_exam1_score CategoryExamScreen:232 (ديناميكي) CertificateScreen:54
+15 soroban_exam2_score CategoryExamScreen:232 (ديناميكي) CertificateScreen:59
+16 soroban_exam1_last_attempt CategoryExamScreen:233 CategoryExamScreen:149
+17 soroban_exam2_last_attempt CategoryExamScreen:233 CategoryExamScreen:149
+18 soroban_exam_result ❌ HeroDashboard:142
+19 soroban_section2_unlocked CategoryExamScreen:245 · App:497 غير مفحوص
+20 soroban_kids_certificate_ready CategoryExamScreen:246 غير مفحوص
+21 soroban_placement_weak_skills bank-v2/placement-engine · srb/exam/index:276 CategoryScreen:177
+22 soroban_placement_recommended ❌ CategoryScreen:178
+23 soroban_placement_last_attempt ❌ ❌
+24 soroban_placement_result ❌ ❌
+25 soroban_weak_skills_v2 bank-v2/index · placement-engine · srb/exam/index bank-v2/index:319
+26 soroban_anzan_badges utils/anzanBadges:26 utils/anzanBadges:17 (معزول)
+27 soroban_anzan_audio_badges utils/audioAnzanBadges:22 utils/audioAnzanBadges:13 (ميت)
+28 soroban_number_style numerals:125 · numberStyle:81 numerals:117 · numberStyle:73
+29 soroban_dev_preview previewMode:22 previewMode:12
+30 soroban_welcome_seen App:74 App:62
+31 soroban_passed_practice App:587 App:583
+32 LESSON_SESSION_PREFIX + lessonId LessonScreen:83 LessonScreen:74
+33 LESSON_PROGRESS_KEY LessonScreen:281,598 LessonScreen:277,594
+34 L0_TEST_LAST_ATTEMPT_KEY LevelTestScreen:136 LevelTestScreen:79
+35 L0_TEST_STORAGE_KEY LevelTestScreen:142 LevelTestScreen:138
 
-مفاتيح ميتة: soroban_anzan_badges · soroban_anzan_audio_badges (من الملفات الميتة).
+9.2 مفاتيح يتيمة (تُقرأ ولا تُكتب)
+
+· soroban_passed_level_tests
+· soroban_exam_result
+· soroban_placement_recommended
+· soroban_placement_last_attempt
+· soroban_placement_result
 
 ---
 
-🗺️ 10. الخطة — 7 مراحل
+🏅 10. الشارات — 4 أنظمة متوازية
 
-Phase 0 — التوثيق (مكتمل)
+# النظام المصدر مانح قارئ الحالة
+1 masteryBadgesStore soroban_mastery_badges PracticeScreen:397 · AnzanScreen:497 · AudioAnzanScreen:434 (awardBadge) AdaptiveFeedback · GuardianDashboard · useGameStats ✅ يعمل
+2 progressStore.anzanBadges sorobanmind-v2-progress AnzanScreen:452 (setAnzanBadge) GuardianDashboard:278 ✅ يعمل
+3 progressStore.anzanAudioBadges نفس المفتاح AudioAnzanScreen:394 GuardianDashboard ✅ يعمل
+4 BADGES (8) data/index.ts badgeChecker (يقرأ فقط) useGameStats:14 🟡 معزول
+
+العلاقة بـAdaptiveFeedback:
+
+```
+src/components/AdaptiveFeedback.tsx:15  ← useMasteryBadgesStore
+src/components/AdaptiveFeedback.tsx:18  ← useProgressStore (skillProgress)
+src/components/AdaptiveFeedback.tsx:41  ← SkillPerformance (من performances prop)
+```
+
+لا تعارض · تكامل: masteryBadgesStore = الشارات المُحققة · skillProgress = المهارات الضعيفة.
+
+---
+
+🗺️ 11. الخطة — 7 مراحل مضغوطة
+
+Phase 0 — التوثيق ✅ مكتمل
 
 · ✅ جرد كامل
 · ✅ هذه الوثيقة
-· ✅ tag احتياطي
 
-Phase 1 — التنظيف الآمن (يومان)
+Phase A — التعليم التكيفي (5 ساعات)
 
-حذف مؤكد:
+A1 — recordAttempt في 5 شاشات (جزئيًا مكتمل)
 
-· data/bank.ts (1200)
-· data/curriculum.ts (312)
-· utils/skillsChecker.ts (176)
-· utils/numerals.ts (126)
-· utils/audioAnzanBadges.ts (27)
-· utils/anzanBadges.ts (34)
-· utils/badgeChecker.ts (112)
+· ✅ PracticeScreen
+· ✅ AnzanScreen
+· ✅ AudioAnzanScreen
+· ⏳ CategoryExamScreen
+· ⏳ PlacementTestScreen
 
-فحص قبل الحذف:
+A2 — ربط adaptiveEngine (ساعة)
 
-· data/index.ts (189 — يحتوي BADGES)
+· استبدال bank-linked بـsrb-adapter في adaptiveEngine.ts + problemGenerator.ts
 
-المجموع: ~2,000 سطر محذوف.
+A3 — ربط masteryTracker (يُغذّى تلقائيًا من A1)
 
-Phase 2 — إصلاح الأخطاء (يومان)
+A4 — قاعدة 70/30 (ساعة)
 
-1. إصلاح getAnzanBadgeKey في AnzanScreen:103
-2. إصلاح نفس الخطأ في AudioAnzanScreen:87
-3. إضافة 3 شارات لـUI في GuardianDashboard
-4. ربط BADGES الـ8 في GuardianDashboard (بلا ملف جديد)
+Phase B — الشارات (ساعتان)
 
-Phase 3 — Attempt Record (أسبوع)
+B1 — ربط BADGES الـ8
 
-1. إضافة 4 أسطر في 5 شاشات
-2. اختبار skillProgress يمتلئ
-3. تفعيل masteryTracker
+· منطق المنح في progressStore أو useGameStats
 
-Phase 4 — ربط Bank B (أسبوع)
+B2 — فجوة UI (3 شارات)
 
-1. بناء srb/exam/index.ts — يجمع L0-L7 → EXAM_BANK
-2. بناء srb/exam/examBuilder.ts — CE1 · CE2
-3. إصلاح 3 دوال في srb-adapter.ts
-4. ربط 3 شاشات
-5. Parity Test
-6. قطع bank-v2 (الملفات تبقى)
+· master_chains · master_chains_audio · master_mixed_audio
 
-Phase 5 — ترحيل adaptiveEngine (أسبوع)
+B3 — BadgeModal عند شارة جديدة
 
-1. تعديل adaptiveEngine.ts: bank-linked → srb-adapter
-2. تعديل problemGenerator.ts: نفس الشيء
-3. تطبيق 70/30
-4. اختبار
+Phase C — التوثيق
 
-Phase 6 — إكمال الترجمة (أسبوع)
+· تصحيح الوثائق القديمة
 
-1. زر LanguageToggle (بلا ملف جديد — مكان في Header)
-2. ربط useT في الشاشات تدريجيًا
-3. ترحيل النصوص
+Phase D — المنهاج (وقت بشري)
 
-Phase 7 — التنظيف النهائي (أسبوع)
+· دروس L2-L7 · الترجمة الكاملة
 
-1. حذف bank-v2 · bank-raw · bank-linked · bank-adapter
-2. حذف data/index.ts (بعد فحص)
-3. حذف numerals.ts (بعد الترجمة)
-4. PWA · اختبار · نشر
+Phase E — التنظيف (ساعتان)
 
-المجموع: ~6 أسابيع.
+· حذف ~2,176 سطرًا مؤكدًا
 
 ---
 
-🚫 11. القواعد لأي مساعد قادم
+🚫 12. القواعد لأي مساعد قادم
 
 ممنوع مطلقًا
 
@@ -354,7 +460,7 @@ Phase 7 — التنظيف النهائي (أسبوع)
 9. إعادة كتابة دوال srb-adapter.ts
 10. حذف سطر من الوثيقة بدون دليل
 11. حذف progressStore.ts
-12. اعتبار "يُستورد" = "يعمل"
+12. اعتبار "يُستورد" = "يعمل" — يجب أن تُستدعى الدالة فعلًا
 
 مطلوب من كل مساعد
 
@@ -368,24 +474,27 @@ Phase 7 — التنظيف النهائي (أسبوع)
 
 ---
 
-📅 12. سجل التعديلات
+📅 13. سجل التعديلات
 
 التاريخ الإضافة
-2026-10-07 إنشاء الوثيقة · جرد كامل · 5 أخطاء مؤكدة · خطة 7 مراحل
+2026-10-07 (أ) إنشاء الوثيقة · جرد أول · 5 أخطاء مزعومة · خطة 7 مراحل
+2026-10-07 (ب) تصحيح getAnzanBadgeKey (ملغى) · ربط srb/exam · recordAttempt في 3 شاشات · recordAttempt في PT · إصلاح العشرية
+2026-10-07 (ج) تقرير v5 — جرد كامل للبنوك · المفاتيح · الشارات · المتاجر · المحرك · i18n
 
 ---
 
-🔗 13. أدوات التحقق
+🔗 14. أدوات التحقق
 
 Workflow: .github/workflows/audit.yml
+الإصدار: v5 (شامل · 9 أقسام)
 التشغيل: Actions → Audit → Run workflow
-المخرج: audit-report-v4.txt
+المخرج: audit-report-v5
 
 يُشغَّل قبل كل مرحلة للتأكد من عدم تغيّر الحالة.
 
 ---
 
-آخر مراجعة: 2026-10-07 — بناءً على فحص فعلي.
+آخر مراجعة: 2026-10-07 — بناءً على تقرير v5 + تعديلات جلسة 24.
 هذه الوثيقة تراكمية.
 
 ```
