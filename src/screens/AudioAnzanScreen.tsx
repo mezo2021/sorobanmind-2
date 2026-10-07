@@ -329,32 +329,41 @@ export function AudioAnzanScreen({
     if (timerRef.current) clearInterval(timerRef.current);
 
     // 2) في handleCheck
-    const factor = getDecimalFactor(currentQ);
-    const targetValue = Math.round(currentQ.result * factor);
-    const isCorrect = abacusValue === targetValue;
+      const factor = getDecimalFactor(currentQ);
+  const targetValue = Math.round(currentQ.result * factor);
+  const isCorrect = abacusValue === targetValue;
 
-    const timeMs = elapsedMs;
-    trackPerformance(isCorrect, timeMs);
-    if (isCorrect) {
-      setScore((s) => s + 1);
-      setFeedback('correct');
-      playSound('success');
-      sorobana.speakCorrect();
-      onXP?.(XP_PER_CORRECT);
-      addXP(XP_PER_CORRECT);
-      updateStreak();
-      burst?.(0.5, 0.5);
-    } else {
-      setFeedback('wrong');
-      playSound('error');
-      sorobana.speakWrong();
-    }
-    setSavedTimeMs(timeMs);
-    setPhase('reveal');
-  }, [
-    currentQ, abacusValue, elapsedMs, feedback, playSound, sorobana,
-    onXP, burst, addXP, updateStreak, trackPerformance,
-  ]);
+  // ✅ Attempt Record
+  const attempt = {
+    skillId: `${currentQ.level}-${currentQ.section}-${currentQ.module}`,
+    correct: isCorrect,
+    timeMs: elapsedMs,
+    timestamp: Date.now(),
+  };
+  useProgressStore.getState().recordAttempt(attempt);
+
+  const timeMs = elapsedMs;
+  trackPerformance(isCorrect, timeMs);
+  if (isCorrect) {
+    setScore((s) => s + 1);
+    setFeedback('correct');
+    playSound('success');
+    sorobana.speakCorrect();
+    onXP?.(XP_PER_CORRECT);
+    addXP(XP_PER_CORRECT);
+    updateStreak();
+    burst?.(0.5, 0.5);
+  } else {
+    setFeedback('wrong');
+    playSound('error');
+    sorobana.speakWrong();
+  }
+  setSavedTimeMs(timeMs);
+  setPhase('reveal');
+}, [
+  currentQ, abacusValue, elapsedMs, feedback, playSound, sorobana,
+  onXP, burst, addXP, updateStreak, trackPerformance,
+]);
 
   const buildPerformances = useCallback((): SkillPerformance[] => {
     const list: SkillPerformance[] = [];
