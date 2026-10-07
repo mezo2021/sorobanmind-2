@@ -243,7 +243,10 @@ export function evaluatePlacementTest(
 
     levelData.total += 1;
     const userAnswer = answers.get(q.placementId);
-    const isCorrect = userAnswer === q.result;
+    const isDecimal = q.result % 1 !== 0;
+    const factor = isDecimal ? 100 : 1;
+    const targetValue = Math.round(q.result * factor);
+    const isCorrect = userAnswer === targetValue;
 
     if (isCorrect) {
       levelData.correct += 1;
