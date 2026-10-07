@@ -31,8 +31,8 @@ import {
   EXAM_PASS_THRESHOLD,
   EXAM_MAX_ATTEMPTS,
   EXAM_COOLDOWN_MS,
-  type BankQuestion,
-} from '@/data/bank-v2';
+} from '@/data/srb/exam';
+import type { SRBQuestion } from '@/data/srb/types';
 
 type Phase = 'intro' | 'cooldown' | 'running' | 'result';
 
@@ -75,11 +75,11 @@ function formatTime(seconds: number): string {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
-function getColumnsForQuestion(q: BankQuestion): number {
+function getColumnsForQuestion(q: SRBQuestion): number {
   // [FIX N60] — العشريات: استخدام القيمة بعد المعامل لعدد الأعمدة
-  const isDecimal = q.correctAnswer % 1 !== 0;
+  const isDecimal = q.result % 1 !== 0;
   const factor = isDecimal ? 100 : 1;
-  const candidates: number[] = [Math.abs(Math.round(q.correctAnswer * factor))];
+  const candidates: number[] = [Math.abs(Math.round(q.result * factor))];
   q.operands.forEach((op) => candidates.push(Math.abs(op)));
   const maxAbs = Math.max(...candidates);
   if (maxAbs < 1000) return 3;
@@ -121,7 +121,7 @@ export function CategoryExamScreen({
   const inPreview = isPreviewMode();
 
   const [phase, setPhase] = useState<Phase>('intro');
-  const [questions, setQuestions] = useState<BankQuestion[]>([]);
+  const [questions, setQuestions] = useState<SRBQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [attempts, setAttempts] = useState<Map<string, QuestionAttempt>>(new Map());
   const [abacusValue, setAbacusValue] = useState(0);
@@ -257,9 +257,9 @@ if (inPreview) { setFinalScore(95); setFinalPassed(true); setPhase('result'); pl
     if (!currentQ || feedback !== 'idle') return;
 
     // [FIX N60] — معامل عشري للأسئلة العشرية (L6)
-    const isDecimal = currentQ.correctAnswer % 1 !== 0;
+    const isDecimal = currentQ.result % 1 !== 0;
     const factor = isDecimal ? 100 : 1;
-    const targetValue = Math.round(currentQ.correctAnswer * factor);
+    const targetValue = Math.round(currentQ.result * factor);
     const isCorrect = abacusValue === targetValue;
 
     const newAttempts = new Map(attempts);
@@ -533,7 +533,7 @@ if (inPreview) { setFinalScore(95); setFinalPassed(true); setPhase('result'); pl
     const isFirstQuestion = currentIdx === 0;
 
     const formattedPrompt = formatText(
-      currentQ.prompt.replace(/ = ؟$/, ''),
+      currentQ.question.replace(/ = ؟$/, ''),
       numberStyle,
     );
 
@@ -545,7 +545,7 @@ if (inPreview) { setFinalScore(95); setFinalPassed(true); setPhase('result'); pl
               السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-[10px] text-white/50 font-body truncate">
-              {currentQ.levelId} · {currentQ.skillId} · محاولة {formatNumber(currentAttempt, numberStyle)}/{formatNumber(EXAM_MAX_ATTEMPTS, numberStyle)}
+              {currentQ.level} · {currentQ.section} · محاولة {formatNumber(currentAttempt, numberStyle)}/{formatNumber(EXAM_MAX_ATTEMPTS, numberStyle)}
             </p>
           </div>
 
@@ -637,7 +637,7 @@ if (inPreview) { setFinalScore(95); setFinalPassed(true); setPhase('result'); pl
                   ❌ الإجابة الصحيحة:
                 </p>
                 <p className="text-2xl font-black text-red-300" dir={isArabic ? 'rtl' : 'ltr'}>
-                  {formatNumber(currentQ.correctAnswer, numberStyle)}
+                  {formatNumber(currentQ.result, numberStyle)}
                 </p>
               </motion.div>
             )}
