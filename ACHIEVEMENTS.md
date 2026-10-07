@@ -1,3 +1,4 @@
+
 <div dir="rtl">
 
 # 🏆 سجل إنجازات SorobanMind v2
@@ -5,6 +6,7 @@
 > **ملف دائم** — يُحدَّث بعد كل جلسة.
 > **الهدف:** توثيق ما تحقق، وما تبقّى، مع التقييم الدوري.
 > **المرجع الأساسي:** [`AL-ISLAH-V2.md`](./AL-ISLAH-V2.md) — وثيقة الفحص الشامل.
+> **الخطة التنفيذية:** [`PLAN_v3.md`](./PLAN_v3.md) — الخطة المعتمدة (P1-P16).
 > **المرجع التاريخي:** [`AL-ISLAH.md`](./AL-ISLAH.md) — وثيقة الحماية الأصلية.
 
 ---
@@ -16,7 +18,7 @@
 3. [الأخطاء المؤكدة](#-الأخطاء-المؤكدة)
 4. [الكود الميت](#-الكود-الميت)
 5. [سجل الجلسات](#-سجل-الجلسات)
-6. [الخطة — 7 مراحل](#-الخطة--7-مراحل)
+6. [الخطة — P1-P16](#-الخطة--p1-p16)
 7. [تطور نسبة الإنجاز](#-تطور-نسبة-الإنجاز)
 8. [ملاحظات](#-ملاحظات)
 
@@ -24,18 +26,20 @@
 
 ## 📊 التقييم الكلي الحالي
 
-**آخر تقييم:** 2026-10-07 (نهاية الجلسة 24 — الفحص الشامل)
+**آخر تقييم:** 2026-10-07 (نهاية الجلسة 24 — الفحص الشامل + الربط)
 
-### نسبة الإنجاز: **~90%**
+### نسبة الإنجاز: **~92%**
 
-`██████████████████░░` &nbsp;**90%**
+`██████████████████▓░` &nbsp;**92%**
 
-> **تصحيح مهم:** النسبة خُفّضت من 92% إلى **90%** لأن الجلسة 24 كشفت 5 أخطاء حرجة جديدة لم تكن موثّقة:
-> - خطأ فادح في `getAnzanBadgeKey` (شارات خاطئة).
-> - `srb-adapter` فيه 3 دوال معطوبة.
-> - `recordAttempt` لا يُستدعى من أي شاشة.
-> - فجوة UI في 3 شارات.
-> - `BADGES` (8 شارات) معزولة في `data/index.ts`.
+> **تصحيح مهم:** النسبة رُفعت من 90% إلى **92%** بعد أن أكملت الجلسة 24:
+> - ✅ `srb/exam/index.ts` — يُجمّع Bank B كاملًا
+> - ✅ ربط `CategoryExamScreen` · `PlacementTestScreen` بـ`srb/exam`
+> - ✅ إصلاح العشرية في PT
+> - ✅ `recordAttempt` مُفعَّل في 3 شاشات (Practice · Anzan · AudioAnzan)
+> - ✅ زر "اختبار حقيقي" في CE1 · CE2
+> - ✅ `PLAN_v3.md` — خطة معتمدة (P1-P16)
+> - ✅ إلغاء خطأ `getAnzanBadgeKey` (الكود صحيح)
 
 ### التقييم التفصيلي (10 محاور)
 
@@ -48,14 +52,14 @@
 | 5 | الشاشات (22) | 98% | `███████████████████▓` |
 | 6 | الوظائف الأساسية | 95% | `███████████████████░` |
 | 7 | التخزين والبيانات | 80% | `████████████████░░░░` |
-| 8 | التعليم التكيفي | 25% | `█████░░░░░░░░░░░░░░░` |
-| 9 | الامتحانات والشهادات | 55% | `███████████░░░░░░░░░` |
+| 8 | التعليم التكيفي | **35%** | `███████░░░░░░░░░░░░░` |
+| 9 | الامتحانات والشهادات | **75%** | `███████████████░░░░░` |
 | 10 | الإثراء والشارات | 55% | `███████████░░░░░░░░░` |
 
 ### 💪 نقاط القوة
 
 - ✅ **Bank A** — 275 سؤالًا · يعمل بالكامل · تقويم تكويني.
-- ✅ **Bank B** — 666 سؤالًا · L0-L7 مكتمل · تقييم ختامي.
+- ✅ **Bank B** — 666 سؤالًا · L0-L7 مكتمل · **مربوط الآن**.
 - ✅ **البنية التقنية** — Zustand + React + Vite · نظيفة.
 - ✅ **progressStore** — 26 action · 5 إصدارات migrations.
 - ✅ **masteryBadgesStore** — يعمل · يُستدعى من 3 شاشات.
@@ -65,18 +69,17 @@
 - ✅ **الشهادات** — Kids + Adults · مربوطة.
 - ✅ **XP يعمل** في كل الشاشات.
 - ✅ **العشرية تعمل** في CE1 · CE2 · PT.
+- ✅ **`recordAttempt` يعمل** في 3 شاشات.
+- ✅ **`srb/exam/index.ts`** — ملف واحد يجمّع CE + PT.
 - ✅ **البناء أخضر** دائمًا.
 
 ### 🚨 نقاط الضعف الحرجة
 
-- 🔴 **`getAnzanBadgeKey`** — خطأ فادح · شارات خاطئة (S05-S10).
-- 🔴 **`recordAttempt` لا يُستدعى** — التعليم التكيفي معطّل.
-- 🔴 **`srb-adapter`** — 3 دوال معطوبة.
-- 🔴 **`Bank B`** — معزول تمامًا · لا أحد يستورده.
-- 🔴 **فجوة UI** — 3 شارات مفقودة من العرض.
-- 🔴 **`BADGES` (8 شارات)** — معزولة في `data/index.ts`.
-- 🔴 **`adaptiveEngine`** — على `bank-linked` القديم.
-- 🔴 **`srb/exam/`** — بلا طبقات (`constants` · `examBuilder` · `placementEngine` · `index`).
+- 🔴 **`recordAttempt` مفقود** في `CategoryExamScreen` · `PlacementTestScreen`.
+- 🔴 **`srb-adapter`** — 3 دوال معطوبة (`getTestQuestions` · `getPlacementTestQuestions` · `getExamQuestions`).
+- 🔴 **`adaptiveEngine`** — على `bank-linked` القديم · لم يُرحَّل.
+- 🔴 **فجوة UI** — 3 شارات مفقودة من العرض (`master_chains` · `master_chains_audio` · `master_mixed_audio`).
+- 🔴 **`BADGES` (8 شارات)** — معزولة في `data/index.ts` · لا تُمنح.
 - 🔴 **~2,176 سطر كود ميت** — مؤكد بالدليل.
 - 🔴 **6 من 8 مستويات بلا دروس نصية** (L2-L7).
 - 🔴 **الترجمة** — 65% · بلا زر.
@@ -84,9 +87,9 @@
 
 ### ⏱️ تقدير الوقت المتبقي
 
-**6 أسابيع** — مع عمل منتظم.
+**~10 ساعات عمل فعلي** (لمراحل P7-P10) + **وقت بشري** للمحتوى (P13-P14).
 
-**⬅️ الوصول إلى 95%** = نهاية المرحلة 5.
+**⬅️ الوصول إلى 95%** = نهاية P10 (adaptive يعمل).
 
 ---
 
@@ -128,7 +131,7 @@ allowed_phases CE · PT · X
 anzan_time_ms 0 (غير مطلوب)
 solution معادلة مباشرة
 الدور حكم نهائي · شهادة
-الحالة 🔴 معزول
+الحالة ✅ مربوط (جلسة 24)
 
 التوزيع:
 
@@ -146,44 +149,53 @@ L7 S15 27
 البنوك القديمة (للقطع)
 
 الملف الحجم الاستخدام القرار
-bank-v2/ 583 CategoryExamScreen · PlacementTestScreen 🔴 قطع في المرحلة 4
-bank-raw/ ~600 bank-v2/bank-exam 🔴 قطع في المرحلة 4
-bank-linked.ts 475 engine (معزول) 🔴 قطع في المرحلة 5
-bank-adapter.ts 375 bank-linked 🔴 قطع في المرحلة 5
-bank.ts 1,200 ❌ لا أحد 💀 حذف في المرحلة 1
+bank-v2/ 583 عبر bank-linked فقط 🔴 قطع في P9
+bank-raw/ ~600 bank-v2/bank-exam 🔴 قطع في P9
+bank-linked.ts 475 engine (معزول) 🔴 قطع في P9
+bank-adapter.ts 375 bank-linked 🔴 قطع في P9
+bank.ts 1,200 ❌ لا أحد 💀 حذف في P16
 
 ---
 
 🐛 الأخطاء المؤكدة
 
-1. 🔴 خطأ فادح — getAnzanBadgeKey (AnzanScreen:103)
+✅ مُلغى — getAnzanBadgeKey صحيح
 
-الكود الحالي (خطأ):
+كان مذكورًا كخطأ · لكن الكود الحالي صحيح (يطابق srb/questions/L2-L4):
 
 ```text
-S03·S04 → master_addition       ✅
-S05·S06 → master_multiplication ❌ (يجب master_chains)
-S07·S08 → master_division       ❌ (يجب master_multiplication)
-S09·S10 → master_chains         ❌ (يجب master_division)
-S11·S12 → master_mixed          ✅
+S03·S04 → master_addition       ✅ (L1 · جمع وطرح)
+S05·S06 → master_multiplication ✅ (L2 · ضرب)
+S07·S08 → master_division       ✅ (L3 · قسمة)
+S09·S10 → master_chains         ✅ (L4 · سلاسل)
+S11·S12 → master_mixed          ✅ (L5 · مختلط)
 ```
 
-الأثر: طفل L2 (ضرب) → شارة قسمة · طفل L3 (قسمة) → شارة سلاسل · طفل L4 (سلاسل) → شارة ضرب.
+السبب: الوثيقة القديمة اعتمدت على ترتيب GEMINI_PLAYBOOK المهجور.
 
-نفس الخطأ محتمل في AudioAnzanScreen:87.
-
-2. 🔴 recordAttempt لا يُستدعى
+✅ مُصلَح — recordAttempt يعمل في 3 شاشات
 
 ```
-=== كيف يُستدعى recordAttempt في الشاشات ===
-(فارغ)
+PracticeScreen.tsx:308   ✅
+AnzanScreen.tsx:402      ✅
+AudioAnzanScreen.tsx:343 ✅
 ```
 
-الأثر: skillProgress فارغ · adaptiveEngine معطّل.
+متبقٍ (P7):
 
-الحل: 4 أسطر في 5 شاشات.
+· ⏳ CategoryExamScreen.tsx
+· ⏳ PlacementTestScreen.tsx
 
-3. 🔴 srb-adapter فيه 3 دوال معطوبة
+✅ مُصلَح — srb/exam مربوط
+
+```
+PlacementTestScreen.tsx:28 → '@/data/srb/exam'
+CategoryExamScreen.tsx:34  → '@/data/srb/exam'
+```
+
+bank-v2 لم يعد يُستورد من الشاشات.
+
+🔴 قائم — srb-adapter 3 دوال معطوبة
 
 ```ts
 getTestQuestions → buildSession(phase: "X") → Bank A (خطأ)
@@ -191,19 +203,29 @@ getPlacementTestQuestions → buildSession(phase: "PT") → Bank A (فارغ)
 getExamQuestions → ❌ غير موجودة
 ```
 
-الأثر: Bank B معزول · الامتحانات على bank-v2 القديم.
+الحل (P9): إصلاح الدوال أو تجاهلها بعد ترحيل adaptiveEngine.
 
-4. 🔴 فجوة UI — 3 شارات مفقودة
+🔴 قائم — فجوة UI — 3 شارات مفقودة
 
-البصري: Store فيه 5 · UI يعرض 4 → master_chains مفقود.
-السمعي: Store فيه 5 · UI يعرض 3 → master_chains_audio + master_mixed_audio مفقودان.
+· البصري: Store فيه 5 · UI يعرض 4 → master_chains مفقود.
+· السمعي: Store فيه 5 · UI يعرض 3 → master_chains_audio + master_mixed_audio مفقودان.
 
-5. 🟡 BADGES (8 شارات) معزولة
+⬅️ مؤجل حسب قرار المطوّر: "كل الشارات تعمل · لا نُنشئ جديد".
+
+🟡 قائم — BADGES (8 شارات) معزولة
 
 الملف: src/data/index.ts (189 سطرًا).
 المحتوى: 8 شارات (مبتدئ → أسطورة خالدة).
 الحالة: صفر استيراد.
-الحل: ربط في GuardianDashboard (بلا ملف جديد).
+⬅️ مؤجل لـP3 (راجع PLAN_v3).
+
+🔴 قائم — 5 مفاتيح يتيمة (تُقرأ ولا تُكتب)
+
+· soroban_passed_level_tests
+· soroban_exam_result
+· soroban_placement_recommended
+· soroban_placement_last_attempt
+· soroban_placement_result
 
 ---
 
@@ -215,8 +237,8 @@ data/curriculum.ts 312 صفر استيراد
 data/index.ts 189 يحتوي BADGES ⚠️
 utils/skillsChecker.ts 176 صفر استيراد
 utils/numerals.ts 126 صفر استيراد (نسخة قديمة)
-utils/badgeChecker.ts 112 صفر استيراد
-utils/anzanBadges.ts 34 يُستورد من badgeChecker (ميت)
+utils/badgeChecker.ts 112 يُستورد فقط من useGameStats
+utils/anzanBadges.ts 34 يُستورد من badgeChecker (معزول)
 utils/audioAnzanBadges.ts 27 صفر استيراد
 المجموع ~2,176 
 
@@ -224,6 +246,8 @@ utils/audioAnzanBadges.ts 27 صفر استيراد
 
 · فحص data/index.ts — قد يحتوي BADGES (مؤكد).
 · فحص استيراد ديناميكي (import(...)).
+
+⬅️ الحذف مؤجل لـP16 (راجع PLAN_v3).
 
 ---
 
@@ -267,215 +291,81 @@ FIX 7 (7 ملفات):
 · ✅ المجموع: 666 سؤالًا.
 · ✅ البناء أخضر.
 
-الجلسة 24 — الفحص الشامل 🔍
+الجلسة 24 — الفحص الشامل + الربط 🔍
 
-⬅️ انعطافة استراتيجية: من التطوير إلى الفحص الدقيق.
-
-اكتشافات حاسمة
-
-· ✅ Bank A vs Bank B — تمييز فلسفي (تقويم vs تقييم).
-· ✅ المنهاج تغيّر: 20 درسًا → 15 درسًا (كوجيما الأصلي).
-· ✅ السبب الحقيقي للفوضى: هجرة نصف مُنفّذة.
-· ✅ getAnzanBadgeKey — خطأ فادح (S05-S10).
-· ✅ recordAttempt — لا يُستدعى.
-· ✅ srb-adapter — 3 دوال معطوبة.
-· ✅ BADGES — موجودة · معزولة.
-· ✅ ~2,176 سطر كود ميت — مؤكد.
-· ✅ الترجمة — 65% جاهزة.
-· ✅ 4 أنظمة شارات — 3 منها بفجوات.
+⬅️ انعطافة استراتيجية: من التطوير إلى الفحص الدقيق + الربط.
 
 الأدوات المُنشأة
 
 · ✅ audit.yml — فحص آلي عبر GitHub Actions.
-· ✅ 4 تقارير فحص (audit-report-v2/v3/v4).
+· ✅ 5 تقارير فحص (audit-report-v2/v3/v4/v5).
 · ✅ جرد كامل للبنوك · الشاشات · المفاتيح · الأنظمة.
+
+الاكتشافات الحاسمة
+
+· ✅ Bank A vs Bank B — تمييز فلسفي (تقويم vs تقييم).
+· ✅ المنهاج تغيّر: 20 درسًا → 15 درسًا (كوجيما الأصلي).
+· ✅ السبب الحقيقي للفوضى: هجرة نصف مُنفّذة.
+· ✅ getAnzanBadgeKey صحيح (ملغى · لا خطأ).
+· ✅ recordAttempt مُفعَّل في 3 شاشات.
+· ✅ srb-adapter — 3 دوال معطوبة.
+· ✅ BADGES — موجودة · معزولة.
+· ✅ ~2,176 سطر كود ميت — مؤكد.
+· ✅ الترجمة — 65% جاهزة.
+· ✅ 4 أنظمة شارات — كلها تعمل · 3 بفجوات UI.
+
+الربط المُنجز
+
+· ✅ srb/exam/index.ts (352 سطرًا) — يُجمّع Bank B + CE1 · CE2 · PT.
+· ✅ ربط CategoryExamScreen بـsrb/exam.
+· ✅ ربط PlacementTestScreen بـsrb/exam.
+· ✅ إصلاح العشرية في PT.
+· ✅ recordAttempt في 3 شاشات.
+· ✅ زر "اختبار حقيقي" في CE1 · CE2.
+· ✅ PLAN_v3.md — خطة معتمدة.
 
 الوثائق المُحدَّثة
 
 · ✅ AL-ISLAH-V2.md — وثيقة الفحص الشامل.
+· ✅ PLAN_v3.md — الخطة المعتمدة (P1-P16).
+· ✅ PROJECT_MASTER.md — المرجع التقني.
 · ✅ ACHIEVEMENTS.md — هذا الملف.
 
 النتيجة
 
 · 🟢 فهم كامل للتطبيق.
-· 🟢 5 أخطاء حرجة جديدة موثقة.
-· 🟢 خطة 7 مراحل واضحة.
+· 🟢 5 أخطاء حرجة موثّقة.
+· 🟢 خطة P1-P16 واضحة.
+· 🟢 Bank B مربوط.
+· 🟢 التعليم التكيفي — نصف مُفعَّل.
 
 ---
 
-🎯 الخطة — 7 مراحل
+🎯 الخطة — P1-P16
 
-⬅️ التفاصيل الكاملة في AL-ISLAH-V2.md القسم 10.
+⬅️ التفاصيل الكاملة في PLAN_v3.md.
 
 المرحلة المهمة الوقت الحالة
-0 التوثيق (AL-ISLAH-V2) يوم ✅ مكتمل
-1 التنظيف الآمن (~2,176 سطر) يومان ⏳
-2 إصلاح الأخطاء + ربط BADGES يومان ⏳
-3 Attempt Record (4 أسطر × 5 شاشات) أسبوع ⏳
-4 ربط Bank B بالشاشات أسبوع ⏳
-5 ترحيل adaptiveEngine أسبوع ⏳
-6 إكمال الترجمة أسبوع ⏳
-7 التنظيف النهائي + الإصدار أسبوع ⏳
+P1 تثبيت نموذج البيانات — ✅ (PLAN_v3)
+P2 Badge Registry — ⏸️ لاحقًا
+P3 ربط BADGES الـ8 — ⏸️ لاحقًا
+P4 توحيد Anzan Badges — ⏸️ لاحقًا
+P5 إغلاق mastery duplication — ⏸️ لا تكرار فعلي
+P6 تصنيف 35 Key — ⏸️ لاحقًا
+P7 إكمال recordAttempt (CE · PT) ساعة ⏳
+P8 ربط masteryTracker — ⏳ يُغذّى تلقائيًا
+P9 نقل adaptiveEngine إلى SRB ساعة ⏳ الأولوية 1
+P10 اختبار Adaptive ساعة ⏳
+P11-P16 Badges UI · i18n · Export/Import · Audit — ⏸️ لاحقًا
 
-⬅️ المجموع: 6 أسابيع.
+الأولويات الفورية
 
-📋 تفاصيل كل مرحلة
+الأولوية المرحلة الملفات الوقت
+1 P9 — ربط adaptiveEngine engine/adaptiveEngine.ts · engine/problemGenerator.ts 1 ساعة
+2 P7 — recordAttempt في CE · PT CategoryExamScreen.tsx · PlacementTestScreen.tsx 1 ساعة
+3 P10 — اختبار Adaptive — ساعة
 
-المرحلة 0 — التوثيق ✅
-
-· ✅ AL-ISLAH-V2.md — الجرد الكامل.
-· ✅ ACHIEVEMENTS.md — هذا الملف.
-· ✅ Tag احتياطي (pre-phase-0).
-
-المرحلة 1 — التنظيف الآمن (يومان)
-
-حذف مؤكد (بعد فحص):
-
-· data/bank.ts (1,200)
-· data/curriculum.ts (312)
-· utils/skillsChecker.ts (176)
-· utils/numerals.ts (126)
-· utils/audioAnzanBadges.ts (27)
-· utils/anzanBadges.ts (34)
-· utils/badgeChecker.ts (112)
-
-فحص قبل الحذف:
-
-· data/index.ts (189 — يحتوي BADGES).
-
-Tag: pre-phase-1 → post-phase-1.
-
-المرحلة 2 — إصلاح الأخطاء + BADGES (يومان)
-
-2.1 — إصلاح getAnzanBadgeKey:
-
-· AnzanScreen.tsx:103 → التخطيط الصحيح (S05·S06 → chains · إلخ).
-· AudioAnzanScreen.tsx:87 → نفس الإصلاح.
-
-2.2 — إصلاح فجوة UI (3 شارات):
-
-· GuardianDashboard.anzanBadgeList — إضافة master_chains.
-· GuardianDashboard.audioAnzanBadgeList — إضافة master_chains_audio + master_mixed_audio.
-
-2.3 — ربط BADGES الـ8:
-
-· استيراد من data/index.ts (بلا ملف جديد).
-· قسم جديد في GuardianDashboard.
-· "الشارة التالية" + شريط تقدم.
-· BadgeModal عند شارة جديدة.
-
-2.4 — إضافة حقل واحد في progressStore:
-
-· earnedAchievements: string[].
-
-المرحلة 3 — Attempt Record (أسبوع)
-
-4 أسطر في كل شاشة:
-
-```ts
-import { createAttempt } from '@/engine/masteryTracker';
-import { useProgressStore } from '@/store/progressStore';
-
-const attempt = createAttempt(skillId, userAnswer, correctAnswer, timeMs);
-useProgressStore.getState().recordAttempt(attempt);
-```
-
-الشاشات المستهدفة:
-
-1. PracticeScreen
-2. AnzanScreen
-3. AudioAnzanScreen
-4. CategoryExamScreen (بعد المرحلة 4)
-5. PlacementTestScreen (بعد المرحلة 4)
-
-الاختبار:
-
-· skillProgress يمتلئ.
-· masteryTracker يعمل.
-· AdaptiveFeedback يقرأ بيانات حقيقية.
-
-المرحلة 4 — ربط Bank B (أسبوع)
-
-4.1 — بناء srb/exam/index.ts:
-
-· يُجمّع L0-L7 → EXAM_BANK.
-
-4.2 — بناء srb/exam/constants.ts:
-
-· EXAM_PASS_THRESHOLD = 80.
-· EXAM_MAX_ATTEMPTS = 2.
-· EXAM_COOLDOWN_MS = 48h.
-· L0_TEST_COOLDOWN_MS = 24h.
-
-4.3 — بناء srb/exam/examBuilder.ts:
-
-· buildExam1Category() — CE1 (L0-L3).
-· buildExam2Category() — CE2 (L4-L7).
-
-4.4 — بناء srb/exam/placementEngine.ts:
-
-· buildPlacementTest().
-
-4.5 — إصلاح 3 دوال في srb-adapter.ts:
-
-· getTestQuestions → EXAM_BANK.
-· getPlacementTestQuestions → EXAM_BANK.
-· إضافة getExamQuestions(category).
-
-4.6 — ربط 3 شاشات:
-
-· CategoryExamScreen (CE1 · CE2).
-· PlacementTestScreen (PT).
-· LevelTestScreen (X).
-
-4.7 — Parity Test:
-
-· مقارنة Old (bank-v2) vs New (srb/exam).
-
-4.8 — قطع bank-v2 · bank-raw:
-
-· حذف الاستيرادات · الملفات تبقى.
-
-المرحلة 5 — ترحيل adaptiveEngine (أسبوع)
-
-5.1 — تعديل adaptiveEngine.ts:
-
-· استبدال from "../data/bank-linked" بـfrom "../data/srb-adapter".
-
-5.2 — تعديل problemGenerator.ts:
-
-· نفس الشيء.
-
-5.3 — تطبيق قاعدة 70/30:
-
-· 70% مهارات ضعيفة · 30% جديدة.
-
-5.4 — اختبار شامل.
-
-المرحلة 6 — إكمال الترجمة (أسبوع)
-
-6.1 — زر LanguageToggle:
-
-· مكان في Header.
-· يربط بـprogressStore.setLanguage.
-
-6.2 — ربط useT في الشاشات تدريجيًا.
-
-6.3 — ترحيل النصوص.
-
-المرحلة 7 — التنظيف النهائي (أسبوع)
-
-7.1 — حذف:
-
-· bank-v2/ · bank-raw/ · bank-linked.ts · bank-adapter.ts.
-· data/index.ts (بعد فحص BADGES).
-· utils/numerals.ts (بعد الترجمة).
-
-7.2 — PWA.
-
-7.3 — اختبار شامل.
-
-7.4 — نشر.
+⬅️ المجموع الفوري: 3 ساعات.
 
 ---
 
@@ -493,11 +383,11 @@ useProgressStore.getState().recordAttempt(attempt);
 2026-10-04 16-19 ~85% الفحص الشامل + AL-ISLAH.md
 2026-10-05 20 ~88% 8 إصلاحات P-1 + FIX 7
 2026-10-07 21-23 ~92% بنك SRB exam مكتمل (666)
-2026-10-07 24 ~90% فحص شامل · تصحيح النسبة
+2026-10-07 24 ~92% ربط Bank B + recordAttempt في 3 شاشات + PLAN_v3
 
-⬅️ الهدف القادم: 92% (نهاية المرحلة 2).
-⬅️ الهدف المتوسط: 95% (نهاية المرحلة 5).
-⬅️ الهدف النهائي: 100% (نهاية المرحلة 7).
+⬅️ الهدف القادم: 93% (نهاية P9 · P7).
+⬅️ الهدف المتوسط: 95% (نهاية P10).
+⬅️ الهدف النهائي: 100% (نهاية P16).
 
 ---
 
@@ -506,9 +396,10 @@ useProgressStore.getState().recordAttempt(attempt);
 · الملف يُحدَّث بعد كل جلسة.
 · التقييم موضوعي — لا مبالغة.
 · AL-ISLAH-V2.md = المرجع الأساسي للفحص.
+· PLAN_v3.md = المرجع الأساسي للخطة.
 · الكود الفعلي هو الحقيقة — لا الملفات النصية.
 
-⚠️ قواعد ذهبية (بعد الجلسة 24)
+⚠️ قواعد ذهبية (16 قاعدة)
 
 ```text
 1. لا نبدأ من الصفر.
@@ -521,20 +412,26 @@ useProgressStore.getState().recordAttempt(attempt);
 8. نسخة احتياطية قبل كل مرحلة (Tag).
 9. أضف — لا تحذف.
 10. الوثيقة تراكمية — لا يُحذف سطر إلا بدليل.
+11. لا حذف سطر من AL-ISLAH-V2.md بدون دليل مصور.
+12. لا إصلاحات بنيوية دون قراءة قسم "مقصود".
+13. لا حذف badgeChecker · useQuests قبل إعادة الكتابة.
+14. لا حذف/استبدال/إعادة بناء progressStore.ts.
+15. لا إضافة نظام شارات جديد (كل الموجود يعمل · راجع PLAN_v3).
+16. لا انتقال إلى IndexedDB أو Backend (مؤجل حسب PLAN_v3).
 ```
 
-📌 حقائق مؤكدة (بأدلة)
+📌 حقائق مؤكدة (بأدلة · تقرير v5)
 
 # الحقيقة الدليل
 1 Bank A = 275 سؤالًا srb/questions/L0-L7
 2 Bank B = 666 سؤالًا srb/exam/L0-L7
-3 Bank A يعمل · Bank B معزول grep
-4 recordAttempt لا يُستدعى grep في الشاشات
-5 getAnzanBadgeKey خطأ AnzanScreen:103
+3 Bank A يعمل · Bank B مربوط grep
+4 recordAttempt في 3 شاشات PracticeScreen:308 · AnzanScreen:402 · AudioAnzanScreen:343
+5 getAnzanBadgeKey صحيح AnzanScreen:103
 6 srb-adapter 3 دوال معطوبة قراءة الملف
 7 BADGES موجودة في data/index.ts قراءة الملف
 8 ~2,176 سطر كود ميت grep
-9 4 أنظمة شارات · 3 بفجوات قراءة الكود
+9 4 أنظمة شارات · كلها تعمل قراءة الكود
 10 الترجمة 65% جاهزة i18n/
 11 numberStyle.ts 14 مستوردًا grep
 12 LevelScreen + LevelTestScreen مربوطتان App.tsx
@@ -543,9 +440,11 @@ useProgressStore.getState().recordAttempt(attempt);
 
 الملف الغرض
 README.md نظرة عامة للمستخدمين
-AL-ISLAH-V2.md ⚠️ وثيقة الفحص الشامل — اقرأها أولًا
+PLAN_v3.md ⭐ الخطة المعتمدة (P1-P16)
+AL-ISLAH-V2.md ⚠️ وثيقة الفحص الشامل
 AL-ISLAH.md وثيقة الحماية الأصلية (مرجعية)
 ACHIEVEMENTS.md هذا الملف — سجل الجلسات
+PROJECT_MASTER.md المرجع التقني
 GEMINI_PLAYBOOK.md دليل بناء Bank B
 
 🗺️ خريطة الملفات
@@ -555,14 +454,10 @@ src/data/srb/
 ├── questions/                ← Bank A (275) ✅
 │   ├── L0.ts · L1.ts · L2.ts · L3.ts · L4.ts
 │   └── L5.ts · L6.ts · L7.ts
-├── exam/                     ← Bank B (666) ✅ · بلا طبقات ⏳
+├── exam/                     ← Bank B (666) ✅ · مربوط
 │   ├── L0.ts · L1.ts · L2.ts · L3.ts · L4.ts
 │   ├── L5.ts · L6.ts · L7.ts
-│   ├── types.ts               ← ⏳
-│   ├── constants.ts           ← ⏳
-│   ├── examBuilder.ts         ← ⏳
-│   ├── placementEngine.ts     ← ⏳
-│   └── index.ts               ← ⏳
+│   └── index.ts (352)        ← ✅ يُجمّع + CE + PT
 ├── types.ts                  ✅
 ├── generateId.ts             ✅
 ├── curriculum.ts             ✅
@@ -583,11 +478,11 @@ src/data/srb/
 
 آخر تحديث: 2026-10-07 — نهاية الجلسة 24
 
-الحالة: 🟢 البناء أخضر · البنكان A و B مكتملان · الأخطاء الحرجة موثّقة
+الحالة: 🟢 البناء أخضر · البنكان A و B مكتملان · PLAN_v3 معتمد · P9 قادمة
 
 المرجع الأساسي: AL-ISLAH-V2.md
 
-دليل بناء Bank B: GEMINI_PLAYBOOK.md
+الخطة التنفيذية: PLAN_v3.md
 
 الوثيقة التاريخية: AL-ISLAH.md
 
