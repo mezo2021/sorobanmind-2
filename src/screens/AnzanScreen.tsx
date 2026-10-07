@@ -392,8 +392,17 @@ export function AnzanScreen({
     const targetValue = Math.round(currentQ.result * factor);
     const isCorrect = abacusValue === targetValue;
 
-    const timeMs = elapsedMs;
-    trackPerformance(isCorrect, timeMs);
+// ✅ Attempt Record
+const attempt = {
+  skillId: `${currentQ.level}-${currentQ.section}-${currentQ.module}`,
+  correct: isCorrect,
+  timeMs: elapsedMs,
+  timestamp: Date.now(),
+};
+useProgressStore.getState().recordAttempt(attempt);
+
+const timeMs = elapsedMs;
+trackPerformance(isCorrect, timeMs);
     if (isCorrect) {
       setScore((s) => s + 1);
       setFeedback('correct');
