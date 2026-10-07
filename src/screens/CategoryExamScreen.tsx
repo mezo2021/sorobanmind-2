@@ -512,7 +512,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
 
         <button
           type="button"
-          onClick={startTest}
+          onClick={() => startTest()}
           className="btn-primary w-full !py-4 !text-lg"
         >
           <Play className="w-6 h-6" />
