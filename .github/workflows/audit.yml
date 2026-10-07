@@ -105,7 +105,25 @@ jobs:
           echo "" >> audit-report.txt
           echo "=== صيغة skillId في SRB (بحث L0-S01-m1) ===" >> audit-report.txt
           grep -rn "L0-S01-m1\|SRB-L0-S01-m1" src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
-          
+          echo "" >> audit-report.txt
+          echo "=== استدعاءات setAnzanBadge ===" >> audit-report.txt
+          grep -rn "setAnzanBadge" src >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== استدعاءات setAnzanAudioBadge ===" >> audit-report.txt
+          grep -rn "setAnzanAudioBadge" src >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== استخدامات masteryBadgesStore ===" >> audit-report.txt
+          grep -rn "masteryBadgesStore\|useMasteryBadgesStore" src >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== استدعاءات masteryBadges (award · add · set) ===" >> audit-report.txt
+          grep -rn "awardBadge\|addBadge\|masterBadge\|masteredAt" src >> audit-report.txt || true
+
+          echo "" >> audit-report.txt
+          echo "=== من يمنح mastery badge ===" >> audit-report.txt
+          grep -rn "masteryBadges\." src --include="*.ts" --include="*.tsx" >> audit-report.txt || true
       - uses: actions/upload-artifact@v4
         with:
           name: audit-report-v4
