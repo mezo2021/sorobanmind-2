@@ -7,6 +7,7 @@
 // 🩺 جلسة علاجية إجبارية داخلية (RemediationScreen) — أولوية عرض عليا
 // 📅 آخر تحديث: SRB Migration — Phase 2 + Remediation
 // [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
+// ✅ [Phase A1] — Attempt Record مُفعَّل في handleCheck
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -328,42 +329,42 @@ export function AudioAnzanScreen({
     if (!currentQ || feedback !== 'idle') return;
     if (timerRef.current) clearInterval(timerRef.current);
 
-    // 2) في handleCheck
-      const factor = getDecimalFactor(currentQ);
-  const targetValue = Math.round(currentQ.result * factor);
-  const isCorrect = abacusValue === targetValue;
+    const factor = getDecimalFactor(currentQ);
+    const targetValue = Math.round(currentQ.result * factor);
+    const isCorrect = abacusValue === targetValue;
 
-  // ✅ Attempt Record
-  const attempt = {
-    skillId: `${currentQ.level}-${currentQ.section}-${currentQ.module}`,
-    correct: isCorrect,
-    timeMs: elapsedMs,
-    timestamp: Date.now(),
-  };
-  useProgressStore.getState().recordAttempt(attempt);
+    // ✅ Attempt Record
+    const attempt = {
+      skillId: `${currentQ.level}-${currentQ.section}-${currentQ.module}`,
+      correct: isCorrect,
+      timeMs: elapsedMs,
+      timestamp: Date.now(),
+    };
+    useProgressStore.getState().recordAttempt(attempt);
 
-  const timeMs = elapsedMs;
-  trackPerformance(isCorrect, timeMs);
-  if (isCorrect) {
-    setScore((s) => s + 1);
-    setFeedback('correct');
-    playSound('success');
-    sorobana.speakCorrect();
-    onXP?.(XP_PER_CORRECT);
-    addXP(XP_PER_CORRECT);
-    updateStreak();
-    burst?.(0.5, 0.5);
-  } else {
-    setFeedback('wrong');
-    playSound('error');
-    sorobana.speakWrong();
-  }
-  setSavedTimeMs(timeMs);
-  setPhase('reveal');
-}, [
-  currentQ, abacusValue, elapsedMs, feedback, playSound, sorobana,
-  onXP, burst, addXP, updateStreak, trackPerformance,
-]);
+    const timeMs = elapsedMs;
+    trackPerformance(isCorrect, timeMs);
+
+    if (isCorrect) {
+      setScore((s) => s + 1);
+      setFeedback('correct');
+      playSound('success');
+      sorobana.speakCorrect();
+      onXP?.(XP_PER_CORRECT);
+      addXP(XP_PER_CORRECT);
+      updateStreak();
+      burst?.(0.5, 0.5);
+    } else {
+      setFeedback('wrong');
+      playSound('error');
+      sorobana.speakWrong();
+    }
+    setSavedTimeMs(timeMs);
+    setPhase('reveal');
+  }, [
+    currentQ, abacusValue, elapsedMs, feedback, playSound, sorobana,
+    onXP, burst, addXP, updateStreak, trackPerformance,
+  ]);
 
   const buildPerformances = useCallback((): SkillPerformance[] => {
     const list: SkillPerformance[] = [];
