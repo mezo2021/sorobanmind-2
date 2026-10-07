@@ -182,8 +182,8 @@ export function CategoryExamScreen({
   }, [phase]);
 
   // ─── بدء الامتحان ───
-  const startTest = useCallback(() => {
-if (inPreview) { setFinalScore(95); setFinalPassed(true); setPhase('result'); playSound('levelup'); return; }
+  const startTest = useCallback((forceReal = false) => {
+if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase('result'); playSound('levelup'); return; }
     const qs = category === 'kids' ? buildExam1Category() : buildExam2Category();
     if (qs.length === 0) { playSound('error'); return; }
 
@@ -196,7 +196,7 @@ if (inPreview) { setFinalScore(95); setFinalPassed(true); setPhase('result'); pl
     setTimeLeft(cfg.totalTimeSec);
     setPhase('running');
     playSound('click');
-  }, [category, cfg.totalTimeSec, playSound]);
+  }, [category, cfg.totalTimeSec, playSound, inPreview]);
 
   // ─── عدّاد الوقت الكلي ───
   useEffect(() => {
