@@ -1,4 +1,4 @@
-```markdown
+
 <div dir="rtl">
 
 # 🧮 SorobanMind v2 — المرجع الموحّد
@@ -1430,4 +1430,3 @@ Actions
 </div>
 
 </div>
-```
