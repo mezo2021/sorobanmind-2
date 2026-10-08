@@ -2,6 +2,7 @@
 // ➕ درس S03: الجمع (منهجية تاكاشي كوجيما - ثنائي اللغة)
 // 📅 آخر تحديث: 2026-10-08
 // [FIX S03-1] — حذف rule.formula من m2 · m3 · m4 (القاعدة الطويلة معقدة على الأطفال)
+// [FIX S03-2] — إضافة condition.formula لـ m2 · m3 · m4
 
 import type { LessonNode } from "../types";
 
@@ -167,6 +168,7 @@ export const S03_LESSON: LessonNode = {
     ],
   },
   condition: {
+    formula: "c ≤ 4 · n ≤ 4 · c + n ≥ 5",
     explanation: "الخرزات السفلية غير كافية، لكن الجدة 5 جاهزة للتدخل والإنقاذ! | Lower beads are not enough, but Grandma 5 is ready to step in!",
   },
   friendsTable: {
@@ -269,7 +271,6 @@ export const S03_LESSON: LessonNode = {
   },
 },
 
-    // ⏸️ الجزء 2 يبدأ من m3 — قل "تابع"
     // ═══════════════════════════════════════════════════════════
     // m3 — الجمع بأصدقاء 10
     // ═══════════════════════════════════════════════════════════
@@ -301,6 +302,7 @@ export const S03_LESSON: LessonNode = {
     ],
   },
   condition: {
+    formula: "c + n > 9 · إمكانية طرح k مباشرة",
     explanation: "المجموع يتجاوز 9، وتوجد خرزات كافية لطرح صديق 10 مباشرة من الآحاد! | Sum exceeds 9, and active beads are enough to subtract 10's friend directly!",
   },
   friendsTable: {
@@ -438,6 +440,7 @@ export const S03_LESSON: LessonNode = {
         ],
       },
       condition: {
+        formula: "c + n > 9 · العلوية 5 مفعّلة · l < k",
         explanation: "المجموع أكبر من 9، والخرزات السفلية المفعّلة لا تكفي لخصم صديق 10 مباشرة، فنستعين بالجدة 5 والعملاق 10 معا! | Sum > 9, active lower beads can't subtract 10's friend directly, so we combine Grandma 5 & Giant 10!",
       },
       discrimination: {
