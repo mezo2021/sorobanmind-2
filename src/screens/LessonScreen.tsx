@@ -907,12 +907,12 @@ export function LessonScreen({
                   )}
 
                   <h3 className="text-sm font-bold text-gold-300 mb-1">🔒 {p(UI.condition)}</h3>
-                  <p
-                    dir="ltr"
-                    className="text-center text-sm font-display font-bold text-amber-300 mb-2 bg-white/5 p-2 rounded-xl"
-                  >
-                    {p(activeModule.condition.formula)}
-                  </p>
+                  <<p
+  dir="ltr"
+  className="text-center text-sm font-display font-bold text-amber-300 mb-2 bg-white/5 p-2 rounded-xl"
+>
+  {p(activeModule.condition.formula)}
+</p>
                   <p className="text-sm text-white/75 font-body leading-relaxed">
                     {p(activeModule.condition.explanation)}
                   </p>
