@@ -3,6 +3,11 @@
 //   1. نظري (L0-INTRO) → introPages Carousel
 //   2. وحدات (S01 · S03 · S04) → module chips + watch/try
 //   3. قديم (احتياطي) → examples + tryQuestions
+//
+// [i18n] كل نصوص المحتوى تمر عبر pickLang (يدعم { ar, en } و "عربي | English")
+// [i18n] كل نصوص الواجهة في قاموس UI المحلي ثنائي اللغة
+// [i18n] dir يتبع اللغة (RTL/LTR) · المعداد يبقى RTL دائمًا
+// [i18n] قصص الصوت mp3 عربية فقط → يُخفى زر "موجز القصة" في الإنجليزية
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,7 +26,6 @@ import {
   type LessonExercise,
   type LessonModule,
   type LessonStep,
-  type BilingualText,
 } from '@/curriculum/lessons';
 import { FloatingCompanion } from '@/components/FloatingCompanion';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
@@ -30,6 +34,8 @@ import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { useProgressStore } from '@/store/progressStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
+import { useT } from '@/i18n/useTranslation';
+import { pickLang, type Localized } from '@/i18n/pickLang';
 
 // ═══════════════════════════════════════════════════════════
 // الثوابت
@@ -60,14 +66,45 @@ interface SessionData {
 }
 
 // ═══════════════════════════════════════════════════════════
-// أدوات مساعدة
+// 🌐 قاموس نصوص الواجهة (ثنائي اللغة)
 // ═══════════════════════════════════════════════════════════
 
-function localize(v: string | { ar: string; en: string } | undefined): string {
-  if (v === undefined) return '';
-  if (typeof v === 'string') return v;
-  return v.ar || v.en || '';
-}
+const UI = {
+  notFound: { ar: 'الدرس غير موجود', en: 'Lesson not found' },
+  back: { ar: 'رجوع', en: 'Back' },
+  introTag: { ar: 'مقدمة تعريفية', en: 'Introduction' },
+  intro: { ar: 'مقدمة', en: 'Intro' },
+  prev: { ar: 'السابق', en: 'Previous' },
+  next: { ar: 'التالي', en: 'Next' },
+  finishIntro: { ar: 'أكملت المقدمة', en: 'Introduction complete' },
+  story: { ar: 'القصة', en: 'Story' },
+  stop: { ar: 'إيقاف', en: 'Stop' },
+  storyBrief: { ar: 'موجز القصة', en: 'Story summary' },
+  rule: { ar: 'القاعدة', en: 'Rule' },
+  specialCases: { ar: 'الحالات الخاصة', en: 'Special cases' },
+  condition: { ar: 'الشرط', en: 'Condition' },
+  discTitle: { ar: 'دليل التمييز — كيف أقرر؟', en: 'Decision guide — how do I choose?' },
+  concept: { ar: 'المفهوم', en: 'Concept' },
+  explainSteps: { ar: 'اشرح لي الخطوات', en: 'Show me the steps' },
+  theoretical: {
+    ar: 'هذا الدرس نظري — لا يحتوي على أمثلة تفاعلية.',
+    en: 'This is a theory lesson — it has no interactive examples.',
+  },
+  check: { ar: 'تحقق', en: 'Check' },
+  clear: { ar: 'مسح', en: 'Clear' },
+  cheer: { ar: 'أحسنت! 🌟', en: 'Great job! 🌟' },
+  correctMsg: { ar: '✅ أحسنت! إجابة صحيحة', en: '✅ Well done! Correct answer' },
+  wrongMsg: { ar: '❌ حاول مرة أخرى', en: '❌ Try again' },
+  correctAnswer: { ar: '💡 الإجابة الصحيحة:', en: '💡 The correct answer:' },
+  gotIt: { ar: 'فهمت، التالي', en: 'Got it, next' },
+  nextLesson: { ar: 'الدرس التالي:', en: 'Next lesson:' },
+  watch: { ar: 'شاهد', en: 'Watch' },
+  tryTab: { ar: 'جرّب', en: 'Try' },
+} as const;
+
+// ═══════════════════════════════════════════════════════════
+// أدوات مساعدة
+// ═══════════════════════════════════════════════════════════
 
 function loadSession(lessonId: string): SessionData {
   try {
@@ -119,12 +156,6 @@ function getStepText(step: string | LessonStep): string {
   return step.instructionText;
 }
 
-function getTitle(title: BilingualText | string | undefined): string {
-  if (!title) return '';
-  if (typeof title === 'string') return title;
-  return title.ar;
-}
-
 function getExampleText(ex: LessonExample): string {
   return ex.problemText ?? ex.question ?? '';
 }
@@ -162,6 +193,17 @@ export function LessonScreen({
   const sorobana = useSorobanaVoice();
   const { style: numberStyle, toggleStyle } = useNumberStyleStore();
   const markLessonCompleted = useProgressStore((s) => s.markLessonCompleted);
+
+  // 🌐 اللغة
+  const { lang, dir, isAr } = useT();
+  const p = (v: Localized): string => pickLang(v, lang);
+  const PrevIcon = isAr ? ChevronRight : ChevronLeft;
+  const NextIcon = isAr ? ChevronLeft : ChevronRight;
+  // نص المحتوى مع تنسيق الأرقام
+  const pf = (v: Localized): string => formatText(p(v), numberStyle);
+  // اسم الوحدة حسب اللغة
+  const moduleTitle = (m: LessonModule): string =>
+    lang === 'en' ? (m.titleEn || m.title) : m.title;
 
   // ─── جلسة محفوظة مسبقًا ───
   const [sessionLoaded, setSessionLoaded] = useState(false);
@@ -223,6 +265,14 @@ export function LessonScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonId]);
 
+  // ═══ إيقاف الصوت عند تبديل اللغة ═══
+  useEffect(() => {
+    sorobana.stop();
+    setIsReadingStory(false);
+    setIsReadingModuleStory(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
+
   // ═══ حفظ الجلسة عند كل تغيير ═══
   useEffect(() => {
     if (!sessionLoaded || !lesson) return;
@@ -251,10 +301,10 @@ export function LessonScreen({
 
   if (!lesson) {
     return (
-      <div dir="rtl" className="min-h-screen flex items-center justify-center p-4">
+      <div dir={dir} className="min-h-screen flex items-center justify-center p-4">
         <div className="glass-card p-6 text-center max-w-md">
-          <p className="text-white/60 mb-4">الدرس غير موجود</p>
-          <button onClick={onBack} className="btn-primary w-full">رجوع</button>
+          <p className="text-white/60 mb-4">{p(UI.notFound)}</p>
+          <button onClick={onBack} className="btn-primary w-full">{p(UI.back)}</button>
         </div>
       </div>
     );
@@ -269,7 +319,7 @@ export function LessonScreen({
     const currentPage = pages[introPageIdx];
     const isLast = introPageIdx === pages.length - 1;
     const isFirst = introPageIdx === 0;
-    const lessonTitleText = getTitle(lesson.title);
+    const lessonTitleText = p(lesson.title);
 
     const handleFinishIntro = () => {
       playSound('levelup');
@@ -288,8 +338,12 @@ export function LessonScreen({
       onComplete(lessonId);
     };
 
+    const pageLabel = isAr
+      ? `صفحة ${formatNumber(introPageIdx + 1, numberStyle)} من ${formatNumber(pages.length, numberStyle)}`
+      : `Page ${formatNumber(introPageIdx + 1, numberStyle)} of ${formatNumber(pages.length, numberStyle)}`;
+
     return (
-      <div dir="rtl" className="min-h-screen pb-40">
+      <div dir={dir} className="min-h-screen pb-40">
         {/* Header */}
         <div className="sticky top-0 z-30 backdrop-blur-lg bg-slate-900/70 border-b border-white/10 px-3 sm:px-6 py-3">
           <div className="max-w-3xl mx-auto flex items-center gap-2">
@@ -303,7 +357,7 @@ export function LessonScreen({
               <h1 className="text-sm font-bold text-white truncate">
                 {formatText(lessonTitleText, numberStyle)}
               </h1>
-              <p className="text-[10px] text-white/50">مقدمة تعريفية · {lesson.levelId}</p>
+              <p className="text-[10px] text-white/50">{p(UI.introTag)} · {lesson.levelId}</p>
             </div>
             <button
               onClick={() => { playSound('click'); toggleStyle(); }}
@@ -327,29 +381,26 @@ export function LessonScreen({
             >
               <div className="flex items-center gap-2 mb-4">
                 <Info className="w-5 h-5 text-electric-300" />
-                <span className="text-xs text-white/50">
-                  صفحة {formatNumber(introPageIdx + 1, numberStyle)} من{' '}
-                  {formatNumber(pages.length, numberStyle)}
-                </span>
+                <span className="text-xs text-white/50">{pageLabel}</span>
               </div>
 
               <h2 className="text-2xl font-extrabold text-white mb-4 text-center">
-                {localize(currentPage.title)}
+                {p(currentPage.title)}
               </h2>
 
               {currentPage.imageSvg && currentPage.imageSvg !== 'soroban-interactive' && (
-  <div className="my-4 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
-    <img
-      src={`${import.meta.env.BASE_URL}images/${currentPage.imageSvg}.svg`}
-      alt={localize(currentPage.imageAlt)}
-      className="w-full h-auto"
-      loading="lazy"
-    />
-  </div>
-)}
+                <div className="my-4 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
+                  <img
+                    src={`${import.meta.env.BASE_URL}images/${currentPage.imageSvg}.svg`}
+                    alt={p(currentPage.imageAlt)}
+                    className="w-full h-auto"
+                    loading="lazy"
+                  />
+                </div>
+              )}
 
               <p className="text-base text-white/85 font-body leading-loose text-center flex-1 flex items-center justify-center">
-                {localize(currentPage.content)}
+                {p(currentPage.content)}
               </p>
 
               {/* Dots */}
@@ -373,14 +424,14 @@ export function LessonScreen({
                   disabled={isFirst}
                   className="flex-1 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm disabled:opacity-30 transition flex items-center justify-center gap-1"
                 >
-                  <ChevronRight className="w-4 h-4" /> السابق
+                  <PrevIcon className="w-4 h-4" /> {p(UI.prev)}
                 </button>
                 {!isLast ? (
                   <button
                     onClick={() => { playSound('click'); setIntroPageIdx((i) => i + 1); }}
                     className="flex-1 py-3 rounded-2xl bg-gradient-to-l from-purple-500 to-electric-500 text-white font-bold text-sm transition flex items-center justify-center gap-1"
                   >
-                    التالي <ChevronLeft className="w-4 h-4" />
+                    {p(UI.next)} <NextIcon className="w-4 h-4" />
                   </button>
                 ) : (
                   <button
@@ -388,7 +439,7 @@ export function LessonScreen({
                     className="flex-1 py-3 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-bold text-sm transition flex items-center justify-center gap-2"
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    أكملت المقدمة +{formatNumber(lesson.xpReward, numberStyle)} XP
+                    {p(UI.finishIntro)} +{formatNumber(lesson.xpReward, numberStyle)} XP
                   </button>
                 )}
               </div>
@@ -439,6 +490,14 @@ export function LessonScreen({
   const hasTry = allQuestions.length > 0;
   const currentTryExpected = currentTry ? getExerciseResult(currentTry) : 0;
   const currentTryAttempts = currentTry ? (attempts[currentTry.id] ?? 1) : 1;
+
+  // 🎙️ القصص الصوتية mp3 عربية فقط
+  const storyText = p(lesson.story);
+  const canPlayLessonStory =
+    isAr && lesson.storyAudioId !== null && lesson.storyAudioId !== undefined;
+  const moduleStoryAudioId = activeModule?.miniStory?.storyAudioId;
+  const canPlayModuleStory =
+    isAr && moduleStoryAudioId !== null && moduleStoryAudioId !== undefined;
 
   const switchModule = (mId: string) => {
     playSound('click');
@@ -534,7 +593,7 @@ export function LessonScreen({
     if (isCorrect) {
       playSound('success');
       sorobana.speakCorrect();
-      showCompanionMsg('أحسنت! 🌟');
+      showCompanionMsg(p(UI.cheer));
       setFeedback('correct');
     } else {
       playSound('error');
@@ -619,11 +678,33 @@ export function LessonScreen({
     onBack();
   };
 
-  const lessonTitleText = getTitle(lesson.title);
-  const nextLessonTitleText = nextLesson ? getTitle(nextLesson.title) : '';
+  const lessonTitleText = p(lesson.title);
+  const nextLessonTitleText = nextLesson ? p(nextLesson.title) : '';
+
+  // 🔤 نصوص ذات معاملات
+  const exampleLabel = isAr
+    ? `مثال ${formatNumber(exampleIdx + 1, numberStyle)} من ${formatNumber(examples.length, numberStyle)}`
+    : `Example ${formatNumber(exampleIdx + 1, numberStyle)} of ${formatNumber(examples.length, numberStyle)}`;
+  const questionLabel = isAr
+    ? `سؤال ${formatNumber(tryIdx + 1, numberStyle)} من ${formatNumber(totalTry, numberStyle)}`
+    : `Question ${formatNumber(tryIdx + 1, numberStyle)} of ${formatNumber(totalTry, numberStyle)}`;
+  const attemptLabel = isAr
+    ? `محاولة ${formatNumber(currentTryAttempts, numberStyle)} / ${formatNumber(MAX_TRIES, numberStyle)}`
+    : `Attempt ${formatNumber(currentTryAttempts, numberStyle)} / ${formatNumber(MAX_TRIES, numberStyle)}`;
+  const remainingLabel = isAr
+    ? `أكمل ${formatNumber(allQuestions.length - allSolvedCount, numberStyle)} سؤالاً إضافياً لفتح الدرس التالي`
+    : `Solve ${formatNumber(allQuestions.length - allSolvedCount, numberStyle)} more question(s) to unlock the next lesson`;
+  const finishButtonLabel =
+    hasTry && !allSolved
+      ? isAr
+        ? `أكمل الأسئلة (${formatNumber(allSolvedCount, numberStyle)}/${formatNumber(allQuestions.length, numberStyle)})`
+        : `Finish the questions (${formatNumber(allSolvedCount, numberStyle)}/${formatNumber(allQuestions.length, numberStyle)})`
+      : isAr
+        ? `أكملت الدرس +${formatNumber(lesson.xpReward, numberStyle)} XP`
+        : `Lesson complete +${formatNumber(lesson.xpReward, numberStyle)} XP`;
 
   return (
-    <div dir="rtl" className="min-h-screen pb-40">
+    <div dir={dir} className="min-h-screen pb-40">
       {/* ───── Header ───── */}
       <div className="sticky top-0 z-30 backdrop-blur-lg bg-slate-900/70 border-b border-white/10 px-3 sm:px-6 py-3">
         <div className="max-w-3xl mx-auto flex items-center gap-2">
@@ -638,7 +719,7 @@ export function LessonScreen({
               {formatText(lessonTitleText, numberStyle)}
             </h1>
             <p className="text-[10px] text-white/50 truncate">
-              {lesson.skillId ?? 'مقدمة'} · {lesson.levelId}
+              {lesson.skillId ?? p(UI.intro)} · {lesson.levelId}
             </p>
           </div>
           <button
@@ -668,7 +749,7 @@ export function LessonScreen({
                 >
                   <span>{m.emoji}</span>
                   <span>{m.id}</span>
-                  <span className="hidden sm:inline">{m.title}</span>
+                  <span className="hidden sm:inline">{moduleTitle(m)}</span>
                   {moduleDone && (
                     <span className="text-emerald-300">✓</span>
                   )}
@@ -688,7 +769,7 @@ export function LessonScreen({
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            <Eye className="w-4 h-4" /> شاهد
+            <Eye className="w-4 h-4" /> {p(UI.watch)}
           </button>
           {hasTry && (
             <button
@@ -699,7 +780,7 @@ export function LessonScreen({
                   : 'text-white/60 hover:text-white'
               }`}
             >
-              <Hand className="w-4 h-4" /> جرّب
+              <Hand className="w-4 h-4" /> {p(UI.tryTab)}
               {currentModuleSolved > 0 && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/30">
                   {currentModuleSolved}/{totalTry}
@@ -723,14 +804,14 @@ export function LessonScreen({
               className="space-y-4"
             >
               {/* 🎬 القصة */}
-              {lesson.story && (lesson.story.ar || lesson.storyAudioId) && (
+              {lesson.story && (storyText || canPlayLessonStory) && (
                 <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-400/30">
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-pink-300" />
-                      <h3 className="text-sm font-bold text-pink-300">📖 القصة</h3>
+                      <h3 className="text-sm font-bold text-pink-300">📖 {p(UI.story)}</h3>
                     </div>
-                    {lesson.storyAudioId !== null && lesson.storyAudioId !== undefined && (
+                    {canPlayLessonStory && (
                       <button
                         onClick={toggleStory}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
@@ -740,16 +821,16 @@ export function LessonScreen({
                         }`}
                       >
                         {isReadingStory ? (
-                          <><Square className="w-3.5 h-3.5" /> إيقاف</>
+                          <><Square className="w-3.5 h-3.5" /> {p(UI.stop)}</>
                         ) : (
-                          <><Volume2 className="w-3.5 h-3.5" /> موجز القصة</>
+                          <><Volume2 className="w-3.5 h-3.5" /> {p(UI.storyBrief)}</>
                         )}
                       </button>
                     )}
                   </div>
-                  {lesson.story.ar && (
+                  {storyText && (
                     <p className="text-sm text-white/85 font-body leading-relaxed">
-                      {formatText(lesson.story.ar, numberStyle)}
+                      {formatText(storyText, numberStyle)}
                     </p>
                   )}
                 </div>
@@ -762,11 +843,10 @@ export function LessonScreen({
                     <div className="flex items-center gap-2">
                       <span className="text-lg">{activeModule.miniStory.emoji}</span>
                       <h3 className="text-sm font-bold text-pink-300">
-                        📖 {activeModule.miniStory.title}
+                        📖 {p(activeModule.miniStory.title)}
                       </h3>
                     </div>
-                    {activeModule.miniStory.storyAudioId !== null
-                      && activeModule.miniStory.storyAudioId !== undefined && (
+                    {canPlayModuleStory && (
                       <button
                         onClick={toggleModuleStory}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
@@ -776,15 +856,15 @@ export function LessonScreen({
                         }`}
                       >
                         {isReadingModuleStory ? (
-                          <><Square className="w-3.5 h-3.5" /> إيقاف</>
+                          <><Square className="w-3.5 h-3.5" /> {p(UI.stop)}</>
                         ) : (
-                          <><Volume2 className="w-3.5 h-3.5" /> موجز القصة</>
+                          <><Volume2 className="w-3.5 h-3.5" /> {p(UI.storyBrief)}</>
                         )}
                       </button>
                     )}
                   </div>
                   <p className="text-sm text-white/85 font-body leading-relaxed">
-                    {formatText(activeModule.miniStory.story, numberStyle)}
+                    {pf(activeModule.miniStory.story)}
                   </p>
                 </div>
               )}
@@ -792,20 +872,20 @@ export function LessonScreen({
               {/* 📐 القاعدة + الشرط */}
               {hasMod && activeModule && (
                 <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-gold-400/10 to-gold-600/10 border border-gold-400/30">
-                  <h3 className="text-sm font-bold text-gold-300 mb-2">📐 القاعدة</h3>
+                  <h3 className="text-sm font-bold text-gold-300 mb-2">📐 {p(UI.rule)}</h3>
                   {/* ⚠️ rule.formula مخفية عن الطفل — لا تُعرض على الشاشة.
     السبب: القاعدة الطويلة معقدة على الأطفال (5-12 سنة).
     البيانات محفوظة في ملفات الدروس للاستخدام المستقبلي.
     ملاحظة: condition.formula تبقى معروضة (قصيرة وبسيطة).
     تاريخ الإخفاء: 2026-10-08 */}
                   <p className="text-sm text-white/85 font-body leading-relaxed mb-3">
-                    {activeModule.rule.description}
+                    {p(activeModule.rule.description)}
                   </p>
 
                   {activeModule.rule.cases && activeModule.rule.cases.length > 0 && (
                     <div className="mt-3 mb-3">
                       <p className="text-xs font-bold text-gold-300 mb-2">
-                        🎯 الحالات الخاصة
+                        🎯 {p(UI.specialCases)}
                       </p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                         {activeModule.rule.cases.map((c, i) => (
@@ -826,31 +906,31 @@ export function LessonScreen({
                     </div>
                   )}
 
-                  <h3 className="text-sm font-bold text-gold-300 mb-1">🔒 الشرط</h3>
+                  <h3 className="text-sm font-bold text-gold-300 mb-1">🔒 {p(UI.condition)}</h3>
                   <p
                     dir="ltr"
                     className="text-center text-sm font-display font-bold text-amber-300 mb-2 bg-white/5 p-2 rounded-xl"
                   >
-                    {activeModule.condition.formula}
+                    {p(activeModule.condition.formula)}
                   </p>
                   <p className="text-sm text-white/75 font-body leading-relaxed">
-                    {activeModule.condition.explanation}
+                    {p(activeModule.condition.explanation)}
                   </p>
 
                   {activeModule.friendsTable && (
                     <div className="mt-3">
                       <p className="text-xs font-bold text-gold-300 mb-2">
-                        🤝 {activeModule.friendsTable.title}
+                        🤝 {p(activeModule.friendsTable.title)}
                       </p>
                       <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
-                        {activeModule.friendsTable.pairs.map((p, i) => (
+                        {activeModule.friendsTable.pairs.map((pair, i) => (
                           <div key={i} className="flex items-center justify-center gap-1 p-1.5 rounded-lg bg-white/5 border border-white/10">
                             <span className="text-xs font-bold text-electric-300 font-display">
-                              {formatNumber(p.from, numberStyle)}
+                              {formatNumber(pair.from, numberStyle)}
                             </span>
                             <span className="text-[10px] text-white/40">↔</span>
                             <span className="text-xs font-bold text-emerald-300 font-display">
-                              {formatNumber(p.to, numberStyle)}
+                              {formatNumber(pair.to, numberStyle)}
                             </span>
                           </div>
                         ))}
@@ -870,7 +950,7 @@ export function LessonScreen({
                     <div className="flex items-center gap-2">
                       <HelpCircle className="w-5 h-5 text-electric-300" />
                       <h3 className="text-sm font-bold text-electric-300">
-                        🔍 دليل التمييز — كيف أقرر؟
+                        🔍 {p(UI.discTitle)}
                       </h3>
                     </div>
                     <ChevronLeft className={`w-4 h-4 text-white/60 transition ${showDiscrimination ? 'rotate-90' : '-rotate-90'}`} />
@@ -888,21 +968,21 @@ export function LessonScreen({
                           {activeModule.discrimination.steps.map((s, i) => (
                             <div key={i} className="p-2.5 rounded-xl bg-white/5 border border-white/10">
                               <p className="text-xs font-bold text-white/90 mb-1">
-                                {formatNumber(i + 1, numberStyle)}. {s.question}
+                                {formatNumber(i + 1, numberStyle)}. {p(s.question)}
                               </p>
                               <p className="text-xs text-emerald-300 font-body">
-                                ✓ {s.answer}
+                                ✓ {p(s.answer)}
                               </p>
                               {s.hint && (
                                 <p className="text-[10px] text-white/50 italic mt-1">
-                                  💡 {s.hint}
+                                  💡 {p(s.hint)}
                                 </p>
                               )}
                             </div>
                           ))}
                           <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/40">
                             <p className="text-xs text-center font-bold text-emerald-200">
-                              ✅ {activeModule.discrimination.decision}
+                              ✅ {p(activeModule.discrimination.decision)}
                             </p>
                           </div>
                         </div>
@@ -917,17 +997,17 @@ export function LessonScreen({
                 <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-gold-400/10 to-gold-600/10 border border-gold-400/30">
                   {lesson.concept && (
                     <>
-                      <h3 className="text-sm font-bold text-gold-300 mb-2">💡 المفهوم</h3>
+                      <h3 className="text-sm font-bold text-gold-300 mb-2">💡 {p(UI.concept)}</h3>
                       <p className="text-sm text-white/85 font-body leading-relaxed mb-3">
-                        {formatText(lesson.concept.ar, numberStyle)}
+                        {pf(lesson.concept)}
                       </p>
                     </>
                   )}
                   {lesson.rule && (
                     <>
-                      <h3 className="text-sm font-bold text-gold-300 mb-1 mt-3">📏 القاعدة</h3>
+                      <h3 className="text-sm font-bold text-gold-300 mb-1 mt-3">📏 {p(UI.rule)}</h3>
                       <p className="text-sm text-white/85 font-body leading-relaxed">
-                        {formatText(lesson.rule.ar, numberStyle)}
+                        {pf(lesson.rule)}
                       </p>
                     </>
                   )}
@@ -954,8 +1034,7 @@ export function LessonScreen({
                 <div className="glass-card p-4 sm:p-5">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-white/70">
-                      مثال {formatNumber(exampleIdx + 1, numberStyle)} من{' '}
-                      {formatNumber(examples.length, numberStyle)}
+                      {exampleLabel}
                     </h3>
                     <div className="flex gap-1">
                       {examples.map((_, i) => (
@@ -970,10 +1049,11 @@ export function LessonScreen({
                   </div>
 
                   <p className="text-center text-xl font-extrabold font-display text-white mb-4">
-                    {formatText(getExampleText(currentExample), numberStyle)}
+                    {pf(getExampleText(currentExample))}
                   </p>
 
-                  <div className="flex justify-center mb-4">
+                  {/* المعداد يبقى RTL دائمًا (ترتيب الأعمدة: آحاد على اليمين) */}
+                  <div dir="rtl" className="flex justify-center mb-4">
                     <Soroban2D5
                       key={`ex-${currentExample.id}`}
                       columns={getColumnsForValue(getExampleResult(currentExample))}
@@ -989,7 +1069,7 @@ export function LessonScreen({
                       className="w-full btn-primary !py-2.5 !text-sm"
                     >
                       <Lightbulb className="w-4 h-4" />
-                      اشرح لي الخطوات
+                      {p(UI.explainSteps)}
                     </button>
                   )}
 
@@ -997,23 +1077,23 @@ export function LessonScreen({
                     <div className="space-y-2">
                       {currentExample.discrimination && (
                         <p className="text-xs text-electric-300 font-body bg-electric-500/10 p-2 rounded-lg">
-                          🔍 {formatText(currentExample.discrimination, numberStyle)}
+                          🔍 {pf(currentExample.discrimination)}
                         </p>
                       )}
                       {currentExample.rule && (
                         <p className="text-xs text-gold-300 font-body bg-gold-500/10 p-2 rounded-lg text-center font-display">
-                          📐 {formatText(currentExample.rule, numberStyle)}
+                          📐 {pf(currentExample.rule)}
                         </p>
                       )}
                       {currentExample.fingerMovement && (
                         <p className="text-xs text-purple-300 font-body bg-purple-500/10 p-2 rounded-lg">
-                          👆 {formatText(currentExample.fingerMovement, numberStyle)}
+                          👆 {pf(currentExample.fingerMovement)}
                         </p>
                       )}
                       {currentExample.steps.map((step, i) => (
                         <motion.div
                           key={i}
-                          initial={{ opacity: 0, x: -20 }}
+                          initial={{ opacity: 0, x: isAr ? -20 : 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.08 }}
                           className="p-3 rounded-xl bg-electric-500/10 border border-electric-400/30"
@@ -1023,19 +1103,19 @@ export function LessonScreen({
                               {formatNumber(i + 1, numberStyle)}
                             </span>
                             <p className="text-sm text-white/85 font-body leading-relaxed flex-1">
-                              {formatText(getStepText(step), numberStyle)}
+                              {pf(getStepText(step))}
                             </p>
                           </div>
                         </motion.div>
                       ))}
                       {getExampleExplanation(currentExample) && (
                         <p className="text-xs text-center text-emerald-300 font-bold pt-1">
-                          ✨ {formatText(getExampleExplanation(currentExample), numberStyle)}
+                          ✨ {pf(getExampleExplanation(currentExample))}
                         </p>
                       )}
                       {currentExample.beadVisual && (
                         <p className="text-xs text-center text-white/60 italic">
-                          👁️ {formatText(currentExample.beadVisual, numberStyle)}
+                          👁️ {pf(currentExample.beadVisual)}
                         </p>
                       )}
                     </div>
@@ -1047,14 +1127,14 @@ export function LessonScreen({
                       disabled={exampleIdx === 0}
                       className="flex-1 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm disabled:opacity-30 transition flex items-center justify-center gap-1"
                     >
-                      <ChevronRight className="w-4 h-4" /> السابق
+                      <PrevIcon className="w-4 h-4" /> {p(UI.prev)}
                     </button>
                     <button
                       onClick={nextExample}
                       disabled={exampleIdx === examples.length - 1}
                       className="flex-1 py-2.5 rounded-2xl bg-gradient-to-l from-purple-500 to-electric-500 text-white font-bold text-sm disabled:opacity-30 transition flex items-center justify-center gap-1"
                     >
-                      التالي <ChevronLeft className="w-4 h-4" />
+                      {p(UI.next)} <NextIcon className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -1062,7 +1142,7 @@ export function LessonScreen({
 
               {examples.length === 0 && !hasMod && (
                 <div className="glass-card p-5 text-center text-white/60 text-sm">
-                  هذا الدرس نظري — لا يحتوي على أمثلة تفاعلية.
+                  {p(UI.theoretical)}
                 </div>
               )}
             </motion.div>
@@ -1079,23 +1159,21 @@ export function LessonScreen({
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-white/70">
-                  سؤال {formatNumber(tryIdx + 1, numberStyle)} من{' '}
-                  {formatNumber(totalTry, numberStyle)}
+                  {questionLabel}
                 </h3>
                 <span className="text-xs text-white/50">
-                  محاولة {formatNumber(currentTryAttempts, numberStyle)} /{' '}
-                  {formatNumber(MAX_TRIES, numberStyle)}
+                  {attemptLabel}
                 </span>
               </div>
 
               <div className="glass-card p-4 sm:p-5 text-center">
                 <p className="text-lg font-extrabold font-display text-white mb-4">
-                  {formatText(getExerciseText(currentTry), numberStyle)}
+                  {pf(getExerciseText(currentTry))}
                 </p>
 
                 {currentTry.type === 'read' && (
                   <>
-                    <div className="flex justify-center mb-4">
+                    <div dir="rtl" className="flex justify-center mb-4">
                       <Soroban2D5
                         key={`tr-${currentTry.id}`}
                         columns={getColumnsForValue(currentTryExpected)}
@@ -1123,7 +1201,7 @@ export function LessonScreen({
 
                 {(currentTry.type === 'build' || (!currentTry.type && currentTryExpected > 0)) && (
                   <>
-                    <div className="flex justify-center mb-3">
+                    <div dir="rtl" className="flex justify-center mb-3">
                       <Soroban2D5
                         key={`tr-${currentTry.id}`}
                         columns={getColumnsForValue(currentTryExpected)}
@@ -1137,13 +1215,13 @@ export function LessonScreen({
                     {feedback !== 'reveal' && feedback !== 'correct' && (
                       <div className="flex gap-2 justify-center">
                         <button onClick={handleCheckBuild} className="btn-primary !py-2.5 !px-6 !text-sm">
-                          <CheckCircle2 className="w-4 h-4" /> تحقق
+                          <CheckCircle2 className="w-4 h-4" /> {p(UI.check)}
                         </button>
                         <button
                           onClick={() => { playSound('click'); setAbacusValue(0); }}
                           className="btn-ghost !py-2.5 !px-4 !text-sm"
                         >
-                          <RotateCcw className="w-4 h-4" /> مسح
+                          <RotateCcw className="w-4 h-4" /> {p(UI.clear)}
                         </button>
                       </div>
                     )}
@@ -1153,20 +1231,20 @@ export function LessonScreen({
 
               {feedback === 'correct' && (
                 <div className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 text-center">
-                  <p className="text-sm font-bold text-emerald-200">✅ أحسنت! إجابة صحيحة</p>
+                  <p className="text-sm font-bold text-emerald-200">{p(UI.correctMsg)}</p>
                 </div>
               )}
 
               {feedback === 'wrong' && (
                 <div className="p-3 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-center">
-                  <p className="text-sm font-bold text-amber-200">❌ حاول مرة أخرى</p>
+                  <p className="text-sm font-bold text-amber-200">{p(UI.wrongMsg)}</p>
                 </div>
               )}
 
               {feedback === 'reveal' && (
                 <div className="p-4 rounded-2xl bg-gold-500/15 border border-gold-400/40">
                   <p className="text-sm font-bold text-gold-300 text-center mb-2">
-                    💡 الإجابة الصحيحة: {formatNumber(currentTryExpected, numberStyle)}
+                    {p(UI.correctAnswer)} {formatNumber(currentTryExpected, numberStyle)}
                   </p>
                   {currentTry.steps && currentTry.steps.length > 0 && (
                     <div className="space-y-1.5 mt-3">
@@ -1175,18 +1253,18 @@ export function LessonScreen({
                           <span className="text-gold-300 font-bold">
                             {formatNumber(i + 1, numberStyle)}.
                           </span>{' '}
-                          {formatText(getStepText(s), numberStyle)}
+                          {pf(getStepText(s))}
                         </p>
                       ))}
                     </div>
                   )}
                   {currentTry.explanation && (
                     <p className="text-xs text-white/70 text-center mt-2">
-                      {formatText(currentTry.explanation, numberStyle)}
+                      {pf(currentTry.explanation)}
                     </p>
                   )}
                   <button onClick={handleRevealNext} className="w-full mt-3 btn-primary !py-2.5 !text-sm">
-                    فهمت، التالي
+                    {p(UI.gotIt)}
                   </button>
                 </div>
               )}
@@ -1214,7 +1292,7 @@ export function LessonScreen({
         <div className="mt-6">
           {!allSolved && hasTry && (
             <p className="text-center text-xs text-white/50 mb-2">
-              أكمل {formatNumber(allQuestions.length - allSolvedCount, numberStyle)} سؤالاً إضافياً لفتح الدرس التالي
+              {remainingLabel}
             </p>
           )}
 
@@ -1228,9 +1306,7 @@ export function LessonScreen({
             }`}
           >
             <CheckCircle2 className="w-5 h-5" />
-            {hasTry && !allSolved
-              ? `أكمل الأسئلة (${formatNumber(allSolvedCount, numberStyle)}/${formatNumber(allQuestions.length, numberStyle)})`
-              : `أكملت الدرس +${formatNumber(lesson.xpReward, numberStyle)} XP`}
+            {finishButtonLabel}
           </button>
 
           {nextLesson && allSolved && (
@@ -1238,8 +1314,8 @@ export function LessonScreen({
               onClick={handleNextLesson}
               className="w-full mt-2 py-3 rounded-2xl bg-gradient-to-l from-purple-500 to-electric-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg"
             >
-              الدرس التالي: {formatText(nextLessonTitleText, numberStyle)}
-              <ChevronLeft className="w-4 h-4" />
+              {p(UI.nextLesson)} {formatText(nextLessonTitleText, numberStyle)}
+              <NextIcon className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -1264,7 +1340,7 @@ export function LessonScreen({
                 color: '#065F46',
               }}
             >
-              <p className="text-xs font-bold text-right" dir="rtl">{companionMsg}</p>
+              <p className={`text-xs font-bold ${isAr ? 'text-right' : 'text-left'}`} dir={dir}>{companionMsg}</p>
               <div
                 className="absolute"
                 style={{
