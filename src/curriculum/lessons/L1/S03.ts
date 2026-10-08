@@ -181,11 +181,12 @@ export const S03_LESSON: LessonNode = {
   discrimination: {
     steps: [
       {
-        question: "هل الخرزات السفلية غير كافية؟ | Are lower beads insufficient?",
-        type: "comparison",
-        answer: "نعم → الخرزات السفلية ممتلئة! | Yes → Lower beads are full!",
-        hint: "لو كانت كافية لاستخدمنا الجمع البسيط | If they were enough, we'd use direct addition",
-      },
+  question: "هل الخرزات السفلية غير كافية؟ | Are lower beads insufficient?",
+  type: "comparison",
+  actual: "الخرزات السفلية ممتلئة | Lower beads are full",
+  answer: "نعم → الخرزات السفلية ممتلئة! | Yes → Lower beads are full!",
+  hint: "لو كانت كافية لاستخدمنا الجمع البسيط | If they were enough, we'd use direct addition",
+},
       {
         question: "هل الجدة 5 (الخرزة العلوية) غير مفعّلة؟ | Is Grandma 5 (upper bead) available?",
         type: "yes-no",
@@ -319,10 +320,11 @@ export const S03_LESSON: LessonNode = {
   discrimination: {
     steps: [
       {
-        question: "هل مجموع الخانة يتجاوز 9؟ | Does the column sum exceed 9?",
-        type: "comparison",
-        answer: "نعم (عمود الآحاد امتليء!) | Yes (Units rod is overflowing!)",
-      },
+  question: "هل مجموع الخانة يتجاوز 9؟ | Does the column sum exceed 9?",
+  type: "comparison",
+  actual: "المجموع أكبر من 9 | Sum exceeds 9",
+  answer: "نعم (عمود الآحاد امتليء!) | Yes (Units rod is overflowing!)",
+},
       {
         question: "هل يمكن طرح صديق 10 مباشرة من الآحاد؟ | Can we subtract 10's friend directly from units?",
         type: "yes-no",
