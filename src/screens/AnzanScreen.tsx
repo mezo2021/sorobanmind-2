@@ -6,9 +6,11 @@
 // ✅ الشارات تُمنح فقط عند نجاح الجلسة (pendingBadgesRef)
 // ✅ زر "إنهاء" يخرج بلا تقييم
 // 🩺 جلسة علاجية إجبارية داخلية (RemediationScreen)
-// 📅 آخر تحديث: SRB Migration — Phase 3 + Remediation
+// 📅 آخر تحديث: SRB Migration — Phase 3 + Remediation + Fix 2 + Fix 3
 // [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
 // [FIX N68] — قفل الوضع بعد النجاح بـ 70%+ + رسالة ذكية لكلا الوضعين
+// [FIX 2] — getAnzanBadgeKey: S11/S12 → null (حذف master_mixed)
+// [FIX 3] — تمرير levelNum الحقيقي (0-7) إلى AdaptiveFeedback بدل 0
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -99,7 +101,7 @@ function displayTextSize(len: number, isBuildOrRead: boolean): string {
 }
 
 // 🆕 خريطة section → مفتاح شارة الأنزان البصري
-// ⬇️⬇️⬇️ تم التعديل هنا بناءً على طلبك ⬇️⬇️⬇️
+// [FIX 2] — S11/S12 → null (حذف master_mixed — بقايا المنهاج القديم)
 function getAnzanBadgeKey(section: SRBSection): keyof AnzanBadges | null {
   switch (section) {
     case 'S03':
@@ -116,12 +118,11 @@ function getAnzanBadgeKey(section: SRBSection): keyof AnzanBadges | null {
       return 'master_chains';         // L4: سلاسل (جمع وطرح)
     case 'S11':
     case 'S12':
-      return 'master_mixed';          // L5: مختلط (كما كان)
+      return null;                    // [FIX 2] L5 القديم — لا شارة
     default:
       return null;
   }
 }
-// ⬆️⬆️⬆️ نهاية التعديل ⬆️⬆️⬆️
 
 function getColumnsForQuestion(q: SRBQuestion): number {
   const candidates: number[] = [
@@ -266,6 +267,13 @@ export function AnzanScreen({
     [level],
   );
 
+  // [FIX 3] — رقم المستوى (0-7) لتمريره إلى AdaptiveFeedback
+  // (بنفس منطق FIX B5 في PracticeScreen)
+  const levelNum = useMemo(() => {
+    const n = parseInt(level.replace('L', ''), 10);
+    return !isNaN(n) && n >= 0 && n <= 7 ? n : 0;
+  }, [level]);
+
   const currentQ = questions[currentIdx];
   const maxMs = currentQ ? getMaxMs(currentQ) : 30000;
   const warningAtMs = maxMs * WARNING_RATIO;
@@ -392,17 +400,17 @@ export function AnzanScreen({
     const targetValue = Math.round(currentQ.result * factor);
     const isCorrect = abacusValue === targetValue;
 
-// ✅ Attempt Record
-const attempt = {
-  skillId: `${currentQ.level}-${currentQ.section}-${currentQ.module}`,
-  correct: isCorrect,
-  timeMs: elapsedMs,
-  timestamp: Date.now(),
-};
-useProgressStore.getState().recordAttempt(attempt);
+    // ✅ Attempt Record
+    const attempt = {
+      skillId: `${currentQ.level}-${currentQ.section}-${currentQ.module}`,
+      correct: isCorrect,
+      timeMs: elapsedMs,
+      timestamp: Date.now(),
+    };
+    useProgressStore.getState().recordAttempt(attempt);
 
-const timeMs = elapsedMs;
-trackPerformance(isCorrect, timeMs);
+    const timeMs = elapsedMs;
+    trackPerformance(isCorrect, timeMs);
     if (isCorrect) {
       setScore((s) => s + 1);
       setFeedback('correct');
@@ -914,8 +922,7 @@ trackPerformance(isCorrect, timeMs);
       master_addition: '🧠 خبير جمع وطرح',
       master_multiplication: '✖️ خبير ضرب',
       master_division: '➗ خبير قسمة',
-      master_mixed: '🔀 خبير مختلط',
-      master_chains: '🔗 خبير سلاسل', // ⬅️ تمت الإضافة
+      master_chains: '🔗 خبير سلاسل',
     };
 
     return (
@@ -991,7 +998,7 @@ trackPerformance(isCorrect, timeMs);
         </motion.div>
 
         {performances.length > 0 && (
-          <AdaptiveFeedback performances={performances} sectionLabel="أنزان بصري" levelNum={0} />
+          <AdaptiveFeedback performances={performances} sectionLabel="أنزان بصري" levelNum={levelNum} />
         )}
 
         {pendingRemediation && (
