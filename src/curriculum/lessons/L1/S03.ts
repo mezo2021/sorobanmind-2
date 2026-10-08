@@ -145,125 +145,128 @@ export const S03_LESSON: LessonNode = {
     // m2 — الجمع بأصدقاء 5
     // ═══════════════════════════════════════════════════════════
     {
-      id: "m2",
-      ruleCategory: "small_friends",
-      title: "الجمع بأصدقاء 5",
-      titleEn: "Complements of 5",
-      emoji: "🤝",
-      miniStory: {
-        title: "غرفة الجدة 5 | Grandma 5's Room",
-        emoji: "👵",
-        story: "وصل الأبطال إلى غرفة الجدة 5. أرادوا إضافة طفل واحد، لكن الساحة ممتلئة! ظهرت الجدة 5 وقالت: لا تقلقوا، أنا أستطيع المساعدة، لكن لي شرط: إذا دخلت أنا (+5)، يجب أن يخرج صديق الرقم الذي تريدونه. | The heroes reached Grandma 5's room. They wanted to add one child, but the yard was full! Grandma 5 appeared and said: Don't worry, I can help, but on one condition: if I come in (+5), your number's friend must leave.",
-        storyAudioText: "وصل الأبطال إلى غرفة الجدة خمسة. أرادوا إضافة طفل واحد، لكن الساحة ممتلئة. ظهرت الجدة خمسة وقالت: لا تقلقوا، أنا أستطيع المساعدة، لكن لي شرط: إذا دخلت أنا، يجب أن يخرج صديق الرقم الذي تريدونه.",
-        storyAudioId: 4,
+  id: "m2",
+  ruleCategory: "small_friends",
+  title: "الجمع بأصدقاء 5",
+  titleEn: "Complements of 5",
+  emoji: "🤝",
+  miniStory: {
+    title: "غرفة الجدة 5 | Grandma 5's Room",
+    emoji: "👵",
+    story: "وصل الأبطال إلى غرفة الجدة 5. أرادوا إضافة طفل واحد، لكن الساحة ممتلئة! ظهرت الجدة 5 وقالت: لا تقلقوا، أنا أستطيع المساعدة، لكن لي شرط: إذا دخلت أنا (+5)، يجب أن يخرج صديق الرقم الذي تريدونه. | The heroes reached Grandma 5's room. They wanted to add one child, but the yard was full! Grandma 5 appeared and said: Don't worry, I can help, but on one condition: if I come in (+5), your number's friend must leave.",
+    storyAudioText: "وصل الأبطال إلى غرفة الجدة خمسة. أرادوا إضافة طفل واحد، لكن الساحة ممتلئة. ظهرت الجدة خمسة وقالت: لا تقلقوا، أنا أستطيع المساعدة، لكن لي شرط: إذا دخلت أنا، يجب أن يخرج صديق الرقم الذي تريدونه.",
+    storyAudioId: 4,
+  },
+  rule: {
+    description: "سرّ الجدة 5 👵: عندما تكتظ الساحة السفلية، ننزل الجدة 5 بالسبابة نحو العارضة، ونطرد صديق الرقم للأسفل بعيداً عن العارضة! | Grandma 5's Secret 👵: When the lower yard is full, bring down Grandma 5 with your index finger and push the number's friend down away from the bar!",
+    cases: [
+      { from: 1, formula: "+1 = +5 − 4" },
+      { from: 2, formula: "+2 = +5 − 3" },
+      { from: 3, formula: "+3 = +5 − 2" },
+      { from: 4, formula: "+4 = +5 − 1" },
+    ],
+  },
+  condition: {
+    explanation: "الخرزات السفلية غير كافية، لكن الجدة 5 جاهزة للتدخل والإنقاذ! | Lower beads are not enough, but Grandma 5 is ready to step in!",
+  },
+  friendsTable: {
+    title: "أصدقاء 5 الصغار | Small Friends of 5",
+    pairs: [
+      { from: 1, to: 4 },
+      { from: 2, to: 3 },
+      { from: 3, to: 2 },
+      { from: 4, to: 1 },
+    ],
+  },
+  discrimination: {
+    steps: [
+      {
+        question: "هل الخرزات السفلية غير كافية؟ | Are lower beads insufficient?",
+        type: "comparison",
+        answer: "نعم → الخرزات السفلية ممتلئة! | Yes → Lower beads are full!",
+        hint: "لو كانت كافية لاستخدمنا الجمع البسيط | If they were enough, we'd use direct addition",
       },
-      rule: {
-        description: "سرّ الجدة 5 👵: عندما تكتظ الساحة السفلية، ننزل الجدة 5 بالسبابة نحو العارضة، ونطرد صديق الرقم للأسفل بعيداً عن العارضة! | Grandma 5's Secret 👵: When the lower yard is full, bring down Grandma 5 with your index finger and push the number's friend down away from the bar!",
-        cases: [
-          { from: 1, formula: "+1 = +5 − 4" },
-          { from: 2, formula: "+2 = +5 − 3" },
-          { from: 3, formula: "+3 = +5 − 2" },
-          { from: 4, formula: "+4 = +5 − 1" },
-        ],
+      {
+        question: "هل الجدة 5 (الخرزة العلوية) غير مفعّلة؟ | Is Grandma 5 (upper bead) available?",
+        type: "yes-no",
+        answer: "نعم → نطلب مساعدة الجدة 5! | Yes → Ask Grandma 5 for help!",
+        hint: "وجود الجدة 5 يسمح بتدفق أصدقائها | Grandma 5 allows using her small friends",
       },
-      condition: {
-        formula: "c ≤ 4 · n ≤ 4 · c + n ≥ 5",
-        explanation: "الخرزات السفلية غير كافية، لكن الجدة 5 جاهزة للتدخل والإنقاذ! | Lower beads are not enough, but Grandma 5 is ready to step in!",
-      },
-      friendsTable: {
-        title: "أصدقاء 5 الصغار | Small Friends of 5",
-        pairs: [
-          { from: 1, to: 4 },
-          { from: 2, to: 3 },
-          { from: 3, to: 2 },
-          { from: 4, to: 1 },
-        ],
-      },
-      discrimination: {
+    ],
+    decision: "استخدم أصدقاء 5 — أنزل الجدة 5 بالسبابة واطرد الصديق للأسفل! | Use Friends of 5 — Bring down Grandma 5 with index finger and push friend down!",
+  },
+  watchPhase: {
+    examples: [
+      {
+        id: "S03-m2-E1",
+        question: "4 + 1",
+        discrimination: "4 مفعّلة، ولا خرزات سفليّة متبقية. 5 فارغة → نستخدم أصدقاء 5 | 4 active, 0 lower beads remaining. 5 is free → Use friends of 5",
+        rule: "صديق 1 هو 4 | 1's friend is 4",
+        fingerMovement: "👆 السبابة تُنزل الخرزة 5 نحو العارضة ⬇️ وتطرد الـ 4 السفليات بعيداً عن العارضة ⬇️ بحركة سريعة | Index finger brings down 5 ⬇️ and pushes 4 lower beads down ⬇️ in one smooth motion",
         steps: [
-          {
-            question: "هل الخرزات السفلية غير كافية؟ | Are lower beads insufficient?",
-            type: "comparison",
-            actual: "l < n",
-            answer: "نعم → الخرزات السفلية ممتلئة! | Yes → Lower beads are full!",
-            hint: "لو كانت كافية لاستخدمنا الجمع البسيط | If they were enough, we'd use direct addition",
-          },
-          {
-            question: "هل الجدة 5 (الخرزة العلوية) غير مفعّلة؟ | Is Grandma 5 (upper bead) available?",
-            type: "yes-no",
-            answer: "نعم → نطلب مساعدة الجدة 5! | Yes → Ask Grandma 5 for help!",
-            hint: "وجود الجدة 5 يسمح بتدفق أصدقائها | Grandma 5 allows using her small friends",
-          },
+          "تمثيل 4: ارفع 4 خرزات سفلية بالإبهام ⬆️ | Represent 4: Lift 4 lower beads with thumb ⬆️",
+          "صديق 1 هو 4 | 1's friend is 4",
+          "إضافة 1: السبابة تُنزل 5 ⬇️ وتطرد 4 خرزات سفلية للأسفل ⬇️ | Add 1: Index brings down 5 ⬇️ & pushes 4 lower beads down ⬇️",
+          "الناتج الظاهر: الخرزة العلوية (5) فقط تلامس العارضة = 5 | Result: Upper bead (5) only touching the bar = 5",
         ],
-        decision: "استخدم أصدقاء 5 — أنزل الجدة 5 بالسبابة واطرد الصديق للأسفل! | Use Friends of 5 — Bring down Grandma 5 with index finger and push friend down!",
+        result: 5,
+        beadVisual: "الخرزة العلوية 5 فقط تلامس العارضة | Upper bead 5 only touching the bar",
       },
-      watchPhase: {
-        examples: [
-          {
-            id: "S03-m2-E1",
-            question: "4 + 1",
-            discrimination: "4 مفعّلة، ولا خرزات سفليّة متبقية. 5 فارغة → نستخدم أصدقاء 5 (صديق 1 هو 4) | 4 active, 0 lower beads remaining. 5 is free → Use friends of 5 (1's friend is 4)",
-            rule: "+1 = +5 − 4 (صديق 1 الصغير هو 4 | Small friend of 1 is 4)",
-            fingerMovement: "👆 السبابة تُنزل الخرزة 5 نحو العارضة ⬇️ وتطرد الـ 4 السفليات بعيداً عن العارضة ⬇️ بحركة سريعة | Index finger brings down 5 ⬇️ and pushes 4 lower beads down ⬇️ in one smooth motion",
-            steps: [
-              "تمثيل 4: ارفع 4 خرزات سفلية بالإبهام ⬆️ | Represent 4: Lift 4 lower beads with thumb ⬆️",
-              "إضافة 1: السبابة تُنزل 5 ⬇️ وتطرد 4 خرزات سفلية للأسفل ⬇️ | Add 1: Index brings down 5 ⬇️ & pushes 4 lower beads down ⬇️",
-              "الناتج الظاهر: الخرزة العلوية (5) فقط تلامس العارضة = 5 | Result: Upper bead (5) only touching the bar = 5",
-            ],
-            result: 5,
-            beadVisual: "الخرزة العلوية 5 فقط تلامس العارضة | Upper bead 5 only touching the bar",
-          },
+    ],
+  },
+  tryPhase: {
+    exercises: [
+      {
+        id: "S03-m2-T1",
+        question: "4 + 3",
+        discrimination: "4 مفعّلة، السفلية ممتلئة → صديق 3 هو 2 | 4 active, lower full → 3's friend is 2",
+        steps: [
+          "مثّل 4 بالإبهام ⬆️ | Represent 4 with thumb ⬆️",
+          "صديق 3 هو 2 | 3's friend is 2",
+          "أنزل 5 بالسبابة ⬇️ واخصم 2 من الخرزات السفلية للأسفل ⬇️ | Bring down 5 with index ⬇️ & subtract 2 lower beads down ⬇️",
+          "الناتج: 7 | Result: 7",
         ],
+        result: 7,
       },
-      tryPhase: {
-        exercises: [
-          {
-            id: "S03-m2-T1",
-            question: "4 + 3",
-            discrimination: "4 مفعّلة، السفلية ممتلئة → صديق 3 هو 2 | 4 active, lower full → 3's friend is 2",
-            steps: [
-              "مثّل 4 بالإبهام ⬆️ | Represent 4 with thumb ⬆️",
-              "أنزل 5 بالسبابة ⬇️ واخصم 2 من الخرزات السفلية للأسفل ⬇️ | Bring down 5 with index ⬇️ & subtract 2 lower beads down ⬇️",
-              "الناتج: 7 | Result: 7",
-            ],
-            result: 7,
-          },
-          {
-            id: "S03-m2-T2",
-            question: "3 + 3",
-            discrimination: "3 مفعّلة، المتبقي خرزة 1 سفلياً → صديق 3 هو 2 | 3 active, 1 lower bead left → 3's friend is 2",
-            steps: [
-              "مثّل 3 بالإبهام ⬆️ | Represent 3 with thumb ⬆️",
-              "أنزل 5 ⬇️ واطرد 2 بالسبابة ⬇️ بحركة واحدة | Bring down 5 ⬇️ & push 2 down with index ⬇️ in one motion",
-              "الناتج: 6 | Result: 6",
-            ],
-            result: 6,
-          },
-          {
-            id: "S03-m2-T3",
-            question: "2 + 4",
-            discrimination: "2 مفعّلة، المتبقي 2 لا يكفي لـ 4 → صديق 4 هو 1 | 2 active, 2 left (insufficient for 4) → 4's friend is 1",
-            steps: [
-              "مثّل 2 بالإبهام ⬆️ | Represent 2 with thumb ⬆️",
-              "أنزل 5 ⬇️ واطرد 1 بالسبابة ⬇️ | Bring down 5 ⬇️ & push 1 down with index ⬇️",
-              "الناتج: 6 | Result: 6",
-            ],
-            result: 6,
-          },
-          {
-            id: "S03-m2-T4",
-            question: "4 + 2",
-            discrimination: "السفليات ممتلئة تماماً → صديق 2 هو 3 | Lower beads completely full → 2's friend is 3",
-            steps: [
-              "مثّل 4 بالإبهام ⬆️ | Represent 4 with thumb ⬆️",
-              "أنزل 5 ⬇️ واطرد 3 بالسبابة ⬇️ | Bring down 5 ⬇️ & push 3 down with index ⬇️",
-              "الناتج: 6 | Result: 6",
-            ],
-            result: 6,
-          },
+      {
+        id: "S03-m2-T2",
+        question: "3 + 3",
+        discrimination: "3 مفعّلة، المتبقي خرزة 1 سفلياً → صديق 3 هو 2 | 3 active, 1 lower bead left → 3's friend is 2",
+        steps: [
+          "مثّل 3 بالإبهام ⬆️ | Represent 3 with thumb ⬆️",
+          "صديق 3 هو 2 | 3's friend is 2",
+          "أنزل 5 ⬇️ واطرد 2 بالسبابة ⬇️ بحركة واحدة | Bring down 5 ⬇️ & push 2 down with index ⬇️ in one motion",
+          "الناتج: 6 | Result: 6",
         ],
+        result: 6,
       },
-    },
+      {
+        id: "S03-m2-T3",
+        question: "2 + 4",
+        discrimination: "2 مفعّلة، المتبقي 2 لا يكفي لـ 4 → صديق 4 هو 1 | 2 active, 2 left (insufficient for 4) → 4's friend is 1",
+        steps: [
+          "مثّل 2 بالإبهام ⬆️ | Represent 2 with thumb ⬆️",
+          "صديق 4 هو 1 | 4's friend is 1",
+          "أنزل 5 ⬇️ واطرد 1 بالسبابة ⬇️ | Bring down 5 ⬇️ & push 1 down with index ⬇️",
+          "الناتج: 6 | Result: 6",
+        ],
+        result: 6,
+      },
+      {
+        id: "S03-m2-T4",
+        question: "4 + 2",
+        discrimination: "السفليات ممتلئة تماماً → صديق 2 هو 3 | Lower beads completely full → 2's friend is 3",
+        steps: [
+          "مثّل 4 بالإبهام ⬆️ | Represent 4 with thumb ⬆️",
+          "صديق 2 هو 3 | 2's friend is 3",
+          "أنزل 5 ⬇️ واطرد 3 بالسبابة ⬇️ | Bring down 5 ⬇️ & push 3 down with index ⬇️",
+          "الناتج: 6 | Result: 6",
+        ],
+        result: 6,
+      },
+    ],
+  },
+},
 
     // ⏸️ الجزء 2 يبدأ من m3 — قل "تابع"
     // ═══════════════════════════════════════════════════════════
