@@ -3,6 +3,10 @@
 // ✅ Props محفوظة للتوافق (deprecated — تُقرأ من store)
 // ✅ أزرار إدارية: حفظ نسخة + استعادة + فتح الكل + تصفير
 // [FIX 7] — زر المعاينة (بدل فتح الكل)
+// [FIX 10] — المستويات المكتملة مشتقة من 3 مراحل (تمرّن + بصري + سمعي)
+// [FIX 11] — master_mixed → master_chains (بصري) · إضافة master_chains_audio (سمعي)
+// [FIX 12] — بطاقة "أسطورة السوروبان" عند 8/8
+// [FIX 13] — LevelNodeButton: "متاح" / "مكتمل" بدل "100 XP"
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMemo, useState, useRef } from 'react';
@@ -44,9 +48,6 @@ interface ParsedSkillId {
   module: SRBModule;
 }
 
-/**
- * يحلّل skillId بصيغة "L2-S07-m1"
- */
 function parseSkillId(skillId: string): ParsedSkillId | null {
   const parts = skillId.split('-');
   if (parts.length !== 3) return null;
@@ -63,9 +64,6 @@ function parseSkillId(skillId: string): ParsedSkillId | null {
   };
 }
 
-/**
- * يُعيد الاسم العربي للمهارة.
- */
 function getSkillLabel(skillId: string): string {
   const parsed = parseSkillId(skillId);
   if (!parsed) return skillId;
@@ -98,13 +96,9 @@ const LEVEL_ICONS: LucideIcon[] = [
 interface GuardianDashboardProps {
   onBack: () => void;
   playSound: (type: 'click' | 'whoosh') => void;
-  /** @deprecated — يُقرأ من progressStore.childName */
   childName?: string;
-  /** @deprecated — يُقرأ من progressStore.totalXP */
   childXP?: number;
-  /** @deprecated — يُقرأ من progressStore.currentStreak */
   childStreak?: number;
-  /** @deprecated — يُحسب من totalXP */
   childLevel?: number;
   onSwitchToHero?: () => void;
   onShowWelcome?: () => void;
@@ -113,15 +107,15 @@ interface GuardianDashboardProps {
 type LevelStatus = 'completed' | 'available' | 'locked';
 
 interface LevelNodeData {
-  id: number;          // order (0-7)
-  nameAr: string;      // name
-  nameEn: string;      // nameEn
+  id: number;
+  nameAr: string;
+  nameEn: string;
   status: LevelStatus;
-  xpRequired: number;  // (order + 1) * 100
+  xpRequired: number;
 }
 
 // ═══════════════════════════════════════════════════════════
-// LevelNodeButton
+// LevelNodeButton — [FIX 13]
 // ═══════════════════════════════════════════════════════════
 
 function LevelNodeButton({
@@ -159,9 +153,14 @@ function LevelNodeButton({
         <p className={`text-xs sm:text-sm font-bold font-body ${level.status === 'locked' ? 'text-white/30' : 'text-white/80'}`}>
           {level.nameAr}
         </p>
+        {level.status === 'completed' && (
+          <p className="text-[10px] text-emerald-300 font-body mt-0.5 font-bold">
+            ✓ مكتمل
+          </p>
+        )}
         {level.status === 'available' && (
-          <p className="text-[10px] text-purple-300 font-body mt-0.5">
-            {toArabicNumber(level.xpRequired)} XP
+          <p className="text-[10px] text-purple-300 font-body mt-0.5 font-bold">
+            🟣 متاح
           </p>
         )}
       </div>
@@ -184,13 +183,11 @@ export function GuardianDashboard({
   const storedName = useProgressStore((s) => s.childName);
   const totalXP = useProgressStore((s) => s.totalXP);
   const currentStreak = useProgressStore((s) => s.currentStreak);
-  const completedLevels = useProgressStore((s) => s.completedLevels);
   const passedPractice = useProgressStore((s) => s.passedPractice);
   const passedAnzanVisual = useProgressStore((s) => s.passedAnzanVisual);
   const passedAnzanAudio = useProgressStore((s) => s.passedAnzanAudio);
   const anzanBadges = useProgressStore((s) => s.anzanBadges);
   const anzanAudioBadges = useProgressStore((s) => s.anzanAudioBadges);
-  const grades = useProgressStore((s) => s.grades);
   const remediationHistory = useProgressStore((s) => s.remediationHistory);
 
   // ═══ masteryBadgesStore ═══
@@ -212,7 +209,6 @@ export function GuardianDashboard({
     return remediationHistory.filter((s) => s.completedAt >= cutoff);
   }, [remediationHistory]);
 
-  // مجموعة المهارات الفريدة مع عدد الجلسات
   const remediationSummary = useMemo(() => {
     const map = new Map<string, {
       skillId: string;
@@ -245,10 +241,28 @@ export function GuardianDashboard({
   // ═══ مشتقات ═══
   const childLevel = Math.floor(totalXP / 100) + 1;
   const totalLevelsCount = SRB_LEVELS.length; // 8
-  const completedLevelsStr = completedLevels as unknown as string[];
-  const completedLevelsCount = completedLevels.length;
 
-  // ═══ 🎓 شارات إنجاز المستوى (8 مشتقة من completedLevels) ═══
+  // [FIX 10] — المستويات المكتملة = اجتاز 3 مراحل
+  const effectiveCompletedLevels = useMemo(() => {
+    return SRB_LEVELS
+      .filter((lv) => {
+        const num = parseInt(lv.id.replace('L', ''), 10);
+        return (
+          passedPractice.includes(num) &&
+          passedAnzanVisual.includes(num) &&
+          passedAnzanAudio.includes(num)
+        );
+      })
+      .map((lv) => lv.id);
+  }, [passedPractice, passedAnzanVisual, passedAnzanAudio]);
+
+  const effectiveCompletedCount = effectiveCompletedLevels.length;
+
+  // [FIX 12] — هل الطفل أسطورة؟
+  const isLegend =
+    effectiveCompletedCount === totalLevelsCount && totalLevelsCount > 0;
+
+  // ═══ 🎓 شارات إنجاز المستوى [FIX 10] ═══
   const levelBadges = useMemo(
     () =>
       SRB_LEVELS.map((lv, idx) => ({
@@ -258,10 +272,9 @@ export function GuardianDashboard({
         order: lv.order,
         Icon: LEVEL_ICONS[idx] ?? Star,
         gradient: LEVEL_GRADIENTS[lv.id] ?? 'from-purple-500 to-electric-500',
-        earned: completedLevelsStr.includes(lv.id),
+        earned: effectiveCompletedLevels.includes(lv.id),
       })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [completedLevels],
+    [effectiveCompletedLevels],
   );
 
   const earnedLevelBadges = levelBadges.filter((b) => b.earned).length;
@@ -272,25 +285,26 @@ export function GuardianDashboard({
     [masteryBadges],
   );
 
-  // ═══ 🧠 شارات الأنزان البصري ═══
+  // ═══ 🧠 شارات الأنزان البصري [FIX 11] ═══
   const anzanBadgeList = useMemo(
     () => [
       { id: 'master_addition', label: 'خبير جمع وطرح', icon: '🧠', color: 'from-cyan-500 to-blue-700', earned: !!anzanBadges.master_addition },
       { id: 'master_multiplication', label: 'خبير ضرب', icon: '✖️', color: 'from-indigo-500 to-purple-700', earned: !!anzanBadges.master_multiplication },
       { id: 'master_division', label: 'خبير قسمة', icon: '➗', color: 'from-blue-500 to-cyan-700', earned: !!anzanBadges.master_division },
-      { id: 'master_mixed', label: 'خبير مختلط', icon: '🔀', color: 'from-pink-500 to-rose-700', earned: !!anzanBadges.master_mixed },
+      { id: 'master_chains', label: 'خبير سلاسل', icon: '🔗', color: 'from-teal-500 to-cyan-700', earned: !!anzanBadges.master_chains },
     ],
     [anzanBadges],
   );
 
   const earnedAnzanCount = anzanBadgeList.filter((b) => b.earned).length;
 
-  // ═══ 🎧 شارات الأنزان السماعي ═══
+  // ═══ 🎧 شارات الأنزان السماعي [FIX 11] ═══
   const audioAnzanBadgeList = useMemo(
     () => [
       { id: 'master_addition_audio', label: 'خبير جمع وطرح سماعي', icon: '🎤', color: 'from-cyan-500 to-blue-700', earned: !!anzanAudioBadges.master_addition_audio },
       { id: 'master_multiplication_audio', label: 'خبير ضرب سماعي', icon: '🎤', color: 'from-indigo-500 to-purple-700', earned: !!anzanAudioBadges.master_multiplication_audio },
       { id: 'master_division_audio', label: 'خبير قسمة سماعية', icon: '🎤', color: 'from-blue-500 to-cyan-700', earned: !!anzanAudioBadges.master_division_audio },
+      { id: 'master_chains_audio', label: 'خبير سلاسل سماعي', icon: '🎤', color: 'from-teal-500 to-cyan-700', earned: !!anzanAudioBadges.master_chains_audio },
     ],
     [anzanAudioBadges],
   );
@@ -321,44 +335,20 @@ export function GuardianDashboard({
     );
 
     return [
-      {
-        id: 'concentration',
-        nameAr: 'التركيز والانتباه',
-        descriptionAr: 'قدرة الطفل على البقاء مركّزاً خلال الجلسات',
-        percentage: concentration,
-        available: true,
-      },
-      {
-        id: 'visualization',
-        nameAr: 'التخيل والتصور',
-        descriptionAr: 'قدرة الطفل على تخيل المعداد في عقله (الأنزان)',
-        percentage: visualization,
-        available: true,
-      },
-      {
-        id: 'observation',
-        nameAr: 'دقة الملاحظة',
-        descriptionAr: 'قدرة الطفل على حل المسائل من المحاولة الأولى',
-        percentage: observation,
-        available: true,
-      },
-      {
-        id: 'listening',
-        nameAr: 'الاستماع والانتباه السمعي',
-        descriptionAr: 'قدرة الطفل على الحساب من خلال السماع',
-        percentage: listening,
-        available: true,
-      },
+      { id: 'concentration', nameAr: 'التركيز والانتباه', descriptionAr: 'قدرة الطفل على البقاء مركّزاً خلال الجلسات', percentage: concentration, available: true },
+      { id: 'visualization', nameAr: 'التخيل والتصور', descriptionAr: 'قدرة الطفل على تخيل المعداد في عقله (الأنزان)', percentage: visualization, available: true },
+      { id: 'observation', nameAr: 'دقة الملاحظة', descriptionAr: 'قدرة الطفل على حل المسائل من المحاولة الأولى', percentage: observation, available: true },
+      { id: 'listening', nameAr: 'الاستماع والانتباه السمعي', descriptionAr: 'قدرة الطفل على الحساب من خلال السماع', percentage: listening, available: true },
     ];
   }, [passedPractice, passedAnzanVisual, passedAnzanAudio, masteryBadges, totalLevelsCount]);
 
-  // ═══ 🗺️ خارطة المستويات ═══
+  // ═══ 🗺️ خارطة المستويات [FIX 10] ═══
   const levelNodes: LevelNodeData[] = useMemo(
     () =>
       SRB_LEVELS.map((lv, idx) => {
-        const isCompleted = completedLevelsStr.includes(lv.id);
+        const isCompleted = effectiveCompletedLevels.includes(lv.id);
         const prevCompleted =
-          idx === 0 || completedLevelsStr.includes(SRB_LEVELS[idx - 1].id);
+          idx === 0 || effectiveCompletedLevels.includes(SRB_LEVELS[idx - 1].id);
 
         const status: LevelStatus = isCompleted
           ? 'completed'
@@ -374,8 +364,7 @@ export function GuardianDashboard({
           xpRequired: (lv.order + 1) * 100,
         };
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [completedLevels],
+    [effectiveCompletedLevels],
   );
 
   // ═══ 📅 نشاط الأسبوع ═══
@@ -392,38 +381,10 @@ export function GuardianDashboard({
 
   // ═══ 📈 الإحصائيات العلوية ═══
   const stats = [
-    {
-      label: 'نقاط الخبرة',
-      labelEn: 'XP Points',
-      value: toArabicNumber(totalXP),
-      icon: Zap,
-      gradient: 'from-gold-400 to-gold-600',
-      glow: 'shadow-gold-500/30',
-    },
-    {
-      label: 'المستوى',
-      labelEn: 'Level',
-      value: toArabicNumber(childLevel),
-      icon: Award,
-      gradient: 'from-purple-500 to-purple-700',
-      glow: 'shadow-purple-500/30',
-    },
-    {
-      label: 'الأيام المتتالية',
-      labelEn: 'Day Streak',
-      value: toArabicNumber(currentStreak),
-      icon: TrendingUp,
-      gradient: 'from-orange-500 to-red-500',
-      glow: 'shadow-orange-500/30',
-    },
-    {
-      label: 'المهارات المتقنة',
-      labelEn: 'Mastered',
-      value: toArabicNumber(masteryBadgesList.length),
-      icon: Target,
-      gradient: 'from-emerald2-500 to-emerald2-700',
-      glow: 'shadow-emerald2-500/30',
-    },
+    { label: 'نقاط الخبرة', labelEn: 'XP Points', value: toArabicNumber(totalXP), icon: Zap, gradient: 'from-gold-400 to-gold-600', glow: 'shadow-gold-500/30' },
+    { label: 'المستوى', labelEn: 'Level', value: toArabicNumber(childLevel), icon: Award, gradient: 'from-purple-500 to-purple-700', glow: 'shadow-purple-500/30' },
+    { label: 'الأيام المتتالية', labelEn: 'Day Streak', value: toArabicNumber(currentStreak), icon: TrendingUp, gradient: 'from-orange-500 to-red-500', glow: 'shadow-orange-500/30' },
+    { label: 'المهارات المتقنة', labelEn: 'Mastered', value: toArabicNumber(masteryBadgesList.length), icon: Target, gradient: 'from-emerald2-500 to-emerald2-700', glow: 'shadow-emerald2-500/30' },
   ];
 
   // ═══ Refresh ═══
@@ -432,20 +393,14 @@ export function GuardianDashboard({
     window.location.reload();
   };
 
-  // ═══════════════════════════════════════════════════════════
-  // 🛠️ دوال الأزرار الإدارية
-  // ═══════════════════════════════════════════════════════════
+  // ═══ دوال الأزرار الإدارية ═══
 
-  // [FIX 7] — وضع المعاينة (toggle)
   const handlePreviewToggle = () => {
     togglePreviewMode();
     playSound('click');
     setTimeout(() => window.location.reload(), 300);
   };
 
-  /**
-   * ✅ "تصفير" — يمسح كل شيء ما عدا الاسم والرفيق.
-   */
   const handleReset = () => {
     const keysToKeep = ['soroban_companion', 'soroban_child_name'];
     Object.keys(localStorage).forEach((key) => {
@@ -456,7 +411,6 @@ export function GuardianDashboard({
     window.location.reload();
   };
 
-  // ✅ حفظ نسخة احتياطية
   const handleBackup = () => {
     try {
       const data: Record<string, string> = {};
@@ -484,7 +438,6 @@ export function GuardianDashboard({
     }
   };
 
-  // ✅ استعادة نسخة
   const handleRestore = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -504,15 +457,13 @@ export function GuardianDashboard({
     reader.readAsText(file);
   };
 
+  // ═══ بداية JSX ═══
   return (
     <div className="px-3 sm:px-6 py-6 max-w-5xl mx-auto" dir="rtl">
       {/* ═══ رأس الصفحة ═══ */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
         <button
-          onClick={() => {
-            playSound('click');
-            onBack();
-          }}
+          onClick={() => { playSound('click'); onBack(); }}
           className="btn-ghost !px-3 !py-2"
         >
           <ArrowRight className="w-5 h-5" />
@@ -522,7 +473,6 @@ export function GuardianDashboard({
         <button
           onClick={handleRefresh}
           className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-500/15 border border-blue-400/30 text-blue-200 hover:bg-blue-500/25 transition-all text-sm font-body"
-          title="إعادة تحميل الصفحة"
         >
           <RefreshCw className="w-4 h-4" />
           <span>تحديث الصفحة</span>
@@ -530,12 +480,8 @@ export function GuardianDashboard({
 
         {onShowWelcome && (
           <button
-            onClick={() => {
-              playSound('click');
-              onShowWelcome();
-            }}
+            onClick={() => { playSound('click'); onShowWelcome(); }}
             className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-200 hover:bg-amber-500/25 transition-all text-sm font-body"
-            title="عرض شاشة الترحيب"
           >
             <PlayCircle className="w-4 h-4" />
             <span>شاشة الترحيب</span>
@@ -544,24 +490,18 @@ export function GuardianDashboard({
 
         {onSwitchToHero && (
           <button
-            onClick={() => {
-              playSound('click');
-              onSwitchToHero();
-            }}
+            onClick={() => { playSound('click'); onSwitchToHero(); }}
             className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-purple-500/15 border border-purple-400/30 text-purple-200 hover:bg-purple-500/25 transition-all text-sm font-body"
-            title="العودة إلى وضع البطل"
           >
             <Home className="w-4 h-4" />
             <span>وضع البطل</span>
           </button>
         )}
 
-        {/* ═══ 🛠️ الأزرار الإدارية ═══ */}
         <button
           type="button"
           onClick={handleBackup}
           className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-500/20 border border-blue-400/40 text-blue-100 hover:bg-blue-500/30 transition-all text-xs font-body"
-          title="حفظ نسخة احتياطية"
         >
           <Download className="w-4 h-4" />
           <span>حفظ نسخة</span>
@@ -571,7 +511,6 @@ export function GuardianDashboard({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-body"
-          title="استعادة نسخة احتياطية"
         >
           <Upload className="w-4 h-4" />
           <span>استعادة</span>
@@ -585,12 +524,10 @@ export function GuardianDashboard({
           style={{ display: 'none' }}
         />
 
-        {/* [FIX 7] — زر المعاينة (بدل فتح الكل) */}
         <button
           type="button"
           onClick={handlePreviewToggle}
           className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-bold font-body"
-          title={inPreview ? 'الخروج من وضع المعاينة' : 'تفعيل وضع المعاينة'}
         >
           <Unlock className="w-4 h-4" />
           <span>{inPreview ? '🚪 خروج من المعاينة' : '👁️ وضع المعاينة'}</span>
@@ -636,11 +573,87 @@ export function GuardianDashboard({
             </h2>
             <p className="text-sm text-emerald2-300 font-body mt-0.5">
               مستوى {toArabicNumber(childLevel)} ·{' '}
-              {toArabicNumber(completedLevelsCount)}/{toArabicNumber(totalLevelsCount)} مستويات مكتملة
+              {toArabicNumber(effectiveCompletedCount)}/{toArabicNumber(totalLevelsCount)} مستويات مكتملة
             </p>
           </div>
         </div>
       </motion.div>
+
+      {/* [FIX 12] — 👑 بطاقة أسطورة السوروبان */}
+      {isLegend && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85, y: 30 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ delay: 0.15, type: 'spring', stiffness: 150, damping: 18 }}
+          className="relative mb-6 rounded-3xl overflow-hidden"
+        >
+          {/* توهج خارجي متحرك */}
+          <motion.div
+            animate={{ opacity: [0.4, 0.9, 0.4], scale: [1, 1.05, 1] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="absolute -inset-4 bg-gold-400/30 blur-3xl pointer-events-none"
+          />
+
+          {/* خلفية ذهبية متدرجة */}
+          <div className="relative rounded-3xl border-2 border-gold-400/70 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-gold-500/40 via-amber-500/25 to-yellow-600/15" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_25%,rgba(250,204,21,0.45),transparent_65%)]" />
+
+            {/* نجوم متلألئة */}
+            <motion.div
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
+              className="absolute top-4 right-6 text-gold-200 text-xl"
+            >✨</motion.div>
+            <motion.div
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 3, repeat: Infinity, delay: 0.7 }}
+              className="absolute top-8 left-8 text-gold-200 text-lg"
+            >⭐</motion.div>
+            <motion.div
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 2.8, repeat: Infinity, delay: 1.4 }}
+              className="absolute bottom-6 right-10 text-gold-200 text-lg"
+            >✨</motion.div>
+
+            {/* المحتوى */}
+            <div className="relative p-6 sm:p-8">
+              <div className="text-center">
+                <motion.div
+                  animate={{ y: [0, -10, 0], rotate: [0, 4, -4, 0] }}
+                  transition={{ duration: 4, repeat: Infinity }}
+                  className="inline-block text-6xl sm:text-7xl mb-4 drop-shadow-[0_0_25px_rgba(250,204,21,0.8)]"
+                >
+                  👑
+                </motion.div>
+
+                <motion.h2
+                  initial={{ opacity: 0, letterSpacing: '0.5em' }}
+                  animate={{ opacity: 1, letterSpacing: '0.15em' }}
+                  transition={{ delay: 0.4, duration: 0.8 }}
+                  className="text-3xl sm:text-4xl font-extrabold font-display text-gold-50 mb-3"
+                  style={{ textShadow: '0 0 30px rgba(250,204,21,0.6), 0 2px 10px rgba(0,0,0,0.5)' }}
+                >
+                  أسطورة السوروبان
+                </motion.h2>
+
+                <p className="text-sm sm:text-base text-gold-100 font-body mb-5 leading-relaxed">
+                  🎉 يا <strong>{savedName}</strong>! أتممت جميع مستويات أكاديمية السوروبان
+                </p>
+
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <span className="px-4 py-2 rounded-2xl bg-gold-400/40 border border-gold-300/60 text-gold-50 text-sm font-bold flex items-center gap-2">
+                    🏆 {toArabicNumber(totalLevelsCount)}/{toArabicNumber(totalLevelsCount)}
+                  </span>
+                  <span className="px-4 py-2 rounded-2xl bg-gold-400/40 border border-gold-300/60 text-gold-50 text-sm font-bold flex items-center gap-2">
+                    ⭐ {toArabicNumber(totalXP)} XP
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* ═══ الإحصائيات ═══ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
@@ -721,6 +734,7 @@ export function GuardianDashboard({
         </div>
       </motion.div>
 
+      {/* ⏸️ الجزء 2 يبدأ من هنا — أرسل "تابع" */}
       {/* ═══ 🎓 شارات إنجاز المستوى (8) ═══ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -921,7 +935,7 @@ export function GuardianDashboard({
           </span>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {audioAnzanBadgeList.map((badge, i) => (
             <motion.div
               key={badge.id}
@@ -1047,7 +1061,7 @@ export function GuardianDashboard({
             </h3>
           </div>
           <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-300 text-xs">
-            {toArabicNumber(completedLevelsCount)}/{toArabicNumber(totalLevelsCount)} مكتمل
+            {toArabicNumber(effectiveCompletedCount)}/{toArabicNumber(totalLevelsCount)} مكتمل
           </span>
         </div>
 
@@ -1312,7 +1326,6 @@ export function GuardianDashboard({
                 <span className="text-emerald-300">الرفيق والاسم سيُحفظان.</span>
               </p>
 
-              {/* ⚠️ تنبيه النسخة الاحتياطية */}
               <div className="mb-5 p-3 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-right">
                 <p className="text-xs text-amber-200 font-body leading-relaxed mb-3">
                   💡 <strong>تنبيه:</strong> يُنصح بحفظ نسخة احتياطية قبل التصفير.
