@@ -245,6 +245,7 @@ export function LevelTestScreen({
 
       const store = useProgressStore.getState();
       store.setGrade(levelId, 'levelTest', score);
+store.markLevelComplete(levelId as never);
     } catch { /* ignore */ }
 
     setPhase('result');
