@@ -273,144 +273,147 @@ export const S03_LESSON: LessonNode = {
     // m3 — الجمع بأصدقاء 10
     // ═══════════════════════════════════════════════════════════
     {
-      id: "m3",
-      ruleCategory: "big_friends",
-      title: "الجمع بأصدقاء 10",
-      titleEn: "Complements of 10",
-      emoji: "🌟",
-      miniStory: {
-        title: "ظهور العملاق 10 | Giant 10 Appears",
-        emoji: "🦶",
-        story: "عندما كبرت الأرقام، لم تعد الجدة 5 تكفي! ظهر عملاق العشرات 10 في العمود الثاني على اليسار. قال: أنا أتدخل عندما يكتظ عمود الآحاد! نادوا عليّ (+10)، وسأطرح متمم الرقم من الآحاد. | As numbers grew larger, Grandma 5 wasn't enough! Giant 10 appeared on the tens rod. He said: I step in when the units rod gets crowded! Call me (+10), and I will subtract the friend from the units.",
-        storyAudioText: "عندما كبرت الأرقام، لم تعد الجدة خمسة تكفي. ظهر عملاق العشرات عشرة في العمود الثاني على اليسار. قال: أنا أتدخل عندما يكتظ عمود الآحاد. نادوا عليّ، وسأطرح متمم الرقم من الآحاد.",
-        storyAudioId: 6,
+  id: "m3",
+  ruleCategory: "big_friends",
+  title: "الجمع بأصدقاء 10",
+  titleEn: "Complements of 10",
+  emoji: "🌟",
+  miniStory: {
+    title: "ظهور العملاق 10 | Giant 10 Appears",
+    emoji: "🦶",
+    story: "عندما كبرت الأرقام، لم تعد الجدة 5 تكفي! ظهر عملاق العشرات 10 في العمود الثاني على اليسار. قال: أنا أتدخل عندما يكتظ عمود الآحاد! نادوا عليّ (+10)، وسأطرح متمم الرقم من الآحاد. | As numbers grew larger, Grandma 5 wasn't enough! Giant 10 appeared on the tens rod. He said: I step in when the units rod gets crowded! Call me (+10), and I will subtract the friend from the units.",
+    storyAudioText: "عندما كبرت الأرقام، لم تعد الجدة خمسة تكفي. ظهر عملاق العشرات عشرة في العمود الثاني على اليسار. قال: أنا أتدخل عندما يكتظ عمود الآحاد. نادوا عليّ، وسأطرح متمم الرقم من الآحاد.",
+    storyAudioId: 6,
+  },
+  rule: {
+    description: "قفزة العملاق 10 🌟: عندما يكتظ بيت الآحاد بالكامل، نطرد صديق الرقم بعيداً عن العارضة بالسبابة، ونوقظ خرزة واحدة في بيت العشرات بالإبهام! | Giant 10's Leap 🌟: When the units rod is full, push the number's friend away from the bar with index, and awaken 1 bead in tens rod with thumb!",
+    cases: [
+      { from: 1, formula: "+1 = −9 + 10" },
+      { from: 2, formula: "+2 = −8 + 10" },
+      { from: 3, formula: "+3 = −7 + 10" },
+      { from: 4, formula: "+4 = −6 + 10" },
+      { from: 5, formula: "+5 = −5 + 10" },
+      { from: 6, formula: "+6 = −4 + 10" },
+      { from: 7, formula: "+7 = −3 + 10" },
+      { from: 8, formula: "+8 = −2 + 10" },
+      { from: 9, formula: "+9 = −1 + 10" },
+    ],
+  },
+  condition: {
+    explanation: "المجموع يتجاوز 9، وتوجد خرزات كافية لطرح صديق 10 مباشرة من الآحاد! | Sum exceeds 9, and active beads are enough to subtract 10's friend directly!",
+  },
+  friendsTable: {
+    title: "أصدقاء 10 الكبار | Big Friends of 10",
+    pairs: [
+      { from: 1, to: 9 },
+      { from: 2, to: 8 },
+      { from: 3, to: 7 },
+      { from: 4, to: 6 },
+      { from: 5, to: 5 },
+      { from: 6, to: 4 },
+      { from: 7, to: 3 },
+      { from: 8, to: 2 },
+      { from: 9, to: 1 },
+    ],
+  },
+  discrimination: {
+    steps: [
+      {
+        question: "هل مجموع الخانة يتجاوز 9؟ | Does the column sum exceed 9?",
+        type: "comparison",
+        answer: "نعم (عمود الآحاد امتليء!) | Yes (Units rod is overflowing!)",
       },
-      rule: {
-        description: "قفزة العملاق 10 🌟: عندما يكتظ بيت الآحاد بالكامل، نطرد صديق الرقم بعيداً عن العارضة بالسبابة، ونوقظ خرزة واحدة في بيت العشرات بالإبهام! | Giant 10's Leap 🌟: When the units rod is full, push the number's friend away from the bar with index, and awaken 1 bead in tens rod with thumb!",
-        cases: [
-          { from: 1, formula: "+1 = −9 + 10" },
-          { from: 2, formula: "+2 = −8 + 10" },
-          { from: 3, formula: "+3 = −7 + 10" },
-          { from: 4, formula: "+4 = −6 + 10" },
-          { from: 5, formula: "+5 = −5 + 10" },
-          { from: 6, formula: "+6 = −4 + 10" },
-          { from: 7, formula: "+7 = −3 + 10" },
-          { from: 8, formula: "+8 = −2 + 10" },
-          { from: 9, formula: "+9 = −1 + 10" },
-        ],
+      {
+        question: "هل يمكن طرح صديق 10 مباشرة من الآحاد؟ | Can we subtract 10's friend directly from units?",
+        type: "yes-no",
+        answer: "نعم (الخرزات المفعّلة تكفي للخصم) | Yes (Active beads are enough to subtract)",
+        hint: "خصم مباشر من الآحاد دون الحاجة لاستدعاء الجدة 5 | Direct subtraction from units without using Grandma 5",
       },
-      condition: {
-        formula: "c + n > 9  ·  إمكانية طرح k مباشرة",
-        explanation: "المجموع يتجاوز 9، وتوجد خرزات كافية لطرح صديق 10 مباشرة من الآحاد! | Sum exceeds 9, and active beads are enough to subtract 10's friend directly!",
-      },
-      friendsTable: {
-        title: "أصدقاء 10 الكبار | Big Friends of 10",
-        pairs: [
-          { from: 1, to: 9 },
-          { from: 2, to: 8 },
-          { from: 3, to: 7 },
-          { from: 4, to: 6 },
-          { from: 5, to: 5 },
-          { from: 6, to: 4 },
-          { from: 7, to: 3 },
-          { from: 8, to: 2 },
-          { from: 9, to: 1 },
-        ],
-      },
-      discrimination: {
+    ],
+    decision: "استخدم أصدقاء 10 — اخصم الصديق من الآحاد وأضف 1 في العشرات! | Use Friends of 10 — Subtract friend from units and add 1 in tens!",
+  },
+  watchPhase: {
+    examples: [
+      {
+        id: "S03-m3-E1",
+        question: "9 + 1",
+        discrimination: "عمود الآحاد ممتلئ بـ 9. صديق 1 هو 9. نخصم 9 من الآحاد وننادي العملاق 10! | Units rod is full with 9. 1's friend is 9. Subtract 9 from units & call Giant 10!",
+        rule: "صديق 1 هو 9 | 1's friend is 9",
+        fingerMovement: "👆 السبابة تخصم 9 من الآحاد (إبعاد كل الخرزات) ⬇️⬆️، و👍 الإبهام يرفع خرزة 1 في العشرات ⬆️ | Index subtracts 9 from units (clearing beads), thumb raises 1 bead in tens rod ⬆️",
         steps: [
-          {
-            question: "هل مجموع الخانة يتجاوز 9؟ | Does the column sum exceed 9?",
-            type: "comparison",
-            actual: "c + n > 9",
-            answer: "نعم (عمود الآحاد امتليء!) | Yes (Units rod is overflowing!)",
-          },
-          {
-            question: "هل يمكن طرح صديق 10 مباشرة من الآحاد؟ | Can we subtract 10's friend directly from units?",
-            type: "yes-no",
-            answer: "نعم (الخرزات المفعّلة تكفي للخصم) | Yes (Active beads are enough to subtract)",
-            hint: "خصم مباشر من الآحاد دون الحاجة لاستدعاء الجدة 5 | Direct subtraction from units without using Grandma 5",
-          },
+          "تمثيل 9: ضع 9 في الآحاد (5 علوية + 4 سفلية) | Represent 9: Set 9 in units (5 upper + 4 lower)",
+          "صديق 1 هو 9 | 1's friend is 9",
+          "اخصم 9 بالسبابة: ابعد الخرزات عن العارضة ⬇️⬆️ | Subtract 9 with index: Move beads away from bar",
+          "ارفع 1 في قضيب العشرات بالإبهام ⬆️ | Lift 1 bead in tens rod with thumb ⬆️",
+          "الناتج الظاهر: 1 في العشرات و0 في الآحاد = 10 | Result: 1 in tens and 0 in units = 10",
         ],
-        decision: "استخدم أصدقاء 10 — اخصم الصديق من الآحاد وأضف 1 في العشرات! | Use Friends of 10 — Subtract friend from units and add 1 in tens!",
+        result: 10,
+        beadVisual: "1 في العشرات و0 في الآحاد | 1 in tens rod and 0 in units rod",
       },
-      watchPhase: {
-        examples: [
-          {
-            id: "S03-m3-E1",
-            question: "9 + 1",
-            discrimination: "عمود الآحاد ممتلئ بـ 9. صديق 1 لـ 10 هو 9. نخصم 9 من الآحاد وننادي العملاق 10! | Units rod is full with 9. 1's friend is 9. Subtract 9 from units & call Giant 10!",
-            rule: "+1 = −9 + 10",
-            fingerMovement: "👆 السبابة تخصم 9 من الآحاد (إبعاد كل الخرزات) ⬇️⬆️، و👍 الإبهام يرفع خرزة 1 في العشرات ⬆️ | Index subtracts 9 from units (clearing beads), thumb raises 1 bead in tens rod ⬆️",
-            steps: [
-              "تمثيل 9: ضع 9 في الآحاد (5 علوية + 4 سفلية) | Represent 9: Set 9 in units (5 upper + 4 lower)",
-              "اخصم 9 بالسبابة: ابعد الخرزات عن العارضة ⬇️⬆️ | Subtract 9 with index: Move beads away from bar",
-              "ارفع 1 في قضيب العشرات بالإبهام ⬆️ | Lift 1 bead in tens rod with thumb ⬆️",
-              "الناتج الظاهر: 1 في العشرات و0 في الآحاد = 10 | Result: 1 in tens and 0 in units = 10",
-            ],
-            result: 10,
-            beadVisual: "1 في العشرات و0 في الآحاد | 1 in tens rod and 0 in units rod",
-          },
+    ],
+  },
+  tryPhase: {
+    exercises: [
+      {
+        id: "S03-m3-T1",
+        question: "8 + 2",
+        discrimination: "8 مفعّلة → لا متسع لـ 2 → صديق 2 هو 8 → اخصم 8 وارفع 10 | 8 active → No room for 2 → 2's friend is 8 → Subtract 8, add 10",
+        steps: [
+          "مثّل 8 (5 علوية + 3 سفليات) | Represent 8 (5 upper + 3 lower)",
+          "صديق 2 هو 8 | 2's friend is 8",
+          "اخصم 8 بالسبابة (ارفع 5 ⬆️ وأنزل 3 ⬇️) | Subtract 8 with index (lift 5 ⬆️, lower 3 ⬇️)",
+          "ارفع 1 في العشرات بالإبهام ⬆️ | Lift 1 in tens rod with thumb ⬆️",
+          "الناتج: 10 | Result: 10",
         ],
+        result: 10,
       },
-      tryPhase: {
-        exercises: [
-          {
-            id: "S03-m3-T1",
-            question: "8 + 2",
-            discrimination: "8 مفعّلة → لا متسع لـ 2 → صديق 2 هو 8 → اخصم 8 وارفع 10 | 8 active → No room for 2 → 2's friend is 8 → Subtract 8, add 10",
-            steps: [
-              "مثّل 8 (5 علوية + 3 سفليات) | Represent 8 (5 upper + 3 lower)",
-              "اخصم 8 بالسبابة (ارفع 5 ⬆️ وأنزل 3 ⬇️) | Subtract 8 with index (lift 5 ⬆️, lower 3 ⬇️)",
-              "ارفع 1 في العشرات بالإبهام ⬆️ | Lift 1 in tens rod with thumb ⬆️",
-              "الناتج: 10 | Result: 10",
-            ],
-            result: 10,
-          },
-          {
-            id: "S03-m3-T2",
-            question: "7 + 5",
-            discrimination: "الخرزة 5 مفعّلة في الآحاد → صديق 5 هو 5 → اخصم 5 وارفع 10 | Upper 5 active in units → 5's friend is 5 → Subtract 5, add 10",
-            steps: [
-              "مثّل 7 (5 علوية + 2 سفليات) | Represent 7 (5 upper + 2 lower)",
-              "اخصم 5 (ارفع العلوية بالسبابة ⬆️) | Subtract 5 (lift upper bead with index ⬆️)",
-              "ارفع 1 في العشرات بالإبهام ⬆️ | Lift 1 in tens rod with thumb ⬆️",
-              "الناتج: 12 | Result: 12",
-            ],
-            result: 12,
-          },
-          {
-            id: "S03-m3-T3",
-            question: "9 + 6",
-            discrimination: "9 تحتوي 4 خرزات سفلية، صديق 6 هو 4 → اخصم 4 سفلياً وارفع 10 | 9 has 4 lower beads, 6's friend is 4 → Subtract 4 lower, add 10",
-            steps: [
-              "مثّل 9 (5 + 4 سفليات) | Represent 9 (5 + 4 lower)",
-              "اخصم 4 من الخرزات السفلية بالسبابة ⬇️ | Subtract 4 lower beads with index ⬇️",
-              "ارفع 1 في العشرات بالإبهام ⬆️ | Lift 1 in tens rod with thumb ⬆️",
-              "الناتج: 15 | Result: 15",
-            ],
-            result: 15,
-          },
-          {
-            id: "S03-m3-T4",
-            question: "9 + 4",
-            discrimination: "9 ممتلئ، صديق 4 هو 6 → اخصم 6 (5 و1) وارفع 10 | 9 full, 4's friend is 6 → Subtract 6 (5 & 1), add 10",
-            steps: [
-              "مثّل 9 (5 + 4 سفليات) | Represent 9 (5 + 4 lower)",
-              "اخصم 6 (ارفع 5 ⬆️ وأنزل 1 ⬇️) | Subtract 6 (lift 5 ⬆️, lower 1 ⬇️)",
-              "ارفع 1 في العشرات بالإبهام ⬆️ | Lift 1 in tens rod with thumb ⬆️",
-              "الناتج: 13 | Result: 13",
-            ],
-            result: 13,
-          },
+      {
+        id: "S03-m3-T2",
+        question: "7 + 5",
+        discrimination: "الخرزة 5 مفعّلة في الآحاد → صديق 5 هو 5 → اخصم 5 وارفع 10 | Upper 5 active in units → 5's friend is 5 → Subtract 5, add 10",
+        steps: [
+          "مثّل 7 (5 علوية + 2 سفليات) | Represent 7 (5 upper + 2 lower)",
+          "صديق 5 هو 5 | 5's friend is 5",
+          "اخصم 5 (ارفع العلوية بالسبابة ⬆️) | Subtract 5 (lift upper bead with index ⬆️)",
+          "ارفع 1 في العشرات بالإبهام ⬆️ | Lift 1 in tens rod with thumb ⬆️",
+          "الناتج: 12 | Result: 12",
         ],
+        result: 12,
       },
-    },
+      {
+        id: "S03-m3-T3",
+        question: "9 + 6",
+        discrimination: "9 تحتوي 4 خرزات سفلية، صديق 6 هو 4 → اخصم 4 سفلياً وارفع 10 | 9 has 4 lower beads, 6's friend is 4 → Subtract 4 lower, add 10",
+        steps: [
+          "مثّل 9 (5 + 4 سفليات) | Represent 9 (5 + 4 lower)",
+          "صديق 6 هو 4 | 6's friend is 4",
+          "اخصم 4 من الخرزات السفلية بالسبابة ⬇️ | Subtract 4 lower beads with index ⬇️",
+          "ارفع 1 في العشرات بالإبهام ⬆️ | Lift 1 in tens rod with thumb ⬆️",
+          "الناتج: 15 | Result: 15",
+        ],
+        result: 15,
+      },
+      {
+        id: "S03-m3-T4",
+        question: "9 + 4",
+        discrimination: "9 ممتلئ، صديق 4 هو 6 → اخصم 6 (5 و1) وارفع 10 | 9 full, 4's friend is 6 → Subtract 6 (5 & 1), add 10",
+        steps: [
+          "مثّل 9 (5 + 4 سفليات) | Represent 9 (5 + 4 lower)",
+          "صديق 4 هو 6 | 4's friend is 6",
+          "اخصم 6 (ارفع 5 ⬆️ وأنزل 1 ⬇️) | Subtract 6 (lift 5 ⬆️, lower 1 ⬇️)",
+          "ارفع 1 في العشرات بالإبهام ⬆️ | Lift 1 in tens rod with thumb ⬆️",
+          "الناتج: 13 | Result: 13",
+        ],
+        result: 13,
+      },
+    ],
+  },
+},
 
     // ═══════════════════════════════════════════════════════════
     // m4 — الجمع المركّب
     // ═══════════════════════════════════════════════════════════
-    {
+        {
       id: "m4",
       ruleCategory: "combined",
       title: "الجمع المركّب",
@@ -433,7 +436,6 @@ export const S03_LESSON: LessonNode = {
         ],
       },
       condition: {
-        formula: "c + n > 9  ·  العلوية 5 مفعّلة  ·  l < k",
         explanation: "المجموع أكبر من 9، والخرزات السفلية المفعّلة لا تكفي لخصم صديق 10 مباشرة، فنستعين بالجدة 5 والعملاق 10 معا! | Sum > 9, active lower beads can't subtract 10's friend directly, so we combine Grandma 5 & Giant 10!",
       },
       discrimination: {
@@ -456,11 +458,12 @@ export const S03_LESSON: LessonNode = {
           {
             id: "S03-m4-E1",
             question: "5 + 6",
-            discrimination: "5 مفعّلة (0 سفليات). صديق 6 لـ 10 هو 4. لا يمكن طرح 4 مباشرة من الأسفل! → جمع مركّب | 5 active (0 lower). 6's friend is 4. Cannot subtract 4 directly from lower! → Compound",
-            rule: "+6 = −5 + 1 + 10",
+            discrimination: "5 مفعّلة (0 سفليات). صديق 6 هو 4. لا يمكن طرح 4 مباشرة من الأسفل! → جمع مركّب | 5 active (0 lower). 6's friend is 4. Cannot subtract 4 directly from lower! → Compound",
+            rule: "صديق 6 هو 4 — أزل 5، ارفع 1، وأضف 10 | 6's friend is 4 — Remove 5, lift 1, add 10",
             fingerMovement: "👆 السبابة ترفع 5 للأعلى ⬆️، 👍 الإبهام يرفع 1 سفلي ⬆️، ثم 👍 الإبهام يرفع 1 في العشرات ⬆️ | Index lifts 5 up ⬆️, thumb lifts 1 lower ⬆️, thumb lifts 1 in tens ⬆️",
             steps: [
               "تمثيل 5: ضع 5 في الآحاد | Represent 5: Set 5 in units rod",
+              "جمع 6: أزل 5، ارفع 1، وأضف 10 | Add 6: Remove 5, lift 1, add 10",
               "ارفع الخرزة 5 بالسبابة للأعلى ⬆️ (إلغاؤها) | Lift bead 5 up with index ⬆️ (cancel it)",
               "ارفع خرزة 1 سفلية بالإبهام ⬆️ | Lift 1 lower bead with thumb ⬆️",
               "ارفع خرزة 1 في العشرات بالإبهام ⬆️ | Lift 1 bead in tens rod with thumb ⬆️",
@@ -476,9 +479,10 @@ export const S03_LESSON: LessonNode = {
           {
             id: "S03-m4-T1",
             question: "5 + 7",
-            discrimination: "5 مفعّلة، صديق 7 هو 3 (غير متوفر سفلياً) → مركّب (−5 + 2 + 10) | 5 active, 7's friend is 3 (not available below) → Compound (−5 + 2 + 10)",
+            discrimination: "5 مفعّلة، صديق 7 هو 3 (غير متوفر سفلياً) → مركّب | 5 active, 7's friend is 3 (not available below) → Compound",
             steps: [
               "مثّل 5 في الآحاد | Represent 5 in units",
+              "جمع 7: أزل 5، ارفع 2، وأضف 10 | Add 7: Remove 5, lift 2, add 10",
               "ارفع 5 بالسبابة ⬆️ (إبعاد) | Lift 5 up with index ⬆️",
               "ارفع 2 بالإبهام ⬆️ | Lift 2 with thumb ⬆️",
               "ارفع 10 في العشرات بالإبهام ⬆️ | Lift 10 in tens rod with thumb ⬆️",
@@ -492,6 +496,7 @@ export const S03_LESSON: LessonNode = {
             discrimination: "7 = (5+2)، صديق 6 هو 4 (المتوفر سفلياً 2 فقط) → مركّب | 7 = (5+2), 6's friend is 4 (only 2 lower active) → Compound",
             steps: [
               "مثّل 7 (5 + 2 سفليات) | Represent 7 (5 + 2 lower)",
+              "جمع 6: أزل 5، ارفع 1، وأضف 10 | Add 6: Remove 5, lift 1, add 10",
               "ارفع 5 بالسبابة ⬆️ | Lift 5 up with index ⬆️",
               "ارفع 1 بالإبهام ⬆️ | Lift 1 with thumb ⬆️",
               "ارفع 10 في العشرات بالإبهام ⬆️ | Lift 10 in tens rod with thumb ⬆️",
@@ -505,6 +510,7 @@ export const S03_LESSON: LessonNode = {
             discrimination: "6 = (5+1)، صديق 8 هو 2 (المتوفر سفلياً 1 فقط) → مركّب | 6 = (5+1), 8's friend is 2 (only 1 lower active) → Compound",
             steps: [
               "مثّل 6 (5 + 1 سفلي) | Represent 6 (5 + 1 lower)",
+              "جمع 8: أزل 5، ارفع 3، وأضف 10 | Add 8: Remove 5, lift 3, add 10",
               "ارفع 5 بالسبابة ⬆️ | Lift 5 up with index ⬆️",
               "ارفع 3 بالإبهام ⬆️ | Lift 3 with thumb ⬆️",
               "ارفع 10 في العشرات بالإبهام ⬆️ | Lift 10 in tens rod with thumb ⬆️",
@@ -518,6 +524,7 @@ export const S03_LESSON: LessonNode = {
             discrimination: "7 = (5+2)، صديق 7 هو 3 (المتوفر سفلياً 2 فقط) → مركّب | 7 = (5+2), 7's friend is 3 (only 2 lower active) → Compound",
             steps: [
               "مثّل 7 (5 + 2 سفليات) | Represent 7 (5 + 2 lower)",
+              "جمع 7: أزل 5، ارفع 2، وأضف 10 | Add 7: Remove 5, lift 2, add 10",
               "ارفع 5 بالسبابة ⬆️ | Lift 5 up with index ⬆️",
               "ارفع 2 بالإبهام ⬆️ | Lift 2 with thumb ⬆️",
               "ارفع 10 في العشرات بالإبهام ⬆️ | Lift 10 in tens rod with thumb ⬆️",
