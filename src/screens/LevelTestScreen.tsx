@@ -244,7 +244,7 @@ export function LevelTestScreen({
       );
 
       const store = useProgressStore.getState();
-      store.setGrade(levelId, 'test', score);
+      store.setGrade(levelId, 'levelTest', score);
     } catch { /* ignore */ }
 
     setPhase('result');
