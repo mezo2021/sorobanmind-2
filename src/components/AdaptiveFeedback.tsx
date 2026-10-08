@@ -3,6 +3,9 @@
 // ✅ فصل المهارات التاريخية حسب المستوى الحالي / مستويات أخرى
 // ✅ SRB: يقرأ من progressStore.skillProgress مباشرة
 // 📅 آخر تحديث: SRB Migration — Phase 3
+// [FIX AF1] — تبسيط weakness: أي خطأ = ضعف (بدل صيغة معقدة)
+// [FIX AF2] — عتبة العرض: > 0 (بدل ≥ 50)
+// [FIX AF3] — إزالة شرط attempts < 3 (الأخطاء تُحسب من أول محاولة)
 
 import { motion } from "framer-motion";
 import { useMemo } from "react";
@@ -89,26 +92,26 @@ function getLevelOfSkill(skillId: string): number | null {
 }
 
 /**
- * يحسب degree الضعف من بيانات skillProgress.
+ * [FIX AF1] — أي خطأ = ضعف.
  *
- * القواعد:
- *   - أقل من 3 محاولات → 0 (لا نحكم على مهارة لم تُتمرّن)
- *   - accuracyScore = (1 - دقة) × 70
- *   - timeScore = 30 إن كان المتوسط أكبر من 15 ثانية
- *   - النتيجة = min(100, المجموع)
+ * القاعدة:
+ *   - 0 محاولات → 0
+ *   - خلاف ذلك → (1 - دقة) × 100
+ *
+ * النتيجة:
+ *   - كله صح       → 0
+ *   - خطأ واحد     → 20 (لـ 5 محاولات)
+ *   - كله خطأ      → 100
  */
 function computeWeaknessScore(params: {
   attempts: number;
   correct: number;
-  avgTimeMs: number;
 }): number {
-  const { attempts, correct, avgTimeMs } = params;
-  if (attempts < 3) return 0;
+  const { attempts, correct } = params;
+  if (attempts === 0) return 0;
 
   const accuracy = correct / attempts;
-  const accuracyScore = (1 - accuracy) * 70;
-  const timeScore = avgTimeMs > 15000 ? 30 : 0;
-  return Math.min(100, accuracyScore + timeScore);
+  return Math.round((1 - accuracy) * 100);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -138,7 +141,7 @@ export function AdaptiveFeedback({
     (p) => p.speedClass === "slow" || p.correct < p.attempts,
   );
 
-  // ─── ✅ المهارات الضعيفة تاريخياً (من progressStore) ───
+  // ─── [FIX AF1 + AF2] المهارات الضعيفة تاريخياً ───
   const allHistoricalWeak: WeakRecord[] = useMemo(
     () =>
       Object.values(skillProgress)
@@ -147,10 +150,9 @@ export function AdaptiveFeedback({
           weaknessScore: computeWeaknessScore({
             attempts: sp.attempts,
             correct: sp.correct,
-            avgTimeMs: sp.avgTimeMs,
           }),
         }))
-        .filter((r) => r.weaknessScore >= 50)
+        .filter((r) => r.weaknessScore > 0)
         .sort((a, b) => b.weaknessScore - a.weaknessScore),
     [skillProgress],
   );
@@ -324,7 +326,7 @@ export function AdaptiveFeedback({
         </div>
       )}
 
-      {/* ─── المهارات التاريخية — هذا المستوى ─── */}
+      {/* ─── [FIX AF2] المهارات التاريخية — هذا المستوى ─── */}
       {historicalThisLevel.length > 0 && (
         <div className="glass-card p-4 border border-red-400/30">
           <div className="flex items-center gap-2 mb-3">
