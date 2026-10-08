@@ -404,13 +404,16 @@ export function LevelScreen({
           >
             <p className="text-sm font-bold text-amber-200 mb-3">
               ⚠️ يجب إتمام الجلسة العلاجية لفتح المسار التالي
+              <span className="block text-xs text-amber-100/80 mt-1">
+                ({toArabicNumber(pendingRemediation.skills.length)} مهارة · ٥ أسئلة موزّعة)
+              </span>
             </p>
             <button
               type="button"
               onClick={() => handleNav(`remediation-${levelId}` as Screen)}
               className="w-full py-3 rounded-2xl bg-gradient-to-l from-amber-400 to-orange-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/40 animate-pulse"
             >
-              🩺 ابدأ الجلسة العلاجية الإجبارية
+              🩺 ابدأ الجلسة العلاجية الإجبارية ({toArabicNumber(pendingRemediation.skills.length)} مهارة)
             </button>
           </motion.div>
         )}
