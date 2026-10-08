@@ -15,7 +15,7 @@ import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { useProgressStore } from '@/store/progressStore';
 import { formatNumber } from '@/utils/numberStyle';
 import {
-  getTestQuestions,
+  buildSession,
   saveSectionGrade,
   type SRBQuestion,
   type SRBLevel,
@@ -189,15 +189,20 @@ export function LevelTestScreen({
 
   // ═══ Start ═══
   const startTest = useCallback(() => {
-    const qs = getTestQuestions(levelId as SRBLevel);
+    const result = buildSession({
+      level: levelId as SRBLevel,
+      phase: 'X',
+      count: QUESTION_COUNT,
+      seed: Date.now(),
+    });
+    const qs = result.questions;
     if (qs.length === 0) {
       playSound('error');
       return;
     }
-    const sliced = qs.slice(0, QUESTION_COUNT);
-    const total = computeTotalTime(sliced);
+    const total = computeTotalTime(qs);
 
-    setQuestions(sliced);
+    setQuestions(qs);
     setCurrentIdx(0);
     setAnswers(new Map());
     setAbacusValue(0);
