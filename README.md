@@ -1,4 +1,7 @@
-<div dir=>
+</div>
+
+</div>
+
 🧮 SorobanMind v2
 
 أكاديمية السوروبان الدولية
