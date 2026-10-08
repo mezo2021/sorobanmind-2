@@ -1,3 +1,4 @@
+<div dir="rtl">
 🧮 SorobanMind v2
 
 أكاديمية السوروبان الدولية
