@@ -5,9 +5,12 @@
 // ✅ الشارات تُمنح فقط عند نجاح الجلسة (pendingBadgesRef)
 // ✅ زر "إنهاء" يخرج بلا تقييم
 // 🩺 جلسة علاجية إجبارية داخلية (RemediationScreen) — أولوية عرض عليا
-// 📅 آخر تحديث: SRB Migration — Phase 2 + Remediation
+// 📅 آخر تحديث: SRB Migration — Phase 2 + Remediation + Fix 1 + Fix 2 + Fix 3
 // [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
 // ✅ [Phase A1] — Attempt Record مُفعَّل في handleCheck
+// [FIX 1] — getAudioAnzanBadgeKey: خريطة صحيحة (S03/S04 جمع · S05/S06 ضرب · S07/S08 قسمة · S09/S10 سلاسل)
+// [FIX 2] — إضافة master_chains_audio (L4)
+// [FIX 3] — تمرير levelNum الحقيقي (0-7) إلى AdaptiveFeedback بدل 0
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -46,7 +49,6 @@ type Phase = 'intro' | 'listening' | 'answering' | 'reveal' | 'result' | 'empty'
 
 interface AudioAnzanScreenProps {
   level: SRBLevel;
-  /** ⚠️ للتوافق — يُتجاهل، يُستخرج من currentQ.section */
   section?: SRBSection;
   onBack: () => void;
   onComplete?: (passed: boolean, score: number) => void;
@@ -67,7 +69,6 @@ const PASS_THRESHOLD = 70;
 const DELAY_BETWEEN_TERMS_MS = 800;
 const WARNING_RATIO = 0.7;
 
-// 1) helper (مرة واحدة أعلى الملف)
 function getDecimalFactor(q: SRBQuestion): number {
   const decimals = [q.result, ...q.operands].map((n) => {
     const str = Math.abs(n).toString();
@@ -77,30 +78,29 @@ function getDecimalFactor(q: SRBQuestion): number {
   return Math.pow(10, Math.max(...decimals, 0));
 }
 
-// 🆕 استخراج التلميح من بداية solution إن وُجد
 function extractHint(q: SRBQuestion | undefined): string | null {
   if (!q?.solution) return null;
   const m = q.solution.match(/^تلميح:\s*(.+?)(?:\.\s|$)/);
   return m ? m[1].trim() : null;
 }
 
-// 🆕 خريطة section → مفتاح شارة الأنزان السماعي
+// [FIX 1 + FIX 2] — خريطة صحيحة مع master_chains_audio
 function getAudioAnzanBadgeKey(
   section: SRBSection,
 ): keyof AnzanAudioBadges | null {
   switch (section) {
     case 'S03':
     case 'S04':
+      return 'master_addition_audio';       // L1 · جمع وطرح
     case 'S05':
     case 'S06':
-      return 'master_addition_audio';
+      return 'master_multiplication_audio'; // L2 · ضرب
     case 'S07':
     case 'S08':
-      return 'master_multiplication_audio';
+      return 'master_division_audio';       // L3 · قسمة
     case 'S09':
     case 'S10':
-      return 'master_division_audio';
-    // S11-S15 → لا يوجد بديل سماعي
+      return 'master_chains_audio';         // L4 · سلاسل
     default:
       return null;
   }
@@ -187,10 +187,9 @@ export function AudioAnzanScreen({
   const addXP = useProgressStore((s) => s.addXP);
   const updateStreak = useProgressStore((s) => s.updateStreak);
 
-  // 🆕 شارات الأنزان السماعي (من progressStore)
   const anzanAudioBadges = useProgressStore((s) => s.anzanAudioBadges);
   const setAnzanAudioBadge = useProgressStore((s) => s.setAnzanAudioBadge);
-  const pendingRemediation = useProgressStore((s) => s.pendingRemediation); // 🆕
+  const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
 
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic';
@@ -210,6 +209,12 @@ export function AudioAnzanScreen({
     () => Math.max(countModulesInLevel(level), 5),
     [level],
   );
+
+  // [FIX 3] — رقم المستوى الحقيقي (0-7)
+  const levelNum = useMemo(() => {
+    const n = parseInt(level.replace('L', ''), 10);
+    return !isNaN(n) && n >= 0 && n <= 7 ? n : 0;
+  }, [level]);
 
   const currentQ = questions[currentIdx];
   const maxMs = currentQ ? getMaxMs(currentQ) : 30000;
@@ -300,7 +305,6 @@ export function AudioAnzanScreen({
           pendingBadgesRef.current.push({ skillId, timeMs, answerMs });
         }
       } else {
-        // ✅ SRB: احفظ skillId كامل ("L2-S07-m1")
         wrongSkillsRef.current.add(skillId);
       }
     },
@@ -333,7 +337,6 @@ export function AudioAnzanScreen({
     const targetValue = Math.round(currentQ.result * factor);
     const isCorrect = abacusValue === targetValue;
 
-    // ✅ Attempt Record
     const attempt = {
       skillId: `${currentQ.level}-${currentQ.section}-${currentQ.module}`,
       correct: isCorrect,
@@ -384,7 +387,6 @@ export function AudioAnzanScreen({
       const percentage = Math.round((finalScore / totalQuestions) * 100);
       const passed = percentage >= PASS_THRESHOLD;
 
-      // ═══ 🆕 منح شارة الأنزان السماعي عند النجاح ═══
       if (passed) {
         const uniqueSections = new Set(questions.map((q) => q.section));
         const earned: string[] = [];
@@ -417,19 +419,15 @@ export function AudioAnzanScreen({
         Array.from(weakSkillIds),
       );
 
-      // ✅ حفظ الدرجة في progressStore
       setGrade(level, 'anzanAudio', percentage);
 
-      // ✅ تسجيل نجاح الأنزان السمعي
       if (passed) {
-        // [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
         const levelNum = parseInt(level.replace('L', ''), 10);
         if (!isNaN(levelNum) && levelNum >= 0 && levelNum <= 7) {
           markAnzanAudioPassed(levelNum);
         }
       }
 
-      // ✅ منح الشارات فقط عند نجاح الجلسة
       if (passed) {
         pendingBadgesRef.current.forEach((b) => {
           awardBadge(b.skillId, b.timeMs, b.answerMs);
@@ -437,7 +435,6 @@ export function AudioAnzanScreen({
       }
       pendingBadgesRef.current = [];
 
-      // ✅ جلسة علاجية إجبارية عند وجود مهارات ضعيفة
       if (weakSkillIds.size > 0) {
         setPendingRemediation({
           level,
@@ -454,6 +451,7 @@ export function AudioAnzanScreen({
     ],
   );
 
+  // ⏸️ الجزء 2 يبدأ من هنا — أرسل "تابع"
   const nextQuestion = useCallback(() => {
     sorobana.stop();
     stopSpeech();
@@ -477,7 +475,6 @@ export function AudioAnzanScreen({
     sorobana, stopSpeech, onComplete, buildPerformances, saveGrade,
   ]);
 
-  // ✅ "إنهاء" — خروج بلا تقييم (لا حفظ درجة، لا شارات، لا علاجية)
   const handleEnd = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     stopSpeech();
@@ -784,10 +781,12 @@ export function AudioAnzanScreen({
     const passed = percentage >= PASS_THRESHOLD;
     const xpEarned = score * XP_PER_CORRECT;
 
+    // [FIX 4] — إضافة master_chains_audio
     const AUDIO_BADGE_LABELS: Record<string, string> = {
       master_addition_audio: '🎤 خبير جمع وطرح سماعي',
       master_multiplication_audio: '🎤 خبير ضرب سماعي',
       master_division_audio: '🎤 خبير قسمة سماعية',
+      master_chains_audio: '🎤 خبير سلاسل سماعي',
     };
 
     return (
@@ -859,7 +858,7 @@ export function AudioAnzanScreen({
         </motion.div>
 
         {performances.length > 0 && (
-          <AdaptiveFeedback performances={performances} sectionLabel="أنزان سمعي" levelNum={0} />
+          <AdaptiveFeedback performances={performances} sectionLabel="أنزان سمعي" levelNum={levelNum} />
         )}
 
         {pendingRemediation && (
