@@ -9,8 +9,9 @@
 // 📅 آخر تحديث: SRB Migration — Phase 3 + Remediation + Fix 2 + Fix 3
 // [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
 // [FIX N68] — قفل الوضع بعد النجاح بـ 70%+ + رسالة ذكية لكلا الوضعين
-// [FIX 2] — getAnzanBadgeKey: S11/S12 → null (حذف master_mixed)
+// [FIX 2] — getAnzanBadgeKey: S11/S12 → null (إلغاء master_mixed)
 // [FIX 3] — تمرير levelNum الحقيقي (0-7) إلى AdaptiveFeedback بدل 0
+// [FIX 4] — حذف master_mixed من ANZAN_BADGE_LABELS
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -50,7 +51,6 @@ type Mode = 'flash' | 'normal';
 
 interface AnzanScreenProps {
   level: SRBLevel;
-  /** ⚠️ للتوافق — يُتجاهل، يُستخرج من currentQ.section */
   section?: SRBSection;
   initialMode?: Mode;
   onBack: () => void;
@@ -71,7 +71,6 @@ const XP_PER_CORRECT = 5;
 const PASS_THRESHOLD = 70;
 const WARNING_RATIO = 0.7;
 
-// 1) helper (مرة واحدة أعلى الملف)
 function getDecimalFactor(q: SRBQuestion): number {
   const decimals = [q.result, ...q.operands].map((n) => {
     const str = Math.abs(n).toString();
@@ -81,14 +80,12 @@ function getDecimalFactor(q: SRBQuestion): number {
   return Math.pow(10, Math.max(...decimals, 0));
 }
 
-// 🆕 استخراج التلميح من بداية solution إن وُجد
 function extractHint(q: SRBQuestion | undefined): string | null {
   if (!q?.solution) return null;
   const m = q.solution.match(/^تلميح:\s*(.+?)(?:\.\s|$)/);
   return m ? m[1].trim() : null;
 }
 
-// 🆕 حجم الخط حسب طول النص (لضمان بقائه في سطر واحد)
 function displayTextSize(len: number, isBuildOrRead: boolean): string {
   if (isBuildOrRead) {
     if (len > 22) return 'text-2xl sm:text-3xl';
@@ -100,8 +97,7 @@ function displayTextSize(len: number, isBuildOrRead: boolean): string {
   return 'text-5xl sm:text-7xl';
 }
 
-// 🆕 خريطة section → مفتاح شارة الأنزان البصري
-// [FIX 2] — S11/S12 → null (حذف master_mixed — بقايا المنهاج القديم)
+// [FIX 2] — S11/S12 → null (حذف master_mixed)
 function getAnzanBadgeKey(section: SRBSection): keyof AnzanBadges | null {
   switch (section) {
     case 'S03':
@@ -109,16 +105,16 @@ function getAnzanBadgeKey(section: SRBSection): keyof AnzanBadges | null {
       return 'master_addition';
     case 'S05':
     case 'S06':
-      return 'master_multiplication'; // L2: ضرب
+      return 'master_multiplication';
     case 'S07':
     case 'S08':
-      return 'master_division';       // L3: قسمة
+      return 'master_division';
     case 'S09':
     case 'S10':
-      return 'master_chains';         // L4: سلاسل (جمع وطرح)
+      return 'master_chains';
     case 'S11':
     case 'S12':
-      return null;                    // [FIX 2] L5 القديم — لا شارة
+      return null;
     default:
       return null;
   }
@@ -243,7 +239,7 @@ export function AnzanScreen({
 
   const anzanBadges = useProgressStore((s) => s.anzanBadges);
   const setAnzanBadge = useProgressStore((s) => s.setAnzanBadge);
-  const pendingRemediation = useProgressStore((s) => s.pendingRemediation); // 🆕
+  const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
 
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic';
@@ -253,7 +249,6 @@ export function AnzanScreen({
   const setPendingRemediation = useProgressStore((s) => s.setPendingRemediation);
   const markAnzanVisualPassed = useProgressStore((s) => s.markAnzanVisualPassed);
 
-  // [FIX N68] قفل الوضع بعد النجاح
   const levelGrades = useProgressStore((s) => s.grades[level]);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -267,8 +262,7 @@ export function AnzanScreen({
     [level],
   );
 
-  // [FIX 3] — رقم المستوى (0-7) لتمريره إلى AdaptiveFeedback
-  // (بنفس منطق FIX B5 في PracticeScreen)
+  // [FIX 3] — رقم المستوى الحقيقي (0-7)
   const levelNum = useMemo(() => {
     const n = parseInt(level.replace('L', ''), 10);
     return !isNaN(n) && n >= 0 && n <= 7 ? n : 0;
@@ -400,7 +394,6 @@ export function AnzanScreen({
     const targetValue = Math.round(currentQ.result * factor);
     const isCorrect = abacusValue === targetValue;
 
-    // ✅ Attempt Record
     const attempt = {
       skillId: `${currentQ.level}-${currentQ.section}-${currentQ.module}`,
       correct: isCorrect,
@@ -492,7 +485,6 @@ export function AnzanScreen({
         const flashOk =
           lg?.anzanVisualFlash !== null && lg?.anzanVisualFlash !== undefined;
         if (normalOk && flashOk) {
-          // [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
           const levelNum = parseInt(level.replace('L', ''), 10);
           if (!isNaN(levelNum) && levelNum >= 0 && levelNum <= 7) {
             markAnzanVisualPassed(levelNum);
@@ -523,6 +515,7 @@ export function AnzanScreen({
     ],
   );
 
+  // ⏸️ الجزء 2 يبدأ من هنا — أرسل "تابع"
   const nextQuestion = useCallback(() => {
     sorobana.stop();
     stopSpeech();
@@ -546,7 +539,6 @@ export function AnzanScreen({
     sorobana, stopSpeech, onComplete, buildPerformances, saveGrade,
   ]);
 
-  // ✅ "إنهاء" — خروج بلا تقييم (لا حفظ درجة، لا شارات، لا علاجية)
   const handleEnd = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     stopSpeech();
@@ -595,7 +587,6 @@ export function AnzanScreen({
 
   // ═══ intro ═══
   if (phase === 'intro') {
-    // [FIX N68] — فحص الوضع الحالي
     const currentGrade = mode === 'flash'
       ? levelGrades?.anzanVisualFlash
       : levelGrades?.anzanVisualNormal;
@@ -673,7 +664,6 @@ export function AnzanScreen({
           </div>
         </motion.div>
 
-        {/* [FIX N68] — قفل الوضع بعد النجاح بـ70%+ */}
         {isCurrentModePassed ? (
           <div className="p-5 rounded-2xl bg-emerald-500/10 border-2 border-emerald-400/40 text-center">
             <CheckCircle2 className="w-12 h-12 text-emerald-300 mx-auto mb-3" />
@@ -918,6 +908,7 @@ export function AnzanScreen({
     const passed = percentage >= PASS_THRESHOLD;
     const xpEarned = score * XP_PER_CORRECT;
 
+    // [FIX 4] — حذف master_mixed
     const ANZAN_BADGE_LABELS: Record<string, string> = {
       master_addition: '🧠 خبير جمع وطرح',
       master_multiplication: '✖️ خبير ضرب',
