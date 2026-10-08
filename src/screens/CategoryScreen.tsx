@@ -1,6 +1,7 @@
 // src/screens/CategoryScreen.tsx
 // [FIX 7] — فحص المعاينة موحّد عبر الأداة
 // [FIX N69] — عرض درجات الأنزان البصري (متوسط) والسمعي في الأزرار
+// [FIX LK1] — فحص مزدوج لفتح المستوى: completedLevels أو passedLevelTests
 
 import { motion } from 'framer-motion';
 import {
@@ -172,6 +173,15 @@ function toArabicNumber(value: number | string): string {
   return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 }
 
+function loadPassedLevelTests(): string[] {
+  try {
+    const raw = localStorage.getItem('soroban_passed_level_tests');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 function loadPlacementData() {
   try {
     const weakSkillsRaw = localStorage.getItem('soroban_placement_weak_skills');
@@ -227,7 +237,12 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     if (inPreview) return true;
     if (index === 0) return true;
     const prevLevel = data.levels[index - 1];
-    return completedLevels.includes(prevLevel.id);
+    // [FIX LK1] — فحص مزدوج: completedLevels أو passedLevelTests
+    const passedTests = loadPassedLevelTests();
+    return (
+      completedLevels.includes(prevLevel.id) ||
+      passedTests.includes(prevLevel.id)
+    );
   };
 
   // ✅ المستوى "مكتمل" = كل دروسه مكتملة
