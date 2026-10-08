@@ -1,4 +1,4 @@
-```markdown
+
 # 🆘 RESCUE.md — SorobanMind v2
 # ملف الإنقاذ الشامل · وثيقة واحدة لكل شيء
 
