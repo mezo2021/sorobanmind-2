@@ -793,14 +793,11 @@ export function LessonScreen({
               {hasMod && activeModule && (
                 <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-gold-400/10 to-gold-600/10 border border-gold-400/30">
                   <h3 className="text-sm font-bold text-gold-300 mb-2">📐 القاعدة</h3>
-                  {activeModule.rule.formula && (
-                    <p
-                      dir="ltr"
-                      className="text-center text-base font-display font-bold text-electric-300 mb-2 bg-white/5 p-2 rounded-xl"
-                    >
-                      {activeModule.rule.formula}
-                    </p>
-                  )}
+                  {/* ⚠️ rule.formula مخفية عن الطفل — لا تُعرض على الشاشة.
+    السبب: القاعدة الطويلة معقدة على الأطفال (5-12 سنة).
+    البيانات محفوظة في ملفات الدروس للاستخدام المستقبلي.
+    ملاحظة: condition.formula تبقى معروضة (قصيرة وبسيطة).
+    تاريخ الإخفاء: 2026-10-08 */}
                   <p className="text-sm text-white/85 font-body leading-relaxed mb-3">
                     {activeModule.rule.description}
                   </p>
