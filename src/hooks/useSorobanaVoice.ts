@@ -105,6 +105,27 @@ async function loadBuffer(url: string): Promise<AudioBuffer> {
   }
 }
 
+// ⭐ رفع الصوت من التعليق بشكل متزامن (user gesture)
+function unlockAudioSync(): AudioContext {
+  const ctx = getAudioContext();
+  try {
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {
+        /* ignore */
+      });
+    }
+    // Silent buffer trick — ضروري لـ iOS/Safari
+    const silentBuf = ctx.createBuffer(1, 1, 22050);
+    const silentSrc = ctx.createBufferSource();
+    silentSrc.buffer = silentBuf;
+    silentSrc.connect(ctx.destination);
+    silentSrc.start(0);
+  } catch {
+    /* ignore */
+  }
+  return ctx;
+}
+
 // ═══════════════════════════════════════════════
 // Hook
 // ═══════════════════════════════════════════════
@@ -200,6 +221,10 @@ export function useSorobanaVoice() {
         return;
       }
 
+      // ⭐ الحل الجذري: تفعيل AudioContext بشكل متزامن (user gesture)
+      const ctx = unlockAudioSync();
+      log(`🔓 unlocked: ctx.state=${ctx.state}`);
+
       const myGeneration = ++generationRef.current;
       const localQueue = [...files];
 
@@ -254,13 +279,18 @@ export function useSorobanaVoice() {
 
         const ctx = getAudioContext();
         log(`🔊 ctx.state=${ctx.state}`);
+
+        // ⭐ محاولة resume أخيرة (قد تفشل، لكن silent buffer عالج المشكلة)
         if (ctx.state === 'suspended') {
           try {
-            await ctx.resume();
-            log(`🔊 after resume: ${ctx.state}`);
-          } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            log(`❌ resume failed: ${msg}`);
+            ctx.resume().catch(() => {
+              /* ignore */
+            });
+            // محاولة قصيرة — إذا لم ينجح، نكمل بالـ silent buffer الموجود
+            await new Promise((r) => setTimeout(r, 50));
+            log(`🔊 after resume attempt: ${ctx.state}`);
+          } catch {
+            /* ignore */
           }
         }
 
