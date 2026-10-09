@@ -602,10 +602,10 @@ export const S06_LESSON: LessonNode = {
     "الآحاد: 2 × 4 = 8 → ضع 8 بالآحاد بكماشة مغلقة 🗜️ | Units: 2 × 4 = 8 → Set 8 in Units with closed pinch 🗜️",
     "الناتج النهائي: 968 | Final Result: 968",
   ],
-  result: 968,
+    result: 968,
 },
-          {
-            id: "S06-m3-T3",
+{
+  id: "S06-m3-T3",
             question: "13 × 31",
             discrimination: "9+1=10 بأصدقاء 10 (+1 = −9 + 10) | +1 = −9 + 10",
             steps: [
