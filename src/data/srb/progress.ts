@@ -13,7 +13,7 @@
 // 📊 البنية الجديدة (2026-09-30):
 //   {
 //     "L0": {
-//       practice: { grade: 85, attempts: 2, passed: true, weakSkills: ["SRB-L0-S01-m3"] },
+//       practice: { grade: 85, attempts: 2, passed: true, weakSkills: ["SRB-L0-S01-m2"] },
 //       anzanVisualNormal: { grade: 90, ... },
 //       anzanVisualFlash: { grade: 75, ... },
 //       anzanAudio: { grade: 80, ... },
