@@ -1,0 +1,811 @@
+// src/curriculum/lessons/L3/S08.ts
+// ➗ درس S08: القسمة على رقمين — منهجية تاكاشي كوجيما
+// القاعدة الذهبية: قدّر بالرقم الأول من المقسوم عليه، ثم اخصم على قضيبين متتاليين (المئات ثم العشرات)
+
+import type { LessonNode } from "../types";
+
+export const S08_LESSON: LessonNode = {
+  id: "S08",
+  skillId: "S08",
+  levelId: "L3",
+  order: 2,
+  title: { ar: "القسمة على رقمين", en: "Division by Two Digits" },
+  emoji: "➗",
+  tags: ["division", "kids", "L3", "two-digit-divisor", "takashi-kojima"],
+
+  modules: [
+    // ═══════════════════════════════════════════════════════════
+    // m1 — القسمة البسيطة | Direct Division
+    // ═══════════════════════════════════════════════════════════
+    {
+      id: "m1",
+      ruleCategory: "direct",
+      title: "القسمة البسيطة | Direct Division",
+      titleEn: "Direct Division",
+      emoji: "✨",
+      miniStory: {
+        title: "مفتاح الأقفال المباشرة | The Direct Locks Key",
+        emoji: "🧙",
+        story: "في قلعة السوروبان العجيبة، يواجه الأبطال أبواب الأقفال المزدوجة. قال الحكيم معداد: لنقسم 484 على 22! نقسم أول رقمين 48 ÷ 2 = 2 في عشرات الخارج، ثم نخصم 44 على قضيبين مباشرة (4 من المئات و4 من العشرات) دون استعارة! | At Soroban Castle, heroes face double-lock doors. Master Abacus says: To divide 484 by 22, divide first two digits 48 ÷ 2 = 2 in tens quotient, then subtract 44 across two rods directly (4 from hundreds and 4 from tens) without borrowing!",
+        storyAudioText: "أهلاً بكم يا أبطال السوروبان الصغار! اليوم سنفتح الأقفال المزدوجة بذكاء وسهولة. لنقسم أربعمائة وأربعة وثمانين على اثنين وعشرين. نبدأ بالتقدير: أربعة وثمانون قسمة اثنين وعشرين تساوي اثنين في عشرات الخارج. نخصم أربعة من المئات وأربعة من العشرات، ثم نكرر مع الآحاد. الناتج هو اثنان وعشرون!",
+        storyAudioId: null,
+      },
+      rule: {
+        description: "القاعدة الذهبية 🧙: قدّر الناتج بالقسمة على الرقم الأول من المقسوم عليه، ضعه في الخارج، اخصم حاصل الضرب على قضيبين متتاليين (المئات ثم العشرات) بالسبابة، وكرر العملية! | Golden Rule 🧙: Estimate quotient using first digit of divisor, place in quotient, subtract product across two rods (hundreds then tens) with index finger, and repeat!",
+      },
+      condition: {
+        formula: "قسمة تامة · طرح مباشر | Exact division · Direct subtraction",
+        explanation: "جميع الخرزات متاحة للطرح المباشر ولا نحتاج لأصدقاء 5 أو 10! | All beads are available for direct subtraction; no friends of 5 or 10 needed!",
+      },
+      discrimination: {
+        steps: [
+          {
+            question: "هل الرقمان الأولان يكفيان للقسمة؟ | Are the first two digits enough to divide?",
+            type: "yes-no",
+            answer: "نعم → قدّر بالقسمة على الرقم الأول | Yes → Estimate using first digit",
+            hint: "48 يكفي للقسمة على 22 | 48 is enough to divide by 22",
+          },
+          {
+            question: "هل الخرزات المتاحة تكفي للطرح على قضيبين؟ | Are available beads enough to subtract across two rods?",
+            type: "comparison",
+            actual: "الخرزات المتاحة ≥ ناتج الضرب | Available beads ≥ Product",
+            answer: "نعم → اطرح مباشرة | Yes → Subtract directly",
+          },
+        ],
+        decision: "قسمة بسيطة — قدّر ثم اخصم على قضيبين بالسبابة! | Direct division — Estimate, then subtract across two rods with index!",
+      },
+      watchPhase: {
+        examples: [
+          {
+            id: "S08-m1-E1",
+            question: "484 ÷ 22",
+            discrimination: "48÷22=2 · 44÷22=2 | Tens: 48÷22=2 · Units: 44÷22=2",
+            rule: "قدّر بالرقم الأول، واخصم على قضيبين مباشرة | Estimate with first digit, subtract directly across two rods",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · اخصم 44 (سحبة سبابة ⬇️ للمئات وسحبة سبابة ⬇️ للعشرات) · ضع 2 في آحاد الخارج 👍 · اخصم 44 (سحبة سبابة ⬇️ للعشرات وسحبة سبابة ⬇️ للآحاد) | Set 2 in tens quotient 👍 · Subtract 44 (index pull ⬇️ for hundreds & index pull ⬇️ for tens) · Set 2 in units quotient 👍 · Subtract 44 (index pull ⬇️ for tens & index pull ⬇️ for units)",
+            steps: [
+              "التقدير: 48 ÷ 22 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 48 ÷ 22 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 22 = 44 → اطرح 4 من المئات بسحبة سبابة ⬇️ و4 من العشرات بسحبة سبابة ⬇️ → المتبقي 44 | Subtraction: 2 × 22 = 44 → Subtract 4 from hundreds with index ⬇️ & 4 from tens with index ⬇️ → Remainder 44",
+              "التقدير الثاني: 44 ÷ 22 = 2 → ضع 2 في آحاد الخارج 👍 | Second estimate: 44 ÷ 22 = 2 → Set 2 in units quotient 👍",
+              "الخصم: 2 × 22 = 44 → اطرح 4 من العشرات بسحبة سبابة ⬇️ و4 من الآحاد بسحبة سبابة ⬇️ → المتبقي 0 | Subtraction: 2 × 22 = 44 → Subtract 4 from tens with index ⬇️ & 4 from units with index ⬇️ → Remainder 0",
+              "الناتج النهائي: 22 | Final Result: 22",
+            ],
+            result: 22,
+            beadVisual: "2 عشرات + 2 آحاد في الخارج | 2 tens + 2 units in quotient",
+          },
+          {
+            id: "S08-m1-E2",
+            question: "396 ÷ 12",
+            discrimination: "39÷12=3 · 36÷12=3 | Tens: 39÷12=3 · Units: 36÷12=3",
+            rule: "قدّر بالرقم الأول، واخصم على قضيبين مباشرة | Estimate with first digit, subtract directly across two rods",
+            fingerMovement: "ضع 3 في عشرات الخارج 👍 · اخصم 36 (3 من المئات بسحبة سبابة ⬇️، و6 من العشرات بكماشة مفتوحة) · ضع 3 في آحاد الخارج 👍 · اخصم 36 | Set 3 in tens quotient 👍 · Subtract 36 (3 from hundreds with index ⬇️ & 6 from tens with open pinch) · Set 3 in units quotient 👍 · Subtract 36",
+            steps: [
+              "التقدير: 39 ÷ 12 = 3 → ضع 3 في عشرات الخارج 👍 | Estimate: 39 ÷ 12 = 3 → Set 3 in tens quotient 👍",
+              "الخصم: 3 × 12 = 36 → اطرح 3 من المئات بسحبة سبابة ⬇️ و6 من العشرات بكماشة مفتوحة (السبابة ترفع 5 ⬆️ وتسحب 1 ⬇️) → المتبقي 36 | Subtraction: 3 × 12 = 36 → Subtract 3 from hundreds with index ⬇️ & 6 from tens with open pinch (index lifts 5 ⬆️ & pulls 1 ⬇️) → Remainder 36",
+              "التقدير الثاني: 36 ÷ 12 = 3 → ضع 3 في آحاد الخارج 👍 | Second estimate: 36 ÷ 12 = 3 → Set 3 in units quotient 👍",
+              "الخصم: 3 × 12 = 36 → اطرح 3 من العشرات ⬇️ و6 من الآحاد بكماشة مفتوحة → المتبقي 0 | Subtraction: 3 × 12 = 36 → Subtract 3 from tens ⬇️ & 6 from units with open pinch → Remainder 0",
+              "الناتج النهائي: 33 | Final Result: 33",
+            ],
+            result: 33,
+            beadVisual: "3 عشرات + 3 آحاد في الخارج | 3 tens + 3 units in quotient",
+          },
+          {
+            id: "S08-m1-E3",
+            question: "462 ÷ 21",
+            discrimination: "46÷21=2 · 42÷21=2 | Tens: 46÷21=2 · Units: 42÷21=2",
+            rule: "قدّر بالرقم الأول، واخصم على قضيبين مباشرة | Estimate with first digit, subtract directly across two rods",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · اخصم 42 (4 من المئات و2 من العشرات) بسحبة سبابة ⬇️ · ضع 2 في آحاد الخارج 👍 · اخصم 42 بسحبة سبابة ⬇️ | Set 2 in tens quotient 👍 · Subtract 42 (4 from hundreds & 2 from tens) with index pull ⬇️ · Set 2 in units quotient 👍 · Subtract 42 with index pull ⬇️",
+            steps: [
+              "التقدير: 46 ÷ 21 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 46 ÷ 21 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 21 = 42 → اطرح 4 من المئات بسحبة سبابة ⬇️ و2 من العشرات بسحبة سبابة ⬇️ → المتبقي 42 | Subtraction: 2 × 21 = 42 → Subtract 4 from hundreds with index ⬇️ & 2 from tens with index ⬇️ → Remainder 42",
+              "التقدير الثاني: 42 ÷ 21 = 2 → ضع 2 في آحاد الخارج 👍 | Second estimate: 42 ÷ 21 = 2 → Set 2 in units quotient 👍",
+              "الخصم: 2 × 21 = 42 → اطرح 4 من العشرات بسحبة سبابة ⬇️ و2 من الآحاد بسحبة سبابة ⬇️ → المتبقي 0 | Subtraction: 2 × 21 = 42 → Subtract 4 from tens with index ⬇️ & 2 from units with index ⬇️ → Remainder 0",
+              "الناتج النهائي: 22 | Final Result: 22",
+            ],
+            result: 22,
+            beadVisual: "2 عشرات + 2 آحاد في الخارج | 2 tens + 2 units in quotient",
+          },
+          {
+            id: "S08-m1-E4",
+            question: "693 ÷ 33",
+            discrimination: "69÷33=2 · 33÷33=1 | Tens: 69÷33=2 · Units: 33÷33=1",
+            rule: "قدّر بالرقم الأول، واخصم على قضيبين مباشرة | Estimate with first digit, subtract directly across two rods",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · اخصم 66 بكماشة مفتوحة (6 من المئات و6 من العشرات) · ضع 1 في آحاد الخارج 👍 · اخصم 33 بالسبابة ⬇️ | Set 2 in tens quotient 👍 · Subtract 66 with open pinch (6 from hundreds & 6 from tens) · Set 1 in units quotient 👍 · Subtract 33 with index ⬇️",
+            steps: [
+              "التقدير: 69 ÷ 33 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 69 ÷ 33 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 33 = 66 → اطرح 6 من المئات بكماشة مفتوحة و6 من العشرات بكماشة مفتوحة → المتبقي 33 | Subtraction: 2 × 33 = 66 → Subtract 6 from hundreds with open pinch & 6 from tens with open pinch → Remainder 33",
+              "التقدير الثاني: 33 ÷ 33 = 1 → ضع 1 في آحاد الخارج 👍 | Second estimate: 33 ÷ 33 = 1 → Set 1 in units quotient 👍",
+              "الخصم: 1 × 33 = 33 → اطرح 3 من العشرات بسحبة سبابة ⬇️ و3 من الآحاد بسحبة سبابة ⬇️ → المتبقي 0 | Subtraction: 1 × 33 = 33 → Subtract 3 from tens ⬇️ & 3 from units ⬇️ → Remainder 0",
+              "الناتج النهائي: 21 | Final Result: 21",
+            ],
+            result: 21,
+            beadVisual: "2 عشرات + 1 آحاد في الخارج | 2 tens + 1 unit in quotient",
+          },
+          {
+            id: "S08-m1-E5",
+            question: "484 ÷ 11",
+            discrimination: "48÷11=4 · 44÷11=4 | Tens: 48÷11=4 · Units: 44÷11=4",
+            rule: "قدّر بالرقم الأول، واخصم على قضيبين مباشرة | Estimate with first digit, subtract directly across two rods",
+            fingerMovement: "ضع 4 في عشرات الخارج 👍 · اخصم 44 بالسبابة ⬇️ (4 من المئات و4 من العشرات) · ضع 4 في آحاد الخارج 👍 · اخصم 44 بالسبابة ⬇️ | Set 4 in tens quotient 👍 · Subtract 44 with index ⬇️ (4 from hundreds & 4 from tens) · Set 4 in units quotient 👍 · Subtract 44 with index ⬇️",
+            steps: [
+              "التقدير: 48 ÷ 11 = 4 → ضع 4 في عشرات الخارج 👍 | Estimate: 48 ÷ 11 = 4 → Set 4 in tens quotient 👍",
+              "الخصم: 4 × 11 = 44 → اطرح 4 من المئات ⬇️ و4 من العشرات ⬇️ بسحبة سبابة → المتبقي 44 | Subtraction: 4 × 11 = 44 → Subtract 4 from hundreds ⬇️ & 4 from tens ⬇️ with index pull → Remainder 44",
+              "التقدير الثاني: 44 ÷ 11 = 4 → ضع 4 في آحاد الخارج 👍 | Second estimate: 44 ÷ 11 = 4 → Set 4 in units quotient 👍",
+              "الخصم: 4 × 11 = 44 → اطرح 4 من العشرات ⬇️ و4 من الآحاد ⬇️ بسحبة سبابة → المتبقي 0 | Subtraction: 4 × 11 = 44 → Subtract 4 from tens ⬇️ & 4 from units ⬇️ with index pull → Remainder 0",
+              "الناتج النهائي: 44 | Final Result: 44",
+            ],
+            result: 44,
+            beadVisual: "4 عشرات + 4 آحاد في الخارج | 4 tens + 4 units in quotient",
+          },
+        ],
+      },
+      tryPhase: {
+        exercises: [
+          {
+            id: "S08-m1-T1",
+            question: "273 ÷ 21",
+            discrimination: "27÷21=1 · 63÷21=3 | 27÷21=1 · 63÷21=3",
+            steps: [
+              "التقدير: 27 ÷ 21 = 1 → ضع 1 في عشرات الخارج 👍 | Estimate: 27 ÷ 21 = 1 → Set 1 in tens quotient 👍",
+              "الخصم: 1 × 21 = 21 → اطرح 2 من المئات بسحبة سبابة ⬇️ و1 من العشرات بسحبة سبابة ⬇️ → المتبقي 63 | Subtraction: 1 × 21 = 21 → Subtract 2 from hundreds ⬇️ & 1 from tens ⬇️ → Remainder 63",
+              "التقدير الثاني: 63 ÷ 21 = 3 → ضع 3 في آحاد الخارج 👍 | Second estimate: 63 ÷ 21 = 3 → Set 3 in units quotient 👍",
+              "الخصم: 3 × 21 = 63 → اطرح 6 من العشرات بكماشة مفتوحة و3 من الآحاد بسحبة سبابة ⬇️ → المتبقي 0 | Subtraction: 3 × 21 = 63 → Subtract 6 from tens with open pinch & 3 from units ⬇️ → Remainder 0",
+              "الناتج النهائي: 13 | Final Result: 13",
+            ],
+            result: 13,
+          },
+          {
+            id: "S08-m1-T2",
+            question: "372 ÷ 31",
+            discrimination: "37÷31=1 · 62÷31=2 | 37÷31=1 · 62÷31=2",
+            steps: [
+              "التقدير: 37 ÷ 31 = 1 → ضع 1 في عشرات الخارج 👍 | Estimate: 37 ÷ 31 = 1 → Set 1 in tens quotient 👍",
+              "الخصم: 1 × 31 = 31 → اطرح 3 من المئات بسحبة سبابة ⬇️ و1 من العشرات بسحبة سبابة ⬇️ → المتبقي 62 | Subtraction: 1 × 31 = 31 → Subtract 3 from hundreds ⬇️ & 1 from tens ⬇️ → Remainder 62",
+              "التقدير الثاني: 62 ÷ 31 = 2 → ضع 2 في آحاد الخارج 👍 | Second estimate: 62 ÷ 31 = 2 → Set 2 in units quotient 👍",
+              "الخصم: 2 × 31 = 62 → اطرح 6 من العشرات بكماشة مفتوحة و2 من الآحاد بسحبة سبابة ⬇️ → المتبقي 0 | Subtraction: 2 × 31 = 62 → Subtract 6 from tens with open pinch & 2 from units ⬇️ → Remainder 0",
+              "الناتج النهائي: 12 | Final Result: 12",
+            ],
+            result: 12,
+          },
+          {
+            id: "S08-m1-T3",
+            question: "483 ÷ 23",
+            discrimination: "48÷23=2 · 23÷23=1 | 48÷23=2 · 23÷23=1",
+            steps: [
+              "التقدير: 48 ÷ 23 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 48 ÷ 23 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 23 = 46 → اطرح 4 من المئات بسحبة سبابة ⬇️ و6 من العشرات بكماشة مفتوحة → المتبقي 23 | Subtraction: 2 × 23 = 46 → Subtract 4 from hundreds ⬇️ & 6 from tens with open pinch → Remainder 23",
+              "التقدير الثاني: 23 ÷ 23 = 1 → ضع 1 في آحاد الخارج 👍 | Second estimate: 23 ÷ 23 = 1 → Set 1 in units quotient 👍",
+              "الخصم: 1 × 23 = 23 → اطرح 2 من العشرات بسحبة سبابة ⬇️ و3 من الآحاد بسحبة سبابة ⬇️ → المتبقي 0 | Subtraction: 1 × 23 = 23 → Subtract 2 from tens ⬇️ & 3 from units ⬇️ → Remainder 0",
+              "الناتج النهائي: 21 | Final Result: 21",
+            ],
+            result: 21,
+          },
+          {
+            id: "S08-m1-T4",
+            question: "492 ÷ 12",
+            discrimination: "49÷12=4 · 12÷12=1 | 49÷12=4 · 12÷12=1",
+            steps: [
+              "التقدير: 49 ÷ 12 = 4 → ضع 4 في عشرات الخارج 👍 | Estimate: 49 ÷ 12 = 4 → Set 4 in tens quotient 👍",
+              "الخصم: 4 × 12 = 48 → اطرح 4 من المئات بسحبة سبابة ⬇️ و8 من العشرات بكماشة مفتوحة → المتبقي 12 | Subtraction: 4 × 12 = 48 → Subtract 4 from hundreds ⬇️ & 8 from tens with open pinch → Remainder 12",
+              "التقدير الثاني: 12 ÷ 12 = 1 → ضع 1 في آحاد الخارج 👍 | Second estimate: 12 ÷ 12 = 1 → Set 1 in units quotient 👍",
+              "الخصم: 1 × 12 = 12 → اطرح 1 من العشرات بسحبة سبابة ⬇️ و2 من الآحاد بسحبة سبابة ⬇️ → المتبقي 0 | Subtraction: 1 × 12 = 12 → Subtract 1 from tens ⬇️ & 2 from units ⬇️ → Remainder 0",
+              "الناتج النهائي: 41 | Final Result: 41",
+            ],
+            result: 41,
+          },
+          {
+            id: "S08-m1-T5",
+            question: "682 ÷ 22",
+            discrimination: "68÷22=3 · 22÷22=1 | 68÷22=3 · 22÷22=1",
+            steps: [
+              "التقدير: 68 ÷ 22 = 3 → ضع 3 في عشرات الخارج 👍 | Estimate: 68 ÷ 22 = 3 → Set 3 in tens quotient 👍",
+              "الخصم: 3 × 22 = 66 → اطرح 6 من المئات بكماشة مفتوحة و6 من العشرات بكماشة مفتوحة → المتبقي 22 | Subtraction: 3 × 22 = 66 → Subtract 6 from hundreds with open pinch & 6 from tens with open pinch → Remainder 22",
+              "التقدير الثاني: 22 ÷ 22 = 1 → ضع 1 في آحاد الخارج 👍 | Second estimate: 22 ÷ 22 = 1 → Set 1 in units quotient 👍",
+              "الخصم: 1 × 22 = 22 → اطرح 2 من العشرات بسحبة سبابة ⬇️ و2 من الآحاد بسحبة سبابة ⬇️ → المتبقي 0 | Subtraction: 1 × 22 = 22 → Subtract 2 from tens ⬇️ & 2 from units ⬇️ → Remainder 0",
+              "الناتج النهائي: 31 | Final Result: 31",
+            ],
+            result: 31,
+          },
+        ],
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // m2 — القسمة بأصدقاء 5 | Friends of 5
+    // ═══════════════════════════════════════════════════════════
+    {
+      id: "m2",
+      ruleCategory: "small_friends",
+      title: "القسمة بأصدقاء 5 | Friends of 5",
+      titleEn: "Friends of 5",
+      emoji: "🤝",
+      miniStory: {
+        title: "مفتاح الجدة 5 والرفع المزدوج | Grandma 5's Key & Double Lift",
+        emoji: "👵",
+        story: "عند الباب الثاني من قلعة السوروبان، أردنا قسمة 572 على 22. 57 ÷ 22 = 2، لكن خصم 44 يطلب طرح 4 من 5 مئات! ابتسمت الجدة 5 وقالت: استخدموا حركة «الرفع المزدوج» ⬆️⬆️ (ارفعوا 5 بالسبابة وارفعوا الصديق 1 بالإبهام معاً على المئات)! الناتج 26! | At the second door of Soroban Castle, we wanted to divide 572 by 22. 57 ÷ 22 = 2, but subtracting 44 needs removing 4 from 5 hundreds! Grandma 5 smiled: Use «Double Lift» ⬆️⬆️ (lift 5 with index and lift friend 1 with thumb together on hundreds)! Result is 26!",
+        storyAudioText: "يا لكم من ذكيين! في الباب الثاني، واجهنا مسألة خمسمائة واثنين وسبعين قسمة اثنين وعشرين. التقدير في العشرات هو اثنان. عند الخصم نحتاج طرح أربعة من خمسة في المئات. هنا تتدخل الجدة خمسة برفق: نرفع الخرزة الخماسية بالسبابة ونرفع الصديق واحداً بالإبهام بحركة رفع مزدوج لطيفة! الناتج النهائي هو ستة وعشرون!",
+        storyAudioId: null,
+      },
+      rule: {
+        description: "أصدقاء 5 👵: عندما لا تكفي الخرزات السفلية للطرح، ارفع الخرزة الخماسية 5 بالسبابة ⬆️ وارفع الصديق بالإبهام ⬆️ بحركة «رفع مزدوج» ⬆️⬆️! | Friends of 5 👵: When lower beads are insufficient for subtraction, lift 5 with index ⬆️ and lift friend with thumb ⬆️ in a «Double Lift» ⬆️⬆️!",
+        cases: [
+          { from: 1, formula: "−1 = −5 + 4" },
+          { from: 2, formula: "−2 = −5 + 3" },
+          { from: 3, formula: "−3 = −5 + 2" },
+          { from: 4, formula: "−4 = −5 + 1" },
+        ],
+      },
+      condition: {
+        formula: "السفليات غير كافية · العلوية 5 مفعّلة | Lower beads insufficient · Upper 5 active",
+        explanation: "نستخدم أصدقاء 5 عندما تكون الخرزة الخماسية منزلة والسفليات المتاحة أقل من المطلوب طرحه! | Use Friends of 5 when upper 5 bead is active and lower beads are less than needed!",
+      },
+      discrimination: {
+        steps: [
+          {
+            question: "هل الخرزات السفلية غير كافية للطرح؟ | Are lower beads insufficient for subtraction?",
+            type: "comparison",
+            actual: "السفليات المتاحة < المطلوب | Free lower beads < Subtrahend",
+            answer: "نعم → استخدم أصدقاء 5 | Yes → Use Friends of 5",
+          },
+          {
+            question: "هل الخرزة العلوية 5 مفعّلة؟ | Is Upper 5 active?",
+            type: "yes-no",
+            answer: "نعم → نفّذ حركة «رفع مزدوج» ⬆️⬆️ | Yes → Perform «Double Lift» ⬆️⬆️",
+          },
+        ],
+        decision: "أصدقاء 5 — ارفع 5 بالسبابة وارفع الصديق بالإبهام (رفع مزدوج ⬆️⬆️)! | Friends of 5 — Lift 5 with index and lift friend with thumb (Double Lift ⬆️⬆️)!",
+      },
+      watchPhase: {
+        examples: [
+          {
+            id: "S08-m2-E1",
+            question: "572 ÷ 22",
+            discrimination: "57÷22=2 · طرح 44 → 4 من 5 بأصدقاء 5 | 57÷22=2 · Subtract 44 → 4 from 5 with Friends of 5",
+            rule: "−4 = −5 + 1",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · اخصم 44: على المئات نطرح 4 برفع مزدوج ⬆️⬆️ (سبابة ترفع 5 + إبهام يرفع 1) وعلى العشرات نطرح 4 برفع مزدوج ⬆️⬆️ (−4 = −5+1) · ضع 6 في آحاد الخارج 🗜️ · اخصم 132 | Set 2 in tens quotient 👍 · Subtract 44: Double Lift ⬆️⬆️ on hundreds (index lifts 5 + thumb lifts 1) & Double Lift ⬆️⬆️ on tens (−4 = −5+1) · Set 6 in units quotient 🗜️ · Subtract 132",
+            steps: [
+              "التقدير: 57 ÷ 22 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 57 ÷ 22 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 22 = 44 → اطرح 44: على المئات نطرح 4 برفع مزدوج ⬆️⬆️ (−4 = −5 + 1) → المئات = 1، وعلى العشرات نطرح 4 برفع مزدوج ⬆️⬆️ (−4 = −5+1) → المتبقي 132 | Subtraction: 2 × 22 = 44 → Subtract 44: hundreds: 4 via «Double Lift» ⬆️⬆️ (−4 = −5 + 1) → Hundreds = 1; tens: 4 via Double Lift ⬆️⬆️ (−4 = −5+1) → Remainder 132",
+              "التقدير الثاني: 132 ÷ 22 = 6 → ضع 6 في آحاد الخارج بكماشة مغلقة 🗜️ | Second estimate: 132 ÷ 22 = 6 → Set 6 in units quotient with closed pinch 🗜️",
+              "الخصم: 6 × 22 = 132 → اطرح 132 مباشرة (1 من المئات، 3 من العشرات، 2 من الآحاد) → المتبقي 0 | Subtraction: 6 × 22 = 132 → Subtract 132 directly → Remainder 0",
+              "الناتج النهائي: 26 | Final Result: 26",
+            ],
+            result: 26,
+            beadVisual: "2 عشرات + 6 آحاد في الخارج | 2 tens + 6 units in quotient",
+          },
+          {
+            id: "S08-m2-E2",
+            question: "594 ÷ 22",
+            discrimination: "59÷22=2 · طرح 44 → 4 من 5 بأصدقاء 5 | 59÷22=2 · Subtract 44 → 4 from 5 with Friends of 5",
+            rule: "−4 = −5 + 1",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · رفع مزدوج ⬆️⬆️ على المئات (سبابة ترفع 5 + إبهام يرفع 1) وسحبة سبابة ⬇️ على العشرات | Set 2 in tens quotient 👍 · Double Lift ⬆️⬆️ on hundreds (index lifts 5 + thumb lifts 1) & index pull ⬇️ on tens",
+            steps: [
+              "التقدير: 59 ÷ 22 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 59 ÷ 22 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 22 = 44 → اطرح 44: رفع مزدوج ⬆️⬆️ على المئات (−4 = −5 + 1) وطرح 4 من العشرات بسحبة سبابة ⬇️ → المتبقي 154 | Subtraction: 2 × 22 = 44 → Subtract 44 with Double Lift ⬆️⬆️ on hundreds & 4 from tens with index ⬇️ → Remainder 154",
+              "التقدير الثاني: 154 ÷ 22 = 7 → ضع 7 في آحاد الخارج بكماشة مغلقة 🗜️ | Second estimate: 154 ÷ 22 = 7 → Set 7 in units quotient 🗜️",
+              "الخصم: 7 × 22 = 154 → اطرح 154 مباشرة → المتبقي 0 | Subtraction: 7 × 22 = 154 → Subtract 154 directly → Remainder 0",
+              "الناتج النهائي: 27 | Final Result: 27",
+            ],
+            result: 27,
+            beadVisual: "2 عشرات + 7 آحاد في الخارج | 2 tens + 7 units in quotient",
+          },
+          {
+            id: "S08-m2-E3",
+            question: "588 ÷ 21",
+            discrimination: "58÷21=2 · طرح 42 → 4 من 5 بأصدقاء 5 | 58÷21=2 · Subtract 42 → 4 from 5 with Friends of 5",
+            rule: "−4 = −5 + 1",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · رفع مزدوج ⬆️⬆️ على المئات لطرح 4 وسحبة سبابة ⬇️ على العشرات لطرح 2 | Set 2 in tens quotient 👍 · Double Lift ⬆️⬆️ on hundreds for 4 & index pull ⬇️ on tens for 2",
+            steps: [
+              "التقدير: 58 ÷ 21 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 58 ÷ 21 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 21 = 42 → اطرح 42: رفع مزدوج ⬆️⬆️ على المئات (−4 = −5 + 1) وطرح 2 من العشرات بسحبة سبابة ⬇️ → المتبقي 168 | Subtraction: 2 × 21 = 42 → Subtract 42: Double Lift ⬆️⬆️ on hundreds & 2 from tens via index ⬇️ → Remainder 168",
+              "التقدير الثاني: 168 ÷ 21 = 8 → ضع 8 في آحاد الخارج بكماشة مغلقة 🗜️ | Second estimate: 168 ÷ 21 = 8 → Set 8 in units quotient 🗜️",
+              "الخصم: 8 × 21 = 168 → اطرح 168 مباشرة → المتبقي 0 | Subtraction: 8 × 21 = 168 → Subtract 168 directly → Remainder 0",
+              "الناتج النهائي: 28 | Final Result: 28",
+            ],
+            result: 28,
+            beadVisual: "2 عشرات + 8 آحاد في الخارج | 2 tens + 8 units in quotient",
+          },
+          {
+            id: "S08-m2-E4",
+            question: "567 ÷ 21",
+            discrimination: "56÷21=2 · طرح 42 → 4 من 5 بأصدقاء 5 | 56÷21=2 · Subtract 42 → 4 from 5 with Friends of 5",
+            rule: "−4 = −5 + 1",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · رفع مزدوج ⬆️⬆️ على المئات لطرح 4 ورفع مزدوج ⬆️⬆️ على العشرات لطرح 2 (−2 = −5+3) | Set 2 in tens quotient 👍 · Double Lift ⬆️⬆️ on hundreds for 4 & Double Lift ⬆️⬆️ on tens for 2 (−2 = −5+3)",
+            steps: [
+              "التقدير: 56 ÷ 21 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 56 ÷ 21 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 21 = 42 → اطرح 42: رفع مزدوج ⬆️⬆️ على المئات (−4 = −5 + 1) وطرح 2 من العشرات برفع مزدوج ⬆️⬆️ (−2 = −5+3) → المتبقي 147 | Subtraction: 2 × 21 = 42 → Subtract 42: Double Lift ⬆️⬆️ on hundreds & 2 from tens with Double Lift ⬆️⬆️ (−2 = −5+3) → Remainder 147",
+              "التقدير الثاني: 147 ÷ 21 = 7 → ضع 7 في آحاد الخارج بكماشة مغلقة 🗜️ | Second estimate: 147 ÷ 21 = 7 → Set 7 in units quotient 🗜️",
+              "الخصم: 7 × 21 = 147 → اطرح 147 مباشرة → المتبقي 0 | Subtraction: 7 × 21 = 147 → Subtract 147 directly → Remainder 0",
+              "الناتج النهائي: 27 | Final Result: 27",
+            ],
+            result: 27,
+            beadVisual: "2 عشرات + 7 آحاد في الخارج | 2 tens + 7 units in quotient",
+          },
+          {
+            id: "S08-m2-E5",
+            question: "546 ÷ 21",
+            discrimination: "54÷21=2 · طرح 42 → 4 من 5 بأصدقاء 5 | 54÷21=2 · Subtract 42 → 4 from 5 with Friends of 5",
+            rule: "−4 = −5 + 1",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · رفع مزدوج ⬆️⬆️ على المئات لطرح 4 وسحبة سبابة ⬇️ على العشرات لطرح 2 | Set 2 in tens quotient 👍 · Double Lift ⬆️⬆️ on hundreds for 4 & index pull ⬇️ on tens for 2",
+            steps: [
+              "التقدير: 54 ÷ 21 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 54 ÷ 21 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 21 = 42 → اطرح 42: رفع مزدوج ⬆️⬆️ على المئات (−4 = −5 + 1) وطرح 2 من العشرات بسحبة سبابة ⬇️ → المتبقي 126 | Subtraction: 2 × 21 = 42 → Subtract 42: Double Lift ⬆️⬆️ on hundreds & 2 from tens via index ⬇️ → Remainder 126",
+              "التقدير الثاني: 126 ÷ 21 = 6 → ضع 6 في آحاد الخارج بكماشة مغلقة 🗜️ | Second estimate: 126 ÷ 21 = 6 → Set 6 in units quotient 🗜️",
+              "الخصم: 6 × 21 = 126 → اطرح 126 مباشرة → المتبقي 0 | Subtraction: 6 × 21 = 126 → Subtract 126 directly → Remainder 0",
+              "الناتج النهائي: 26 | Final Result: 26",
+            ],
+            result: 26,
+            beadVisual: "2 عشرات + 6 آحاد في الخارج | 2 tens + 6 units in quotient",
+          },
+        ],
+      },
+      tryPhase: {
+        exercises: [
+          {
+            id: "S08-m2-T1",
+            question: "952 ÷ 14",
+            discrimination: "95÷14=6 · طرح 84 → 8 من المئات بسحبة سبابة + 4 من العشرات برفع مزدوج | 95÷14=6 · Subtract 84 → 8 from hundreds with index + 4 from tens with Double Lift",
+            steps: [
+              "التقدير: 95 ÷ 14 = 6 → ضع 6 في عشرات الخارج 🗜️ | Estimate: 95 ÷ 14 = 6 → Set 6 in tens quotient 🗜️",
+              "الخصم: 6 × 14 = 84 → اطرح 8 من المئات بسحبة سبابة ⬇️، ثم اطرح 4 من العشرات برفع مزدوج ⬆️⬆️ (−4 = −5 + 1) → المتبقي 112 | Subtraction: 6 × 14 = 84 → Subtract 8 from hundreds with index ⬇️ & 4 from tens with Double Lift ⬆️⬆️ (−4 = −5 + 1) → Remainder 112",
+              "التقدير الثاني: 112 ÷ 14 = 8 → ضع 8 في آحاد الخارج 🗜️ | Second estimate: 112 ÷ 14 = 8 → Set 8 in units quotient 🗜️",
+              "الخصم: 8 × 14 = 112 → اطرح مباشرة → الناتج 68 | Subtraction: 8 × 14 = 112 → Subtract directly → Result 68",
+            ],
+            result: 68,
+          },
+          {
+            id: "S08-m2-T2",
+            question: "357 ÷ 21",
+            discrimination: "35÷21=1 · طرح 21 → 2 من المئات بسحبة سبابة + 1 من العشرات برفع مزدوج | 35÷21=1 · Subtract 21 → 2 from hundreds with index + 1 from tens with Double Lift",
+            steps: [
+              "التقدير: 35 ÷ 21 = 1 → ضع 1 في عشرات الخارج 👍 | Estimate: 35 ÷ 21 = 1 → Set 1 in tens quotient 👍",
+              "الخصم: 1 × 21 = 21 → اطرح 2 من المئات بسحبة سبابة ⬇️، و1 من العشرات برفع مزدوج ⬆️⬆️ (−1 = −5 + 4) → المتبقي 147 | Subtraction: 1 × 21 = 21 → Subtract 2 from hundreds ⬇️ & 1 from tens with Double Lift ⬆️⬆️ (−1 = −5 + 4) → Remainder 147",
+              "التقدير الثاني: 147 ÷ 21 = 7 → ضع 7 في آحاد الخارج 🗜️ | Second estimate: 147 ÷ 21 = 7 → Set 7 in units quotient 🗜️",
+              "الخصم: 7 × 21 = 147 → اطرح مباشرة → الناتج 17 | Subtraction: 7 × 21 = 147 → Subtract directly → Result 17",
+            ],
+            result: 17,
+          },
+          {
+            id: "S08-m2-T3",
+            question: "756 ÷ 21",
+            discrimination: "75÷21=3 · طرح 63 → 6 من المئات بكماشة مفتوحة + 3 من العشرات برفع مزدوج | 75÷21=3 · Subtract 63 → 6 from hundreds with open pinch + 3 from tens with Double Lift",
+            steps: [
+              "التقدير: 75 ÷ 21 = 3 → ضع 3 في عشرات الخارج 👍 | Estimate: 75 ÷ 21 = 3 → Set 3 in tens quotient 👍",
+              "الخصم: 3 × 21 = 63 → اطرح 6 من المئات بكماشة مفتوحة، و3 من العشرات برفع مزدوج ⬆️⬆️ (−3 = −5 + 2) → المتبقي 126 | Subtraction: 3 × 21 = 63 → Subtract 6 from hundreds with open pinch & 3 from tens with Double Lift ⬆️⬆️ (−3 = −5 + 2) → Remainder 126",
+              "التقدير الثاني: 126 ÷ 21 = 6 → ضع 6 في آحاد الخارج 🗜️ | Second estimate: 126 ÷ 21 = 6 → Set 6 in units quotient 🗜️",
+              "الخصم: 6 × 21 = 126 → اطرح مباشرة → الناتج 36 | Subtraction: 6 × 21 = 126 → Subtract directly → Result 36",
+            ],
+            result: 36,
+          },
+          {
+            id: "S08-m2-T4",
+            question: "656 ÷ 41",
+            discrimination: "65÷41=1 · طرح 41 → 4 من المئات برفع مزدوج + 1 من العشرات برفع مزدوج | 65÷41=1 · Subtract 41 → 4 from hundreds with Double Lift + 1 from tens with Double Lift",
+            steps: [
+              "التقدير: 65 ÷ 41 = 1 → ضع 1 في عشرات الخارج 👍 | Estimate: 65 ÷ 41 = 1 → Set 1 in tens quotient 👍",
+              "الخصم: 1 × 41 = 41 → اطرح 4 من المئات برفع مزدوج ⬆️⬆️ (−4 = −5 + 1)، وطرح 1 من العشرات برفع مزدوج ⬆️⬆️ (−1 = −5 + 4) → المتبقي 246 | Subtraction: 1 × 41 = 41 → Subtract 4 from hundreds via Double Lift ⬆️⬆️ & 1 from tens via Double Lift ⬆️⬆️ → Remainder 246",
+              "التقدير الثاني: 246 ÷ 41 = 6 → ضع 6 في آحاد الخارج 🗜️ | Second estimate: 246 ÷ 41 = 6 → Set 6 in units quotient 🗜️",
+              "الخصم: 6 × 41 = 246 → اطرح مباشرة → الناتج 16 | Subtraction: 6 × 41 = 246 → Subtract directly → Result 16",
+            ],
+            result: 16,
+          },
+          {
+            id: "S08-m2-T5",
+            question: "550 ÷ 22",
+            discrimination: "55÷22=2 · طرح 44 → 4 من المئات برفع مزدوج + 4 من العشرات برفع مزدوج | 55÷22=2 · Subtract 44 → 4 from hundreds with Double Lift + 4 from tens with Double Lift",
+            steps: [
+              "التقدير: 55 ÷ 22 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 55 ÷ 22 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 22 = 44 → اطرح 4 من المئات برفع مزدوج ⬆️⬆️ (−4 = −5 + 1)، وطرح 4 من العشرات برفع مزدوج ⬆️⬆️ (−4 = −5 + 1) → المتبقي 110 | Subtraction: 2 × 22 = 44 → Subtract 4 from hundreds via Double Lift ⬆️⬆️ & 4 from tens via Double Lift ⬆️⬆️ → Remainder 110",
+              "التقدير الثاني: 110 ÷ 22 = 5 → ضع 5 في آحاد الخارج بسحبة سبابة ⬇️ | Second estimate: 110 ÷ 22 = 5 → Set 5 in units quotient with index ⬇️",
+              "الخصم: 5 × 22 = 110 → اطرح مباشرة → الناتج 25 | Subtraction: 5 × 22 = 110 → Subtract directly → Result 25",
+            ],
+            result: 25,
+          },
+        ],
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // m3 — القسمة بأصدقاء 10 | Friends of 10
+    // ═══════════════════════════════════════════════════════════
+    {
+      id: "m3",
+      ruleCategory: "big_friends",
+      title: "القسمة بأصدقاء 10 | Friends of 10",
+      titleEn: "Friends of 10",
+      emoji: "🌟",
+      miniStory: {
+        title: "نداء العملاق 10 والاستعارة | Giant 10's Call & Borrowing",
+        emoji: "🦶",
+        story: "في الباب الثالث من القلعة، واجه الفرسان قسمة 350 على 14. 35 ÷ 14 = 2، لكن طرح 28 يتطلب طرح 2 من المئات وطرح 8 من العشرات مع استعارة! ينادي الفرسان العملاق 10: نطرح 2 من المئات، ثم نطرح 10 بسحبة سبابة من المئات ⬇️ ونضيف الصديق 2 للعشرات بالإبهام ⬆️! الناتج 25! | At the third castle door, knights faced dividing 350 by 14. 35 ÷ 14 = 2, but subtracting 28 requires subtracting 2 from hundreds and 8 from tens with borrowing! Knights call Giant 10: Subtract 2 from hundreds, then subtract 10 with index pull from hundreds ⬇️ and add friend 2 to tens with thumb ⬆️! Result is 25!",
+        storyAudioText: "يا أبطال القلعة الشجعان! في الباب الثالث، واجهنا مسألة ثلاثمائة وخمسين قسمة أربعة عشر. التقدير هو اثنان في عشرات الخارج. عند الخصم نطرح اثنين من المئات، ثم نحتاج طرح ثمانية من العشرات دون وجود خرزات كافية! ننادي العملاق عشرة بصوت دافئ: نطرح عشرة بسحبة سبابة من المئات، ونضيف الصديق اثنين للعشرات بالإبهام! الناتج النهائي هو خمسة وعشرون!",
+        storyAudioId: null,
+      },
+      rule: {
+        description: "أصدقاء 10 🌟: عندما لا تكفي الخرزات للطرح، اطرح 10 من العمود الأيسر (المئات) بسحبة سبابة ⬇️ وأضف الصديق (مكمل 10) في عمودك (العشرات) بالإبهام ⬆️! | Friends of 10 🌟: When beads are insufficient, subtract 10 from the left column (hundreds) with index pull ⬇️ and add friend (complement of 10) in your column (tens) with thumb ⬆️!",
+        cases: [
+          { from: 1, formula: "−1 = −10 + 9" },
+          { from: 2, formula: "−2 = −10 + 8" },
+          { from: 3, formula: "−3 = −10 + 7" },
+          { from: 4, formula: "−4 = −10 + 6" },
+          { from: 5, formula: "−5 = −10 + 5" },
+          { from: 6, formula: "−6 = −10 + 4" },
+          { from: 7, formula: "−7 = −10 + 3" },
+          { from: 8, formula: "−8 = −10 + 2" },
+          { from: 9, formula: "−9 = −10 + 1" },
+        ],
+      },
+      condition: {
+        formula: "المطلوب > خرزات العمود · العمود الأيسر مفعّل | Subtrahend > Column beads · Left column active",
+        explanation: "نستعير 10 من العمود الأيسر عندما تتجاوز قيمة الخصم الخرزات المتاحة في العمود الحالي! | Borrow 10 from the left column when subtraction exceeds current available beads!",
+      },
+      discrimination: {
+        steps: [
+          {
+            question: "هل الخرزات المتاحة أقل من المطلوب طرحه؟ | Are available column beads less than required?",
+            type: "yes-no",
+            answer: "نعم → استخدم أصدقاء 10 | Yes → Use Friends of 10",
+          },
+          {
+            question: "هل العمود الأيسر يحتوي على خرزة للاستعارة؟ | Does the left column have a bead to borrow?",
+            type: "yes-no",
+            answer: "نعم → اطرح 10 بسحبة سبابة وأضف صديق 10 بالإبهام | Yes → Subtract 10 with index pull & add Friend of 10 with thumb",
+          },
+        ],
+        decision: "أصدقاء 10 — اطرح 10 من المئات بسحبة سبابة وأضف الصديق للعشرات بالإبهام! | Friends of 10 — Subtract 10 from hundreds with index pull & add Friend to tens with thumb!",
+      },
+      watchPhase: {
+        examples: [
+          {
+            id: "S08-m3-E1",
+            question: "350 ÷ 14",
+            discrimination: "35÷14=2 · طرح 28 → 2 من المئات + استعارة 10 من المئات للعشرات | 35÷14=2 · Subtract 28 → 2 from hundreds + borrow 10 from hundreds for tens",
+            rule: "−8 = −10 + 2",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · اطرح 2 من المئات بسحبة سبابة ⬇️ · اطرح 10 من المئات بسحبة سبابة ⬇️ (استعارة 10) وأضف 2 إلى العشرات بالإبهام ⬆️ · ضع 5 في آحاد الخارج بسحبة سبابة ⬇️ · اخصم 70 | Set 2 in tens quotient 👍 · Subtract 2 from hundreds with index ⬇️ · Index pull on hundreds ⬇️ to borrow 10 & add 2 to tens with thumb ⬆️ · Set 5 in units quotient with index ⬇️ · Subtract 70",
+            steps: [
+              "التقدير: 35 ÷ 14 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 35 ÷ 14 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 14 = 28 → اطرح 2 من المئات بسحبة سبابة ⬇️، ثم استعر 10 بسحبة سبابة على المئات ⬇️ وأضف 2 للعشرات بالإبهام ⬆️ (−8 = −10 + 2) → العداد = 70 | Subtraction: 2 × 14 = 28 → Subtract 2 from hundreds ⬇️, then borrow 10 with index pull on hundreds ⬇️ & add 2 to tens with thumb ⬆️ (−8 = −10 + 2) → Abacus = 70",
+              "التقدير الثاني: 70 ÷ 14 = 5 → ضع 5 في آحاد الخارج بسحبة سبابة ⬇️ | Second estimate: 70 ÷ 14 = 5 → Set 5 in units quotient with index ⬇️",
+              "الخصم: 5 × 14 = 70 → اطرح 7 من العشرات بكماشة مفتوحة و0 من الآحاد → المتبقي 0 | Subtraction: 5 × 14 = 70 → Subtract 7 from tens with open pinch & 0 from units → Remainder 0",
+              "الناتج النهائي: 25 | Final Result: 25",
+            ],
+            result: 25,
+            beadVisual: "2 عشرات + 5 آحاد في الخارج | 2 tens + 5 units in quotient",
+          },
+          {
+            id: "S08-m3-E2",
+            question: "351 ÷ 13",
+            discrimination: "35÷13=2 · طرح 26 → 2 من المئات + استعارة 10 من المئات للعشرات | 35÷13=2 · Subtract 26 → 2 from hundreds + borrow 10 from hundreds for tens",
+            rule: "−6 = −10 + 4",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · اطرح 2 من المئات ⬇️ · سحبة سبابة على المئات ⬇️ + إبهام يرفع 4 بالعشرات ⬆️ · ضع 7 في آحاد الخارج 🗜️ · اخصم 91 بكماشة مفتوحة | Set 2 in tens quotient 👍 · Subtract 2 from hundreds ⬇️ · Index pull on hundreds ⬇️ + thumb lifts 4 in tens ⬆️ · Set 7 in units quotient 🗜️ · Subtract 91 with open pinch",
+            steps: [
+              "التقدير: 35 ÷ 13 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 35 ÷ 13 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 13 = 26 → اطرح 2 من المئات بسحبة سبابة ⬇️، ثم استعر 10 بسحبة سبابة على المئات وأضف 4 للعشرات بالإبهام ⬆️ (−6 = −10 + 4) → العداد = 91 | Subtraction: 2 × 13 = 26 → Subtract 2 from hundreds ⬇️, then borrow 10 with index & add 4 to tens with thumb ⬆️ (−6 = −10 + 4) → Abacus = 91",
+              "التقدير الثاني: 91 ÷ 13 = 7 → ضع 7 في آحاد الخارج بكماشة مغلقة 🗜️ | Second estimate: 91 ÷ 13 = 7 → Set 7 in units quotient with closed pinch 🗜️",
+              "الخصم: 7 × 13 = 91 → اطرح 9 من العشرات بكماشة مفتوحة و1 من الآحاد بسحبة سبابة ⬇️ → المتبقي 0 | Subtraction: 7 × 13 = 91 → Subtract 9 from tens with open pinch & 1 from units ⬇️ → Remainder 0",
+              "الناتج النهائي: 27 | Final Result: 27",
+            ],
+            result: 27,
+            beadVisual: "2 عشرات + 7 آحاد في الخارج | 2 tens + 7 units in quotient",
+          },
+          {
+            id: "S08-m3-E3",
+            question: "455 ÷ 13",
+            discrimination: "45÷13=3 · طرح 39 → 3 من المئات + استعارة 10 من المئات للعشرات | 45÷13=3 · Subtract 39 → 3 from hundreds + borrow 10 from hundreds for tens",
+            rule: "−9 = −10 + 1",
+            fingerMovement: "ضع 3 في عشرات الخارج 👍 · اطرح 3 من المئات ⬇️ · سحبة سبابة ⬇️ + إبهام يرفع 1 بالعشرات ⬆️ · ضع 5 في آحاد الخارج ⬇️ · اخصم 65 بكماشة مفتوحة | Set 3 in tens quotient 👍 · Subtract 3 from hundreds ⬇️ · Index pull ⬇️ + thumb lifts 1 in tens ⬆️ · Set 5 in units quotient ⬇️ · Subtract 65 with open pinch",
+            steps: [
+              "التقدير: 45 ÷ 13 = 3 → ضع 3 في عشرات الخارج 👍 | Estimate: 45 ÷ 13 = 3 → Set 3 in tens quotient 👍",
+              "الخصم: 3 × 13 = 39 → اطرح 3 من المئات بسحبة سبابة ⬇️، ثم استعر 10 بسحبة سبابة وأضف 1 للعشرات بالإبهام ⬆️ (−9 = −10 + 1) → العداد = 65 | Subtraction: 3 × 13 = 39 → Subtract 3 from hundreds ⬇️, then borrow 10 with index & add 1 to tens ⬆️ (−9 = −10 + 1) → Abacus = 65",
+              "التقدير الثاني: 65 ÷ 13 = 5 → ضع 5 في آحاد الخارج بسحبة سبابة ⬇️ | Second estimate: 65 ÷ 13 = 5 → Set 5 in units quotient with index ⬇️",
+              "الخصم: 5 × 13 = 65 → اطرح 6 من العشرات بكماشة مفتوحة و5 من الآحاد برفع العلوية بالسبابة ⬆️ → المتبقي 0 | Subtraction: 5 × 13 = 65 → Subtract 6 from tens with open pinch & 5 from units by lifting upper bead with index ⬆️ → Remainder 0",
+              "الناتج النهائي: 35 | Final Result: 35",
+            ],
+            result: 35,
+            beadVisual: "3 عشرات + 5 آحاد في الخارج | 3 tens + 5 units in quotient",
+          },
+          {
+            id: "S08-m3-E4",
+            question: "456 ÷ 12",
+            discrimination: "45÷12=3 · طرح 36 → 3 من المئات + استعارة 10 من المئات للعشرات | 45÷12=3 · Subtract 36 → 3 from hundreds + borrow 10 from hundreds for tens",
+            rule: "−6 = −10 + 4",
+            fingerMovement: "ضع 3 في عشرات الخارج 👍 · اطرح 3 من المئات ⬇️ · سحبة سبابة ⬇️ + إبهام يرفع 4 بالعشرات ⬆️ · ضع 8 في آحاد الخارج 🗜️ · اخصم 96 | Set 3 in tens quotient 👍 · Subtract 3 from hundreds ⬇️ · Index pull ⬇️ + thumb lifts 4 in tens ⬆️ · Set 8 in units quotient 🗜️ · Subtract 96",
+            steps: [
+              "التقدير: 45 ÷ 12 = 3 → ضع 3 في عشرات الخارج 👍 | Estimate: 45 ÷ 12 = 3 → Set 3 in tens quotient 👍",
+              "الخصم: 3 × 12 = 36 → اطرح 3 من المئات بسحبة سبابة ⬇️، ثم استعر 10 بسحبة سبابة وأضف 4 للعشرات بالإبهام ⬆️ (−6 = −10 + 4) → العداد = 96 | Subtraction: 3 × 12 = 36 → Subtract 3 from hundreds ⬇️, then borrow 10 with index & add 4 to tens ⬆️ (−6 = −10 + 4) → Abacus = 96",
+              "التقدير الثاني: 96 ÷ 12 = 8 → ضع 8 في آحاد الخارج بكماشة مغلقة 🗜️ | Second estimate: 96 ÷ 12 = 8 → Set 8 in units quotient with closed pinch 🗜️",
+              "الخصم: 8 × 12 = 96 → اطرح 9 من العشرات بكماشة مفتوحة و6 من الآحاد بكماشة مفتوحة → المتبقي 0 | Subtraction: 8 × 12 = 96 → Subtract 9 from tens with open pinch & 6 from units with open pinch → Remainder 0",
+              "الناتج النهائي: 38 | Final Result: 38",
+            ],
+            result: 38,
+            beadVisual: "3 عشرات + 8 آحاد في الخارج | 3 tens + 8 units in quotient",
+          },
+          {
+            id: "S08-m3-E5",
+            question: "308 ÷ 14",
+            discrimination: "30÷14=2 · طرح 28 → 2 من المئات + استعارة 10 من المئات للعشرات | 30÷14=2 · Subtract 28 → 2 from hundreds + borrow 10 from hundreds for tens",
+            rule: "−8 = −10 + 2",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · اطرح 2 من المئات ⬇️ · سحبة سبابة ⬇️ + إبهام يرفع 2 بالعشرات ⬆️ · ضع 2 في آحاد الخارج 👍 · اخصم 28 | Set 2 in tens quotient 👍 · Subtract 2 from hundreds ⬇️ · Index pull ⬇️ + thumb lifts 2 in tens ⬆️ · Set 2 in units quotient 👍 · Subtract 28",
+            steps: [
+              "التقدير: 30 ÷ 14 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 30 ÷ 14 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 14 = 28 → اطرح 2 من المئات بسحبة سبابة ⬇️، ثم استعر 10 بسحبة سبابة وأضف 2 للعشرات بالإبهام ⬆️ (−8 = −10 + 2) → العداد = 28 | Subtraction: 2 × 14 = 28 → Subtract 2 from hundreds ⬇️, then borrow 10 with index & add 2 to tens ⬆️ (−8 = −10 + 2) → Abacus = 28",
+              "التقدير الثاني: 28 ÷ 14 = 2 → ضع 2 في آحاد الخارج بالإبهام 👍 | Second estimate: 28 ÷ 14 = 2 → Set 2 in units quotient with thumb 👍",
+              "الخصم: 2 × 14 = 28 → اطرح 2 من العشرات بسحبة سبابة ⬇️ و8 من الآحاد بكماشة مفتوحة → المتبقي 0 | Subtraction: 2 × 14 = 28 → Subtract 2 from tens ⬇️ & 8 from units with open pinch → Remainder 0",
+              "الناتج النهائي: 22 | Final Result: 22",
+            ],
+            result: 22,
+            beadVisual: "2 عشرات + 2 آحاد في الخارج | 2 tens + 2 units in quotient",
+          },
+        ],
+      },
+      tryPhase: {
+        exercises: [
+          {
+            id: "S08-m3-T1",
+            question: "408 ÷ 17",
+            discrimination: "−4 = −10 + 6",
+            steps: [
+              "التقدير: 40 ÷ 17 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 40 ÷ 17 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 17 = 34 → اطرح 3 من المئات بسحبة سبابة ⬇️، ثم استعر 10 بسحبة سبابة من المئات وأضف 6 للعشرات بكماشة مغلقة 🗜️ → العداد = 68 | Subtraction: 2 × 17 = 34 → Subtract 3 from hundreds ⬇️, then borrow 10 with index from hundreds & add 6 to tens 🗜️ → Abacus = 68",
+              "التقدير الثاني: 68 ÷ 17 = 4 → ضع 4 في آحاد الخارج 👍 | Second estimate: 68 ÷ 17 = 4 → Set 4 in units quotient 👍",
+              "الخصم: 4 × 17 = 68 → اطرح 68 مباشرة → الناتج 24 | Subtraction: 4 × 17 = 68 → Subtract directly → Result 24",
+            ],
+            result: 24,
+          },
+          {
+            id: "S08-m3-T2",
+            question: "702 ÷ 27",
+            discrimination: "−4 = −10 + 6",
+            steps: [
+              "التقدير: 70 ÷ 27 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 70 ÷ 27 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 27 = 54 → اطرح 5 من المئات برفع العلوية بالسبابة ⬆️، ثم استعر 10 بسحبة سبابة من المئات وأضف 6 للعشرات بكماشة مغلقة 🗜️ → العداد = 162 | Subtraction: 2 × 27 = 54 → Subtract 5 from hundreds by lifting upper bead with index ⬆️, then borrow 10 with index from hundreds & add 6 to tens 🗜️ → Abacus = 162",
+              "التقدير الثاني: 162 ÷ 27 = 6 → ضع 6 في آحاد الخارج بكماشة مغلقة 🗜️ | Second estimate: 162 ÷ 27 = 6 → Set 6 in units quotient 🗜️",
+              "الخصم: 6 × 27 = 162 → اطرح مباشرة → الناتج 26 | Subtraction: 6 × 27 = 162 → Subtract directly → Result 26",
+            ],
+            result: 26,
+          },
+          {
+            id: "S08-m3-T3",
+            question: "901 ÷ 17",
+            discrimination: "−5 = −10 + 5",
+            steps: [
+              "التقدير: 90 ÷ 17 = 5 → ضع 5 في عشرات الخارج بسحبة سبابة ⬇️ | Estimate: 90 ÷ 17 = 5 → Set 5 in tens quotient with index ⬇️",
+              "الخصم: 5 × 17 = 85 → اطرح 8 من المئات بكماشة مفتوحة، ثم استعر 10 بسحبة سبابة من المئات وأضف 5 للعشرات بإنزال العلوية بالسبابة ⬇️ → العداد = 51 | Subtraction: 5 × 17 = 85 → Subtract 8 from hundreds, then borrow 10 with index from hundreds & add 5 to tens by lowering upper bead with index ⬇️ → Abacus = 51",
+              "التقدير الثاني: 51 ÷ 17 = 3 → ضع 3 في آحاد الخارج بالإبهام 👍 | Second estimate: 51 ÷ 17 = 3 → Set 3 in units quotient 👍",
+              "الخصم: 3 × 17 = 51 → اطرح مباشرة → الناتج 53 | Subtraction: 3 × 17 = 51 → Subtract directly → Result 53",
+            ],
+            result: 53,
+          },
+          {
+            id: "S08-m3-T4",
+            question: "759 ÷ 23",
+            discrimination: "−9 = −10 + 1",
+            steps: [
+              "التقدير: 75 ÷ 23 = 3 → ضع 3 في عشرات الخارج 👍 | Estimate: 75 ÷ 23 = 3 → Set 3 in tens quotient 👍",
+              "الخصم: 3 × 23 = 69 → اطرح 6 من المئات بكماشة مفتوحة، ثم استعر 10 بسحبة سبابة من المئات وأضف 1 للعشرات بالإبهام ⬆️ → العداد = 69 | Subtraction: 3 × 23 = 69 → Subtract 6 from hundreds, then borrow 10 with index from hundreds & add 1 to tens ⬆️ → Abacus = 69",
+              "التقدير الثاني: 69 ÷ 23 = 3 → ضع 3 في آحاد الخارج 👍 | Second estimate: 69 ÷ 23 = 3 → Set 3 in units quotient 👍",
+              "الخصم: 3 × 23 = 69 → اطرح مباشرة → الناتج 33 | Subtraction: 3 × 23 = 69 → Subtract directly → Result 33",
+            ],
+            result: 33,
+          },
+          {
+            id: "S08-m3-T5",
+            question: "851 ÷ 23",
+            discrimination: "−9 = −10 + 1",
+            steps: [
+              "التقدير: 85 ÷ 23 = 3 → ضع 3 في عشرات الخارج 👍 | Estimate: 85 ÷ 23 = 3 → Set 3 in tens quotient 👍",
+              "الخصم: 3 × 23 = 69 → اطرح 6 من المئات بكماشة مفتوحة، ثم استعر 10 بسحبة سبابة من المئات وأضف 1 للعشرات بالإبهام ⬆️ → العداد = 161 | Subtraction: 3 × 23 = 69 → Subtract 6 from hundreds, then borrow 10 with index from hundreds & add 1 to tens ⬆️ → Abacus = 161",
+              "التقدير الثاني: 161 ÷ 23 = 7 → ضع 7 في آحاد الخارج بكماشة مغلقة 🗜️ | Second estimate: 161 ÷ 23 = 7 → Set 7 in units quotient 🗜️",
+              "الخصم: 7 × 23 = 161 → اطرح مباشرة → الناتج 37 | Subtraction: 7 × 23 = 161 → Subtract directly → Result 37",
+            ],
+            result: 37,
+          },
+        ],
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // m4 — القسمة المركّبة | Compound Division
+    // ═══════════════════════════════════════════════════════════
+    {
+      id: "m4",
+      ruleCategory: "combined",
+      title: "القسمة المركّبة | Compound Division",
+      titleEn: "Compound Division",
+      emoji: "🎯",
+      miniStory: {
+        title: "التحالف المزدوج - قوة أصدقاء 10 و5 | The Dual Alliance - Power of Friends of 10 & 5",
+        emoji: "👑",
+        story: "في الغرفة السرية الأخيرة، نقسم 234 على 18. 23 ÷ 18 = 1، لكن طرح 18 يطلب طرح 1 من المئات ثم استعارة 10 من المئات وأصدقاء 5 لإضافة المكمل في العشرات! يتحد الجدة 5 والعملاق 10 لفتح الباب: سحبة سبابة للاستعارة 10 من المئات ⬇️، ونزول مزدوج ⬇️⬇️ بالسبابة والإبهام على العشرات لتفعيل 5 وطرد الزائد! الناتج 13! | In the final secret room, divide 234 by 18. 23 ÷ 18 = 1, but subtracting 18 requires subtracting 1 from hundreds then borrowing 10 from hundreds and Friends of 5 to add complement in tens! Grandma 5 and Giant 10 unite: index pull to borrow 10 ⬇️ and Double Drop ⬇️⬇️ on tens to activate 5 and push excess down! Result is 13!",
+        storyAudioText: "وصلنا للغرفة السرية الكبرى يا فرسان! مئتان وأربعة وثلاثون قسمة ثمانية عشر. التقدير هو واحد في عشرات الخارج. عند طرح ثمانية عشر، نطرح واحداً من المئات، ثم نحتاج استعارة عشرة وصديق خمسة في نفس الوقت للعشرات! يتحد العملاق عشرة والجدة خمسة: نستعير عشرة بسحبة سبابة من المئات، وننزل خمسة بالسبابة ونطرد ثلاثة بالإبهام بنزول مزدوج على العشرات! الناتج النهائي هو ثلاثة عشر!",
+        storyAudioId: null,
+      },
+      rule: {
+        description: "التحالف المزدوج 👑: عندما تستعير 10 ولا تكفي السفليات لإضافة المكمل، استخدم الصيغة المركبة: −10 + 5 − (k−5) باستعارة 10 بسحبة سبابة ⬇️ من المئات، ثم نزول مزدوج ⬇️⬇️ على العشرات لتفعيل 5 وطرد الزائد! | Dual Alliance 👑: When borrowing 10 and lower beads can't hold the complement, use compound rule: −10 + 5 − (k−5) by borrowing 10 with index pull ⬇️ from hundreds, then Double Drop ⬇️⬇️ on tens to activate 5 and push excess down!",
+        cases: [
+          { from: 6, formula: "−6 = −10 + 5 − 1" },
+          { from: 7, formula: "−7 = −10 + 5 − 2" },
+          { from: 8, formula: "−8 = −10 + 5 − 3" },
+          { from: 9, formula: "−9 = −10 + 5 − 4" },
+        ],
+      },
+      condition: {
+        formula: "المطلوب > خرزات العمود · المتمّم > السفليات المتاحة | Subtrahend > Column beads · Complement > Free lower beads",
+        explanation: "نحتاج للجمع المركب عندما نستعير 10 ولكن إضافة المكمّل تتطلب استخدام صديق 5 في نفس الوقت! | We need compound rule when borrowing 10 requires using Friend of 5 to add the complement simultaneously!",
+      },
+      discrimination: {
+        steps: [
+          {
+            question: "هل نحتاج استعارة 10 من عمود المئات؟ | Do we need to borrow 10 from hundreds column?",
+            type: "yes-no",
+            answer: "نعم → نحتاج استعارة 10 | Yes → Need to borrow 10",
+          },
+          {
+            question: "هل الخرزات السفلية غير كافية لإضافة المكمل المباشر؟ | Are lower beads insufficient to add direct complement?",
+            type: "yes-no",
+            answer: "نعم → استخدم التحالف المزدوج: سحبة سبابة + نزول مزدوج | Yes → Use Dual Alliance: Index pull + Double Drop",
+          },
+        ],
+        decision: "تحالف مزدوج — سحبة سبابة للاستعارة 10 من المئات + نزول مزدوج لتفعيل 5 وطرد الزائد بالعشرات! | Dual Alliance — Index pull to borrow 10 from hundreds + Double Drop to activate 5 & push excess down in tens!",
+      },
+      watchPhase: {
+        examples: [
+          {
+            id: "S08-m4-E1",
+            question: "234 ÷ 18",
+            discrimination: "23÷18=1 · طرح 18 → 1 من المئات + استعارة 10 وأصدقاء 5 | 23÷18=1 · Subtract 18 → 1 from hundreds + borrow 10 & Friends of 5",
+            rule: "−8 = −10 + 5 − 3",
+            fingerMovement: "ضع 1 في عشرات الخارج 👍 · اطرح 1 من المئات ⬇️ · سحبة سبابة ⬇️ على المئات (استعارة 10) + نزول مزدوج ⬇️⬇️ على العشرات (سبابة تفعّل 5 ⬇️ + إبهام يطرد 3 ⬇️) · ضع 3 في آحاد الخارج 👍 · اخصم 54 | Set 1 in tens quotient 👍 · Subtract 1 from hundreds ⬇️ · Index pull ⬇️ on hundreds (borrow 10) + Double Drop ⬇️⬇️ on tens (index activates 5 ⬇️ + thumb pushes 3 down ⬇️) · Set 3 in units quotient 👍 · Subtract 54",
+            steps: [
+              "التقدير: 23 ÷ 18 = 1 → ضع 1 في عشرات الخارج 👍 | Estimate: 23 ÷ 18 = 1 → Set 1 in tens quotient 👍",
+              "الخصم: 1 × 18 = 18 → اطرح 18: اطرح 1 من المئات بسحبة سبابة ⬇️، ثم استعر 10 بسحبة سبابة على المئات ⬇️، ونزول مزدوج ⬇️⬇️ على العشرات (السبابة تفعّل 5 ⬇️ والإبهام يطرد 3 ⬇️) → العداد = 54 | Subtraction: 1 × 18 = 18 → Subtract 18: 1 from hundreds via index ⬇️, borrow 10 via index ⬇️ & Double Drop ⬇️⬇️ on tens (index activates 5 ⬇️ & thumb pushes 3 down ⬇️) → Abacus = 54",
+              "التقدير الثاني: 54 ÷ 18 = 3 → ضع 3 في آحاد الخارج بالإبهام 👍 | Second estimate: 54 ÷ 18 = 3 → Set 3 in units quotient with thumb 👍",
+              "الخصم: 3 × 18 = 54 → اطرح 5 من العشرات بسحبة سبابة ⬇️ و4 من الآحاد بسحبة سبابة ⬇️ → المتبقي 0 | Subtraction: 3 × 18 = 54 → Subtract 5 from tens ⬇️ & 4 from units ⬇️ → Remainder 0",
+              "الناتج النهائي: 13 | Final Result: 13",
+            ],
+            result: 13,
+            beadVisual: "1 عشرات + 3 آحاد في الخارج | 1 ten + 3 units in quotient",
+          },
+          {
+            id: "S08-m4-E2",
+            question: "432 ÷ 18",
+            discrimination: "43÷18=2 · طرح 36 → 3 من المئات + استعارة 10 وأصدقاء 5 | 43÷18=2 · Subtract 36 → 3 from hundreds + borrow 10 & Friends of 5",
+            rule: "−6 = −10 + 5 − 1",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · اطرح 3 من المئات ⬇️ · سحبة سبابة ⬇️ على المئات (استعارة 10) + نزول مزدوج ⬇️⬇️ على العشرات (سبابة تفعّل 5 ⬇️ + إبهام يطرد 1 ⬇️) · ضع 4 في آحاد الخارج 👍 · اخصم 72 | Set 2 in tens quotient 👍 · Subtract 3 from hundreds ⬇️ · Index pull ⬇️ on hundreds (borrow 10) + Double Drop ⬇️⬇️ on tens (index activates 5 ⬇️ + thumb pushes 1 down ⬇️) · Set 4 in units quotient 👍 · Subtract 72",
+            steps: [
+              "التقدير: 43 ÷ 18 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 43 ÷ 18 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 18 = 36 → اطرح 36: اطرح 3 من المئات بسحبة سبابة ⬇️، ثم استعر 10 بسحبة سبابة ⬇️، ونزول مزدوج ⬇️⬇️ على العشرات (السبابة تفعّل 5 ⬇️ والإبهام يطرد 1 ⬇️) → العداد = 72 | Subtraction: 2 × 18 = 36 → Subtract 36: 3 from hundreds via index ⬇️, borrow 10 via index ⬇️ & Double Drop ⬇️⬇️ on tens (index activates 5 ⬇️ & thumb pushes 1 down ⬇️) → Abacus = 72",
+              "التقدير الثاني: 72 ÷ 18 = 4 → ضع 4 في آحاد الخارج بالإبهام 👍 | Second estimate: 72 ÷ 18 = 4 → Set 4 in units quotient with thumb 👍",
+              "الخصم: 4 × 18 = 72 → اطرح 7 من العشرات بكماشة مفتوحة و2 من الآحاد بسحبة سبابة ⬇️ → المتبقي 0 | Subtraction: 4 × 18 = 72 → Subtract 7 from tens with open pinch & 2 from units ⬇️ → Remainder 0",
+              "الناتج النهائي: 24 | Final Result: 24",
+            ],
+            result: 24,
+            beadVisual: "2 عشرات + 4 آحاد في الخارج | 2 tens + 4 units in quotient",
+          },
+          {
+            id: "S08-m4-E3",
+            question: "336 ÷ 14",
+            discrimination: "33÷14=2 · طرح 28 → 2 من المئات + استعارة 10 وأصدقاء 5 | 33÷14=2 · Subtract 28 → 2 from hundreds + borrow 10 & Friends of 5",
+            rule: "−8 = −10 + 5 − 3",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · اطرح 2 من المئات ⬇️ · سحبة سبابة ⬇️ على المئات (استعارة 10) + نزول مزدوج ⬇️⬇️ على العشرات (سبابة تفعّل 5 ⬇️ + إبهام يطرد 3 ⬇️) · ضع 4 في آحاد الخارج 👍 · اخصم 56 | Set 2 in tens quotient 👍 · Subtract 2 from hundreds ⬇️ · Index pull ⬇️ on hundreds (borrow 10) + Double Drop ⬇️⬇️ on tens (index activates 5 ⬇️ + thumb pushes 3 down ⬇️) · Set 4 in units quotient 👍 · Subtract 56",
+            steps: [
+              "التقدير: 33 ÷ 14 = 2 → ضع 2 في عشرات الخارج 👍 | Estimate: 33 ÷ 14 = 2 → Set 2 in tens quotient 👍",
+              "الخصم: 2 × 14 = 28 → اطرح 28: اطرح 2 من المئات بسحبة سبابة ⬇️، ثم استعر 10 بسحبة سبابة ⬇️، ونزول مزدوج ⬇️⬇️ على العشرات (السبابة تفعّل 5 ⬇️ والإبهام يطرد 3 ⬇️) → العداد = 56 | Subtraction: 2 × 14 = 28 → Subtract 28: 2 from hundreds via index ⬇️, borrow 10 via index ⬇️ & Double Drop ⬇️⬇️ on tens (index activates 5 ⬇️ & thumb pushes 3 down ⬇️) → Abacus = 56",
+              "التقدير الثاني: 56 ÷ 14 = 4 → ضع 4 في آحاد الخارج بالإبهام 👍 | Second estimate: 56 ÷ 14 = 4 → Set 4 in units quotient with thumb 👍",
+              "الخصم: 4 × 14 = 56 → اطرح 5 من العشرات بسحبة سبابة ⬇️ و6 من الآحاد بكماشة مفتوحة → المتبقي 0 | Subtraction: 4 × 14 = 56 → Subtract 5 from tens ⬇️ & 6 from units with open pinch → Remainder 0",
+              "الناتج النهائي: 24 | Final Result: 24",
+            ],
+            result: 24,
+            beadVisual: "2 عشرات + 4 آحاد في الخارج | 2 tens + 4 units in quotient",
+          },
+          {
+            id: "S08-m4-E4",
+            question: "224 ÷ 16",
+            discrimination: "22÷16=1 · طرح 16 → 1 من المئات + استعارة 10 وأصدقاء 5 | 22÷16=1 · Subtract 16 → 1 from hundreds + borrow 10 & Friends of 5",
+            rule: "−6 = −10 + 5 − 1",
+            fingerMovement: "ضع 1 في عشرات الخارج 👍 · اطرح 1 من المئات ⬇️ · سحبة سبابة ⬇️ على المئات (استعارة 10) + نزول مزدوج ⬇️⬇️ على العشرات (سبابة تفعّل 5 ⬇️ + إبهام يطرد 1 ⬇️) · ضع 4 في آحاد الخارج بالإبهام 👍 · اخصم 64 | Set 1 in tens quotient 👍 · Subtract 1 from hundreds ⬇️ · Index pull ⬇️ on hundreds (borrow 10) + Double Drop ⬇️⬇️ on tens (index activates 5 ⬇️ + thumb pushes 1 down ⬇️) · Set 4 in units quotient with thumb 👍 · Subtract 64",
+            steps: [
+              "التقدير: 22 ÷ 16 = 1 → ضع 1 في عشرات الخارج 👍 | Estimate: 22 ÷ 16 = 1 → Set 1 in tens quotient 👍",
+              "الخصم: 1 × 16 = 16 → اطرح 16: اطرح 1 من المئات بسحبة سبابة ⬇️، ثم استعر 10 بسحبة سبابة ⬇️، ونزول مزدوج ⬇️⬇️ على العشرات (السبابة تفعّل 5 ⬇️ والإبهام يطرد 1 ⬇️) → العداد = 64 | Subtraction: 1 × 16 = 16 → Subtract 16: 1 from hundreds via index ⬇️, borrow 10 via index ⬇️ & Double Drop ⬇️⬇️ on tens (index activates 5 ⬇️ & thumb pushes 1 down ⬇️) → Abacus = 64",
+              "التقدير الثاني: 64 ÷ 16 = 4 → ضع 4 في آحاد الخارج بالإبهام 👍 | Second estimate: 64 ÷ 16 = 4 → Set 4 in units quotient with thumb 👍",
+              "الخصم: 4 × 16 = 64 → اطرح 6 من العشرات بكماشة مفتوحة و4 من الآحاد بسحبة سبابة ⬇️ → المتبقي 0 | Subtraction: 4 × 16 = 64 → Subtract 6 from tens with open pinch & 4 from units ⬇️ → Remainder 0",
+              "الناتج النهائي: 14 | Final Result: 14",
+            ],
+            result: 14,
+            beadVisual: "1 عشرات + 4 آحاد في الخارج | 1 ten + 4 units in quotient",
+          },
+          {
+            id: "S08-m4-E5",
+            question: "238 ÷ 17",
+            discrimination: "23÷17=1 · طرح 17 → 1 من المئات + استعارة 10 وأصدقاء 5 | 23÷17=1 · Subtract 17 → 1 from hundreds + borrow 10 & Friends of 5",
+            rule: "−7 = −10 + 5 − 2",
+            fingerMovement: "ضع 1 في عشرات الخارج 👍 · اطرح 1 من المئات ⬇️ · سحبة سبابة ⬇️ على المئات (استعارة 10) + نزول مزدوج ⬇️⬇️ على العشرات (سبابة تفعّل 5 ⬇️ + إبهام يطرد 2 ⬇️) · ضع 4 في آحاد الخارج بالإبهام 👍 · اخصم 68 | Set 1 in tens quotient 👍 · Subtract 1 from hundreds ⬇️ · Index pull ⬇️ on hundreds (borrow 10) + Double Drop ⬇️⬇️ on tens (index activates 5 ⬇️ + thumb pushes 2 down ⬇️) · Set 4 in units quotient with thumb 👍 · Subtract 68",
+            steps: [
+              "التقدير: 23 ÷ 17 = 1 → ضع 1 في عشرات الخارج 👍 | Estimate: 23 ÷ 17 = 1 → Set 1 in tens quotient 👍",
+              "الخصم: 1 × 17 = 17 → اطرح 17: اطرح 1 من المئات بسحبة سبابة ⬇️، ثم استعر 10 بسحبة سبابة ⬇️، ونزول مزدوج ⬇️⬇️ على العشرات (السبابة تفعّل 5 ⬇️ والإبهام يطرد 2 ⬇️) → العداد = 68 | Subtraction: 1 × 17 = 17 → Subtract 17: 1 from hundreds via index ⬇️, borrow 10 via index ⬇️ & Double Drop ⬇️⬇️ on tens (index activates 5 ⬇️ & thumb pushes 2 down ⬇️) → Abacus = 68",
+              "التقدير الثاني: 68 ÷ 17 = 4 → ضع 4 في آحاد الخارج بالإبهام 👍 | Second estimate: 68 ÷ 17 = 4 → Set 4 in units quotient with thumb 👍",
+              "الخصم: 4 × 17 = 68 → اطرح 6 من العشرات بكماشة مفتوحة و8 من الآحاد بكماشة مفتوحة → المتبقي 0 | Subtraction: 4 × 17 = 68 → Subtract 6 from tens with open pinch & 8 from units with open pinch → Remainder 0",
+              "الناتج النهائي: 14 | Final Result: 14",
+            ],
+            result: 14,
+            beadVisual: "1 عشرات + 4 آحاد في الخارج | 1 ten + 4 units in quotient",
+          },
+        ],
+      },
+      tryPhase: {
+        exercises: [
+          {
+            id: "S08-m4-T1",
+            question: "234 ÷ 18",
+            discrimination: "−8 = −10 + 5 − 3",
+            steps: [
+              "23 ÷ 18 = 1 → ضع 1 في عشرات الخارج 👍 | 23 ÷ 18 = 1 → Set 1 in tens quotient 👍",
+              "−18: اطرح 1 من المئات، واخصم 8 بسحبة سبابة ⬇️ (استعارة 10) + نزول مزدوج ⬇️⬇️ على العشرات (تفعيل 5 وطرد 3) → العداد = 54 | −18: Subtract 1 from hundreds & deduct 8 with index pull ⬇️ (borrow 10) + Double Drop ⬇️⬇️ on tens (activate 5 & push 3 down) → Abacus = 54",
+              "54 ÷ 18 = 3 → ضع 3 في آحاد الخارج 👍 | 54 ÷ 18 = 3 → Set 3 in units quotient 👍",
+              "اطرح 54 مباشرة → الناتج 13 | Subtract 54 directly → Result 13",
+            ],
+            result: 13,
+          },
+          {
+            id: "S08-m4-T2",
+            question: "432 ÷ 18",
+            discrimination: "−6 = −10 + 5 − 1",
+            steps: [
+              "43 ÷ 18 = 2 → ضع 2 في عشرات الخارج 👍 | 43 ÷ 18 = 2 → Set 2 in tens quotient 👍",
+              "−36: اطرح 3 من المئات، واخصم 6 بسحبة سبابة ⬇️ (استعارة 10) + نزول مزدوج ⬇️⬇️ على العشرات (تفعيل 5 وطرد 1) → العداد = 72 | −36: Subtract 3 from hundreds & deduct 6 with index pull ⬇️ (borrow 10) + Double Drop ⬇️⬇️ on tens (activate 5 & push 1 down) → Abacus = 72",
+              "72 ÷ 18 = 4 → ضع 4 في آحاد الخارج 👍 | 72 ÷ 18 = 4 → Set 4 in units quotient 👍",
+              "اطرح 72 مباشرة → الناتج 24 | Subtract 72 directly → Result 24",
+            ],
+            result: 24,
+          },
+          {
+            id: "S08-m4-T3",
+            question: "336 ÷ 14",
+            discrimination: "−8 = −10 + 5 − 3",
+            steps: [
+              "33 ÷ 14 = 2 → ضع 2 في عشرات الخارج 👍 | 33 ÷ 14 = 2 → Set 2 in tens quotient 👍",
+              "−28: اطرح 2 من المئات، واخصم 8 بسحبة سبابة ⬇️ (استعارة 10) + نزول مزدوج ⬇️⬇️ على العشرات (تفعيل 5 وطرد 3) → العداد = 56 | −28: Subtract 2 from hundreds & deduct 8 with index pull ⬇️ (borrow 10) + Double Drop ⬇️⬇️ on tens (activate 5 & push 3 down) → Abacus = 56",
+              "56 ÷ 14 = 4 → ضع 4 في آحاد الخارج 👍 | 56 ÷ 14 = 4 → Set 4 in units quotient 👍",
+              "اطرح 56 مباشرة → الناتج 24 | Subtract 56 directly → Result 24",
+            ],
+            result: 24,
+          },
+          {
+            id: "S08-m4-T4",
+            question: "224 ÷ 16",
+            discrimination: "−6 = −10 + 5 − 1",
+            steps: [
+              "22 ÷ 16 = 1 → ضع 1 في عشرات الخارج 👍 | 22 ÷ 16 = 1 → Set 1 in tens quotient 👍",
+              "−16: اطرح 1 من المئات، واخصم 6 بسحبة سبابة ⬇️ (استعارة 10) + نزول مزدوج ⬇️⬇️ على العشرات (تفعيل 5 وطرد 1) → العداد = 64 | −16: Subtract 1 from hundreds & deduct 6 with index pull ⬇️ (borrow 10) + Double Drop ⬇️⬇️ on tens (activate 5 & push 1 down) → Abacus = 64",
+              "64 ÷ 16 = 4 → ضع 4 في آحاد الخارج 👍 | 64 ÷ 16 = 4 → Set 4 in units quotient 👍",
+              "اطرح 64 مباشرة → الناتج 14 | Subtract 64 directly → Result 14",
+            ],
+            result: 14,
+          },
+          {
+            id: "S08-m4-T5",
+            question: "238 ÷ 17",
+            discrimination: "−7 = −10 + 5 − 2",
+            steps: [
+              "23 ÷ 17 = 1 → ضع 1 في عشرات الخارج 👍 | 23 ÷ 17 = 1 → Set 1 in tens quotient 👍",
+              "−17: اطرح 1 من المئات، واخصم 7 بسحبة سبابة ⬇️ (استعارة 10) + نزول مزدوج ⬇️⬇️ على العشرات (تفعيل 5 وطرد 2) → العداد = 68 | −17: Subtract 1 from hundreds & deduct 7 with index pull ⬇️ (borrow 10) + Double Drop ⬇️⬇️ on tens (activate 5 & push 2 down) → Abacus = 68",
+              "68 ÷ 17 = 4 → ضع 4 في آحاد الخارج 👍 | 68 ÷ 17 = 4 → Set 4 in units quotient 👍",
+              "اطرح 68 مباشرة → الناتج 14 | Subtract 68 directly → Result 14",
+            ],
+            result: 14,
+          },
+        ],
+      },
+    },
+  ],
+
+  outro: {
+    summary: "أتقنت القسمة على رقمين بجميع أسرارها: بسيطة · أصدقاء 5 · أصدقاء 10 · تحالف مزدوج مركب! | Mastered division by two digits with all its secrets: Direct, Friends of 5, Friends of 10, and Dual Alliance Compound!",
+    encouragement: "🎉 أنت بطل القلعة الخارق وفارس السوروبان المتألق! | 🎉 You are the super castle champion and brilliant Soroban knight!",
+    totalExamples: 20,
+  },
+
+  estimatedMinutes: 25,
+  xpReward: 20,
+};
+
+export default S08_LESSON;
