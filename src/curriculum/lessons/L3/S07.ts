@@ -14,7 +14,7 @@ export const S07_LESSON: LessonNode = {
   tags: ["division", "kids", "L3", "left-to-right", "takashi-kojima"],
 
   modules: [
-    // ═══════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
     // m1 — القسمة البسيطة
     // ═══════════════════════════════════════════════════════════
     {
@@ -31,7 +31,7 @@ export const S07_LESSON: LessonNode = {
         storyAudioId: null,
       },
       rule: {
-        description: "القاعدة الذهبية 🧙: اقسم العشرات ضع الناتج، اطرح مباشرة بالإبهام والسبابة، ثم كرر مع الآحاد! | Golden Rule 🧙: Divide tens and place quotient, subtract directly using thumb and index, then repeat with units!",
+        description: "القاعدة الذهبية 🧙: اقسم العشرات ضع الناتج، اطرح مباشرة بالسبابة، ثم كرر مع الآحاد! | Golden Rule 🧙: Divide tens and place quotient, subtract directly using index finger, then repeat with units!",
       },
       condition: {
         formula: "قسمة تامة · طرح مباشر | Exact division · Direct subtraction",
@@ -61,10 +61,10 @@ export const S07_LESSON: LessonNode = {
             question: "84 ÷ 2",
             discrimination: "العشرات: 8÷2=4 · الآحاد: 4÷2=2 | Tens: 8÷2=4 · Units: 4÷2=2",
             rule: "اقسم من الكبار للصغار وطرح مباشر | Divide high to low with direct subtraction",
-            fingerMovement: "ضع 4 في عشرات الخارج 👍 · اطرح 8 بكماشة 🗜️ · ضع 2 في آحاد الخارج 👍 · اطرح 4 بالسبابة ⬇️ | Set 4 in tens quotient 👍 · Subtract 8 with pinch 🗜️ · Set 2 in units quotient 👍 · Subtract 4 with index ⬇️",
+            fingerMovement: "ضع 4 في عشرات الخارج 👍 · اطرح 8 بكماشة مفتوحة (السبابة ترفع 5 ⬆️ وتسحب 3 ⬇️) · ضع 2 في آحاد الخارج 👍 · اطرح 4 بسحبة سبابة ⬇️ | Set 4 in tens quotient 👍 · Subtract 8 with open pinch (index lifts 5 ⬆️ & pulls 3 ⬇️) · Set 2 in units quotient 👍 · Subtract 4 with index ⬇️",
             steps: [
               "العشرات ÷ 2: 8 ÷ 2 = 4 → ضع 4 في عشرات الخارج 👍 | Tens ÷ 2: 8 ÷ 2 = 4 → Set 4 in tens quotient 👍",
-              "الخصم: 4 × 2 = 8 → اطرح 8 من العشرات بكماشة مغلقة 🗜️ | Subtraction: 4 × 2 = 8 → Subtract 8 from tens with closed pinch 🗜️",
+              "الخصم: 4 × 2 = 8 → اطرح 8 من العشرات بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 3 ⬇️ | Subtraction: 4 × 2 = 8 → Subtract 8 from tens with open pinch — Index lifts 5 ⬆️ and pulls 3 ⬇️",
               "الآحاد ÷ 2: 4 ÷ 2 = 2 → ضع 2 في آحاد الخارج 👍 | Units ÷ 2: 4 ÷ 2 = 2 → Set 2 in units quotient 👍",
               "الخصم: 2 × 2 = 4 → اطرح 4 من الآحاد بسحبة سبابة ⬇️ | Subtraction: 2 × 2 = 4 → Subtract 4 from units with index pull ⬇️",
               "الناتج النهائي: 42 | Final Result: 42",
@@ -77,12 +77,12 @@ export const S07_LESSON: LessonNode = {
             question: "69 ÷ 3",
             discrimination: "العشرات: 6÷3=2 · الآحاد: 9÷3=3 | Tens: 6÷3=2 · Units: 9÷3=3",
             rule: "اقسم من الكبار للصغار وطرح مباشر | Divide high to low with direct subtraction",
-            fingerMovement: "ضع 2 في عشرات الخارج 👍 · اطرح 6 بكماشة 🗜️ · ضع 3 في آحاد الخارج 👍 · اطرح 9 بكماشة 🗜️ | Set 2 in tens quotient 👍 · Subtract 6 with pinch 🗜️ · Set 3 in units quotient 👍 · Subtract 9 with pinch 🗜️",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · اطرح 6 بكماشة مفتوحة (السبابة ترفع 5 ⬆️ وتسحب 1 ⬇️) · ضع 3 في آحاد الخارج 👍 · اطرح 9 بكماشة مفتوحة (السبابة ترفع 5 ⬆️ وتسحب 4 ⬇️) | Set 2 in tens quotient 👍 · Subtract 6 with open pinch (index lifts 5 ⬆️ & pulls 1 ⬇️) · Set 3 in units quotient 👍 · Subtract 9 with open pinch (index lifts 5 ⬆️ & pulls 4 ⬇️)",
             steps: [
               "العشرات ÷ 3: 6 ÷ 3 = 2 → ضع 2 في عشرات الخارج 👍 | Tens ÷ 3: 6 ÷ 3 = 2 → Set 2 in tens quotient 👍",
-              "الخصم: 2 × 3 = 6 → اطرح 6 من العشرات بكماشة مغلقة 🗜️ | Subtraction: 2 × 3 = 6 → Subtract 6 from tens with closed pinch 🗜️",
+              "الخصم: 2 × 3 = 6 → اطرح 6 من العشرات بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 1 ⬇️ | Subtraction: 2 × 3 = 6 → Subtract 6 from tens with open pinch — Index lifts 5 ⬆️ and pulls 1 ⬇️",
               "الآحاد ÷ 3: 9 ÷ 3 = 3 → ضع 3 في آحاد الخارج 👍 | Units ÷ 3: 9 ÷ 3 = 3 → Set 3 in units quotient 👍",
-              "الخصم: 3 × 3 = 9 → اطرح 9 من الآحاد بكماشة مغلقة 🗜️ | Subtraction: 3 × 3 = 9 → Subtract 9 from units with closed pinch 🗜️",
+              "الخصم: 3 × 3 = 9 → اطرح 9 من الآحاد بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 4 ⬇️ | Subtraction: 3 × 3 = 9 → Subtract 9 from units with open pinch — Index lifts 5 ⬆️ and pulls 4 ⬇️",
               "الناتج النهائي: 23 | Final Result: 23",
             ],
             result: 23,
@@ -93,12 +93,12 @@ export const S07_LESSON: LessonNode = {
             question: "48 ÷ 4",
             discrimination: "العشرات: 4÷4=1 · الآحاد: 8÷4=2 | Tens: 4÷4=1 · Units: 8÷4=2",
             rule: "اقسم من الكبار للصغار وطرح مباشر | Divide high to low with direct subtraction",
-            fingerMovement: "ضع 1 في عشرات الخارج 👍 · اطرح 4 بالسبابة ⬇️ · ضع 2 في آحاد الخارج 👍 · اطرح 8 بكماشة 🗜️ | Set 1 in tens quotient 👍 · Subtract 4 with index ⬇️ · Set 2 in units quotient 👍 · Subtract 8 with pinch 🗜️",
+            fingerMovement: "ضع 1 في عشرات الخارج 👍 · اطرح 4 بسحبة سبابة ⬇️ · ضع 2 في آحاد الخارج 👍 · اطرح 8 بكماشة مفتوحة (السبابة ترفع 5 ⬆️ وتسحب 3 ⬇️) | Set 1 in tens quotient 👍 · Subtract 4 with index pull ⬇️ · Set 2 in units quotient 👍 · Subtract 8 with open pinch (index lifts 5 ⬆️ & pulls 3 ⬇️)",
             steps: [
               "العشرات ÷ 4: 4 ÷ 4 = 1 → ضع 1 في عشرات الخارج 👍 | Tens ÷ 4: 4 ÷ 4 = 1 → Set 1 in tens quotient 👍",
               "الخصم: 1 × 4 = 4 → اطرح 4 من العشرات بسحبة سبابة ⬇️ | Subtraction: 1 × 4 = 4 → Subtract 4 from tens with index pull ⬇️",
               "الآحاد ÷ 4: 8 ÷ 4 = 2 → ضع 2 في آحاد الخارج 👍 | Units ÷ 4: 8 ÷ 4 = 2 → Set 2 in units quotient 👍",
-              "الخصم: 2 × 4 = 8 → اطرح 8 من الآحاد بكماشة مغلقة 🗜️ | Subtraction: 2 × 4 = 8 → Subtract 8 from units with closed pinch 🗜️",
+              "الخصم: 2 × 4 = 8 → اطرح 8 من الآحاد بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 3 ⬇️ | Subtraction: 2 × 4 = 8 → Subtract 8 from units with open pinch — Index lifts 5 ⬆️ and pulls 3 ⬇️",
               "الناتج النهائي: 12 | Final Result: 12",
             ],
             result: 12,
@@ -109,12 +109,12 @@ export const S07_LESSON: LessonNode = {
             question: "96 ÷ 3",
             discrimination: "العشرات: 9÷3=3 · الآحاد: 6÷3=2 | Tens: 9÷3=3 · Units: 6÷3=2",
             rule: "اقسم من الكبار للصغار وطرح مباشر | Divide high to low with direct subtraction",
-            fingerMovement: "ضع 3 في عشرات الخارج 👍 · اطرح 9 بكماشة 🗜️ · ضع 2 في آحاد الخارج 👍 · اطرح 6 بكماشة 🗜️ | Set 3 in tens quotient 👍 · Subtract 9 with pinch 🗜️ · Set 2 in units quotient 👍 · Subtract 6 with pinch 🗜️",
+            fingerMovement: "ضع 3 في عشرات الخارج 👍 · اطرح 9 بكماشة مفتوحة (السبابة ترفع 5 ⬆️ وتسحب 4 ⬇️) · ضع 2 في آحاد الخارج 👍 · اطرح 6 بكماشة مفتوحة (السبابة ترفع 5 ⬆️ وتسحب 1 ⬇️) | Set 3 in tens quotient 👍 · Subtract 9 with open pinch (index lifts 5 ⬆️ & pulls 4 ⬇️) · Set 2 in units quotient 👍 · Subtract 6 with open pinch (index lifts 5 ⬆️ & pulls 1 ⬇️)",
             steps: [
               "العشرات ÷ 3: 9 ÷ 3 = 3 → ضع 3 في عشرات الخارج 👍 | Tens ÷ 3: 9 ÷ 3 = 3 → Set 3 in tens quotient 👍",
-              "الخصم: 3 × 3 = 9 → اطرح 9 من العشرات بكماشة مغلقة 🗜️ | Subtraction: 3 × 3 = 9 → Subtract 9 from tens with closed pinch 🗜️",
+              "الخصم: 3 × 3 = 9 → اطرح 9 من العشرات بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 4 ⬇️ | Subtraction: 3 × 3 = 9 → Subtract 9 from tens with open pinch — Index lifts 5 ⬆️ and pulls 4 ⬇️",
               "الآحاد ÷ 3: 6 ÷ 3 = 2 → ضع 2 في آحاد الخارج 👍 | Units ÷ 3: 6 ÷ 3 = 2 → Set 2 in units quotient 👍",
-              "الخصم: 2 × 3 = 6 → اطرح 6 من الآحاد بكماشة مغلقة 🗜️ | Subtraction: 2 × 3 = 6 → Subtract 6 from units with closed pinch 🗜️",
+              "الخصم: 2 × 3 = 6 → اطرح 6 من الآحاد بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 1 ⬇️ | Subtraction: 2 × 3 = 6 → Subtract 6 from units with open pinch — Index lifts 5 ⬆️ and pulls 1 ⬇️",
               "الناتج النهائي: 32 | Final Result: 32",
             ],
             result: 32,
@@ -125,12 +125,12 @@ export const S07_LESSON: LessonNode = {
             question: "88 ÷ 4",
             discrimination: "العشرات: 8÷4=2 · الآحاد: 8÷4=2 | Tens: 8÷4=2 · Units: 8÷4=2",
             rule: "اقسم من الكبار للصغار وطرح مباشر | Divide high to low with direct subtraction",
-            fingerMovement: "ضع 2 في عشرات الخارج 👍 · اطرح 8 بكماشة 🗜️ · ضع 2 في آحاد الخارج 👍 · اطرح 8 بكماشة 🗜️ | Set 2 in tens quotient 👍 · Subtract 8 with pinch 🗜️ · Set 2 in units quotient 👍 · Subtract 8 with pinch 🗜️",
+            fingerMovement: "ضع 2 في عشرات الخارج 👍 · اطرح 8 بكماشة مفتوحة (السبابة ترفع 5 ⬆️ وتسحب 3 ⬇️) · ضع 2 في آحاد الخارج 👍 · اطرح 8 بكماشة مفتوحة (السبابة ترفع 5 ⬆️ وتسحب 3 ⬇️) | Set 2 in tens quotient 👍 · Subtract 8 with open pinch (index lifts 5 ⬆️ & pulls 3 ⬇️) · Set 2 in units quotient 👍 · Subtract 8 with open pinch (index lifts 5 ⬆️ & pulls 3 ⬇️)",
             steps: [
               "العشرات ÷ 4: 8 ÷ 4 = 2 → ضع 2 في عشرات الخارج 👍 | Tens ÷ 4: 8 ÷ 4 = 2 → Set 2 in tens quotient 👍",
-              "الخصم: 2 × 4 = 8 → اطرح 8 من العشرات بكماشة مغلقة 🗜️ | Subtraction: 2 × 4 = 8 → Subtract 8 from tens with closed pinch 🗜️",
+              "الخصم: 2 × 4 = 8 → اطرح 8 من العشرات بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 3 ⬇️ | Subtraction: 2 × 4 = 8 → Subtract 8 from tens with open pinch — Index lifts 5 ⬆️ and pulls 3 ⬇️",
               "الآحاد ÷ 4: 8 ÷ 4 = 2 → ضع 2 في آحاد الخارج 👍 | Units ÷ 4: 8 ÷ 4 = 2 → Set 2 in units quotient 👍",
-              "الخصم: 2 × 4 = 8 → اطرح 8 من الآحاد بكماشة مغلقة 🗜️ | Subtraction: 2 × 4 = 8 → Subtract 8 from units with closed pinch 🗜️",
+              "الخصم: 2 × 4 = 8 → اطرح 8 من الآحاد بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 3 ⬇️ | Subtraction: 2 × 4 = 8 → Subtract 8 from units with open pinch — Index lifts 5 ⬆️ and pulls 3 ⬇️",
               "الناتج النهائي: 22 | Final Result: 22",
             ],
             result: 22,
@@ -146,9 +146,9 @@ export const S07_LESSON: LessonNode = {
             discrimination: "8÷2=4 · 6÷2=3 | 8÷2=4 · 6÷2=3",
             steps: [
               "العشرات: 8 ÷ 2 = 4 → ضع 4 في عشرات الخارج 👍 | Tens: 8 ÷ 2 = 4 → Set 4 in tens quotient 👍",
-              "الخصم: 4 × 2 = 8 → اطرح 8 بكماشة مغلقة 🗜️ | Subtraction: 4 × 2 = 8 → Subtract 8 with pinch 🗜️",
+              "الخصم: 4 × 2 = 8 → اطرح 8 بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 3 ⬇️ | Subtraction: 4 × 2 = 8 → Subtract 8 with open pinch — Index lifts 5 ⬆️ and pulls 3 ⬇️",
               "الآحاد: 6 ÷ 2 = 3 → ضع 3 في آحاد الخارج 👍 | Units: 6 ÷ 2 = 3 → Set 3 in units quotient 👍",
-              "الخصم: 3 × 2 = 6 → اطرح 6 بكماشة مغلقة 🗜️ | Subtraction: 3 × 2 = 6 → Subtract 6 with pinch 🗜️",
+              "الخصم: 3 × 2 = 6 → اطرح 6 بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 1 ⬇️ | Subtraction: 3 × 2 = 6 → Subtract 6 with open pinch — Index lifts 5 ⬆️ and pulls 1 ⬇️",
               "الناتج النهائي: 43 | Final Result: 43",
             ],
             result: 43,
@@ -159,9 +159,9 @@ export const S07_LESSON: LessonNode = {
             discrimination: "6÷3=2 · 6÷3=2 | 6÷3=2 · 6÷3=2",
             steps: [
               "العشرات: 6 ÷ 3 = 2 → ضع 2 في عشرات الخارج 👍 | Tens: 6 ÷ 3 = 2 → Set 2 in tens quotient 👍",
-              "الخصم: 2 × 3 = 6 → اطرح 6 بكماشة مغلقة 🗜️ | Subtraction: 2 × 3 = 6 → Subtract 6 with pinch 🗜️",
+              "الخصم: 2 × 3 = 6 → اطرح 6 بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 1 ⬇️ | Subtraction: 2 × 3 = 6 → Subtract 6 with open pinch — Index lifts 5 ⬆️ and pulls 1 ⬇️",
               "الآحاد: 6 ÷ 3 = 2 → ضع 2 في آحاد الخارج 👍 | Units: 6 ÷ 3 = 2 → Set 2 in units quotient 👍",
-              "الخصم: 2 × 3 = 6 → اطرح 6 بكماشة مغلقة 🗜️ | Subtraction: 2 × 3 = 6 → Subtract 6 with pinch 🗜️",
+              "الخصم: 2 × 3 = 6 → اطرح 6 بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 1 ⬇️ | Subtraction: 2 × 3 = 6 → Subtract 6 with open pinch — Index lifts 5 ⬆️ and pulls 1 ⬇️",
               "الناتج النهائي: 22 | Final Result: 22",
             ],
             result: 22,
@@ -172,9 +172,9 @@ export const S07_LESSON: LessonNode = {
             discrimination: "4÷2=2 · 4÷2=2 | 4÷2=2 · 4÷2=2",
             steps: [
               "العشرات: 4 ÷ 2 = 2 → ضع 2 في عشرات الخارج 👍 | Tens: 4 ÷ 2 = 2 → Set 2 in tens quotient 👍",
-              "الخصم: 2 × 2 = 4 → اطرح 4 بسحبة سبابة ⬇️ | Subtraction: 2 × 2 = 4 → Subtract 4 with index ⬇️",
+              "الخصم: 2 × 2 = 4 → اطرح 4 بسحبة سبابة ⬇️ | Subtraction: 2 × 2 = 4 → Subtract 4 with index pull ⬇️",
               "الآحاد: 4 ÷ 2 = 2 → ضع 2 في آحاد الخارج 👍 | Units: 4 ÷ 2 = 2 → Set 2 in units quotient 👍",
-              "الخصم: 2 × 2 = 4 → اطرح 4 بسحبة سبابة ⬇️ | Subtraction: 2 × 2 = 4 → Subtract 4 with index ⬇️",
+              "الخصم: 2 × 2 = 4 → اطرح 4 بسحبة سبابة ⬇️ | Subtraction: 2 × 2 = 4 → Subtract 4 with index pull ⬇️",
               "الناتج النهائي: 22 | Final Result: 22",
             ],
             result: 22,
@@ -185,9 +185,9 @@ export const S07_LESSON: LessonNode = {
             discrimination: "6÷3=2 · 3÷3=1 | 6÷3=2 · 3÷3=1",
             steps: [
               "العشرات: 6 ÷ 3 = 2 → ضع 2 في عشرات الخارج 👍 | Tens: 6 ÷ 3 = 2 → Set 2 in tens quotient 👍",
-              "الخصم: 2 × 3 = 6 → اطرح 6 بكماشة مغلقة 🗜️ | Subtraction: 2 × 3 = 6 → Subtract 6 with pinch 🗜️",
+              "الخصم: 2 × 3 = 6 → اطرح 6 بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 1 ⬇️ | Subtraction: 2 × 3 = 6 → Subtract 6 with open pinch — Index lifts 5 ⬆️ and pulls 1 ⬇️",
               "الآحاد: 3 ÷ 3 = 1 → ضع 1 في آحاد الخارج 👍 | Units: 3 ÷ 3 = 1 → Set 1 in units quotient 👍",
-              "الخصم: 1 × 3 = 3 → اطرح 3 بسحبة سبابة ⬇️ | Subtraction: 1 × 3 = 3 → Subtract 3 with index ⬇️",
+              "الخصم: 1 × 3 = 3 → اطرح 3 بسحبة سبابة ⬇️ | Subtraction: 1 × 3 = 3 → Subtract 3 with index pull ⬇️",
               "الناتج النهائي: 21 | Final Result: 21",
             ],
             result: 21,
@@ -198,9 +198,9 @@ export const S07_LESSON: LessonNode = {
             discrimination: "3÷3=1 · 9÷3=3 | 3÷3=1 · 9÷3=3",
             steps: [
               "العشرات: 3 ÷ 3 = 1 → ضع 1 في عشرات الخارج 👍 | Tens: 3 ÷ 3 = 1 → Set 1 in tens quotient 👍",
-              "الخصم: 1 × 3 = 3 → اطرح 3 بسحبة سبابة ⬇️ | Subtraction: 1 × 3 = 3 → Subtract 3 with index ⬇️",
+              "الخصم: 1 × 3 = 3 → اطرح 3 بسحبة سبابة ⬇️ | Subtraction: 1 × 3 = 3 → Subtract 3 with index pull ⬇️",
               "الآحاد: 9 ÷ 3 = 3 → ضع 3 في آحاد الخارج 👍 | Units: 9 ÷ 3 = 3 → Set 3 in units quotient 👍",
-              "الخصم: 3 × 3 = 9 → اطرح 9 بكماشة مغلقة 🗜️ | Subtraction: 3 × 3 = 9 → Subtract 9 with pinch 🗜️",
+              "الخصم: 3 × 3 = 9 → اطرح 9 بكماشة مفتوحة — السبابة ترفع 5 ⬆️ وتسحب 4 ⬇️ | Subtraction: 3 × 3 = 9 → Subtract 9 with open pinch — Index lifts 5 ⬆️ and pulls 4 ⬇️",
               "الناتج النهائي: 13 | Final Result: 13",
             ],
             result: 13,
@@ -208,6 +208,7 @@ export const S07_LESSON: LessonNode = {
         ],
       },
     },
+
 
     // ═══════════════════════════════════════════════════════════
     // m2 — القسمة بأصدقاء 5
@@ -608,7 +609,7 @@ export const S07_LESSON: LessonNode = {
       },
     },
 
-    // ═══════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
     // m4 — القسمة المركّبة
     // ═══════════════════════════════════════════════════════════
     {
@@ -620,12 +621,12 @@ export const S07_LESSON: LessonNode = {
       miniStory: {
         title: "مفتاح التحالف المزدوج - قوة أصدقاء 10 و5 | Dual Alliance Key - Power of Friends of 10 & 5",
         emoji: "👑",
-        story: "في التحدي النهائي الغرفة السرية 216 ÷ 8: 21 قسمة 8 تساوي 2، لكن طرح 16 يحتاج استعارة 10 AND أصدقاء 5 لإضافة المكمل! اتحد الجدة 5 والعملاق 10 لفتح الباب: اطرح 10 من اليسار بسحبة سبابة ⬇️، وتفعيل 5 بالسبابة وطرد الخرزات الزائدة بنزول مزدوج ⬇️⬇️! | In the final room 216 ÷ 8: 21 ÷ 8 = 2, but subtracting 16 requires borrowing 10 AND using Friends of 5 to add the complement! Grandma 5 and Giant 10 united: Subtract 10 from left with index pull ⬇️, activate 5 and push excess beads down with Double Drop ⬇️⬇️!",
+        story: "في التحدي النهائي الغرفة السرية 216 ÷ 8: 21 قسمة 8 تساوي 2، لكن طرح 16 يحتاج استعارة 10 وأصدقاء 5 لإضافة المكمل! اتحد الجدة 5 والعملاق 10 لفتح الباب: اطرح 10 من اليسار بسحبة سبابة ⬇️، وتفعيل 5 بالسبابة وطرد الخرزات الزائدة بنزول مزدوج ⬇️⬇️! | In the final room 216 ÷ 8: 21 ÷ 8 = 2, but subtracting 16 requires borrowing 10 AND using Friends of 5 to add the complement! Grandma 5 and Giant 10 united: Subtract 10 from left with index pull ⬇️, activate 5 and push excess beads down with Double Drop ⬇️⬇️!",
         storyAudioText: "مئتان وستة عشر حلوى على ثمانية أصدقاء. واحد وعشرون قسمة ثمانية تساوي اثنين. لكن طرح ستة عشر يحتاج استعارة عشرة وأيضا صديق خمسة. الجدة خمسة والعملاق عشرة يتعاونان. الناتج سبعة وعشرون. | 216 candies shared among 8 friends. 21 divided by 8 equals 2. Subtracting 16 needs borrowing 10 and Friend of 5. Grandma 5 and Giant 10 cooperate. Result is 27.",
         storyAudioId: null,
       },
       rule: {
-        description: "التحالف المزدوج 👑: عندما تستعير 10 ولا تكفي السفليات لإضافة المكمل، استخدم الصيغة المركبة: −10 + 5 − (5−k) باستعارة 10 بسحبة سبابة ⬇️، ثم نزول مزدوج ⬇️⬇️ لتفعيل 5 وطرد الزائد! | Dual Alliance 👑: When borrowing 10 and lower beads can't hold the complement, use compound rule: −10 + 5 − (5−k) by borrowing 10 with index pull ⬇️, then Double Drop ⬇️⬇️ to activate 5 and push excess down!",
+        description: "التحالف المزدوج 👑: عندما تستعير 10 ولا تكفي السفليات لإضافة المكمل، استخدم الصيغة المركبة: −10 + 5 − (k−5) باستعارة 10 بسحبة سبابة ⬇️، ثم نزول مزدوج ⬇️⬇️ لتفعيل 5 وطرد الزائد! | Dual Alliance 👑: When borrowing 10 and lower beads can't hold the complement, use compound rule: −10 + 5 − (k−5) by borrowing 10 with index pull ⬇️, then Double Drop ⬇️⬇️ to activate 5 and push excess down!",
         cases: [
           { from: 6, formula: "−6 = −10 + 5 − 1" },
           { from: 7, formula: "−7 = −10 + 5 − 2" },
@@ -801,7 +802,7 @@ export const S07_LESSON: LessonNode = {
         ],
       },
     },
-  ],
+
 
   outro: {
     summary: "أتقنت القسمة على رقم واحد: بسيطة · أصدقاء 5 · أصدقاء 10 · مركّبة! | Mastered division by one digit: Direct, Friends of 5, Friends of 10, and Compound!",
