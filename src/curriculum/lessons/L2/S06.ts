@@ -529,7 +529,7 @@ export const S06_LESSON: LessonNode = {
             question: "16 × 13",
             discrimination: "المئات: 1×1=1 · العشرات: 6×1=6 · إضافة العشرات: 1×3=3 (6+3=9) · الآحاد: 6×3=18 (8 للآحاد، +1 للعشرات: 9+1=10) | Friends of 10 (+1)",
             rule: "+1 = −9 + 10 (صديق 1 هو 9) | +1 = −9 + 10 (1's friend is 9)",
-            fingerMovement: "ضع 1 للمئات بالإبهام 👍⬆️ · ضع 6 للعشرات بكماشة مغلقة 🗜️ · أضf 3 للعشرات بالإبهام 👍⬆️ · ضع 8 بالآحاد بكماشة مغلقة 🗜️، واطرح 9 بالعشرات بكماشة مفتوحة وأضف 1 للمئات بالإبهام 👍⬆️ | Set 1 in hundreds with thumb 👍⬆️ · Set 6 in tens with closed pinch 🗜️ · Add 3 to tens with thumb 👍⬆️ · Set 8 in units with closed pinch 🗜️, subtract 9 from tens with open pinch & add 1 to hundreds with thumb 👍⬆️",
+            fingerMovement: "ضع 1 للمئات بالإبهام 👍⬆️ · ضع 6 للعشرات بكماشة مغلقة 🗜️ · أضف 3 للعشرات بالإبهام 👍⬆️ · ضع 8 بالآحاد بكماشة مغلقة 🗜️، واطرح 9 بالعشرات بكماشة مفتوحة وأضف 1 للمئات بالإبهام 👍⬆️ | Set 1 in hundreds with thumb 👍⬆️ · Set 6 in tens with closed pinch 🗜️ · Add 3 to tens with thumb 👍⬆️ · Set 8 in units with closed pinch 🗜️, subtract 9 from tens with open pinch & add 1 to hundreds with thumb 👍⬆️",
             steps: [
               "المئات: 1 × 1 = 1 → ارفع 1 بالمئات بالإبهام 👍⬆️ | Hundreds: 1 × 1 = 1 → Lift 1 in Hundreds with thumb 👍⬆️",
               "العشرات: 6 × 1 = 6 → ضع 6 بالعشرات بكماشة مغلقة 🗜️ | Tens: 6 × 1 = 6 → Set 6 in Tens with closed pinch 🗜️",
@@ -596,7 +596,7 @@ export const S06_LESSON: LessonNode = {
             steps: [
               "المئات: 2 × 4 = 8 → ضع 8 بالمئات بكماشة مغلقة 🗜️ | Hundreds: 2 × 4 = 8 → Set 8 in Hundreds with closed pinch 🗜️",
               "العشرات: 2 × 4 = 8 → ضع 8 بالعشرات بكماشة مغلقة 🗜️ | Tens: 2 × 4 = 8 → Set 8 in Tens with closed pinch 🗜️",
-              "العشرات: 2 × 4 = 8 → إضافة 8 للعشرات (+8 = −2 + 10): اطرح 2 بالعشرات بالإبهام ⬇️ وأضف 1 للمئات بالإبهام 👍⬆️ | Tens: 2 × 4 = 8 → Add 8 to Tens (+8 = −2 + 10): Subtract 2 with thumb ⬇️ & add 1 to Hundreds with thumb 👍⬆️",
+              "العشرات: 2 × 4 = 8 → إضافة 8 للعشرات (+8 = −2 + 10): اطرح 2 بالعشرات بالسبابة ⬇️ (سحبة سبابة) وأضف 1 للمئات بالإبهام 👍⬆️ | Tens: 2 × 4 = 8 → Add 8 to Tens (+8 = −2 + 10): Subtract 2 with index ⬇️ (index pull down) & add 1 to Hundreds with thumb 👍⬆️",
               "الآحاد: 2 × 4 = 8 → ضع 8 بالآحاد بكماشة مغلقة 🗜️ | Units: 2 × 4 = 8 → Set 8 in Units with closed pinch 🗜️",
               "الناتج النهائي: 968 | Final Result: 968",
             ],
