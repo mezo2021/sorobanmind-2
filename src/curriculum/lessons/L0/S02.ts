@@ -14,9 +14,9 @@ export const L0_S02: LessonNode = {
   tags: ["build", "read", "kids", "L0", "place-value"],
 
   story: {
-    ar: "مرحباً بكم يا أبطال الأعداد! هل تعلمون أن المعداد مليء ببيوت ملونة ومجتزأة؟ البيت الأول على اليمين هو بيت الآحاد الصغار، والبيت الثاني هو بيت العشرات الأبطال، ثم المئات والآلاف! تعالوا نتعلم كيف نبني الأعداد كالمحافظين والمهندسين الكبار!",
-    en: "Welcome, number heroes! Did you know the abacus is full of colorful houses? The first rod on the right is the Units house, the second is the Tens house, then Hundreds and Thousands! Let's learn how to build numbers like master architects!",
-  },
+    ar: "مرحباً بكم يا أبطال ! هل تعلمون أن المعداد مليء ببيوت ملونة ؟ البيت الأول على اليمين هو بيت الآحاد الصغار، و الثاني هو بيت العشرات الأبطال، ثم المئات والآلاف! تعالوا نتعلم كيف نبني الأعداد كالمهندسين الكبار!",
+    en: "Welcome, heroes! Did you know that the abacus is full of colorful houses? The first house on the right is the little Units house, and the second is the hero Tens house, then Hundreds and Thousands! Let's learn how to build numbers like master architects!",
+},
   storyAudioId: 10,
 
   modules: [
