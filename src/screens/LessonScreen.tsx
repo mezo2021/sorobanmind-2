@@ -911,9 +911,6 @@ export function LessonScreen({
 <p className="text-sm text-white/75 font-body leading-relaxed">
   {p(activeModule.condition.explanation)}
 </p>
-                  <p className="text-sm text-white/75 font-body leading-relaxed">
-                    {p(activeModule.condition.explanation)}
-                  </p>
 
                   {activeModule.friendsTable && (
                     <div className="mt-3">
