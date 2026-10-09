@@ -590,22 +590,20 @@ export const S06_LESSON: LessonNode = {
             result: 759,
           },
           {
-            {
-  {
-  id: "S06-m3-T2",
-  question: "22 × 44",
-  discrimination: "8+8=16 بأصدقاء 10 (+8 = −2 + 10) | +8 = −2 + 10",
-  steps: [
-    "المئات: 2 × 4 = 8 → ضع 8 بالمئات بكماشة مغلقة 🗜️ | Hundreds: 2 × 4 = 8 → Set 8 in Hundreds with closed pinch 🗜️",
-    "العشرات: 2 × 4 = 8 → ضع 8 بالعشرات بكماشة مغلقة 🗜️ | Tens: 2 × 4 = 8 → Set 8 in Tens with closed pinch 🗜️",
-    "العشرات: 2 × 4 = 8 → إضافة 8 للعشرات (+8 = −2 + 10): اطرح 2 بالعشرات بالسبابة ⬇️ (سحبة سبابة) وأضف 1 للمئات بالإبهام 👍⬆️ | Tens: 2 × 4 = 8 → Add 8 to Tens (+8 = −2 + 10): Subtract 2 with index ⬇️ (index pull) & add 1 to Hundreds with thumb 👍⬆️",
-    "الآحاد: 2 × 4 = 8 → ضع 8 بالآحاد بكماشة مغلقة 🗜️ | Units: 2 × 4 = 8 → Set 8 in Units with closed pinch 🗜️",
-    "الناتج النهائي: 968 | Final Result: 968",
-  ],
-    result: 968,
-},
-{
-  id: "S06-m3-T3",
+            id: "S06-m3-T2",
+            question: "22 × 44",
+            discrimination: "8+8=16 بأصدقاء 10 (+8 = −2 + 10) | +8 = −2 + 10",
+            steps: [
+              "المئات: 2 × 4 = 8 → ضع 8 بالمئات بكماشة مغلقة 🗜️ | Hundreds: 2 × 4 = 8 → Set 8 in Hundreds with closed pinch 🗜️",
+              "العشرات: 2 × 4 = 8 → ضع 8 بالعشرات بكماشة مغلقة 🗜️ | Tens: 2 × 4 = 8 → Set 8 in Tens with closed pinch 🗜️",
+              "العشرات: 2 × 4 = 8 → إضافة 8 للعشرات (+8 = −2 + 10): اطرح 2 بالعشرات بالإبهام ⬇️ وأضف 1 للمئات بالإبهام 👍⬆️ | Tens: 2 × 4 = 8 → Add 8 to Tens (+8 = −2 + 10): Subtract 2 with thumb ⬇️ & add 1 to Hundreds with thumb 👍⬆️",
+              "الآحاد: 2 × 4 = 8 → ضع 8 بالآحاد بكماشة مغلقة 🗜️ | Units: 2 × 4 = 8 → Set 8 in Units with closed pinch 🗜️",
+              "الناتج النهائي: 968 | Final Result: 968",
+            ],
+            result: 968,
+          },
+          {
+            id: "S06-m3-T3",
             question: "13 × 31",
             discrimination: "9+1=10 بأصدقاء 10 (+1 = −9 + 10) | +1 = −9 + 10",
             steps: [
