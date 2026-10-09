@@ -1253,7 +1253,7 @@ const toggleModuleStory = () => {
     }
   } else {
     // 🔊 TTS — العربية فقط
-    const arText = text.split(' | ')[0].trim();
+    const arText = (text ?? '').split(' | ')[0].trim();
     tts.speak(arText, { onEnd: () => setIsReadingModuleStory(false) });
   }
 };
