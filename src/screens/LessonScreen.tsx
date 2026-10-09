@@ -866,6 +866,19 @@ export function LessonScreen({
                   <p className="text-sm text-white/85 font-body leading-relaxed">
                     {pf(activeModule.miniStory.story)}
                   </p>
+
+{sorobana.debugLogs.length > 0 && (
+  <details className="mt-3 p-2 rounded-lg bg-black/40 border border-emerald-400/30">
+    <summary className="text-[10px] font-bold text-emerald-300 cursor-pointer">
+      🐞 Debug ({sorobana.debugLogs.length})
+    </summary>
+    <div className="mt-2 max-h-48 overflow-y-auto text-[9px] font-mono text-emerald-200 space-y-0.5" dir="ltr">
+      {sorobana.debugLogs.map((line, i) => (
+        <div key={i}>{line}</div>
+      ))}
+    </div>
+  </details>
+)}
                 </div>
               )}
 
