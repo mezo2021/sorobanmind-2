@@ -27,51 +27,43 @@ export interface SRBModuleDef {
 }
 
 export const SRB_MODULES: readonly SRBModuleDef[] = Object.freeze([
-  // ═══════════════ L0 — التمهيدي (5 m) ═══════════════
+  // ═══════════════ L0 — التمهيدي (4 m) ═══════════════
 
-  // ─── S01: تمثيل الأرقام 0-9 (3 m) ───
-  {
-    id: "m1",
-    section: "S01",
-    level: "L0",
-    name: "تمثيل 0-4",
-    description: "الأرقام الصغيرة بالخرزات السفلية",
-    order: 1,
-  },
-  {
-    id: "m2",
-    section: "S01",
-    level: "L0",
-    name: "تمثيل 5",
-    description: "الخرزة العلوية (حركة السبابة)",
-    order: 2,
-  },
-  {
-    id: "m3",
-    section: "S01",
-    level: "L0",
-    name: "تمثيل 6-9",
-    description: "مزيج العلوية + السفلية (حركة القرص)",
-    order: 3,
-  },
+// ─── S01: تمثيل الأرقام 0-9 (2 m) ───
+{
+  id: "m1",
+  section: "S01",
+  level: "L0",
+  name: "تمثيل 0-4",
+  description: "الأرقام الصغيرة بالخرزات السفلية",
+  order: 1,
+},
+{
+  id: "m2",
+  section: "S01",
+  level: "L0",
+  name: "تمثيل 5-9",
+  description: "الخرزة العلوية (5) + السفلية (6-9)",
+  order: 2,
+},
 
-  // ─── S02: القيمة المكانية (2 m) ───
-  {
-    id: "m1",
-    section: "S02",
-    level: "L0",
-    name: "الآحاد والعشرات",
-    description: "الأعداد من 0 إلى 99",
-    order: 1,
-  },
-  {
-    id: "m2",
-    section: "S02",
-    level: "L0",
-    name: "المئات والآلاف",
-    description: "الأعداد من 100 إلى 9999",
-    order: 2,
-  },
+// ─── S02: القيمة المكانية (2 m) ───
+{
+  id: "m1",
+  section: "S02",
+  level: "L0",
+  name: "الآحاد والعشرات",
+  description: "الأعداد من 0 إلى 99",
+  order: 1,
+},
+{
+  id: "m2",
+  section: "S02",
+  level: "L0",
+  name: "المئات والآلاف",
+  description: "الأعداد من 100 إلى 9999",
+  order: 2,
+},
 
   // ═══════════════ L1 — الجمع والطرح (8 m) ═══════════════
 
