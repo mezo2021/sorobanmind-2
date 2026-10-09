@@ -1,7 +1,6 @@
 // src/hooks/useSorobanaVoice.ts
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// ✅ المسار الصحيح لـv2
 const BASE = 'https://mezo2021.github.io/sorobanmind-2/';
 
 function audioPath(file: string): string {
@@ -34,11 +33,9 @@ function pickRandom(arr: string[]): string {
 
 const MAX_DEBUG_LOGS = 40;
 
-// ═══════════════════════════════════════════════
-// Web Audio API — Singleton + Buffer Cache
-// ═══════════════════════════════════════════════
 let sharedAudioContext: AudioContext | null = null;
 let globalUnlockInstalled = false;
+let silentKeepAliveSource: AudioBufferSourceNode | null = null;
 
 function getAudioContext(): AudioContext {
   if (!sharedAudioContext) {
@@ -105,30 +102,44 @@ async function loadBuffer(url: string): Promise<AudioBuffer> {
   }
 }
 
-// ⭐ رفع الصوت من التعليق بشكل متزامن (user gesture)
+// ⭐ الحل: انتظر resume() ثم ابدأ silent buffer
 function unlockAudioSync(): AudioContext {
   const ctx = getAudioContext();
-  try {
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {
-        /* ignore */
-      });
+
+  const startSilent = () => {
+    if (silentKeepAliveSource) return;
+    try {
+      const silentBuf = ctx.createBuffer(1, 22050, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = silentBuf;
+      src.loop = true;
+      const gain = ctx.createGain();
+      gain.gain.value = 0;
+      src.connect(gain);
+      gain.connect(ctx.destination);
+      src.start(0);
+      silentKeepAliveSource = src;
+    } catch {
+      /* ignore */
     }
-    // Silent buffer trick — ضروري لـ iOS/Safari
-    const silentBuf = ctx.createBuffer(1, 1, 22050);
-    const silentSrc = ctx.createBufferSource();
-    silentSrc.buffer = silentBuf;
-    silentSrc.connect(ctx.destination);
-    silentSrc.start(0);
-  } catch {
-    /* ignore */
+  };
+
+  if (ctx.state === 'suspended') {
+    ctx
+      .resume()
+      .then(startSilent)
+      .catch(() => {
+        setTimeout(() => {
+          if (ctx.state === 'running') startSilent();
+        }, 100);
+      });
+  } else {
+    startSilent();
   }
+
   return ctx;
 }
 
-// ═══════════════════════════════════════════════
-// Hook
-// ═══════════════════════════════════════════════
 export function useSorobanaVoice() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSupported] = useState<boolean>(() => {
@@ -221,7 +232,6 @@ export function useSorobanaVoice() {
         return;
       }
 
-      // ⭐ الحل الجذري: تفعيل AudioContext بشكل متزامن (user gesture)
       const ctx = unlockAudioSync();
       log(`🔓 unlocked: ctx.state=${ctx.state}`);
 
@@ -280,15 +290,11 @@ export function useSorobanaVoice() {
         const ctx = getAudioContext();
         log(`🔊 ctx.state=${ctx.state}`);
 
-        // ⭐ محاولة resume أخيرة (قد تفشل، لكن silent buffer عالج المشكلة)
+        // ⭐ إذا كان معلّقاً — انتظر resume قبل التشغيل
         if (ctx.state === 'suspended') {
           try {
-            ctx.resume().catch(() => {
-              /* ignore */
-            });
-            // محاولة قصيرة — إذا لم ينجح، نكمل بالـ silent buffer الموجود
-            await new Promise((r) => setTimeout(r, 50));
-            log(`🔊 after resume attempt: ${ctx.state}`);
+            await ctx.resume();
+            log(`🔊 resumed: ${ctx.state}`);
           } catch {
             /* ignore */
           }
