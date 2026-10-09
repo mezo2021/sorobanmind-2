@@ -31,6 +31,7 @@ import { FloatingCompanion } from '@/components/FloatingCompanion';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
+import { useSpeech } from '@/hooks/useSpeech';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { useProgressStore } from '@/store/progressStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
@@ -191,6 +192,7 @@ export function LessonScreen({
   const lesson = getLessonById(lessonId);
   const nextLesson = getNextLesson(lessonId);
   const sorobana = useSorobanaVoice();
+  const tts = useSpeech();
   const { style: numberStyle, toggleStyle } = useNumberStyleStore();
   const markLessonCompleted = useProgressStore((s) => s.markLessonCompleted);
 
@@ -309,286 +311,319 @@ export function LessonScreen({
       </div>
     );
   }
+// ═══════════════════════════════════════════════════════════
+// 🅰️ النوع 1: درس نظري (L0-INTRO)
+// ═══════════════════════════════════════════════════════════
 
-  // ═══════════════════════════════════════════════════════════
-  // 🅰️ النوع 1: درس نظري (L0-INTRO)
-  // ═══════════════════════════════════════════════════════════
+if (isPureIntro(lesson) && lesson.introPages && lesson.introPages.length > 0) {
+  const pages = lesson.introPages;
+  const currentPage = pages[introPageIdx];
+  const isLast = introPageIdx === pages.length - 1;
+  const isFirst = introPageIdx === 0;
+  const lessonTitleText = p(lesson.title);
 
-  if (isPureIntro(lesson) && lesson.introPages && lesson.introPages.length > 0) {
-    const pages = lesson.introPages;
-    const currentPage = pages[introPageIdx];
-    const isLast = introPageIdx === pages.length - 1;
-    const isFirst = introPageIdx === 0;
-    const lessonTitleText = p(lesson.title);
+  const handleFinishIntro = () => {
+    playSound('levelup');
+    try {
+      const raw = localStorage.getItem(LESSON_PROGRESS_KEY);
+      const arr: string[] = raw ? JSON.parse(raw) : [];
+      if (!arr.includes(lessonId)) {
+        arr.push(lessonId);
+        localStorage.setItem(LESSON_PROGRESS_KEY, JSON.stringify(arr));
+      }
+    } catch { /* ignore */ }
+    markLessonCompleted(lessonId);
+    clearSession(lessonId);
 
-    const handleFinishIntro = () => {
-      playSound('levelup');
-      try {
-        const raw = localStorage.getItem(LESSON_PROGRESS_KEY);
-        const arr: string[] = raw ? JSON.parse(raw) : [];
-        if (!arr.includes(lessonId)) {
-          arr.push(lessonId);
-          localStorage.setItem(LESSON_PROGRESS_KEY, JSON.stringify(arr));
-        }
-      } catch { /* ignore */ }
-      markLessonCompleted(lessonId);
-      clearSession(lessonId);
+    if (lesson.xpReward && onXP) onXP(lesson.xpReward);
+    onComplete(lessonId);
+  };
 
-      if (lesson.xpReward && onXP) onXP(lesson.xpReward);
-      onComplete(lessonId);
-    };
+  const pageLabel = isAr
+    ? `صفحة ${formatNumber(introPageIdx + 1, numberStyle)} من ${formatNumber(pages.length, numberStyle)}`
+    : `Page ${formatNumber(introPageIdx + 1, numberStyle)} of ${formatNumber(pages.length, numberStyle)}`;
 
-    const pageLabel = isAr
-      ? `صفحة ${formatNumber(introPageIdx + 1, numberStyle)} من ${formatNumber(pages.length, numberStyle)}`
-      : `Page ${formatNumber(introPageIdx + 1, numberStyle)} of ${formatNumber(pages.length, numberStyle)}`;
-
-    return (
-      <div dir={dir} className="min-h-screen pb-40">
-        {/* Header */}
-        <div className="sticky top-0 z-30 backdrop-blur-lg bg-slate-900/70 border-b border-white/10 px-3 sm:px-6 py-3">
-          <div className="max-w-3xl mx-auto flex items-center gap-2">
-            <button
-              onClick={() => { playSound('click'); onBack(); }}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
-            >
-              <Home className="w-5 h-5 text-white" />
-            </button>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-sm font-bold text-white truncate">
-                {formatText(lessonTitleText, numberStyle)}
-              </h1>
-              <p className="text-[10px] text-white/50">{p(UI.introTag)} · {lesson.levelId}</p>
-            </div>
-            <button
-              onClick={() => { playSound('click'); toggleStyle(); }}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
-            >
-              <Type className="w-5 h-5 text-white" />
-            </button>
+  return (
+    <div dir={dir} className="min-h-screen pb-40">
+      {/* Header */}
+      <div className="sticky top-0 z-30 backdrop-blur-lg bg-slate-900/70 border-b border-white/10 px-3 sm:px-6 py-3">
+        <div className="max-w-3xl mx-auto flex items-center gap-2">
+          <button
+            onClick={() => { playSound('click'); onBack(); }}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
+          >
+            <Home className="w-5 h-5 text-white" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-sm font-bold text-white truncate">
+              {formatText(lessonTitleText, numberStyle)}
+            </h1>
+            <p className="text-[10px] text-white/50">{p(UI.introTag)} · {lesson.levelId}</p>
           </div>
+          <button
+            onClick={() => { playSound('click'); toggleStyle(); }}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
+          >
+            <Type className="w-5 h-5 text-white" />
+          </button>
         </div>
-
-        {/* Page */}
-        <div className="max-w-3xl mx-auto px-3 sm:px-6 py-5">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentPage.id}
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={{ duration: 0.3 }}
-              className="glass-card p-6 sm:p-8 min-h-[60vh] flex flex-col"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <Info className="w-5 h-5 text-electric-300" />
-                <span className="text-xs text-white/50">{pageLabel}</span>
-              </div>
-
-              <h2 className="text-2xl font-extrabold text-white mb-4 text-center">
-                {p(currentPage.title)}
-              </h2>
-
-              {currentPage.imageSvg && currentPage.imageSvg !== 'soroban-interactive' && (
-                <div className="my-4 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
-                  <img
-                    src={`${import.meta.env.BASE_URL}images/${currentPage.imageSvg}.svg`}
-                    alt={p(currentPage.imageAlt)}
-                    className="w-full h-auto"
-                    loading="lazy"
-                  />
-                </div>
-              )}
-
-              <p className="text-base text-white/85 font-body leading-loose text-center flex-1 flex items-center justify-center">
-                {p(currentPage.content)}
-              </p>
-
-              {/* Dots */}
-              <div className="flex justify-center gap-1.5 my-4">
-                {pages.map((_, i) => (
-                  <div
-                    key={i}
-                    className={`rounded-full transition-all ${
-                      i === introPageIdx
-                        ? 'w-6 h-2 bg-gold-400'
-                        : 'w-2 h-2 bg-white/20'
-                    }`}
-                  />
-                ))}
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-2 mt-2">
-                <button
-                  onClick={() => { playSound('click'); setIntroPageIdx((i) => Math.max(0, i - 1)); }}
-                  disabled={isFirst}
-                  className="flex-1 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm disabled:opacity-30 transition flex items-center justify-center gap-1"
-                >
-                  <PrevIcon className="w-4 h-4" /> {p(UI.prev)}
-                </button>
-                {!isLast ? (
-                  <button
-                    onClick={() => { playSound('click'); setIntroPageIdx((i) => i + 1); }}
-                    className="flex-1 py-3 rounded-2xl bg-gradient-to-l from-purple-500 to-electric-500 text-white font-bold text-sm transition flex items-center justify-center gap-1"
-                  >
-                    {p(UI.next)} <NextIcon className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleFinishIntro}
-                    className="flex-1 py-3 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-bold text-sm transition flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    {p(UI.finishIntro)} +{formatNumber(lesson.xpReward, numberStyle)} XP
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        <FloatingCompanion playSound={playSound} />
-        <SorobanaCompanion
-          isSpeaking={sorobana.isSpeaking}
-          onClick={() => sorobana.speakTeaching()}
-          mode="watch"
-        />
       </div>
-    );
+
+      {/* Page */}
+      <div className="max-w-3xl mx-auto px-3 sm:px-6 py-5">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentPage.id}
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -40 }}
+            transition={{ duration: 0.3 }}
+            className="glass-card p-6 sm:p-8 min-h-[60vh] flex flex-col"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Info className="w-5 h-5 text-electric-300" />
+              <span className="text-xs text-white/50">{pageLabel}</span>
+            </div>
+
+            <h2 className="text-2xl font-extrabold text-white mb-4 text-center">
+              {p(currentPage.title)}
+            </h2>
+
+            {currentPage.imageSvg && currentPage.imageSvg !== 'soroban-interactive' && (
+              <div className="my-4 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
+                <img
+                  src={`${import.meta.env.BASE_URL}images/${currentPage.imageSvg}.svg`}
+                  alt={p(currentPage.imageAlt)}
+                  className="w-full h-auto"
+                  loading="lazy"
+                />
+              </div>
+            )}
+
+            <p className="text-base text-white/85 font-body leading-loose text-center flex-1 flex items-center justify-center">
+              {p(currentPage.content)}
+            </p>
+
+            {/* Dots */}
+            <div className="flex justify-center gap-1.5 my-4">
+              {pages.map((_, i) => (
+                <div
+                  key={i}
+                  className={`rounded-full transition-all ${
+                    i === introPageIdx
+                      ? 'w-6 h-2 bg-gold-400'
+                      : 'w-2 h-2 bg-white/20'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => { playSound('click'); setIntroPageIdx((i) => Math.max(0, i - 1)); }}
+                disabled={isFirst}
+                className="flex-1 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm disabled:opacity-30 transition flex items-center justify-center gap-1"
+              >
+                <PrevIcon className="w-4 h-4" /> {p(UI.prev)}
+              </button>
+              {!isLast ? (
+                <button
+                  onClick={() => { playSound('click'); setIntroPageIdx((i) => i + 1); }}
+                  className="flex-1 py-3 rounded-2xl bg-gradient-to-l from-purple-500 to-electric-500 text-white font-bold text-sm transition flex items-center justify-center gap-1"
+                >
+                  {p(UI.next)} <NextIcon className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleFinishIntro}
+                  className="flex-1 py-3 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-bold text-sm transition flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  {p(UI.finishIntro)} +{formatNumber(lesson.xpReward, numberStyle)} XP
+                </button>
+              )}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <FloatingCompanion playSound={playSound} />
+      <SorobanaCompanion
+        isSpeaking={sorobana.isSpeaking}
+        onClick={() => sorobana.speakTeaching()}
+        mode="watch"
+      />
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🅱️ النوع 2 و 3: درس تفاعلي (وحدات أو قديم)
+// ═══════════════════════════════════════════════════════════
+
+const hasMod = hasModules(lesson);
+const modules: LessonModule[] = lesson.modules ?? [];
+const activeModule = hasMod
+  ? modules.find((m) => m.id === activeModuleId) ?? modules[0]
+  : null;
+
+const examples: LessonExample[] = hasMod
+  ? activeModule?.watchPhase.examples ?? []
+  : lesson.examples ?? [];
+
+const tryQuestions: LessonExercise[] = hasMod
+  ? activeModule?.tryPhase.exercises ?? []
+  : lesson.tryQuestions ?? [];
+
+const allQuestions: LessonExercise[] = hasMod
+  ? modules.flatMap((m) => m.tryPhase.exercises)
+  : lesson.tryQuestions ?? [];
+
+const currentExample = examples[exampleIdx];
+const currentTry = tryQuestions[tryIdx];
+const totalTry = tryQuestions.length;
+
+const currentModuleSolved = tryQuestions.filter((q) => solved.has(q.id)).length;
+const allSolvedCount = allQuestions.filter((q) => solved.has(q.id)).length;
+const allSolved = allQuestions.length > 0 && allSolvedCount === allQuestions.length;
+
+const hasTry = allQuestions.length > 0;
+const currentTryExpected = currentTry ? getExerciseResult(currentTry) : 0;
+const currentTryAttempts = currentTry ? (attempts[currentTry.id] ?? 1) : 1;
+
+// 🎙️ القصص الصوتية mp3 عربية فقط
+const storyText = p(lesson.story);
+
+// [FIX TTS] — دعم MP3 + TTS
+const hasLessonMp3 =
+  lesson.storyAudioId !== null && lesson.storyAudioId !== undefined;
+const hasLessonTTS = !hasLessonMp3 && !!storyText;
+const canPlayLessonStory = isAr && (hasLessonMp3 || hasLessonTTS);
+
+const moduleStoryAudioId = activeModule?.miniStory?.storyAudioId;
+
+// [FIX TTS] — دعم MP3 + TTS
+const hasModuleMp3 =
+  moduleStoryAudioId !== null && moduleStoryAudioId !== undefined;
+const moduleStoryText = activeModule?.miniStory?.storyAudioText;
+const hasModuleTTS = !hasModuleMp3 && !!moduleStoryText;
+const canPlayModuleStory = isAr && (hasModuleMp3 || hasModuleTTS);
+
+const switchModule = (mId: string) => {
+  playSound('click');
+  sorobana.stop();
+  setIsReadingModuleStory(false);
+  setActiveModuleId(mId);
+  setExampleIdx(0);
+  setTryIdx(0);
+  setFeedback('idle');
+  setShowSteps(false);
+  setShowDiscrimination(false);
+  setAbacusValue(0);
+};
+
+const switchTab = (t: Tab) => {
+  playSound('click');
+  setTab(t);
+  setFeedback('idle');
+  setAbacusValue(0);
+  setShowSteps(false);
+  setShowDiscrimination(false);
+};
+
+// [FIX TTS] — دعم MP3 + TTS fallback
+const toggleStory = () => {
+  const src = lesson.storyAudioId;
+  const hasMp3 = src !== null && src !== undefined;
+  const hasTTS = !hasMp3 && !!storyText;
+
+  if (!hasMp3 && !hasTTS) return;
+
+  if (isReadingStory) {
+    sorobana.stop();
+    tts.stop();
+    setIsReadingStory(false);
+    return;
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 🅱️ النوع 2 و 3: درس تفاعلي (وحدات أو قديم)
-  // ═══════════════════════════════════════════════════════════
+  sorobana.stop();
+  tts.stop();
+  playSound('click');
+  setIsReadingStory(true);
 
-  const hasMod = hasModules(lesson);
-  const modules: LessonModule[] = lesson.modules ?? [];
-  const activeModule = hasMod
-    ? modules.find((m) => m.id === activeModuleId) ?? modules[0]
-    : null;
-
-  const examples: LessonExample[] = hasMod
-    ? activeModule?.watchPhase.examples ?? []
-    : lesson.examples ?? [];
-
-  const tryQuestions: LessonExercise[] = hasMod
-    ? activeModule?.tryPhase.exercises ?? []
-    : lesson.tryQuestions ?? [];
-
-  const allQuestions: LessonExercise[] = hasMod
-    ? modules.flatMap((m) => m.tryPhase.exercises)
-    : lesson.tryQuestions ?? [];
-
-  const currentExample = examples[exampleIdx];
-  const currentTry = tryQuestions[tryIdx];
-  const totalTry = tryQuestions.length;
-
-  const currentModuleSolved = tryQuestions.filter((q) => solved.has(q.id)).length;
-  const allSolvedCount = allQuestions.filter((q) => solved.has(q.id)).length;
-  const allSolved = allQuestions.length > 0 && allSolvedCount === allQuestions.length;
-
-  const hasTry = allQuestions.length > 0;
-  const currentTryExpected = currentTry ? getExerciseResult(currentTry) : 0;
-  const currentTryAttempts = currentTry ? (attempts[currentTry.id] ?? 1) : 1;
-
-  // 🎙️ القصص الصوتية mp3 عربية فقط
-  const storyText = p(lesson.story);
-  const canPlayLessonStory =
-    isAr && lesson.storyAudioId !== null && lesson.storyAudioId !== undefined;
-  const moduleStoryAudioId = activeModule?.miniStory?.storyAudioId;
-  const canPlayModuleStory =
-    isAr && moduleStoryAudioId !== null && moduleStoryAudioId !== undefined;
-
-  const switchModule = (mId: string) => {
-    playSound('click');
-    sorobana.stop();
-    setIsReadingModuleStory(false);
-    setActiveModuleId(mId);
-    setExampleIdx(0);
-    setTryIdx(0);
-    setFeedback('idle');
-    setShowSteps(false);
-    setShowDiscrimination(false);
-    setAbacusValue(0);
-  };
-
-  const switchTab = (t: Tab) => {
-    playSound('click');
-    setTab(t);
-    setFeedback('idle');
-    setAbacusValue(0);
-    setShowSteps(false);
-    setShowDiscrimination(false);
-  };
-
-  const toggleStory = () => {
-    const audioSrc = lesson.storyAudioId;
-    if (audioSrc === null || audioSrc === undefined) return;
-
-    if (isReadingStory) {
-      sorobana.stop();
-      setIsReadingStory(false);
-      return;
-    }
-
-    sorobana.stop();
-    playSound('click');
-    setIsReadingStory(true);
-
-    if (audioSrc === 'welcome') {
-      sorobana.speakFiles(
-        ['https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3'],
-      );
+  if (hasMp3) {
+    if (src === 'welcome') {
+      sorobana.speakFiles([
+        'https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3',
+      ]);
       setIsReadingStory(false);
     } else {
-      sorobana.speakStory(audioSrc, () => setIsReadingStory(false));
+      sorobana.speakStory(src, () => setIsReadingStory(false));
     }
-  };
+  } else {
+    // 🔊 TTS — العربية فقط
+    const arText = storyText.split(' | ')[0].trim();
+    tts.speak(arText, { onEnd: () => setIsReadingStory(false) });
+  }
+};
 
-  const toggleModuleStory = () => {
-    const src = activeModule?.miniStory?.storyAudioId;
-    if (src === null || src === undefined) return;
+// [FIX TTS] — دعم MP3 + TTS fallback
+const toggleModuleStory = () => {
+  const src = activeModule?.miniStory?.storyAudioId;
+  const text = activeModule?.miniStory?.storyAudioText;
+  const hasMp3 = src !== null && src !== undefined;
+  const hasTTS = !hasMp3 && !!text;
 
-    if (isReadingModuleStory) {
-      sorobana.stop();
-      setIsReadingModuleStory(false);
-      return;
-    }
+  if (!hasMp3 && !hasTTS) return;
 
+  if (isReadingModuleStory) {
     sorobana.stop();
-    playSound('click');
-    setIsReadingModuleStory(true);
+    tts.stop();
+    setIsReadingModuleStory(false);
+    return;
+  }
 
+  sorobana.stop();
+  tts.stop();
+  playSound('click');
+  setIsReadingModuleStory(true);
+
+  if (hasMp3) {
     if (src === 'welcome') {
-      sorobana.speakFiles(
-        ['https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3'],
-      );
+      sorobana.speakFiles([
+        'https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3',
+      ]);
       setIsReadingModuleStory(false);
     } else {
       sorobana.speakStory(src, () => setIsReadingModuleStory(false));
     }
-  };
+  } else {
+    // 🔊 TTS — العربية فقط
+    const arText = text.split(' | ')[0].trim();
+    tts.speak(arText, { onEnd: () => setIsReadingModuleStory(false) });
+  }
+};
 
-  const nextExample = () => {
-    if (exampleIdx + 1 >= examples.length) return;
-    playSound('click');
-    setExampleIdx((i) => i + 1);
-    setShowSteps(false);
-  };
-  const prevExample = () => {
-    if (exampleIdx === 0) return;
-    playSound('click');
-    setExampleIdx((i) => i - 1);
-    setShowSteps(false);
-  };
+const nextExample = () => {
+  if (exampleIdx + 1 >= examples.length) return;
+  playSound('click');
+  setExampleIdx((i) => i + 1);
+  setShowSteps(false);
+};
+const prevExample = () => {
+  if (exampleIdx === 0) return;
+  playSound('click');
+  setExampleIdx((i) => i - 1);
+  setShowSteps(false);
+};
 
-  useEffect(() => {
-    if (tab === 'try' && currentTry && currentTry.type === 'read') {
-      setChoices(generateChoices(currentTryExpected));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, tryIdx, activeModuleId, currentTry?.id]);
-
+useEffect(() => {
+  if (tab === 'try' && currentTry && currentTry.type === 'read') {
+    setChoices(generateChoices(currentTryExpected));
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [tab, tryIdx, activeModuleId, currentTry?.id]);
   const reactToAnswer = (isCorrect: boolean, attempt: number) => {
     if (isCorrect) {
       playSound('success');
@@ -881,7 +916,6 @@ export function LessonScreen({
 )}
                 </div>
               )}
-
               {/* 📐 القاعدة + الشرط */}
               {hasMod && activeModule && (
                 <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-gold-400/10 to-gold-600/10 border border-gold-400/30">
