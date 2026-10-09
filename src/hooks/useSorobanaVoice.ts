@@ -1,6 +1,7 @@
 // src/hooks/useSorobanaVoice.ts
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+// ✅ المسار الصحيح لـv2
 const BASE = 'https://mezo2021.github.io/sorobanmind-2/';
 
 function audioPath(file: string): string {
@@ -33,9 +34,11 @@ function pickRandom(arr: string[]): string {
 
 const MAX_DEBUG_LOGS = 40;
 
+// ═══════════════════════════════════════════════
+// Web Audio API — Singleton + Buffer Cache
+// ═══════════════════════════════════════════════
 let sharedAudioContext: AudioContext | null = null;
 let globalUnlockInstalled = false;
-let silentKeepAliveSource: AudioBufferSourceNode | null = null;
 
 function getAudioContext(): AudioContext {
   if (!sharedAudioContext) {
@@ -102,44 +105,9 @@ async function loadBuffer(url: string): Promise<AudioBuffer> {
   }
 }
 
-// ⭐ الحل: انتظر resume() ثم ابدأ silent buffer
-function unlockAudioSync(): AudioContext {
-  const ctx = getAudioContext();
-
-  const startSilent = () => {
-    if (silentKeepAliveSource) return;
-    try {
-      const silentBuf = ctx.createBuffer(1, 22050, 22050);
-      const src = ctx.createBufferSource();
-      src.buffer = silentBuf;
-      src.loop = true;
-      const gain = ctx.createGain();
-      gain.gain.value = 0;
-      src.connect(gain);
-      gain.connect(ctx.destination);
-      src.start(0);
-      silentKeepAliveSource = src;
-    } catch {
-      /* ignore */
-    }
-  };
-
-  if (ctx.state === 'suspended') {
-    ctx
-      .resume()
-      .then(startSilent)
-      .catch(() => {
-        setTimeout(() => {
-          if (ctx.state === 'running') startSilent();
-        }, 100);
-      });
-  } else {
-    startSilent();
-  }
-
-  return ctx;
-}
-
+// ═══════════════════════════════════════════════
+// Hook
+// ═══════════════════════════════════════════════
 export function useSorobanaVoice() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSupported] = useState<boolean>(() => {
@@ -232,9 +200,6 @@ export function useSorobanaVoice() {
         return;
       }
 
-      const ctx = unlockAudioSync();
-      log(`🔓 unlocked: ctx.state=${ctx.state}`);
-
       const myGeneration = ++generationRef.current;
       const localQueue = [...files];
 
@@ -289,14 +254,13 @@ export function useSorobanaVoice() {
 
         const ctx = getAudioContext();
         log(`🔊 ctx.state=${ctx.state}`);
-
-        // ⭐ إذا كان معلّقاً — انتظر resume قبل التشغيل
         if (ctx.state === 'suspended') {
           try {
             await ctx.resume();
-            log(`🔊 resumed: ${ctx.state}`);
-          } catch {
-            /* ignore */
+            log(`🔊 after resume: ${ctx.state}`);
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            log(`❌ resume failed: ${msg}`);
           }
         }
 
