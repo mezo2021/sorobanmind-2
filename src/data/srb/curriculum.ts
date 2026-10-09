@@ -136,7 +136,7 @@ export const SRB_SECTIONS: readonly SRBSectionDef[] = Object.freeze([
     name: "تمثيل الأرقام 0-9",
     nameEn: "Number Representation 0-9",
     description: "قراءة وبناء الأرقام من 0 إلى 9 على السوروبان",
-    moduleCount: 3,
+    moduleCount: 2,
     order: 1,
   },
   {
