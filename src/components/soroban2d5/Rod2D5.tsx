@@ -16,6 +16,7 @@ interface Rod2D5Props {
   isActive?: boolean;
   beamHighlight?: boolean;
   tint?: RodTint;
+  isDimmed?: boolean;   // 🆕
 }
 
 const COLUMN_LABELS: string[] = [
@@ -61,6 +62,7 @@ export function Rod2D5({
   isActive = false,
   beamHighlight = false,
   tint,
+  isDimmed = false,   // 🆕
 }: Rod2D5Props) {
   const lowerBeads = [0, 1, 2, 3];
 
@@ -87,10 +89,19 @@ export function Rod2D5({
   const isWhiteHighlight = tint === 'white';
   const beadFilter = getBeadFilter(tint);
 
+  const wrapperOpacity = isDimmed ? 0.25 : 1;
+  const wrapperFilter = isDimmed ? 'grayscale(1)' : 'none';
+
   return (
     <div
       className="relative flex flex-col items-center"
-      style={{ height, width: beadSize * 1.3 }}
+      style={{
+        height,
+        width: beadSize * 1.3,
+        opacity: wrapperOpacity,
+        filter: wrapperFilter,
+        transition: 'opacity 0.4s, filter 0.4s',
+      }}
     >
       {/* Amber glow (basics only) */}
       {isActive && (
