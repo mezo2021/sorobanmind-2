@@ -20,8 +20,10 @@ interface FlashScreenProps {
 export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [autoPlay, setAutoPlay] = useState(false);
-  const [showSecondary, setShowSecondary] = useState(false);
   const [badgeVisible, setBadgeVisible] = useState(true);
+  const [displayValue, setDisplayValue] = useState(
+    lesson.steps[0]?.sorobanValue ?? 0,
+  );
 
   const tts = useSpeech();
   const timersRef = useRef<number[]>([]);
@@ -56,7 +58,8 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
     setStepIndex(0);
     setAutoPlay(false);
     tts.stop();
-  }, [tts]);
+    setDisplayValue(lesson.steps[0]?.sorobanValue ?? 0);
+  }, [tts, lesson]);
 
   // ⭐ التأثير الرئيسي لكل خطوة
   useEffect(() => {
@@ -64,29 +67,26 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
 
     clearTimers();
     tts.stop();
-
-    // t = 0: Badge + TTS
     setBadgeVisible(true);
-    setShowSecondary(false);
 
+    // TTS
     if (step.ttsText) {
       tts.speak(step.ttsText);
     }
 
-    // t = 250ms: secondary
-    if (step.badgeSecondary) {
-      const t1 = window.setTimeout(() => {
-        setShowSecondary(true);
-      }, 250);
-      timersRef.current.push(t1);
-    }
+    // تأخير تحديث العداد حتى تظهر كل أسطر Badge
+    const badgeRevealDuration = Math.max(0, step.badgeLines.length - 1) * 800;
+    const tUpdate = window.setTimeout(() => {
+      setDisplayValue(step.sorobanValue);
+    }, badgeRevealDuration);
+    timersRef.current.push(tUpdate);
 
-    // t = durationMs: الانتقال التلقائي
+    // Auto-advance
     if (autoPlay) {
-      const t2 = window.setTimeout(() => {
+      const tNext = window.setTimeout(() => {
         goNext();
       }, step.durationMs);
-      timersRef.current.push(t2);
+      timersRef.current.push(tNext);
     }
 
     return () => clearTimers();
@@ -156,16 +156,15 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         {/* Mental Badge */}
         <div className="relative w-full max-w-md">
           <MentalBadge
-            primary={step.badgePrimary}
-            secondary={step.badgeSecondary}
-            showSecondary={showSecondary}
+            lines={step.badgeLines}
             visible={badgeVisible}
+            lineDelayMs={800}
           />
         </div>
 
         {/* Soroban */}
         <motion.div
-          key={`${stepIndex}-${step.sorobanValue}`}
+          key={`${stepIndex}-${displayValue}`}
           initial={{ opacity: 0.9 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
@@ -173,7 +172,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         >
           <Soroban2D5
             columns={lesson.columns}
-            demoValue={step.sorobanValue}
+            demoValue={displayValue}
             activeRodIndex={step.activeRodIndex >= 0 ? step.activeRodIndex : undefined}
             interactive={false}
             showValue={true}
