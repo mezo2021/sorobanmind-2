@@ -12,8 +12,9 @@ interface Rod2D5Props {
   onReset: () => void;
   height?: number;
   beadSize?: number;
-  // ⭐ جديد — للفلاشات التعليمية
+  // ⭐ للفلاشات التعليمية
   isActive?: boolean;
+  beamHighlight?: boolean;
 }
 
 const COLUMN_LABELS: string[] = [
@@ -43,6 +44,7 @@ export function Rod2D5({
   height = 440,
   beadSize = 44,
   isActive = false,
+  beamHighlight = false,
 }: Rod2D5Props) {
   const lowerBeads = [0, 1, 2, 3];
 
@@ -72,7 +74,7 @@ export function Rod2D5({
       className="relative flex flex-col items-center"
       style={{ height, width: beadSize * 1.3 }}
     >
-      {/* ⭐ Glow Ring — Tailwind animate-pulse · يظهر فقط عند isActive */}
+      {/* ⭐ Glow Ring — العمود النشط */}
       {isActive && (
         <div
           className="absolute border-2 border-amber-400 bg-amber-400/10 rounded-xl animate-pulse pointer-events-none z-10"
@@ -130,6 +132,23 @@ export function Rod2D5({
         }}
       />
 
+      {/* ⭐ نبض ذهبي على العارضة */}
+      {beamHighlight && (
+        <div
+          className="absolute animate-pulse pointer-events-none z-20"
+          style={{
+            top: beamY - 8,
+            left: -10,
+            width: beadSize * 1.3 + 20,
+            height: 16,
+            borderRadius: 8,
+            background: 'rgba(251,191,36,0.45)',
+            boxShadow:
+              '0 0 20px rgba(251,191,36,0.9), 0 0 40px rgba(251,191,36,0.5)',
+          }}
+        />
+      )}
+
       {lowerBeads.map((idx) => {
         const isBeadActive = idx < state.lower;
         const topActive = lowerAreaTop + idx * step;
@@ -164,7 +183,6 @@ export function Rod2D5({
         );
       })}
 
-      {/* اسم المنزلة فقط — لا يوجد زر تصفير */}
       <div
         className="absolute text-amber-800 font-bold"
         style={{
