@@ -6,6 +6,7 @@ import { Rod2D5 } from './Rod2D5';
 import { useBeadSound } from './useBeadSound';
 import { useBeadHaptics } from './useBeadHaptics';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
+import type { RodTint } from '@/components/flash/types';
 
 interface Soroban2D5Props {
   columns?: number;
@@ -16,10 +17,13 @@ interface Soroban2D5Props {
   demoValue?: number;
   size?: 'sm' | 'md' | 'lg' | 'auto';
   autoBeadSize?: boolean;
-  // ⭐ للفلاشات التعليمية
   activeRodIndex?: number;
   hideTitle?: boolean;
   beamHighlight?: boolean;
+  // ⭐ جديد — للفلاشات
+  rodTint?: RodTint;
+  highlightColumns?: number[];
+  hideColumnLabels?: boolean;
 }
 
 function useResponsiveSize() {
@@ -30,7 +34,6 @@ function useResponsiveSize() {
     if (w < 768) return 'md';
     return 'lg';
   });
-
   useEffect(() => {
     const handleResize = () => {
       const w = window.innerWidth;
@@ -41,44 +44,13 @@ function useResponsiveSize() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
   return size;
 }
 
 const SIZE_CONFIG = {
-  sm: {
-    beadSize: 34,
-    gap: 10,
-    framePadding: 14,
-    innerPadding: 12,
-    height: 380,
-    topPadding: 34,
-    bottomPadding: 10,
-    titleSize: 'text-base',
-    valueSize: 'text-2xl',
-  },
-  md: {
-    beadSize: 44,
-    gap: 14,
-    framePadding: 18,
-    innerPadding: 14,
-    height: 440,
-    topPadding: 40,
-    bottomPadding: 12,
-    titleSize: 'text-lg',
-    valueSize: 'text-3xl',
-  },
-  lg: {
-    beadSize: 56,
-    gap: 20,
-    framePadding: 26,
-    innerPadding: 18,
-    height: 520,
-    topPadding: 48,
-    bottomPadding: 14,
-    titleSize: 'text-2xl',
-    valueSize: 'text-5xl',
-  },
+  sm: { beadSize: 34, gap: 10, framePadding: 14, innerPadding: 12, height: 380, topPadding: 34, bottomPadding: 10, titleSize: 'text-base', valueSize: 'text-2xl' },
+  md: { beadSize: 44, gap: 14, framePadding: 18, innerPadding: 14, height: 440, topPadding: 40, bottomPadding: 12, titleSize: 'text-lg', valueSize: 'text-3xl' },
+  lg: { beadSize: 56, gap: 20, framePadding: 26, innerPadding: 18, height: 520, topPadding: 48, bottomPadding: 14, titleSize: 'text-2xl', valueSize: 'text-5xl' },
 };
 
 function getAutoBeadSize(columns: number): number {
@@ -112,6 +84,9 @@ export function Soroban2D5({
   activeRodIndex,
   hideTitle = false,
   beamHighlight = false,
+  rodTint,
+  highlightColumns,
+  hideColumnLabels = false,
 }: Soroban2D5Props) {
   const {
     columns: colStates,
@@ -187,8 +162,7 @@ export function Soroban2D5({
         className="relative rounded-2xl sm:rounded-3xl"
         style={{
           padding: cfg.framePadding,
-          background:
-            'linear-gradient(135deg, #8b6f47 0%, #6b4423 50%, #4a2e15 100%)',
+          background: 'linear-gradient(135deg, #8b6f47 0%, #6b4423 50%, #4a2e15 100%)',
           boxShadow:
             'inset 0 4px 12px rgba(255,200,150,0.15), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35), 0 8px 16px rgba(0,0,0,0.25)',
           border: '2px solid rgba(0,0,0,0.25)',
@@ -216,6 +190,11 @@ export function Soroban2D5({
             {displayedStates.map((state, idx) => {
               const originalIdx = idx + displayOffset;
               const displayOrder = columns - 1 - originalIdx;
+              const isHighlighted = highlightColumns?.includes(originalIdx) ?? false;
+              const finalTint: RodTint | undefined = isHighlighted
+                ? 'white'
+                : rodTint;
+
               return (
                 <Rod2D5
                   key={originalIdx}
@@ -230,10 +209,15 @@ export function Soroban2D5({
                   beadSize={effectiveBeadSize}
                   isActive={activeRodIndex === originalIdx}
                   beamHighlight={beamHighlight}
+                  tint={finalTint}
                 />
               );
             })}
           </div>
+
+          {hideColumnLabels && (
+            <div className="h-0" />
+          )}
 
           {displayOffset > 0 && (
             <p className="text-center text-[10px] text-amber-700 mt-1 font-body">
@@ -277,8 +261,7 @@ export function Soroban2D5({
 
       {interactive && (
         <p className="text-[10px] sm:text-sm text-amber-700 text-center max-w-md px-2">
-          💡 اضغط على الخرزة لتفعيلها. الخرزة العلوية = <strong>{formatByStyle(5, numberStyle)}</strong>،
-          السفلية = <strong>{formatByStyle(1, numberStyle)}</strong>.
+          💡 اضغط على الخرزة لتفعيلها.
         </p>
       )}
     </div>
