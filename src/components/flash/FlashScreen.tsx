@@ -296,12 +296,12 @@ function SplitView({
     <div className="flex items-start justify-center gap-2 w-full max-w-md">
       {/* المقسوم (right in RTL) */}
       <div className="flex flex-col items-center flex-1 min-w-0">
-        <div className="text-xs text-red-300 mb-1 flex items-center gap-1.5 font-bold">
+        <div className="flex items-center gap-1.5 text-[11px] text-red-300 font-bold mb-0.5">
           <span>🔴</span>
-          <span>المقسوم:</span>
-          <span className="text-red-100 font-mono tabular-nums">
-            {toAr(dividendValue)}
-          </span>
+          <span>المقسوم</span>
+        </div>
+        <div className="px-4 py-1 rounded-lg bg-red-500/25 border border-red-400/50 text-red-50 font-mono font-black text-lg tabular-nums mb-1.5 min-w-[70px] text-center">
+          {toAr(dividendValue)}
         </div>
         <Soroban2D5
           columns={dividendColumns}
@@ -320,12 +320,12 @@ function SplitView({
 
       {/* الناتج (left in RTL) */}
       <div className="flex flex-col items-center flex-1 min-w-0">
-        <div className="text-xs text-emerald-300 mb-1 flex items-center gap-1.5 font-bold">
+        <div className="flex items-center gap-1.5 text-[11px] text-emerald-300 font-bold mb-0.5">
           <span>🟢</span>
-          <span>الناتج:</span>
-          <span className="text-emerald-100 font-mono tabular-nums">
-            {toAr(resultValue)}
-          </span>
+          <span>الناتج</span>
+        </div>
+        <div className="px-4 py-1 rounded-lg bg-emerald-500/25 border border-emerald-400/50 text-emerald-50 font-mono font-black text-lg tabular-nums mb-1.5 min-w-[70px] text-center">
+          {toAr(resultValue)}
         </div>
         <Soroban2D5
           columns={resultColumns}
