@@ -486,29 +486,28 @@ export default function App() {
         );
 
       case 'guardian-dashboard':
-        return (
-          <>
-            <Header
-              xp={stats.xp}
-              streak={stats.streak}
-              level={stats.level}
-              soundEnabled={stats.soundEnabled}
-              onToggleSound={toggleSound}
-              onHome={handleBackToRole}
-            />
-            <GuardianDashboard
-              onBack={handleBackToRole}
-              playSound={handleSound}
-              childName={localStorage.getItem('soroban_child_name') || 'البطل'}
-              childXP={stats.xp}
-              childStreak={stats.streak}
-              childLevel={stats.level}
-              onSwitchToHero={handleSwitchToHero}
-              onShowWelcome={handleShowWelcome}
-              onNavigate={(target) => handleNavigate(target as AppScreen)}
-            />
-          </>
-        );
+  return (
+    <>
+      <Header
+        xp={stats.xp}
+        streak={stats.streak}
+        level={stats.level}
+        soundEnabled={stats.soundEnabled}
+        onToggleSound={toggleSound}
+        onHome={handleBackToRole}
+      />
+      <GuardianDashboard
+        onBack={handleBackToRole}
+        playSound={handleSound}
+        childName={localStorage.getItem('soroban_child_name') || 'البطل'}
+        childXP={stats.xp}
+        childStreak={stats.streak}
+        childLevel={stats.level}
+        onSwitchToHero={handleSwitchToHero}
+        onShowWelcome={handleShowWelcome}
+      />
+    </>
+  );
 
       case 'placement-test':
         return (
