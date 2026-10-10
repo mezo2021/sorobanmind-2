@@ -14,6 +14,11 @@ import type { FlashLesson } from './types';
 const TTS_RATE = 0.7;
 const BADGE_LINE_MS = 800;
 
+const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+function toAr(value: number): string {
+  return String(value).replace(/\d/g, (d) => ARABIC_DIGITS[Number(d)]);
+}
+
 interface FlashScreenProps {
   lesson: FlashLesson;
   onBack: () => void;
@@ -42,13 +47,11 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
   const isLastStep = stepIndex === lesson.steps.length - 1;
   const isFirstStep = stepIndex === 0;
 
-  // Speak current step
   const speakStep = useCallback((s: typeof step) => {
     if (!s?.ttsText) return;
     ttsRef.current.speak(s.ttsText, { rate: TTS_RATE });
   }, []);
 
-  // Update displays when step changes
   useEffect(() => {
     if (!step) return;
     if (isSplit) {
@@ -58,7 +61,6 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
     setBadgeVisible(true);
   }, [stepIndex, step, isSplit]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       ttsRef.current.stop();
@@ -115,7 +117,6 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
 
   const isEnded = isLastStep && hasStarted;
 
-  // Badge variant based on step highlights
   const badgeVariant: 'amber' | 'emerald' | 'red' = step.highlightDividend?.length
     ? 'red'
     : step.highlightResult?.length
@@ -295,9 +296,12 @@ function SplitView({
     <div className="flex items-start justify-center gap-2 w-full max-w-md">
       {/* المقسوم (right in RTL) */}
       <div className="flex flex-col items-center flex-1 min-w-0">
-        <div className="text-xs text-red-300 mb-1 flex items-center gap-1">
+        <div className="text-xs text-red-300 mb-1 flex items-center gap-1.5 font-bold">
           <span>🔴</span>
-          <span>المقسوم</span>
+          <span>المقسوم:</span>
+          <span className="text-red-100 font-mono tabular-nums">
+            {toAr(dividendValue)}
+          </span>
         </div>
         <Soroban2D5
           columns={dividendColumns}
@@ -316,9 +320,12 @@ function SplitView({
 
       {/* الناتج (left in RTL) */}
       <div className="flex flex-col items-center flex-1 min-w-0">
-        <div className="text-xs text-emerald-300 mb-1 flex items-center gap-1">
+        <div className="text-xs text-emerald-300 mb-1 flex items-center gap-1.5 font-bold">
           <span>🟢</span>
-          <span>الناتج</span>
+          <span>الناتج:</span>
+          <span className="text-emerald-100 font-mono tabular-nums">
+            {toAr(resultValue)}
+          </span>
         </div>
         <Soroban2D5
           columns={resultColumns}
