@@ -1,18 +1,17 @@
 // src/components/flash/FlashScreen.tsx
-// 🎬 شاشة الفلاش التعليمي
-// [FIX 10-10] صوت: user gesture + onEnd + Fallback 10s + Token + PauseFlag
+// 🎬 شاشة الفلاش — دعم single + split · manual advance only
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight, Play, Pause, ChevronLeft, ChevronRight, RotateCcw,
+  ArrowRight, ChevronLeft, ChevronRight, RotateCcw, Volume2,
 } from 'lucide-react';
 import { useSpeech } from '@/hooks/useSpeech';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { MentalBadge } from './MentalBadge';
 import type { FlashLesson } from './types';
 
-const FALLBACK_MS = 10000;
+const TTS_RATE = 0.7;
 const BADGE_LINE_MS = 800;
 
 interface FlashScreenProps {
@@ -23,187 +22,89 @@ interface FlashScreenProps {
 
 export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [autoPlay, setAutoPlay] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
   const [badgeVisible, setBadgeVisible] = useState(true);
-  const [displayValue, setDisplayValue] = useState(
-    lesson.steps[0]?.sorobanValue ?? 0,
+  const [hasStarted, setHasStarted] = useState(false);
+  const [displayResult, setDisplayResult] = useState<number>(
+    lesson.steps[0]?.resultValue ?? 0,
+  );
+  const [displayDividend, setDisplayDividend] = useState<number>(
+    lesson.steps[0]?.dividendValue ?? 0,
   );
 
   const tts = useSpeech();
   const ttsRef = useRef(tts);
-  useEffect(() => {
-    ttsRef.current = tts;
-  }, [tts]);
+  useEffect(() => { ttsRef.current = tts; }, [tts]);
 
-  const timersRef = useRef<number[]>([]);
-  const fallbackTimerRef = useRef<number | null>(null);
-  const speakTokenRef = useRef(0);
-  const pauseFlagRef = useRef(false);
-  const stepStartTimeRef = useRef(Date.now());
-  const lastAnimatedStepRef = useRef(-1);
-  const goNextRef = useRef<() => void>(() => {});
-
+  const isSplit = lesson.layout === 'split';
   const step = lesson.steps[stepIndex];
   const isLastStep = stepIndex === lesson.steps.length - 1;
   const isFirstStep = stepIndex === 0;
 
-  const clearAllTimers = useCallback(() => {
-    timersRef.current.forEach((t) => clearTimeout(t));
-    timersRef.current = [];
-    if (fallbackTimerRef.current !== null) {
-      clearTimeout(fallbackTimerRef.current);
-      fallbackTimerRef.current = null;
-    }
-  }, []);
+  // Speak current step
+  const speakStep = useCallback(
+    (s: typeof step) => {
+      if (!s?.ttsText) return;
+      ttsRef.current.speak(s.ttsText, { rate: TTS_RATE });
+    },
+    [],
+  );
 
-  // ═══ auto-advance ═══
-  const goNext = useCallback(() => {
-    if (isLastStep) {
-      setAutoPlay(false);
-      ttsRef.current.stop();
-      onComplete?.();
-      return;
-    }
-    setStepIndex((i) => i + 1);
-  }, [isLastStep, onComplete]);
-
-  useEffect(() => {
-    goNextRef.current = goNext;
-  }, [goNext]);
-
-  // ═══ main effect ═══
+  // Update displays when step changes
   useEffect(() => {
     if (!step) return;
-    clearAllTimers();
-    pauseFlagRef.current = false;
-
-    // --- Visual ---
-    if (lastAnimatedStepRef.current !== stepIndex) {
-      lastAnimatedStepRef.current = stepIndex;
-      setBadgeVisible(true);
-      stepStartTimeRef.current = Date.now();
-
-      const badgeRevealMs = Math.max(0, step.badgeLines.length - 1) * BADGE_LINE_MS;
-      const t = window.setTimeout(() => {
-        setDisplayValue(step.sorobanValue);
-      }, badgeRevealMs);
-      timersRef.current.push(t);
+    if (isSplit) {
+      setDisplayResult(step.resultValue ?? 0);
+      setDisplayDividend(step.dividendValue ?? 0);
     }
+    setBadgeVisible(true);
+  }, [stepIndex, step, isSplit]);
 
-    // --- Audio ---
-    if (!autoPlay || !hasStarted) return;
-
-    const token = ++speakTokenRef.current;
-    const badgeRevealMs = Math.max(0, step.badgeLines.length - 1) * BADGE_LINE_MS;
-    let doneCalled = false;
-
-    const onSpeechDone = () => {
-      if (doneCalled) return;
-      doneCalled = true;
-      if (token !== speakTokenRef.current) return;
-      if (pauseFlagRef.current) return;
-
-      const elapsed = Date.now() - stepStartTimeRef.current;
-      const remaining = Math.max(0, badgeRevealMs - elapsed);
-
-      const t = window.setTimeout(() => {
-        if (token !== speakTokenRef.current) return;
-        if (pauseFlagRef.current) return;
-        goNextRef.current();
-      }, remaining);
-      timersRef.current.push(t);
-    };
-
-    // Fallback
-    fallbackTimerRef.current = window.setTimeout(() => {
-      fallbackTimerRef.current = null;
-      if (token !== speakTokenRef.current) return;
-      if (pauseFlagRef.current) return;
-      ttsRef.current.stop();
-      onSpeechDone();
-    }, FALLBACK_MS);
-
-    if (step.ttsText) {
-      ttsRef.current.speak(step.ttsText, {
-        onEnd: () => {
-          if (fallbackTimerRef.current !== null) {
-            clearTimeout(fallbackTimerRef.current);
-            fallbackTimerRef.current = null;
-          }
-          onSpeechDone();
-        },
-      });
-    } else {
-      onSpeechDone();
-    }
-
-    return () => clearAllTimers();
-  }, [stepIndex, autoPlay, hasStarted, step, clearAllTimers]);
-
-  // ═══ cleanup on unmount ═══
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      speakTokenRef.current += 1;
       ttsRef.current.stop();
-      clearAllTimers();
     };
-  }, [clearAllTimers]);
+  }, []);
 
-  // ═══ Handlers ═══
   const handleStart = () => {
-    // Prime iOS audio (user gesture)
-    ttsRef.current.speak(' ');
     setHasStarted(true);
-    setAutoPlay(true);
+    const s = lesson.steps[stepIndex];
+    if (s) speakStep(s);
   };
 
-  const handlePause = () => {
-    speakTokenRef.current += 1;
-    pauseFlagRef.current = true;
-    setAutoPlay(false);
-    ttsRef.current.stop();
-    clearAllTimers();
-    setDisplayValue(step?.sorobanValue ?? 0);
+  const handleReplayAudio = () => {
+    const s = lesson.steps[stepIndex];
+    if (s) speakStep(s);
   };
 
-  const handleResume = () => {
-    pauseFlagRef.current = false;
-    setAutoPlay(true);
-  };
-
-  const skipToPrev = () => {
-    if (isFirstStep) return;
-    speakTokenRef.current += 1;
-    pauseFlagRef.current = true;
-    clearAllTimers();
-    ttsRef.current.stop();
-    setAutoPlay(false);
-    setStepIndex((i) => i - 1);
-  };
-
-  const skipToNext = () => {
+  const handleNext = () => {
     if (isLastStep) return;
-    speakTokenRef.current += 1;
-    pauseFlagRef.current = true;
-    clearAllTimers();
     ttsRef.current.stop();
-    setAutoPlay(false);
-    setStepIndex((i) => i + 1);
+    const nextIdx = stepIndex + 1;
+    setStepIndex(nextIdx);
+    const s = lesson.steps[nextIdx];
+    if (s) speakStep(s);
   };
 
-  const restart = useCallback(() => {
-    speakTokenRef.current += 1;
-    pauseFlagRef.current = true;
-    clearAllTimers();
+  const handlePrev = () => {
+    if (isFirstStep) return;
     ttsRef.current.stop();
-    lastAnimatedStepRef.current = -1;
+    const prevIdx = stepIndex - 1;
+    setStepIndex(prevIdx);
+    const s = lesson.steps[prevIdx];
+    if (s) speakStep(s);
+  };
+
+  const handleRestart = () => {
+    ttsRef.current.stop();
     setStepIndex(0);
-    setAutoPlay(false);
     setHasStarted(false);
     setBadgeVisible(true);
-    setDisplayValue(lesson.steps[0]?.sorobanValue ?? 0);
-  }, [clearAllTimers, lesson.steps]);
+    if (isSplit) {
+      setDisplayResult(lesson.steps[0]?.resultValue ?? 0);
+      setDisplayDividend(lesson.steps[0]?.dividendValue ?? 0);
+    }
+  };
 
   if (!step) {
     return (
@@ -213,14 +114,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
     );
   }
 
-  const isEnded = isLastStep && !autoPlay && hasStarted;
-  const playLabel = !hasStarted ? 'ابدأ' : autoPlay ? 'إيقاف' : 'استئناف';
-  const PlayIcon = autoPlay ? Pause : Play;
-  const onPlayClick = !hasStarted
-    ? handleStart
-    : autoPlay
-    ? handlePause
-    : handleResume;
+  const isEnded = isLastStep && hasStarted;
 
   return (
     <div
@@ -265,36 +159,29 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         </p>
       </div>
 
-      {/* Soroban + Badge */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 relative">
-        <div className="relative w-full max-w-md">
-          <MentalBadge
-            lines={step.badgeLines}
-            visible={badgeVisible}
-            lineDelayMs={BADGE_LINE_MS}
-          />
-        </div>
+      {/* Badge */}
+      <div className="px-4 mb-3">
+        <MentalBadge
+          lines={step.badgeLines}
+          visible={badgeVisible}
+          lineDelayMs={BADGE_LINE_MS}
+        />
+      </div>
 
-        <motion.div
-          key={`${stepIndex}-${displayValue}`}
-          initial={{ opacity: 0.9 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="mt-16"
-        >
-          <Soroban2D5
-            columns={lesson.columns}
-            demoValue={displayValue}
-            activeRodIndex={
-              step.activeRodIndex >= 0 ? step.activeRodIndex : undefined
-            }
-            beamHighlight={step.highlightBeam === true}
-            interactive={false}
-            showValue={true}
-            autoBeadSize={true}
-            hideTitle={true}
+      {/* Abacus area */}
+      <div className="flex-1 flex items-center justify-center px-3">
+        {isSplit ? (
+          <SplitView
+            lesson={lesson}
+            resultValue={displayResult}
+            dividendValue={displayDividend}
+            highlightResult={step.highlightResult ?? []}
+            highlightDividend={step.highlightDividend ?? []}
+            isEnded={isEnded}
           />
-        </motion.div>
+        ) : (
+          <SingleView lesson={lesson} step={step} />
+        )}
       </div>
 
       {/* Caption */}
@@ -314,63 +201,156 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
       </div>
 
       {/* Controls */}
-      <div className="p-4 pb-6 flex items-center justify-center gap-3">
-        <button
-          onClick={skipToPrev}
-          disabled={isFirstStep}
-          className={`p-3 rounded-full transition ${
-            isFirstStep
-              ? 'bg-white/5 text-white/30 cursor-not-allowed'
-              : 'bg-white/10 hover:bg-white/20 text-white'
-          }`}
-        >
-          <ChevronRight className="w-6 h-6" />
-        </button>
-
-        {!isEnded && (
+      <div className="p-4 pb-6 flex flex-col gap-3">
+        {!hasStarted ? (
           <button
-            onClick={onPlayClick}
-            className={`rounded-full font-bold flex items-center gap-2 transition ${
-              autoPlay
-                ? 'bg-red-500/30 border border-red-400 text-red-200 px-6 py-3'
-                : hasStarted
-                ? 'bg-gradient-to-l from-purple-600 to-amber-500 text-white px-6 py-3'
-                : 'bg-gradient-to-l from-purple-600 to-amber-500 text-white px-8 py-4 text-lg shadow-lg shadow-amber-500/30'
-            }`}
+            onClick={handleStart}
+            className="mx-auto px-8 py-4 rounded-full font-bold flex items-center gap-2 transition bg-gradient-to-l from-purple-600 to-amber-500 text-white text-lg shadow-lg shadow-amber-500/30"
           >
-            <PlayIcon className="w-5 h-5" /> {playLabel}
+            ▶️ ابدأ
           </button>
-        )}
+        ) : (
+          <>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={handlePrev}
+                disabled={isFirstStep}
+                className={`p-3 rounded-full transition ${
+                  isFirstStep
+                    ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                    : 'bg-white/10 hover:bg-white/20 text-white'
+                }`}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
 
-        <button
-          onClick={skipToNext}
-          disabled={isLastStep}
-          className={`p-3 rounded-full transition ${
-            isLastStep
-              ? 'bg-white/5 text-white/30 cursor-not-allowed'
-              : 'bg-white/10 hover:bg-white/20 text-white'
-          }`}
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
+              <button
+                onClick={handleReplayAudio}
+                className="px-5 py-3 rounded-full font-bold flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/50 text-emerald-200 hover:bg-emerald-500/30 transition"
+              >
+                <Volume2 className="w-5 h-5" /> إعادة الصوت
+              </button>
+
+              <button
+                onClick={handleNext}
+                disabled={isLastStep}
+                className={`p-3 rounded-full transition ${
+                  isLastStep
+                    ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                    : 'bg-white/10 hover:bg-white/20 text-white'
+                }`}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+            </div>
+
+            {isEnded && (
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={handleRestart}
+                className="mx-auto px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-bold flex items-center gap-2"
+              >
+                <RotateCcw className="w-4 h-4" /> إعادة من البداية
+              </motion.button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// Split View (division / multiplication)
+// ═══════════════════════════════════════════════════════════
+
+function SplitView({
+  lesson,
+  resultValue,
+  dividendValue,
+  highlightResult,
+  highlightDividend,
+  isEnded,
+}: {
+  lesson: FlashLesson;
+  resultValue: number;
+  dividendValue: number;
+  highlightResult: number[];
+  highlightDividend: number[];
+  isEnded: boolean;
+}) {
+  const resultColumns = lesson.resultColumns ?? 3;
+  const dividendColumns = lesson.dividendColumns ?? 4;
+  const finalPulse = isEnded;
+
+  return (
+    <div className="flex items-start justify-center gap-2 w-full max-w-md">
+      {/* المقسوم (right in RTL) */}
+      <div className="flex flex-col items-center flex-1 min-w-0">
+        <div className="text-xs text-red-300 mb-1 flex items-center gap-1">
+          <span>🔴</span>
+          <span>المقسوم</span>
+        </div>
+        <Soroban2D5
+          columns={dividendColumns}
+          demoValue={dividendValue}
+          interactive={false}
+          showValue={false}
+          autoBeadSize={true}
+          hideTitle={true}
+          rodTint="red"
+          highlightColumns={highlightDividend}
+        />
       </div>
 
-      {/* Restart */}
-      {isEnded && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="px-6 pb-6 text-center"
-        >
-          <button
-            onClick={restart}
-            className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-bold flex items-center gap-2 mx-auto"
-          >
-            <RotateCcw className="w-4 h-4" /> إعادة من البداية
-          </button>
-        </motion.div>
-      )}
+      {/* Divider */}
+      <div className="w-px self-stretch bg-slate-600/60 my-2" />
+
+      {/* الناتج (left in RTL) */}
+      <div className="flex flex-col items-center flex-1 min-w-0">
+        <div className="text-xs text-emerald-300 mb-1 flex items-center gap-1">
+          <span>🟢</span>
+          <span>الناتج</span>
+        </div>
+        <Soroban2D5
+          columns={resultColumns}
+          demoValue={resultValue}
+          interactive={false}
+          showValue={false}
+          autoBeadSize={true}
+          hideTitle={true}
+          rodTint="emerald"
+          highlightColumns={finalPulse ? [] : highlightResult}
+        />
+      </div>
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// Single View (basics)
+// ═══════════════════════════════════════════════════════════
+
+function SingleView({
+  lesson,
+  step,
+}: {
+  lesson: FlashLesson;
+  step: any;
+}) {
+  const displayValue = step.sorobanValue ?? 0;
+  return (
+    <Soroban2D5
+      columns={lesson.columns}
+      demoValue={displayValue}
+      activeRodIndex={step.activeRodIndex >= 0 ? step.activeRodIndex : undefined}
+      beamHighlight={step.highlightBeam === true}
+      interactive={false}
+      showValue={true}
+      autoBeadSize={true}
+      hideTitle={true}
+    />
   );
 }
 
