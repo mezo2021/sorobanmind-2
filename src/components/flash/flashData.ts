@@ -216,13 +216,6 @@ export const FLASH_CATEGORIES: FlashCategory[] = [
     description: 'القسمة ÷ 2 (S08)',
     lessons: [DIV_1X2_M1, DIV_1X2_M2, DIV_1X2_M3, DIV_1X2_M4],
   },
-  {
-    id: 'mult',
-    title: 'الضرب',
-    emoji: '✖️',
-    description: 'الضرب (S05 · S06) — قريباً',
-    lessons: [],
-  },
 ];
 
 export const ALL_FLASH_LESSONS: FlashLesson[] = FLASH_CATEGORIES.flatMap(
