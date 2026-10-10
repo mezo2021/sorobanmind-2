@@ -30,7 +30,8 @@ const BASICS_1: FlashLesson = {
     {
       id: 's3',
       sorobanValue: 0,
-      activeRodIndex: 1,
+      activeRodIndex: -1,
+      highlightBeam: true,
       badgeLines: ['العارضة'],
       caption: 'الخط الأفقي في المنتصف',
       ttsText: 'هذه هي العارضة.',
@@ -68,7 +69,6 @@ const DIV_1X1_M1: FlashLesson = {
   category: 'div-1',
   columns: 7,
   steps: [
-    // s1 — عرض المقسوم
     {
       id: 's1',
       sorobanValue: 837,
@@ -78,7 +78,6 @@ const DIV_1X1_M1: FlashLesson = {
       ttsText: 'نضع المقسوم ثمانمائة وسبعة وثلاثين.',
       durationMs: 3000,
     },
-    // s2 — الجولة الأولى
     {
       id: 's2',
       sorobanValue: 200237,
@@ -88,7 +87,6 @@ const DIV_1X1_M1: FlashLesson = {
       ttsText: 'ثمانية تقسيم ثلاثة يساوي اثنين. اثنان في ثلاثة يساوي ستة. نطرح ستة، نسجل اثنين.',
       durationMs: 5000,
     },
-    // s3 — الجولة الثانية
     {
       id: 's3',
       sorobanValue: 270027,
@@ -98,7 +96,6 @@ const DIV_1X1_M1: FlashLesson = {
       ttsText: 'ثلاثة وعشرون تقسيم ثلاثة يساوي سبعة. سبعة في ثلاثة يساوي واحداً وعشرين. نطرح، نسجل سبعة.',
       durationMs: 5000,
     },
-    // s4 — الجولة الثالثة
     {
       id: 's4',
       sorobanValue: 279000,
@@ -108,7 +105,6 @@ const DIV_1X1_M1: FlashLesson = {
       ttsText: 'سبعة وعشرون تقسيم ثلاثة يساوي تسعة. تسعة في ثلاثة يساوي سبعة وعشرين. نطرح، نسجل تسعة.',
       durationMs: 5000,
     },
-    // s5 — الناتج
     {
       id: 's5',
       sorobanValue: 279000,
