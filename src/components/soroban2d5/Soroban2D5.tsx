@@ -16,9 +16,10 @@ interface Soroban2D5Props {
   demoValue?: number;
   size?: 'sm' | 'md' | 'lg' | 'auto';
   autoBeadSize?: boolean;
-  // ⭐ جديد — للفلاشات التعليمية
+  // ⭐ للفلاشات التعليمية
   activeRodIndex?: number;
   hideTitle?: boolean;
+  beamHighlight?: boolean;
 }
 
 function useResponsiveSize() {
@@ -110,6 +111,7 @@ export function Soroban2D5({
   autoBeadSize = false,
   activeRodIndex,
   hideTitle = false,
+  beamHighlight = false,
 }: Soroban2D5Props) {
   const {
     columns: colStates,
@@ -227,6 +229,7 @@ export function Soroban2D5({
                   height={effectiveHeight}
                   beadSize={effectiveBeadSize}
                   isActive={activeRodIndex === originalIdx}
+                  beamHighlight={beamHighlight}
                 />
               );
             })}
