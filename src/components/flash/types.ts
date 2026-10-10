@@ -7,7 +7,9 @@ export interface FlashStep {
   id: string;
   sorobanValue: number;
   activeRodIndex: number;
-  badgeLines: string[];       // ← بدل primary/secondary
+  /** ⭐ جديد — إضاءة العارضة الأفقية */
+  highlightBeam?: boolean;
+  badgeLines: string[];
   caption: string;
   ttsText: string;
   durationMs: number;
