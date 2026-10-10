@@ -338,3 +338,20 @@ export const divisionProblems: DivisionProblem[] = [
 export function getDivisionProblemById(id: string): DivisionProblem | undefined {
   return divisionProblems.find((p) => p.id === id);
 }
+
+// ═══════════════════════════════════════════════════════════
+// 🔗 جدول الربط: lesson.id → problem.id
+// ═══════════════════════════════════════════════════════════
+// كل درس فلاش يمكن أن يكون له تمرين مقابل.
+// عند إضافة درس جديد: أضف سطراً هنا.
+export const LESSON_TO_PROBLEM: Record<string, string> = {
+  'div-1x1-m1': 'prob_1',   // 837 ÷ 3
+  // 'div-1x1-m2': 'prob_2',   ← عند إضافة الدرس
+  // 'div-1x1-m3': 'prob_3',
+  // 'div-1x1-m4': 'prob_4',
+};
+
+/** يُرجع problemId المرتبط بـ lessonId · أو null إذا لم يوجد */
+export function getProblemIdForLesson(lessonId: string): string | null {
+  return LESSON_TO_PROBLEM[lessonId] ?? null;
+}
