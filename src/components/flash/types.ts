@@ -1,22 +1,27 @@
 // src/components/flash/types.ts
 
 export type FlashOperation = 'basics' | 'multiplication' | 'division';
-export type FlashCategoryId = 'basics' | 'div-1' | 'div-2' | 'mult';
+export type FlashCategoryId = 'basics' | 'div-1' | 'div-2' | 'mult-1' | 'mult-2';
 export type FlashLayout = 'single' | 'split';
 export type RodTint = 'red' | 'emerald' | 'amber' | 'white';
 
 export interface FlashStep {
   id: string;
-  // Single layout (basics)
+
+  // ═══ للقسمة والضرب (معدادان) ═══
+  dividendValue?: number;        // المضروب / المقسوم (يسار)
+  resultValue?: number;          // الناتج (يمين)
+  highlightDividend?: number[];  // إضاءة على المضروب/المقسوم
+  highlightResult?: number[];    // إضاءة على الناتج
+  blurDividend?: number[];       // 🆕 أعمدة مطموسة في المضروب/المقسوم
+
+  // ═══ للأساسيات (معداد واحد) ═══
   sorobanValue?: number;
   activeRodIndex?: number;
+  highlightColumns?: number[];
   highlightBeam?: boolean;
-  // Split layout (division/multiplication)
-  resultValue?: number;
-  dividendValue?: number;
-  highlightResult?: number[];    // indices in result abacus → white
-  highlightDividend?: number[];  // indices in dividend abacus → white
-  // Common
+
+  // ═══ مشترك ═══
   badgeLines: string[];
   caption: string;
   ttsText: string;
@@ -29,10 +34,17 @@ export interface FlashLesson {
   subtitle: string;
   operation: FlashOperation;
   category: FlashCategoryId;
-  columns: number;              // for single layout
-  layout?: FlashLayout;         // 'single' (default) | 'split'
-  resultColumns?: number;       // for split
-  dividendColumns?: number;     // for split
+  columns: number;
+  layout?: FlashLayout;
+
+  // للقسمة والضرب
+  resultColumns?: number;
+  dividendColumns?: number;
+
+  // 🆕 للضرب
+  multiplicand?: number;   // المضروب (32)
+  multiplier?: number;     // المضروب فيه (11)
+
   steps: FlashStep[];
 }
 
