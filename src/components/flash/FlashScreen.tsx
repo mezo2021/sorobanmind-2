@@ -1,11 +1,7 @@
 // src/components/flash/FlashScreen.tsx
-// 🎬 شاشة الفلاش — الناتج يمين · المقسوم يسار
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowRight, ChevronLeft, ChevronRight, RotateCcw, Volume2,
-} from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, RotateCcw, Volume2 } from 'lucide-react';
 import { useSpeech } from '@/hooks/useSpeech';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { MentalBadge } from './MentalBadge';
@@ -13,10 +9,9 @@ import type { FlashLesson } from './types';
 
 const TTS_RATE = 0.7;
 const BADGE_LINE_MS = 800;
-
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
-function toAr(value: number): string {
-  return String(value).replace(/\d/g, (d) => ARABIC_DIGITS[Number(d)]);
+function toAr(v: number): string {
+  return String(v).replace(/\d/g, (d) => ARABIC_DIGITS[Number(d)]);
 }
 
 interface FlashScreenProps {
@@ -29,12 +24,8 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [badgeVisible, setBadgeVisible] = useState(true);
   const [hasStarted, setHasStarted] = useState(false);
-  const [displayResult, setDisplayResult] = useState<number>(
-    lesson.steps[0]?.resultValue ?? 0,
-  );
-  const [displayDividend, setDisplayDividend] = useState<number>(
-    lesson.steps[0]?.dividendValue ?? 0,
-  );
+  const [displayResult, setDisplayResult] = useState<number>(lesson.steps[0]?.resultValue ?? 0);
+  const [displayDividend, setDisplayDividend] = useState<number>(lesson.steps[0]?.dividendValue ?? 0);
 
   const tts = useSpeech();
   const ttsRef = useRef(tts);
@@ -68,30 +59,23 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
     const s = lesson.steps[stepIndex];
     if (s) speakStep(s);
   };
-
-  const handleReplayAudio = () => {
-    const s = lesson.steps[stepIndex];
-    if (s) speakStep(s);
-  };
-
+  const handleReplay = () => { const s = lesson.steps[stepIndex]; if (s) speakStep(s); };
   const handleNext = () => {
     if (isLastStep) return;
     ttsRef.current.stop();
-    const nextIdx = stepIndex + 1;
-    setStepIndex(nextIdx);
-    const s = lesson.steps[nextIdx];
+    const n = stepIndex + 1;
+    setStepIndex(n);
+    const s = lesson.steps[n];
     if (s) speakStep(s);
   };
-
   const handlePrev = () => {
     if (isFirstStep) return;
     ttsRef.current.stop();
-    const prevIdx = stepIndex - 1;
-    setStepIndex(prevIdx);
-    const s = lesson.steps[prevIdx];
+    const p = stepIndex - 1;
+    setStepIndex(p);
+    const s = lesson.steps[p];
     if (s) speakStep(s);
   };
-
   const handleRestart = () => {
     ttsRef.current.stop();
     setStepIndex(0);
@@ -112,29 +96,19 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
   }
 
   const isEnded = isLastStep && hasStarted;
-
-  const badgeVariant: 'amber' | 'emerald' | 'red' = step.highlightDividend?.length
-    ? 'red'
-    : step.highlightResult?.length
-    ? 'emerald'
+  const badgeVariant: 'amber' | 'emerald' | 'red' =
+    step.highlightDividend?.length ? 'red'
+    : step.highlightResult?.length ? 'emerald'
     : 'amber';
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col"
-      dir="rtl"
-    >
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col" dir="rtl">
       <div className="flex items-center justify-between p-4 gap-2">
-        <button
-          onClick={onBack}
-          className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0"
-        >
+        <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0">
           <ArrowRight className="w-6 h-6" />
         </button>
         <div className="flex-1 text-center">
-          <h1 className="text-sm sm:text-lg font-bold text-amber-300">
-            {lesson.title}
-          </h1>
+          <h1 className="text-sm sm:text-lg font-bold text-amber-300">{lesson.title}</h1>
           <p className="text-xs text-white/60">{lesson.subtitle}</p>
         </div>
         <div className="w-10 shrink-0" />
@@ -143,30 +117,16 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
       <div className="px-6 mb-2">
         <div className="flex justify-center gap-1">
           {lesson.steps.map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 rounded-full transition-all ${
-                i === stepIndex
-                  ? 'w-6 bg-amber-400'
-                  : i < stepIndex
-                  ? 'w-1.5 bg-amber-400/50'
-                  : 'w-1.5 bg-white/20'
-              }`}
-            />
+            <div key={i} className={`h-1.5 rounded-full transition-all ${
+              i === stepIndex ? 'w-6 bg-amber-400' : i < stepIndex ? 'w-1.5 bg-amber-400/50' : 'w-1.5 bg-white/20'
+            }`} />
           ))}
         </div>
-        <p className="text-center text-xs text-white/40 mt-2">
-          الخطوة {stepIndex + 1} من {lesson.steps.length}
-        </p>
+        <p className="text-center text-xs text-white/40 mt-2">الخطوة {stepIndex + 1} من {lesson.steps.length}</p>
       </div>
 
       <div className="px-4 mb-3">
-        <MentalBadge
-          lines={step.badgeLines}
-          visible={badgeVisible}
-          lineDelayMs={BADGE_LINE_MS}
-          variant={badgeVariant}
-        />
+        <MentalBadge lines={step.badgeLines} visible={badgeVisible} lineDelayMs={BADGE_LINE_MS} variant={badgeVariant} />
       </div>
 
       <div className="flex-1 flex items-center justify-center px-3">
@@ -177,6 +137,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
             dividendValue={displayDividend}
             highlightResult={step.highlightResult ?? []}
             highlightDividend={step.highlightDividend ?? []}
+            blurDividend={step.blurDividend ?? []}
             isEnded={isEnded}
           />
         ) : (
@@ -186,11 +147,8 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
 
       <div className="px-6 mb-3">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={step.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+          <motion.div key={step.id}
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.25 }}
             className="bg-slate-800/90 border border-slate-700 px-4 py-3 rounded-xl text-slate-200 text-sm text-center shadow-lg max-w-md mx-auto"
           >
@@ -201,54 +159,29 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
 
       <div className="p-4 pb-6 flex flex-col gap-3">
         {!hasStarted ? (
-          <button
-            onClick={handleStart}
-            className="mx-auto px-8 py-4 rounded-full font-bold flex items-center gap-2 transition bg-gradient-to-l from-purple-600 to-amber-500 text-white text-lg shadow-lg shadow-amber-500/30"
-          >
+          <button onClick={handleStart}
+            className="mx-auto px-8 py-4 rounded-full font-bold flex items-center gap-2 transition bg-gradient-to-l from-purple-600 to-amber-500 text-white text-lg shadow-lg shadow-amber-500/30">
             ▶️ ابدأ
           </button>
         ) : (
           <>
             <div className="flex items-center justify-center gap-3">
-              <button
-                onClick={handlePrev}
-                disabled={isFirstStep}
-                className={`p-3 rounded-full transition ${
-                  isFirstStep
-                    ? 'bg-white/5 text-white/30 cursor-not-allowed'
-                    : 'bg-white/10 hover:bg-white/20 text-white'
-                }`}
-              >
+              <button onClick={handlePrev} disabled={isFirstStep}
+                className={`p-3 rounded-full transition ${isFirstStep ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 text-white'}`}>
                 <ChevronRight className="w-6 h-6" />
               </button>
-
-              <button
-                onClick={handleReplayAudio}
-                className="px-5 py-3 rounded-full font-bold flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/50 text-emerald-200 hover:bg-emerald-500/30 transition"
-              >
+              <button onClick={handleReplay}
+                className="px-5 py-3 rounded-full font-bold flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/50 text-emerald-200 hover:bg-emerald-500/30 transition">
                 <Volume2 className="w-5 h-5" /> إعادة الصوت
               </button>
-
-              <button
-                onClick={handleNext}
-                disabled={isLastStep}
-                className={`p-3 rounded-full transition ${
-                  isLastStep
-                    ? 'bg-white/5 text-white/30 cursor-not-allowed'
-                    : 'bg-white/10 hover:bg-white/20 text-white'
-                }`}
-              >
+              <button onClick={handleNext} disabled={isLastStep}
+                className={`p-3 rounded-full transition ${isLastStep ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 text-white'}`}>
                 <ChevronLeft className="w-6 h-6" />
               </button>
             </div>
-
             {isEnded && (
-              <motion.button
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                onClick={handleRestart}
-                className="mx-auto px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-bold flex items-center gap-2"
-              >
+              <motion.button initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} onClick={handleRestart}
+                className="mx-auto px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-bold flex items-center gap-2">
                 <RotateCcw className="w-4 h-4" /> إعادة من البداية
               </motion.button>
             )}
@@ -259,23 +192,11 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════
-// Split View — 🟢 الناتج يمين · 🔴 المقسوم يسار
-// ═══════════════════════════════════════════════════════════
-
 function SplitView({
-  lesson,
-  resultValue,
-  dividendValue,
-  highlightResult,
-  highlightDividend,
-  isEnded,
+  lesson, resultValue, dividendValue, highlightResult, highlightDividend, blurDividend, isEnded,
 }: {
-  lesson: FlashLesson;
-  resultValue: number;
-  dividendValue: number;
-  highlightResult: number[];
-  highlightDividend: number[];
+  lesson: FlashLesson; resultValue: number; dividendValue: number;
+  highlightResult: number[]; highlightDividend: number[]; blurDividend: number[];
   isEnded: boolean;
 }) {
   const resultColumns = lesson.resultColumns ?? 3;
@@ -284,11 +205,10 @@ function SplitView({
 
   return (
     <div className="flex items-start justify-center gap-2 w-full max-w-md">
-      {/* 🟢 الناتج (أول عنصر = يمين في RTL) */}
+      {/* 🟢 الناتج (يمين) */}
       <div className="flex-1 min-w-0 flex flex-col items-center">
         <div className="flex items-center gap-1.5 text-[11px] text-emerald-300 font-bold mb-0.5">
-          <span>🟢</span>
-          <span>الناتج</span>
+          <span>🟢</span><span>الناتج</span>
         </div>
         <div className="px-4 py-1 rounded-lg bg-emerald-500/25 border border-emerald-400/50 text-emerald-50 font-mono font-black text-lg tabular-nums mb-1.5 min-w-[70px] text-center">
           {toAr(resultValue)}
@@ -305,14 +225,12 @@ function SplitView({
         />
       </div>
 
-      {/* Divider */}
       <div className="w-px self-stretch bg-slate-600/60 my-2" />
 
-      {/* 🔴 المقسوم (ثاني عنصر = يسار في RTL) */}
+      {/* 🔴 المضروب/المقسوم (يسار) */}
       <div className="flex-1 min-w-0 flex flex-col items-center">
         <div className="flex items-center gap-1.5 text-[11px] text-rose-300 font-bold mb-0.5">
-          <span>🔴</span>
-          <span>المقسوم</span>
+          <span>🔴</span><span>المضروب</span>
         </div>
         <div className="px-4 py-1 rounded-lg bg-rose-500/25 border border-rose-400/50 text-rose-50 font-mono font-black text-lg tabular-nums mb-1.5 min-w-[70px] text-center">
           {toAr(dividendValue)}
@@ -326,28 +244,18 @@ function SplitView({
           hideTitle={true}
           rodTint="red"
           highlightColumns={highlightDividend}
+          dimColumns={blurDividend}
         />
       </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════
-// Single View (basics)
-// ═══════════════════════════════════════════════════════════
-
-function SingleView({
-  lesson,
-  step,
-}: {
-  lesson: FlashLesson;
-  step: any;
-}) {
-  const displayValue = step.sorobanValue ?? 0;
+function SingleView({ lesson, step }: { lesson: FlashLesson; step: any }) {
   return (
     <Soroban2D5
       columns={lesson.columns}
-      demoValue={displayValue}
+      demoValue={step.sorobanValue ?? 0}
       activeRodIndex={step.activeRodIndex >= 0 ? step.activeRodIndex : undefined}
       beamHighlight={step.highlightBeam === true}
       interactive={false}
