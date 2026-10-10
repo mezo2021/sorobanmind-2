@@ -72,7 +72,7 @@ function CategorySection({
   index: number;
   onOpenFlash: (lessonId: string) => void;
 }) {
-  const gradient = CATEGORY_GRADIENTS[category.id] ?? 'from-purple-500 to-electric-500';
+  const gradient = CATEGORY_GRADIENTS[category.id] ?? 'from-purple-500 to-violet-700';
   const isEmpty = category.lessons.length === 0;
 
   return (
