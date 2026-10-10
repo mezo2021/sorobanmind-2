@@ -1,15 +1,6 @@
 // src/components/flash/FlashScreen.tsx
-// 🎬 شاشة الفلاش التعليمي — عرض كامل
-// [FIX 10-10] صوت: user gesture + مصدر واحد + ttsRef ثابت
-//
-// القواعد:
-//  - ▶️ ابدأ = user gesture + قراءة الخطوة الحالية
-//  - ⏸️ = يوقف autoPlay + stop
-//  - ▶️ استئناف = autoPlay + قراءة الخطوة الحالية + durationMs من الصفر
-//  - تلقائي = goNext يقرأ الخطوة التالية فقط
-//  - ⏭️/⏮️ يدوي = بلا قراءة · Badge يُعاد
-//  - 🔄 في النهاية = إعادة كاملة
-//  - useEffect = Badge + timers + displayValue فقط (لا صوت)
+// 🎬 شاشة الفلاش التعليمي
+// [FIX 10-10] صوت: user gesture + onEnd + Fallback 10s + Token + PauseFlag
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,6 +11,9 @@ import { useSpeech } from '@/hooks/useSpeech';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { MentalBadge } from './MentalBadge';
 import type { FlashLesson } from './types';
+
+const FALLBACK_MS = 10000;
+const BADGE_LINE_MS = 800;
 
 interface FlashScreenProps {
   lesson: FlashLesson;
@@ -36,7 +30,6 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
     lesson.steps[0]?.sorobanValue ?? 0,
   );
 
-  // ═══ TTS — مرجع ثابت (لا يُسبب re-runs) ═══
   const tts = useSpeech();
   const ttsRef = useRef(tts);
   useEffect(() => {
@@ -44,18 +37,27 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
   }, [tts]);
 
   const timersRef = useRef<number[]>([]);
+  const fallbackTimerRef = useRef<number | null>(null);
+  const speakTokenRef = useRef(0);
+  const pauseFlagRef = useRef(false);
+  const stepStartTimeRef = useRef(Date.now());
   const lastAnimatedStepRef = useRef(-1);
+  const goNextRef = useRef<() => void>(() => {});
 
   const step = lesson.steps[stepIndex];
   const isLastStep = stepIndex === lesson.steps.length - 1;
   const isFirstStep = stepIndex === 0;
 
-  const clearTimers = useCallback(() => {
+  const clearAllTimers = useCallback(() => {
     timersRef.current.forEach((t) => clearTimeout(t));
     timersRef.current = [];
+    if (fallbackTimerRef.current !== null) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
   }, []);
 
-  // ═══ goNext — صوت + تقدّم تلقائي ═══
+  // ═══ auto-advance ═══
   const goNext = useCallback(() => {
     if (isLastStep) {
       setAutoPlay(false);
@@ -63,90 +65,145 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
       onComplete?.();
       return;
     }
-    const nextIdx = stepIndex + 1;
-    setStepIndex(nextIdx);
-    if (autoPlay) {
-      const nextStep = lesson.steps[nextIdx];
-      if (nextStep?.ttsText) {
-        ttsRef.current.speak(nextStep.ttsText);
-      }
+    setStepIndex((i) => i + 1);
+  }, [isLastStep, onComplete]);
+
+  useEffect(() => {
+    goNextRef.current = goNext;
+  }, [goNext]);
+
+  // ═══ main effect ═══
+  useEffect(() => {
+    if (!step) return;
+    clearAllTimers();
+    pauseFlagRef.current = false;
+
+    // --- Visual ---
+    if (lastAnimatedStepRef.current !== stepIndex) {
+      lastAnimatedStepRef.current = stepIndex;
+      setBadgeVisible(true);
+      stepStartTimeRef.current = Date.now();
+
+      const badgeRevealMs = Math.max(0, step.badgeLines.length - 1) * BADGE_LINE_MS;
+      const t = window.setTimeout(() => {
+        setDisplayValue(step.sorobanValue);
+      }, badgeRevealMs);
+      timersRef.current.push(t);
     }
-  }, [stepIndex, isLastStep, autoPlay, lesson.steps, onComplete]);
 
-  const goPrev = useCallback(() => {
-    if (isFirstStep) return;
-    ttsRef.current.stop();
-    setStepIndex((i) => i - 1);
-  }, [isFirstStep]);
+    // --- Audio ---
+    if (!autoPlay || !hasStarted) return;
 
-  // ═══ أزرار التشغيل — user gestures ═══
+    const token = ++speakTokenRef.current;
+    const badgeRevealMs = Math.max(0, step.badgeLines.length - 1) * BADGE_LINE_MS;
+    let doneCalled = false;
+
+    const onSpeechDone = () => {
+      if (doneCalled) return;
+      doneCalled = true;
+      if (token !== speakTokenRef.current) return;
+      if (pauseFlagRef.current) return;
+
+      const elapsed = Date.now() - stepStartTimeRef.current;
+      const remaining = Math.max(0, badgeRevealMs - elapsed);
+
+      const t = window.setTimeout(() => {
+        if (token !== speakTokenRef.current) return;
+        if (pauseFlagRef.current) return;
+        goNextRef.current();
+      }, remaining);
+      timersRef.current.push(t);
+    };
+
+    // Fallback
+    fallbackTimerRef.current = window.setTimeout(() => {
+      fallbackTimerRef.current = null;
+      if (token !== speakTokenRef.current) return;
+      if (pauseFlagRef.current) return;
+      ttsRef.current.stop();
+      onSpeechDone();
+    }, FALLBACK_MS);
+
+    if (step.ttsText) {
+      ttsRef.current.speak(step.ttsText, {
+        onEnd: () => {
+          if (fallbackTimerRef.current !== null) {
+            clearTimeout(fallbackTimerRef.current);
+            fallbackTimerRef.current = null;
+          }
+          onSpeechDone();
+        },
+      });
+    } else {
+      onSpeechDone();
+    }
+
+    return () => clearAllTimers();
+  }, [stepIndex, autoPlay, hasStarted, step, clearAllTimers]);
+
+  // ═══ cleanup on unmount ═══
+  useEffect(() => {
+    return () => {
+      speakTokenRef.current += 1;
+      ttsRef.current.stop();
+      clearAllTimers();
+    };
+  }, [clearAllTimers]);
+
+  // ═══ Handlers ═══
   const handleStart = () => {
+    // Prime iOS audio (user gesture)
+    ttsRef.current.speak(' ');
     setHasStarted(true);
     setAutoPlay(true);
-    const s = lesson.steps[stepIndex];
-    if (s?.ttsText) {
-      ttsRef.current.speak(s.ttsText);
-    }
   };
 
   const handlePause = () => {
+    speakTokenRef.current += 1;
+    pauseFlagRef.current = true;
     setAutoPlay(false);
     ttsRef.current.stop();
+    clearAllTimers();
+    setDisplayValue(step?.sorobanValue ?? 0);
   };
 
   const handleResume = () => {
+    pauseFlagRef.current = false;
     setAutoPlay(true);
-    const s = lesson.steps[stepIndex];
-    if (s?.ttsText) {
-      ttsRef.current.speak(s.ttsText);
-    }
+  };
+
+  const skipToPrev = () => {
+    if (isFirstStep) return;
+    speakTokenRef.current += 1;
+    pauseFlagRef.current = true;
+    clearAllTimers();
+    ttsRef.current.stop();
+    setAutoPlay(false);
+    setStepIndex((i) => i - 1);
+  };
+
+  const skipToNext = () => {
+    if (isLastStep) return;
+    speakTokenRef.current += 1;
+    pauseFlagRef.current = true;
+    clearAllTimers();
+    ttsRef.current.stop();
+    setAutoPlay(false);
+    setStepIndex((i) => i + 1);
   };
 
   const restart = useCallback(() => {
-    clearTimers();
+    speakTokenRef.current += 1;
+    pauseFlagRef.current = true;
+    clearAllTimers();
     ttsRef.current.stop();
     lastAnimatedStepRef.current = -1;
     setStepIndex(0);
     setAutoPlay(false);
     setHasStarted(false);
+    setBadgeVisible(true);
     setDisplayValue(lesson.steps[0]?.sorobanValue ?? 0);
-  }, [clearTimers, lesson.steps]);
-
-  // ═══ effect: Badge + timers + displayValue (بلا صوت) ═══
-  useEffect(() => {
-    if (!step) return;
-    clearTimers();
-
-    const isNewStep = lastAnimatedStepRef.current !== stepIndex;
-
-    if (isNewStep) {
-      lastAnimatedStepRef.current = stepIndex;
-      setBadgeVisible(true);
-
-      const badgeRevealDuration = Math.max(0, step.badgeLines.length - 1) * 800;
-      const tUpdate = window.setTimeout(() => {
-        setDisplayValue(step.sorobanValue);
-      }, badgeRevealDuration);
-      timersRef.current.push(tUpdate);
-    }
-
-    if (autoPlay) {
-      const tNext = window.setTimeout(() => {
-        goNext();
-      }, step.durationMs);
-      timersRef.current.push(tNext);
-    }
-
-    return () => clearTimers();
-  }, [stepIndex, autoPlay, step, goNext, clearTimers]);
-
-  // ═══ تنظيف عند الخروج ═══
-  useEffect(() => {
-    return () => {
-      ttsRef.current.stop();
-      clearTimers();
-    };
-  }, [clearTimers]);
+  }, [clearAllTimers, lesson.steps]);
 
   if (!step) {
     return (
@@ -170,7 +227,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
       className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col"
       dir="rtl"
     >
-      {/* ═══ Header ═══ */}
+      {/* Header */}
       <div className="flex items-center justify-between p-4 gap-2">
         <button
           onClick={onBack}
@@ -187,7 +244,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         <div className="w-10 shrink-0" />
       </div>
 
-      {/* ═══ Progress ═══ */}
+      {/* Progress */}
       <div className="px-6 mb-2">
         <div className="flex justify-center gap-1">
           {lesson.steps.map((_, i) => (
@@ -208,13 +265,13 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         </p>
       </div>
 
-      {/* ═══ Soroban + Badge ═══ */}
+      {/* Soroban + Badge */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 relative">
         <div className="relative w-full max-w-md">
           <MentalBadge
             lines={step.badgeLines}
             visible={badgeVisible}
-            lineDelayMs={800}
+            lineDelayMs={BADGE_LINE_MS}
           />
         </div>
 
@@ -231,6 +288,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
             activeRodIndex={
               step.activeRodIndex >= 0 ? step.activeRodIndex : undefined
             }
+            beamHighlight={step.highlightBeam === true}
             interactive={false}
             showValue={true}
             autoBeadSize={true}
@@ -239,7 +297,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         </motion.div>
       </div>
 
-      {/* ═══ Caption ═══ */}
+      {/* Caption */}
       <div className="px-6 mb-3">
         <AnimatePresence mode="wait">
           <motion.div
@@ -255,10 +313,10 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         </AnimatePresence>
       </div>
 
-      {/* ═══ Controls ═══ */}
+      {/* Controls */}
       <div className="p-4 pb-6 flex items-center justify-center gap-3">
         <button
-          onClick={goPrev}
+          onClick={skipToPrev}
           disabled={isFirstStep}
           className={`p-3 rounded-full transition ${
             isFirstStep
@@ -285,7 +343,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         )}
 
         <button
-          onClick={goNext}
+          onClick={skipToNext}
           disabled={isLastStep}
           className={`p-3 rounded-full transition ${
             isLastStep
@@ -297,7 +355,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         </button>
       </div>
 
-      {/* ═══ Restart ═══ */}
+      {/* Restart */}
       {isEnded && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
