@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import {
   Sparkles, Flame, Brain, Zap, Palette,
-  X, Users, Trophy, Target, Grid3X3,
+  X, Users, Trophy, Target, Grid3X3, Film,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -110,13 +110,14 @@ export function HeroDashboard({
 }: HeroDashboardProps) {
   const [exam2Passed, setExam2Passed] = useState(false);
 
-useEffect(() => {
-  try {
-    const raw = localStorage.getItem('soroban_exam2_passed');
-    if (raw) setExam2Passed(JSON.parse(raw) === true);
-  } catch { /* ignore */ }
-}, []);
-const [companion, setCompanion] = useState<CharacterType>('sham');
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('soroban_exam2_passed');
+      if (raw) setExam2Passed(JSON.parse(raw) === true);
+    } catch { /* ignore */ }
+  }, []);
+
+  const [companion, setCompanion] = useState<CharacterType>('sham');
   const [showSelector, setShowSelector] = useState(false);
   const [childName, setChildName] = useState<string>('');
   const [examPassed, setExamPassed] = useState(false);
@@ -379,6 +380,57 @@ const [companion, setCompanion] = useState<CharacterType>('sham');
             </div>
 
             <div className="shrink-0 self-center text-purple-300 group-hover:text-purple-100 transition-colors">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </div>
+        </motion.button>
+      </motion.div>
+
+      {/* 🎬 FLASH LESSONS CARD */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.13 }}
+        className="mb-6"
+      >
+        <motion.button
+          type="button"
+          whileHover={{ scale: 1.01, y: -3 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => handleNav('flash-list' as Screen)}
+          className="group relative glass-card p-5 sm:p-6 text-right overflow-hidden w-full border-2 border-amber-400/40"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-rose-500 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
+          <div className="absolute -top-20 -right-20 w-48 h-48 bg-amber-500/30 blur-3xl" />
+
+          <div className="relative flex items-center gap-4">
+            <div className="shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center shadow-xl shadow-amber-500/50">
+              <Film className="w-8 h-8 text-white" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className="text-xl font-black font-display text-white">
+                  الفلاشات التعليمية
+                </h4>
+                <span className="px-2 py-0.5 rounded-lg bg-amber-400/30 text-amber-100 text-[10px] font-bold">
+                  جديد
+                </span>
+              </div>
+              <p className="text-[10px] text-white/40 font-body">
+                Flash Lessons
+              </p>
+              <p className="text-xs text-white/60 font-body leading-relaxed mt-1">
+                شروحات قصيرة — خطوة بخطوة مع الصوت والصورة
+              </p>
+              <p className="text-xs text-amber-300 font-body mt-1">
+                🎬 أساسيات · ضرب · قسمة
+              </p>
+            </div>
+
+            <div className="shrink-0 self-center text-amber-300 group-hover:text-amber-100 transition-colors">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
