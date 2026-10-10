@@ -39,7 +39,7 @@ import LevelTestScreen from './screens/LevelTestScreen';
 import KidsCertificateScreen from './screens/KidsCertificateScreen';
 import CertificateScreen from './screens/CertificateScreen';
 
-// ═══ 🎬 Flash Lessons (جديد) ═══
+// ═══ 🎬 Flash Lessons ═══
 import { FlashScreen } from './components/flash/FlashScreen';
 import { getFlashLessonById } from './components/flash/flashData';
 
@@ -492,6 +492,7 @@ export default function App() {
               childLevel={stats.level}
               onSwitchToHero={handleSwitchToHero}
               onShowWelcome={handleShowWelcome}
+              onNavigate={(target) => handleNavigate(target as AppScreen)}
             />
           </>
         );
