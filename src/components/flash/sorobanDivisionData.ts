@@ -1,7 +1,6 @@
 // src/components/flash/sorobanDivisionData.ts
 // 📊 بيانات مسائل القسمة للتمرين التفاعلي
 // ⚠️ فهارس الأعمدة: 0=مئات · 1=عشرات · 2=آحاد
-// 🎯 كل الأعمدة = 3 (مئات · عشرات · آحاد)
 
 export interface DivisionStep {
   stepIndex: number;
@@ -118,7 +117,7 @@ export const divisionProblems: DivisionProblem[] = [
   },
 
   // ═══════════════════════════════════════════════════════════
-  // ➗ prob_4 — 216 ÷ 8 = 27  (div-1x1-m4 — استعارة 10)
+  // ➗ prob_4 — 216 ÷ 8 = 27  (div-1x1-m4 — مركبة)
   // ═══════════════════════════════════════════════════════════
   {
     id: 'prob_4',
@@ -143,121 +142,122 @@ export const divisionProblems: DivisionProblem[] = [
         activeDividendRods: [1, 2],
         activeResultRod: 2,
       },
-// ═══════════════════════════════════════════════════════════
-// ➗ prob_5 — 484 ÷ 22 = 22  (div-1x2-m1)
-// ═══════════════════════════════════════════════════════════
-{
-  id: 'prob_5',
-  dividend: 484,
-  divisor: 22,
-  steps: [
-    {
-      stepIndex: 0,
-      instructionTitle: 'قسمة المئات (48 ÷ 22)',
-      instructionDetail: '48 ÷ 22 = 2 — نضع 2 في عشرات الناتج، ونطرح 20×22 = 440.',
-      expectedDividend: 44,
-      expectedResult: 20,
-      activeDividendRods: [0, 1],
-      activeResultRod: 1,
-    },
-    {
-      stepIndex: 1,
-      instructionTitle: 'قسمة العشرات والآحاد (44 ÷ 22)',
-      instructionDetail: '44 ÷ 22 = 2 — نضع 2 في آحاد الناتج، ونطرح 2×22 = 44.',
-      expectedDividend: 0,
-      expectedResult: 22,
-      activeDividendRods: [1, 2],
-      activeResultRod: 2,
-    },
-  ],
-},
+    ],
+  },
 
-// ═══════════════════════════════════════════════════════════
-// ➗ prob_6 — 572 ÷ 22 = 26  (div-1x2-m2)
-// ═══════════════════════════════════════════════════════════
-{
-  id: 'prob_6',
-  dividend: 572,
-  divisor: 22,
-  steps: [
-    {
-      stepIndex: 0,
-      instructionTitle: 'قسمة المئات (57 ÷ 22)',
-      instructionDetail: '57 ÷ 22 = 2 — نضع 2 في عشرات الناتج، ونطرح 20×22 = 440.',
-      expectedDividend: 132,
-      expectedResult: 20,
-      activeDividendRods: [0, 1],
-      activeResultRod: 1,
-    },
-    {
-      stepIndex: 1,
-      instructionTitle: 'قسمة العشرات والآحاد (132 ÷ 22)',
-      instructionDetail: '132 ÷ 22 = 6 — نضع 6 في آحاد الناتج، ونطرح 6×22 = 132.',
-      expectedDividend: 0,
-      expectedResult: 26,
-      activeDividendRods: [1, 2],
-      activeResultRod: 2,
-    },
-  ],
-},
+  // ═══════════════════════════════════════════════════════════
+  // ➗ prob_5 — 484 ÷ 22 = 22  (div-1x2-m1)
+  // ═══════════════════════════════════════════════════════════
+  {
+    id: 'prob_5',
+    dividend: 484,
+    divisor: 22,
+    steps: [
+      {
+        stepIndex: 0,
+        instructionTitle: 'قسمة المئات (48 ÷ 22)',
+        instructionDetail: '48 ÷ 22 = 2 — نضع 2 في عشرات الناتج، ونطرح 20×22 = 440.',
+        expectedDividend: 44,
+        expectedResult: 20,
+        activeDividendRods: [0, 1],
+        activeResultRod: 1,
+      },
+      {
+        stepIndex: 1,
+        instructionTitle: 'قسمة العشرات والآحاد (44 ÷ 22)',
+        instructionDetail: '44 ÷ 22 = 2 — نضع 2 في آحاد الناتج، ونطرح 2×22 = 44.',
+        expectedDividend: 0,
+        expectedResult: 22,
+        activeDividendRods: [1, 2],
+        activeResultRod: 2,
+      },
+    ],
+  },
 
-// ═══════════════════════════════════════════════════════════
-// ➗ prob_7 — 350 ÷ 14 = 25  (div-1x2-m3)
-// ═══════════════════════════════════════════════════════════
-{
-  id: 'prob_7',
-  dividend: 350,
-  divisor: 14,
-  steps: [
-    {
-      stepIndex: 0,
-      instructionTitle: 'قسمة المئات (35 ÷ 14)',
-      instructionDetail: '35 ÷ 14 = 2 — نضع 2 في عشرات الناتج، ونطرح 20×14 = 280.',
-      expectedDividend: 70,
-      expectedResult: 20,
-      activeDividendRods: [0, 1],
-      activeResultRod: 1,
-    },
-    {
-      stepIndex: 1,
-      instructionTitle: 'قسمة العشرات والآحاد (70 ÷ 14)',
-      instructionDetail: '70 ÷ 14 = 5 — نضع 5 في آحاد الناتج، ونطرح 5×14 = 70.',
-      expectedDividend: 0,
-      expectedResult: 25,
-      activeDividendRods: [1, 2],
-      activeResultRod: 2,
-    },
-  ],
-},
+  // ═══════════════════════════════════════════════════════════
+  // ➗ prob_6 — 572 ÷ 22 = 26  (div-1x2-m2)
+  // ═══════════════════════════════════════════════════════════
+  {
+    id: 'prob_6',
+    dividend: 572,
+    divisor: 22,
+    steps: [
+      {
+        stepIndex: 0,
+        instructionTitle: 'قسمة المئات (57 ÷ 22)',
+        instructionDetail: '57 ÷ 22 = 2 — نضع 2 في عشرات الناتج، ونطرح 20×22 = 440.',
+        expectedDividend: 132,
+        expectedResult: 20,
+        activeDividendRods: [0, 1],
+        activeResultRod: 1,
+      },
+      {
+        stepIndex: 1,
+        instructionTitle: 'قسمة العشرات والآحاد (132 ÷ 22)',
+        instructionDetail: '132 ÷ 22 = 6 — نضع 6 في آحاد الناتج، ونطرح 6×22 = 132.',
+        expectedDividend: 0,
+        expectedResult: 26,
+        activeDividendRods: [1, 2],
+        activeResultRod: 2,
+      },
+    ],
+  },
 
-// ═══════════════════════════════════════════════════════════
-// ➗ prob_8 — 234 ÷ 18 = 13  (div-1x2-m4)
-// ═══════════════════════════════════════════════════════════
-{
-  id: 'prob_8',
-  dividend: 234,
-  divisor: 18,
-  steps: [
-    {
-      stepIndex: 0,
-      instructionTitle: 'قسمة المئات (23 ÷ 18)',
-      instructionDetail: '23 ÷ 18 = 1 — نضع 1 في عشرات الناتج، ونطرح 10×18 = 180.',
-      expectedDividend: 54,
-      expectedResult: 10,
-      activeDividendRods: [0, 1],
-      activeResultRod: 1,
-    },
-    {
-      stepIndex: 1,
-      instructionTitle: 'قسمة العشرات والآحاد (54 ÷ 18)',
-      instructionDetail: '54 ÷ 18 = 3 — نضع 3 في آحاد الناتج، ونطرح 3×18 = 54.',
-      expectedDividend: 0,
-      expectedResult: 13,
-      activeDividendRods: [1, 2],
-      activeResultRod: 2,
-    },
-  ],
-},
+  // ═══════════════════════════════════════════════════════════
+  // ➗ prob_7 — 350 ÷ 14 = 25  (div-1x2-m3)
+  // ═══════════════════════════════════════════════════════════
+  {
+    id: 'prob_7',
+    dividend: 350,
+    divisor: 14,
+    steps: [
+      {
+        stepIndex: 0,
+        instructionTitle: 'قسمة المئات (35 ÷ 14)',
+        instructionDetail: '35 ÷ 14 = 2 — نضع 2 في عشرات الناتج، ونطرح 20×14 = 280.',
+        expectedDividend: 70,
+        expectedResult: 20,
+        activeDividendRods: [0, 1],
+        activeResultRod: 1,
+      },
+      {
+        stepIndex: 1,
+        instructionTitle: 'قسمة العشرات والآحاد (70 ÷ 14)',
+        instructionDetail: '70 ÷ 14 = 5 — نضع 5 في آحاد الناتج، ونطرح 5×14 = 70.',
+        expectedDividend: 0,
+        expectedResult: 25,
+        activeDividendRods: [1, 2],
+        activeResultRod: 2,
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // ➗ prob_8 — 234 ÷ 18 = 13  (div-1x2-m4)
+  // ═══════════════════════════════════════════════════════════
+  {
+    id: 'prob_8',
+    dividend: 234,
+    divisor: 18,
+    steps: [
+      {
+        stepIndex: 0,
+        instructionTitle: 'قسمة المئات (23 ÷ 18)',
+        instructionDetail: '23 ÷ 18 = 1 — نضع 1 في عشرات الناتج، ونطرح 10×18 = 180.',
+        expectedDividend: 54,
+        expectedResult: 10,
+        activeDividendRods: [0, 1],
+        activeResultRod: 1,
+      },
+      {
+        stepIndex: 1,
+        instructionTitle: 'قسمة العشرات والآحاد (54 ÷ 18)',
+        instructionDetail: '54 ÷ 18 = 3 — نضع 3 في آحاد الناتج، ونطرح 3×18 = 54.',
+        expectedDividend: 0,
+        expectedResult: 13,
+        activeDividendRods: [1, 2],
+        activeResultRod: 2,
+      },
     ],
   },
 ];
