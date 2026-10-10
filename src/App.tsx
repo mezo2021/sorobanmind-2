@@ -2,7 +2,7 @@
 // [FIX N42] XP now wired to real addXP — 2026-10-04
 // [FIX B9]  call recordPlacementAttempt — 2026-10-04
 // [FIX 7]  ربط الشهادة الذهبية (CertificateScreen) — 2026-10-05
-// [FIX 10-10] ربط الفلاشات التعليمية (FlashScreen) — 2026-10-10
+// [FIX 10-10] ربط الفلاشات التعليمية — FlashScreen + FlashListScreen — 2026-10-10
 
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
@@ -41,6 +41,7 @@ import CertificateScreen from './screens/CertificateScreen';
 
 // ═══ 🎬 Flash Lessons ═══
 import { FlashScreen } from './components/flash/FlashScreen';
+import { FlashListScreen } from './components/flash/FlashListScreen';
 import { getFlashLessonById } from './components/flash/flashData';
 
 // ═══ Playground ═══
@@ -264,7 +265,19 @@ export default function App() {
 
   // ═══ Screen Renderer ═══
   const renderScreen = () => {
-    // ═══ 🎬 الفلاشات — flash-<lessonId> ═══
+    // ═══ 🎬 قائمة الفلاشات ═══
+    if (screen === 'flash-list') {
+      return (
+        <FlashListScreen
+          onBack={handleBackToHero}
+          onOpenFlash={(lessonId) => {
+            setScreen(('flash-' + lessonId) as AppScreen);
+          }}
+        />
+      );
+    }
+
+    // ═══ 🎬 فلاش واحد — flash-<lessonId> ═══
     if (screen.startsWith('flash-')) {
       const lessonId = screen.replace('flash-', '');
       const lesson = getFlashLessonById(lessonId);
@@ -281,7 +294,7 @@ export default function App() {
       return (
         <FlashScreen
           lesson={lesson}
-          onBack={handleBackToHero}
+          onBack={() => setScreen('flash-list' as AppScreen)}
           onComplete={() => {
             /* يمكن إضافة XP لاحقاً */
           }}
