@@ -26,11 +26,19 @@ const COLUMN_LABELS: string[] = [
   'تريليونات',
 ];
 
-// 🎨 tints للألوان فقط (بدون إطار)
-const TINT_OVERLAY: Record<'red' | 'emerald', { color: string; blend: string }> = {
-  red:     { color: 'rgba(220, 38, 38, 0.55)',  blend: 'multiply' },
-  emerald: { color: 'rgba(16, 185, 129, 0.55)', blend: 'multiply' },
-};
+// 🎨 CSS filter لتلوين الخرزات فقط — لا يلمس الخلفية
+function getBeadFilter(tint?: RodTint): string | undefined {
+  switch (tint) {
+    case 'red':
+      return 'grayscale(1) sepia(1) saturate(8) hue-rotate(-45deg) brightness(0.7)';
+    case 'emerald':
+      return 'grayscale(1) sepia(1) saturate(6) hue-rotate(75deg) brightness(0.95)';
+    case 'white':
+      return 'grayscale(1) brightness(2.2)';
+    default:
+      return undefined;
+  }
+}
 
 function getLabelFontSize(text: string, isVertical: boolean): number {
   if (!isVertical) return 11;
@@ -77,15 +85,14 @@ export function Rod2D5({
   const labelFontSize = getLabelFontSize(labelText, isVertical);
 
   const isWhiteHighlight = tint === 'white';
-  const tintOverlay =
-    tint === 'red' || tint === 'emerald' ? TINT_OVERLAY[tint] : null;
+  const beadFilter = getBeadFilter(tint);
 
   return (
     <div
       className="relative flex flex-col items-center"
       style={{ height, width: beadSize * 1.3 }}
     >
-      {/* Glow Ring (basics — amber only) */}
+      {/* Amber glow (basics only) */}
       {isActive && (
         <div
           className="absolute border-2 border-amber-400 bg-amber-400/10 rounded-xl animate-pulse pointer-events-none z-10"
@@ -96,13 +103,13 @@ export function Rod2D5({
       {/* ⚪ White highlight ring — ONLY for the changed column */}
       {isWhiteHighlight && (
         <div
-          className="absolute rounded-xl pointer-events-none z-[6] animate-pulse"
+          className="absolute rounded-xl pointer-events-none z-20 animate-pulse"
           style={{
-            inset: -5,
-            border: '2px solid rgba(255,255,255,0.95)',
+            inset: -6,
+            border: '2.5px solid rgba(255,255,255,0.95)',
             boxShadow:
-              '0 0 24px rgba(255,255,255,1), 0 0 44px rgba(255,255,255,0.6)',
-            background: 'rgba(255,255,255,0.08)',
+              '0 0 24px rgba(255,255,255,1), 0 0 48px rgba(255,255,255,0.7)',
+            background: 'rgba(255,255,255,0.06)',
           }}
         />
       )}
@@ -130,6 +137,7 @@ export function Rod2D5({
           left: '50%',
           transform: 'translateX(-50%)',
           transition: 'top 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          filter: beadFilter,
         }}
       >
         <Bead2D5
@@ -188,6 +196,7 @@ export function Rod2D5({
               left: '50%',
               transform: 'translateX(-50%)',
               transition: 'top 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              filter: beadFilter,
             }}
           >
             <Bead2D5
@@ -207,40 +216,6 @@ export function Rod2D5({
           </div>
         );
       })}
-
-      {/* 🎨 Tint overlay — colors the BEADS only (no ring) */}
-      {tintOverlay && (
-        <div
-          className="absolute pointer-events-none z-[5]"
-          style={{
-            top: 0,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: beadSize * 1.3,
-            height: rodHeight,
-            borderRadius: 12,
-            background: tintOverlay.color,
-            mixBlendMode: tintOverlay.blend as any,
-          }}
-        />
-      )}
-
-      {/* ⚪ White overlay for highlight column */}
-      {isWhiteHighlight && (
-        <div
-          className="absolute pointer-events-none z-[5]"
-          style={{
-            top: 0,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: beadSize * 1.3,
-            height: rodHeight,
-            borderRadius: 12,
-            background: 'rgba(255, 255, 255, 0.4)',
-            mixBlendMode: 'screen',
-          }}
-        />
-      )}
 
       {/* Column label */}
       <div
