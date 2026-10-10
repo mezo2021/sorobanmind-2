@@ -19,7 +19,8 @@ const BASICS_1: FlashLesson = {
 };
 
 // ═══════════════════════════════════════════════════════════
-// ➗ div-1x1-m1 — 837 ÷ 3 = 279 (8 خطوات)
+// ➗ div-1x1-m1 — 837 ÷ 3 = 279
+// ⚠️ 3 أعمدة: 0=مئات · 1=عشرات · 2=آحاد
 // ═══════════════════════════════════════════════════════════
 const DIV_1X1_M1: FlashLesson = {
   id: 'div-1x1-m1',
@@ -27,91 +28,83 @@ const DIV_1X1_M1: FlashLesson = {
   subtitle: '837 ÷ 3',
   operation: 'division',
   category: 'div-1',
-  columns: 7,
+  columns: 6,
   layout: 'split',
   resultColumns: 3,
-  dividendColumns: 4,
+  dividendColumns: 3,
   steps: [
-    // s1 — الإعداد
     {
       id: 's1',
       resultValue: 0,
       dividendValue: 837,
       badgeLines: ['837 ÷ 3'],
-      caption: 'نضع المقسوم 837 على العداد الأيمن',
-      ttsText: 'نضع المقسوم ثمانمائة وسبعة وثلاثين على العداد الأيمن.',
+      caption: 'نضع المقسوم 837 على العداد',
+      ttsText: 'نضع المقسوم ثمانمائة وسبعة وثلاثين.',
       durationMs: 4000,
     },
-    // s2 — إضافة 2 للمئات في الناتج
     {
       id: 's2',
       resultValue: 200,
       dividendValue: 837,
       highlightResult: [0],
-      highlightDividend: [1],
+      highlightDividend: [0],
       badgeLines: ['8 ÷ 3 = 2'],
-      caption: 'نقسم 8 مئات على 3 → 2 مئات في الناتج',
-      ttsText: 'ثمانية مئات تقسيم ثلاثة يساوي اثنين مئات. نضع اثنين في منزلة المئات بالناتج.',
+      caption: 'نقسم 8 مئات على 3 → 2 في مئات الناتج',
+      ttsText: 'ثمانية مئات تقسيم ثلاثة يساوي اثنين مئات.',
       durationMs: 7000,
     },
-    // s3 — طرح 6 من المئات
     {
       id: 's3',
       resultValue: 200,
       dividendValue: 237,
-      highlightDividend: [1],
+      highlightDividend: [0],
       badgeLines: ['8 − 6 = 2'],
-      caption: 'نطرح 2×3 = 6، يبقى 2 في المئات',
-      ttsText: 'اثنان في ثلاثة يساوي ستة. نطرح ستة من ثمانية، يبقى اثنان في منزلة المئات.',
+      caption: 'نطرح 2×3 = 6 · يبقى 2 في المئات',
+      ttsText: 'نطرح ستة من ثمانية، يبقى اثنان.',
       durationMs: 7000,
     },
-    // s4 — إضافة 7 للعشرات
     {
       id: 's4',
       resultValue: 270,
       dividendValue: 237,
       highlightResult: [1],
-      highlightDividend: [2],
+      highlightDividend: [0, 1],
       badgeLines: ['23 ÷ 3 = 7'],
-      caption: 'نقسم 23 عشرة على 3 → 7 عشرات',
-      ttsText: 'ثلاثة وعشرون عشرة تقسيم ثلاثة يساوي سبعة عشرات. نضع سبعة في منزلة العشرات بالناتج.',
+      caption: 'نأخذ (23) · 23 ÷ 3 = 7 → 7 في عشرات الناتج',
+      ttsText: 'ثلاثة وعشرون تقسيم ثلاثة يساوي سبعة.',
       durationMs: 7000,
     },
-    // s5 — طرح 21 من العشرات
     {
       id: 's5',
       resultValue: 270,
       dividendValue: 27,
-      highlightDividend: [2],
+      highlightDividend: [0, 1],
       badgeLines: ['23 − 21 = 2'],
-      caption: 'نطرح 7×3 = 21، يبقى 2 عشرة',
-      ttsText: 'سبعة في ثلاثة يساوي واحداً وعشرين. نطرح، يبقى عشرتان.',
+      caption: 'نطرح 7×3 = 21 · يبقى 2 عشرة',
+      ttsText: 'نطرح واحداً وعشرين، يبقى عشرتان.',
       durationMs: 7000,
     },
-    // s6 — إضافة 9 للآحاد
     {
       id: 's6',
       resultValue: 279,
       dividendValue: 27,
       highlightResult: [2],
-      highlightDividend: [3],
+      highlightDividend: [1, 2],
       badgeLines: ['27 ÷ 3 = 9'],
-      caption: 'نقسم 27 على 3 → 9 آحاد',
-      ttsText: 'سبعة وعشرون تقسيم ثلاثة يساوي تسعة. نضع تسعة في منزلة الآحاد بالناتج.',
+      caption: 'نأخذ (27) · 27 ÷ 3 = 9 → 9 في آحاد الناتج',
+      ttsText: 'سبعة وعشرون تقسيم ثلاثة يساوي تسعة.',
       durationMs: 7000,
     },
-    // s7 — طرح 27 من الآحاد
     {
       id: 's7',
       resultValue: 279,
       dividendValue: 0,
-      highlightDividend: [3],
+      highlightDividend: [1, 2],
       badgeLines: ['27 − 27 = 0'],
-      caption: 'نطرح 9×3 = 27، يبقى صفر',
-      ttsText: 'تسعة في ثلاثة يساوي سبعة وعشرين. نطرح، يبقى صفر.',
+      caption: 'نطرح 9×3 = 27 · يبقى صفر',
+      ttsText: 'نطرح سبعة وعشرين، يبقى صفر.',
       durationMs: 7000,
     },
-    // s8 — النتيجة النهائية
     {
       id: 's8',
       resultValue: 279,
@@ -123,8 +116,10 @@ const DIV_1X1_M1: FlashLesson = {
     },
   ],
 };
+
 // ═══════════════════════════════════════════════════════════
 // ➗ div-1x1-m2 — 54 ÷ 3 = 18
+// ⚠️ 3 أعمدة: 0=مئات · 1=عشرات · 2=آحاد
 // ═══════════════════════════════════════════════════════════
 const DIV_1X1_M2: FlashLesson = {
   id: 'div-1x1-m2',
@@ -132,18 +127,18 @@ const DIV_1X1_M2: FlashLesson = {
   subtitle: '54 ÷ 3',
   operation: 'division',
   category: 'div-1',
-  columns: 5,
+  columns: 6,
   layout: 'split',
   resultColumns: 3,
-  dividendColumns: 2,
+  dividendColumns: 3,
   steps: [
     {
       id: 's1',
       resultValue: 0,
       dividendValue: 54,
       badgeLines: ['54 ÷ 3'],
-      caption: 'نضع المقسوم 54 على العداد الأيمن',
-      ttsText: 'نضع المقسوم أربعة وخمسين على العداد الأيمن.',
+      caption: 'نضع المقسوم 54 على العداد',
+      ttsText: 'نضع المقسوم أربعة وخمسين.',
       durationMs: 4000,
     },
     {
@@ -151,19 +146,19 @@ const DIV_1X1_M2: FlashLesson = {
       resultValue: 10,
       dividendValue: 54,
       highlightResult: [1],
-      highlightDividend: [0],
+      highlightDividend: [1],
       badgeLines: ['5 ÷ 3 = 1'],
-      caption: '5 عشرات ÷ 3 = 1 عشرات في الناتج',
-      ttsText: 'خمسة عشرات تقسيم ثلاثة يساوي عشرة. نضع واحداً في العشرات.',
+      caption: '5 عشرات ÷ 3 = 1 → 1 في عشرات الناتج',
+      ttsText: 'خمسة عشرات تقسيم ثلاثة يساوي عشرة.',
       durationMs: 7000,
     },
     {
       id: 's3',
       resultValue: 10,
       dividendValue: 24,
-      highlightDividend: [0],
+      highlightDividend: [1],
       badgeLines: ['5 − 3 = 2'],
-      caption: 'نطرح 1×3 = 3 من 5، يبقى 2 عشرات',
+      caption: 'نطرح 1×3 = 3 · يبقى 2 عشرات',
       ttsText: 'نطرح ثلاثة من خمسة، يبقى عشرتان.',
       durationMs: 7000,
     },
@@ -172,9 +167,9 @@ const DIV_1X1_M2: FlashLesson = {
       resultValue: 18,
       dividendValue: 24,
       highlightResult: [2],
-      highlightDividend: [1],
+      highlightDividend: [1, 2],
       badgeLines: ['24 ÷ 3 = 8'],
-      caption: '24 ÷ 3 = 8 → نضع 8 في آحاد الناتج',
+      caption: 'نأخذ (24) · 24 ÷ 3 = 8 → 8 في آحاد الناتج',
       ttsText: 'أربعة وعشرون تقسيم ثلاثة يساوي ثمانية.',
       durationMs: 7000,
     },
@@ -182,9 +177,9 @@ const DIV_1X1_M2: FlashLesson = {
       id: 's5',
       resultValue: 18,
       dividendValue: 0,
-      highlightDividend: [1],
+      highlightDividend: [1, 2],
       badgeLines: ['24 − 24 = 0'],
-      caption: 'نطرح 8×3 = 24، يبقى صفر',
+      caption: 'نطرح 8×3 = 24 · يبقى صفر',
       ttsText: 'نطرح أربعة وعشرين، يبقى صفر.',
       durationMs: 7000,
     },
@@ -202,6 +197,7 @@ const DIV_1X1_M2: FlashLesson = {
 
 // ═══════════════════════════════════════════════════════════
 // ➗ div-1x1-m3 — 152 ÷ 8 = 19
+// ⚠️ 3 أعمدة: 0=مئات · 1=عشرات · 2=آحاد
 // ═══════════════════════════════════════════════════════════
 const DIV_1X1_M3: FlashLesson = {
   id: 'div-1x1-m3',
@@ -219,7 +215,7 @@ const DIV_1X1_M3: FlashLesson = {
       resultValue: 0,
       dividendValue: 152,
       badgeLines: ['152 ÷ 8'],
-      caption: 'نضع المقسوم 152 على العداد الأيمن',
+      caption: 'نضع المقسوم 152 على العداد',
       ttsText: 'نضع المقسوم مئة واثنين وخمسين.',
       durationMs: 4000,
     },
@@ -228,20 +224,20 @@ const DIV_1X1_M3: FlashLesson = {
       resultValue: 10,
       dividendValue: 152,
       highlightResult: [1],
-      highlightDividend: [0],
+      highlightDividend: [0, 1],
       badgeLines: ['15 ÷ 8 = 1'],
-      caption: '15 عشرة ÷ 8 = 1 عشرات في الناتج',
-      ttsText: 'خمسة عشر عشرة تقسيم ثمانية يساوي عشرة.',
+      caption: '1 أصغر من 8 · نأخذ (15) · 15 ÷ 8 = 1 → 1 في عشرات الناتج',
+      ttsText: 'واحد أصغر من ثمانية. نأخذ خمسة عشر. خمسة عشر تقسيم ثمانية يساوي عشرة.',
       durationMs: 7000,
     },
     {
       id: 's3',
       resultValue: 10,
       dividendValue: 72,
-      highlightDividend: [0, 1],
+      highlightDividend: [1, 2],
       badgeLines: ['15 − 8 = 7'],
-      caption: 'نطرح 1×8 = 8: 1 مئات + 2 عشرات ← 72',
-      ttsText: 'نطرح ثمانية. نطرح مئة، ونضيف عشرتين. المقسوم الآن اثنان وسبعون.',
+      caption: 'نطرح 1×8 = 8 · المقسوم الآن 72',
+      ttsText: 'نطرح ثمانية. المقسوم الآن اثنان وسبعون.',
       durationMs: 7000,
     },
     {
@@ -251,7 +247,7 @@ const DIV_1X1_M3: FlashLesson = {
       highlightResult: [2],
       highlightDividend: [1, 2],
       badgeLines: ['72 ÷ 8 = 9'],
-      caption: '72 ÷ 8 = 9 → نضع 9 في آحاد الناتج',
+      caption: 'نأخذ (72) · 72 ÷ 8 = 9 → 9 في آحاد الناتج',
       ttsText: 'اثنان وسبعون تقسيم ثمانية يساوي تسعة.',
       durationMs: 7000,
     },
@@ -261,7 +257,7 @@ const DIV_1X1_M3: FlashLesson = {
       dividendValue: 0,
       highlightDividend: [1, 2],
       badgeLines: ['72 − 72 = 0'],
-      caption: 'نطرح 9×8 = 72، يبقى صفر',
+      caption: 'نطرح 9×8 = 72 · يبقى صفر',
       ttsText: 'نطرح اثنين وسبعين، يبقى صفر.',
       durationMs: 7000,
     },
@@ -279,6 +275,7 @@ const DIV_1X1_M3: FlashLesson = {
 
 // ═══════════════════════════════════════════════════════════
 // ➗ div-1x1-m4 — 216 ÷ 8 = 27
+// ⚠️ 3 أعمدة: 0=مئات · 1=عشرات · 2=آحاد
 // ═══════════════════════════════════════════════════════════
 const DIV_1X1_M4: FlashLesson = {
   id: 'div-1x1-m4',
@@ -296,7 +293,7 @@ const DIV_1X1_M4: FlashLesson = {
       resultValue: 0,
       dividendValue: 216,
       badgeLines: ['216 ÷ 8'],
-      caption: 'نضع المقسوم 216 على العداد الأيمن',
+      caption: 'نضع المقسوم 216 على العداد',
       ttsText: 'نضع المقسوم مئتين وستة عشر.',
       durationMs: 4000,
     },
@@ -307,18 +304,18 @@ const DIV_1X1_M4: FlashLesson = {
       highlightResult: [1],
       highlightDividend: [0, 1],
       badgeLines: ['21 ÷ 8 = 2'],
-      caption: '21 عشرة ÷ 8 = 2 عشرات في الناتج',
-      ttsText: 'واحد وعشرون عشرة تقسيم ثمانية يساوي عشرين.',
+      caption: '2 أصغر من 8 · نأخذ (21) · 21 ÷ 8 = 2 → 2 في عشرات الناتج',
+      ttsText: 'اثنان أصغر من ثمانية. نأخذ واحداً وعشرين. واحد وعشرون تقسيم ثمانية يساوي عشرين.',
       durationMs: 7000,
     },
     {
       id: 's3',
       resultValue: 20,
       dividendValue: 56,
-      highlightDividend: [0, 1],
+      highlightDividend: [1, 2],
       badgeLines: ['21 − 16 = 5'],
-      caption: 'نطرح 2×8 = 16: استعارة 10 · 21 − 16 = 5 · المقسوم 56',
-      ttsText: 'نطرح ستة عشر. نستعير عشرة، يبقى ستة وخمسون.',
+      caption: 'نطرح 2×8 = 16 (استعارة 10) · المقسوم الآن 56',
+      ttsText: 'نطرح ستة عشر. نستعير عشرة. المقسوم الآن ستة وخمسون.',
       durationMs: 7000,
     },
     {
@@ -328,7 +325,7 @@ const DIV_1X1_M4: FlashLesson = {
       highlightResult: [2],
       highlightDividend: [1, 2],
       badgeLines: ['56 ÷ 8 = 7'],
-      caption: '56 ÷ 8 = 7 → نضع 7 في آحاد الناتج',
+      caption: 'نأخذ (56) · 56 ÷ 8 = 7 → 7 في آحاد الناتج',
       ttsText: 'ستة وخمسون تقسيم ثمانية يساوي سبعة.',
       durationMs: 7000,
     },
@@ -338,7 +335,7 @@ const DIV_1X1_M4: FlashLesson = {
       dividendValue: 0,
       highlightDividend: [1, 2],
       badgeLines: ['56 − 56 = 0'],
-      caption: 'نطرح 7×8 = 56، يبقى صفر',
+      caption: 'نطرح 7×8 = 56 · يبقى صفر',
       ttsText: 'نطرح ستة وخمسين، يبقى صفر.',
       durationMs: 7000,
     },
