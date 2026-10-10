@@ -12,6 +12,8 @@ interface Rod2D5Props {
   onReset: () => void;
   height?: number;
   beadSize?: number;
+  // ⭐ جديد — للفلاشات التعليمية
+  isActive?: boolean;
 }
 
 const COLUMN_LABELS: string[] = [
@@ -40,6 +42,7 @@ export function Rod2D5({
   onReset: _onReset,
   height = 440,
   beadSize = 44,
+  isActive = false,
 }: Rod2D5Props) {
   const lowerBeads = [0, 1, 2, 3];
 
@@ -69,6 +72,17 @@ export function Rod2D5({
       className="relative flex flex-col items-center"
       style={{ height, width: beadSize * 1.3 }}
     >
+      {/* ⭐ Glow Ring — Tailwind animate-pulse · يظهر فقط عند isActive */}
+      {isActive && (
+        <div
+          className="absolute border-2 border-amber-400 bg-amber-400/10 rounded-xl animate-pulse pointer-events-none z-10"
+          style={{
+            inset: -6,
+            boxShadow: '0 0 16px rgba(251,191,36,0.55)',
+          }}
+        />
+      )}
+
       <div
         style={{
           position: 'absolute',
@@ -117,7 +131,7 @@ export function Rod2D5({
       />
 
       {lowerBeads.map((idx) => {
-        const isActive = idx < state.lower;
+        const isBeadActive = idx < state.lower;
         const topActive = lowerAreaTop + idx * step;
         const topInactive = lowerAreaBottom - (3 - idx) * step;
 
@@ -126,7 +140,7 @@ export function Rod2D5({
             key={idx}
             style={{
               position: 'absolute',
-              top: isActive ? topActive : topInactive,
+              top: isBeadActive ? topActive : topInactive,
               left: '50%',
               transform: 'translateX(-50%)',
               transition: 'top 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -134,11 +148,11 @@ export function Rod2D5({
           >
             <Bead2D5
               color="wood"
-              active={isActive}
+              active={isBeadActive}
               position="lower"
               size={beadSize}
               onClick={() => {
-                if (isActive && idx === state.lower - 1) {
+                if (isBeadActive && idx === state.lower - 1) {
                   onSetLower(idx);
                 } else {
                   onSetLower(idx + 1);
