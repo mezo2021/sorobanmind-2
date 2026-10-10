@@ -20,9 +20,9 @@ interface Soroban2D5Props {
   activeRodIndex?: number;
   hideTitle?: boolean;
   beamHighlight?: boolean;
-  // ⭐ جديد — للفلاشات
   rodTint?: RodTint;
   highlightColumns?: number[];
+  dimColumns?: number[];   // 🆕 أعمدة مطموسة
   hideColumnLabels?: boolean;
 }
 
@@ -86,6 +86,7 @@ export function Soroban2D5({
   beamHighlight = false,
   rodTint,
   highlightColumns,
+  dimColumns,
   hideColumnLabels = false,
 }: Soroban2D5Props) {
   const {
@@ -163,8 +164,7 @@ export function Soroban2D5({
         style={{
           padding: cfg.framePadding,
           background: 'linear-gradient(135deg, #8b6f47 0%, #6b4423 50%, #4a2e15 100%)',
-          boxShadow:
-            'inset 0 4px 12px rgba(255,200,150,0.15), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35), 0 8px 16px rgba(0,0,0,0.25)',
+          boxShadow: 'inset 0 4px 12px rgba(255,200,150,0.15), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35), 0 8px 16px rgba(0,0,0,0.25)',
           border: '2px solid rgba(0,0,0,0.25)',
           maxWidth: '100%',
         }}
@@ -180,20 +180,15 @@ export function Soroban2D5({
         >
           <div
             className="flex flex-row-reverse items-center justify-center"
-            style={{
-              gap: cfg.gap,
-              paddingTop: cfg.topPadding,
-              paddingBottom: cfg.bottomPadding,
-            }}
+            style={{ gap: cfg.gap, paddingTop: cfg.topPadding, paddingBottom: cfg.bottomPadding }}
             dir="rtl"
           >
             {displayedStates.map((state, idx) => {
               const originalIdx = idx + displayOffset;
               const displayOrder = columns - 1 - originalIdx;
               const isHighlighted = highlightColumns?.includes(originalIdx) ?? false;
-              const finalTint: RodTint | undefined = isHighlighted
-                ? 'white'
-                : rodTint;
+              const isDim = dimColumns?.includes(originalIdx) ?? false;
+              const finalTint: RodTint | undefined = isHighlighted ? 'white' : rodTint;
 
               return (
                 <Rod2D5
@@ -210,14 +205,13 @@ export function Soroban2D5({
                   isActive={activeRodIndex === originalIdx}
                   beamHighlight={beamHighlight}
                   tint={finalTint}
+                  isDimmed={isDim}
                 />
               );
             })}
           </div>
 
-          {hideColumnLabels && (
-            <div className="h-0" />
-          )}
+          {hideColumnLabels && <div className="h-0" />}
 
           {displayOffset > 0 && (
             <p className="text-center text-[10px] text-amber-700 mt-1 font-body">
@@ -248,10 +242,7 @@ export function Soroban2D5({
             exit={{ scale: 0.6, opacity: 0, y: -20 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             className={`${cfg.valueSize} font-black text-amber-900 tabular-nums`}
-            style={{
-              fontFamily: 'monospace',
-              textShadow: '0 4px 8px rgba(139,111,71,0.3)',
-            }}
+            style={{ fontFamily: 'monospace', textShadow: '0 4px 8px rgba(139,111,71,0.3)' }}
             dir={isArabic ? 'rtl' : 'ltr'}
           >
             {formatByStyle(totalValue, numberStyle)}
