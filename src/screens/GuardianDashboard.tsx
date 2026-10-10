@@ -7,7 +7,6 @@
 // [FIX 11] — master_mixed → master_chains (بصري) · إضافة master_chains_audio (سمعي)
 // [FIX 12] — بطاقة "أسطورة السوروبان" عند 8/8
 // [FIX 13] — LevelNodeButton: "متاح" / "مكتمل" بدل "100 XP"
-// [FIX 10-10] — زر 🎬 الفلاشات التعليمية
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMemo, useState, useRef } from 'react';
@@ -17,7 +16,7 @@ import {
   Star, Eye, Crown, Diamond, Trophy, Lock as LockBadge,
   Swords, ShieldCheck, Circle, Lock, Volume2, RefreshCw,
   Home, Sparkles, PlayCircle, Timer, Lightbulb,
-  Upload, Download, Trash2, Unlock, Film,
+  Upload, Download, Trash2, Unlock,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -103,8 +102,6 @@ interface GuardianDashboardProps {
   childLevel?: number;
   onSwitchToHero?: () => void;
   onShowWelcome?: () => void;
-  // ⭐ جديد — للفلاشات
-  onNavigate?: (target: string) => void;
 }
 
 type LevelStatus = 'completed' | 'available' | 'locked';
@@ -181,7 +178,6 @@ export function GuardianDashboard({
   childName = 'البطل',
   onSwitchToHero,
   onShowWelcome,
-  onNavigate,
 }: GuardianDashboardProps) {
   // ═══ progressStore (SRB) ═══
   const storedName = useProgressStore((s) => s.childName);
@@ -461,12 +457,6 @@ export function GuardianDashboard({
     reader.readAsText(file);
   };
 
-  // ⭐ جديد — فتح الفلاشات
-  const handleOpenFlashes = () => {
-    playSound('click');
-    onNavigate?.('flash-div-1x1-m1');
-  };
-
   // ═══ بداية JSX ═══
   return (
     <div className="px-3 sm:px-6 py-6 max-w-5xl mx-auto" dir="rtl">
@@ -479,17 +469,6 @@ export function GuardianDashboard({
           <ArrowRight className="w-5 h-5" />
           <span className="hidden sm:inline">تبديل الدور</span>
         </button>
-
-        {/* ⭐ جديد — زر الفلاشات */}
-        {onNavigate && (
-          <button
-            onClick={handleOpenFlashes}
-            className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-l from-purple-500/25 to-amber-500/25 border border-amber-400/50 text-amber-100 hover:from-purple-500/40 hover:to-amber-500/40 transition-all text-sm font-bold font-body shadow-lg shadow-amber-500/10"
-          >
-            <Film className="w-4 h-4" />
-            <span>🎬 الفلاشات التعليمية</span>
-          </button>
-        )}
 
         <button
           onClick={handleRefresh}
@@ -608,16 +587,19 @@ export function GuardianDashboard({
           transition={{ delay: 0.15, type: 'spring', stiffness: 150, damping: 18 }}
           className="relative mb-6 rounded-3xl overflow-hidden"
         >
+          {/* توهج خارجي متحرك */}
           <motion.div
             animate={{ opacity: [0.4, 0.9, 0.4], scale: [1, 1.05, 1] }}
             transition={{ duration: 3, repeat: Infinity }}
             className="absolute -inset-4 bg-gold-400/30 blur-3xl pointer-events-none"
           />
 
+          {/* خلفية ذهبية متدرجة */}
           <div className="relative rounded-3xl border-2 border-gold-400/70 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-gold-500/40 via-amber-500/25 to-yellow-600/15" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_25%,rgba(250,204,21,0.45),transparent_65%)]" />
 
+            {/* نجوم متلألئة */}
             <motion.div
               animate={{ opacity: [0.3, 1, 0.3] }}
               transition={{ duration: 2.5, repeat: Infinity }}
@@ -634,6 +616,7 @@ export function GuardianDashboard({
               className="absolute bottom-6 right-10 text-gold-200 text-lg"
             >✨</motion.div>
 
+            {/* المحتوى */}
             <div className="relative p-6 sm:p-8">
               <div className="text-center">
                 <motion.div
@@ -751,6 +734,7 @@ export function GuardianDashboard({
         </div>
       </motion.div>
 
+      {/* ⏸️ الجزء 2 يبدأ من هنا — أرسل "تابع" */}
       {/* ═══ 🎓 شارات إنجاز المستوى (8) ═══ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
