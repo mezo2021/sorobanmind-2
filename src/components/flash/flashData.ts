@@ -1,11 +1,6 @@
 // src/components/flash/flashData.ts
-// 🎬 بيانات الفلاشات التعليمية
-
 import type { FlashCategory, FlashLesson } from './types';
 
-// ═══════════════════════════════════════════════════════════
-// 🎬 الفلاش 1: أجزاء السوروبان (أساسيات)
-// ═══════════════════════════════════════════════════════════
 const BASICS_1: FlashLesson = {
   id: 'basics-parts',
   title: 'أجزاء السوروبان',
@@ -18,36 +13,35 @@ const BASICS_1: FlashLesson = {
       id: 's1',
       sorobanValue: 0,
       activeRodIndex: -1,
-      badgePrimary: '👋 مرحباً',
+      badgeLines: ['👋 مرحباً'],
       caption: 'سنتعلم أجزاء السوروبان',
-      ttsText: 'مرحباً يا بطل. سنتعلم أجزاء السوروبان.',
+      ttsText: 'مرحباً يا بطل.',
       durationMs: 2500,
     },
     {
       id: 's2',
       sorobanValue: 0,
       activeRodIndex: 1,
-      badgePrimary: 'الأعمدة',
-      caption: 'الخطوط الرأسية التي تتحرك عليها الخرزات',
-      ttsText: 'هذه هي الأعمدة، الخطوط الرأسية التي تتحرك عليها الخرزات.',
+      badgeLines: ['الأعمدة'],
+      caption: 'الخطوط الرأسية',
+      ttsText: 'هذه هي الأعمدة.',
       durationMs: 3000,
     },
     {
       id: 's3',
       sorobanValue: 0,
       activeRodIndex: 1,
-      badgePrimary: 'العارضة',
+      badgeLines: ['العارضة'],
       caption: 'الخط الأفقي في المنتصف',
-      ttsText: 'هذه هي العارضة، الخط الأفقي في المنتصف.',
+      ttsText: 'هذه هي العارضة.',
       durationMs: 3000,
     },
     {
       id: 's4',
       sorobanValue: 5,
       activeRodIndex: 1,
-      badgePrimary: '5',
-      badgeSecondary: 'الخرزة العلوية',
-      caption: 'الخرزة العلوية قيمتها 5',
+      badgeLines: ['5', 'الخرزة العلوية'],
+      caption: 'الخرزة العلوية = 5',
       ttsText: 'الخرزة العلوية قيمتها خمسة.',
       durationMs: 3000,
     },
@@ -55,79 +49,78 @@ const BASICS_1: FlashLesson = {
       id: 's5',
       sorobanValue: 4,
       activeRodIndex: 1,
-      badgePrimary: '4',
-      badgeSecondary: 'الخرزات السفلية',
-      caption: 'كل خرزة سفلية قيمتها 1',
-      ttsText: 'كل خرزة سفلية قيمتها واحد.',
+      badgeLines: ['4', 'الخرزات السفلية'],
+      caption: 'كل خرزة سفلية = 1',
+      ttsText: 'كل خرزة سفلية تساوي واحد.',
       durationMs: 3000,
     },
   ],
 };
 
 // ═══════════════════════════════════════════════════════════
-// 🎬 الفلاش 2: القسمة البسيطة — 84 ÷ 2 (S07-m1)
+// ➗ div-1x1-m1 — 837 ÷ 3 = 279 (5 خطوات)
 // ═══════════════════════════════════════════════════════════
 const DIV_1X1_M1: FlashLesson = {
   id: 'div-1x1-m1',
   title: 'القسمة البسيطة',
-  subtitle: '84 ÷ 2',
+  subtitle: '837 ÷ 3',
   operation: 'division',
   category: 'div-1',
-  columns: 3,
+  columns: 7,
   steps: [
+    // s1 — عرض المقسوم
     {
       id: 's1',
-      sorobanValue: 84,
-      activeRodIndex: 0,
-      badgePrimary: '84 ÷ 2',
-      caption: 'نبدأ بوضع المقسوم 84 على العداد',
-      ttsText: 'نبدأ بوضع المقسوم أربعة وثمانين على العداد.',
+      sorobanValue: 837,
+      activeRodIndex: 4,
+      badgeLines: ['837 ÷ 3'],
+      caption: 'نضع المقسوم 837 على يمين العداد',
+      ttsText: 'نضع المقسوم ثمانمائة وسبعة وثلاثين.',
       durationMs: 3000,
     },
+    // s2 — الجولة الأولى
     {
       id: 's2',
-      sorobanValue: 84,
-      activeRodIndex: 0,
-      badgePrimary: '8 ÷ 2 = 4',
-      badgeSecondary: '4 × 2 = 8',
-      caption: 'نقسم 8 عشرات على 2، الناتج 4',
-      ttsText: 'نقسم ثمانية على اثنين، الناتج أربعة.',
-      durationMs: 3500,
+      sorobanValue: 200237,
+      activeRodIndex: 1,
+      badgeLines: ['8 ÷ 3 = 2', '2 × 3 = 6', '8 − 6 = 2'],
+      caption: 'نقسم 8، نطرح 6، نسجّل 2 في الناتج',
+      ttsText: 'ثمانية تقسيم ثلاثة يساوي اثنين. اثنان في ثلاثة يساوي ستة. نطرح ستة، نسجل اثنين.',
+      durationMs: 5000,
     },
+    // s3 — الجولة الثانية
     {
       id: 's3',
-      sorobanValue: 4,
-      activeRodIndex: 0,
-      badgePrimary: '8 − 8 = 0',
-      caption: 'نطرح 8، يبقى 0. الناتج الجزئي: 4 عشرات',
-      ttsText: 'نطرح ثمانية، يبقى صفر.',
-      durationMs: 3000,
+      sorobanValue: 270027,
+      activeRodIndex: 2,
+      badgeLines: ['23 ÷ 3 = 7', '7 × 3 = 21', '23 − 21 = 2'],
+      caption: 'نقسم 23، نطرح 21، نسجّل 7 في الناتج',
+      ttsText: 'ثلاثة وعشرون تقسيم ثلاثة يساوي سبعة. سبعة في ثلاثة يساوي واحداً وعشرين. نطرح، نسجل سبعة.',
+      durationMs: 5000,
     },
+    // s4 — الجولة الثالثة
     {
       id: 's4',
-      sorobanValue: 4,
-      activeRodIndex: 1,
-      badgePrimary: '4 ÷ 2 = 2',
-      badgeSecondary: '2 × 2 = 4',
-      caption: 'نقسم 4 آحاد على 2، الناتج 2',
-      ttsText: 'نقسم أربعة على اثنين، الناتج اثنان.',
-      durationMs: 3500,
+      sorobanValue: 279000,
+      activeRodIndex: 3,
+      badgeLines: ['27 ÷ 3 = 9', '9 × 3 = 27', '27 − 27 = 0'],
+      caption: 'نقسم 27، نطرح 27، نسجّل 9 في الناتج',
+      ttsText: 'سبعة وعشرون تقسيم ثلاثة يساوي تسعة. تسعة في ثلاثة يساوي سبعة وعشرين. نطرح، نسجل تسعة.',
+      durationMs: 5000,
     },
+    // s5 — الناتج
     {
       id: 's5',
-      sorobanValue: 42,
-      activeRodIndex: 1,
-      badgePrimary: '4 − 4 = 0',
-      caption: 'نطرح 4، يبقى 0. الناتج النهائي: 42',
-      ttsText: 'نطرح أربعة، يبقى صفر. الناتج النهائي اثنان وأربعون.',
+      sorobanValue: 279000,
+      activeRodIndex: -1,
+      badgeLines: ['✅ الناتج = 279'],
+      caption: 'انتهت القسمة! الناتج: 279',
+      ttsText: 'انتهت القسمة. الناتج مئتان وتسعة وسبعون.',
       durationMs: 4000,
     },
   ],
 };
 
-// ═══════════════════════════════════════════════════════════
-// 🗂️ الفئات
-// ═══════════════════════════════════════════════════════════
 export const FLASH_CATEGORIES: FlashCategory[] = [
   {
     id: 'basics',
