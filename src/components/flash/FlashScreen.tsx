@@ -1,5 +1,15 @@
 // src/components/flash/FlashScreen.tsx
 // 🎬 شاشة الفلاش التعليمي — عرض كامل
+// [FIX 10-10] صوت: user gesture + مصدر واحد + ttsRef ثابت
+//
+// القواعد:
+//  - ▶️ ابدأ = user gesture + قراءة الخطوة الحالية
+//  - ⏸️ = يوقف autoPlay + stop
+//  - ▶️ استئناف = autoPlay + قراءة الخطوة الحالية + durationMs من الصفر
+//  - تلقائي = goNext يقرأ الخطوة التالية فقط
+//  - ⏭️/⏮️ يدوي = بلا قراءة · Badge يُعاد
+//  - 🔄 في النهاية = إعادة كاملة
+//  - useEffect = Badge + timers + displayValue فقط (لا صوت)
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,13 +30,21 @@ interface FlashScreenProps {
 export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [autoPlay, setAutoPlay] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const [badgeVisible, setBadgeVisible] = useState(true);
   const [displayValue, setDisplayValue] = useState(
     lesson.steps[0]?.sorobanValue ?? 0,
   );
 
+  // ═══ TTS — مرجع ثابت (لا يُسبب re-runs) ═══
   const tts = useSpeech();
+  const ttsRef = useRef(tts);
+  useEffect(() => {
+    ttsRef.current = tts;
+  }, [tts]);
+
   const timersRef = useRef<number[]>([]);
+  const lastAnimatedStepRef = useRef(-1);
 
   const step = lesson.steps[stepIndex];
   const isLastStep = stepIndex === lesson.steps.length - 1;
@@ -37,51 +55,81 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
     timersRef.current = [];
   }, []);
 
-  // ⭐ منطق الانتقال التلقائي
+  // ═══ goNext — صوت + تقدّم تلقائي ═══
   const goNext = useCallback(() => {
     if (isLastStep) {
       setAutoPlay(false);
-      setBadgeVisible(false);
+      ttsRef.current.stop();
       onComplete?.();
-    } else {
-      setStepIndex((i) => i + 1);
+      return;
     }
-  }, [isLastStep, onComplete]);
+    const nextIdx = stepIndex + 1;
+    setStepIndex(nextIdx);
+    if (autoPlay) {
+      const nextStep = lesson.steps[nextIdx];
+      if (nextStep?.ttsText) {
+        ttsRef.current.speak(nextStep.ttsText);
+      }
+    }
+  }, [stepIndex, isLastStep, autoPlay, lesson.steps, onComplete]);
 
   const goPrev = useCallback(() => {
-    if (!isFirstStep) {
-      setStepIndex((i) => i - 1);
-    }
+    if (isFirstStep) return;
+    ttsRef.current.stop();
+    setStepIndex((i) => i - 1);
   }, [isFirstStep]);
 
+  // ═══ أزرار التشغيل — user gestures ═══
+  const handleStart = () => {
+    setHasStarted(true);
+    setAutoPlay(true);
+    const s = lesson.steps[stepIndex];
+    if (s?.ttsText) {
+      ttsRef.current.speak(s.ttsText);
+    }
+  };
+
+  const handlePause = () => {
+    setAutoPlay(false);
+    ttsRef.current.stop();
+  };
+
+  const handleResume = () => {
+    setAutoPlay(true);
+    const s = lesson.steps[stepIndex];
+    if (s?.ttsText) {
+      ttsRef.current.speak(s.ttsText);
+    }
+  };
+
   const restart = useCallback(() => {
+    clearTimers();
+    ttsRef.current.stop();
+    lastAnimatedStepRef.current = -1;
     setStepIndex(0);
     setAutoPlay(false);
-    tts.stop();
+    setHasStarted(false);
     setDisplayValue(lesson.steps[0]?.sorobanValue ?? 0);
-  }, [tts, lesson]);
+  }, [clearTimers, lesson.steps]);
 
-  // ⭐ التأثير الرئيسي لكل خطوة
+  // ═══ effect: Badge + timers + displayValue (بلا صوت) ═══
   useEffect(() => {
     if (!step) return;
-
     clearTimers();
-    tts.stop();
-    setBadgeVisible(true);
 
-    // TTS
-    if (step.ttsText) {
-      tts.speak(step.ttsText);
+    const isNewStep = lastAnimatedStepRef.current !== stepIndex;
+
+    if (isNewStep) {
+      lastAnimatedStepRef.current = stepIndex;
+      setBadgeVisible(true);
+
+      const badgeRevealDuration = Math.max(0, step.badgeLines.length - 1) * 800;
+      const tUpdate = window.setTimeout(() => {
+        setDisplayValue(step.sorobanValue);
+      }, badgeRevealDuration);
+      timersRef.current.push(tUpdate);
     }
 
-    // تأخير تحديث العداد حتى تظهر كل أسطر Badge
-    const badgeRevealDuration = Math.max(0, step.badgeLines.length - 1) * 800;
-    const tUpdate = window.setTimeout(() => {
-      setDisplayValue(step.sorobanValue);
-    }, badgeRevealDuration);
-    timersRef.current.push(tUpdate);
-
-    // Auto-advance
     if (autoPlay) {
       const tNext = window.setTimeout(() => {
         goNext();
@@ -90,15 +138,15 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
     }
 
     return () => clearTimers();
-  }, [stepIndex, autoPlay, step, tts, goNext, clearTimers]);
+  }, [stepIndex, autoPlay, step, goNext, clearTimers]);
 
-  // تنظيف عند الخروج
+  // ═══ تنظيف عند الخروج ═══
   useEffect(() => {
     return () => {
-      tts.stop();
+      ttsRef.current.stop();
       clearTimers();
     };
-  }, [tts, clearTimers]);
+  }, [clearTimers]);
 
   if (!step) {
     return (
@@ -107,6 +155,15 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
       </div>
     );
   }
+
+  const isEnded = isLastStep && !autoPlay && hasStarted;
+  const playLabel = !hasStarted ? 'ابدأ' : autoPlay ? 'إيقاف' : 'استئناف';
+  const PlayIcon = autoPlay ? Pause : Play;
+  const onPlayClick = !hasStarted
+    ? handleStart
+    : autoPlay
+    ? handlePause
+    : handleResume;
 
   return (
     <div
@@ -153,7 +210,6 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
 
       {/* ═══ Soroban + Badge ═══ */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 relative">
-        {/* Mental Badge */}
         <div className="relative w-full max-w-md">
           <MentalBadge
             lines={step.badgeLines}
@@ -162,7 +218,6 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
           />
         </div>
 
-        {/* Soroban */}
         <motion.div
           key={`${stepIndex}-${displayValue}`}
           initial={{ opacity: 0.9 }}
@@ -173,7 +228,9 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
           <Soroban2D5
             columns={lesson.columns}
             demoValue={displayValue}
-            activeRodIndex={step.activeRodIndex >= 0 ? step.activeRodIndex : undefined}
+            activeRodIndex={
+              step.activeRodIndex >= 0 ? step.activeRodIndex : undefined
+            }
             interactive={false}
             showValue={true}
             autoBeadSize={true}
@@ -212,24 +269,20 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
           <ChevronRight className="w-6 h-6" />
         </button>
 
-        <button
-          onClick={() => setAutoPlay((p) => !p)}
-          className={`px-6 py-3 rounded-full font-bold flex items-center gap-2 transition ${
-            autoPlay
-              ? 'bg-red-500/30 border border-red-400 text-red-200'
-              : 'bg-gradient-to-l from-purple-600 to-amber-500 text-white'
-          }`}
-        >
-          {autoPlay ? (
-            <>
-              <Pause className="w-5 h-5" /> إيقاف
-            </>
-          ) : (
-            <>
-              <Play className="w-5 h-5" /> تشغيل
-            </>
-          )}
-        </button>
+        {!isEnded && (
+          <button
+            onClick={onPlayClick}
+            className={`rounded-full font-bold flex items-center gap-2 transition ${
+              autoPlay
+                ? 'bg-red-500/30 border border-red-400 text-red-200 px-6 py-3'
+                : hasStarted
+                ? 'bg-gradient-to-l from-purple-600 to-amber-500 text-white px-6 py-3'
+                : 'bg-gradient-to-l from-purple-600 to-amber-500 text-white px-8 py-4 text-lg shadow-lg shadow-amber-500/30'
+            }`}
+          >
+            <PlayIcon className="w-5 h-5" /> {playLabel}
+          </button>
+        )}
 
         <button
           onClick={goNext}
@@ -244,8 +297,8 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         </button>
       </div>
 
-      {/* ═══ Restart (يظهر في النهاية) ═══ */}
-      {isLastStep && !autoPlay && (
+      {/* ═══ Restart ═══ */}
+      {isEnded && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -253,7 +306,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         >
           <button
             onClick={restart}
-            className="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-bold flex items-center gap-2 mx-auto"
+            className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-bold flex items-center gap-2 mx-auto"
           >
             <RotateCcw className="w-4 h-4" /> إعادة من البداية
           </button>
