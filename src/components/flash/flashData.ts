@@ -1,4 +1,6 @@
 // src/components/flash/flashData.ts
+// 📊 بيانات الفلاشات التعليمية المحدثة مع تصحيح نطق الـ TTS للقسمة على رقمين
+
 import type { FlashCategory, FlashLesson } from './types';
 
 const BASICS_1: FlashLesson = {
@@ -121,9 +123,9 @@ const DIV_1X2_M1: FlashLesson = {
   dividendColumns: 3,
   steps: [
     { id: 's1', resultValue: 0, dividendValue: 484, badgeLines: ['484 ÷ 22'], caption: 'نضع المقسوم 484 على العداد', ttsText: 'نضع المقسوم أربعمائة وأربعة وثمانين.', durationMs: 4000 },
-    { id: 's2', resultValue: 20, dividendValue: 484, highlightResult: [1], highlightDividend: [0, 1], badgeLines: ['48 ÷ 22 = 2'], caption: '48 ÷ 22 = 2 → 2 في عشرات الناتج (= 20)', ttsText: 'ثمانية وأربعون تقسيم اثنين وعشرين يساوي اثنين.', durationMs: 7000 },
+    { id: 's2', resultValue: 20, dividendValue: 484, highlightResult: [1], highlightDividend: [0, 1], badgeLines: ['48 ÷ 22 = 2'], caption: '48 ÷ 22 = 2 → 2 في عشرات الناتج (= 20)', ttsText: 'ثمانية وأربعون تقسيم اثنين وعشرين يساوي عشرين. نضع اثنين في العشرات.', durationMs: 8000 },
     { id: 's3', resultValue: 20, dividendValue: 44, highlightDividend: [0, 1], badgeLines: ['20 × 22 = 440', '484 − 440 = 44'], caption: 'نطرح 440 (4 من المئات + 4 من العشرات)', ttsText: 'عشرون في اثنين وعشرين يساوي أربعمائة وأربعين. نطرح، يبقى أربعة وأربعين.', durationMs: 8000 },
-    { id: 's4', resultValue: 22, dividendValue: 44, highlightResult: [2], highlightDividend: [1, 2], badgeLines: ['44 ÷ 22 = 2'], caption: '44 ÷ 22 = 2 → 2 في آحاد الناتج', ttsText: 'أربعة وأربعون تقسيم اثنين وعشرين يساوي اثنين.', durationMs: 7000 },
+    { id: 's4', resultValue: 22, dividendValue: 44, highlightResult: [2], highlightDividend: [1, 2], badgeLines: ['44 ÷ 22 = 2'], caption: '44 ÷ 22 = 2 → 2 في آحاد الناتج', ttsText: 'أربعة وأربعون تقسيم اثنين وعشرين يساوي اثنين. نضع اثنين في الآحاد.', durationMs: 8000 },
     { id: 's5', resultValue: 22, dividendValue: 0, highlightDividend: [1, 2], badgeLines: ['2 × 22 = 44', '44 − 44 = 0'], caption: 'نطرح 44 (4 من العشرات + 4 من الآحاد)', ttsText: 'اثنان في اثنين وعشرين يساوي أربعة وأربعين. نطرح، يبقى صفر.', durationMs: 8000 },
     { id: 's6', resultValue: 22, dividendValue: 0, badgeLines: ['✅ الناتج = 22'], caption: 'انتهت القسمة! الناتج: 22', ttsText: 'انتهت القسمة. الناتج اثنان وعشرون.', durationMs: 5000 },
   ],
@@ -142,9 +144,9 @@ const DIV_1X2_M2: FlashLesson = {
   dividendColumns: 3,
   steps: [
     { id: 's1', resultValue: 0, dividendValue: 572, badgeLines: ['572 ÷ 22'], caption: 'نضع المقسوم 572 على العداد', ttsText: 'نضع المقسوم خمسمائة واثنين وسبعين.', durationMs: 4000 },
-    { id: 's2', resultValue: 20, dividendValue: 572, highlightResult: [1], highlightDividend: [0, 1], badgeLines: ['57 ÷ 22 = 2'], caption: '57 ÷ 22 = 2 → 2 في عشرات الناتج (= 20)', ttsText: 'سبعة وخمسون تقسيم اثنين وعشرين يساوي اثنين.', durationMs: 7000 },
+    { id: 's2', resultValue: 20, dividendValue: 572, highlightResult: [1], highlightDividend: [0, 1], badgeLines: ['57 ÷ 22 = 2'], caption: '57 ÷ 22 = 2 → 2 في عشرات الناتج (= 20)', ttsText: 'سبعة وخمسون تقسيم اثنين وعشرين يساوي عشرين. نضع اثنين في العشرات.', durationMs: 8000 },
     { id: 's3', resultValue: 20, dividendValue: 132, highlightDividend: [0, 1, 2], badgeLines: ['20 × 22 = 440', '572 − 440 = 132'], caption: 'نطرح 440 · يبقى 132', ttsText: 'عشرون في اثنين وعشرين يساوي أربعمائة وأربعين. نطرح، يبقى مئة واثنين وثلاثين.', durationMs: 8000 },
-    { id: 's4', resultValue: 26, dividendValue: 132, highlightResult: [2], highlightDividend: [0, 1, 2], badgeLines: ['132 ÷ 22 = 6'], caption: '132 ÷ 22 = 6 → 6 في آحاد الناتج', ttsText: 'مئة واثنان وثلاثون تقسيم اثنين وعشرين يساوي ستة.', durationMs: 7000 },
+    { id: 's4', resultValue: 26, dividendValue: 132, highlightResult: [2], highlightDividend: [0, 1, 2], badgeLines: ['132 ÷ 22 = 6'], caption: '132 ÷ 22 = 6 → 6 في آحاد الناتج', ttsText: 'مئة واثنان وثلاثون تقسيم اثنين وعشرين يساوي ستة. نضع ستة في الآحاد.', durationMs: 8000 },
     { id: 's5', resultValue: 26, dividendValue: 0, highlightDividend: [0, 1, 2], badgeLines: ['6 × 22 = 132', '132 − 132 = 0'], caption: 'نطرح 132 (1 مئات + 3 عشرات + 2 آحاد)', ttsText: 'ستة في اثنين وعشرين يساوي مئة واثنين وثلاثين. نطرح، يبقى صفر.', durationMs: 8000 },
     { id: 's6', resultValue: 26, dividendValue: 0, badgeLines: ['✅ الناتج = 26'], caption: 'انتهت القسمة! الناتج: 26', ttsText: 'انتهت القسمة. الناتج ستة وعشرون.', durationMs: 5000 },
   ],
@@ -163,9 +165,9 @@ const DIV_1X2_M3: FlashLesson = {
   dividendColumns: 3,
   steps: [
     { id: 's1', resultValue: 0, dividendValue: 350, badgeLines: ['350 ÷ 14'], caption: 'نضع المقسوم 350 على العداد', ttsText: 'نضع المقسوم ثلاثمائة وخمسين.', durationMs: 4000 },
-    { id: 's2', resultValue: 20, dividendValue: 350, highlightResult: [1], highlightDividend: [0, 1], badgeLines: ['35 ÷ 14 = 2'], caption: '35 ÷ 14 = 2 → 2 في عشرات الناتج (= 20)', ttsText: 'خمسة وثلاثون تقسيم أربعة عشر يساوي اثنين.', durationMs: 7000 },
+    { id: 's2', resultValue: 20, dividendValue: 350, highlightResult: [1], highlightDividend: [0, 1], badgeLines: ['35 ÷ 14 = 2'], caption: '35 ÷ 14 = 2 → 2 في عشرات الناتج (= 20)', ttsText: 'خمسة وثلاثون تقسيم أربعة عشر يساوي عشرين. نضع اثنين في العشرات.', durationMs: 8000 },
     { id: 's3', resultValue: 20, dividendValue: 70, highlightDividend: [1], badgeLines: ['20 × 14 = 280', '350 − 280 = 70'], caption: 'نطرح 280 (2 من المئات + 8 من العشرات)', ttsText: 'عشرون في أربعة عشر يساوي مئتين وثمانين. نطرح، يبقى سبعين.', durationMs: 8000 },
-    { id: 's4', resultValue: 25, dividendValue: 70, highlightResult: [2], highlightDividend: [1], badgeLines: ['70 ÷ 14 = 5'], caption: '70 ÷ 14 = 5 → 5 في آحاد الناتج', ttsText: 'سبعون تقسيم أربعة عشر يساوي خمسة.', durationMs: 7000 },
+    { id: 's4', resultValue: 25, dividendValue: 70, highlightResult: [2], highlightDividend: [1], badgeLines: ['70 ÷ 14 = 5'], caption: '70 ÷ 14 = 5 → 5 في آحاد الناتج', ttsText: 'سبعون تقسيم أربعة عشر يساوي خمسة. نضع خمسة في الآحاد.', durationMs: 8000 },
     { id: 's5', resultValue: 25, dividendValue: 0, highlightDividend: [1], badgeLines: ['5 × 14 = 70', '70 − 70 = 0'], caption: 'نطرح 70 (7 من العشرات)', ttsText: 'خمسة في أربعة عشر يساوي سبعين. نطرح، يبقى صفر.', durationMs: 8000 },
     { id: 's6', resultValue: 25, dividendValue: 0, badgeLines: ['✅ الناتج = 25'], caption: 'انتهت القسمة! الناتج: 25', ttsText: 'انتهت القسمة. الناتج خمسة وعشرون.', durationMs: 5000 },
   ],
@@ -184,9 +186,9 @@ const DIV_1X2_M4: FlashLesson = {
   dividendColumns: 3,
   steps: [
     { id: 's1', resultValue: 0, dividendValue: 234, badgeLines: ['234 ÷ 18'], caption: 'نضع المقسوم 234 على العداد', ttsText: 'نضع المقسوم مئتين وأربعة وثلاثين.', durationMs: 4000 },
-    { id: 's2', resultValue: 10, dividendValue: 234, highlightResult: [1], highlightDividend: [0, 1], badgeLines: ['23 ÷ 18 = 1'], caption: '23 ÷ 18 = 1 → 1 في عشرات الناتج (= 10)', ttsText: 'ثلاثة وعشرون تقسيم ثمانية عشر يساوي واحد.', durationMs: 7000 },
+    { id: 's2', resultValue: 10, dividendValue: 234, highlightResult: [1], highlightDividend: [0, 1], badgeLines: ['23 ÷ 18 = 1'], caption: '23 ÷ 18 = 1 → 1 في عشرات الناتج (= 10)', ttsText: 'ثلاثة وعشرون تقسيم ثمانية عشر يساوي عشرة. نضع واحداً في العشرات.', durationMs: 8000 },
     { id: 's3', resultValue: 10, dividendValue: 54, highlightDividend: [0, 1], badgeLines: ['10 × 18 = 180', '234 − 180 = 54'], caption: 'نطرح 180 (1 من المئات + 8 من العشرات)', ttsText: 'عشرة في ثمانية عشر يساوي مئة وثمانين. نطرح، يبقى أربعة وخمسين.', durationMs: 8000 },
-    { id: 's4', resultValue: 13, dividendValue: 54, highlightResult: [2], highlightDividend: [1, 2], badgeLines: ['54 ÷ 18 = 3'], caption: '54 ÷ 18 = 3 → 3 في آحاد الناتج', ttsText: 'أربعة وخمسون تقسيم ثمانية عشر يساوي ثلاثة.', durationMs: 7000 },
+    { id: 's4', resultValue: 13, dividendValue: 54, highlightResult: [2], highlightDividend: [1, 2], badgeLines: ['54 ÷ 18 = 3'], caption: '54 ÷ 18 = 3 → 3 في آحاد الناتج', ttsText: 'أربعة وخمسون تقسيم ثمانية عشر يساوي ثلاثة. نضع ثلاثة في الآحاد.', durationMs: 8000 },
     { id: 's5', resultValue: 13, dividendValue: 0, highlightDividend: [1, 2], badgeLines: ['3 × 18 = 54', '54 − 54 = 0'], caption: 'نطرح 54 (5 من العشرات + 4 من الآحاد)', ttsText: 'ثلاثة في ثمانية عشر يساوي أربعة وخمسين. نطرح، يبقى صفر.', durationMs: 8000 },
     { id: 's6', resultValue: 13, dividendValue: 0, badgeLines: ['✅ الناتج = 13'], caption: 'انتهت القسمة! الناتج: 13', ttsText: 'انتهت القسمة. الناتج ثلاثة عشر.', durationMs: 5000 },
   ],
