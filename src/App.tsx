@@ -2,6 +2,7 @@
 // [FIX N42] XP now wired to real addXP — 2026-10-04
 // [FIX B9]  call recordPlacementAttempt — 2026-10-04
 // [FIX 7]  ربط الشهادة الذهبية (CertificateScreen) — 2026-10-05
+// [FIX 10-10] ربط الفلاشات التعليمية (FlashScreen) — 2026-10-10
 
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
@@ -35,8 +36,12 @@ import LessonScreen from './screens/LessonScreen';
 import { getLessonById } from './curriculum/lessons';
 import IntroductionScreen from './screens/IntroductionScreen';
 import LevelTestScreen from './screens/LevelTestScreen';
-import KidsCertificateScreen from './screens/KidsCertificateScreen'; // ← جديد
-import CertificateScreen from './screens/CertificateScreen'; // [FIX 7] ← الشهادة الذهبية
+import KidsCertificateScreen from './screens/KidsCertificateScreen';
+import CertificateScreen from './screens/CertificateScreen';
+
+// ═══ 🎬 Flash Lessons (جديد) ═══
+import { FlashScreen } from './components/flash/FlashScreen';
+import { getFlashLessonById } from './components/flash/flashData';
 
 // ═══ Playground ═══
 import SorobanPlayground from './screens/SorobanPlayground';
@@ -114,7 +119,6 @@ function getComingSoonTitle(screen: string): string {
     secrets: 'الأسرار السحرية',
     'cross-multiplication': 'الضرب التقاطعي',
     division: 'القسمة',
-    // [FIX 7] — 'certificate' أُزيلت — لها case خاص الآن
     'final-exam': 'الامتحان النهائي',
   };
   return titles[screen] || 'قيد التطوير';
@@ -260,6 +264,31 @@ export default function App() {
 
   // ═══ Screen Renderer ═══
   const renderScreen = () => {
+    // ═══ 🎬 الفلاشات — flash-<lessonId> ═══
+    if (screen.startsWith('flash-')) {
+      const lessonId = screen.replace('flash-', '');
+      const lesson = getFlashLessonById(lessonId);
+
+      if (!lesson) {
+        return (
+          <ComingSoonScreen
+            onBack={handleBackToHero}
+            title="الفلاش غير موجود"
+          />
+        );
+      }
+
+      return (
+        <FlashScreen
+          lesson={lesson}
+          onBack={handleBackToHero}
+          onComplete={() => {
+            /* يمكن إضافة XP لاحقاً */
+          }}
+        />
+      );
+    }
+
     // ═══ 🆕 learn-L0 ... learn-L7 ═══
     if (screen.startsWith('learn-')) {
       const levelId = screen.replace('learn-', '');
@@ -309,7 +338,6 @@ export default function App() {
                 localStorage.setItem('soroban_completed_lessons', JSON.stringify(arr));
               }
             } catch { /* ignore */ }
-            // ✅ حفظ في progressStore (النظام الجديد)
             useProgressStore.getState().markLessonCompleted(lessonId);
             setScreen(('learn-' + levelId) as AppScreen);
           }}
@@ -331,7 +359,7 @@ export default function App() {
     if (screen.startsWith('lesson-view-')) {
       const lessonId = screen.replace('lesson-view-', '');
       const lessonNode = getLessonById(lessonId);
-const levelId = lessonNode?.levelId ?? 'L0';
+      const levelId = lessonNode?.levelId ?? 'L0';
 
       return (
         <LessonScreen
@@ -406,7 +434,6 @@ const levelId = lessonNode?.levelId ?? 'L0';
           />
         );
 
-      // [FIX 7] — الشهادة الذهبية (القسم الثاني / الكبار)
       case 'certificate':
         return (
           <CertificateScreen
@@ -496,7 +523,7 @@ const levelId = lessonNode?.levelId ?? 'L0';
                 try {
                   localStorage.setItem('soroban_section2_unlocked', 'true');
                 } catch { /* ignore */ }
-                setScreen('kids-certificate'); // ← كان 'category-teens'
+                setScreen('kids-certificate');
               } else {
                 setScreen('category-kids');
               }
@@ -510,7 +537,6 @@ const levelId = lessonNode?.levelId ?? 'L0';
           <CategoryExamScreen
             category="teens"
             onBack={() => handleBackToCategory('teens')}
-            // [FIX 7] — عند النجاح → الشهادة الذهبية
             onComplete={(passed, _score) => {
               setScreen(passed ? 'certificate' : 'category-teens');
             }}
@@ -558,104 +584,101 @@ const levelId = lessonNode?.levelId ?? 'L0';
       }
 
       case 'practice-0':
-case 'practice-1':
-case 'practice-2':
-case 'practice-3':
-case 'practice-4':
-case 'practice-5':
-case 'practice-6':
-case 'practice-7': {
-  const practiceNum = parseInt(screen.replace('practice-', ''), 10);
-  const level = `L${practiceNum}` as SRBLevel;
+      case 'practice-1':
+      case 'practice-2':
+      case 'practice-3':
+      case 'practice-4':
+      case 'practice-5':
+      case 'practice-6':
+      case 'practice-7': {
+        const practiceNum = parseInt(screen.replace('practice-', ''), 10);
+        const level = `L${practiceNum}` as SRBLevel;
 
-  // هذه الشاشة القديمة — نحولها للسؤال الأول من المستوى
-  // مؤقتًا: نستخدم S01 كنقطة بداية
-  return (
-    <PracticeScreen
-      level={level}
-      section={'S01' as SRBSection}
-      onBack={() =>
-        handleBackToCategory(practiceNum <= 3 ? 'kids' : 'teens')
-      }
-      onComplete={(passed, _score) => {
-        if (passed) {
-          try {
-            const raw = localStorage.getItem('soroban_passed_practice');
-            const arr = raw ? JSON.parse(raw) : [];
-            if (!arr.includes(practiceNum)) {
-              arr.push(practiceNum);
-              localStorage.setItem(
-                'soroban_passed_practice',
-                JSON.stringify(arr),
-              );
+        return (
+          <PracticeScreen
+            level={level}
+            section={'S01' as SRBSection}
+            onBack={() =>
+              handleBackToCategory(practiceNum <= 3 ? 'kids' : 'teens')
             }
-          } catch { /* ignore */ }
-        }
-      }}
-      playSound={handleSound}
-      onXP={(amount) => useProgressStore.getState().addXP(amount)}
-      burst={_burst}
-    />
-  );
-}
+            onComplete={(passed, _score) => {
+              if (passed) {
+                try {
+                  const raw = localStorage.getItem('soroban_passed_practice');
+                  const arr: number[] = raw ? JSON.parse(raw) : [];
+                  if (!arr.includes(practiceNum)) {
+                    arr.push(practiceNum);
+                    localStorage.setItem(
+                      'soroban_passed_practice',
+                      JSON.stringify(arr),
+                    );
+                  }
+                } catch { /* ignore */ }
+              }
+            }}
+            playSound={handleSound}
+            onXP={(amount) => useProgressStore.getState().addXP(amount)}
+            burst={_burst}
+          />
+        );
+      }
 
       case 'anzan-0':
-case 'anzan-1':
-case 'anzan-2':
-case 'anzan-3':
-case 'anzan-4':
-case 'anzan-5':
-case 'anzan-6':
-case 'anzan-7': {
-  const anzanNum = parseInt(screen.replace('anzan-', ''), 10);
-  const level = `L${anzanNum}` as SRBLevel;
+      case 'anzan-1':
+      case 'anzan-2':
+      case 'anzan-3':
+      case 'anzan-4':
+      case 'anzan-5':
+      case 'anzan-6':
+      case 'anzan-7': {
+        const anzanNum = parseInt(screen.replace('anzan-', ''), 10);
+        const level = `L${anzanNum}` as SRBLevel;
 
-  return (
-    <AnzanScreen
-      level={level}
-      section={'S01' as SRBSection}
-      initialMode="flash"
-      onBack={() =>
-        handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
+        return (
+          <AnzanScreen
+            level={level}
+            section={'S01' as SRBSection}
+            initialMode="flash"
+            onBack={() =>
+              handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
+            }
+            playSound={handleSound}
+            onXP={(amount) => useProgressStore.getState().addXP(amount)}
+            burst={_burst}
+          />
+        );
       }
-      playSound={handleSound}
-      onXP={(amount) => useProgressStore.getState().addXP(amount)}
-      burst={_burst}
-    />
-  );
-}
 
       case 'audio-anzan-0':
-case 'audio-anzan-1':
-case 'audio-anzan-2':
-case 'audio-anzan-3':
-case 'audio-anzan-4':
-case 'audio-anzan-5':
-case 'audio-anzan-6':
-case 'audio-anzan-7': {
-  const anzanNum = parseInt(screen.replace('audio-anzan-', ''), 10);
-  const level = `L${anzanNum}` as SRBLevel;
+      case 'audio-anzan-1':
+      case 'audio-anzan-2':
+      case 'audio-anzan-3':
+      case 'audio-anzan-4':
+      case 'audio-anzan-5':
+      case 'audio-anzan-6':
+      case 'audio-anzan-7': {
+        const anzanNum = parseInt(screen.replace('audio-anzan-', ''), 10);
+        const level = `L${anzanNum}` as SRBLevel;
 
-  return (
-    <AudioAnzanScreen
-      level={level}
-      section={'S01' as SRBSection}
-      onBack={() =>
-        handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
+        return (
+          <AudioAnzanScreen
+            level={level}
+            section={'S01' as SRBSection}
+            onBack={() =>
+              handleBackToCategory(anzanNum <= 3 ? 'kids' : 'teens')
+            }
+            playSound={handleSound}
+            onXP={(amount) => useProgressStore.getState().addXP(amount)}
+            burst={_burst}
+          />
+        );
       }
-      playSound={handleSound}
-      onXP={(amount) => useProgressStore.getState().addXP(amount)}
-      burst={_burst}
-    />
-  );
-}
 
       case 'quests':
       case 'multiplication':
       case 'secrets':
       case 'cross-multiplication':
       case 'division':
-      // [FIX 7] — 'certificate' أُزيلت من هنا — لها case خاص
       case 'final-exam':
         return (
           <ComingSoonScreen
