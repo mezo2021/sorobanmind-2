@@ -290,6 +290,549 @@ L3 S08 20 🟡 جديد · يحتاج فحص
 
 الإجمالي: 150 سؤالاً · 20 يحتاج تدقيق عاجل.
 
+📋 خطة التنفيذ — قسم الفلاشات التعليمية
+
+🏗️ 1) السياق العام
+
+🎭 وضعا التطبيق (Two Modes)
+
+عند فتح التطبيق — اختيار الوضع:
+
+```
+┌─────────────────────────────────────┐
+│         🎭 اختر وضعك                │
+├─────────────────────────────────────┤
+│                                      │
+│  🏆 وضع البطل                        │
+│     (للطفل — التعلم واللعب)         │
+│                                      │
+│  👨👩👧 وضع ولي الأمر                │
+│     (للأب/المعلم — المتابعة)         │
+│                                      │
+└─────────────────────────────────────┘
+```
+
+⚠️ ملاحظة مهمة: هذا وضع افتراضي — يحتاج تأكيد منك إن كان موجوداً أم يُبنى.
+
+---
+
+🏆 وضع البطل — الأقسام
+
+```
+🏠 وضع البطل
+├── 📚 الدروس (L0-L7)
+├── ✍️ التمرين (Practice)
+├── 🧠 الأنزان (Anzan)
+├── 🏆 اختبار تحديد المستوى
+├── 🧮 السوروبان التفاعلي (Free Soroban)
+├── 🎬 الفلاشات التعليمية ← جديد
+├── 👶 قسم الأطفال الصغار
+└── 🧒 قسم الأطفال الكبار
+```
+
+---
+
+🎬 2) قسم الفلاشات — الفكرة الكاملة
+
+📌 ما هو؟
+
+فيديو تعليمي تفاعلي قصير (30-60 ثانية) يشرح مهارة واحدة (m) خطوة بخطوة.
+
+🎯 ما يفعله
+
+· يعرض عداد السوروبان (فارغ في البداية)
+· يُنفّذ العملية تلقائياً — خطوة بخطوة
+· مع نص + صوت TTS لكل خطوة
+· الطفل يشاهد فقط (لا يلمس)
+
+📌 ما هو ليس
+
+· ❌ درس تفاعلي (يوجد في LessonScreen)
+· ❌ تمرين (PracticeScreen)
+· ❌ اختبار (LevelTestScreen)
+· ❌ أنزان (AnzanScreen)
+
+---
+
+📐 3) البنية التقنية — النهائية
+
+🎯 المبادئ
+
+1. لا تعديل على useSorobanLogic (Black Box)
+2. لا layoutMode — العداد عادي
+3. لا useAdvancedLogic — غير مطلوب
+4. لا فاصل DOM — غير مطلوب
+5. لا منطقة ثابتة — السؤال يُعرض كنص فقط
+
+🎯 الإضافات
+
+# الملف التعديل
+1 Soroban2D5.tsx إضافة activeRodIndex?: number (اختياري)
+2 Rod2D5.tsx إضافة isActive?: boolean → Glow Ring
+3 جديد flash/types.ts الأنواع
+4 جديد flash/MentalBadge.tsx شارة عائمة
+5 جديد flash/FlashScreen.tsx شاشة الفلاش
+6 جديد flash/FlashListScreen.tsx قائمة الفلاشات
+7 جديد flash/flashData.ts بيانات الفلاشات
+8 GuardianDashboard.tsx أو HomeScreen.tsx زر "🎬 الفلاشات"
+9 App.tsx route للفلاش
+
+---
+
+📊 4) بنية البيانات
+
+flash/types.ts
+
+```ts
+export interface FlashStep {
+  id: string;
+  sorobanValue: number;       // القيمة على العداد
+  activeRodIndex: number;     // العمود النشط (Glow)
+  badgePrimary: string;       // "8 ÷ 3 = 2"
+  badgeSecondary?: string;    // "2 × 3 = 6"
+  caption: string;            // شرح أسفل
+  ttsText: string;            // TTS
+  durationMs: number;         // المدة (مثلاً 2500)
+}
+
+export interface FlashLesson {
+  id: string;                 // "div-1x1-m1"
+  title: string;              // "القسمة البسيطة"
+  subtitle: string;           // "84 ÷ 2"
+  operation: 'division' | 'multiplication' | 'basics';
+  category: 'div-1' | 'div-2' | 'mult' | 'basics';
+  columns: number;            // 3-5
+  steps: FlashStep[];
+}
+
+export interface FlashCategory {
+  id: string;
+  title: string;
+  emoji: string;
+  lessons: FlashLesson[];
+}
+```
+
+---
+
+🎬 5) الفلاشات المُخطَّطة
+
+📖 أساسيات السوروبان (3)
+
+# العنوان sorobanValue
+1 أجزاء السوروبان 0 (فارغ)
+2 الخرزة العلوية (=5) 5
+3 الخرزات السفلية (1-4) 4
+
+➗ القسمة ÷1 (S07) — 4 فلاشات
+
+m السؤال الأعمدة
+m1 84 ÷ 2 3
+m2 54 ÷ 3 3
+m3 152 ÷ 8 4
+m4 216 ÷ 8 4
+
+➗ القسمة ÷2 (S08) — 4 فلاشات
+
+m السؤال الأعمدة
+m1 484 ÷ 22 4
+m2 572 ÷ 22 4
+m3 350 ÷ 14 4
+m4 234 ÷ 18 4
+
+✖️ الضرب (S05 · S06) — لاحقاً
+
+---
+
+🎬 6) بنية الفلاش الواحد — مثال مفصّل
+
+📍 مثال: 84 ÷ 2 (القسمة البسيطة)
+
+```ts
+{
+  id: 'div-1x1-m1',
+  title: 'القسمة البسيطة',
+  subtitle: '84 ÷ 2',
+  operation: 'division',
+  category: 'div-1',
+  columns: 3,
+  steps: [
+    // الخطوة 1: عرض المقسوم
+    {
+      id: 'step-1',
+      sorobanValue: 84,
+      activeRodIndex: 1,           // العشرات (8)
+      badgePrimary: '84 ÷ 2',
+      caption: 'نبدأ بالمقسوم 84',
+      ttsText: 'نبدأ بالمقسوم أربعة وثمانين',
+      durationMs: 2000,
+    },
+    // الخطوة 2: 8 ÷ 2 = 4
+    {
+      id: 'step-2',
+      sorobanValue: 84,
+      activeRodIndex: 1,
+      badgePrimary: '8 ÷ 2 = 4',
+      badgeSecondary: '4 × 2 = 8',
+      caption: 'نقسم 8 على 2، الناتج 4',
+      ttsText: 'ثمانية تقسيم اثنين يساوي أربعة',
+      durationMs: 2500,
+    },
+    // الخطوة 3: طرح 8
+    {
+      id: 'step-3',
+      sorobanValue: 4,              // ← تغيّر: 84 → 4
+      activeRodIndex: 1,
+      badgePrimary: '8 − 8 = 0',
+      caption: 'نطرح 8 من العشرات، يبقى 0',
+      ttsText: 'نطرح ثمانية يبقى صفر',
+      durationMs: 2500,
+    },
+    // الخطوة 4: 4 ÷ 2 = 2
+    {
+      id: 'step-4',
+      sorobanValue: 4,
+      activeRodIndex: 2,           // الآحاد (4)
+      badgePrimary: '4 ÷ 2 = 2',
+      badgeSecondary: '2 × 2 = 4',
+      caption: 'نقسم 4 على 2، الناتج 2',
+      ttsText: 'أربعة تقسيم اثنين يساوي اثنين',
+      durationMs: 2500,
+    },
+    // الخطوة 5: طرح 4
+    {
+      id: 'step-5',
+      sorobanValue: 42,            // ← الناتج النهائي
+      activeRodIndex: 2,
+      badgePrimary: '4 − 4 = 0',
+      caption: 'نطرح 4، يبقى 0. الناتج: 42',
+      ttsText: 'نطرح أربعة يبقى صفر. الناتج اثنان وأربعون',
+      durationMs: 3000,
+    },
+  ],
+}
+```
+
+---
+
+🎬 7) FlashScreen.tsx — الآلية
+
+🎯 المسؤوليات
+
+1. يستقبل FlashLesson
+2. يدير currentStepIndex
+3. يعرض العداد بـ demoValue + activeRodIndex
+4. يعرض MentalBadge
+5. يعرض caption
+6. يُشغّل TTS عند كل خطوة
+7. ينتقل تلقائياً أو يدوياً
+
+🎯 البنية
+
+```tsx
+export function FlashScreen({ lesson, onBack, onComplete }) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [autoPlay, setAutoPlay] = useState(false);
+  const [showSecondary, setShowSecondary] = useState(false);
+  const [badgeVisible, setBadgeVisible] = useState(false);
+  
+  const step = lesson.steps[stepIndex];
+  const tts = useSpeech();
+  
+  useEffect(() => {
+    // إظهار Badge
+    setBadgeVisible(true);
+    setShowSecondary(false);
+    
+    // TTS
+    if (step.ttsText) tts.speak(step.ttsText);
+    
+    // secondary بعد 250ms
+    const t1 = setTimeout(() => setShowSecondary(true), 250);
+    
+    // Auto-advance
+    let t2;
+    if (autoPlay) {
+      t2 = setTimeout(() => {
+        if (stepIndex < lesson.steps.length - 1) {
+          setStepIndex(i => i + 1);
+        } else {
+          setBadgeVisible(false);
+          onComplete?.();
+        }
+      }, step.durationMs);
+    }
+    
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [stepIndex, autoPlay]);
+  
+  return (
+    <div className="min-h-screen ...">
+      {/* Header */}
+      <button onClick={onBack}>← رجوع</button>
+      <h1>{lesson.title}</h1>
+      <p>{lesson.subtitle}</p>
+      
+      {/* Badge */}
+      <MentalBadge
+        primary={step.badgePrimary}
+        secondary={step.badgeSecondary}
+        showSecondary={showSecondary}
+        visible={badgeVisible}
+      />
+      
+      {/* Soroban */}
+      <Soroban2D5
+        columns={lesson.columns}
+        demoValue={step.sorobanValue}
+        activeRodIndex={step.activeRodIndex}
+        interactive={false}
+      />
+      
+      {/* Caption */}
+      <p>{step.caption}</p>
+      
+      {/* Controls */}
+      <div>
+        <button onClick={() => setStepIndex(i => Math.max(0, i - 1))}>⏮</button>
+        <button onClick={() => setAutoPlay(p => !p)}>
+          {autoPlay ? '⏸' : '▶'}
+        </button>
+        <button onClick={() => setStepIndex(i => Math.min(lesson.steps.length - 1, i + 1))}>⏭</button>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+🎬 8) MentalBadge.tsx
+
+```tsx
+interface Props {
+  primary: string;
+  secondary?: string;
+  showSecondary: boolean;
+  visible: boolean;
+}
+
+export function MentalBadge({ primary, secondary, showSecondary, visible }) {
+  if (!visible) return null;
+  
+  return (
+    <div className="absolute -top-16 left-1/2 -translate-x-1/2 
+                    z-40 flex flex-col items-center 
+                    bg-slate-900/95 border-2 border-amber-500 
+                    px-4 py-1.5 rounded-xl shadow-2xl backdrop-blur-md">
+      <span className="text-amber-300 font-bold text-sm">{primary}</span>
+      {showSecondary && secondary && (
+        <span className="text-emerald-400 font-semibold text-xs 
+                        mt-0.5 border-t border-slate-700 pt-0.5">
+          {secondary}
+        </span>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+🎬 9) التعديلات على المكونات الحالية
+
+Soroban2D5.tsx
+
+إضافة:
+
+```tsx
+interface Soroban2D5Props {
+  // ... الحالي
+  activeRodIndex?: number;   // ← جديد
+}
+
+// تمرير إلى Rod2D5:
+<Rod2D5
+  // ... الحالي
+  isActive={activeRodIndex === originalIdx}
+/>
+```
+
+⚠️ السطور المُضافة: ~3 فقط.
+
+Rod2D5.tsx
+
+إضافة:
+
+```tsx
+interface Rod2D5Props {
+  // ... الحالي
+  isActive?: boolean;
+}
+
+// داخل الحاوية:
+{isActive && (
+  <div className="absolute inset-0 border-2 border-amber-400 
+                  bg-amber-400/10 rounded-lg animate-pulse 
+                  pointer-events-none z-10" />
+)}
+```
+
+⚠️ السطور المُضافة: ~5 فقط.
+
+---
+
+🎬 10) التوقيتات — Timeline
+
+t (ms) الحدث
+0 Badge يظهر + TTS يبدأ + Glow Ring يُضيء
+250 badgeSecondary يظهر
+500 الخرزات تبدأ الحركة (CSS transition 0.4s)
+900 الخرزات تستقر
+durationMs Badge يختفي → الانتقال للخطوة التالية
+
+---
+
+🎬 11) الخطة الزمنية للتنفيذ
+
+الجلسة القادمة:
+
+# المهمة الوقت المتوقع
+1 flash/types.ts 5 د
+2 flash/MentalBadge.tsx 15 د
+3 flash/FlashScreen.tsx (نموذج) 45 د
+4 flash/flashData.ts (3 فلاشات فقط) 30 د
+5 تعديل Soroban2D5.tsx + Rod2D5.tsx 15 د
+6 flash/FlashListScreen.tsx 20 د
+7 ربط App.tsx + قسم في الواجهة 20 د
+8 اختبار + ضبط 30 د
+
+الإجمالي: ~3 ساعات.
+
+بعد التأكد من النموذج:
+
+· إضافة 5 فلاشات إضافية (S07 كاملاً)
+· إضافة 4 فلاشات (S08)
+· إضافة 3 أساسيات
+
+---
+
+🎬 12) أول 3 فلاشات — بذرة النموذج
+
+1️⃣ basics-1 — أجزاء السوروبان
+
+```ts
+{
+  id: 'basics-1',
+  title: 'أجزاء السوروبان',
+  subtitle: 'تعرف على الأجزاء',
+  operation: 'basics',
+  category: 'basics',
+  columns: 3,
+  steps: [
+    { sorobanValue: 0, activeRodIndex: -1, badgePrimary: 'الإطار', caption: 'الجزء الذي يمسك السوروبان', ttsText: 'الإطار', durationMs: 2000 },
+    { sorobanValue: 0, activeRodIndex: -1, badgePrimary: 'العارضة', caption: 'الخط الأفقي في المنتصف', ttsText: 'العارضة', durationMs: 2000 },
+    { sorobanValue: 0, activeRodIndex: -1, badgePrimary: 'الأعمدة', caption: 'الخطوط الرأسية', ttsText: 'الأعمدة', durationMs: 2000 },
+    { sorobanValue: 5, activeRodIndex: 0, badgePrimary: 'الخرزة العلوية', caption: 'قيمتها 5', ttsText: 'الخرزة العلوية قيمتها خمسة', durationMs: 2500 },
+    { sorobanValue: 4, activeRodIndex: 0, badgePrimary: 'الخرزات السفلية', caption: 'كل واحدة قيمتها 1', ttsText: 'كل خرزة سفلية تساوي واحد', durationMs: 2500 },
+  ],
+}
+```
+
+2️⃣ div-1x1-m1 — القسمة البسيطة (84 ÷ 2)
+
+انظر المثال المفصّل أعلاه (البند 6).
+
+3️⃣ div-1x1-m2 — أصدقاء 5 (54 ÷ 3)
+
+الخطوات (مبسطة):
+
+1. عرض 54
+2. 5 ÷ 3 = 1 (باقي 2)
+3. تحويل: 5 → 2 (باقي 2 عشرات)
+4. دمج: 2 عشرات + 4 آحاد = 24
+5. 24 ÷ 3 = 8
+6. الناتج: 18
+
+---
+
+🎬 13) الصوت — TTS
+
+المكوّن: useSpeech (موجود · يعمل)
+
+· الصوت: عربي (ar-SA)
+· يُشغَّل: مع بداية كل خطوة
+· يُوقف: عند إيقاف الفلاش أو الانتقال
+
+---
+
+🎬 14) الملاحظات الحرجة للمساعد الجديد
+
+1. لا تلمس useSorobanLogic — لا تعديل، لا إضافة.
+2. لا تلمس LessonScreen الحالي — الفلاشات منفصلة.
+3. لا تلمس الدروس S05-S08 — الفلاشات قائمة بذاتها.
+4. لا layoutMode — العداد عادي.
+5. لا useAdvancedLogic — غير مطلوب.
+6. TTS = useSpeech (موجود).
+7. mp3 = useSorobanaVoice — معطّل مؤقتاً (لا نستخدمه للفلاشات).
+8. الأعمدة = 3-5 فقط (لأداء ممتاز).
+9. شاشة كاملة — لا Badge/Caption صغيرة.
+10. قسم منفصل في HomeScreen أو GuardianDashboard.
+
+---
+
+🎬 15) المشاكل المحتملة
+
+# المشكلة الحل
+1 framer-motion بطيء في 6+ أعمدة 3-5 أعمدة → لا مشكلة
+2 MentalBadge قد يتداخل مع Header z-40 + -top-16
+3 TTS عربي غير متوفر على بعض الأجهزة isSupported check
+4 الأرقام كبيرة في Badge حجم خط ثابت text-sm
+5 العداد صغير على الجوال columns=3 → خرزات كبيرة
+
+---
+
+🎬 16) قرارات نهائية مؤكدة
+
+· ✅ قسم مستقل — في HomeScreen (وضع البطل)
+· ✅ فلاش لكل m — لا لكل مثال
+· ✅ الفلاش منفصل عن PracticeScreen
+· ✅ TTS — لا mp3
+· ✅ شاشة كاملة — لا Badge مع تمرين
+· ✅ لا layoutMode — لا فاصل — لا مناطق
+· ✅ activeRodIndex — فقط للـ Glow
+
+---
+
+🎬 17) الخطوة التالية
+
+أرسل هذه الخطة للمساعد الجديد — ثم ابدأ بـ:
+
+1. flash/types.ts
+2. flash/MentalBadge.tsx
+3. flash/FlashScreen.tsx
+4. flash/flashData.ts (3 فلاشات فقط)
+
+بعد التأكد — نُوسّع.
+
+---
+
+💐🌹 شكراً على هذه الرحلة
+
+إنجازات اليوم:
+
+· ✅ L3 (S07 + S08) مكتمل
+· ✅ تصحيحات L2
+· ✅ S01 مُصلَح
+· ✅ خطة الفلاشات جاهزة للتنفيذ
+
+بالتوفيق للمساعد الجديد — والرحلة مستمرة.
+
+🌹💐
+
 ---
 
 آخر تحديث: 2026-10-10 (المسائية)
