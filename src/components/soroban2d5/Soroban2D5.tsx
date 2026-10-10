@@ -16,6 +16,9 @@ interface Soroban2D5Props {
   demoValue?: number;
   size?: 'sm' | 'md' | 'lg' | 'auto';
   autoBeadSize?: boolean;
+  // ⭐ جديد — للفلاشات التعليمية
+  activeRodIndex?: number;
+  hideTitle?: boolean;
 }
 
 function useResponsiveSize() {
@@ -105,6 +108,8 @@ export function Soroban2D5({
   demoValue,
   size = 'auto',
   autoBeadSize = false,
+  activeRodIndex,
+  hideTitle = false,
 }: Soroban2D5Props) {
   const {
     columns: colStates,
@@ -167,9 +172,11 @@ export function Soroban2D5({
 
   return (
     <div className="w-full flex flex-col items-center gap-3 sm:gap-5">
-      <h3 className={`${cfg.titleSize} font-bold text-amber-900`}>
-        🧮 عداد السوروبان
-      </h3>
+      {!hideTitle && (
+        <h3 className={`${cfg.titleSize} font-bold text-amber-900`}>
+          🧮 عداد السوروبان
+        </h3>
+      )}
 
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
@@ -219,6 +226,7 @@ export function Soroban2D5({
                   onReset={() => interactive && resetColumn(originalIdx)}
                   height={effectiveHeight}
                   beadSize={effectiveBeadSize}
+                  isActive={activeRodIndex === originalIdx}
                 />
               );
             })}
@@ -264,10 +272,12 @@ export function Soroban2D5({
         </AnimatePresence>
       )}
 
-      <p className="text-[10px] sm:text-sm text-amber-700 text-center max-w-md px-2">
-        💡 اضغط على الخرزة لتفعيلها. الخرزة العلوية = <strong>{formatByStyle(5, numberStyle)}</strong>،
-        السفلية = <strong>{formatByStyle(1, numberStyle)}</strong>.
-      </p>
+      {interactive && (
+        <p className="text-[10px] sm:text-sm text-amber-700 text-center max-w-md px-2">
+          💡 اضغط على الخرزة لتفعيلها. الخرزة العلوية = <strong>{formatByStyle(5, numberStyle)}</strong>،
+          السفلية = <strong>{formatByStyle(1, numberStyle)}</strong>.
+        </p>
+      )}
     </div>
   );
 }
