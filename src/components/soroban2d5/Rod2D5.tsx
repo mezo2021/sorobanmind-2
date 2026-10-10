@@ -1,6 +1,7 @@
 // src/components/soroban2d5/Rod2D5.tsx
 import { Bead2D5 } from './Bead2D5';
 import type { BeadState } from './useSorobanLogic';
+import type { RodTint } from '@/components/flash/types';
 
 interface Rod2D5Props {
   state: BeadState;
@@ -12,9 +13,9 @@ interface Rod2D5Props {
   onReset: () => void;
   height?: number;
   beadSize?: number;
-  // ⭐ للفلاشات التعليمية
   isActive?: boolean;
   beamHighlight?: boolean;
+  tint?: RodTint;
 }
 
 const COLUMN_LABELS: string[] = [
@@ -24,6 +25,38 @@ const COLUMN_LABELS: string[] = [
   'مليارات', 'عشرات المليارات', 'مئات المليارات',
   'تريليونات',
 ];
+
+const TINT_STYLE: Record<RodTint, {
+  overlay: string;
+  blend: string;
+  ring: string;
+  shadow: string;
+}> = {
+  red: {
+    overlay: 'rgba(220, 38, 38, 0.42)',
+    blend: 'overlay',
+    ring: 'rgba(239,68,68,0.85)',
+    shadow: '0 0 20px rgba(239,68,68,0.7)',
+  },
+  emerald: {
+    overlay: 'rgba(16, 185, 129, 0.42)',
+    blend: 'overlay',
+    ring: 'rgba(16,185,129,0.85)',
+    shadow: '0 0 20px rgba(16,185,129,0.7)',
+  },
+  amber: {
+    overlay: 'rgba(251, 191, 36, 0.35)',
+    blend: 'overlay',
+    ring: 'rgba(251,191,36,0.85)',
+    shadow: '0 0 16px rgba(251,191,36,0.55)',
+  },
+  white: {
+    overlay: 'rgba(255, 255, 255, 0.55)',
+    blend: 'screen',
+    ring: 'rgba(255,255,255,0.95)',
+    shadow: '0 0 24px rgba(255,255,255,1), 0 0 44px rgba(255,255,255,0.6)',
+  },
+};
 
 function getLabelFontSize(text: string, isVertical: boolean): number {
   if (!isVertical) return 11;
@@ -45,6 +78,7 @@ export function Rod2D5({
   beadSize = 44,
   isActive = false,
   beamHighlight = false,
+  tint,
 }: Rod2D5Props) {
   const lowerBeads = [0, 1, 2, 3];
 
@@ -64,27 +98,40 @@ export function Rod2D5({
   const isVertical = (totalColumns ?? 0) >= 6;
 
   const labelText =
-    COLUMN_LABELS[displayOrder] ??
-    `عمود ${displayOrder + 1}`;
+    COLUMN_LABELS[displayOrder] ?? `عمود ${displayOrder + 1}`;
 
   const labelFontSize = getLabelFontSize(labelText, isVertical);
+
+  const tintStyle = tint ? TINT_STYLE[tint] : null;
+  const isWhite = tint === 'white';
 
   return (
     <div
       className="relative flex flex-col items-center"
       style={{ height, width: beadSize * 1.3 }}
     >
-      {/* ⭐ Glow Ring — العمود النشط */}
+      {/* Glow Ring (isActive) — amber only for basics */}
       {isActive && (
         <div
           className="absolute border-2 border-amber-400 bg-amber-400/10 rounded-xl animate-pulse pointer-events-none z-10"
+          style={{ inset: -6, boxShadow: '0 0 16px rgba(251,191,36,0.55)' }}
+        />
+      )}
+
+      {/* Tint Glow */}
+      {tintStyle && (
+        <div
+          className={`absolute rounded-xl pointer-events-none z-[6] ${isWhite ? 'animate-pulse' : ''}`}
           style={{
-            inset: -6,
-            boxShadow: '0 0 16px rgba(251,191,36,0.55)',
+            inset: -5,
+            border: `2px solid ${tintStyle.ring}`,
+            boxShadow: tintStyle.shadow,
+            background: isWhite ? 'rgba(255,255,255,0.08)' : 'transparent',
           }}
         />
       )}
 
+      {/* Rod line */}
       <div
         style={{
           position: 'absolute',
@@ -93,13 +140,13 @@ export function Rod2D5({
           transform: 'translateX(-50%)',
           width: 6,
           height: rodHeight,
-          background:
-            'linear-gradient(90deg, #5a5a5a 0%, #999 50%, #5a5a5a 100%)',
+          background: 'linear-gradient(90deg, #5a5a5a 0%, #999 50%, #5a5a5a 100%)',
           borderRadius: 3,
           boxShadow: 'inset 0 0 4px rgba(0,0,0,0.5)',
         }}
       />
 
+      {/* Upper bead */}
       <div
         style={{
           position: 'absolute',
@@ -119,6 +166,7 @@ export function Rod2D5({
         />
       </div>
 
+      {/* Beam */}
       <div
         style={{
           position: 'absolute',
@@ -132,7 +180,7 @@ export function Rod2D5({
         }}
       />
 
-      {/* ⭐ نبض ذهبي على العارضة */}
+      {/* Beam highlight (basics) */}
       {beamHighlight && (
         <div
           className="absolute animate-pulse pointer-events-none z-20"
@@ -149,6 +197,7 @@ export function Rod2D5({
         />
       )}
 
+      {/* Lower beads */}
       {lowerBeads.map((idx) => {
         const isBeadActive = idx < state.lower;
         const topActive = lowerAreaTop + idx * step;
@@ -183,6 +232,24 @@ export function Rod2D5({
         );
       })}
 
+      {/* Tint overlay on beads */}
+      {tintStyle && (
+        <div
+          className="absolute pointer-events-none z-[5]"
+          style={{
+            top: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: beadSize * 1.3,
+            height: rodHeight,
+            borderRadius: 12,
+            background: tintStyle.overlay,
+            mixBlendMode: tintStyle.blend as any,
+          }}
+        />
+      )}
+
+      {/* Column label */}
       <div
         className="absolute text-amber-800 font-bold"
         style={{
