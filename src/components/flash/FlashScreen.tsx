@@ -33,7 +33,9 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
 
   const tts = useSpeech();
   const ttsRef = useRef(tts);
-  useEffect(() => { ttsRef.current = tts; }, [tts]);
+  useEffect(() => {
+    ttsRef.current = tts;
+  }, [tts]);
 
   const isSplit = lesson.layout === 'split';
   const step = lesson.steps[stepIndex];
@@ -41,13 +43,10 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
   const isFirstStep = stepIndex === 0;
 
   // Speak current step
-  const speakStep = useCallback(
-    (s: typeof step) => {
-      if (!s?.ttsText) return;
-      ttsRef.current.speak(s.ttsText, { rate: TTS_RATE });
-    },
-    [],
-  );
+  const speakStep = useCallback((s: typeof step) => {
+    if (!s?.ttsText) return;
+    ttsRef.current.speak(s.ttsText, { rate: TTS_RATE });
+  }, []);
 
   // Update displays when step changes
   useEffect(() => {
@@ -116,6 +115,13 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
 
   const isEnded = isLastStep && hasStarted;
 
+  // Badge variant based on step highlights
+  const badgeVariant: 'amber' | 'emerald' | 'red' = step.highlightDividend?.length
+    ? 'red'
+    : step.highlightResult?.length
+    ? 'emerald'
+    : 'amber';
+
   return (
     <div
       className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col"
@@ -165,6 +171,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
           lines={step.badgeLines}
           visible={badgeVisible}
           lineDelayMs={BADGE_LINE_MS}
+          variant={badgeVariant}
         />
       </div>
 
