@@ -1,5 +1,5 @@
 // src/components/flash/FlashScreen.tsx
-// 🎬 شاشة الفلاش — دعم single + split · manual advance only
+// 🎬 شاشة الفلاش — الناتج يمين · المقسوم يسار
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -38,9 +38,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
 
   const tts = useSpeech();
   const ttsRef = useRef(tts);
-  useEffect(() => {
-    ttsRef.current = tts;
-  }, [tts]);
+  useEffect(() => { ttsRef.current = tts; }, [tts]);
 
   const isSplit = lesson.layout === 'split';
   const step = lesson.steps[stepIndex];
@@ -62,9 +60,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
   }, [stepIndex, step, isSplit]);
 
   useEffect(() => {
-    return () => {
-      ttsRef.current.stop();
-    };
+    return () => { ttsRef.current.stop(); };
   }, []);
 
   const handleStart = () => {
@@ -128,7 +124,6 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
       className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col"
       dir="rtl"
     >
-      {/* Header */}
       <div className="flex items-center justify-between p-4 gap-2">
         <button
           onClick={onBack}
@@ -145,7 +140,6 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         <div className="w-10 shrink-0" />
       </div>
 
-      {/* Progress */}
       <div className="px-6 mb-2">
         <div className="flex justify-center gap-1">
           {lesson.steps.map((_, i) => (
@@ -166,7 +160,6 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         </p>
       </div>
 
-      {/* Badge */}
       <div className="px-4 mb-3">
         <MentalBadge
           lines={step.badgeLines}
@@ -176,7 +169,6 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         />
       </div>
 
-      {/* Abacus area */}
       <div className="flex-1 flex items-center justify-center px-3">
         {isSplit ? (
           <SplitView
@@ -192,7 +184,6 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         )}
       </div>
 
-      {/* Caption */}
       <div className="px-6 mb-3">
         <AnimatePresence mode="wait">
           <motion.div
@@ -208,7 +199,6 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         </AnimatePresence>
       </div>
 
-      {/* Controls */}
       <div className="p-4 pb-6 flex flex-col gap-3">
         {!hasStarted ? (
           <button
@@ -270,7 +260,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// Split View (division / multiplication)
+// Split View — 🟢 الناتج يمين · 🔴 المقسوم يسار
 // ═══════════════════════════════════════════════════════════
 
 function SplitView({
@@ -289,37 +279,13 @@ function SplitView({
   isEnded: boolean;
 }) {
   const resultColumns = lesson.resultColumns ?? 3;
-  const dividendColumns = lesson.dividendColumns ?? 4;
+  const dividendColumns = lesson.dividendColumns ?? 3;
   const finalPulse = isEnded;
 
   return (
     <div className="flex items-start justify-center gap-2 w-full max-w-md">
-      {/* المقسوم (right in RTL) */}
-      <div className="flex flex-col items-center flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 text-[11px] text-red-300 font-bold mb-0.5">
-          <span>🔴</span>
-          <span>المقسوم</span>
-        </div>
-        <div className="px-4 py-1 rounded-lg bg-red-500/25 border border-red-400/50 text-red-50 font-mono font-black text-lg tabular-nums mb-1.5 min-w-[70px] text-center">
-          {toAr(dividendValue)}
-        </div>
-        <Soroban2D5
-          columns={dividendColumns}
-          demoValue={dividendValue}
-          interactive={false}
-          showValue={false}
-          autoBeadSize={true}
-          hideTitle={true}
-          rodTint="red"
-          highlightColumns={highlightDividend}
-        />
-      </div>
-
-      {/* Divider */}
-      <div className="w-px self-stretch bg-slate-600/60 my-2" />
-
-      {/* الناتج (left in RTL) */}
-      <div className="flex flex-col items-center flex-1 min-w-0">
+      {/* 🟢 الناتج (أول عنصر = يمين في RTL) */}
+      <div className="flex-1 min-w-0 flex flex-col items-center">
         <div className="flex items-center gap-1.5 text-[11px] text-emerald-300 font-bold mb-0.5">
           <span>🟢</span>
           <span>الناتج</span>
@@ -336,6 +302,30 @@ function SplitView({
           hideTitle={true}
           rodTint="emerald"
           highlightColumns={finalPulse ? [] : highlightResult}
+        />
+      </div>
+
+      {/* Divider */}
+      <div className="w-px self-stretch bg-slate-600/60 my-2" />
+
+      {/* 🔴 المقسوم (ثاني عنصر = يسار في RTL) */}
+      <div className="flex-1 min-w-0 flex flex-col items-center">
+        <div className="flex items-center gap-1.5 text-[11px] text-rose-300 font-bold mb-0.5">
+          <span>🔴</span>
+          <span>المقسوم</span>
+        </div>
+        <div className="px-4 py-1 rounded-lg bg-rose-500/25 border border-rose-400/50 text-rose-50 font-mono font-black text-lg tabular-nums mb-1.5 min-w-[70px] text-center">
+          {toAr(dividendValue)}
+        </div>
+        <Soroban2D5
+          columns={dividendColumns}
+          demoValue={dividendValue}
+          interactive={false}
+          showValue={false}
+          autoBeadSize={true}
+          hideTitle={true}
+          rodTint="red"
+          highlightColumns={highlightDividend}
         />
       </div>
     </div>
