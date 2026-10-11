@@ -5,6 +5,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, RotateCcw, Volume2 } from 'lucid
 import { useSpeech } from '@/hooks/useSpeech';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { MentalBadge } from './MentalBadge';
+import { FingerMovementIcon } from './FingerMovementIcon';
 import type { FlashLesson } from './types';
 
 const TTS_RATE = 0.7;
@@ -50,9 +51,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
     setBadgeVisible(true);
   }, [stepIndex, step, isSplit]);
 
-  useEffect(() => {
-    return () => { ttsRef.current.stop(); };
-  }, []);
+  useEffect(() => { return () => { ttsRef.current.stop(); }; }, []);
 
   const handleStart = () => {
     setHasStarted(true);
@@ -127,6 +126,14 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
 
       <div className="px-4 mb-3">
         <MentalBadge lines={step.badgeLines} visible={badgeVisible} lineDelayMs={BADGE_LINE_MS} variant={badgeVariant} />
+        {/* أيقونة الحركة (للسلاسل) */}
+        {step.movement && (
+          <div className="flex justify-center mt-2">
+            <div className="flex items-center gap-2 bg-emerald-500/15 border border-emerald-500/40 rounded-2xl px-4 py-2">
+              <FingerMovementIcon type={step.movement} size={48} />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 flex items-center justify-center px-3">
@@ -202,10 +209,10 @@ function SplitView({
   const resultColumns = lesson.resultColumns ?? 3;
   const dividendColumns = lesson.dividendColumns ?? 3;
   const finalPulse = isEnded;
+  const leftLabel = lesson.operation === 'multiplication' ? 'المضروب' : 'المقسوم';
 
   return (
     <div className="flex items-start justify-center gap-2 w-full max-w-md">
-      {/* 🟢 الناتج (يمين) */}
       <div className="flex-1 min-w-0 flex flex-col items-center">
         <div className="flex items-center gap-1.5 text-[11px] text-emerald-300 font-bold mb-0.5">
           <span>🟢</span><span>الناتج</span>
@@ -227,11 +234,9 @@ function SplitView({
 
       <div className="w-px self-stretch bg-slate-600/60 my-2" />
 
-      {/* 🔴 المضروب/المقسوم (يسار) */}
       <div className="flex-1 min-w-0 flex flex-col items-center">
         <div className="flex items-center gap-1.5 text-[11px] text-rose-300 font-bold mb-0.5">
-          <span>🔴</span>
-          <span>{lesson.operation === 'multiplication' ? 'المضروب' : 'المقسوم'}</span>
+          <span>🔴</span><span>{leftLabel}</span>
         </div>
         <div className="px-4 py-1 rounded-lg bg-rose-500/25 border border-rose-400/50 text-rose-50 font-mono font-black text-lg tabular-nums mb-1.5 min-w-[70px] text-center">
           {toAr(dividendValue)}
@@ -253,16 +258,19 @@ function SplitView({
 }
 
 function SingleView({ lesson, step }: { lesson: FlashLesson; step: any }) {
+  const isFinal = step.isFinal === true;
   return (
     <Soroban2D5
       columns={lesson.columns}
       demoValue={step.sorobanValue ?? 0}
-      activeRodIndex={step.activeRodIndex >= 0 ? step.activeRodIndex : undefined}
-      beamHighlight={step.highlightBeam === true}
       interactive={false}
       showValue={true}
       autoBeadSize={true}
       hideTitle={true}
+      rodTint={isFinal ? 'emerald' : undefined}
+      highlightColumns={isFinal ? [] : (step.highlightColumns ?? [])}
+      activeRodIndex={step.activeRodIndex >= 0 ? step.activeRodIndex : undefined}
+      beamHighlight={step.highlightBeam === true}
     />
   );
 }
