@@ -1,12 +1,11 @@
 // src/components/flash/ChainSolver.tsx
-// 🧮 تمرين السلاسل — معداد واحد · TTS · أيقونة الحركة
+// 🧮 تمرين السلاسل — معداد واحد · TTS
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ChevronLeft, RotateCcw, Lightbulb, CheckCircle2, AlertTriangle, Volume2 } from 'lucide-react';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useSpeech } from '@/hooks/useSpeech';
-import { FingerMovementIcon } from './FingerMovementIcon';
 import type { FlashLesson } from './types';
 
 const TTS_RATE = 0.7;
@@ -147,12 +146,7 @@ export function ChainSolver({ lesson, onBack, onComplete }: ChainSolverProps) {
             className={`bg-slate-900/90 border-2 rounded-2xl p-4 text-center shadow-xl ${
               isFinal ? 'border-emerald-500/60' : 'border-amber-500/40'
             }`}>
-            <div className="flex flex-wrap justify-center items-center gap-2 mb-2">
-              {step.movement && (
-                <div className="flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/40 rounded-xl px-2 py-1">
-                  <FingerMovementIcon type={step.movement} size={36} />
-                </div>
-              )}
+            <div className="flex flex-wrap justify-center gap-1.5 mb-2">
               {step.badgeLines.map((line, i) => (
                 <span key={i} className={`text-xs font-black px-2.5 py-1 rounded-lg border ${
                   isFinal ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
