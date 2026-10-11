@@ -390,7 +390,7 @@ export function HeroDashboard({
               <p className="text-xs text-white/60 font-body leading-relaxed">
                 {hasTakenPlacement
                   ? `المستوى الموصى به: ${recommendedLevel ?? 'L0'} — تحدّث مع وليّ الأمر للتغيير`
-                  : '٤٠ سؤالاً — ٢٠ دقيقة — يحدد نقطة البداية المثالية'}
+                  : '٤٠ سؤالاً — ١٠ دقيقة — يحدد نقطة البداية المثالية'}
               </p>
               <p
                 className={`text-xs font-body mt-1 ${
