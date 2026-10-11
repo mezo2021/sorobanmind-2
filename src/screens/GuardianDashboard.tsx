@@ -402,7 +402,12 @@ export function GuardianDashboard({
   };
 
   const handleReset = () => {
-    const keysToKeep = ['soroban_companion', 'soroban_child_name'];
+    const keysToKeep = [
+      'soroban_companion',
+      'soroban_child_name',
+      'soroban_high_scores_v1',      // 🆕 الرقم القياسي
+      'soroban_high_scores_month',   // 🆕 شهر السجل
+    ];
     Object.keys(localStorage).forEach((key) => {
       if (!keysToKeep.includes(key)) localStorage.removeItem(key);
     });
