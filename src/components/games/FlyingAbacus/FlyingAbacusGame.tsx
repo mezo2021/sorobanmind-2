@@ -1,15 +1,16 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/FlyingAbacus/FlyingAbacusGame.tsx — v2 Expanded
+// 🆕 src/components/games/FlyingAbacus/FlyingAbacusGame.tsx — v2 Expanded+
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما تغيّر عن v2:
-//   - مكتبة عبارات موسّعة (خطأ · بدء · تفكير · سؤال · سلسلة · نهاية)
-//   - الخطأ: 6 عبارات عشوائية (لا تكرار)
-//   - معالم السلسلة: 3 · 5 · 8 · 10 · 12 · 15 · 20
-//   - النهاية: 4 عبارات حسب الأداء
-//   - الإجابة الصحيحة العادية: صامتة (كما طُلب)
+// ما تغيّر عن v2 Expanded:
+//   - مكتبات عبارات موسّعة (71 عبارة إجمالاً)
+//   - نظام منع التكرار (usedPhrasesRef)
+//   - عبارات إجابة صحيحة (12 · بصري فقط بلا TTS)
+//   - عبارات نهاية متنوعة (12 · 3 لكل مستوى)
+//   - معالم سلسلة إضافية (9 معالم)
 //
-// كل شيء آخر من v2 يبقى كما هو.
+// TTS يُشغَّل في: البدء · الخطأ · معالم السلسلة · النهاية
+// الصح العادي: بصري متنوع فقط (بلا TTS)
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -25,34 +26,65 @@ import type { CharacterType } from '@/types';
 const SESSION_SECONDS = 60;
 const VALID_HEROES: CharacterType[] = ['sham', 'rayan', 'bana', 'joud'];
 
-// ═══ 🆕 مكتبة العبارات الموسّعة ═══
+// ═══════════════════════════════════════════════════════════════════
+// 🆕 مكتبات العبارات الموسّعة (71 عبارة)
+// ═══════════════════════════════════════════════════════════════════
 
-/** عبارات بداية الجولة */
+/** 🚀 عبارات بداية الجولة (10) */
 const START_PHRASES = [
   'مُسْتَعِدٌّ؟ انْطَلِقْ!',
   'هَيَّا يَا بَطَل!',
   'انْطَلِقْ بِسُرْعَة!',
   'هَيَّا نَبْدَأ!',
+  'هَيَّا نَرَى قُوَّتَك!',
+  'اسْتَعِدْ لِلطَّيَرَان!',
+  'هَيَّا نُلَاعِبُ الأَرْقَام!',
+  'أَنَا مَعَك، هَيَّا!',
+  'اسْتَعِدْ... انْطَلِق!',
+  'هَيَّا نُثْبِتُ سُرْعَتَنَا!',
 ];
 
-/** عبارات التشجيع أثناء التفكير (بصرية فقط · بلا صوت) */
+/** 💭 عبارات التفكير (بصرية فقط — 8) */
 const THINKING_PHRASES = [
   'رَكِّزْ جَيِّداً...',
   'رَاقِبْ بِعِنَايَة...',
   'انْظُرْ بِتَرْكِيز...',
   'تَمَهَّلْ قَلِيلاً...',
   'انْتَبِهْ لِلْخَرَزَات...',
+  'انْظُرْ بِدِقَّة...',
+  'رَاقِبِ المِعْدَاد...',
+  'كُنْ مُنْتَبِهاً...',
 ];
 
-/** عبارات السؤال (بصرية فقط · بلا صوت) */
+/** ❓ عبارات السؤال (بصرية فقط — 8) */
 const ASK_PHRASES = [
   'مَا هِيَ القِيمَةُ؟',
   'كَمْ تُسَاوِي؟',
   'مَا الرَّقَمُ؟',
   'مَا القِيمَةُ الَّتِي رَأَيْتَهَا؟',
+  'كَمْ عَدَدُ الخَرَزَات؟',
+  'مَا النَّاتِج؟',
+  'أَخْبِرْنِي بِالْقِيمَة!',
+  'مَا هَذَا الرَّقَم؟',
 ];
 
-/** 🆕 6 عبارات خطأ — تُختار عشوائياً */
+/** ✅ عبارات الإجابة الصحيحة (12 · بصرية فقط) */
+const CORRECT_PHRASES = [
+  'أَحْسَنْتَ!',
+  'جَيِّد!',
+  'مُمْتَاز!',
+  'رَائِع!',
+  'بَرَافُو!',
+  'عَمَلٌ رَائِع!',
+  'سَرِيعٌ كَالْبَرْق!',
+  'إِجَابَةٌ صَحِيحَة!',
+  'مَا شَاءَ الله!',
+  'أَنْتَ ذَكِيّ!',
+  'أَحْسَنْتَ يَا بَطَل!',
+  'رَائِع جِدّاً!',
+];
+
+/** ❌ عبارات الخطأ (12) */
 const ERROR_PHRASES = [
   'بَسِيطَةٌ، رَكِّزْ!',
   'لَا بَأْسَ، حَاوِلْ مُجَدَّداً!',
@@ -61,30 +93,68 @@ const ERROR_PHRASES = [
   'هَيَّا، رَكِّزْ أَكْثَر!',
   'لَا تَسْتَعْجِلْ!',
   'انْتَبِهْ لِلْمِعْدَاد!',
+  'قَرِيب! حَاوِلْ مَرَّةً أُخْرَى!',
+  'لَا بَأْس، المُهِمُّ المُحَاوَلَة!',
+  'خُذْ نَفَساً، ثُمَّ حَاوِلْ!',
+  'المَرَّةُ القَادِمَة أَفْضَل!',
+  'رَكِّزْ أَكْثَر، أَنْتَ تَقْدِر!',
 ];
 
-/** 🆕 معالم السلسلة — كل معلم يُنطق مرة واحدة */
+/** 🔥 معالم السلسلة (9) */
 const STREAK_PHRASES: Record<number, string> = {
-  3: 'السُّرْعَةُ القُصْوَى!',
-  5: 'كَفُو!',
-  8: 'مُمْتَاز!',
-  10: 'رَائِع!',
-  12: 'خَارِق!',
-  15: 'عَبْقَرِي!',
-  20: 'أُسْطُورِي!',
+  3: 'ثَلَاثَة! السُّرْعَةُ القُصْوَى!',
+  5: 'خَمْسَة! كَفُو!',
+  8: 'ثَمَانِيَة! مُمْتَاز!',
+  10: 'عَشَرَة! رَائِع!',
+  12: 'اثْنَا عَشَر! خَارِق!',
+  15: 'خَمْسَةَ عَشَر! عَبْقَرِي!',
+  18: 'ثَمَانِيَةَ عَشَر! مُذْهِل!',
+  20: 'عِشْرُونَ! أُسْطُورِي!',
+  25: 'خَمْسَةٌ وَعِشْرُونَ! لَا يُوصَف!',
 };
 
-/** 🆕 عبارة النهاية حسب الأداء */
-function getEndPhrase(correct: number): string {
-  if (correct >= 15) return 'مُمْتَاز! أَنْتَ بَطَلٌ حَقِيقِيّ!';
-  if (correct >= 10) return 'أَحْسَنْتَ! أَدَاءٌ رَائِع!';
-  if (correct >= 5) return 'جَيِّد! وَاصِل التَّدْرِيب!';
-  return 'لَا بَأْسَ، المُحَاوَلَةُ القَادِمَة!';
-}
+/** 🏆 عبارات النهاية حسب الأداء (12 · 3 لكل مستوى) */
+const END_PHRASES_HIGH = [
+  'مُمْتَاز! أَنْتَ بَطَلٌ حَقِيقِيّ!',
+  'رَائِع! أَدَاءٌ خَارِق!',
+  'أَنْتَ نَجْمُ السُّورُوبَان!',
+];
+const END_PHRASES_MID = [
+  'أَحْسَنْتَ! أَدَاءٌ رَائِع!',
+  'عَمَلٌ جَيِّد!',
+  'أَنْتَ تَتَحَسَّن!',
+];
+const END_PHRASES_LOW = [
+  'جَيِّد! وَاصِل التَّدْرِيب!',
+  'مُحَاوَلَةٌ طَيِّبَة!',
+  'أَنْتَ عَلَى الطَّرِيقِ الصَّحِيح!',
+];
+const END_PHRASES_NONE = [
+  'لَا بَأْسَ، المُحَاوَلَةُ القَادِمَة!',
+  'هَيَّا نُحَاوِلُ مَرَّةً أُخْرَى!',
+  'التَّدْرِيبُ يَصْنَعُ الأَبْطَال!',
+];
 
-/** 🆕 اختيار عشوائي من مصفوفة */
-function pickRandom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+// ═══ 🆕 دوال منع التكرار ═══
+
+/**
+ * اختيار عبارة عشوائية غير مستخدمة — لا تكرار حتى استنفاد المكتبة
+ */
+function pickUniquePhrase(
+  phrases: string[],
+  used: Set<string>,
+): string {
+  const available = phrases.filter((p) => !used.has(p));
+
+  if (available.length === 0) {
+    // استنفدنا المكتبة → صفّر · وابدأ من جديد
+    used.clear();
+    return phrases[Math.floor(Math.random() * phrases.length)];
+  }
+
+  const picked = available[Math.floor(Math.random() * available.length)];
+  used.add(picked);
+  return picked;
 }
 
 // ═══ أنواع ═══
@@ -221,6 +291,15 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
   const [xpEarned, setXpEarned] = useState(0);
 
   const usedValuesRef = useRef<Set<number>>(new Set());
+
+  // 🆕 مجموعات منع التكرار لكل فئة
+  const usedStartRef = useRef<Set<string>>(new Set());
+  const usedThinkingRef = useRef<Set<string>>(new Set());
+  const usedAskRef = useRef<Set<string>>(new Set());
+  const usedCorrectRef = useRef<Set<string>>(new Set());
+  const usedErrorRef = useRef<Set<string>>(new Set());
+  const usedEndRef = useRef<Set<string>>(new Set());
+
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const addTimeout = useCallback((fn: () => void, ms: number) => {
@@ -265,13 +344,13 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     setSelectedAnswer(null);
     setIsAbacusVisible(true);
     setHeroMood('thinking');
-    // 🆕 عبارة تفكير عشوائية (بصرية فقط)
-    setHeroText(pickRandom(THINKING_PHRASES));
+    // 🆕 عبارة تفكير فريدة (بصرية فقط)
+    setHeroText(pickUniquePhrase(THINKING_PHRASES, usedThinkingRef.current));
 
     addTimeout(() => {
       setIsAbacusVisible(false);
-      // 🆕 عبارة سؤال عشوائية (بصرية فقط)
-      setHeroText(pickRandom(ASK_PHRASES));
+      // 🆕 عبارة سؤال فريدة (بصرية فقط)
+      setHeroText(pickUniquePhrase(ASK_PHRASES, usedAskRef.current));
     }, problem.showMs);
   }, [addTimeout]);
 
@@ -286,9 +365,15 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     setXpEarned(earned);
     addXP(earned);
 
+    // 🆕 اختيار مكتبة النهاية حسب الأداء
+    const endPool =
+      correctCount >= 15 ? END_PHRASES_HIGH
+      : correctCount >= 10 ? END_PHRASES_MID
+      : correctCount >= 5 ? END_PHRASES_LOW
+      : END_PHRASES_NONE;
+
+    const endMsg = pickUniquePhrase(endPool, usedEndRef.current);
     setHeroMood('celebrating');
-    // 🆕 عبارة نهاية حسب الأداء
-    const endMsg = getEndPhrase(correctCount);
     setHeroText(endMsg);
     speak(endMsg);
 
@@ -299,6 +384,14 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
   const handleStartGame = useCallback(() => {
     clearAllTimeouts();
     usedValuesRef.current = new Set();
+    // 🆕 تصفير مجموعات العبارات
+    usedStartRef.current = new Set();
+    usedThinkingRef.current = new Set();
+    usedAskRef.current = new Set();
+    usedCorrectRef.current = new Set();
+    usedErrorRef.current = new Set();
+    usedEndRef.current = new Set();
+
     setIsPlaying(true);
     setIsGameOver(false);
     setSessionTimeLeft(SESSION_SECONDS);
@@ -308,8 +401,8 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     setIsGoldMode(false);
     setHeroMood('excited');
 
-    // 🆕 عبارة بدء عشوائية
-    const startMsg = pickRandom(START_PHRASES);
+    // 🆕 عبارة بدء فريدة
+    const startMsg = pickUniquePhrase(START_PHRASES, usedStartRef.current);
     setHeroText(startMsg);
     speak(startMsg);
     vibrate(50);
@@ -333,14 +426,13 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
       setStreak(newStreak);
       setCorrectCount((c) => c + 1);
 
-      // 🆕 فحص معالم السلسلة
       const milestone = STREAK_PHRASES[newStreak];
 
       if (milestone) {
+        // 🆕 معلم سلسلة — نص + TTS
         setHeroText(milestone);
         speak(milestone);
 
-        // Gold Mode ينطلق عند 3
         if (newStreak === 3) {
           setIsGoldMode(true);
           setHeroMood('excited');
@@ -348,9 +440,11 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
         } else if (!isGoldMode) {
           setHeroMood('celebrating');
         }
-      } else if (!isGoldMode) {
-        // ✅ إجابة صحيحة عادية — صامتة (كما طُلب)
-        setHeroMood('celebrating');
+      } else {
+        // ✅ إجابة صحيحة عادية — نص فريد (بصري فقط · بلا TTS)
+        const correctMsg = pickUniquePhrase(CORRECT_PHRASES, usedCorrectRef.current);
+        setHeroText(correctMsg);
+        if (!isGoldMode) setHeroMood('celebrating');
       }
 
       addTimeout(() => {
@@ -362,8 +456,8 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
       setIsGoldMode(false);
       setHeroMood('sad');
 
-      // 🆕 عبارة خطأ عشوائية (لا تكرار)
-      const errMsg = pickRandom(ERROR_PHRASES);
+      // 🆕 عبارة خطأ فريدة + TTS
+      const errMsg = pickUniquePhrase(ERROR_PHRASES, usedErrorRef.current);
       setHeroText(errMsg);
       speak(errMsg);
 
