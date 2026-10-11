@@ -1,15 +1,29 @@
+// ═══════════════════════════════════════════════════════════════════
+// 🆕 src/screens/HeroDashboard.tsx — مُعدَّل جلسة 2026-10-11
+// ═══════════════════════════════════════════════════════════════════
+//
+// ما تم إضافته (3 تغييرات فقط):
+//   1. استيراد Gamepad2 من lucide-react + GamesListScreen
+//   2. حالة محلية: showGames (لإدارة عرض مدينة الألعاب داخلياً)
+//   3. بطاقة جديدة "مدينة الألعاب" بعد بطاقة "الفلاشات التعليمية"
+//
+// لا يلمس: onNavigate · App.tsx · أي منطق موجود
+// ═══════════════════════════════════════════════════════════════════
+
 // src/screens/HeroDashboard.tsx
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import {
   Sparkles, Flame, Brain, Zap, Palette,
   X, Users, Trophy, Target, Grid3X3, Film,
+  Gamepad2,                                          // 🆕
   type LucideIcon,
 } from 'lucide-react';
 
 import type { Screen, CharacterType } from '@/types';
 import { Companion } from '@/components/Companion';
 import { CharacterSelector } from '@/components/CharacterSelector';
+import { GamesListScreen } from '@/components/games/GamesListScreen';   // 🆕
 
 interface HeroDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -109,6 +123,7 @@ export function HeroDashboard({
   earnedBadges: _earnedBadges,
 }: HeroDashboardProps) {
   const [exam2Passed, setExam2Passed] = useState(false);
+  const [showGames, setShowGames] = useState(false);   // 🆕
 
   useEffect(() => {
     try {
@@ -158,6 +173,18 @@ export function HeroDashboard({
     playSound('click');
     onNavigate(screen);
   };
+
+  // 🆕 عرض مدينة الألعاب داخلياً (بلا لمس App.tsx)
+  if (showGames) {
+    return (
+      <GamesListScreen
+        onBack={() => {
+          playSound('click');
+          setShowGames(false);
+        }}
+      />
+    );
+  }
 
   const characterInfo = CHARACTER_INFO[companion];
 
@@ -431,6 +458,57 @@ export function HeroDashboard({
             </div>
 
             <div className="shrink-0 self-center text-amber-300 group-hover:text-amber-100 transition-colors">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </div>
+        </motion.button>
+      </motion.div>
+
+      {/* 🆕 🎮 GAMES CITY CARD */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.14 }}
+        className="mb-6"
+      >
+        <motion.button
+          type="button"
+          whileHover={{ scale: 1.01, y: -3 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => { playSound('click'); setShowGames(true); }}
+          className="group relative glass-card p-5 sm:p-6 text-right overflow-hidden w-full border-2 border-sky-400/40"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-sky-500 to-fuchsia-500 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
+          <div className="absolute -top-20 -right-20 w-48 h-48 bg-sky-500/30 blur-3xl" />
+
+          <div className="relative flex items-center gap-4">
+            <div className="shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500 to-fuchsia-500 flex items-center justify-center shadow-xl shadow-sky-500/50">
+              <Gamepad2 className="w-8 h-8 text-white" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className="text-xl font-black font-display text-white">
+                  مدينة الألعاب
+                </h4>
+                <span className="px-2 py-0.5 rounded-lg bg-sky-400/30 text-sky-100 text-[10px] font-bold">
+                  جديد
+                </span>
+              </div>
+              <p className="text-[10px] text-white/40 font-body">
+                Games City
+              </p>
+              <p className="text-xs text-white/60 font-body leading-relaxed mt-1">
+                اجمع XP من الدروس → اشترِ تذكرة → العب
+              </p>
+              <p className="text-xs text-sky-300 font-body mt-1">
+                🎟️ 10 XP = تذكرة
+              </p>
+            </div>
+
+            <div className="shrink-0 self-center text-sky-300 group-hover:text-sky-100 transition-colors">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
