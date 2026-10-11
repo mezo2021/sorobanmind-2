@@ -1,22 +1,21 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/GamesListScreen.tsx — ملف جديد
+// 🆕 src/components/games/GamesListScreen.tsx — v2
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما يضيفه:
-//   - قائمة الألعاب الخمس
-//   - ماكينة تذاكر (شريط تقدم ticketXP/10)
-//   - منطق الأقفال (بدون تذكرة = مقفل)
-//   - زر شراء تذكرة
-//   - ActiveView داخلي (نفس نمط FlashListScreen)
-//   - عند فتح لعبة → "🚧 قيد التطوير" مؤقتاً
+// ما تغيّر عن v1:
+//   - استيراد FlyingAbacusGame
+//   - عند active.gameId === 'flying-abacus' → تشغيل اللعبة
+//   - تمرير onBack من اللعبة
+//   - الألعاب الأخرى "قيد التطوير" كما كانت
 //
-// لا يلمس أي ملف موجود · لا يؤثر على الدروس.
+// لا يلمس أي ملف خارج مجلد games/.
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Ticket, Lock, Play, Sparkles } from 'lucide-react';
 import { GAMES, type GameId, type GameMeta } from './gamesData';
+import { FlyingAbacusGame } from './FlyingAbacus/FlyingAbacusGame';
 import { useProgressStore, TICKET_COST } from '../../store/progressStore';
 
 interface GamesListScreenProps {
@@ -46,11 +45,17 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
     setActive({ kind: 'game', gameId: game.id });
   };
 
+  // 🆕 تشغيل اللعبة الفعلية
   if (active?.kind === 'game') {
+    if (active.gameId === 'flying-abacus') {
+      return <FlyingAbacusGame onBack={() => setActive(null)} />;
+    }
+
+    // الألعاب الأخرى — قيد التطوير
     return (
       <div
-        className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6"
         dir="rtl"
+        className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6"
       >
         <h2 className="text-2xl font-black text-amber-300 mb-4">
           🚧 قيد التطوير
@@ -71,20 +76,21 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white pb-10"
       dir="rtl"
+      className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white pb-10"
     >
       <div className="flex items-center gap-3 p-4 sticky top-0 z-20 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
         <button
           onClick={onBack}
           className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0"
           style={{ touchAction: 'manipulation' }}
+          aria-label="رجوع"
         >
           <ArrowRight className="w-6 h-6" />
         </button>
         <div className="flex-1">
           <h1 className="text-lg sm:text-2xl font-bold text-amber-300 flex items-center gap-2">
-            <Sparkles className="w-5 h-5" /> مدينة الألعاب
+            <Sparkles className="w-5 h-5" /> مَدِينَةُ الأَلْعَابِ
           </h1>
           <p className="text-xs text-white/60 mt-0.5">العب · تعلّم · استمتع</p>
         </div>
@@ -144,7 +150,7 @@ function TicketMachine({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Ticket className="w-5 h-5 text-amber-400" />
-          <span className="text-sm font-bold text-white">تذاكرك</span>
+          <span className="text-sm font-bold text-white">تَذَاكِرُك</span>
         </div>
         <span className="text-xs text-white/50">XP الكلي: {totalXP}</span>
       </div>
@@ -159,7 +165,7 @@ function TicketMachine({
             🎟️
           </motion.div>
           <span className="text-emerald-400 font-bold text-lg">
-            لديك تذكرة · اختر لعبة!
+            لَدَيْكَ تَذْكِرَة · اخْتَرْ لُعْبَة!
           </span>
         </div>
       )}
@@ -180,7 +186,7 @@ function TicketMachine({
             style={{ touchAction: 'manipulation' }}
           >
             <Ticket className="w-5 h-5" />
-            🎟️ اشترِ تذكرة بـ 10 XP
+            🎟️ اشْتَرِ تَذْكِرَة بِـ 10 XP
           </button>
         </div>
       )}
@@ -188,8 +194,8 @@ function TicketMachine({
       {!hasTicket && !canBuy && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-white/60">
-            <span>التقدم نحو التذكرة</span>
-            <span className="font-bold text-amber-300">
+            <span>التَّقَدُّمُ نَحْوَ التَّذْكِرَة</span>
+            <span className="font-bold text-amber-300 tabular-nums">
               {ticketXP} / {TICKET_COST}
             </span>
           </div>
@@ -202,7 +208,7 @@ function TicketMachine({
             />
           </div>
           <p className="text-xs text-white/50 text-center pt-1">
-            اجمع {TICKET_COST - ticketXP} XP إضافية للحصول على تذكرة
+            اجْمَعْ {TICKET_COST - ticketXP} XP إِضَافِيَّة
           </p>
         </div>
       )}
