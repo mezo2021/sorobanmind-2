@@ -1,22 +1,23 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/GamesListScreen.tsx — v2
+// 🆕 src/components/games/GamesListScreen.tsx — v3 (يدعم المعاينة)
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما تغيّر عن v1:
-//   - استيراد FlyingAbacusGame
-//   - عند active.gameId === 'flying-abacus' → تشغيل اللعبة
-//   - تمرير onBack من اللعبة
-//   - الألعاب الأخرى "قيد التطوير" كما كانت
+// ما تغيّر عن v2:
+//   - استيراد isPreviewMode من @/utils/previewMode (المصدر الرسمي)
+//   - في المعاينة: كل الألعاب مفتوحة · بلا تذاكر · بلا XP
+//   - شارة "معاينة" أعلى الشاشة
+//   - إخفاء ماكينة التذاكر في المعاينة
 //
-// لا يلمس أي ملف خارج مجلد games/.
+// لا يلمس أي ملف خارج games/.
 // ═══════════════════════════════════════════════════════════════════
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Ticket, Lock, Play, Sparkles } from 'lucide-react';
+import { ArrowRight, Ticket, Lock, Play, Sparkles, Eye } from 'lucide-react';
 import { GAMES, type GameId, type GameMeta } from './gamesData';
 import { FlyingAbacusGame } from './FlyingAbacus/FlyingAbacusGame';
 import { useProgressStore, TICKET_COST } from '../../store/progressStore';
+import { isPreviewMode } from '@/utils/previewMode';
 
 interface GamesListScreenProps {
   onBack: () => void;
@@ -28,6 +29,7 @@ type ActiveView =
 
 export function GamesListScreen({ onBack }: GamesListScreenProps) {
   const [active, setActive] = useState<ActiveView>(null);
+  const [preview, setPreview] = useState(false);
 
   const ticketXP = useProgressStore((s) => s.ticketXP);
   const tickets = useProgressStore((s) => s.tickets);
@@ -35,23 +37,31 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
   const buyTicket = useProgressStore((s) => s.buyTicket);
   const consumeTicket = useProgressStore((s) => s.consumeTicket);
 
-  const hasTicket = tickets >= 1;
-  const canBuy = !hasTicket && ticketXP >= TICKET_COST;
+  // فحص المعاينة عند التحميل
+  useEffect(() => {
+    setPreview(isPreviewMode());
+  }, []);
+
+  // في المعاينة: كل الألعاب مفتوحة
+  const hasTicket = preview ? true : tickets >= 1;
+  const canBuy = preview ? false : !hasTicket && ticketXP >= TICKET_COST;
   const progressPct = Math.min(100, (ticketXP / TICKET_COST) * 100);
 
   const handleOpenGame = (game: GameMeta) => {
     if (!hasTicket) return;
-    consumeTicket();
+    // في المعاينة: لا نستهلك تذكرة
+    if (!preview) {
+      consumeTicket();
+    }
     setActive({ kind: 'game', gameId: game.id });
   };
 
-  // 🆕 تشغيل اللعبة الفعلية
+  // ═══ تشغيل لعبة ═══
   if (active?.kind === 'game') {
     if (active.gameId === 'flying-abacus') {
       return <FlyingAbacusGame onBack={() => setActive(null)} />;
     }
 
-    // الألعاب الأخرى — قيد التطوير
     return (
       <div
         dir="rtl"
@@ -94,17 +104,44 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
           </h1>
           <p className="text-xs text-white/60 mt-0.5">العب · تعلّم · استمتع</p>
         </div>
+
+        {preview && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-200 text-xs font-bold">
+            <Eye className="w-4 h-4" />
+            <span>معاينة</span>
+          </div>
+        )}
       </div>
 
       <div className="px-4 sm:px-6 pt-4 space-y-4 max-w-3xl mx-auto">
-        <TicketMachine
-          ticketXP={ticketXP}
-          hasTicket={hasTicket}
-          canBuy={canBuy}
-          progressPct={progressPct}
-          onBuy={buyTicket}
-          totalXP={totalXP}
-        />
+        {!preview && (
+          <TicketMachine
+            ticketXP={ticketXP}
+            hasTicket={hasTicket}
+            canBuy={canBuy}
+            progressPct={progressPct}
+            onBuy={buyTicket}
+            totalXP={totalXP}
+          />
+        )}
+
+        {preview && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl bg-amber-500/10 border border-amber-400/30 p-4 text-center"
+          >
+            <div className="flex items-center justify-center gap-2 text-amber-200">
+              <Eye className="w-5 h-5" />
+              <span className="text-sm font-bold">
+                وضع المعاينة الكاملة مُفعَّل
+              </span>
+            </div>
+            <p className="text-xs text-amber-300/70 mt-1">
+              جميع الألعاب مفتوحة · بلا تذاكر · بلا XP
+            </p>
+          </motion.div>
+        )}
 
         <div className="space-y-3">
           {GAMES.map((game, idx) => (
