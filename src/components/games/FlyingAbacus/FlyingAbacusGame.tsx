@@ -1,18 +1,15 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/FlyingAbacus/FlyingAbacusGame.tsx — v2 (نسخة مستقرة)
+// 🆕 src/components/games/FlyingAbacus/FlyingAbacusGame.tsx — v2
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما في هذه النسخة:
-//   - لا Trajectory عشوائي (ظهور ثابت من الأسفل)
-//   - لا Ghost
-//   - لا Gold Atmosphere Shift (فقط لون الخرزات)
-//   - لا Sparkles
-//   - لا Speed Medal
-//   - ✅ حجم المعداد مُصلَح (scale أصغر)
-//   - ✅ تتبع الأرقام المستخدمة
-//   - ✅ نطاقات موسّعة
+// ما تغيّر عن v1:
+//   1. تتبّع الأرقام المستخدمة في الجلسة (usedValuesRef)
+//   2. توسيع نطاقات المراحل (تنوع أعلى)
+//   3. اختيار ذكي للأرقام (بلا تكرار داخل المرحلة)
+//   4. خيارات خاطئة قريبة من الصحيح (±1 إلى ±5)
+//   5. تصفير المجموعة في بداية كل جلسة
 //
-// هذه هي النسخة المستقرة · المختبرة · التي تعمل بسلاسة.
+// الواجهة العامة ثابتة — لا يلمس أي مستخدم.
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -61,51 +58,87 @@ function readSelectedHero(): CharacterType {
   return 'rayan';
 }
 
+/**
+ * تحديد النطاق والزمن حسب منحنى W-Shape (v2 — نطاقات أوسع)
+ */
 function getPhaseConfig(elapsedSec: number): {
   minVal: number;
   maxVal: number;
   showMs: number;
 } {
   if (elapsedSec <= 10) {
+    // مرحلة 1: بناء الثقة (2-9 · 8 قيم)
     return { minVal: 2, maxVal: 9, showMs: 1800 };
   } else if (elapsedSec <= 25) {
+    // مرحلة 2: تسارع (10-29 · 20 قيمة)
     return { minVal: 10, maxVal: 29, showMs: 1200 };
   } else if (elapsedSec <= 40) {
+    // مرحلة 3: ذروة أولى (30-59 · 30 قيمة)
     return { minVal: 30, maxVal: 59, showMs: 900 };
   } else if (elapsedSec <= 50) {
+    // مرحلة 4: استراحة (5-19 · 15 قيمة)
     return { minVal: 5, maxVal: 19, showMs: 1500 };
   } else {
+    // مرحلة 5: الذروة النهائية (60-99 · 40 قيمة)
     return { minVal: 60, maxVal: 99, showMs: 700 };
   }
 }
 
-function pickUnusedValue(minVal: number, maxVal: number, used: Set<number>): number {
+/**
+ * اختيار قيمة غير مستخدمة من النطاق
+ */
+function pickUnusedValue(
+  minVal: number,
+  maxVal: number,
+  used: Set<number>,
+): number {
   const range = maxVal - minVal + 1;
+
+  // جرّب 30 مرة لإيجاد قيمة غير مستخدمة
   for (let i = 0; i < 30; i++) {
     const candidate = minVal + Math.floor(Math.random() * range);
-    if (!used.has(candidate)) return candidate;
+    if (!used.has(candidate)) {
+      return candidate;
+    }
   }
+
+  // استنفدنا النطاق → صفّر هذا النطاق فقط
   for (let v = minVal; v <= maxVal; v++) {
     used.delete(v);
   }
+
+  // ارجع قيمة عشوائية جديدة
   return minVal + Math.floor(Math.random() * range);
 }
 
+/**
+ * توليد خيارات خاطئة قريبة (v2 — أذكى)
+ */
 function generateWrongOptions(correct: number): number[] {
   const offsets = [-5, -4, -3, -2, -1, 1, 2, 3, 4, 5];
   const pool = offsets
     .map((o) => correct + o)
     .filter((v) => v >= 1 && v <= 99 && v !== correct);
+
+  // خلط عشوائي · اختر 2
   const shuffled = pool.sort(() => Math.random() - 0.5);
   return shuffled.slice(0, 2);
 }
 
+/**
+ * توليد مسألة كاملة حسب منحنى W-Shape + تتبّع المستخدم
+ */
 function generateProblem(elapsedSec: number, used: Set<number>): Problem {
   const { minVal, maxVal, showMs } = getPhaseConfig(elapsedSec);
+
+  // اختر قيمة غير مستخدمة
   const value = pickUnusedValue(minVal, maxVal, used);
   used.add(value);
 
+  // خيارات خاطئة قريبة
   const wrongs = generateWrongOptions(value);
+
+  // ضمان 3 خيارات فريدة (لأمان المنطق)
   const set = new Set<number>([value, ...wrongs]);
   let safety = 0;
   while (set.size < 3 && safety < 50) {
@@ -136,44 +169,52 @@ function getXpForScore(correct: number): number {
   if (correct >= 15) xp += 3;
   else if (correct >= 10) xp += 2;
   else if (correct >= 5) xp += 1;
-  return xp;
+  return xp; // الحد الأقصى 5
 }
 
 // ═══ المكوّن الرئيسي ═══
 export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameProps) {
   const heroId: CharacterType = propHero ?? readSelectedHero();
   const { speak } = useCharacterVoice(heroId);
+
+  // متجر التقدم
   const addXP = useProgressStore((s) => s.addXP);
 
+  // حالة الجلسة
   const [sessionTimeLeft, setSessionTimeLeft] = useState(SESSION_SECONDS);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
 
+  // حالة المسألة
   const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
   const [isAbacusVisible, setIsAbacusVisible] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
+  // حالة البطل
   const [streak, setStreak] = useState(0);
   const [isGoldMode, setIsGoldMode] = useState(false);
   const [heroMood, setHeroMood] = useState<HeroMood>('idle');
   const [heroText, setHeroText] = useState('مُسْتَعِدٌّ لِلتَّحَدِّي؟');
 
+  // نتيجة
   const [correctCount, setCorrectCount] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
 
+  // 🆕 تتبّع الأرقام المستخدمة في الجلسة
   const usedValuesRef = useRef<Set<number>>(new Set());
-  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  // مراجع (تُنظَّف عند unmount)
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const addTimeout = useCallback((fn: () => void, ms: number) => {
     const id = setTimeout(fn, ms);
     timeoutsRef.current.push(id);
   }, []);
-
   const clearAllTimeouts = useCallback(() => {
     timeoutsRef.current.forEach((id) => clearTimeout(id));
     timeoutsRef.current = [];
   }, []);
 
+  // تنظيف عند unmount
   useEffect(() => {
     return () => {
       clearAllTimeouts();
@@ -183,6 +224,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     };
   }, [clearAllTimeouts]);
 
+  // ═══ مؤقت الجلسة ═══
   useEffect(() => {
     if (!isPlaying || isGameOver) return;
     const timer = setInterval(() => {
@@ -191,6 +233,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     return () => clearInterval(timer);
   }, [isPlaying, isGameOver]);
 
+  // ═══ مراقبة نهاية الجلسة ═══
   useEffect(() => {
     if (sessionTimeLeft === 0 && isPlaying && !isGameOver) {
       // eslint-disable-next-line no-use-before-define
@@ -199,6 +242,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionTimeLeft, isPlaying, isGameOver]);
 
+  // ═══ بدء مسألة جديدة ═══
   const startNextProblem = useCallback((elapsed: number) => {
     const problem = generateProblem(elapsed, usedValuesRef.current);
     setCurrentProblem(problem);
@@ -213,6 +257,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     }, problem.showMs);
   }, [addTimeout]);
 
+  // ═══ إنهاء اللعبة ═══
   const endGame = useCallback(() => {
     setIsGameOver(true);
     setIsPlaying(false);
@@ -230,8 +275,10 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     vibrate([0, 40, 40, 40, 40, 80]);
   }, [correctCount, addXP, speak, clearAllTimeouts]);
 
+  // ═══ بدء اللعبة ═══
   const handleStartGame = useCallback(() => {
     clearAllTimeouts();
+    // 🆕 تصفير الأرقام المستخدمة
     usedValuesRef.current = new Set();
     setIsPlaying(true);
     setIsGameOver(false);
@@ -252,6 +299,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     }, 1200);
   }, [addTimeout, startNextProblem, speak, clearAllTimeouts]);
 
+  // ═══ معالجة الإجابة ═══
   const handleAnswer = useCallback((ans: number) => {
     if (selectedAnswer !== null || isAbacusVisible || !currentProblem) return;
     setSelectedAnswer(ans);
@@ -305,6 +353,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     speak,
   ]);
 
+  // ═══ إعادة اللعب ═══
   const handleReplay = useCallback(() => {
     const state = useProgressStore.getState();
     if (state.tickets >= 1) {
@@ -319,6 +368,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     }
   }, [handleStartGame, onBack]);
 
+  // ═══ render ═══
   return (
     <div
       dir="rtl"
@@ -386,18 +436,21 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
       {/* ═══ منطقة اللعب ═══ */}
       {isPlaying && (
         <div className="flex-1 flex flex-col items-center justify-around gap-4 px-4 py-6">
-          {/* منطقة المعداد — مع إصلاح الحجم */}
-          <div className="flex items-center justify-center h-52 w-full">
+          {/* منطقة المعداد */}
+          <div className="flex items-center justify-center min-h-[260px] w-full">
             <AnimatePresence mode="wait">
               {isAbacusVisible && currentProblem ? (
                 <motion.div
                   key={`abacus-${currentProblem.id}`}
-                  initial={{ y: 30, opacity: 0, scale: 0.9 }}
+                  initial={{ y: 40, opacity: 0, scale: 0.85 }}
                   animate={{ y: 0, opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.15 } }}
-                  transition={{ duration: 0.22, ease: 'easeOut' }}
-                  className={`rounded-2xl origin-center ${isGoldMode ? 'ring-2 ring-amber-400' : ''}`}
-                  style={{ transform: 'scale(0.62)' }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  className={`p-3 rounded-2xl transition-shadow ${
+                    isGoldMode
+                      ? 'bg-amber-900/20 border-2 border-amber-400 shadow-[0_0_30px_rgba(251,191,36,0.6)] animate-pulse'
+                      : 'bg-slate-800/80 border border-slate-700 shadow-xl'
+                  }`}
                 >
                   <Soroban2D5
                     columns={3}
@@ -415,10 +468,9 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                   key="hidden"
                   initial={{ scale: 0.85, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                  className="w-32 h-32 rounded-3xl bg-slate-800/50 border-2 border-dashed border-slate-600 flex items-center justify-center"
+                  className="w-36 h-36 rounded-3xl bg-slate-800/50 border-2 border-dashed border-slate-600 flex items-center justify-center"
                 >
-                  <span className="text-4xl text-sky-400 animate-bounce">❓</span>
+                  <span className="text-5xl text-sky-400 animate-bounce">❓</span>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -430,10 +482,10 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
               {!isAbacusVisible && currentProblem ? (
                 <motion.div
                   key={`options-${currentProblem.id}`}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                  transition={{ duration: 0.18 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
                   className="flex flex-row gap-4 w-full justify-center"
                 >
                   {currentProblem.options.map((opt) => {
