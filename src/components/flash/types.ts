@@ -4,7 +4,6 @@ export type FlashOperation = 'basics' | 'multiplication' | 'division' | 'chains'
 export type FlashCategoryId = 'basics' | 'chains' | 'div-1' | 'div-2' | 'mult-1' | 'mult-2';
 export type FlashLayout = 'single' | 'split';
 export type RodTint = 'red' | 'emerald' | 'amber' | 'white';
-export type MovementType = 'doubleDrop' | 'doubleLift' | 'closedPinch';
 
 export interface FlashStep {
   id: string;
@@ -22,7 +21,6 @@ export interface FlashStep {
   highlightColumns?: number[];
   highlightBeam?: boolean;
   isFinal?: boolean;
-  movement?: MovementType;
 
   // مشترك
   badgeLines: string[];
