@@ -1,670 +1,675 @@
-// src/screens/HeroDashboard.tsx
-// [GAMES]  — إضافة زر مدينة الألعاب
-// [PLACE]  — قفل امتحان تحديد المستوى بعد أول محاولة
+// src/screens/PlacementTestScreen.tsx
+// [FIX N60-ب] — معامل عشري للأسئلة العشرية
+// [FIX TIME] — تقليص الزمن إلى 10 دقائق
+// شاشة امتحان تحديد المستوى (Placement Test)
+// 40 سؤالاً — 10 دقائق — 200 نقطة
+// ✅ الإجابة على السوروبان
+// ✅ زر إنهاء + السابق + التالي
+// ✅ لا يوجد تقييم فوري (الانتقال فوري)
+// ✅ يدعم نمط الأرقام (عربي / لاتيني)
+// ✅ الأعمدة = max(السلسلة، الناتج) + عرض بصري
 
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
 import {
-  Sparkles, Flame, Brain, Zap, Palette,
-  X, Users, Trophy, Target, Grid3X3, Film,
-  Gamepad2, CheckCircle2,
-  type LucideIcon,
+  ArrowRight, ArrowLeft, Clock, Trophy, CheckCircle2, XCircle,
+  Target, Sparkles, Play, Type, LogOut, Grid3X3,
 } from 'lucide-react';
 
-import type { Screen, CharacterType } from '@/types';
-import { Companion } from '@/components/Companion';
-import { CharacterSelector } from '@/components/CharacterSelector';
-import { GamesListScreen } from '@/components/games/GamesListScreen';
-import { useProgressStore } from '@/store/progressStore';
+import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { formatText, formatNumber } from '@/utils/numberStyle';
 
-interface HeroDashboardProps {
-  onNavigate: (screen: Screen) => void;
-  playSound: (type: 'click' | 'whoosh') => void;
-  xp: number;
-  streak: number;
-  earnedBadges: string[];
+import {
+  buildPlacementTest,
+  evaluatePlacementTest,
+  getLevelName,
+  type PlacementQuestion,
+  type PlacementResult,
+} from '@/data/srb/exam';
+
+// ═══════════════════════════════════════════════════════════
+// الأنواع
+// ═══════════════════════════════════════════════════════════
+
+type Phase = 'intro' | 'running' | 'result';
+
+interface PlacementTestScreenProps {
+  onBack: () => void;
+  onComplete: (recommendedLevel: string, weakSkills: string[]) => void;
+  playSound: (type: 'click' | 'success' | 'error' | 'whoosh' | 'levelup') => void;
 }
 
-function toArabicNumber(value: number | string): string {
-  return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+// ═══════════════════════════════════════════════════════════
+// الثوابت
+// ═══════════════════════════════════════════════════════════
+
+// 🆕 [FIX TIME] — تقليص الزمن من 20 دقيقة إلى 10 دقائق
+const TOTAL_TIME_SEC = 10 * 60;
+const LOW_SCORE_THRESHOLD = 7;
+
+// ═══════════════════════════════════════════════════════════
+// أدوات
+// ═══════════════════════════════════════════════════════════
+
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
-const CHARACTER_INFO: Record<
-  CharacterType,
-  { name: string; title: string; message: string; color: string; lightColor: string }
-> = {
-  sham: {
-    name: 'شام',
-    title: 'البطلة الذكية',
-    message: 'لنكتشف اليوم طريقة جديدة للحساب!',
-    color: 'from-violet-500 to-purple-700',
-    lightColor: 'text-violet-300',
-  },
-  rayan: {
-    name: 'ريان',
-    title: 'البطل السريع',
-    message: 'هل أنت مستعد لتحدٍ جديد؟ هيا نبدأ!',
-    color: 'from-blue-500 to-indigo-700',
-    lightColor: 'text-blue-300',
-  },
-  bana: {
-    name: 'بانة',
-    title: 'البطلة الهادئة',
-    message: 'التركيز الهادئ يصنع نتائج رائعة.',
-    color: 'from-teal-400 to-emerald-700',
-    lightColor: 'text-teal-300',
-  },
-  joud: {
-    name: 'جود',
-    title: 'البطل الذكي',
-    message: 'أحب التفكير والتحليل — هيا نحل معًا!',
-    color: 'from-indigo-500 to-purple-700',
-    lightColor: 'text-indigo-300',
-  },
-};
+/**
+ * ✅ حساب الأعمدة من max(السلسلة، الناتج)
+ */
+function getColumnsForQuestion(question: PlacementQuestion): number {
+  const nums = (question.question.match(/\d+/g) ?? []).map(Number);
+  const candidates: number[] = [
+    Math.abs(Math.round(question.result * (question.result % 1 !== 0 ? 100 : 1))),
+    ...nums.map(Math.abs),
+  ];
+  const maxAbs = Math.max(...candidates, 0);
 
-interface CategoryCard {
-  screen: Screen;
-  title: string;
-  titleEn: string;
-  ageRange: string;
-  desc: string;
-  icon: LucideIcon;
-  gradient: string;
-  glow: string;
-  levelsAr: string;
+  if (maxAbs < 1000) return 3;
+  if (maxAbs < 1_000_000) return 6;
+  if (maxAbs < 1_000_000_000) return 9;
+  return 13;
 }
 
-const CATEGORY_CARDS: CategoryCard[] = [
-  {
-    screen: 'category-kids',
-    title: 'الأبطال الصغار',
-    titleEn: 'Young Heroes',
-    ageRange: '٥ - ١٢ سنة',
-    desc: 'التأسيس: التعرّف على السوروبان، الأرقام، الجمع والطرح، الضرب والقسمة',
-    icon: Users,
-    gradient: 'from-emerald-500 to-teal-700',
-    glow: 'shadow-emerald-500/40',
-    levelsAr: '٠ · ١ · ٢ · ٣',
-  },
-  {
-    screen: 'category-teens',
-    title: 'الأبطال الكبار',
-    titleEn: 'Champion Heroes',
-    ageRange: '١٣+ سنة',
-    desc: 'المتقدم: العمليات المركبة، الضرب والقسمة المتقدمة، الأعداد العشرية والجذور',
-    icon: Trophy,
-    gradient: 'from-purple-500 to-indigo-700',
-    glow: 'shadow-purple-500/40',
-    levelsAr: '٤ · ٥ · ٦ · ٧',
-  },
-];
+/** ✅ اسم وصفي لعدد الأعمدة */
+function getColumnsLabel(columns: number, isArabic: boolean): string {
+  const map: Record<number, { ar: string; en: string }> = {
+    3: { ar: '٣ أعمدة', en: '3 Columns' },
+    6: { ar: '٦ أعمدة', en: '6 Columns' },
+    9: { ar: '٩ أعمدة', en: '9 Columns' },
+    13: { ar: '١٣ عموداً', en: '13 Columns' },
+  };
+  const entry = map[columns];
+  if (!entry) return `${columns}`;
+  return isArabic ? entry.ar : entry.en;
+}
 
-const LEGACY_CHARACTER_MAP: Record<string, CharacterType> = {
-  fox: 'sham',
-  owl: 'bana',
-  panda: 'joud',
-  rabbit: 'rayan',
-};
+// ═══════════════════════════════════════════════════════════
+// الشاشة الرئيسية
+// ═══════════════════════════════════════════════════════════
 
-export function HeroDashboard({
-  onNavigate,
+export function PlacementTestScreen({
+  onBack,
+  onComplete,
   playSound,
-  xp,
-  streak,
-  earnedBadges: _earnedBadges,
-}: HeroDashboardProps) {
-  const [exam2Passed, setExam2Passed] = useState(false);
-  const [showGames, setShowGames] = useState(false);
+}: PlacementTestScreenProps) {
+  const [phase, setPhase] = useState<Phase>('intro');
+  const [questions, setQuestions] = useState<PlacementQuestion[]>([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [answers, setAnswers] = useState<Map<string, number>>(new Map());
+  const [abacusValue, setAbacusValue] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME_SEC);
+  const [result, setResult] = useState<PlacementResult | null>(null);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
 
-  // 🆕 [PLACE] — عدد محاولات امتحان تحديد المستوى
-  const placementAttempts = useProgressStore((s) => s.placementAttempts);
-  const [recommendedLevel, setRecommendedLevel] = useState<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('soroban_placement_recommended');
-      if (raw) setRecommendedLevel(raw);
-    } catch { /* ignore */ }
-  }, []);
+  // ✅ نمط الأرقام
+  const { style: numberStyle, toggleStyle } = useNumberStyleStore();
+  const isArabic = numberStyle === 'arabic';
 
-  const hasTakenPlacement = placementAttempts > 0 || recommendedLevel !== null;
+  const currentQ = questions[currentIdx];
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('soroban_exam2_passed');
-      if (raw) setExam2Passed(JSON.parse(raw) === true);
-    } catch { /* ignore */ }
-  }, []);
-
-  const [companion, setCompanion] = useState<CharacterType>('sham');
-  const [showSelector, setShowSelector] = useState(false);
-  const [childName, setChildName] = useState<string>('');
-  const [examPassed, setExamPassed] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('soroban_companion');
-    if (saved === 'sham' || saved === 'rayan' || saved === 'bana' || saved === 'joud') {
-      setCompanion(saved as CharacterType);
-    } else if (saved && LEGACY_CHARACTER_MAP[saved]) {
-      const migrated = LEGACY_CHARACTER_MAP[saved];
-      localStorage.setItem('soroban_companion', migrated);
-      setCompanion(migrated);
-    } else {
-      localStorage.setItem('soroban_companion', 'sham');
-      setCompanion('sham');
-      setShowSelector(true);
-    }
-
-    const savedName = localStorage.getItem('soroban_child_name');
-    if (savedName) setChildName(savedName);
-
-    try {
-      const raw = localStorage.getItem('soroban_exam_result');
-      if (raw) {
-        const data = JSON.parse(raw);
-        if (data?.passed === true) setExamPassed(true);
-      }
-    } catch { /* ignore */ }
-  }, []);
-
-  const handleCompanionChange = (character: CharacterType) => {
-    setCompanion(character);
-    localStorage.setItem('soroban_companion', character);
-    setShowSelector(false);
-  };
-
-  const handleNav = (screen: Screen) => {
+  // ─── بدء الامتحان ───
+  const startTest = useCallback(() => {
+    const qs = buildPlacementTest();
+    setQuestions(qs);
+    setCurrentIdx(0);
+    setAnswers(new Map());
+    setAbacusValue(0);
+    setTimeLeft(TOTAL_TIME_SEC);
+    setResult(null);
+    setShowEndConfirm(false);
+    setPhase('running');
     playSound('click');
-    onNavigate(screen);
-  };
+  }, [playSound]);
 
-  if (showGames) {
+  // ─── العدّاد ───
+  useEffect(() => {
+    if (phase !== 'running') return;
+    if (timeLeft <= 0) {
+      const res = evaluatePlacementTest(questions, answers);
+      setResult(res);
+      setPhase('result');
+      playSound('levelup');
+      return;
+    }
+    timerRef.current = setTimeout(() => setTimeLeft((x) => x - 1), 1000);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, timeLeft]);
+
+  // ─── إنهاء الامتحان ───
+  const confirmEndExam = useCallback(() => {
+    const res = evaluatePlacementTest(questions, answers);
+    setResult(res);
+    setShowEndConfirm(false);
+    setPhase('result');
+    playSound('levelup');
+  }, [questions, answers, playSound]);
+
+  // ─── التنقل ───
+  const goToQuestion = useCallback(
+    (idx: number) => {
+      if (idx < 0 || idx >= questions.length) return;
+      setCurrentIdx(idx);
+      const targetQ = questions[idx];
+      if (targetQ) {
+        setAbacusValue(answers.get(targetQ.placementId) ?? 0);
+      }
+    },
+    [questions, answers],
+  );
+
+  // ─── تحقق ───
+  const handleCheck = useCallback(() => {
+    if (!currentQ) return;
+
+    const newAnswers = new Map(answers);
+    newAnswers.set(currentQ.placementId, abacusValue);
+    setAnswers(newAnswers);
+    playSound('click');
+
+    if (currentIdx + 1 < questions.length) {
+      const nextIdx = currentIdx + 1;
+      const nextQ = questions[nextIdx];
+      setCurrentIdx(nextIdx);
+      setAbacusValue(newAnswers.get(nextQ.placementId) ?? 0);
+    } else {
+      const res = evaluatePlacementTest(questions, newAnswers);
+      setResult(res);
+      setPhase('result');
+      playSound('levelup');
+    }
+  }, [currentQ, currentIdx, questions, answers, abacusValue, playSound]);
+
+  // ─── السابق ───
+  const handlePrevious = useCallback(() => {
+    if (currentIdx === 0) return;
+    playSound('click');
+    goToQuestion(currentIdx - 1);
+  }, [currentIdx, goToQuestion, playSound]);
+
+  // ─── التالي ───
+  const handleNext = useCallback(() => {
+    if (currentIdx + 1 >= questions.length) return;
+    playSound('click');
+    goToQuestion(currentIdx + 1);
+  }, [currentIdx, questions.length, goToQuestion, playSound]);
+
+  // ═══════════════════════════════════════════════════════
+  // المرحلة: intro
+  // ═══════════════════════════════════════════════════════
+  if (phase === 'intro') {
     return (
-      <GamesListScreen
-        onBack={() => {
-          playSound('click');
-          setShowGames(false);
-        }}
-      />
+      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            type="button"
+            onClick={() => { playSound('click'); onBack(); }}
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
+          >
+            <ArrowRight className="w-6 h-6" />
+          </button>
+          <div className="flex-1">
+            <h2 className="text-2xl font-extrabold font-display text-white">
+              امتحان تحديد المستوى
+            </h2>
+            <p className="text-sm text-white/50 font-body">
+              اختبار شامل من {formatNumber(40, numberStyle)} سؤالاً
+            </p>
+          </div>
+          <Target className="w-6 h-6 text-gold-300" />
+        </div>
+
+        <div className="glass-card p-4 mb-6">
+          <p className="text-xs text-white/60 font-body mb-3 text-center">
+            اختر نمط الأرقام
+          </p>
+          <div className="flex gap-2 bg-white/5 p-1 rounded-2xl">
+            <button
+              type="button"
+              onClick={() => { playSound('click'); if (!isArabic) toggleStyle(); }}
+              className={`flex-1 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
+                isArabic
+                  ? 'bg-gradient-to-l from-emerald-500 to-teal-600 text-white shadow-lg'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <span className="text-2xl">١ ٢ ٣</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { playSound('click'); if (isArabic) toggleStyle(); }}
+              className={`flex-1 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
+                !isArabic
+                  ? 'bg-gradient-to-l from-blue-500 to-indigo-600 text-white shadow-lg'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <span className="text-2xl">3 2 1</span>
+            </button>
+          </div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-6 mb-6"
+        >
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-gold-400 to-amber-600 flex items-center justify-center shadow-xl shadow-gold-500/40 mx-auto mb-4">
+            <Target className="w-10 h-10 text-white" />
+          </div>
+
+          <h3 className="text-xl font-extrabold font-display text-white text-center mb-4">
+            كيف يعمل الامتحان؟
+          </h3>
+
+          <div className="space-y-3 text-sm text-white/80 font-body">
+            <div className="flex items-start gap-3">
+              <span className="text-gold-300 font-bold shrink-0">
+                {formatNumber(1, numberStyle)}.
+              </span>
+              <p>{formatNumber(40, numberStyle)} سؤالاً من كل المستويات (L0 → L7)</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-gold-300 font-bold shrink-0">
+                {formatNumber(2, numberStyle)}.
+              </span>
+              {/* 🆕 [FIX TIME] — 10 دقائق */}
+              <p>الزمن الإجمالي: {formatNumber(10, numberStyle)} دقائق فقط</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-gold-300 font-bold shrink-0">
+                {formatNumber(3, numberStyle)}.
+              </span>
+              <p>الإجابة على السوروبان — مثّل الناتج على العداد</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-gold-300 font-bold shrink-0">
+                {formatNumber(4, numberStyle)}.
+              </span>
+              <p>يمكنك التنقل (السابق/التالي) في أي وقت</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-gold-300 font-bold shrink-0">
+                {formatNumber(5, numberStyle)}.
+              </span>
+              <p>لا يوجد تقييم فوري — ينتقل مباشرة للسؤال التالي</p>
+            </div>
+          </div>
+
+          <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30">
+            <p className="text-xs text-amber-200 font-body leading-relaxed">
+              💡 <strong>ملاحظة:</strong> الأسئلة غير المُجابة تُحتسب صفراً.
+              يمكنك إنهاء الامتحان في أي وقت بزر "إنهاء الاختبار".
+            </p>
+          </div>
+        </motion.div>
+
+        <button
+          type="button"
+          onClick={startTest}
+          className="btn-primary w-full !py-4 !text-lg"
+        >
+          <Play className="w-6 h-6" />
+          ابدأ الامتحان
+        </button>
+      </div>
     );
   }
 
-  const characterInfo = CHARACTER_INFO[companion];
+  // ═══════════════════════════════════════════════════════
+  // المرحلة: running
+  // ═══════════════════════════════════════════════════════
+  if (phase === 'running' && currentQ) {
+    const progress = ((currentIdx + 1) / questions.length) * 100;
+    const timeWarning = timeLeft <= 60;
+    const columns = getColumnsForQuestion(currentQ);
+    const isLastQuestion = currentIdx === questions.length - 1;
+    const isFirstQuestion = currentIdx === 0;
 
-  return (
-    <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-6xl mx-auto">
-      {/* WELCOME HEADER */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-card p-5 sm:p-6 mb-6 overflow-hidden relative"
-      >
-        <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-40 h-40 bg-electric-500/10 rounded-full blur-3xl" />
+    const formattedPrompt = formatText(
+      currentQ.question.replace(/ = ؟$/, ''),
+      numberStyle,
+    );
 
-        <div className="relative flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-5 h-5 text-gold-300" />
-              <span className="text-xs text-gold-300 font-bold font-body">
-                أكاديمية الأبطال الصغار
-              </span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white">
-              مرحباً يا {childName || 'أيها البطل'}!
+    return (
+      <div dir="rtl" className="px-3 sm:px-6 py-4 max-w-2xl mx-auto min-h-screen flex flex-col">
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-base font-bold text-white truncate">
+              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
-            <p className="text-white/60 font-body text-sm mt-1">
-              واصل رحلتك في إتقان الحساب الذهني بالسوروبان
+            <p className="text-[10px] text-white/50 font-body truncate">
+              {getLevelName(currentQ.level)} · {currentQ.section}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="text-center px-4 py-2 rounded-2xl bg-purple-500/15 border border-purple-400/20">
-              <p className="text-2xl font-extrabold text-purple-300 font-display">
-                {toArabicNumber(xp)}
-              </p>
-              <p className="text-[10px] text-white/50 font-body">نقطة خبرة</p>
-            </div>
-
-            <div className="text-center px-4 py-2 rounded-2xl bg-orange-500/15 border border-orange-400/20">
-              <div className="flex items-center justify-center gap-1">
-                <Flame className="w-4 h-4 text-orange-300" />
-                <p className="text-2xl font-extrabold text-orange-300 font-display">
-                  {toArabicNumber(streak)}
-                </p>
-              </div>
-              <p className="text-[10px] text-white/50 font-body">أيام متتالية</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative flex items-center gap-2 mt-4 flex-wrap">
           <button
             type="button"
-            onClick={() => { playSound('click'); setShowSelector(true); }}
-            className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br from-purple-500/20 to-electric-500/20 border border-purple-400/30 text-purple-200 hover:from-purple-500/30 hover:to-electric-500/30 transition-all text-xs font-body"
+            onClick={() => { playSound('click'); toggleStyle(); }}
+            className="p-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 transition"
+            title="تبديل نمط الأرقام"
           >
-            <Palette className="w-4 h-4" />
-            <span>تغيير الرفيق</span>
+            <Type className="w-4 h-4 text-white/70" />
           </button>
+
+          <div className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl border ${
+            timeWarning
+              ? 'bg-red-500/20 border-red-500/50'
+              : 'bg-white/5 border-white/10'
+          }`}>
+            <Clock className={`w-4 h-4 ${timeWarning ? 'text-red-300' : 'text-amber-300'}`} />
+            <span className={`font-bold font-mono text-sm ${timeWarning ? 'text-red-300' : 'text-white'}`}>
+              {formatTime(timeLeft)}
+            </span>
+          </div>
         </div>
-      </motion.div>
 
-      {/* HERO COMPANION CARD */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        className="glass-card p-5 sm:p-6 mb-6 overflow-hidden relative"
-      >
-        <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-violet-500/15 blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-electric-500/10 blur-3xl" />
-
-        <div className="relative grid grid-cols-1 md:grid-cols-[260px_1fr_auto] items-center gap-5">
-          <div className="relative flex justify-center">
+        {/* Progress */}
+        <div className="mb-4">
+          <div className="h-2 rounded-full bg-white/10 overflow-hidden">
             <motion.div
-              animate={{ y: [0, -5, 0], rotate: [-1, 1, -1] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="relative"
+              className="h-full rounded-full bg-gradient-to-r from-gold-400 to-amber-600"
+              animate={{ width: `${progress}%` }}
+              transition={{ type: 'spring', stiffness: 200 }}
+            />
+          </div>
+        </div>
+
+        {/* Question Card */}
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <motion.div
+            key={currentIdx}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-card p-4 sm:p-6 w-full text-center mb-4"
+          >
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-400/30 text-purple-200 text-xs font-bold">
+                <Grid3X3 className="w-3.5 h-3.5" />
+                {getColumnsLabel(columns, isArabic)}
+              </span>
+            </div>
+
+            <p
+              className="text-3xl sm:text-4xl font-black font-display text-white mb-5"
+              dir={isArabic ? 'rtl' : 'ltr'}
             >
-              <div className="absolute inset-0 rounded-full bg-violet-500/20 blur-3xl scale-75" />
-              <div className={`relative w-60 h-72 sm:w-64 sm:h-76 rounded-[2.5rem] bg-gradient-to-br ${characterInfo.color} flex items-end justify-center shadow-2xl border border-white/20 overflow-hidden`}>
-                <div className="absolute inset-0 bg-white/10" />
-                <div className="relative w-full h-full flex items-end justify-center">
-                  <Companion
-                    character={companion}
-                    xp={xp}
-                    variant="inline"
-                    imageClassName="w-full h-full object-contain object-bottom drop-shadow-2xl"
-                  />
-                </div>
-              </div>
-            </motion.div>
-          </div>
+              {formattedPrompt} = ؟
+            </p>
 
-          <div className="text-center md:text-right">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/15 border border-violet-400/20 mb-2">
-              <Sparkles className="w-4 h-4 text-violet-300" />
-              <span className="text-xs font-bold text-violet-200 font-body">رفيق رحلتك</span>
+            <div className="flex justify-center mb-3">
+              <Soroban2D5
+                key={`q-${currentQ.placementId}-${answers.get(currentQ.placementId) ?? 0}-${columns}`}
+                columns={columns}
+                initialValue={answers.get(currentQ.placementId) ?? 0}
+                autoBeadSize={true}
+                interactive={true}
+                showValue={true}
+                onValueChange={setAbacusValue}
+              />
             </div>
-            <h3 className="text-3xl sm:text-4xl font-black font-display text-white">{characterInfo.name}</h3>
-            <p className={`text-sm font-bold font-body mt-1 ${characterInfo.lightColor}`}>{characterInfo.title}</p>
-            <p className="text-sm text-white/60 font-body mt-3 leading-relaxed">{characterInfo.message}</p>
+          </motion.div>
+        </div>
 
-            <div className="flex items-center justify-center md:justify-start gap-2 mt-4 flex-wrap">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
-                <Brain className="w-4 h-4 text-purple-300" />
-                <span className="text-xs text-white/60 font-body">تدريب العقل</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
-                <Zap className="w-4 h-4 text-gold-300" />
-                <span className="text-xs text-white/60 font-body">تطوير السرعة</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex md:flex-col gap-2 justify-center">
+        {/* ──── أزرار التنقل ──── */}
+        <div className="space-y-2 mb-4">
+          <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
-              onClick={() => { playSound('click'); setShowSelector(true); }}
-              className="flex-1 md:flex-none px-4 py-3 rounded-2xl bg-violet-500/15 border border-violet-400/20 text-violet-200 hover:bg-violet-500/25 transition-all text-xs font-bold font-body"
+              onClick={handlePrevious}
+              disabled={isFirstQuestion}
+              className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
-              تغيير الرفيق
+              <ArrowRight className="w-4 h-4" />
+              السابق
             </button>
-            <div className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-center">
-              <p className="text-lg font-black text-gold-300 font-display">{toArabicNumber(xp)}</p>
-              <p className="text-[10px] text-white/40 font-body">خبرة البطل</p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
 
-      {/* 🆕 [PLACE] PLACEMENT TEST CARD */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="mb-6"
-      >
-        <motion.button
-          type="button"
-          whileHover={!hasTakenPlacement ? { scale: 1.01, y: -3 } : {}}
-          whileTap={!hasTakenPlacement ? { scale: 0.99 } : {}}
-          onClick={() => {
-            if (hasTakenPlacement) return;
-            handleNav('placement-test' as Screen);
-          }}
-          disabled={hasTakenPlacement}
-          className={`group relative glass-card p-5 sm:p-6 text-right overflow-hidden w-full border-2 transition-all ${
-            hasTakenPlacement
-              ? 'border-emerald-400/40 opacity-80 cursor-not-allowed'
-              : 'border-gold-400/40'
-          }`}
-        >
-          <div
-            className={`absolute inset-0 ${
-              hasTakenPlacement
-                ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                : 'bg-gradient-to-br from-gold-400 to-amber-600'
-            } opacity-10 ${!hasTakenPlacement ? 'group-hover:opacity-20' : ''} transition-opacity duration-500`}
-          />
-          <div
-            className={`absolute -top-20 -right-20 w-48 h-48 blur-3xl ${
-              hasTakenPlacement ? 'bg-emerald-500/30' : 'bg-gold-500/30'
-            }`}
-          />
-
-          <div className="relative flex items-center gap-4">
-            <div
-              className={`shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl ${
-                hasTakenPlacement
-                  ? 'bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-500/50'
-                  : 'bg-gradient-to-br from-gold-400 to-amber-600 shadow-gold-500/50'
-              }`}
+            <button
+              type="button"
+              onClick={handleCheck}
+              className="py-3 rounded-2xl bg-gradient-to-l from-gold-400 to-amber-600 text-white font-bold text-sm flex items-center justify-center gap-1.5 shadow-lg shadow-gold-500/30 hover:shadow-gold-500/50 transition"
             >
-              {hasTakenPlacement ? (
-                <CheckCircle2 className="w-8 h-8 text-white" />
-              ) : (
-                <Target className="w-8 h-8 text-white" />
+              <CheckCircle2 className="w-4 h-4" />
+              تحقق
+            </button>
+
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={isLastQuestion}
+              className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition"
+            >
+              التالي
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => { playSound('click'); setShowEndConfirm(true); }}
+            className="w-full py-2.5 rounded-2xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 font-bold text-xs flex items-center justify-center gap-2 transition"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            إنهاء الاختبار
+          </button>
+        </div>
+
+        {/* Modal: تأكيد الإنهاء */}
+        <AnimatePresence>
+          {showEndConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+              onClick={() => setShowEndConfirm(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.85, opacity: 0, y: 30 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.85, opacity: 0, y: 30 }}
+                transition={{ type: 'spring', stiffness: 250, damping: 25 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-amber-500/30 text-center"
+                dir="rtl"
+              >
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center">
+                  <LogOut className="w-8 h-8 text-amber-300" />
+                </div>
+
+                <h3 className="text-xl font-extrabold font-display text-white mb-2">
+                  إنهاء الاختبار؟
+                </h3>
+
+                <p className="text-sm text-white/60 font-body mb-6 leading-relaxed">
+                  ستُحتسب الأسئلة غير المُجابة <span className="text-red-300 font-bold">صفراً</span>.
+                  <br />
+                  النتيجة النهائية = مجموع الإجابات الصحيحة فقط.
+                </p>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={confirmEndExam}
+                    className="flex-1 py-3 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white font-bold"
+                  >
+                    نعم، أنهِ الامتحان
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { playSound('click'); setShowEndConfirm(false); }}
+                    className="flex-1 py-3 rounded-2xl bg-white/10 text-white/80 font-bold"
+                  >
+                    متابعة
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // المرحلة: result
+  // ═══════════════════════════════════════════════════════
+  if (phase === 'result' && result) {
+    const isLowScore = result.totalScore < LOW_SCORE_THRESHOLD;
+    const recommendedLevel = isLowScore ? 'L0' : result.recommendedLevel;
+    const isNewL0 = isLowScore && result.recommendedLevel !== 'L0';
+
+    return (
+      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-6 mb-6 overflow-hidden relative"
+        >
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-gold-500/20 blur-3xl" />
+
+          <div className="relative text-center">
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+              className="w-24 h-24 rounded-3xl bg-gradient-to-br from-gold-400 to-amber-600 flex items-center justify-center shadow-2xl shadow-gold-500/40 mx-auto mb-4"
+            >
+              <Trophy className="w-12 h-12 text-white" />
+            </motion.div>
+
+            <h2 className="text-2xl font-extrabold font-display text-white mb-2">
+              نتيجة تحديد المستوى
+            </h2>
+
+            <div className="my-6">
+              <p className="text-sm text-white/60 font-body mb-1">المستوى المُوصى به</p>
+              <p className="text-5xl font-black font-display shimmer-text">
+                {recommendedLevel}
+              </p>
+              <p className="text-lg font-bold text-gold-300 font-body mt-1">
+                {getLevelName(recommendedLevel)}
+              </p>
+
+              {isNewL0 && (
+                <p className="text-xs text-amber-300 font-body mt-2 bg-amber-500/10 border border-amber-400/30 rounded-xl px-3 py-2 inline-block">
+                  📌 نوصي بالبدء من المستوى التمهيدي الجديد (L0)
+                </p>
               )}
             </div>
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <h4 className="text-xl font-black font-display text-white">
-                  {hasTakenPlacement
-                    ? 'تم تحديد مستواك'
-                    : 'امتحان تحديد المستوى'}
-                </h4>
-                <span
-                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold whitespace-nowrap ${
-                    hasTakenPlacement
-                      ? 'bg-emerald-400/30 text-emerald-100'
-                      : 'bg-gold-400/30 text-gold-100'
-                  }`}
-                >
-                  {hasTakenPlacement ? '✅ مكتمل' : 'جديد'}
-                </span>
-              </div>
-              <p className="text-xs text-white/60 font-body leading-relaxed">
-                {hasTakenPlacement
-                  ? `المستوى الموصى به: ${recommendedLevel ?? 'L0'} — تحدّث مع وليّ الأمر للتغيير`
-                  : '٤٠ سؤالاً — ٢٠ دقيقة — يحدد نقطة البداية المثالية'}
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
+              <p className="text-sm text-white/60 font-body">النتيجة الكلية</p>
+              <p className="text-4xl font-black text-white font-display mt-1">
+                {formatNumber(result.totalScore, numberStyle)}٪
               </p>
-              <p
-                className={`text-xs font-body mt-1 ${
-                  hasTakenPlacement ? 'text-emerald-300' : 'text-gold-300'
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="glass-card p-5 mb-6">
+          <h3 className="text-sm font-bold text-amber-300 mb-4">📊 تفصيل المستويات</h3>
+
+          <div className="space-y-2">
+            {result.levels.map((lvl) => (
+              <div
+                key={lvl.levelId}
+                className={`p-3 rounded-xl border ${
+                  lvl.passed
+                    ? 'bg-emerald-500/10 border-emerald-400/30'
+                    : 'bg-red-500/10 border-red-400/30'
                 }`}
               >
-                {hasTakenPlacement
-                  ? '🔒 لا يمكن إعادة الامتحان'
-                  : '🎯 مفتوح دائماً'}
-              </p>
-            </div>
-
-            <div
-              className={`shrink-0 self-center transition-colors ${
-                hasTakenPlacement
-                  ? 'text-emerald-300'
-                  : 'text-gold-300 group-hover:text-gold-100'
-              }`}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-          </div>
-        </motion.button>
-      </motion.div>
-
-      {/* SOROBAN PLAYGROUND CARD */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.12 }}
-        className="mb-6"
-      >
-        <motion.button
-          type="button"
-          whileHover={{ scale: 1.01, y: -3 }}
-          whileTap={{ scale: 0.99 }}
-          onClick={() => handleNav('soroban' as Screen)}
-          className="group relative glass-card p-5 sm:p-6 text-right overflow-hidden w-full border-2 border-purple-400/40"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-electric-500 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
-          <div className="absolute -top-20 -right-20 w-48 h-48 bg-purple-500/30 blur-3xl" />
-
-          <div className="relative flex items-center gap-4">
-            <div className="shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-electric-500 flex items-center justify-center shadow-xl shadow-purple-500/50">
-              <Grid3X3 className="w-8 h-8 text-white" />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h4 className="text-xl font-black font-display text-white">
-                  السوروبان التفاعلي
-                </h4>
-                <span className="px-2 py-0.5 rounded-lg bg-purple-400/30 text-purple-100 text-[10px] font-bold">
-                  جديد
-                </span>
-              </div>
-              <p className="text-[10px] text-white/40 font-body">
-                Soroban Playground
-              </p>
-              <p className="text-xs text-white/60 font-body leading-relaxed mt-1">
-                العب بالمعداد بحرية — اختر عدد الأعمدة (٣ / ٦ / ٩ / ١٣)
-              </p>
-              <p className="text-xs text-purple-300 font-body mt-1">
-                🎮 وضع حر — بلا أسئلة ولا مؤقت
-              </p>
-            </div>
-
-            <div className="shrink-0 self-center text-purple-300 group-hover:text-purple-100 transition-colors">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-          </div>
-        </motion.button>
-      </motion.div>
-
-      {/* 🎬 FLASH LESSONS CARD */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.13 }}
-        className="mb-6"
-      >
-        <motion.button
-          type="button"
-          whileHover={{ scale: 1.01, y: -3 }}
-          whileTap={{ scale: 0.99 }}
-          onClick={() => handleNav('flash-list' as Screen)}
-          className="group relative glass-card p-5 sm:p-6 text-right overflow-hidden w-full border-2 border-amber-400/40"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-rose-500 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
-          <div className="absolute -top-20 -right-20 w-48 h-48 bg-amber-500/30 blur-3xl" />
-
-          <div className="relative flex items-center gap-4">
-            <div className="shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center shadow-xl shadow-amber-500/50">
-              <Film className="w-8 h-8 text-white" />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h4 className="text-xl font-black font-display text-white">
-                  الفلاشات التعليمية
-                </h4>
-                <span className="px-2 py-0.5 rounded-lg bg-amber-400/30 text-amber-100 text-[10px] font-bold">
-                  جديد
-                </span>
-              </div>
-              <p className="text-[10px] text-white/40 font-body">
-                Flash Lessons
-              </p>
-              <p className="text-xs text-white/60 font-body leading-relaxed mt-1">
-                شروحات قصيرة — خطوة بخطوة مع الصوت والصورة
-              </p>
-              <p className="text-xs text-amber-300 font-body mt-1">
-                🎬 أساسيات · ضرب · قسمة
-              </p>
-            </div>
-
-            <div className="shrink-0 self-center text-amber-300 group-hover:text-amber-100 transition-colors">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-          </div>
-        </motion.button>
-      </motion.div>
-
-      {/* 🆕 🎮 GAMES CITY CARD */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.14 }}
-        className="mb-6"
-      >
-        <motion.button
-          type="button"
-          whileHover={{ scale: 1.01, y: -3 }}
-          whileTap={{ scale: 0.99 }}
-          onClick={() => { playSound('click'); setShowGames(true); }}
-          className="group relative glass-card p-5 sm:p-6 text-right overflow-hidden w-full border-2 border-sky-400/40"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-500 to-fuchsia-500 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
-          <div className="absolute -top-20 -right-20 w-48 h-48 bg-sky-500/30 blur-3xl" />
-
-          <div className="relative flex items-center gap-4">
-            <div className="shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500 to-fuchsia-500 flex items-center justify-center shadow-xl shadow-sky-500/50">
-              <Gamepad2 className="w-8 h-8 text-white" />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h4 className="text-xl font-black font-display text-white">
-                  مدينة الألعاب
-                </h4>
-                <span className="px-2 py-0.5 rounded-lg bg-sky-400/30 text-sky-100 text-[10px] font-bold">
-                  جديد
-                </span>
-              </div>
-              <p className="text-[10px] text-white/40 font-body">
-                Games City
-              </p>
-              <p className="text-xs text-white/60 font-body leading-relaxed mt-1">
-                اجمع XP من الدروس → اشترِ تذكرة → العب
-              </p>
-              <p className="text-xs text-sky-300 font-body mt-1">
-                🎟️ 10 XP = تذكرة
-              </p>
-            </div>
-
-            <div className="shrink-0 self-center text-sky-300 group-hover:text-sky-100 transition-colors">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-          </div>
-        </motion.button>
-      </motion.div>
-
-      {/* CATEGORY CARDS */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold text-white/80 font-display mb-3 text-center">
-          اختر قسمك
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {CATEGORY_CARDS.map((card, i) => {
-            const Icon = card.icon;
-
-            return (
-              <motion.button
-                key={card.screen}
-                type="button"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 + i * 0.1, type: 'spring', stiffness: 200, damping: 20 }}
-                whileHover={{ scale: 1.02, y: -4 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleNav(card.screen)}
-                className="group relative glass-card p-5 sm:p-6 text-right overflow-hidden"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-15 transition-opacity duration-500`} />
-
-                <div className="relative flex items-start gap-4">
-                  <div className={`shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br ${card.gradient} flex items-center justify-center shadow-xl ${card.glow}`}>
-                    <Icon className="w-8 h-8 text-white" />
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {lvl.passed ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-red-400" />
+                    )}
+                    <span className="font-bold text-white text-sm">
+                      {lvl.levelId} — {getLevelName(lvl.levelId)}
+                    </span>
                   </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-xl font-black font-display text-white">
-                      {card.title}
-                    </h4>
-                    <p className="text-xs text-white/40 font-body">
-                      {card.titleEn}
-                    </p>
-                    <p className={`text-sm font-bold font-body mt-2 bg-gradient-to-l ${card.gradient} bg-clip-text text-transparent`}>
-                      {card.ageRange}
-                    </p>
-                    <p className="text-xs sm:text-sm text-white/60 font-body mt-2 leading-relaxed">
-                      {card.desc}
-                    </p>
-
-                    <div className="flex items-center gap-2 mt-3 flex-wrap">
-                      <span className="text-xs text-white/40 font-body">المستويات:</span>
-                      <span className="text-sm font-bold text-white/80 font-display">
-                        {card.levelsAr}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 self-center text-white/40 group-hover:text-white/80 transition-colors">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
+                  <span className={`text-xs font-bold ${
+                    lvl.passed ? 'text-emerald-300' : 'text-red-300'
+                  }`}>
+                    {formatNumber(lvl.correct, numberStyle)}/{formatNumber(lvl.total, numberStyle)} · {formatNumber(lvl.percentage, numberStyle)}٪
+                  </span>
                 </div>
-              </motion.button>
-            );
-          })}
+                <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                  <motion.div
+                    className={`h-full rounded-full ${
+                      lvl.passed
+                        ? 'bg-gradient-to-r from-emerald-400 to-teal-500'
+                        : 'bg-gradient-to-r from-red-400 to-rose-500'
+                    }`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${lvl.percentage}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {result.weakSkills.length > 0 && (
+          <div className="glass-card p-5 mb-6">
+            <h3 className="text-sm font-bold text-amber-300 mb-3">
+              📌 مهارات تحتاج مراجعة
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {result.weakSkills.map((skill) => (
+                <span
+                  key={skill}
+                  className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-200 text-xs font-bold"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-white/60 font-body mt-3">
+              💡 سيُركّز التدريب على هذه المهارات أولاً
+            </p>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => {
+              playSound('click');
+              onComplete(recommendedLevel, result.weakSkills);
+            }}
+            className="btn-primary w-full !py-4 !text-lg"
+          >
+            <Sparkles className="w-6 h-6" />
+            ابدأ من {recommendedLevel} — {getLevelName(recommendedLevel)}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { playSound('click'); onBack(); }}
+            className="btn-ghost w-full"
+          >
+            العودة للرئيسية
+          </button>
         </div>
       </div>
+    );
+  }
 
-      {/* CHARACTER SELECTOR MODAL */}
-      <AnimatePresence>
-        {showSelector && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0, y: 30 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.85, opacity: 0, y: 30 }}
-              transition={{ type: 'spring', stiffness: 250, damping: 25 }}
-              className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-5 sm:p-7 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/10"
-            >
-              <button
-                type="button"
-                onClick={() => { playSound('click'); setShowSelector(false); }}
-                className="absolute top-4 left-4 w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
-                aria-label="إغلاق"
-              >
-                <X className="w-5 h-5 text-white/70" />
-              </button>
-              <CharacterSelector onSelectCharacter={handleCompanionChange} />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+  return null;
 }
 
-export default HeroDashboard;
+export default PlacementTestScreen;
