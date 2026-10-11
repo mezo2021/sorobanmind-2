@@ -1,14 +1,13 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/GameCompanion.tsx — ملف جديد
+// 🆕 src/components/games/GameCompanion.tsx — v2 (بصري فقط)
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما يضيفه:
-//   - بطل مرافق داخل الألعاب (70x70)
-//   - 5 حالات مزاج (idle · thinking · excited · celebrating · sad)
-//   - فقاعة كلام
-//   - لا يتكلم (TTS في الألعاب يُدار من الخارج)
+// ما تغيّر عن v1:
+//   - إزالة استخدام useCharacterVoice (اللعبة تُديره)
+//   - إزالة dir-rtl غير الصالح
+//   - استخدام dir="rtl" (HTML attribute)
 //
-// لا يلمس Companion.tsx · FloatingCompanion.tsx · ImageAvatar.tsx.
+// لا يلمس Companion.tsx · FloatingCompanion.tsx.
 // ═══════════════════════════════════════════════════════════════════
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -38,7 +37,7 @@ export function GameCompanion({
   heroId,
   mood,
   customText,
-  size = 70,
+  size = 68,
 }: GameCompanionProps) {
   const animate = (() => {
     switch (mood) {
@@ -79,12 +78,12 @@ export function GameCompanion({
           src={HERO_IMAGES[heroId]}
           alt={heroId}
           className="object-contain select-none pointer-events-none"
-          style={{ width: size * 0.8, height: size * 0.8 }}
+          style={{ width: size * 0.82, height: size * 0.82 }}
           draggable={false}
         />
       </motion.div>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {customText && (
           <motion.div
             key={customText}
@@ -92,7 +91,7 @@ export function GameCompanion({
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.85 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl max-w-[170px] text-center shadow-lg leading-tight"
+            className="bg-sky-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl max-w-[170px] text-center shadow-lg leading-tight"
           >
             {customText}
           </motion.div>
