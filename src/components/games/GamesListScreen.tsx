@@ -1,11 +1,10 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/GamesListScreen.tsx — v5
+// 🆕 src/components/games/GamesListScreen.tsx — v6
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما تغيّر عن v4:
-//   - استيراد DetectiveGame + ربط المسار
-//
-// لا يلمس أي ملف آخر.
+// ما تغيّر عن v5:
+//   - استيراد FriendsGame
+//   - ربط مسار 'friends'
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect } from 'react';
@@ -14,6 +13,7 @@ import { ArrowRight, Ticket, Lock, Play, Sparkles, Eye } from 'lucide-react';
 import { GAMES, type GameId, type GameMeta } from './gamesData';
 import { FlyingAbacusGame } from './FlyingAbacus/FlyingAbacusGame';
 import { DetectiveGame } from './Detective/DetectiveGame';
+import { FriendsGame } from './Friends/FriendsGame';
 import { HighScoreBadge } from './HighScoreBadge';
 import { useProgressStore, TICKET_COST } from '../../store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
@@ -55,9 +55,11 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
     if (active.gameId === 'flying-abacus') {
       return <FlyingAbacusGame onBack={() => setActive(null)} />;
     }
-
     if (active.gameId === 'detective') {
       return <DetectiveGame onBack={() => setActive(null)} />;
+    }
+    if (active.gameId === 'friends') {
+      return <FriendsGame onBack={() => setActive(null)} />;
     }
 
     return (
@@ -159,19 +161,10 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
 
 // ═══ ماكينة التذاكر (بلا تغيير) ═══
 function TicketMachine({
-  ticketXP,
-  hasTicket,
-  canBuy,
-  progressPct,
-  onBuy,
-  totalXP,
+  ticketXP, hasTicket, canBuy, progressPct, onBuy, totalXP,
 }: {
-  ticketXP: number;
-  hasTicket: boolean;
-  canBuy: boolean;
-  progressPct: number;
-  onBuy: () => void;
-  totalXP: number;
+  ticketXP: number; hasTicket: boolean; canBuy: boolean;
+  progressPct: number; onBuy: () => void; totalXP: number;
 }) {
   return (
     <motion.div
@@ -250,15 +243,9 @@ function TicketMachine({
 
 // ═══ بطاقة لعبة (بلا تغيير) ═══
 function GameCard({
-  game,
-  index,
-  unlocked,
-  onOpen,
+  game, index, unlocked, onOpen,
 }: {
-  game: GameMeta;
-  index: number;
-  unlocked: boolean;
-  onOpen: () => void;
+  game: GameMeta; index: number; unlocked: boolean; onOpen: () => void;
 }) {
   return (
     <motion.div
