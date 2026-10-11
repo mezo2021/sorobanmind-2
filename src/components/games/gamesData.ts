@@ -1,12 +1,9 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/gamesData.ts — v2
+// 🆕 src/components/games/gamesData.ts — v3
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما تغيّر عن v1:
-//   - flying-abacus: building → ready
-//   - detective: building → ready
-//
-// لا يلمس أي ملف موجود · لا يؤثر على الدروس.
+// ما تغيّر عن v2:
+//   - friends: building → ready
 // ═══════════════════════════════════════════════════════════════════
 
 import type { CharacterType } from '../../types';
@@ -40,7 +37,7 @@ export const GAMES: GameMeta[] = [
     gradient: 'from-sky-500 to-blue-700',
     recommendHero: 'rayan',
     duration: '60 ثانية',
-    status: 'ready',      // ✅ مكتمل
+    status: 'ready',
   },
   {
     id: 'detective',
@@ -50,17 +47,17 @@ export const GAMES: GameMeta[] = [
     gradient: 'from-violet-500 to-purple-700',
     recommendHero: 'joud',
     duration: '45 ثانية',
-    status: 'ready',      // ✅ مكتمل
+    status: 'ready',
   },
   {
     id: 'friends',
-    title: 'أصدقاء 5 و 10',
-    subtitle: 'قواعد المكملات باللمس',
-    icon: '🤝',
+    title: 'دوجو السوروبان',
+    subtitle: 'أسرار الجدة 5 والعملاق 10',
+    icon: '🥋',
     gradient: 'from-emerald-500 to-teal-700',
     recommendHero: 'sham',
     duration: '90 ثانية',
-    status: 'building',
+    status: 'ready',      // ✅ مكتمل
   },
   {
     id: 'pirate-race',
