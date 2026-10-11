@@ -528,7 +528,7 @@ export const useProgressStore = create<ProgressState>()(
     }),
     {
       name: "sorobanmind-v2-progress",
-      version: 6,
+      version: 7,
       migrate: (persistedState, version) => {
         const old = (persistedState as Record<string, unknown>) || {};
 
@@ -575,6 +575,17 @@ export const useProgressStore = create<ProgressState>()(
             ...initialState,
             ...old,
             ticketXP: 0,
+            tickets: 0,
+          } as ProgressState;
+        }
+
+        // 🆕 v7 — احتساب XP القديم في رصيد التذاكر (بسقف 20)
+        if (version < 7) {
+          const oldTotalXP = (old.totalXP as number) || 0;
+          return {
+            ...initialState,
+            ...old,
+            ticketXP: Math.min(20, oldTotalXP),
             tickets: 0,
           } as ProgressState;
         }
