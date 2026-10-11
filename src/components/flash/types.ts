@@ -1,27 +1,30 @@
 // src/components/flash/types.ts
 
-export type FlashOperation = 'basics' | 'multiplication' | 'division';
-export type FlashCategoryId = 'basics' | 'div-1' | 'div-2' | 'mult-1' | 'mult-2';
+export type FlashOperation = 'basics' | 'multiplication' | 'division' | 'chains';
+export type FlashCategoryId = 'basics' | 'chains' | 'div-1' | 'div-2' | 'mult-1' | 'mult-2';
 export type FlashLayout = 'single' | 'split';
 export type RodTint = 'red' | 'emerald' | 'amber' | 'white';
+export type MovementType = 'doubleDrop' | 'doubleLift' | 'closedPinch';
 
 export interface FlashStep {
   id: string;
 
-  // ═══ للقسمة والضرب (معدادان) ═══
-  dividendValue?: number;        // المضروب / المقسوم (يسار)
-  resultValue?: number;          // الناتج (يمين)
-  highlightDividend?: number[];  // إضاءة على المضروب/المقسوم
-  highlightResult?: number[];    // إضاءة على الناتج
-  blurDividend?: number[];       // 🆕 أعمدة مطموسة في المضروب/المقسوم
+  // للقسمة والضرب (معدادان)
+  dividendValue?: number;
+  resultValue?: number;
+  highlightDividend?: number[];
+  highlightResult?: number[];
+  blurDividend?: number[];
 
-  // ═══ للأساسيات (معداد واحد) ═══
+  // للأساسيات والسلاسل (معداد واحد)
   sorobanValue?: number;
   activeRodIndex?: number;
   highlightColumns?: number[];
   highlightBeam?: boolean;
+  isFinal?: boolean;
+  movement?: MovementType;
 
-  // ═══ مشترك ═══
+  // مشترك
   badgeLines: string[];
   caption: string;
   ttsText: string;
@@ -36,15 +39,10 @@ export interface FlashLesson {
   category: FlashCategoryId;
   columns: number;
   layout?: FlashLayout;
-
-  // للقسمة والضرب
   resultColumns?: number;
   dividendColumns?: number;
-
-  // 🆕 للضرب
-  multiplicand?: number;   // المضروب (32)
-  multiplier?: number;     // المضروب فيه (11)
-
+  multiplicand?: number;
+  multiplier?: number;
   steps: FlashStep[];
 }
 
