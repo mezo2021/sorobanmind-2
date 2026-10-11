@@ -2,6 +2,7 @@
 // [FIX 7] — فحص المعاينة موحّد عبر الأداة
 // [FIX N69] — عرض درجات الأنزان البصري (متوسط) والسمعي في الأزرار
 // [FIX LK1] — فحص مزدوج لفتح المستوى: completedLevels أو passedLevelTests
+// [FIX LK2] — فتح المستوى المُوصى به من امتحان تحديد المستوى
 
 import { motion } from 'framer-motion';
 import {
@@ -232,9 +233,17 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   // [FIX 7] — استخدام أداة المعاينة
   const inPreview = isPreviewMode();
 
-  // ✅ المستوى يُفتح إذا: كان الأول، أو المستوى السابق مكتملًا
-  const isLevelUnlocked = (_levelId: LevelId, index: number): boolean => {
+  // ✅ المستوى يُفتح إذا:
+  //    - المعاينة مفعّلة
+  //    - أو المستوى مُوصى به من امتحان تحديد المستوى  ← 🆕
+  //    - أو كان الأول
+  //    - أو المستوى السابق مكتمل/مُختبر
+  const isLevelUnlocked = (levelId: LevelId, index: number): boolean => {
     if (inPreview) return true;
+
+    // 🆕 [FIX LK2] — فتح المستوى المُوصى به من امتحان تحديد المستوى
+    if (placement.recommendedLevel === levelId) return true;
+
     if (index === 0) return true;
     const prevLevel = data.levels[index - 1];
     // [FIX LK1] — فحص مزدوج: completedLevels أو passedLevelTests
