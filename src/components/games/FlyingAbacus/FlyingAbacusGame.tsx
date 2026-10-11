@@ -1,22 +1,27 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/FlyingAbacus/FlyingAbacusGame.tsx — v2 Expanded+
+// 🆕 src/components/games/FlyingAbacus/FlyingAbacusGame.tsx — v2 Expanded+ HS
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما تغيّر عن v2 Expanded:
-//   - مكتبات عبارات موسّعة (71 عبارة إجمالاً)
-//   - نظام منع التكرار (usedPhrasesRef)
-//   - عبارات إجابة صحيحة (12 · بصري فقط بلا TTS)
-//   - عبارات نهاية متنوعة (12 · 3 لكل مستوى)
-//   - معالم سلسلة إضافية (9 معالم)
+// ما تغيّر عن v2 Expanded+:
+//   1. استيراد HighScoreBadge + addScore + getHighScore
+//   2. قراءة اسم الطفل + الرقم القياسي
+//   3. عرض HighScoreBadge في شاشة البداية
+//   4. حفظ الرقم عند endGame + كشف الرقم الجديد
+//   5. احتفال في مودال النهاية عند كسر الرقم
 //
-// TTS يُشغَّل في: البدء · الخطأ · معالم السلسلة · النهاية
-// الصح العادي: بصري متنوع فقط (بلا TTS)
+// لا يلمس منطق اللعبة · لا يلمس الواجهة الحالية.
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, RotateCcw, Home } from 'lucide-react';
+import { ArrowRight, RotateCcw, Home, Trophy, Crown } from 'lucide-react';
 import { GameCompanion, type HeroMood } from '../GameCompanion';
+import { HighScoreBadge } from '../HighScoreBadge';
+import {
+  addScore,
+  getHighScore,
+  type HighScoreEntry,
+} from '../highScoreStore';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useCharacterVoice } from '@/hooks/useCharacterVoice';
 import { useProgressStore } from '@/store/progressStore';
@@ -25,12 +30,12 @@ import type { CharacterType } from '@/types';
 // ═══ ثوابت ═══
 const SESSION_SECONDS = 60;
 const VALID_HEROES: CharacterType[] = ['sham', 'rayan', 'bana', 'joud'];
+const GAME_ID = 'flying-abacus';
 
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 مكتبات العبارات الموسّعة (71 عبارة)
+// مكتبات العبارات (كما هي)
 // ═══════════════════════════════════════════════════════════════════
 
-/** 🚀 عبارات بداية الجولة (10) */
 const START_PHRASES = [
   'مُسْتَعِدٌّ؟ انْطَلِقْ!',
   'هَيَّا يَا بَطَل!',
@@ -44,7 +49,6 @@ const START_PHRASES = [
   'هَيَّا نُثْبِتُ سُرْعَتَنَا!',
 ];
 
-/** 💭 عبارات التفكير (بصرية فقط — 8) */
 const THINKING_PHRASES = [
   'رَكِّزْ جَيِّداً...',
   'رَاقِبْ بِعِنَايَة...',
@@ -56,7 +60,6 @@ const THINKING_PHRASES = [
   'كُنْ مُنْتَبِهاً...',
 ];
 
-/** ❓ عبارات السؤال (بصرية فقط — 8) */
 const ASK_PHRASES = [
   'مَا هِيَ القِيمَةُ؟',
   'كَمْ تُسَاوِي؟',
@@ -68,7 +71,6 @@ const ASK_PHRASES = [
   'مَا هَذَا الرَّقَم؟',
 ];
 
-/** ✅ عبارات الإجابة الصحيحة (12 · بصرية فقط) */
 const CORRECT_PHRASES = [
   'أَحْسَنْتَ!',
   'جَيِّد!',
@@ -84,7 +86,6 @@ const CORRECT_PHRASES = [
   'رَائِع جِدّاً!',
 ];
 
-/** ❌ عبارات الخطأ (12) */
 const ERROR_PHRASES = [
   'بَسِيطَةٌ، رَكِّزْ!',
   'لَا بَأْسَ، حَاوِلْ مُجَدَّداً!',
@@ -100,7 +101,6 @@ const ERROR_PHRASES = [
   'رَكِّزْ أَكْثَر، أَنْتَ تَقْدِر!',
 ];
 
-/** 🔥 معالم السلسلة (9) */
 const STREAK_PHRASES: Record<number, string> = {
   3: 'ثَلَاثَة! السُّرْعَةُ القُصْوَى!',
   5: 'خَمْسَة! كَفُو!',
@@ -113,7 +113,6 @@ const STREAK_PHRASES: Record<number, string> = {
   25: 'خَمْسَةٌ وَعِشْرُونَ! لَا يُوصَف!',
 };
 
-/** 🏆 عبارات النهاية حسب الأداء (12 · 3 لكل مستوى) */
 const END_PHRASES_HIGH = [
   'مُمْتَاز! أَنْتَ بَطَلٌ حَقِيقِيّ!',
   'رَائِع! أَدَاءٌ خَارِق!',
@@ -135,29 +134,28 @@ const END_PHRASES_NONE = [
   'التَّدْرِيبُ يَصْنَعُ الأَبْطَال!',
 ];
 
-// ═══ 🆕 دوال منع التكرار ═══
-
-/**
- * اختيار عبارة عشوائية غير مستخدمة — لا تكرار حتى استنفاد المكتبة
- */
-function pickUniquePhrase(
-  phrases: string[],
-  used: Set<string>,
-): string {
+// ═══ 🆕 دوال مساعدة ═══
+function pickUniquePhrase(phrases: string[], used: Set<string>): string {
   const available = phrases.filter((p) => !used.has(p));
-
   if (available.length === 0) {
-    // استنفدنا المكتبة → صفّر · وابدأ من جديد
     used.clear();
     return phrases[Math.floor(Math.random() * phrases.length)];
   }
-
   const picked = available[Math.floor(Math.random() * available.length)];
   used.add(picked);
   return picked;
 }
 
-// ═══ أنواع ═══
+function readChildName(): string {
+  if (typeof window === 'undefined') return 'بطل';
+  try {
+    return localStorage.getItem('soroban_child_name')?.trim() || 'بطل';
+  } catch {
+    return 'بطل';
+  }
+}
+
+// ═══ الأنواع ═══
 interface Problem {
   id: number;
   value: number;
@@ -274,25 +272,32 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
   const { speak } = useCharacterVoice(heroId);
   const addXP = useProgressStore((s) => s.addXP);
 
+  // حالة الجلسة
   const [sessionTimeLeft, setSessionTimeLeft] = useState(SESSION_SECONDS);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
 
+  // حالة المسألة
   const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
   const [isAbacusVisible, setIsAbacusVisible] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
+  // حالة البطل
   const [streak, setStreak] = useState(0);
   const [isGoldMode, setIsGoldMode] = useState(false);
   const [heroMood, setHeroMood] = useState<HeroMood>('idle');
   const [heroText, setHeroText] = useState('مُسْتَعِدٌّ لِلتَّحَدِّي؟');
 
+  // نتائج
   const [correctCount, setCorrectCount] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
 
-  const usedValuesRef = useRef<Set<number>>(new Set());
+  // 🆕 الرقم القياسي
+  const [childName] = useState<string>(readChildName);
+  const [previousHigh, setPreviousHigh] = useState<HighScoreEntry | null>(null);
+  const [isNewRecord, setIsNewRecord] = useState(false);
 
-  // 🆕 مجموعات منع التكرار لكل فئة
+  const usedValuesRef = useRef<Set<number>>(new Set());
   const usedStartRef = useRef<Set<string>>(new Set());
   const usedThinkingRef = useRef<Set<string>>(new Set());
   const usedAskRef = useRef<Set<string>>(new Set());
@@ -301,17 +306,16 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
   const usedEndRef = useRef<Set<string>>(new Set());
 
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-
   const addTimeout = useCallback((fn: () => void, ms: number) => {
     const id = setTimeout(fn, ms);
     timeoutsRef.current.push(id);
   }, []);
-
   const clearAllTimeouts = useCallback(() => {
     timeoutsRef.current.forEach((id) => clearTimeout(id));
     timeoutsRef.current = [];
   }, []);
 
+  // تنظيف
   useEffect(() => {
     return () => {
       clearAllTimeouts();
@@ -321,6 +325,12 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     };
   }, [clearAllTimeouts]);
 
+  // 🆕 قراءة الرقم القياسي عند الدخول
+  useEffect(() => {
+    setPreviousHigh(getHighScore(GAME_ID));
+  }, []);
+
+  // مؤقت
   useEffect(() => {
     if (!isPlaying || isGameOver) return;
     const timer = setInterval(() => {
@@ -329,6 +339,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     return () => clearInterval(timer);
   }, [isPlaying, isGameOver]);
 
+  // نهاية
   useEffect(() => {
     if (sessionTimeLeft === 0 && isPlaying && !isGameOver) {
       // eslint-disable-next-line no-use-before-define
@@ -337,19 +348,17 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionTimeLeft, isPlaying, isGameOver]);
 
-  // ═══ بدء مسألة جديدة ═══
+  // بدء مسألة
   const startNextProblem = useCallback((elapsed: number) => {
     const problem = generateProblem(elapsed, usedValuesRef.current);
     setCurrentProblem(problem);
     setSelectedAnswer(null);
     setIsAbacusVisible(true);
     setHeroMood('thinking');
-    // 🆕 عبارة تفكير فريدة (بصرية فقط)
     setHeroText(pickUniquePhrase(THINKING_PHRASES, usedThinkingRef.current));
 
     addTimeout(() => {
       setIsAbacusVisible(false);
-      // 🆕 عبارة سؤال فريدة (بصرية فقط)
       setHeroText(pickUniquePhrase(ASK_PHRASES, usedAskRef.current));
     }, problem.showMs);
   }, [addTimeout]);
@@ -365,26 +374,32 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     setXpEarned(earned);
     addXP(earned);
 
-    // 🆕 اختيار مكتبة النهاية حسب الأداء
-    const endPool =
-      correctCount >= 15 ? END_PHRASES_HIGH
-      : correctCount >= 10 ? END_PHRASES_MID
-      : correctCount >= 5 ? END_PHRASES_LOW
-      : END_PHRASES_NONE;
+    // 🆕 حفظ الرقم القياسي
+    const recordResult = addScore(GAME_ID, childName, correctCount, heroId);
+    if (recordResult.isNewRecord) {
+      setIsNewRecord(true);
+      setPreviousHigh(recordResult.previousTop);
+      speak('رَقَمٌ قِيَاسِيٌّ جَدِيد!');
+    } else {
+      setIsNewRecord(false);
+      const endPool =
+        correctCount >= 15 ? END_PHRASES_HIGH
+        : correctCount >= 10 ? END_PHRASES_MID
+        : correctCount >= 5 ? END_PHRASES_LOW
+        : END_PHRASES_NONE;
+      const endMsg = pickUniquePhrase(endPool, usedEndRef.current);
+      setHeroText(endMsg);
+      speak(endMsg);
+    }
 
-    const endMsg = pickUniquePhrase(endPool, usedEndRef.current);
     setHeroMood('celebrating');
-    setHeroText(endMsg);
-    speak(endMsg);
-
     vibrate([0, 40, 40, 40, 40, 80]);
-  }, [correctCount, addXP, speak, clearAllTimeouts]);
+  }, [correctCount, addXP, speak, clearAllTimeouts, childName, heroId]);
 
-  // ═══ بدء اللعبة ═══
+  // بدء اللعبة
   const handleStartGame = useCallback(() => {
     clearAllTimeouts();
     usedValuesRef.current = new Set();
-    // 🆕 تصفير مجموعات العبارات
     usedStartRef.current = new Set();
     usedThinkingRef.current = new Set();
     usedAskRef.current = new Set();
@@ -394,6 +409,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
 
     setIsPlaying(true);
     setIsGameOver(false);
+    setIsNewRecord(false);
     setSessionTimeLeft(SESSION_SECONDS);
     setCorrectCount(0);
     setXpEarned(0);
@@ -401,7 +417,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     setIsGoldMode(false);
     setHeroMood('excited');
 
-    // 🆕 عبارة بدء فريدة
     const startMsg = pickUniquePhrase(START_PHRASES, usedStartRef.current);
     setHeroText(startMsg);
     speak(startMsg);
@@ -412,7 +427,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     }, 1200);
   }, [addTimeout, startNextProblem, speak, clearAllTimeouts]);
 
-  // ═══ معالجة الإجابة ═══
+  // معالجة الإجابة
   const handleAnswer = useCallback((ans: number) => {
     if (selectedAnswer !== null || isAbacusVisible || !currentProblem) return;
     setSelectedAnswer(ans);
@@ -429,7 +444,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
       const milestone = STREAK_PHRASES[newStreak];
 
       if (milestone) {
-        // 🆕 معلم سلسلة — نص + TTS
         setHeroText(milestone);
         speak(milestone);
 
@@ -441,7 +455,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
           setHeroMood('celebrating');
         }
       } else {
-        // ✅ إجابة صحيحة عادية — نص فريد (بصري فقط · بلا TTS)
         const correctMsg = pickUniquePhrase(CORRECT_PHRASES, usedCorrectRef.current);
         setHeroText(correctMsg);
         if (!isGoldMode) setHeroMood('celebrating');
@@ -456,7 +469,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
       setIsGoldMode(false);
       setHeroMood('sad');
 
-      // 🆕 عبارة خطأ فريدة + TTS
       const errMsg = pickUniquePhrase(ERROR_PHRASES, usedErrorRef.current);
       setHeroText(errMsg);
       speak(errMsg);
@@ -477,7 +489,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     speak,
   ]);
 
-  // ═══ إعادة اللعب ═══
+  // إعادة اللعب
   const handleReplay = useCallback(() => {
     const state = useProgressStore.getState();
     if (state.tickets >= 1) {
@@ -492,7 +504,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     }
   }, [handleStartGame, onBack]);
 
-  // ═══ render ═══
   return (
     <div
       dir="rtl"
@@ -526,14 +537,14 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
 
       {/* ═══ شاشة البداية ═══ */}
       {!isPlaying && !isGameOver && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-8 p-6">
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 p-6">
           <motion.div
             initial={{ scale: 0, rotate: -180, opacity: 0 }}
             animate={{ scale: 1, rotate: 0, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 260, damping: 16 }}
             className="flex flex-col items-center gap-4"
           >
-            <div className="w-28 h-28 rounded-full bg-sky-500/20 border-2 border-sky-400 flex items-center justify-center text-6xl shadow-2xl shadow-sky-500/30">
+            <div className="w-24 h-24 rounded-full bg-sky-500/20 border-2 border-sky-400 flex items-center justify-center text-5xl shadow-2xl shadow-sky-500/30">
               🛸
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-sky-400 text-center">
@@ -543,6 +554,9 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
               اقْرَأْ قِيمَةَ المِعْدَادِ قَبْلَ أَنْ يَخْتَفِيَ!
             </p>
           </motion.div>
+
+          {/* 🆕 الرقم القياسي */}
+          <HighScoreBadge gameId={GAME_ID} variant="full" />
 
           <motion.button
             initial={{ opacity: 0, y: 20 }}
@@ -665,37 +679,123 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
               initial={{ scale: 0.85, y: 30 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: 'spring', stiffness: 240, damping: 22 }}
-              className="w-full max-w-sm bg-slate-800 border border-slate-700 rounded-3xl p-6 text-center shadow-2xl flex flex-col items-center gap-4"
+              className={`w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl flex flex-col items-center gap-4 border-2 ${
+                isNewRecord
+                  ? 'bg-gradient-to-br from-amber-900/40 via-slate-800 to-amber-900/40 border-amber-400/70'
+                  : 'bg-slate-800 border-slate-700'
+              }`}
             >
-              <div className="text-5xl">🏆</div>
-              <h2 className="text-2xl font-black text-sky-400">
-                انْتَهَى التَّحَدِّي!
-              </h2>
+              {/* الأيقونة */}
+              {isNewRecord ? (
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 15 }}
+                  className="relative"
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="text-5xl"
+                  >
+                    🏆
+                  </motion.div>
+                  <motion.div
+                    animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 1.5] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="absolute inset-0 rounded-full bg-amber-400/30 blur-xl"
+                  />
+                </motion.div>
+              ) : (
+                <div className="text-5xl">🏆</div>
+              )}
 
-              <div className="w-full bg-slate-900/80 rounded-2xl border border-slate-700/50 p-4 flex flex-col gap-2">
-                <p className="text-slate-400 text-xs">اللَّقَبُ:</p>
-                <p className="text-amber-400 font-black text-lg">
-                  {getTitleForScore(correctCount)}
-                </p>
-                <div className="h-px bg-slate-700/50 my-1" />
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-400">الإِجَابَاتُ الصَّحِيحَةُ:</span>
-                  <span className="text-emerald-400 font-bold text-base tabular-nums">
-                    {correctCount}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-400">طَاقَةُ XP:</span>
-                  <span className="text-amber-400 font-bold text-base tabular-nums">
-                    +{xpEarned} XP
-                  </span>
-                </div>
-              </div>
+              {/* العنوان */}
+              {isNewRecord ? (
+                <>
+                  <h2 className="text-2xl font-black text-amber-300">
+                    🎉 رَقَمٌ قِيَاسِيٌّ جَدِيد!
+                  </h2>
 
+                  {/* مقارنة */}
+                  <div className="w-full bg-slate-900/80 rounded-2xl border border-amber-400/30 p-4 flex flex-col gap-2">
+                    {previousHigh && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-slate-400 flex items-center gap-1.5">
+                          <Crown className="w-3.5 h-3.5 text-slate-400" />
+                          كُنْتَ:
+                        </span>
+                        <span className="text-slate-300 font-bold tabular-nums">
+                          {previousHigh.value} ({previousHigh.name})
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-base">
+                      <span className="text-amber-300 flex items-center gap-1.5 font-bold">
+                        <Trophy className="w-4 h-4" />
+                        الآن:
+                      </span>
+                      <span className="text-amber-300 font-black text-lg tabular-nums">
+                        {correctCount} ({childName})
+                      </span>
+                    </div>
+                    <div className="h-px bg-amber-400/30 my-1" />
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-400">طَاقَةُ XP:</span>
+                      <span className="text-amber-400 font-bold tabular-nums">
+                        +{xpEarned} XP
+                      </span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-black text-sky-400">
+                    انْتَهَى التَّحَدِّي!
+                  </h2>
+
+                  <div className="w-full bg-slate-900/80 rounded-2xl border border-slate-700/50 p-4 flex flex-col gap-2">
+                    <p className="text-slate-400 text-xs">اللَّقَبُ:</p>
+                    <p className="text-amber-400 font-black text-lg">
+                      {getTitleForScore(correctCount)}
+                    </p>
+                    <div className="h-px bg-slate-700/50 my-1" />
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-400">الإِجَابَاتُ الصَّحِيحَةُ:</span>
+                      <span className="text-emerald-400 font-bold text-base tabular-nums">
+                        {correctCount}
+                      </span>
+                    </div>
+                    {previousHigh && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-slate-400 flex items-center gap-1.5">
+                          <Trophy className="w-3.5 h-3.5 text-amber-300" />
+                          الرَّقَمُ:
+                        </span>
+                        <span className="text-amber-300 font-bold tabular-nums">
+                          {previousHigh.value} ({previousHigh.name})
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-400">طَاقَةُ XP:</span>
+                      <span className="text-amber-400 font-bold text-base tabular-nums">
+                        +{xpEarned} XP
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* الأزرار */}
               <div className="flex flex-col gap-3 w-full mt-1">
                 <button
                   onClick={handleReplay}
-                  className="w-full bg-sky-500 hover:bg-sky-400 text-white font-bold py-3 rounded-xl shadow-lg shadow-sky-500/20 active:scale-95 transition flex items-center justify-center gap-2"
+                  className={`w-full font-bold py-3 rounded-xl active:scale-95 transition flex items-center justify-center gap-2 ${
+                    isNewRecord
+                      ? 'bg-gradient-to-l from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600 text-white shadow-lg shadow-amber-500/30'
+                      : 'bg-sky-500 hover:bg-sky-400 text-white shadow-lg shadow-sky-500/20'
+                  }`}
                   style={{ touchAction: 'manipulation' }}
                 >
                   <RotateCcw className="w-4 h-4" />
