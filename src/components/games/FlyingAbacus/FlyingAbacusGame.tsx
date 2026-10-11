@@ -1,20 +1,23 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/FlyingAbacus/FlyingAbacusGame.tsx — v3.2
+// 🆕 src/components/games/FlyingAbacus/FlyingAbacusGame.tsx — v2 (نسخة مستقرة)
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما تغيّر عن v3.1 (إصلاح الأداء الثقيل):
-//   1. ❌ إزالة Ghost تماماً (كان يخلق Soroban2D5 مزدوجاً = كارثة أداء)
-//   2. ✅ تثبيت Soroban2D5 — لا يُعاد mount مع كل سؤال (useAnimate imperative)
-//   3. ✅ Placeholder مدمج · لا AnimatePresence mode="wait" للعداد
-//   4. ✅ Spring أخف (300/24 بدل 500/30)
-//   5. ✅ إزاحة أصغر (±30/40)
+// ما في هذه النسخة:
+//   - لا Trajectory عشوائي (ظهور ثابت من الأسفل)
+//   - لا Ghost
+//   - لا Gold Atmosphere Shift (فقط لون الخرزات)
+//   - لا Sparkles
+//   - لا Speed Medal
+//   - ✅ حجم المعداد مُصلَح (scale أصغر)
+//   - ✅ تتبع الأرقام المستخدمة
+//   - ✅ نطاقات موسّعة
 //
-// النتيجة: أخف بكثير على الموبايل · نفس الجمال · بلا jank
+// هذه هي النسخة المستقرة · المختبرة · التي تعمل بسلاسة.
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence, useAnimate } from 'framer-motion';
-import { ArrowRight, RotateCcw, Home, Zap, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, RotateCcw, Home } from 'lucide-react';
 import { GameCompanion, type HeroMood } from '../GameCompanion';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useCharacterVoice } from '@/hooks/useCharacterVoice';
@@ -24,7 +27,6 @@ import type { CharacterType } from '@/types';
 // ═══ ثوابت ═══
 const SESSION_SECONDS = 60;
 const VALID_HEROES: CharacterType[] = ['sham', 'rayan', 'bana', 'joud'];
-type TrajectoryDirection = 'top' | 'left' | 'right' | 'bottom';
 
 // ═══ أنواع ═══
 interface Problem {
@@ -32,7 +34,6 @@ interface Problem {
   value: number;
   options: number[];
   showMs: number;
-  direction: TrajectoryDirection;
 }
 
 interface FlyingAbacusGameProps {
@@ -114,21 +115,18 @@ function generateProblem(elapsedSec: number, used: Set<number>): Problem {
   }
 
   const options = Array.from(set).slice(0, 3).sort(() => Math.random() - 0.5);
-  const directions: TrajectoryDirection[] = ['top', 'left', 'right', 'bottom'];
-  const direction = directions[Math.floor(Math.random() * directions.length)];
 
   return {
     id: Date.now() + Math.random(),
     value,
     options,
     showMs,
-    direction,
   };
 }
 
 function getTitleForScore(correct: number): string {
-  if (correct >= 15) return '⚡ برق السوروبان الخارق';
-  if (correct >= 10) return '🌟 نجم العداد السريع';
+  if (correct >= 15) return '⚡ برق السوروبان';
+  if (correct >= 10) return '🌟 نجم العداد';
   if (correct >= 5) return '🔍 الباحث الذكي';
   return '🌱 البطل الصاعد';
 }
@@ -147,31 +145,19 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
   const { speak } = useCharacterVoice(heroId);
   const addXP = useProgressStore((s) => s.addXP);
 
-  // 🆕 imperative animation للعداد (لا يُعاد mount)
-  const [abacusScope, animateAbacus] = useAnimate();
-
-  // حالة الجلسة
   const [sessionTimeLeft, setSessionTimeLeft] = useState(SESSION_SECONDS);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
 
-  // حالة المسألة
   const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
   const [isAbacusVisible, setIsAbacusVisible] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showSparkles, setShowSparkles] = useState(false);
 
-  // تتبع سرعة الاستجابة
-  const problemStartTimeRef = useRef<number>(0);
-  const totalResponseTimeRef = useRef<number>(0);
-
-  // حالة البطل
   const [streak, setStreak] = useState(0);
   const [isGoldMode, setIsGoldMode] = useState(false);
   const [heroMood, setHeroMood] = useState<HeroMood>('idle');
   const [heroText, setHeroText] = useState('مُسْتَعِدٌّ لِلتَّحَدِّي؟');
 
-  // نتائج
   const [correctCount, setCorrectCount] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
 
@@ -213,66 +199,20 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionTimeLeft, isPlaying, isGameOver]);
 
-  // 🆕 إزاحة أصغر — أخف
-  const getInitialTrajectory = (dir?: TrajectoryDirection) => {
-    switch (dir) {
-      case 'top': return { y: -30, x: 0 };
-      case 'left': return { x: -40, y: 0 };
-      case 'right': return { x: 40, y: 0 };
-      case 'bottom':
-      default: return { y: 30, x: 0 };
-    }
-  };
-
-  // 🆕 Animate abacus imperatively — لا remount
-  useEffect(() => {
-    if (!abacusScope.current) return;
-
-    if (isAbacusVisible && currentProblem) {
-      const start = getInitialTrajectory(currentProblem.direction);
-
-      // 1. ضع الحالة الابتدائية بلا أنيميشن
-      animateAbacus(
-        abacusScope.current,
-        { x: start.x, y: start.y, opacity: 0, scale: 0.85 },
-        { duration: 0 }
-      );
-
-      // 2. أنيميشن إلى الظهور
-      animateAbacus(
-        abacusScope.current,
-        { x: 0, y: 0, opacity: 1, scale: 1 },
-        { type: 'spring', stiffness: 300, damping: 24 }
-      );
-    } else {
-      // إخفاء
-      animateAbacus(
-        abacusScope.current,
-        { x: 0, y: 0, opacity: 0, scale: 0.85 },
-        { duration: 0.18 }
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAbacusVisible, currentProblem?.id, animateAbacus, abacusScope]);
-
-  // ═══ بدء مسألة جديدة ═══
   const startNextProblem = useCallback((elapsed: number) => {
     const problem = generateProblem(elapsed, usedValuesRef.current);
     setCurrentProblem(problem);
     setSelectedAnswer(null);
     setIsAbacusVisible(true);
-    setShowSparkles(false);
     setHeroMood('thinking');
     setHeroText('رَكِّزْ جَيِّداً...');
 
     addTimeout(() => {
       setIsAbacusVisible(false);
-      problemStartTimeRef.current = Date.now();
       setHeroText('مَا هِيَ القِيمَةُ؟');
     }, problem.showMs);
   }, [addTimeout]);
 
-  // ═══ إنهاء اللعبة ═══
   const endGame = useCallback(() => {
     setIsGameOver(true);
     setIsPlaying(false);
@@ -290,11 +230,9 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     vibrate([0, 40, 40, 40, 40, 80]);
   }, [correctCount, addXP, speak, clearAllTimeouts]);
 
-  // ═══ بدء اللعبة ═══
   const handleStartGame = useCallback(() => {
     clearAllTimeouts();
     usedValuesRef.current = new Set();
-    totalResponseTimeRef.current = 0;
     setIsPlaying(true);
     setIsGameOver(false);
     setSessionTimeLeft(SESSION_SECONDS);
@@ -311,10 +249,9 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
 
     addTimeout(() => {
       startNextProblem(0);
-    }, 900);
+    }, 1200);
   }, [addTimeout, startNextProblem, speak, clearAllTimeouts]);
 
-  // ═══ معالجة الإجابة ═══
   const handleAnswer = useCallback((ans: number) => {
     if (selectedAnswer !== null || isAbacusVisible || !currentProblem) return;
     setSelectedAnswer(ans);
@@ -324,13 +261,9 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
 
     if (isCorrect) {
       vibrate(30);
-      setShowSparkles(true);
       const newStreak = streak + 1;
       setStreak(newStreak);
       setCorrectCount((c) => c + 1);
-
-      const responseTimeSec = (Date.now() - problemStartTimeRef.current) / 1000;
-      totalResponseTimeRef.current += responseTimeSec;
 
       if (newStreak === 3 && !isGoldMode) {
         setIsGoldMode(true);
@@ -347,7 +280,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
 
       addTimeout(() => {
         startNextProblem(elapsedNow);
-      }, 400);
+      }, 650);
     } else {
       vibrate([0, 40, 40, 40]);
       setStreak(0);
@@ -358,7 +291,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
 
       addTimeout(() => {
         startNextProblem(elapsedNow);
-      }, 750);
+      }, 1000);
     }
   }, [
     selectedAnswer,
@@ -386,18 +319,10 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     }
   }, [handleStartGame, onBack]);
 
-  const avgSpeed = correctCount > 0
-    ? (totalResponseTimeRef.current / correctCount).toFixed(1)
-    : '0';
-
   return (
     <div
       dir="rtl"
-      className={`min-h-screen flex flex-col select-none transition-colors duration-700 text-white ${
-        isGoldMode
-          ? 'bg-gradient-to-b from-amber-950 via-slate-900 to-amber-950'
-          : 'bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900'
-      }`}
+      className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col select-none"
       style={{ touchAction: 'manipulation' }}
     >
       {/* ═══ الرأس ═══ */}
@@ -461,59 +386,61 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
       {/* ═══ منطقة اللعب ═══ */}
       {isPlaying && (
         <div className="flex-1 flex flex-col items-center justify-around gap-4 px-4 py-6">
-          {/* منطقة المعداد — مُحسَّنة */}
-          <div className="flex items-center justify-center min-h-[260px] w-full relative">
-            {/* Placeholder (خلف · يُخفى بلطف) */}
-            <div
-              className={`absolute transition-opacity duration-200 ${
-                isAbacusVisible ? 'opacity-0' : 'opacity-100'
-              }`}
-            >
-              <div className="w-36 h-36 rounded-3xl bg-slate-800/50 border-2 border-dashed border-slate-600 flex items-center justify-center">
-                <span className="text-5xl text-sky-400 animate-bounce">❓</span>
-              </div>
-            </div>
-
-            {/* المعداد (دائم الوجود · يُحفَّز بـ useAnimate) */}
-            <div
-              ref={abacusScope}
-              className={`p-3 rounded-2xl transition-all duration-300 ${
-                isGoldMode
-                  ? 'bg-amber-950/40 border-2 border-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.7)] animate-pulse'
-                  : 'bg-slate-800/80 border border-slate-700 shadow-xl'
-              }`}
-              style={{ opacity: 0 }}
-            >
-              <Soroban2D5
-                columns={3}
-                size="sm"
-                autoBeadSize
-                demoValue={currentProblem?.value ?? 0}
-                interactive={false}
-                showValue={false}
-                hideTitle
-                rodTint={isGoldMode ? 'amber' : 'white'}
-              />
-            </div>
+          {/* منطقة المعداد — مع إصلاح الحجم */}
+          <div className="flex items-center justify-center h-52 w-full">
+            <AnimatePresence mode="wait">
+              {isAbacusVisible && currentProblem ? (
+                <motion.div
+                  key={`abacus-${currentProblem.id}`}
+                  initial={{ y: 30, opacity: 0, scale: 0.9 }}
+                  animate={{ y: 0, opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.15 } }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                  className={`rounded-2xl origin-center ${isGoldMode ? 'ring-2 ring-amber-400' : ''}`}
+                  style={{ transform: 'scale(0.62)' }}
+                >
+                  <Soroban2D5
+                    columns={3}
+                    size="sm"
+                    autoBeadSize
+                    demoValue={currentProblem.value}
+                    interactive={false}
+                    showValue={false}
+                    hideTitle
+                    rodTint={isGoldMode ? 'amber' : 'white'}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="hidden"
+                  initial={{ scale: 0.85, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-32 h-32 rounded-3xl bg-slate-800/50 border-2 border-dashed border-slate-600 flex items-center justify-center"
+                >
+                  <span className="text-4xl text-sky-400 animate-bounce">❓</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* منطقة الأزرار */}
-          <div className="w-full max-w-sm min-h-[80px] flex items-center justify-center relative">
+          <div className="w-full max-w-sm min-h-[80px] flex items-center justify-center">
             <AnimatePresence mode="wait">
               {!isAbacusVisible && currentProblem ? (
                 <motion.div
                   key={`options-${currentProblem.id}`}
-                  initial={{ opacity: 0, y: 8 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                  transition={{ duration: 0.15 }}
-                  className="flex flex-row gap-4 w-full justify-center relative"
+                  transition={{ duration: 0.18 }}
+                  className="flex flex-row gap-4 w-full justify-center"
                 >
                   {currentProblem.options.map((opt) => {
                     const isSelected = selectedAnswer === opt;
                     const isCorrect = opt === currentProblem.value;
                     let cls =
-                      'flex-1 h-16 rounded-2xl font-black text-2xl text-white border-2 shadow-lg active:scale-95 transition flex items-center justify-center relative';
+                      'flex-1 h-16 rounded-2xl font-black text-2xl text-white border-2 shadow-lg active:scale-95 transition flex items-center justify-center';
                     if (isSelected) {
                       cls += isCorrect
                         ? ' bg-emerald-500 border-emerald-300 shadow-emerald-500/50 scale-110'
@@ -531,18 +458,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                         style={{ touchAction: 'manipulation' }}
                       >
                         {opt}
-
-                        {isSelected && isCorrect && showSparkles && (
-                          <motion.div
-                            initial={{ scale: 0, y: 0, opacity: 1 }}
-                            animate={{ scale: 1.4, y: -40, opacity: 0 }}
-                            transition={{ duration: 0.5 }}
-                            className="absolute -top-6 text-amber-300 font-extrabold text-sm flex items-center gap-0.5 pointer-events-none"
-                          >
-                            <Sparkles className="w-5 h-5 fill-amber-300" />
-                            {streak >= 3 ? `+${streak}x` : '✨'}
-                          </motion.div>
-                        )}
                       </button>
                     );
                   })}
@@ -552,7 +467,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                   key="wait"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.15 }}
                   className="text-slate-500 italic text-sm"
                 >
                   رَاقِبِ المِعْدَادَ جَيِّداً...
@@ -594,13 +508,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                   <span className="text-slate-400">الإِجَابَاتُ الصَّحِيحَةُ:</span>
                   <span className="text-emerald-400 font-bold text-base tabular-nums">
                     {correctCount}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-400">مُعَدَّلُ السُّرْعَةِ:</span>
-                  <span className="text-sky-300 font-bold text-sm flex items-center gap-1 tabular-nums">
-                    <Zap className="w-3.5 h-3.5 fill-sky-300" />
-                    {avgSpeed} ث/مسألة
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
