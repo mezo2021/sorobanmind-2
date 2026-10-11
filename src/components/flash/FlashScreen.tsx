@@ -230,7 +230,8 @@ function SplitView({
       {/* 🔴 المضروب/المقسوم (يسار) */}
       <div className="flex-1 min-w-0 flex flex-col items-center">
         <div className="flex items-center gap-1.5 text-[11px] text-rose-300 font-bold mb-0.5">
-          <span>🔴</span><span>المضروب</span>
+          <span>🔴</span>
+          <span>{lesson.operation === 'multiplication' ? 'المضروب' : 'المقسوم'}</span>
         </div>
         <div className="px-4 py-1 rounded-lg bg-rose-500/25 border border-rose-400/50 text-rose-50 font-mono font-black text-lg tabular-nums mb-1.5 min-w-[70px] text-center">
           {toAr(dividendValue)}
