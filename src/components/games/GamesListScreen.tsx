@@ -1,12 +1,11 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/GamesListScreen.tsx — v4
+// 🆕 src/components/games/GamesListScreen.tsx — v5
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما تغيّر عن v3:
-//   - استيراد HighScoreBadge
-//   - عرض الرقم القياسي (compact) في بطاقة كل لعبة
+// ما تغيّر عن v4:
+//   - استيراد DetectiveGame + ربط المسار
 //
-// لا يلمس أي ملف خارج games/.
+// لا يلمس أي ملف آخر.
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect } from 'react';
@@ -14,6 +13,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Ticket, Lock, Play, Sparkles, Eye } from 'lucide-react';
 import { GAMES, type GameId, type GameMeta } from './gamesData';
 import { FlyingAbacusGame } from './FlyingAbacus/FlyingAbacusGame';
+import { DetectiveGame } from './Detective/DetectiveGame';
 import { HighScoreBadge } from './HighScoreBadge';
 import { useProgressStore, TICKET_COST } from '../../store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
@@ -36,22 +36,17 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
   const buyTicket = useProgressStore((s) => s.buyTicket);
   const consumeTicket = useProgressStore((s) => s.consumeTicket);
 
-  // فحص المعاينة عند التحميل
   useEffect(() => {
     setPreview(isPreviewMode());
   }, []);
 
-  // في المعاينة: كل الألعاب مفتوحة
   const hasTicket = preview ? true : tickets >= 1;
   const canBuy = preview ? false : !hasTicket && ticketXP >= TICKET_COST;
   const progressPct = Math.min(100, (ticketXP / TICKET_COST) * 100);
 
   const handleOpenGame = (game: GameMeta) => {
     if (!hasTicket) return;
-    // في المعاينة: لا نستهلك تذكرة
-    if (!preview) {
-      consumeTicket();
-    }
+    if (!preview) consumeTicket();
     setActive({ kind: 'game', gameId: game.id });
   };
 
@@ -59,6 +54,10 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
   if (active?.kind === 'game') {
     if (active.gameId === 'flying-abacus') {
       return <FlyingAbacusGame onBack={() => setActive(null)} />;
+    }
+
+    if (active.gameId === 'detective') {
+      return <DetectiveGame onBack={() => setActive(null)} />;
     }
 
     return (
@@ -158,10 +157,7 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// 🎟️ ماكينة التذاكر
-// ═══════════════════════════════════════════════════════════════════
-
+// ═══ ماكينة التذاكر (بلا تغيير) ═══
 function TicketMachine({
   ticketXP,
   hasTicket,
@@ -252,10 +248,7 @@ function TicketMachine({
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// 🎮 بطاقة لعبة
-// ═══════════════════════════════════════════════════════════════════
-
+// ═══ بطاقة لعبة (بلا تغيير) ═══
 function GameCard({
   game,
   index,
@@ -295,7 +288,6 @@ function GameCard({
             <p className="text-[10px] text-amber-300/80">
               ⏱️ {game.duration}
             </p>
-            {/* 🆕 الرقم القياسي */}
             <HighScoreBadge gameId={game.id} variant="compact" />
           </div>
         </div>
