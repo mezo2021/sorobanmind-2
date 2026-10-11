@@ -1,23 +1,15 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/FlyingAbacus/FlyingAbacusGame.tsx
+// 🆕 src/components/games/FlyingAbacus/FlyingAbacusGame.tsx — v2
 // ═══════════════════════════════════════════════════════════════════
 //
-// لعبة العداد الطائر — v1
+// ما تغيّر عن v1:
+//   1. تتبّع الأرقام المستخدمة في الجلسة (usedValuesRef)
+//   2. توسيع نطاقات المراحل (تنوع أعلى)
+//   3. اختيار ذكي للأرقام (بلا تكرار داخل المرحلة)
+//   4. خيارات خاطئة قريبة من الصحيح (±1 إلى ±5)
+//   5. تصفير المجموعة في بداية كل جلسة
 //
-// ما تفعله:
-//   - 60 ثانية · منحنى W-Shape
-//   - Hook spring + صوت البطل
-//   - Gold Mode (3 صح متتالي)
-//   - نظام طبقات الكلام (5-6 مرات فقط)
-//   - اهتزاز Android
-//   - مكافأة XP (2-5)
-//   - لقب ديناميكي
-//
-// تعتمد على:
-//   - Soroban2D5 (demoValue · interactive=false)
-//   - GameCompanion (بصري)
-//   - useCharacterVoice (TTS)
-//   - useProgressStore (XP · التذاكر)
+// الواجهة العامة ثابتة — لا يلمس أي مستخدم.
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -67,36 +59,94 @@ function readSelectedHero(): CharacterType {
 }
 
 /**
- * توليد مسألة حسب منحنى W-Shape
+ * تحديد النطاق والزمن حسب منحنى W-Shape (v2 — نطاقات أوسع)
  */
-function generateProblem(elapsedSec: number): Problem {
-  let value: number;
-  let showMs: number;
-
+function getPhaseConfig(elapsedSec: number): {
+  minVal: number;
+  maxVal: number;
+  showMs: number;
+} {
   if (elapsedSec <= 10) {
-    value = Math.floor(Math.random() * 4) + 2; // 2..5
-    showMs = 1800;
+    // مرحلة 1: بناء الثقة (2-9 · 8 قيم)
+    return { minVal: 2, maxVal: 9, showMs: 1800 };
   } else if (elapsedSec <= 25) {
-    value = Math.floor(Math.random() * 8) + 6; // 6..13
-    showMs = 1200;
+    // مرحلة 2: تسارع (10-29 · 20 قيمة)
+    return { minVal: 10, maxVal: 29, showMs: 1200 };
   } else if (elapsedSec <= 40) {
-    value = Math.floor(Math.random() * 10) + 10; // 10..19
-    showMs = 900;
+    // مرحلة 3: ذروة أولى (30-59 · 30 قيمة)
+    return { minVal: 30, maxVal: 59, showMs: 900 };
   } else if (elapsedSec <= 50) {
-    value = Math.floor(Math.random() * 4) + 4; // 4..7
-    showMs = 1500;
+    // مرحلة 4: استراحة (5-19 · 15 قيمة)
+    return { minVal: 5, maxVal: 19, showMs: 1500 };
   } else {
-    value = Math.floor(Math.random() * 25) + 20; // 20..44
-    showMs = 700;
+    // مرحلة 5: الذروة النهائية (60-99 · 40 قيمة)
+    return { minVal: 60, maxVal: 99, showMs: 700 };
+  }
+}
+
+/**
+ * اختيار قيمة غير مستخدمة من النطاق
+ */
+function pickUnusedValue(
+  minVal: number,
+  maxVal: number,
+  used: Set<number>,
+): number {
+  const range = maxVal - minVal + 1;
+
+  // جرّب 30 مرة لإيجاد قيمة غير مستخدمة
+  for (let i = 0; i < 30; i++) {
+    const candidate = minVal + Math.floor(Math.random() * range);
+    if (!used.has(candidate)) {
+      return candidate;
+    }
   }
 
-  // خيارات (نضمن 3 قيم فريدة)
-  const wrong1 = Math.max(1, value + (Math.random() > 0.5 ? 2 : -3));
-  const wrong2 = Math.max(1, value + (Math.random() > 0.5 ? -2 : 4));
-  const set = new Set([value, wrong1, wrong2]);
-  while (set.size < 3) {
-    set.add(Math.max(1, value + Math.floor(Math.random() * 10) - 5));
+  // استنفدنا النطاق → صفّر هذا النطاق فقط
+  for (let v = minVal; v <= maxVal; v++) {
+    used.delete(v);
   }
+
+  // ارجع قيمة عشوائية جديدة
+  return minVal + Math.floor(Math.random() * range);
+}
+
+/**
+ * توليد خيارات خاطئة قريبة (v2 — أذكى)
+ */
+function generateWrongOptions(correct: number): number[] {
+  const offsets = [-5, -4, -3, -2, -1, 1, 2, 3, 4, 5];
+  const pool = offsets
+    .map((o) => correct + o)
+    .filter((v) => v >= 1 && v <= 99 && v !== correct);
+
+  // خلط عشوائي · اختر 2
+  const shuffled = pool.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 2);
+}
+
+/**
+ * توليد مسألة كاملة حسب منحنى W-Shape + تتبّع المستخدم
+ */
+function generateProblem(elapsedSec: number, used: Set<number>): Problem {
+  const { minVal, maxVal, showMs } = getPhaseConfig(elapsedSec);
+
+  // اختر قيمة غير مستخدمة
+  const value = pickUnusedValue(minVal, maxVal, used);
+  used.add(value);
+
+  // خيارات خاطئة قريبة
+  const wrongs = generateWrongOptions(value);
+
+  // ضمان 3 خيارات فريدة (لأمان المنطق)
+  const set = new Set<number>([value, ...wrongs]);
+  let safety = 0;
+  while (set.size < 3 && safety < 50) {
+    const fallback = Math.max(1, Math.min(99, value + (Math.floor(Math.random() * 10) - 5)));
+    if (fallback !== value) set.add(fallback);
+    safety++;
+  }
+
   const options = Array.from(set).slice(0, 3).sort(() => Math.random() - 0.5);
 
   return {
@@ -129,8 +179,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
 
   // متجر التقدم
   const addXP = useProgressStore((s) => s.addXP);
-  const tickets = useProgressStore((s) => s.tickets);
-  const ticketXP = useProgressStore((s) => s.ticketXP);
 
   // حالة الجلسة
   const [sessionTimeLeft, setSessionTimeLeft] = useState(SESSION_SECONDS);
@@ -151,6 +199,9 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
   // نتيجة
   const [correctCount, setCorrectCount] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
+
+  // 🆕 تتبّع الأرقام المستخدمة في الجلسة
+  const usedValuesRef = useRef<Set<number>>(new Set());
 
   // مراجع (تُنظَّف عند unmount)
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -182,7 +233,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     return () => clearInterval(timer);
   }, [isPlaying, isGameOver]);
 
-  // ═══ مراقبة نهاية الجلسة (خارج setState — لا يسبب anti-pattern) ═══
+  // ═══ مراقبة نهاية الجلسة ═══
   useEffect(() => {
     if (sessionTimeLeft === 0 && isPlaying && !isGameOver) {
       // eslint-disable-next-line no-use-before-define
@@ -193,7 +244,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
 
   // ═══ بدء مسألة جديدة ═══
   const startNextProblem = useCallback((elapsed: number) => {
-    const problem = generateProblem(elapsed);
+    const problem = generateProblem(elapsed, usedValuesRef.current);
     setCurrentProblem(problem);
     setSelectedAnswer(null);
     setIsAbacusVisible(true);
@@ -224,9 +275,11 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     vibrate([0, 40, 40, 40, 40, 80]);
   }, [correctCount, addXP, speak, clearAllTimeouts]);
 
-  // ═══ بدء اللعبة (Hook) ═══
+  // ═══ بدء اللعبة ═══
   const handleStartGame = useCallback(() => {
     clearAllTimeouts();
+    // 🆕 تصفير الأرقام المستخدمة
+    usedValuesRef.current = new Set();
     setIsPlaying(true);
     setIsGameOver(false);
     setSessionTimeLeft(SESSION_SECONDS);
@@ -271,7 +324,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
         speak('كَفُو!');
       } else if (!isGoldMode) {
         setHeroMood('celebrating');
-        // لا نص · لا كلام — فقط حركة
       }
 
       addTimeout(() => {
@@ -301,7 +353,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     speak,
   ]);
 
-  // ═══ إعادة اللعب من المودال ═══
+  // ═══ إعادة اللعب ═══
   const handleReplay = useCallback(() => {
     const state = useProgressStore.getState();
     if (state.tickets >= 1) {
@@ -312,7 +364,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
       useProgressStore.getState().consumeTicket();
       handleStartGame();
     } else {
-      // لا تذكرة · عودة للمدينة
       onBack();
     }
   }, [handleStartGame, onBack]);
@@ -349,7 +400,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
         </div>
       </div>
 
-      {/* ═══ شاشة البداية (Hook) ═══ */}
+      {/* ═══ شاشة البداية ═══ */}
       {!isPlaying && !isGameOver && (
         <div className="flex-1 flex flex-col items-center justify-center gap-8 p-6">
           <motion.div
