@@ -4,9 +4,11 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Play, Film, Sparkles, Hand } from 'lucide-react';
 import { FLASH_CATEGORIES, getFlashLessonById } from './flashData';
 import { MULT_CATEGORIES, getMultLessonById } from './multData';
+import { CHAIN_CATEGORY, getChainLessonById } from './chainsData';
 import { getDivisionProblemById, getProblemIdForLesson } from './sorobanDivisionData';
 import { FlashScreen } from './FlashScreen';
 import { MultSolver } from './MultSolver';
+import { ChainSolver } from './ChainSolver';
 import { TwoAbacusSolver } from './TwoAbacusSolver';
 import type { FlashCategory, FlashLesson } from './types';
 
@@ -18,54 +20,59 @@ interface FlashListScreenProps {
 type ActiveView =
   | { kind: 'flash'; lessonId: string }
   | { kind: 'mult'; lessonId: string }
+  | { kind: 'chain'; lessonId: string }
   | { kind: 'practice'; problemId: string }
   | null;
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
   basics: 'from-emerald-500 to-teal-700',
+  chains: 'from-cyan-500 to-blue-700',
   'div-1': 'from-blue-500 to-indigo-700',
   'div-2': 'from-purple-500 to-violet-700',
   'mult-1': 'from-amber-500 to-orange-700',
   'mult-2': 'from-rose-500 to-red-700',
 };
 
-const ALL_CATEGORIES: FlashCategory[] = [...FLASH_CATEGORIES, ...MULT_CATEGORIES];
+// ⚠️ الترتيب: basics → chains → div → mult
+const ALL_CATEGORIES: FlashCategory[] = [
+  ...FLASH_CATEGORIES.slice(0, 1),   // basics
+  CHAIN_CATEGORY,                     // chains (جديد)
+  ...FLASH_CATEGORIES.slice(1),       // div-1 · div-2
+  ...MULT_CATEGORIES,                 // mult-1 · mult-2
+];
 
 export function FlashListScreen({ onBack }: FlashListScreenProps) {
   const [active, setActive] = useState<ActiveView>(null);
 
-  // ═══ 🎬 شاهد (قسمة أو ضرب) ═══
+  // 🎬 شاهد
   if (active?.kind === 'flash') {
     const lesson =
-      getFlashLessonById(active.lessonId) ?? getMultLessonById(active.lessonId);
+      getFlashLessonById(active.lessonId) ??
+      getMultLessonById(active.lessonId) ??
+      getChainLessonById(active.lessonId);
     if (!lesson) { setActive(null); return null; }
     return <FlashScreen lesson={lesson} onBack={() => setActive(null)} />;
   }
 
-  // ═══ 🖐️ جرّب (ضرب) ═══
+  // 🖐️ جرّب — ضرب
   if (active?.kind === 'mult') {
     const lesson = getMultLessonById(active.lessonId);
     if (!lesson) { setActive(null); return null; }
-    return (
-      <MultSolver
-        lesson={lesson}
-        onBack={() => setActive(null)}
-        onComplete={() => setActive(null)}
-      />
-    );
+    return <MultSolver lesson={lesson} onBack={() => setActive(null)} onComplete={() => setActive(null)} />;
   }
 
-  // ═══ 🖐️ جرّب (قسمة) ═══
+  // 🖐️ جرّب — سلاسل
+  if (active?.kind === 'chain') {
+    const lesson = getChainLessonById(active.lessonId);
+    if (!lesson) { setActive(null); return null; }
+    return <ChainSolver lesson={lesson} onBack={() => setActive(null)} onComplete={() => setActive(null)} />;
+  }
+
+  // 🖐️ جرّب — قسمة
   if (active?.kind === 'practice') {
     const problem = getDivisionProblemById(active.problemId);
     if (!problem) { setActive(null); return null; }
-    return (
-      <TwoAbacusSolver
-        problem={problem}
-        onBack={() => setActive(null)}
-        onComplete={() => setActive(null)}
-      />
-    );
+    return <TwoAbacusSolver problem={problem} onBack={() => setActive(null)} onComplete={() => setActive(null)} />;
   }
 
   return (
@@ -91,6 +98,7 @@ export function FlashListScreen({ onBack }: FlashListScreenProps) {
             index={idx}
             onOpenFlash={(id) => setActive({ kind: 'flash', lessonId: id })}
             onOpenMult={(id) => setActive({ kind: 'mult', lessonId: id })}
+            onOpenChain={(id) => setActive({ kind: 'chain', lessonId: id })}
             onOpenPractice={(id) => setActive({ kind: 'practice', problemId: id })}
           />
         ))}
@@ -100,16 +108,19 @@ export function FlashListScreen({ onBack }: FlashListScreenProps) {
 }
 
 function CategorySection({
-  category, index, onOpenFlash, onOpenMult, onOpenPractice,
+  category, index, onOpenFlash, onOpenMult, onOpenChain, onOpenPractice,
 }: {
   category: FlashCategory; index: number;
   onOpenFlash: (id: string) => void;
   onOpenMult: (id: string) => void;
+  onOpenChain: (id: string) => void;
   onOpenPractice: (id: string) => void;
 }) {
   const gradient = CATEGORY_GRADIENTS[category.id] ?? 'from-purple-500 to-violet-700';
   const isEmpty = category.lessons.length === 0;
   const isMult = category.id === 'mult-1' || category.id === 'mult-2';
+  const isChain = category.id === 'chains';
+  const isDivision = !isMult && !isChain && category.id !== 'basics';
 
   return (
     <motion.section
@@ -139,7 +150,7 @@ function CategorySection({
       ) : (
         <div className="space-y-2.5">
           {category.lessons.map((lesson, i) => {
-            const problemId = !isMult ? getProblemIdForLesson(lesson.id) : null;
+            const problemId = isDivision ? getProblemIdForLesson(lesson.id) : null;
             return (
               <LessonCard
                 key={lesson.id}
@@ -147,9 +158,11 @@ function CategorySection({
                 gradient={gradient}
                 index={i}
                 isMult={isMult}
+                isChain={isChain}
                 hasPractice={problemId !== null}
                 onOpenFlash={() => onOpenFlash(lesson.id)}
                 onOpenMult={() => onOpenMult(lesson.id)}
+                onOpenChain={() => onOpenChain(lesson.id)}
                 onOpenPractice={problemId ? () => onOpenPractice(problemId) : undefined}
               />
             );
@@ -161,13 +174,22 @@ function CategorySection({
 }
 
 function LessonCard({
-  lesson, gradient, index, isMult, hasPractice,
-  onOpenFlash, onOpenMult, onOpenPractice,
+  lesson, gradient, index, isMult, isChain, hasPractice,
+  onOpenFlash, onOpenMult, onOpenChain, onOpenPractice,
 }: {
   lesson: FlashLesson; gradient: string; index: number;
-  isMult: boolean; hasPractice: boolean;
-  onOpenFlash: () => void; onOpenMult: () => void; onOpenPractice?: () => void;
+  isMult: boolean; isChain: boolean; hasPractice: boolean;
+  onOpenFlash: () => void;
+  onOpenMult: () => void;
+  onOpenChain: () => void;
+  onOpenPractice?: () => void;
 }) {
+  const isBasics = lesson.operation === 'basics';
+  const icon = isMult ? '✖️' : isChain ? '🧮' : isBasics ? '📖' : '➗';
+
+  const onPracticeClick = isMult ? onOpenMult : isChain ? onOpenChain : onOpenPractice;
+  const practiceDisabled = !isMult && !isChain && !hasPractice;
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -177,7 +199,7 @@ function LessonCard({
     >
       <div className="flex items-center gap-3 mb-3">
         <div className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg`}>
-          <span className="text-xl sm:text-2xl">{isMult ? '✖️' : '➗'}</span>
+          <span className="text-xl sm:text-2xl">{icon}</span>
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm sm:text-base font-bold text-white truncate">{lesson.title}</p>
@@ -197,18 +219,20 @@ function LessonCard({
           <Play className="w-4 h-4 fill-white" /> شاهد
         </motion.button>
 
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={isMult ? onOpenMult : onOpenPractice}
-          disabled={!isMult && !hasPractice}
-          className={`flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition ${
-            !isMult && !hasPractice
-              ? 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
-              : 'bg-emerald-500/25 border-2 border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/35'
-          }`}
-        >
-          <Hand className="w-4 h-4" /> جرّب بنفسك
-        </motion.button>
+        {!isBasics && (
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={onPracticeClick}
+            disabled={practiceDisabled}
+            className={`flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition ${
+              practiceDisabled
+                ? 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+                : 'bg-emerald-500/25 border-2 border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/35'
+            }`}
+          >
+            <Hand className="w-4 h-4" /> جرّب بنفسك
+          </motion.button>
+        )}
       </div>
     </motion.div>
   );
