@@ -138,7 +138,8 @@ function CategorySection({
 }
 
 function LessonCard({
-  lesson, gradient, index, isMult, hasPractice, onOpenFlash, onOpenMult, onOpenPractice,
+  lesson, gradient, index, isMult, hasPractice,
+  onOpenFlash, onOpenMult, onOpenPractice,
 }: {
   lesson: FlashLesson; gradient: string; index: number;
   isMult: boolean; hasPractice: boolean;
@@ -161,17 +162,26 @@ function LessonCard({
       </div>
 
       <div className="flex gap-2">
-        <motion.button whileTap={{ scale: 0.96 }} onClick={isMult ? onOpenMult : onOpenFlash}
-          className={`flex-1 py-2.5 rounded-xl bg-gradient-to-l ${gradient} text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg`}>
-          <Play className="w-4 h-4 fill-white" /> {isMult ? 'تمرين' : 'شاهد'}
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={onOpenFlash}
+          className={`flex-1 py-2.5 rounded-xl bg-gradient-to-l ${gradient} text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg`}
+        >
+          <Play className="w-4 h-4 fill-white" /> شاهد
         </motion.button>
 
-        {!isMult && hasPractice && onOpenPractice && (
-          <motion.button whileTap={{ scale: 0.96 }} onClick={onOpenPractice}
-            className="flex-1 py-2.5 rounded-xl bg-emerald-500/25 border-2 border-emerald-400/50 text-emerald-100 font-bold text-sm flex items-center justify-center gap-2 hover:bg-emerald-500/35 transition">
-            <Hand className="w-4 h-4" /> جرّب بنفسك
-          </motion.button>
-        )}
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={isMult ? onOpenMult : onOpenPractice}
+          disabled={!isMult && !hasPractice}
+          className={`flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition ${
+            !isMult && !hasPractice
+              ? 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+              : 'bg-emerald-500/25 border-2 border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/35'
+          }`}
+        >
+          <Hand className="w-4 h-4" /> جرّب بنفسك
+        </motion.button>
       </div>
     </motion.div>
   );
