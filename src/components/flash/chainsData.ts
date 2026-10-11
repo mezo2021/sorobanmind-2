@@ -1,8 +1,20 @@
 // src/components/flash/chainsData.ts
-// 🧮 سلاسل الجمع والطرح
+// 🧮 سلاسل الجمع والطرح — معداد واحد
+// 📖 الأصابع:
+//   الإبهام 👍 = يرفع 1-4 سفلية لتلامس العارضة
+//   السبابة ☝️ = تنزل 1-4 بعيداً · ترفع/تنزل 5
+// 📖 الحركات:
+//   نزول مزدوج ⬇️⬇️ = سبابة ↓ 5 لتلامس + سبابة ↓ 4 بعيداً
+//   رفع مزدوج ⬆️⬆️ = سبابة ↑ 5 بعيداً + إبهام ↑ 4 لتلامس
+//   كماشة مغلقة 🗜️ = سبابة ↓ 5 لتلامس + إبهام ↑ 1 لتلامس (للجمع)
+//                     سبابة ↑ 5 بعيداً + سبابة ↓ 1 بعيداً (للطرح)
+// فهارس: 0=عشرات · 1=آحاد
 
 import type { FlashCategory, FlashLesson } from './types';
 
+// ═══════════════════════════════════════════════════════════
+// 🧮 السلسلة 1 — البسيطة (+2 +1 +1 −2 = 2)
+// ═══════════════════════════════════════════════════════════
 const CHAIN_SIMPLE: FlashLesson = {
   id: 'chain-simple',
   title: 'السلسلة البسيطة',
@@ -13,14 +25,17 @@ const CHAIN_SIMPLE: FlashLesson = {
   layout: 'single',
   steps: [
     { id: 's1', sorobanValue: 0, badgeLines: ['+2 +1 +1 −2'], caption: 'نبدأ بمعداد فارغ', ttsText: 'نبدأ بمعداد فارغ.', durationMs: 3000 },
-    { id: 's2', sorobanValue: 2, highlightColumns: [1], badgeLines: ['+2'], caption: 'ارفع خرزتين سفليتين بالإبهام', ttsText: 'نضيف اثنين. نرفع خرزتين سفليتين بالإبهام.', durationMs: 5000 },
-    { id: 's3', sorobanValue: 3, highlightColumns: [1], badgeLines: ['+1'], caption: 'ارفع خرزة سفلية واحدة بالإبهام', ttsText: 'نضيف واحداً. نرفع خرزة سفلية بالإبهام.', durationMs: 5000 },
-    { id: 's4', sorobanValue: 4, highlightColumns: [1], badgeLines: ['+1'], caption: 'ارفع خرزة سفلية واحدة بالإبهام', ttsText: 'نضيف واحداً. نرفع خرزة سفلية بالإبهام.', durationMs: 5000 },
-    { id: 's5', sorobanValue: 2, highlightColumns: [1], badgeLines: ['−2'], caption: 'أنزل خرزتين سفليتين بالسبابة', ttsText: 'نطرح اثنين. ننزل خرزتين سفليتين بالسبابة.', durationMs: 5000 },
+    { id: 's2', sorobanValue: 2, highlightColumns: [1], badgeLines: ['+2'], caption: '👍 إبهام: ارفع خرزتين سفلية لتلامسا العارضة', ttsText: 'نضيف اثنين. نرفع خرزتين سفلية بالإبهام لتلامسا العارضة.', durationMs: 5000 },
+    { id: 's3', sorobanValue: 3, highlightColumns: [1], badgeLines: ['+1'], caption: '👍 إبهام: ارفع خرزة سفلية لتلامس العارضة', ttsText: 'نضيف واحداً. نرفع خرزة سفلية بالإبهام لتلامس العارضة.', durationMs: 5000 },
+    { id: 's4', sorobanValue: 4, highlightColumns: [1], badgeLines: ['+1'], caption: '👍 إبهام: ارفع خرزة سفلية لتلامس العارضة', ttsText: 'نضيف واحداً. نرفع خرزة سفلية بالإبهام لتلامس العارضة.', durationMs: 5000 },
+    { id: 's5', sorobanValue: 2, highlightColumns: [1], badgeLines: ['−2'], caption: '☝️ سبابة: أنزل خرزتين سفلية بعيداً عن العارضة', ttsText: 'نطرح اثنين. ننزل خرزتين سفلية بالسبابة بعيداً عن العارضة.', durationMs: 5000 },
     { id: 's6', sorobanValue: 2, isFinal: true, badgeLines: ['✅ الناتج = 2'], caption: 'انتهت السلسلة! الناتج: 2', ttsText: 'انتهت السلسلة. الناتج اثنان.', durationMs: 5000 },
   ],
 };
 
+// ═══════════════════════════════════════════════════════════
+// 🧮 السلسلة 2 — أصدقاء 5 (+4 +1 +50 −11 = 44)
+// ═══════════════════════════════════════════════════════════
 const CHAIN_FRIENDS5: FlashLesson = {
   id: 'chain-friends5',
   title: 'سلسلة أصدقاء 5',
@@ -31,14 +46,17 @@ const CHAIN_FRIENDS5: FlashLesson = {
   layout: 'single',
   steps: [
     { id: 's1', sorobanValue: 0, badgeLines: ['+4 +1 +50 −11'], caption: 'نبدأ بمعداد فارغ', ttsText: 'نبدأ بمعداد فارغ.', durationMs: 3000 },
-    { id: 's2', sorobanValue: 4, highlightColumns: [1], badgeLines: ['+4'], caption: 'ارفع 4 خرزات سفلية بالإبهام', ttsText: 'نضيف أربعة. نرفع أربع خرزات سفلية بالإبهام.', durationMs: 5000 },
-    { id: 's3', sorobanValue: 5, highlightColumns: [1], movement: 'doubleDrop', badgeLines: ['+1', 'صديق 5'], caption: 'نزول مزدوج: أنزل 5 وارفع 4', ttsText: 'نضيف واحداً بأصدقاء خمسة. ننزل الخرزة العلوية، ونرفع أربع خرزات سفلية.', durationMs: 6000 },
-    { id: 's4', sorobanValue: 55, highlightColumns: [0], badgeLines: ['+50'], caption: 'أضف 5 في العشرات بالإبهام', ttsText: 'نضيف خمسين. ننزل الخرزة العلوية في العشرات.', durationMs: 5000 },
-    { id: 's5', sorobanValue: 44, highlightColumns: [0, 1], movement: 'doubleLift', badgeLines: ['−11'], caption: 'اطرح 10 عشرات، ثم 1 برفع مزدوج', ttsText: 'نطرح أحد عشر. نطرح عشرة في العشرات، وواحداً برفع مزدوج.', durationMs: 7000 },
+    { id: 's2', sorobanValue: 4, highlightColumns: [1], badgeLines: ['+4'], caption: '👍 إبهام: ارفع 4 خرزات سفلية لتلامس العارضة', ttsText: 'نضيف أربعة. نرفع أربع خرزات سفلية بالإبهام لتلامس العارضة.', durationMs: 5000 },
+    { id: 's3', sorobanValue: 5, highlightColumns: [1], badgeLines: ['+1', 'صديق 5 ⬇️⬇️ نزول مزدوج'], caption: '☝️ سبابة ↓ 5 لتلامس العارضة + ☝️ سبابة ↓ 4 بعيداً (نزول مزدوج)', ttsText: 'نضيف واحداً بأصدقاء خمسة. نزول مزدوج. ننزل خمسة لتلامس العارضة، وننزل أربع خرزات بعيداً.', durationMs: 7000 },
+    { id: 's4', sorobanValue: 55, highlightColumns: [0], badgeLines: ['+50'], caption: '☝️ سبابة: أنزل 5 في العشرات لتلامس العارضة', ttsText: 'نضيف خمسين. ننزل الخرزة العلوية في العشرات لتلامس العارضة.', durationMs: 5000 },
+    { id: 's5', sorobanValue: 44, highlightColumns: [0, 1], badgeLines: ['−11', 'مركبة 🗜️'], caption: '☝️ سبابة ↓ 1 عشرات بعيداً · ثم ⬆️⬆️ رفع مزدوج: ☝️ سبابة ↑ 5 بعيداً + 👍 إبهام ↑ 4 لتلامس', ttsText: 'نطرح أحد عشر. ننزل واحد عشرات بعيداً. ثم رفع مزدوج.', durationMs: 8000 },
     { id: 's6', sorobanValue: 44, isFinal: true, badgeLines: ['✅ الناتج = 44'], caption: 'انتهت السلسلة! الناتج: 44', ttsText: 'انتهت السلسلة. الناتج أربعة وأربعون.', durationMs: 5000 },
   ],
 };
 
+// ═══════════════════════════════════════════════════════════
+// 🧮 السلسلة 3 — أصدقاء 10 (+4 +8 −1 = 11)
+// ═══════════════════════════════════════════════════════════
 const CHAIN_FRIENDS10: FlashLesson = {
   id: 'chain-friends10',
   title: 'سلسلة أصدقاء 10',
@@ -49,13 +67,16 @@ const CHAIN_FRIENDS10: FlashLesson = {
   layout: 'single',
   steps: [
     { id: 's1', sorobanValue: 0, badgeLines: ['+4 +8 −1'], caption: 'نبدأ بمعداد فارغ', ttsText: 'نبدأ بمعداد فارغ.', durationMs: 3000 },
-    { id: 's2', sorobanValue: 4, highlightColumns: [1], badgeLines: ['+4'], caption: 'ارفع 4 خرزات سفلية بالإبهام', ttsText: 'نضيف أربعة. نرفع أربع خرزات سفلية بالإبهام.', durationMs: 5000 },
-    { id: 's3', sorobanValue: 12, highlightColumns: [0, 1], movement: 'doubleDrop', badgeLines: ['+8', 'صديق 10'], caption: 'أضف 1 للعشرات، وأنزل 2 من الآحاد', ttsText: 'نضيف ثمانية بأصدقاء عشرة. نرفع واحداً في العشرات، وننزل اثنين من الآحاد.', durationMs: 7000 },
-    { id: 's4', sorobanValue: 11, highlightColumns: [1], badgeLines: ['−1'], caption: 'أنزل خرزة سفلية واحدة بالسبابة', ttsText: 'نطرح واحداً. ننزل خرزة سفلية بالسبابة.', durationMs: 5000 },
+    { id: 's2', sorobanValue: 4, highlightColumns: [1], badgeLines: ['+4'], caption: '👍 إبهام: ارفع 4 خرزات سفلية لتلامس العارضة', ttsText: 'نضيف أربعة. نرفع أربع خرزات سفلية بالإبهام لتلامس العارضة.', durationMs: 5000 },
+    { id: 's3', sorobanValue: 12, highlightColumns: [0, 1], badgeLines: ['+8', 'صديق 10'], caption: '👍 إبهام ↑ 1 عشرات لتلامس · ☝️ سبابة ↓ 2 آحاد بعيداً', ttsText: 'نضيف ثمانية بأصدقاء عشرة. نرفع واحداً في العشرات، وننزل اثنين من الآحاد بعيداً.', durationMs: 7000 },
+    { id: 's4', sorobanValue: 11, highlightColumns: [1], badgeLines: ['−1'], caption: '☝️ سبابة: أنزل خرزة سفلية بعيداً عن العارضة', ttsText: 'نطرح واحداً. ننزل خرزة سفلية بالسبابة بعيداً عن العارضة.', durationMs: 5000 },
     { id: 's5', sorobanValue: 11, isFinal: true, badgeLines: ['✅ الناتج = 11'], caption: 'انتهت السلسلة! الناتج: 11', ttsText: 'انتهت السلسلة. الناتج أحد عشر.', durationMs: 5000 },
   ],
 };
 
+// ═══════════════════════════════════════════════════════════
+// 🧮 السلسلة 4 — المركبة (+6 +6 −1 −7 = 4)
+// ═══════════════════════════════════════════════════════════
 const CHAIN_COMPOUND: FlashLesson = {
   id: 'chain-compound',
   title: 'السلسلة المركبة',
@@ -66,10 +87,10 @@ const CHAIN_COMPOUND: FlashLesson = {
   layout: 'single',
   steps: [
     { id: 's1', sorobanValue: 0, badgeLines: ['+6 +6 −1 −7'], caption: 'نبدأ بمعداد فارغ', ttsText: 'نبدأ بمعداد فارغ.', durationMs: 3000 },
-    { id: 's2', sorobanValue: 6, highlightColumns: [1], movement: 'closedPinch', badgeLines: ['+6'], caption: 'كماشة مغلقة: أنزل 5 وارفع 1', ttsText: 'نضيف ستة. ننزل الخرزة العلوية، ونرفع خرزة سفلية بالكماشة المغلقة.', durationMs: 6000 },
-    { id: 's3', sorobanValue: 12, highlightColumns: [0, 1], movement: 'closedPinch', badgeLines: ['+6', 'مركبة'], caption: 'أضف 1 للعشرات، ثم أنزل 5 وارفع 1', ttsText: 'نضيف ستة بالقاعدة المركبة.', durationMs: 8000 },
-    { id: 's4', sorobanValue: 11, highlightColumns: [1], badgeLines: ['−1'], caption: 'أنزل خرزة سفلية واحدة بالسبابة', ttsText: 'نطرح واحداً. ننزل خرزة سفلية بالسبابة.', durationMs: 5000 },
-    { id: 's5', sorobanValue: 4, highlightColumns: [0, 1], movement: 'closedPinch', badgeLines: ['−7', 'مركبة'], caption: 'اطرح 1 عشرات، ثم أنزل 5 وارفع 2', ttsText: 'نطرح سبعة بالقاعدة المركبة.', durationMs: 8000 },
+    { id: 's2', sorobanValue: 6, highlightColumns: [1], badgeLines: ['+6', '🗜️ كماشة مغلقة'], caption: '☝️ سبابة ↓ 5 لتلامس · 👍 إبهام ↑ 1 لتلامس (كماشة مغلقة)', ttsText: 'نضيف ستة. ننزل الخرزة العلوية لتلامس العارضة، ونرفع خرزة سفلية بالكماشة المغلقة.', durationMs: 7000 },
+    { id: 's3', sorobanValue: 12, highlightColumns: [0, 1], badgeLines: ['+6', 'مركبة'], caption: '👍 إبهام ↑ 1 عشرات لتلامس · ⬆️⬆️ رفع مزدوج: ☝️ سبابة ↑ 5 بعيداً + 👍 إبهام ↑ 1 لتلامس', ttsText: 'نضيف ستة بالقاعدة المركبة. نرفع واحداً في العشرات، ثم رفع مزدوج في الآحاد.', durationMs: 9000 },
+    { id: 's4', sorobanValue: 11, highlightColumns: [1], badgeLines: ['−1'], caption: '☝️ سبابة: أنزل خرزة سفلية بعيداً عن العارضة', ttsText: 'نطرح واحداً. ننزل خرزة سفلية بالسبابة بعيداً عن العارضة.', durationMs: 5000 },
+    { id: 's5', sorobanValue: 4, highlightColumns: [0, 1], badgeLines: ['−7', 'مركبة 🗜️'], caption: '☝️ سبابة ↓ 1 عشرات بعيداً · ثم 🗜️ كماشة مغلقة: ☝️ سبابة ↓ 5 لتلامس + ☝️ سبابة ↓ 2 بعيداً', ttsText: 'نطرح سبعة بالقاعدة المركبة. ننزل واحد عشرات، ثم كماشة مغلقة في الآحاد.', durationMs: 9000 },
     { id: 's6', sorobanValue: 4, isFinal: true, badgeLines: ['✅ الناتج = 4'], caption: 'انتهت السلسلة! الناتج: 4', ttsText: 'انتهت السلسلة. الناتج أربعة.', durationMs: 5000 },
   ],
 };
