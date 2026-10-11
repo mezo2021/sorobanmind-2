@@ -31,29 +31,41 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
 
 const ALL_CATEGORIES: FlashCategory[] = [...FLASH_CATEGORIES, ...MULT_CATEGORIES];
 
-function getLessonById(id: string): FlashLesson | undefined {
-  return getFlashLessonById(id) ?? getMultLessonById(id);
-}
-
 export function FlashListScreen({ onBack }: FlashListScreenProps) {
   const [active, setActive] = useState<ActiveView>(null);
 
+  // ═══ 🎬 شاهد (قسمة أو ضرب) ═══
   if (active?.kind === 'flash') {
-    const lesson = getFlashLessonById(active.lessonId);
+    const lesson =
+      getFlashLessonById(active.lessonId) ?? getMultLessonById(active.lessonId);
     if (!lesson) { setActive(null); return null; }
     return <FlashScreen lesson={lesson} onBack={() => setActive(null)} />;
   }
 
+  // ═══ 🖐️ جرّب (ضرب) ═══
   if (active?.kind === 'mult') {
     const lesson = getMultLessonById(active.lessonId);
     if (!lesson) { setActive(null); return null; }
-    return <MultSolver lesson={lesson} onBack={() => setActive(null)} onComplete={() => setActive(null)} />;
+    return (
+      <MultSolver
+        lesson={lesson}
+        onBack={() => setActive(null)}
+        onComplete={() => setActive(null)}
+      />
+    );
   }
 
+  // ═══ 🖐️ جرّب (قسمة) ═══
   if (active?.kind === 'practice') {
     const problem = getDivisionProblemById(active.problemId);
     if (!problem) { setActive(null); return null; }
-    return <TwoAbacusSolver problem={problem} onBack={() => setActive(null)} onComplete={() => setActive(null)} />;
+    return (
+      <TwoAbacusSolver
+        problem={problem}
+        onBack={() => setActive(null)}
+        onComplete={() => setActive(null)}
+      />
+    );
   }
 
   return (
@@ -73,7 +85,10 @@ export function FlashListScreen({ onBack }: FlashListScreenProps) {
 
       <div className="px-4 sm:px-6 pt-6 space-y-8 max-w-3xl mx-auto">
         {ALL_CATEGORIES.map((cat, idx) => (
-          <CategorySection key={cat.id} category={cat} index={idx}
+          <CategorySection
+            key={cat.id}
+            category={cat}
+            index={idx}
             onOpenFlash={(id) => setActive({ kind: 'flash', lessonId: id })}
             onOpenMult={(id) => setActive({ kind: 'mult', lessonId: id })}
             onOpenPractice={(id) => setActive({ kind: 'practice', problemId: id })}
@@ -97,7 +112,11 @@ function CategorySection({
   const isMult = category.id === 'mult-1' || category.id === 'mult-2';
 
   return (
-    <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.08 }}>
+    <motion.section
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.08 }}
+    >
       <div className="flex items-center gap-3 mb-3">
         <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg`}>
           <span className="text-xl">{category.emoji}</span>
@@ -122,7 +141,11 @@ function CategorySection({
           {category.lessons.map((lesson, i) => {
             const problemId = !isMult ? getProblemIdForLesson(lesson.id) : null;
             return (
-              <LessonCard key={lesson.id} lesson={lesson} gradient={gradient} index={i}
+              <LessonCard
+                key={lesson.id}
+                lesson={lesson}
+                gradient={gradient}
+                index={i}
                 isMult={isMult}
                 hasPractice={problemId !== null}
                 onOpenFlash={() => onOpenFlash(lesson.id)}
@@ -146,8 +169,12 @@ function LessonCard({
   onOpenFlash: () => void; onOpenMult: () => void; onOpenPractice?: () => void;
 }) {
   return (
-    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.06 }}
-      className="rounded-2xl bg-white/5 border border-white/10 p-3 sm:p-4">
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.06 }}
+      className="rounded-2xl bg-white/5 border border-white/10 p-3 sm:p-4"
+    >
       <div className="flex items-center gap-3 mb-3">
         <div className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg`}>
           <span className="text-xl sm:text-2xl">{isMult ? '✖️' : '➗'}</span>
