@@ -1,6 +1,8 @@
+
+
 # 🎬 قسم الفلاشات التعليمية — دليل شامل
-**آخر تحديث:** 2026-10-10  
-**الحالة:** 🟢 مستقر · قابل للتوسّع  
+**آخر تحديث:** 2026-10-11  
+**الحالة:** 🟢 مستقر · قسمة مكتملة + ضرب مكتمل  
 **المرجع:** RESCUE.md · AL-ISLAH-V2.md
 
 ---
@@ -10,16 +12,17 @@
 1. الرؤية والأهداف
 2. البنية العامة
 3. الملفات والمكونات
-4. آلية عمل الفلاش
-5. آلية عمل التمرين
-6. قاعدة تاكاشي كوجيما
-7. نظام الألوان
-8. نظام الصوت TTS
-9. التنقل والربط
-10. بنية البيانات
-11. ميثاق عدم اللمس
-12. التوسّع المستقبلي
-13. دروس مستفادة (FIXes)
+4. آلية عمل الفلاش (مشاهدة)
+5. آلية عمل تمارين القسمة
+6. آلية عمل تمارين الضرب
+7. قاعدة تاكاشي كوجيما
+8. نظام الألوان
+9. نظام الصوت TTS (مع التشكيل)
+10. التنقل والربط
+11. بنية البيانات
+12. ميثاق عدم اللمس
+13. التوسّع المستقبلي
+14. دروس مستفادة (FIXes)
 
 ---
 
@@ -27,7 +30,10 @@
 
 ### 🎯 الهدف الأساسي
 
-توفير **بديل عملي** للدروس السلبية الحالية التي تُظهر **معداداً واحداً** فقط، ولا تُتيح للطفل **فهم دور المقسوم** في عملية القسمة.
+توفير **بديل عملي** للدروس السلبية، يُتيح للطفل:
+- **مشاهدة** شرح خطوة بخطوة
+- **تطبيق** بنفسه على معدادين متزامنين
+- **فهم** دور كل رقم في الحل
 
 ### 📖 الفجوة التي نعالجها
 
@@ -39,9 +45,9 @@
 
 ### 🎓 المخرجات المتوقعة
 
-- ✅ فهم **دور المقسوم** في الحل
+- ✅ فهم **دور المقسوم/المضروب** في الحل
 - ✅ إدراك **كيف ينمو الناتج** منزلة بمنزلة
-- ✅ أساس قوي لـ **الأنزان** (الحساب الذهني)
+- ✅ أساس قوي لـ **الأنزان**
 
 ---
 
@@ -53,11 +59,15 @@
 ↓ زر "🎬 الفلاشات التعليمية"
 📋 FlashListScreen (القائمة)
 ↓
-├── 🎬 زر "شاهد" → FlashScreen (مشاهدة · 8 حركات)
-│       ↓ رجوع
-│    FlashListScreen
+├── 🎬 زر "شاهد"  → FlashScreen (مشاهدة)
+│         ↓ رجوع
+│     FlashListScreen
 │
-└── 🖐️ زر "جرّب" → TwoAbacusSolver (تطبيق · 3 مراحل)
+├── 🖐️ زر "جرّب" (قسمة) → TwoAbacusSolver
+│         ↓ رجوع
+│     FlashListScreen
+│
+└── 🖐️ زر "جرّب" (ضرب) → MultSolver
 ↓ رجوع
 FlashListScreen
 
@@ -71,42 +81,53 @@ FlashListScreen
 
 ## 3️⃣ الملفات والمكونات
 
-### 📂 الملفات
+### 📂 قائمة الملفات
 
 | # | الملف | الوظيفة | الحالة |
 |---|---|---|---|
 | 1 | `types.ts` | أنواع FlashStep/FlashLesson | ✅ |
-| 2 | `flashData.ts` | بيانات الفلاشات | ✅ |
-| 3 | `FlashListScreen.tsx` | قائمة الفلاشات + التنقل | ✅ |
-| 4 | `FlashScreen.tsx` | عرض الفلاش (المشاهدة) | ✅ |
-| 5 | `MentalBadge.tsx` | شارة المعادلة | ✅ |
-| 6 | `sorobanDivisionData.ts` | بيانات التمارين + الربط | ✅ |
-| 7 | `TwoAbacusSolver.tsx` | التمرين التفاعلي | ✅ |
-| 8 | `Soroban2D5.tsx` | المعداد | 🟡 معدَّل (props جديدة) |
-| 9 | `Rod2D5.tsx` | عمود واحد | 🟡 معدَّل (props جديدة) |
+| 2 | `flashData.ts` | بيانات الفلاشات (أساسيات + قسمة) | ✅ |
+| 3 | `multData.ts` | بيانات دروس الضرب | ✅ |
+| 4 | `FlashListScreen.tsx` | قائمة الفلاشات + التنقل الداخلي | ✅ |
+| 5 | `FlashScreen.tsx` | عرض الفلاش (مشاهدة + TTS) | ✅ |
+| 6 | `MentalBadge.tsx` | شارة المعادلة (متعددة الأسطر) | ✅ |
+| 7 | `sorobanDivisionData.ts` | بيانات تمارين القسمة + جدول الربط | ✅ |
+| 8 | `TwoAbacusSolver.tsx` | تمرين القسمة (معدادان) | ✅ |
+| 9 | `MultSolver.tsx` | تمرين الضرب (معدادان) | ✅ |
+| 10 | `Soroban2D5.tsx` | المعداد | 🟡 معدَّل (props) |
+| 11 | `Rod2D5.tsx` | عمود واحد | 🟡 معدَّل (props) |
 
-### 🆕 Props الجديدة في Soroban2D5
+### 🆕 Props الجديدة في `Soroban2D5`
 
 ```tsx
-// props اختيارية — default = undefined
-rodTint?: 'red' | 'emerald' | 'white' | 'amber';
-highlightColumns?: number[];
-beamHighlight?: boolean;
-hideTitle?: boolean;
-activeRodIndex?: number;
+rodTint?: 'red' | 'emerald' | 'white' | 'amber';   // لون الخرزات
+highlightColumns?: number[];                        // أعمدة بإضاءة بيضاء
+dimColumns?: number[];                              // أعمدة مطموسة (ضرب)
+activeRodIndex?: number;                            // عمود نشط (أساسيات)
+beamHighlight?: boolean;                            // إضاءة العارضة
+hideTitle?: boolean;                                // إخفاء العنوان
 ```
 
 ⚠️ كلها اختيارية — لا تؤثر على الوضع الطبيعي.
 
+🆕 Props الجديدة في Rod2D5
+
+```tsx
+tint?: RodTint;          // لون الخرزات (red/emerald/white/amber)
+isDimmed?: boolean;      // طمس (opacity 0.25 + grayscale)
+isActive?: boolean;      // حلقة ذهبية نابضة
+beamHighlight?: boolean; // إضاءة العارضة
+```
+
 ---
 
-4️⃣ آلية عمل الفلاش (FlashScreen)
+4️⃣ آلية عمل الفلاش (مشاهدة)
 
 🎬 مثال: 837 ÷ 3 (8 حركات)
 
 # Badge المقسوم الناتج ملاحظة
 s1 837 ÷ 3 837 🔴 0 إعداد
-s2 8 ÷ 3 = 2 837 🔴 200 🟢 إضافة
+s2 8 ÷ 3 = 2 837 200 🟢 إضافة
 s3 8 − 6 = 2 237 200 🔴 طرح
 s4 23 ÷ 3 = 7 237 270 🟢 إضافة
 s5 23 − 21 = 2 27 270 🔴 طرح
@@ -116,24 +137,20 @@ s8 ✅ الناتج = 279 0 279 نتيجة
 
 🎮 تحكم المستخدم
 
-· ▶️ ابدأ → user gesture · يُشغّل TTS
-· ⏭ التالي → انتقال يدوي · لا auto-advance
-· ⏮ السابق → رجوع
-· 🔊 إعادة الصوت → يُعيد TTS للخطوة
-· 🔄 إعادة → عند النهاية فقط
-
-🔊 نظام الصوت
-
-· TTS Rate: 0.7 (بطيء مفهوم)
-· User gesture: ✅ مطلوب أول تشغيل
-· onEnd: ✅ يُستخدم للتحقق
-· Fallback: 10s (حالة نادرة)
+الزر الوظيفة
+▶️ ابدأ user gesture · يُشغّل TTS
+⏭ التالي انتقال يدوي
+⏮ السابق رجوع
+🔊 إعادة الصوت يُعيد TTS للخطوة
+🔄 إعادة عند النهاية
 
 ---
 
-5️⃣ آلية عمل التمرين (TwoAbacusSolver)
+5️⃣ آلية عمل تمارين القسمة (TwoAbacusSolver)
 
-🖐️ نفس المسألة — 3 مراحل
+🖐️ نفس المسألة — 2-3 مراحل
+
+مثال: 837 ÷ 3
 
 المرحلة المقسوم الناتج التعليمات
 1 837 → 237 0 → 200 8 ÷ 3
@@ -143,11 +160,11 @@ s8 ✅ الناتج = 279 0 279 نتيجة
 🔄 الفرق عن الفلاش
 
  الفلاش التمرين
-الوحدات 8 حركات 3 مراحل
+الوحدات 8 حركات 2-3 مراحل
 الطفل يشاهد يُنفّذ
 التعديل تلقائي يدوي
 التحقق لا ✅ زر
-الانتقال يدوي يدوي
+TTS تلقائي 🔊 زر "إعادة الصوت"
 
 🎯 خطوات المرحلة الواحدة
 
@@ -162,98 +179,148 @@ s8 ✅ الناتج = 279 0 279 نتيجة
 
 ---
 
-6️⃣ قاعدة تاكاشي كوجيما
+6️⃣ آلية عمل تمارين الضرب (MultSolver)
 
-📐 القاعدة الذهبية
+🖐️ نفس البنية — لكن معدادان بترتيب مختلف
 
-أين يُوضع رقم الناتج؟
+العنصر القسمة الضرب
+🟢 الناتج يمين · يتعمّر يمين · يتعمّر
+🔴 المضروب/المقسوم يسار · يتناقص يسار · ثابت ثم يُطمس
+المنهج القسمة الطويلة كوجيما (A×C → A×D → B×C → B×D)
+
+🎯 مثال: 23 × 33 = 759
+
+# العملية 🔴 المضروب 🟢 الناتج طمس
+s1 إعداد 23 0 —
+s2 2×3=6 → مئات 23 600 —
+s3 2×3=6 → عشرات 23 660 🔘 عشرات
+s4 3×3=9 → +عشرات 3 750 —
+s5 3×3=9 → آحاد 3 759 🔘 آحاد
+s6 نتيجة 0 759 ✨ —
+
+🎯 خطوات المرحلة
+
+1. الطفل يُعدّل المعدادين — يقارن مع dividendValue و resultValue
+2. الطمس التدريجي — بعد كل مرحلة · يُطمس عمود من المضروب
+3. TTS عند الضغط على "▶️ ابدأ" و "🔊 إعادة الصوت"
+4. لا انتقال تلقائي — الطفل يقود
+
+🔑 الفرق الجوهري
+
+· الضرب: المضروب يبقى ثم يُطمس تدريجياً (يُستهلك رمزياً)
+· القسمة: المقسوم يتناقص فعلياً مع كل طرح
+
+⚠️ عدد الأعمدة
+
+المسألة الأعمدة
+2×1 (32 × 3) 3 (مئات · عشرات · آحاد)
+2×2 (23 × 33) 4 (آلاف · مئات · عشرات · آحاد)
+
+---
+
+7️⃣ قاعدة تاكاشي كوجيما
+
+📐 القسمة — قاعدة موقع الناتج
 
 الحالة القاعدة مثال
 المقسوم ≥ المقسوم عليه فاصل عمود 8 ÷ 3 → 2 في المئات
 المقسوم < المقسوم عليه يأخذ رقمين 2 < 3 → نأخذ 23
 
-🎯 تطبيق على 837 ÷ 3
+📐 الضرب — الترتيب من اليسار لليمين
 
-المرحلة المقسوم الجزئي القاعدة العمود المُضيء
-1 8 (≥ 3) مباشر المئات
-2 23 (2 < 3) يأخذ رقمين العشرات
-3 27 (2 < 3) يأخذ رقمين الآحاد
+الترتيب (2×2):
 
-📝 معالجة الأصفار الوسطية
+1. عشرات المضروب × عشرات المضروب فيه → المنزلة الأعلى
+2. عشرات المضروب × آحاد المضروب فيه → المنزلة التالية
+3. آحاد المضروب × عشرات المضروب فيه → إضافة للمنزلة
+4. آحاد المضروب × آحاد المضروب فيه → المنزلة الأدنى
 
-مثال: 525 ÷ 5
+مثال 23 × 33:
 
-· المرحلة 1: 5 ÷ 5 = 1 → 100
-· المرحلة 2: 2 < 5 → نضع 0 في العشرات ← مدموج في المرحلة 1
-· المرحلة 3: 25 ÷ 5 = 5 → 105
-
-القرار: دمج المرحلة الفارغة في السابقة — لا "خطوة تحقق بلا فعل".
+```
+2 × 3 = 6   → مئات
+2 × 3 = 6   → عشرات (تُضاف)
+3 × 3 = 9   → عشرات (تُضاف مع حمل)
+3 × 3 = 9   → آحاد
+```
 
 ---
 
-7️⃣ نظام الألوان
-
-🎨 الألوان المعتمدة
+8️⃣ نظام الألوان
 
 اللون الرمز الاستخدام النوع
-أحمر 🔴 المقسوم (الباقي) خلفية الخرزات
-أخضر 🟢 الناتج المتراكم خلفية الخرزات
+أحمر 🔴 المقسوم/المضروب لون الخرزات
+أخضر 🟢 الناتج لون الخرزات
 أبيض ⚪ العمود المُعدَّل الآن حلقة نابضة
 ذهبي 🟡 العمود في الأساسيات حلقة نابضة
-برتقالي 🟠 highlightBeam (العارضة) وميض
+رمادي 🌫️ عمود مطموس (بعد الاستهلاك) opacity 0.25 + grayscale
 
 🖌️ التنفيذ التقني
 
 ```tsx
 // في Rod2D5.tsx
-const beadFilter = getBeadFilter(tint);
-// red → CSS filter
-// emerald → CSS filter
-// white → حلقة + نبض
-
-// في Soroban2D5.tsx
-<Rod2D5
-  tint={isHighlighted ? 'white' : rodTint}
-/>
+const beadFilter = isDimmed 
+  ? 'grayscale(1) brightness(0.7)' 
+  : getBeadFilter(tint);
 ```
 
-⚠️ مهم: اللون يُطبَّق على الخرزات فقط — لا على الخلفية.
+⚠️ اللون يُطبَّق على الخرزات فقط — لا على الخلفية.
 
 ---
 
-8️⃣ نظام الصوت TTS
+9️⃣ نظام الصوت TTS (مع التشكيل)
 
 🔊 التقنية
 
-الملف: src/hooks/useSpeech.ts (موجود · يعمل)
+الملف: src/hooks/useSpeech.ts
 
 ```tsx
 const { speak, stop, isSpeaking, isSupported } = useSpeech();
 ```
 
-🎯 التطبيق في FlashScreen
+🎯 القاعدة الذهبية
 
 ```tsx
 const tts = useSpeech();
-const ttsRef = useRef(tts);  // ← مرجع ثابت
+const ttsRef = useRef(tts);  // مرجع ثابت
+useEffect(() => { ttsRef.current = tts; }, [tts]);
 
-// قراءة الخطوة
 const speakStep = (s) => {
-  ttsRef.current.speak(s.ttsText, { rate: 0.7 });
+  ttsRef.current.speak(s.ttsText, { rate: TTS_RATE });
 };
 ```
+
+TTS_RATE = 0.7 — بطيء مفهوم للأطفال.
+
+🎨 التشكيل المُوجَّه (الحل النهائي)
+
+المشكلة: محركات TTS لا تفهم الإعراب · تنطق "عشرون" كـ "عشر".
+
+الحل: تشكيل موجَّه — الكلمات المُشكِلة فقط:
+
+الكلمة التشكيل
+عشرون عِشْرُونَ
+عشرين عِشْرِينَ
+سبعون سَبْعُونَ
+سبعين سَبْعِينَ
+عشرتان عِشْرَتَان
+عشرات عَشَرَات
+خمسون خَمْسُونَ
+خمسين خَمْسِينَ
+
+⚠️ لا نُشكّل الملف كله — فقط الأرقام المُشكِلة (10-15 كلمة).
 
 🔑 دروس مستفادة
 
 # المشكلة الحل
-1 TTS لا يعمل في useEffect user gesture
-2 الصوت يُقطع عند الانتقال onEnd + fallback 10s
+1 TTS لا يعمل في useEffect user gesture + زر "ابدأ"
+2 الصوت يُقطع onEnd + fallback 10s
 3 تكرار القراءة ttsRef + token
-4 Badge يظهر بعد TTS badge reveal 800ms/سطر
+4 "عشرون" تُلفظ "عشر" تشكيل موجَّه
 
 ---
 
-9️⃣ التنقل والربط
+🔟 التنقل والربط
 
 🎯 آلية التنقل
 
@@ -262,75 +329,112 @@ const speakStep = (s) => {
 ```tsx
 type ActiveView =
   | { kind: 'flash'; lessonId: string }
+  | { kind: 'mult'; lessonId: string }
   | { kind: 'practice'; problemId: string }
   | null;
 
 const [active, setActive] = useState<ActiveView>(null);
 ```
 
-🔗 جدول الربط
+🔗 منطق القرار
+
+```tsx
+// في FlashListScreen
+if (active?.kind === 'flash') {
+  const lesson =
+    getFlashLessonById(active.lessonId) ?? getMultLessonById(active.lessonId);
+  // ← يبحث في القسمة أولاً · ثم الضرب
+  return <FlashScreen lesson={lesson} onBack={() => setActive(null)} />;
+}
+```
+
+📊 جدول الربط (القسمة)
 
 ```ts
 // في sorobanDivisionData.ts
 export const LESSON_TO_PROBLEM: Record<string, string> = {
   'div-1x1-m1': 'prob_1',   // 837 ÷ 3
+  'div-1x1-m2': 'prob_2',   // 54 ÷ 3
+  'div-1x1-m3': 'prob_3',   // 152 ÷ 8
+  'div-1x1-m4': 'prob_4',   // 216 ÷ 8
+  'div-1x2-m1': 'prob_5',   // 484 ÷ 22
+  'div-1x2-m2': 'prob_6',   // 572 ÷ 22
+  'div-1x2-m3': 'prob_7',   // 350 ÷ 14
+  'div-1x2-m4': 'prob_8',   // 234 ÷ 18
 };
-
-export function getProblemIdForLesson(lessonId: string): string | null {
-  return LESSON_TO_PROBLEM[lessonId] ?? null;
-}
 ```
+
+⚠️ الضرب لا يحتاج جدول ربط — نفس lesson يُستخدم في MultSolver.
 
 🚫 ما لا يتغير
 
 · ❌ App.tsx — لا تعديل
-· ❌ HeroDashboard — لا تعديل (بلا زر إضافي)
+· ❌ HeroDashboard — لا تعديل
 · ❌ LessonScreen — لا تعديل
 
-الزر يظهر تلقائياً في FlashListScreen إذا وُجد ربط.
+الزر يظهر تلقائياً في FlashListScreen.
 
 ---
 
-🔟 بنية البيانات
+1️⃣1️⃣ بنية البيانات
 
-📐 DivisionStep
+📐 FlashStep (مشترك · قسمة + ضرب)
 
 ```ts
-interface DivisionStep {
-  stepIndex: number;
-  instructionTitle: string;      // "قسمة المئات (8 ÷ 3)"
-  instructionDetail: string;     // الشرح الكامل
-  expectedDividend: number;      // 237
-  expectedResult: number;        // 200
-  activeDividendRods: number[];  // [0] — الأعمدة المُضاءة
-  activeResultRod: number;       // 0
+interface FlashStep {
+  id: string;
+
+  // للقسمة والضرب (معدادان)
+  dividendValue?: number;
+  resultValue?: number;
+  highlightDividend?: number[];
+  highlightResult?: number[];
+  blurDividend?: number[];        // 🆕 للضرب
+
+  // للأساسيات (معداد واحد)
+  sorobanValue?: number;
+  activeRodIndex?: number;
+  highlightColumns?: number[];
+  highlightBeam?: boolean;
+
+  // مشترك
+  badgeLines: string[];
+  caption: string;
+  ttsText: string;
+  durationMs: number;
 }
 ```
 
-📐 DivisionProblem
+📐 FlashLesson
 
 ```ts
-interface DivisionProblem {
-  id: string;              // "prob_1"
-  dividend: number;        // 837
-  divisor: number;         // 3
-  steps: DivisionStep[];
+interface FlashLesson {
+  id: string;
+  title: string;
+  subtitle: string;
+  operation: FlashOperation;
+  category: FlashCategoryId;
+  columns: number;
+  layout?: FlashLayout;
+  resultColumns?: number;
+  dividendColumns?: number;
+  multiplicand?: number;   // 🆕 للضرب
+  multiplier?: number;     // 🆕 للضرب
+  steps: FlashStep[];
 }
 ```
 
 ⚠️ فهارس الأعمدة
 
-مهم جداً:
+مطابقة مع نظام Soroban2D5:
 
-· 0 = مئات
-· 1 = عشرات
-· 2 = آحاد
-
-مطابقة مع نظام Soroban2D5.
+· 0 = مئات (أو آلاف في 2×2)
+· 1 = عشرات (أو مئات)
+· 2 = آحاد (أو عشرات)
 
 ---
 
-1️⃣1️⃣ ميثاق عدم اللمس
+1️⃣2️⃣ ميثاق عدم اللمس
 
 🔒 ممنوع تماماً
 
@@ -359,71 +463,89 @@ SorobanPlayground.tsx 🎮 الوضع الحر
 
 ---
 
-1️⃣2️⃣ التوسّع المستقبلي
+1️⃣3️⃣ التوسّع المستقبلي
 
-📋 المسائل المُعدَّة (10 مسائل)
+📋 المسائل المُعدَّة
 
-# المسألة القسمة على المراحل
-prob_1 837 ÷ 3 3 3
-prob_2 428 ÷ 2 2 3
-prob_3 639 ÷ 3 3 3
-prob_4 963 ÷ 3 3 3
-prob_5 525 ÷ 5 5 2
-prob_6 749 ÷ 7 7 2
-prob_7 848 ÷ 4 4 3
-prob_8 936 ÷ 3 3 3
-prob_9 618 ÷ 2 2 2
-prob_10 484 ÷ 4 4 3
+القسمة: 8 مسائل (prob_1 .. prob_8)
+
+# المسألة القسمة على
+prob_1 837 ÷ 3 3
+prob_2 54 ÷ 3 3
+prob_3 152 ÷ 8 8
+prob_4 216 ÷ 8 8
+prob_5 484 ÷ 22 22
+prob_6 572 ÷ 22 22
+prob_7 350 ÷ 14 14
+prob_8 234 ÷ 18 18
+
+الضرب: 8 دروس (mult-2x1-m1..m4 + mult-2x2-m1..m4)
 
 🚀 خطوات التوسّع
 
-1. إضافة مسائل جديدة → في divisionProblems
-2. ربطها بفلاشات → في LESSON_TO_PROBLEM
-3. القسمة على رقمين (S08) → بنية جديدة (رقم مضاعف)
-4. الضرب → نفس النموذج مع تعديل:
-   · المقسوم → المضروب (ثابت)
-   · الناتج → التراكمي
+1. إضافة درس قسمة جديد:
+   · أضف FlashLesson في flashData.ts
+   · أضف DivisionProblem في sorobanDivisionData.ts
+   · اربطهما في LESSON_TO_PROBLEM
+2. إضافة درس ضرب جديد:
+   · أضف FlashLesson في multData.ts
+   · لا حاجة لجدول ربط (يستخدم lesson نفسه)
+3. مستويات جديدة (L4-L7):
+   · نفس البنية
 
 🎯 أفكار مستقبلية (مؤجلة)
 
-· 🅰️ الطرح المتسلسل (للقسمة على رقمين)
+· 🅰️ الطرح المتسلسل (للقسمة على 3+ أرقام)
 · 🅱️ Ghost Abacus (جسر نحو الأنزان)
 · 🅲️ Adaptive Mastery (الانتقال التلقائي بين الأنماط)
 · 🅳️ Anzan Metrics (قياس سرعة التفاعل)
+· 🅴 قسمة على 3 أرقام (S09+)
+· 🅵 L4-L7 (المنهج الكامل)
 
 ---
 
-1️⃣3️⃣ دروس مستفادة (FIXes)
+1️⃣4️⃣ دروس مستفادة (FIXes)
 
-🔴 مشاكل واجهناها وحلولها
+🔴 مشاكل واجهناها وحلها
 
 # المشكلة الحل الملف
-1 TTS لا يعمل في useEffect user gesture + زر "ابدأ" FlashScreen
+1 TTS لا يعمل في useEffect user gesture + زر "ابدأ" FlashScreen · MultSolver
 2 الصوت يُقطع قبل اكتماله onEnd + fallback 10s FlashScreen
-3 tts في deps → re-runs ttsRef ثابت FlashScreen
+3 tts في deps → re-runs ttsRef ثابت FlashScreen · MultSolver
 4 Badge يُقطع من الأعلى mx-auto بدل absolute MentalBadge
 5 ألوان تغطي الخلفية CSS filter على الخرزات فقط Rod2D5
 6 حلقة على كل عمود حلقة فقط عند tint='white' Rod2D5
-7 border على كل عمود ملون إزالة border · إبقاء overlay Rod2D5
-8 electric-500 غير موجود استبدال بـ violet-700 FlashListScreen
+7 electric-500 غير موجود استبدال بـ violet-700 FlashListScreen
+8 "عشرون" تُلفظ "عشر" تشكيل موجَّه flashData · multData
+9 أخطاء رياضية في قيم S08 مراجعة يدوية multData
+10 زر "شاهد" لا يعمل للضرب ?? getMultLessonById FlashListScreen
 
 🎓 قواعد ذهبية
 
 1. ttsRef — مرجع ثابت للـ useSpeech
 2. onEnd — لا انتقال بدون انتهاء الصوت
-3. user gesture — أول تشغيل TTS يحتاج زر
+3. user gesture — أول تشغيل TTS يحتاج زر "ابدأ"
 4. default undefined — كل prop جديدة اختيارية
 5. one source of truth — مصدر واحد للصوت (handler)
+6. blurDividend + dimColumns — طمس تدريجي بعد كل مرحلة (ضرب)
+7. تشكيل موجَّه — الكلمات المُشكِلة فقط (TTS)
+8. ?? getMultLessonById — للتمييز بين القسمة والضرب
 
 ---
 
 📊 حالة النظام الشاملة
 
 النظام الحالة
-🎬 الفلاشات (Flash) ✅ يعمل
-🖐️ التمرين (TwoAbacus) ✅ يعمل
-🔊 TTS ✅ يعمل (user gesture)
+🎬 الفلاشات (أساسيات) ✅ يعمل
+🎬 الفلاشات (قسمة S07) ✅ 4 دروس
+🎬 الفلاشات (قسمة S08) ✅ 4 دروس
+🎬 الفلاشات (ضرب S05) ✅ 4 دروس
+🎬 الفلاشات (ضرب S06) ✅ 4 دروس
+🖐️ تمرين القسمة (TwoAbacus) ✅ 8 مسائل
+🖐️ تمرين الضرب (MultSolver) ✅ 8 دروس
+🔊 TTS ✅ يعمل + تشكيل
 🎨 الألوان ✅ دقيقة
+🎯 الطمس التدريجي ✅ (ضرب)
 🔗 الربط ✅ تلقائي
 📚 باقي التطبيق ✅ لا تأثير
 
@@ -435,18 +557,22 @@ prob_10 484 ÷ 4 4 3
 
 1. اقرأ هذا الملف كاملاً — يفهم البنية في 10 دقائق
 2. لا تلمس الملفات المحمية
-3. لإضافة فلاش جديد:
+3. لإضافة فلاش قسمة:
    · أضف FlashLesson في flashData.ts
    · أضف DivisionProblem في sorobanDivisionData.ts
    · اربطهما في LESSON_TO_PROBLEM
-4. لإضافة مسألة قسمة:
-   · أضف خطوة في divisionProblems
-   · لا حاجة لتعديل أي مكون
+4. لإضافة فلاش ضرب:
+   · أضف FlashLesson في multData.ts
+   · لا حاجة لجدول ربط
+5. لإضافة ميزة جديدة:
+   · PropTypes اختيارية فقط
+   · اختبار على 4 أوضاع
+   · توثيق في FIXes
 
 ---
 
-آخر تحديث: 2026-10-10 (المسائية)
-الحالة: 🟢 البناء أخضر · الفلاش يعمل · التمرين يعمل
+آخر تحديث: 2026-10-11
+الحالة: 🟢 البناء أخضر · قسمة + ضرب مكتملان
 المرجع: RESCUE.md + هذا الملف
 
 ```
