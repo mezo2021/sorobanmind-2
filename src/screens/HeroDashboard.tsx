@@ -1,29 +1,21 @@
-// ═══════════════════════════════════════════════════════════════════
-// 🆕 src/screens/HeroDashboard.tsx — مُعدَّل جلسة 2026-10-11
-// ═══════════════════════════════════════════════════════════════════
-//
-// ما تم إضافته (3 تغييرات فقط):
-//   1. استيراد Gamepad2 من lucide-react + GamesListScreen
-//   2. حالة محلية: showGames (لإدارة عرض مدينة الألعاب داخلياً)
-//   3. بطاقة جديدة "مدينة الألعاب" بعد بطاقة "الفلاشات التعليمية"
-//
-// لا يلمس: onNavigate · App.tsx · أي منطق موجود
-// ═══════════════════════════════════════════════════════════════════
-
 // src/screens/HeroDashboard.tsx
+// [GAMES]  — إضافة زر مدينة الألعاب
+// [PLACE]  — قفل امتحان تحديد المستوى بعد أول محاولة
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import {
   Sparkles, Flame, Brain, Zap, Palette,
   X, Users, Trophy, Target, Grid3X3, Film,
-  Gamepad2,                                          // 🆕
+  Gamepad2, CheckCircle2,
   type LucideIcon,
 } from 'lucide-react';
 
 import type { Screen, CharacterType } from '@/types';
 import { Companion } from '@/components/Companion';
 import { CharacterSelector } from '@/components/CharacterSelector';
-import { GamesListScreen } from '@/components/games/GamesListScreen';   // 🆕
+import { GamesListScreen } from '@/components/games/GamesListScreen';
+import { useProgressStore } from '@/store/progressStore';
 
 interface HeroDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -123,7 +115,20 @@ export function HeroDashboard({
   earnedBadges: _earnedBadges,
 }: HeroDashboardProps) {
   const [exam2Passed, setExam2Passed] = useState(false);
-  const [showGames, setShowGames] = useState(false);   // 🆕
+  const [showGames, setShowGames] = useState(false);
+
+  // 🆕 [PLACE] — عدد محاولات امتحان تحديد المستوى
+  const placementAttempts = useProgressStore((s) => s.placementAttempts);
+  const [recommendedLevel, setRecommendedLevel] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('soroban_placement_recommended');
+      if (raw) setRecommendedLevel(raw);
+    } catch { /* ignore */ }
+  }, []);
+
+  const hasTakenPlacement = placementAttempts > 0 || recommendedLevel !== null;
 
   useEffect(() => {
     try {
@@ -174,7 +179,6 @@ export function HeroDashboard({
     onNavigate(screen);
   };
 
-  // 🆕 عرض مدينة الألعاب داخلياً (بلا لمس App.tsx)
   if (showGames) {
     return (
       <GamesListScreen
@@ -316,7 +320,7 @@ export function HeroDashboard({
         </div>
       </motion.div>
 
-      {/* PLACEMENT TEST CARD */}
+      {/* 🆕 [PLACE] PLACEMENT TEST CARD */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -325,37 +329,87 @@ export function HeroDashboard({
       >
         <motion.button
           type="button"
-          whileHover={{ scale: 1.01, y: -3 }}
-          whileTap={{ scale: 0.99 }}
-          onClick={() => handleNav('placement-test' as Screen)}
-          className="group relative glass-card p-5 sm:p-6 text-right overflow-hidden w-full border-2 border-gold-400/40"
+          whileHover={!hasTakenPlacement ? { scale: 1.01, y: -3 } : {}}
+          whileTap={!hasTakenPlacement ? { scale: 0.99 } : {}}
+          onClick={() => {
+            if (hasTakenPlacement) return;
+            handleNav('placement-test' as Screen);
+          }}
+          disabled={hasTakenPlacement}
+          className={`group relative glass-card p-5 sm:p-6 text-right overflow-hidden w-full border-2 transition-all ${
+            hasTakenPlacement
+              ? 'border-emerald-400/40 opacity-80 cursor-not-allowed'
+              : 'border-gold-400/40'
+          }`}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-gold-400 to-amber-600 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
-          <div className="absolute -top-20 -right-20 w-48 h-48 bg-gold-500/30 blur-3xl" />
+          <div
+            className={`absolute inset-0 ${
+              hasTakenPlacement
+                ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                : 'bg-gradient-to-br from-gold-400 to-amber-600'
+            } opacity-10 ${!hasTakenPlacement ? 'group-hover:opacity-20' : ''} transition-opacity duration-500`}
+          />
+          <div
+            className={`absolute -top-20 -right-20 w-48 h-48 blur-3xl ${
+              hasTakenPlacement ? 'bg-emerald-500/30' : 'bg-gold-500/30'
+            }`}
+          />
 
           <div className="relative flex items-center gap-4">
-            <div className="shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-gold-400 to-amber-600 flex items-center justify-center shadow-xl shadow-gold-500/50">
-              <Target className="w-8 h-8 text-white" />
+            <div
+              className={`shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl ${
+                hasTakenPlacement
+                  ? 'bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-500/50'
+                  : 'bg-gradient-to-br from-gold-400 to-amber-600 shadow-gold-500/50'
+              }`}
+            >
+              {hasTakenPlacement ? (
+                <CheckCircle2 className="w-8 h-8 text-white" />
+              ) : (
+                <Target className="w-8 h-8 text-white" />
+              )}
             </div>
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <h4 className="text-xl font-black font-display text-white">
-                  امتحان تحديد المستوى
+                  {hasTakenPlacement
+                    ? 'تم تحديد مستواك'
+                    : 'امتحان تحديد المستوى'}
                 </h4>
-                <span className="px-2 py-0.5 rounded-lg bg-gold-400/30 text-gold-100 text-[10px] font-bold">
-                  جديد
+                <span
+                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold whitespace-nowrap ${
+                    hasTakenPlacement
+                      ? 'bg-emerald-400/30 text-emerald-100'
+                      : 'bg-gold-400/30 text-gold-100'
+                  }`}
+                >
+                  {hasTakenPlacement ? '✅ مكتمل' : 'جديد'}
                 </span>
               </div>
               <p className="text-xs text-white/60 font-body leading-relaxed">
-                ٤٠ سؤالاً — ٢٠ دقيقة — يحدد نقطة البداية المثالية
+                {hasTakenPlacement
+                  ? `المستوى الموصى به: ${recommendedLevel ?? 'L0'} — تحدّث مع وليّ الأمر للتغيير`
+                  : '٤٠ سؤالاً — ٢٠ دقيقة — يحدد نقطة البداية المثالية'}
               </p>
-              <p className="text-xs text-gold-300 font-body mt-1">
-                🎯 مفتوح دائماً
+              <p
+                className={`text-xs font-body mt-1 ${
+                  hasTakenPlacement ? 'text-emerald-300' : 'text-gold-300'
+                }`}
+              >
+                {hasTakenPlacement
+                  ? '🔒 لا يمكن إعادة الامتحان'
+                  : '🎯 مفتوح دائماً'}
               </p>
             </div>
 
-            <div className="shrink-0 self-center text-gold-300 group-hover:text-gold-100 transition-colors">
+            <div
+              className={`shrink-0 self-center transition-colors ${
+                hasTakenPlacement
+                  ? 'text-emerald-300'
+                  : 'text-gold-300 group-hover:text-gold-100'
+              }`}
+            >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
