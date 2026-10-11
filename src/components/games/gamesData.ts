@@ -1,0 +1,89 @@
+// ═══════════════════════════════════════════════════════════════════
+// 🆕 src/components/games/gamesData.ts — ملف جديد
+// ═══════════════════════════════════════════════════════════════════
+//
+// ما يضيفه:
+//   - GameId · GameMeta · GAMES (بيانات الألعاب الخمس)
+//   - getGameById()
+//
+// لا يلمس أي ملف موجود · لا يؤثر على الدروس.
+// ═══════════════════════════════════════════════════════════════════
+
+import type { CharacterType } from '../../types';
+
+export type GameId =
+  | 'flying-abacus'
+  | 'detective'
+  | 'friends'
+  | 'pirate-race'
+  | 'anzan-island';
+
+export type GameStatus = 'ready' | 'building';
+
+export interface GameMeta {
+  id: GameId;
+  title: string;
+  subtitle: string;
+  icon: string;
+  gradient: string;
+  recommendHero: CharacterType;
+  duration: string;
+  status: GameStatus;
+}
+
+export const GAMES: GameMeta[] = [
+  {
+    id: 'flying-abacus',
+    title: 'العداد الطائر',
+    subtitle: 'اقرأ قيمة المعداد بسرعة البرق',
+    icon: '🛸',
+    gradient: 'from-sky-500 to-blue-700',
+    recommendHero: 'rayan',
+    duration: '60 ثانية',
+    status: 'building',
+  },
+  {
+    id: 'detective',
+    title: 'المحقق الرقمي',
+    subtitle: 'اكتشف الخطأ وأصلح المعداد',
+    icon: '🔍',
+    gradient: 'from-violet-500 to-purple-700',
+    recommendHero: 'joud',
+    duration: '45 ثانية',
+    status: 'building',
+  },
+  {
+    id: 'friends',
+    title: 'أصدقاء 5 و 10',
+    subtitle: 'قواعد المكملات باللمس',
+    icon: '🤝',
+    gradient: 'from-emerald-500 to-teal-700',
+    recommendHero: 'sham',
+    duration: '90 ثانية',
+    status: 'building',
+  },
+  {
+    id: 'pirate-race',
+    title: 'سباق القراصنة',
+    subtitle: 'أسرع من العاصفة',
+    icon: '🏴‍☠️',
+    gradient: 'from-rose-500 to-red-700',
+    recommendHero: 'rayan',
+    duration: '90 ثانية',
+    status: 'building',
+  },
+  {
+    id: 'anzan-island',
+    title: 'جزيرة الأنزان',
+    subtitle: 'الحساب الذهني الخارق',
+    icon: '🏝️',
+    gradient: 'from-amber-500 to-orange-700',
+    recommendHero: 'sham',
+    duration: '60 ثانية',
+    status: 'building',
+  },
+];
+
+export function getGameById(id: GameId): GameMeta | undefined {
+  return GAMES.find((g) => g.id === id);
+}
