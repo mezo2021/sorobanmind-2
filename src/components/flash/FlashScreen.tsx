@@ -5,7 +5,6 @@ import { ArrowRight, ChevronLeft, ChevronRight, RotateCcw, Volume2 } from 'lucid
 import { useSpeech } from '@/hooks/useSpeech';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { MentalBadge } from './MentalBadge';
-import { FingerMovementIcon } from './FingerMovementIcon';
 import type { FlashLesson } from './types';
 
 const TTS_RATE = 0.7;
@@ -126,14 +125,6 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
 
       <div className="px-4 mb-3">
         <MentalBadge lines={step.badgeLines} visible={badgeVisible} lineDelayMs={BADGE_LINE_MS} variant={badgeVariant} />
-        {/* أيقونة الحركة (للسلاسل) */}
-        {step.movement && (
-          <div className="flex justify-center mt-2">
-            <div className="flex items-center gap-2 bg-emerald-500/15 border border-emerald-500/40 rounded-2xl px-4 py-2">
-              <FingerMovementIcon type={step.movement} size={48} />
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="flex-1 flex items-center justify-center px-3">
