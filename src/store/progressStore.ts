@@ -7,6 +7,7 @@
 // [FIX B1]  removed dead reload() — 2026-10-04
 // [FIX B4]  unify AND for visual anzan — 2026-10-04
 // [FIX N62] outcome انتقل إلى RemediationSession (اختياري) — 2026-10-05
+// [GAMES]   إضافة نظام التذاكر: ticketXP + tickets — 2026-10-11
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -83,6 +84,11 @@ export interface RemediationSession {
   outcome?: "passed" | "failed";
 }
 
+// ═══ ثوابت نظام التذاكر ═══
+export const TICKET_COST = 10;      // 10 XP = تذكرة واحدة
+export const TICKET_XP_CAP = 20;    // سقف ticketXP
+export const TICKETS_MAX = 1;       // تذكرة واحدة فقط في الجيب
+
 // ═══ الحالة الكاملة ═══
 export interface ProgressState {
   childName: string;
@@ -112,6 +118,10 @@ export interface ProgressState {
   soundEnabled: boolean;
   voiceEnabled: boolean;
   hapticsEnabled: boolean;
+
+  // 🆕 نظام التذاكر
+  ticketXP: number;    // رصيد XP الخاص بالتذاكر (سقف 20)
+  tickets: number;     // عدد التذاكر في الجيب (سقف 1)
 
   setChildName: (name: string) => void;
   setCategory: (category: Category) => void;
@@ -150,6 +160,10 @@ export interface ProgressState {
   toggleVoice: () => void;
   toggleHaptics: () => void;
   reset: () => void;
+
+  // 🆕 نظام التذاكر
+  buyTicket: () => void;       // شراء تذكرة (10 XP من ticketXP)
+  consumeTicket: () => void;   // استهلاك تذكرة عند فتح لعبة
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -192,6 +206,9 @@ const initialState = {
   soundEnabled: true,
   voiceEnabled: true,
   hapticsEnabled: true,
+  // 🆕 نظام التذاكر
+  ticketXP: 0,
+  tickets: 0,
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -442,10 +459,20 @@ export const useProgressStore = create<ProgressState>()(
           };
         }),
 
+      // ═══ addXP — معدّل: يُحدّث totalXP + ticketXP ═══
+      // totalXP: بلا سقف (للمستويات)
+      // ticketXP: بسقف TICKET_XP_CAP (20)
       addXP: (amount) =>
-        set((state) => ({
-          totalXP: state.totalXP + Math.max(0, amount),
-        })),
+        set((state) => {
+          const safeAmount = Math.max(0, amount);
+          return {
+            totalXP: state.totalXP + safeAmount,
+            ticketXP: Math.min(
+              TICKET_XP_CAP,
+              state.ticketXP + safeAmount,
+            ),
+          };
+        }),
 
       updateStreak: () => {
         const today = getToday();
@@ -476,10 +503,32 @@ export const useProgressStore = create<ProgressState>()(
         set((state) => ({ hapticsEnabled: !state.hapticsEnabled })),
 
       reset: () => set({ ...initialState }),
+
+      // ═══ 🆕 نظام التذاكر ═══
+
+      // شراء تذكرة: خصم 10 من ticketXP · إضافة تذكرة للجيب
+      // شروط: لا يوجد تذكرة في الجيب · الرصيد كافٍ
+      buyTicket: () =>
+        set((state) => {
+          if (state.tickets >= TICKETS_MAX) return state;
+          if (state.ticketXP < TICKET_COST) return state;
+          return {
+            ticketXP: state.ticketXP - TICKET_COST,
+            tickets: state.tickets + 1,
+          };
+        }),
+
+      // استهلاك تذكرة: خصم 1 من الجيب · لا يلمس ticketXP
+      // يُستدعى عند فتح أي لعبة
+      consumeTicket: () =>
+        set((state) => {
+          if (state.tickets <= 0) return state;
+          return { tickets: state.tickets - 1 };
+        }),
     }),
     {
       name: "sorobanmind-v2-progress",
-      version: 5,
+      version: 6,
       migrate: (persistedState, version) => {
         const old = (persistedState as Record<string, unknown>) || {};
 
@@ -517,6 +566,16 @@ export const useProgressStore = create<ProgressState>()(
               (old.pendingRemediation as PendingRemediation | null) || null,
             remediationHistory:
               (old.remediationHistory as RemediationSession[]) || [],
+          } as ProgressState;
+        }
+
+        // 🆕 v6 — إضافة نظام التذاكر
+        if (version < 6) {
+          return {
+            ...initialState,
+            ...old,
+            ticketXP: 0,
+            tickets: 0,
           } as ProgressState;
         }
 
@@ -558,5 +617,20 @@ export const selectRecentRemediation = (days: number) =>
     const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
     return state.remediationHistory.filter((s) => s.completedAt >= cutoff);
   };
+
+// ═══ 🆕 Selectors نظام التذاكر ═══
+
+export const selectTicketXP = (state: ProgressState) => state.ticketXP;
+
+export const selectTickets = (state: ProgressState) => state.tickets;
+
+export const selectCanBuyTicket = (state: ProgressState) =>
+  state.tickets < TICKETS_MAX && state.ticketXP >= TICKET_COST;
+
+export const selectHasTicket = (state: ProgressState) =>
+  state.tickets >= 1;
+
+export const selectTicketProgress = (state: ProgressState) =>
+  Math.min(100, (state.ticketXP / TICKET_COST) * 100);
 
 export default useProgressStore;
