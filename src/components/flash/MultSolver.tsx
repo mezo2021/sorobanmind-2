@@ -1,12 +1,14 @@
 // src/components/flash/MultSolver.tsx
-// ✖️ تمرين الضرب — معدادان · المضروب يسار · الناتج يمين
+// ✖️ تمرين الضرب — معدادان · TTS · تحقق يدوي
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ChevronLeft, RotateCcw, Lightbulb, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ArrowRight, ChevronLeft, RotateCcw, Lightbulb, CheckCircle2, AlertTriangle, Volume2 } from 'lucide-react';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
+import { useSpeech } from '@/hooks/useSpeech';
 import type { FlashLesson } from './types';
 
+const TTS_RATE = 0.7;
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 function toAr(v: number): string {
   return String(v).replace(/\d/g, (d) => ARABIC_DIGITS[Number(d)]);
@@ -28,17 +30,28 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
   const [errorMsg, setErrorMsg] = useState('');
   const [showHint, setShowHint] = useState(false);
   const [resetKey, setResetKey] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const multRef = useRef(0);
   const resultRef = useRef(0);
 
+  // ═══ TTS ═══
+  const tts = useSpeech();
+  const ttsRef = useRef(tts);
+  useEffect(() => { ttsRef.current = tts; }, [tts]);
+
   const step = lesson.steps[stepIdx];
   const isLastStep = stepIdx === lesson.steps.length - 1;
+
+  const speakStep = useCallback((s: typeof step) => {
+    if (!s?.ttsText) return;
+    ttsRef.current.speak(s.ttsText, { rate: TTS_RATE });
+  }, []);
 
   useEffect(() => { multRef.current = multVal; }, [multVal]);
   useEffect(() => { resultRef.current = resultVal; }, [resultVal]);
 
-  // عند تغيّر الخطوة — نُحدّث القيم الابتدائية
+  // ═══ عند تغيّر الخطوة: تحديث القيم + TTS ═══
   useEffect(() => {
     if (!step) return;
     setMultVal(step.dividendValue ?? 0);
@@ -48,7 +61,29 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
     setStatus('idle');
     setErrorMsg('');
     setShowHint(false);
-  }, [stepIdx]);
+  }, [stepIdx, step]);
+
+  // ═══ TTS عند بدء التمرين فقط ═══
+  const handleStart = () => {
+    setHasStarted(true);
+    const s = lesson.steps[stepIdx];
+    if (s) speakStep(s);
+  };
+
+  // ═══ TTS عند الانتقال (فقط إن بدأ) ═══
+  const handleNext = () => {
+    if (isLastStep) { onComplete?.(); return; }
+    ttsRef.current.stop();
+    const n = stepIdx + 1;
+    setStepIdx(n);
+    const s = lesson.steps[n];
+    if (s && hasStarted) speakStep(s);
+  };
+
+  const handleReplay = () => {
+    const s = lesson.steps[stepIdx];
+    if (s) speakStep(s);
+  };
 
   const handleVerify = () => {
     const m = multRef.current;
@@ -67,12 +102,8 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
     }
   };
 
-  const handleNext = () => {
-    if (isLastStep) { onComplete?.(); return; }
-    setStepIdx((i) => i + 1);
-  };
-
   const handleReset = () => {
+    ttsRef.current.stop();
     setMultVal(0);
     setResultVal(0);
     multRef.current = 0;
@@ -81,8 +112,14 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
     setStatus('idle');
     setShowHint(false);
     setErrorMsg('');
+    setHasStarted(false);
     setResetKey((k) => k + 1);
   };
+
+  // تنظيف عند الخروج
+  useEffect(() => {
+    return () => { ttsRef.current.stop(); };
+  }, []);
 
   const handleMultChange = (v: number) => { setMultVal(v); if (status !== 'idle') setStatus('idle'); };
   const handleResultChange = (v: number) => { setResultVal(v); if (status !== 'idle') setStatus('idle'); };
@@ -144,7 +181,7 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
                 className="mt-3 pt-3 border-t border-slate-700 text-xs text-amber-300 font-bold flex items-center justify-center gap-1.5 bg-amber-950/40 p-2 rounded-xl">
                 <Lightbulb className="w-4 h-4 shrink-0 text-amber-400" />
-                <span>راجع الخطوة السابقة · القيمة المطلوبة على الناتج: {toAr(step.resultValue ?? 0)}</span>
+                <span>القيمة المطلوبة على الناتج: {toAr(step.resultValue ?? 0)}</span>
               </motion.div>
             )}
           </motion.div>
@@ -226,22 +263,47 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
       </div>
 
       {/* Controls */}
-      <div className="p-4 pb-6 flex gap-3 bg-slate-900/60 backdrop-blur-md border-t border-white/10">
-        <button onClick={() => setShowHint((s) => !s)}
-          className="px-4 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-slate-200 text-sm font-bold transition shrink-0 flex items-center justify-center gap-1.5 border border-white/10">
-          <Lightbulb className="w-5 h-5 text-amber-400" />
-        </button>
-        {status !== 'success' ? (
-          <button onClick={handleVerify}
-            className="flex-1 py-3.5 rounded-2xl bg-gradient-to-l from-amber-500 to-orange-600 text-white font-black shadow-lg text-sm sm:text-base tracking-wide active:scale-[0.98] transition flex items-center justify-center gap-2 border border-amber-400/30">
-            🔍 تحقق من الإجابة
+      <div className="p-4 pb-6 flex flex-col gap-3 bg-slate-900/60 backdrop-blur-md border-t border-white/10">
+        {!hasStarted ? (
+          <button onClick={handleStart}
+            className="mx-auto px-8 py-4 rounded-full font-bold flex items-center gap-2 transition bg-gradient-to-l from-purple-600 to-amber-500 text-white text-lg shadow-lg shadow-amber-500/30">
+            ▶️ ابدأ
           </button>
         ) : (
-          <button onClick={handleNext}
-            className="flex-1 py-3.5 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-black shadow-lg text-sm sm:text-base tracking-wide active:scale-[0.98] transition flex items-center justify-center gap-2 border border-emerald-400/30">
-            <span>{isLastStep ? '🏆 إنهاء' : 'المرحلة التالية'}</span>
-            {!isLastStep && <ChevronLeft className="w-5 h-5" />}
-          </button>
+          <>
+            {/* Row 1: Hint + Replay */}
+            <div className="flex items-center justify-center gap-3">
+              <button onClick={() => setShowHint((s) => !s)}
+                className={`px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 transition shrink-0 ${
+                  showHint
+                    ? 'bg-amber-500/30 border border-amber-400 text-amber-100'
+                    : 'bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10'
+                }`}>
+                <Lightbulb className="w-4 h-4 text-amber-400" />
+                <span className="hidden sm:inline">تلميح</span>
+              </button>
+
+              <button onClick={handleReplay}
+                className="px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/50 text-emerald-200 hover:bg-emerald-500/30 transition shrink-0">
+                <Volume2 className="w-4 h-4" />
+                <span className="hidden sm:inline">إعادة الصوت</span>
+              </button>
+            </div>
+
+            {/* Row 2: Verify / Next */}
+            {status !== 'success' ? (
+              <button onClick={handleVerify}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-amber-500 to-orange-600 text-white font-black shadow-lg text-sm sm:text-base tracking-wide active:scale-[0.98] transition flex items-center justify-center gap-2 border border-amber-400/30">
+                🔍 تحقق من الإجابة
+              </button>
+            ) : (
+              <button onClick={handleNext}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-black shadow-lg text-sm sm:text-base tracking-wide active:scale-[0.98] transition flex items-center justify-center gap-2 border border-emerald-400/30">
+                <span>{isLastStep ? '🏆 إنهاء' : 'المرحلة التالية'}</span>
+                {!isLastStep && <ChevronLeft className="w-5 h-5" />}
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>
