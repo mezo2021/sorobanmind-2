@@ -528,7 +528,7 @@ export const useProgressStore = create<ProgressState>()(
     }),
     {
       name: "sorobanmind-v2-progress",
-      version: 7,
+      version: 9,
       migrate: (persistedState, version) => {
         const old = (persistedState as Record<string, unknown>) || {};
 
@@ -569,24 +569,66 @@ export const useProgressStore = create<ProgressState>()(
           } as ProgressState;
         }
 
-        // 🆕 v6 — إضافة نظام التذاكر
+        // 🆕 v6 — إضافة نظام التذاكر (مع احتساب XP القديم)
         if (version < 6) {
-          return {
-            ...initialState,
-            ...old,
-            ticketXP: 0,
-            tickets: 0,
-          } as ProgressState;
-        }
-
-        // 🆕 v7 — احتساب XP القديم في رصيد التذاكر (بسقف 20)
-        if (version < 7) {
           const oldTotalXP = (old.totalXP as number) || 0;
           return {
             ...initialState,
             ...old,
-            ticketXP: Math.min(20, oldTotalXP),
+            ticketXP: Math.min(TICKET_XP_CAP, oldTotalXP),
             tickets: 0,
+          } as ProgressState;
+        }
+
+        // 🆕 v7 — احتساب XP الموجود إن كان ticketXP = 0
+        if (version < 7) {
+          const oldTotalXP = (old.totalXP as number) || 0;
+          const existingTicketXP = (old.ticketXP as number) || 0;
+          return {
+            ...initialState,
+            ...old,
+            ticketXP:
+              existingTicketXP > 0
+                ? existingTicketXP
+                : Math.min(TICKET_XP_CAP, oldTotalXP),
+            tickets: 0,
+          } as ProgressState;
+        }
+
+        // 🆕 v8 — إصلاح إضافي
+        if (version < 8) {
+          const oldTotalXP = (old.totalXP as number) || 0;
+          const existingTicketXP = (old.ticketXP as number) || 0;
+          return {
+            ...initialState,
+            ...old,
+            ticketXP:
+              existingTicketXP > 0
+                ? existingTicketXP
+                : Math.min(TICKET_XP_CAP, oldTotalXP),
+            tickets: (old.tickets as number) || 0,
+          } as ProgressState;
+        }
+
+        // 🆕 v9 — الإصلاح النهائي: أي مستخدم لديه totalXP > 0
+        //             لكن ticketXP = 0 → يُمنح رصيد من XP الموجود
+        if (version < 9) {
+          const oldTotalXP = (old.totalXP as number) || 0;
+          const existingTicketXP = (old.ticketXP as number) || 0;
+          const existingTickets = (old.tickets as number) || 0;
+
+          // إذا كان الـ ticketXP موجوداً فعلاً · لا نلمسه
+          // إن كان صفراً و totalXP > 0 · نمنح 20 (الحد الأقصى)
+          const newTicketXP =
+            existingTicketXP > 0
+              ? existingTicketXP
+              : Math.min(TICKET_XP_CAP, oldTotalXP);
+
+          return {
+            ...initialState,
+            ...old,
+            ticketXP: newTicketXP,
+            tickets: existingTickets,
           } as ProgressState;
         }
 
