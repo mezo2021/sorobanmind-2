@@ -1,7 +1,8 @@
 // src/screens/PlacementTestScreen.tsx
 // [FIX N60-ب] — معامل عشري للأسئلة العشرية
+// [FIX TIME] — تقليص الزمن إلى 10 دقائق
 // شاشة امتحان تحديد المستوى (Placement Test)
-// 40 سؤالاً — 20 دقيقة — 200 نقطة
+// 40 سؤالاً — 10 دقائق — 200 نقطة
 // ✅ الإجابة على السوروبان
 // ✅ زر إنهاء + السابق + التالي
 // ✅ لا يوجد تقييم فوري (الانتقال فوري)
@@ -43,7 +44,8 @@ interface PlacementTestScreenProps {
 // الثوابت
 // ═══════════════════════════════════════════════════════════
 
-const TOTAL_TIME_SEC = 20 * 60;
+// 🆕 [FIX TIME] — تقليص الزمن من 20 دقيقة إلى 10 دقائق
+const TOTAL_TIME_SEC = 10 * 60;
 const LOW_SCORE_THRESHOLD = 7;
 
 // ═══════════════════════════════════════════════════════════
@@ -58,13 +60,10 @@ function formatTime(seconds: number): string {
 
 /**
  * ✅ حساب الأعمدة من max(السلسلة، الناتج)
- * (بدل الاعتماد على الناتج فقط)
  */
 function getColumnsForQuestion(question: PlacementQuestion): number {
-  // ✅ استخراج الأرقام من نص السؤال (لأن PlacementQuestion لا يحتوي على operands)
   const nums = (question.question.match(/\d+/g) ?? []).map(Number);
   const candidates: number[] = [
-    // [FIX N60-ب] — معامل عشري للأسئلة العشرية
     Math.abs(Math.round(question.result * (question.result % 1 !== 0 ? 100 : 1))),
     ...nums.map(Math.abs),
   ];
@@ -283,7 +282,8 @@ export function PlacementTestScreen({
               <span className="text-gold-300 font-bold shrink-0">
                 {formatNumber(2, numberStyle)}.
               </span>
-              <p>الزمن الإجمالي: {formatNumber(20, numberStyle)} دقيقة فقط</p>
+              {/* 🆕 [FIX TIME] — 10 دقائق */}
+              <p>الزمن الإجمالي: {formatNumber(10, numberStyle)} دقائق فقط</p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">
@@ -331,7 +331,7 @@ export function PlacementTestScreen({
   if (phase === 'running' && currentQ) {
     const progress = ((currentIdx + 1) / questions.length) * 100;
     const timeWarning = timeLeft <= 60;
-    const columns = getColumnsForQuestion(currentQ);  // ✅ max(السلسلة، الناتج)
+    const columns = getColumnsForQuestion(currentQ);
     const isLastQuestion = currentIdx === questions.length - 1;
     const isFirstQuestion = currentIdx === 0;
 
@@ -393,7 +393,6 @@ export function PlacementTestScreen({
             animate={{ opacity: 1, scale: 1 }}
             className="glass-card p-4 sm:p-6 w-full text-center mb-4"
           >
-            {/* ✅ شارة عدد الأعمدة */}
             <div className="flex items-center justify-center gap-2 mb-4">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-400/30 text-purple-200 text-xs font-bold">
                 <Grid3X3 className="w-3.5 h-3.5" />
