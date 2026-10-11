@@ -1,12 +1,10 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/GamesListScreen.tsx — v3 (يدعم المعاينة)
+// 🆕 src/components/games/GamesListScreen.tsx — v4
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما تغيّر عن v2:
-//   - استيراد isPreviewMode من @/utils/previewMode (المصدر الرسمي)
-//   - في المعاينة: كل الألعاب مفتوحة · بلا تذاكر · بلا XP
-//   - شارة "معاينة" أعلى الشاشة
-//   - إخفاء ماكينة التذاكر في المعاينة
+// ما تغيّر عن v3:
+//   - استيراد HighScoreBadge
+//   - عرض الرقم القياسي (compact) في بطاقة كل لعبة
 //
 // لا يلمس أي ملف خارج games/.
 // ═══════════════════════════════════════════════════════════════════
@@ -16,6 +14,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Ticket, Lock, Play, Sparkles, Eye } from 'lucide-react';
 import { GAMES, type GameId, type GameMeta } from './gamesData';
 import { FlyingAbacusGame } from './FlyingAbacus/FlyingAbacusGame';
+import { HighScoreBadge } from './HighScoreBadge';
 import { useProgressStore, TICKET_COST } from '../../store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
 
@@ -292,9 +291,13 @@ function GameCard({
           <p className="text-xs text-white/50 mt-0.5 truncate">
             {game.subtitle}
           </p>
-          <p className="text-[10px] text-amber-300/80 mt-1">
-            ⏱️ {game.duration}
-          </p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-[10px] text-amber-300/80">
+              ⏱️ {game.duration}
+            </p>
+            {/* 🆕 الرقم القياسي */}
+            <HighScoreBadge gameId={game.id} variant="compact" />
+          </div>
         </div>
         <button
           onClick={onOpen}
