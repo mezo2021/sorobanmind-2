@@ -1,10 +1,10 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/gamesData.ts — ملف جديد
+// 🆕 src/components/games/gamesData.ts — v2
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما يضيفه:
-//   - GameId · GameMeta · GAMES (بيانات الألعاب الخمس)
-//   - getGameById()
+// ما تغيّر عن v1:
+//   - flying-abacus: building → ready
+//   - detective: building → ready
 //
 // لا يلمس أي ملف موجود · لا يؤثر على الدروس.
 // ═══════════════════════════════════════════════════════════════════
@@ -40,7 +40,7 @@ export const GAMES: GameMeta[] = [
     gradient: 'from-sky-500 to-blue-700',
     recommendHero: 'rayan',
     duration: '60 ثانية',
-    status: 'building',
+    status: 'ready',      // ✅ مكتمل
   },
   {
     id: 'detective',
@@ -50,7 +50,7 @@ export const GAMES: GameMeta[] = [
     gradient: 'from-violet-500 to-purple-700',
     recommendHero: 'joud',
     duration: '45 ثانية',
-    status: 'building',
+    status: 'ready',      // ✅ مكتمل
   },
   {
     id: 'friends',
