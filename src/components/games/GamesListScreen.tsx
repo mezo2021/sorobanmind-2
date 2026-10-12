@@ -1,12 +1,10 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/GamesListScreen.tsx — v7
+// 🆕 src/components/games/GamesListScreen.tsx — v8
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما تغيّر عن v6:
-//   1. منع استهلاك التذكرة على ألعاب 'building'
-//   2. تعطيل زر 'building' بصرياً (لا نقر · لا استهلاك)
-//   3. شارة "🚧 قيد التطوير" على بطاقة building
-//
+// ما تغيّر عن v7:
+//   - استيراد PirateRaceGame
+//   - ربط مسار 'pirate-race'
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect } from 'react';
@@ -16,6 +14,7 @@ import { GAMES, type GameId, type GameMeta } from './gamesData';
 import { FlyingAbacusGame } from './FlyingAbacus/FlyingAbacusGame';
 import { DetectiveGame } from './Detective/DetectiveGame';
 import { FriendsGame } from './Friends/FriendsGame';
+import { PirateRaceGame } from './Pirates/PirateRaceGame';
 import { HighScoreBadge } from './HighScoreBadge';
 import { useProgressStore, TICKET_COST } from '../../store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
@@ -46,7 +45,6 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
   const canBuy = preview ? false : !hasTicket && ticketXP >= TICKET_COST;
   const progressPct = Math.min(100, (ticketXP / TICKET_COST) * 100);
 
-  // 🆕 لا استهلاك · لا فتح · لألعاب 'building'
   const handleOpenGame = (game: GameMeta) => {
     if (!hasTicket) return;
     if (game.status !== 'ready') return;
@@ -64,6 +62,9 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
     }
     if (active.gameId === 'friends') {
       return <FriendsGame onBack={() => setActive(null)} />;
+    }
+    if (active.gameId === 'pirate-race') {
+      return <PirateRaceGame onBack={() => setActive(null)} />;
     }
 
     return (
@@ -163,7 +164,7 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
   );
 }
 
-// ═══ ماكينة التذاكر (بلا تغيير) ═══
+// ═══ ماكينة التذاكر ═══
 function TicketMachine({
   ticketXP, hasTicket, canBuy, progressPct, onBuy, totalXP,
 }: {
@@ -245,7 +246,7 @@ function TicketMachine({
   );
 }
 
-// ═══ بطاقة لعبة — v7 ═══
+// ═══ بطاقة لعبة ═══
 function GameCard({
   game, index, unlocked, onOpen,
 }: {
