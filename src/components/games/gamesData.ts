@@ -1,9 +1,12 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/gamesData.ts — v4
+// 🆕 src/components/games/gamesData.ts — v5
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما تغيّر عن v3:
-//   - pirate-race: building → ready
+// ما تغيّر عن v4:
+//   - anzan-island → sorobania-island
+//   - البطلة: sham → bana
+//   - العنوان: جزيرة سوروبانيا
+//   - status: building → ready
 // ═══════════════════════════════════════════════════════════════════
 
 import type { CharacterType } from '../../types';
@@ -13,7 +16,7 @@ export type GameId =
   | 'detective'
   | 'friends'
   | 'pirate-race'
-  | 'anzan-island';
+  | 'sorobania-island';
 
 export type GameStatus = 'ready' | 'building';
 
@@ -67,17 +70,17 @@ export const GAMES: GameMeta[] = [
     gradient: 'from-rose-500 to-red-700',
     recommendHero: 'rayan',
     duration: '90 ثانية',
-    status: 'ready',      // ✅ مكتمل
+    status: 'ready',
   },
   {
-    id: 'anzan-island',
-    title: 'جزيرة الأنزان',
-    subtitle: 'الحساب الذهني الخارق',
+    id: 'sorobania-island',
+    title: 'جزيرة سوروبانيا',
+    subtitle: 'أسرار المربعات والجذور',
     icon: '🏝️',
     gradient: 'from-amber-500 to-orange-700',
-    recommendHero: 'sham',
+    recommendHero: 'bana',
     duration: '60 ثانية',
-    status: 'building',
+    status: 'ready',
   },
 ];
 
