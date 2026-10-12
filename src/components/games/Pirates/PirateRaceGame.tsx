@@ -1,28 +1,29 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🏴‍☠️ src/components/games/Pirates/PirateRaceGame.tsx — v1
+// 🏴‍☠️ src/components/games/Pirates/PirateRaceGame.tsx — v2
 // ═══════════════════════════════════════════════════════════════════
 //
-// لعبة سباق القراصنة · 90 ثانية · ضرب السوروبان
+// سباق القراصنة · 90 ثانية · ضرب السوروبان
 //
-// الإصلاحات عن نسخة جيميني (8 أخطاء حرجة + 4 منطقية):
-//   1. isPreviewMode() بدل isPreview
-//   2. mood صحيحة فقط ('thinking' | 'excited' | 'celebrating' | 'sad' | 'idle')
-//   3. HighScoreBadge بـ gameId + variant (لا entry)
-//   4. useCharacterVoice(HERO_ID) مع وسيط
-//   5. MulProblem/MulOption من mulEngine (لا محلية)
-//   6. buyTicket() لا يُعيد boolean
-//   7. readChildName() محلية (لا 'البطل')
-//   8. عرض خطوات الخطأ على MultiRodAbacus بدل خطوة ثابتة
-//   9. اسم الطفل الصحيح
-//   10. selectHasTicket من progressStore
-//   11. رمية ريان بعد فحص gap (لا زر دائم)
-//   12. cleanup شامل
+// ما تغيّر عن v1:
+//   1. ساعة لعب واحدة (interval 100ms · dt محسوب) بدل setTimeout داخل setState
+//      ← لا عقوبة مضاعفة في StrictMode · ويتوقف الزمن تلقائياً أثناء المراجعة.
+//   2. الجولة تنتهي بـ 90 ثانية: الفوز = gap > 0 عندها. gap يُسقَّف عند 100.
+//   3. شدّ الحبل: القراصنة يقتربون وحدهم (1 كل 3 ث بعد إحماء 20 ث)،
+//      مدافعهم تقلّص وقت المسألة إذا gap > 80، وحبل ريان إذا gap < 30.
+//   4. handleRope بدل useRayanRope.
+//   5. المستويات: كل 3 صحيحات · سقف 3 قبل الثانية 60 · المستوى 4 ≤ ثلث المسائل.
+//   6. الجسر التعليمي: بعد الخطأ/المهلة فقط · 0.8 ث/خطوة · تخطٍّ باللمس ·
+//      يُبرز الخطوة الخاطئة عبر option.stepIndex القادم من المحرّك.
+//   7. إصلاح عرض المعداد: activeRods = 4 − onesRod (الأعمدة من اليسار).
+//   8. مسألة ذهبية مرتين في الجولة (نقاط ×2 · بلا عقوبة) + كومبو + مدفع ريان.
+//   9. النجوم من gap الأخير · وصندوق الكنز على شاشة النصر.
 // ═══════════════════════════════════════════════════════════════════
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, RotateCcw, Home, Trophy, Crown, Zap, Hand, Star,
+  Volume2, VolumeX,
 } from 'lucide-react';
 import { GameCompanion, type HeroMood } from '../GameCompanion';
 import { HighScoreBadge } from '../HighScoreBadge';
@@ -36,90 +37,112 @@ import PirateScene from './PirateScene';
 import { seaSfx } from './seaSfx';
 import {
   generateMulProblem,
+  adaptiveTime,
+  rodsFromNumber,
   type MulProblem,
   type MulOption,
   type MulLevel,
 } from './mulEngine';
 
+const Scene = React.memo(PirateScene);
+
 // ═══ ثوابت ═══
 const SESSION_SECONDS = 90;
 const GAME_ID = 'pirate-race';
 const HERO_ID: CharacterType = 'rayan';
+const SOUND_KEY = 'pirate_sound_v1';
+
 const GAP_START = 60;
+const GAP_MAX = 100;
+const DRAG_PER_SEC = 1 / 3;     // القراصنة يقتربون 1 كل 3 ث
+const WARMUP_SEC = 20;          // لا سحب في أول 20 ث
+const WARMUP_LEVEL_SEC = 30;    // سقف المستوى 2 قبل الثانية 30
+const LEVEL4_MIN_SEC = 60;
 const ROPE_THRESHOLD = 30;
+const CANNON_THRESHOLD = 80;
+const LOSS_WRONG = 12;
+const LOSS_TIMEOUT = 15;
+const REVEAL_MS = 450;
 
 // ═══ أنواع ═══
-type GameState = 'welcome' | 'playing' | 'error_review' | 'victory' | 'defeat';
+type Phase = 'welcome' | 'ready' | 'playing' | 'reveal' | 'review' | 'caught' | 'victory' | 'defeat';
 type Weather = 'sunny' | 'rain' | 'storm';
 
 interface PirateRaceGameProps {
   onBack: () => void;
 }
 
-interface ErrorDetails {
-  wrongOption: MulOption;
-  correctAnswer: number;
+interface ReviewInfo {
+  kind: MulOption['kind'] | 'timeout';
+  why: string;
+  wrongValue: number | null;
+  stepIndex?: number;
 }
+
+interface Hud {
+  gap: number;
+  elapsed: number;
+  left: number;
+  max: number;
+}
+
+// ═══ عبارات ═══
+const WRONG_PHRASES = [
+  'لا بَأْس! تَعَلَّمْ مِنَ الخُطُوَات.',
+  'قَرِيب! انْظُرْ أَيْنَ الخَطَأ.',
+  'القَرَاصِنَةُ تَقَدَّمُوا... هَيَّا نَلْحَق!',
+];
 
 // ═══ أدوات ═══
 function vibrate(pattern: number | number[]): void {
-  if (typeof navigator === 'undefined') return;
-  if (!('vibrate' in navigator)) return;
+  if (typeof navigator === 'undefined' || !('vibrate' in navigator)) return;
   try { navigator.vibrate(pattern); } catch { /* iOS */ }
 }
 
 function readChildName(): string {
   if (typeof window === 'undefined') return 'بطل';
-  try {
-    return localStorage.getItem('soroban_child_name')?.trim() || 'بطل';
-  } catch {
-    return 'بطل';
-  }
+  try { return localStorage.getItem('soroban_child_name')?.trim() || 'بطل'; } catch { return 'بطل'; }
 }
 
-/** يحوّل رقماً إلى مصفوفة أرقام (بعدد أعمدة محدد · من اليسار) */
-function rodsFromNumber(n: number, cols = 5): number[] {
-  const safe = Math.max(0, Math.floor(n));
-  const str = String(safe).padStart(cols, '0');
-  return str.slice(-cols).split('').map(Number);
+function loadSound(): boolean {
+  try { return localStorage.getItem(SOUND_KEY) !== 'off'; } catch { return true; }
 }
 
-/** يحسب الوقت الأساسي حسب المستوى + التكيف */
-function getBaseTimer(level: MulLevel, errorStreak: number): number {
-  let base: number;
-  switch (level) {
-    case 1: base = 8; break;
-    case 2: base = 10; break;
-    case 3: base = 12; break;
-    case 4: base = 16; break;
-    default: base = 8;
-  }
-  if (errorStreak >= 2) base += 2;
-  return Math.max(6, base);
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-function getWeather(gap: number): Weather {
-  if (gap >= 60) return 'sunny';
-  if (gap >= 30) return 'rain';
-  return 'storm';
+/** المستوى: كل 3 صحيحات · سقف 3 · الرابع متأخر ونادر */
+function pickLevel(score: number, elapsed: number): MulLevel {
+  let lvl = Math.min(3, Math.floor(score / 3) + 1);
+  if (elapsed < WARMUP_LEVEL_SEC) lvl = Math.min(lvl, 2);
+  if (elapsed >= LEVEL4_MIN_SEC && score >= 9 && Math.random() < 1 / 3) lvl = 4;
+  return lvl as MulLevel;
 }
 
-function getHeroBubble(
-  gap: number,
-  streak: number,
-  ropeUsed: boolean,
-  gameState: GameState,
-): string {
-  if (gameState === 'victory') return 'وصلنا للجزيرة! 🏝️';
-  if (gameState === 'defeat') return 'أمسكوا بنا! نحاول مرة أخرى.';
-  if (gap < 30 && !ropeUsed) return 'خُذ حبل الإنقاذ! 🤝';
-  if (gap < 40) return 'القراصنة يقتربون!';
-  if (streak >= 3) return 'أنت أسطورة! 🔥';
-  return 'أسرع يا بطل!';
+/** الطقس = الأسوأ بين مرحلة الزمن وحالة الفجوة */
+function getWeather(gap: number, elapsed: number): Weather {
+  const byTime = elapsed < 30 ? 0 : elapsed < 60 ? 1 : 2;
+  const byGap = gap >= 60 ? 0 : gap >= 30 ? 1 : 2;
+  return (['sunny', 'rain', 'storm'] as const)[Math.max(byTime, byGap)];
+}
+
+function starsFromGap(gap: number): number {
+  return gap >= 75 ? 3 : gap >= 45 ? 2 : 1;
+}
+
+function defaultBubble(gap: number, streak: number, ropeAvail: boolean, elapsed: number): string {
+  if (gap < ROPE_THRESHOLD && ropeAvail) return 'خُذْ حَبْلَ الإِنْقَاذ! 🤝';
+  if (gap < 40) return 'القَرَاصِنَةُ يَقْتَرِبُون!';
+  if (elapsed >= SESSION_SECONDS - 10) return 'الجَزِيرَةُ أَمَامَنَا! 🏝️';
+  if (streak >= 3) return 'أَنْتَ أُسْطُورَة! 🔥';
+  if (gap > CANNON_THRESHOLD) return 'نَحْنُ فِي المُقَدِّمَة!';
+  return 'أَسْرِعْ يَا بَطَل!';
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// المكوّن
+// المكوّن الرئيسي
 // ═══════════════════════════════════════════════════════════════════
 export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
   const { speak } = useCharacterVoice(HERO_ID);
@@ -128,40 +151,65 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
   const buyTicket = useProgressStore((s) => s.buyTicket);
   const consumeTicket = useProgressStore((s) => s.consumeTicket);
 
-  // ═══ حالة الجلسة ═══
-  const [gameState, setGameState] = useState<GameState>('welcome');
-  const [gap, setGap] = useState<number>(GAP_START);
+  // ═══ الطور ═══
+  const [phase, setPhaseState] = useState<Phase>('welcome');
+  const phaseRef = useRef<Phase>('welcome');
+  const goPhase = useCallback((p: Phase) => {
+    phaseRef.current = p;
+    setPhaseState(p);
+  }, []);
+
+  // ═══ مصدر الحقيقة (مراجع) ═══
+  const gapRef = useRef(GAP_START);
+  const elapsedRef = useRef(0);
+  const leftRef = useRef(8);
+  const maxRef = useRef(8);
+  const scoreRef = useRef(0);
+  const pointsRef = useRef(0);
+  const streakRef = useRef(0);
+  const wrongStreakRef = useRef(0);
+  const wrongCountRef = useRef(0);
+  const ropeUsedRef = useRef(false);
+  const answeredRef = useRef(true);
+  const goldenRef = useRef(false);
+  const goldenQueueRef = useRef<number[]>([]);
+  const dangerWarnedRef = useRef(false);
+  const finishedRef = useRef(false);
+  const problemRef = useRef<MulProblem | null>(null);
+  const lastTickRef = useRef(0);
+  const stepClockRef = useRef<(dt: number) => void>(() => {});
+
+  // ═══ حالة العرض ═══
+  const [hud, setHud] = useState<Hud>({ gap: GAP_START, elapsed: 0, left: 8, max: 8 });
+  const [scoreCount, setScoreCount] = useState(0);
+  const [points, setPoints] = useState(0);
+  const [streak, setStreak] = useState(0);
   const [level, setLevel] = useState<MulLevel>(1);
-  const [scoreCount, setScoreCount] = useState<number>(0);
-  const [streak, setStreak] = useState<number>(0);
-  const [errorStreak, setErrorStreak] = useState<number>(0);
-  const [elapsedSec, setElapsedSec] = useState<number>(0);
-  const [isLightning, setIsLightning] = useState<boolean>(false);
-  const [ropeUsed, setRopeUsed] = useState<boolean>(false);
+  const [ropeUsed, setRopeUsed] = useState(false);
+  const [isGolden, setIsGolden] = useState(false);
+  const [isLightning, setIsLightning] = useState(false);
+  const [soundOn, setSoundOn] = useState<boolean>(loadSound);
 
-  // ═══ حالة السؤال ═══
   const [currentProblem, setCurrentProblem] = useState<MulProblem | null>(null);
-  const [displayOptions, setDisplayOptions] = useState<MulOption[]>([]);
-  const [timeLeft, setTimeLeft] = useState<number>(8);
-  const [timerMax, setTimerMax] = useState<number>(8);
+  const [options, setOptions] = useState<MulOption[]>([]);
+  const [reveal, setReveal] = useState<{ picked: number | null; correct: number } | null>(null);
+  const [review, setReview] = useState<ReviewInfo | null>(null);
 
-  // ═══ حالة البطل ═══
   const [heroMood, setHeroMood] = useState<HeroMood>('idle');
+  const [heroLine, setHeroLine] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
 
-  // ═══ حالة الخطأ ═══
-  const [errorDetails, setErrorDetails] = useState<ErrorDetails | null>(null);
-  const [reviewStepIndex, setReviewStepIndex] = useState<number>(0);
-
-  // ═══ الرقم القياسي ═══
   const [childName] = useState<string>(readChildName);
   const [previousHigh, setPreviousHigh] = useState<HighScoreEntry | null>(null);
-  const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
+  const [isNewRecord, setIsNewRecord] = useState(false);
+  const [finalStars, setFinalStars] = useState(0);
+  const [finalWrong, setFinalWrong] = useState(0);
 
-  // ═══ مراجع ═══
+  // ═══ مؤقتات ═══
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const problemTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const elapsedTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const lightningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reducedMotion = useRef(prefersReducedMotion());
 
   const addTimeout = useCallback((fn: () => void, ms: number) => {
     const id = setTimeout(fn, ms);
@@ -173,342 +221,382 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
     timeoutsRef.current = [];
   }, []);
 
-  const clearAllIntervals = useCallback(() => {
-    if (problemTimerRef.current) {
-      clearInterval(problemTimerRef.current);
-      problemTimerRef.current = null;
-    }
-    if (elapsedTimerRef.current) {
-      clearInterval(elapsedTimerRef.current);
-      elapsedTimerRef.current = null;
-    }
-    if (lightningTimerRef.current) {
-      clearTimeout(lightningTimerRef.current);
-      lightningTimerRef.current = null;
-    }
+  const say = useCallback((text: string, ms = 2800) => {
+    setHeroLine(text);
+    if (sayTimerRef.current) clearTimeout(sayTimerRef.current);
+    sayTimerRef.current = setTimeout(() => setHeroLine(null), ms);
   }, []);
 
-  // ═══ تنظيف عند unmount ═══
+  const showToast = useCallback((text: string) => {
+    setToast({ id: Date.now(), text });
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 1400);
+  }, []);
+
+  // تنظيف شامل
   useEffect(() => {
     return () => {
       clearAllTimeouts();
-      clearAllIntervals();
+      if (sayTimerRef.current) clearTimeout(sayTimerRef.current);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
       seaSfx.dispose();
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
     };
-  }, [clearAllTimeouts, clearAllIntervals]);
+  }, [clearAllTimeouts]);
 
-  // ═══ قراءة الرقم القياسي عند mount ═══
   useEffect(() => {
     setPreviousHigh(getHighScore(GAME_ID));
   }, []);
 
-  // ═══════════════════════════════════════════════════════════
-  // منطق اللعبة
-  // ═══════════════════════════════════════════════════════════
-
-  const loadNextProblem = useCallback((lvl: MulLevel, errs: number) => {
-    const prob = generateMulProblem(lvl);
-    setCurrentProblem(prob);
-    // نُخزّن الخيارات مرتّبة عشوائياً
-    const shuffled = [...prob.options].sort(() => Math.random() - 0.5);
-    setDisplayOptions(shuffled);
-    const t = getBaseTimer(lvl, errs);
-    setTimerMax(t);
-    setTimeLeft(t);
-    setReviewStepIndex(0);
-    setHeroMood('thinking');
+  const syncStats = useCallback(() => {
+    setScoreCount(scoreRef.current);
+    setPoints(pointsRef.current);
+    setStreak(streakRef.current);
+    setHud((h) => ({ ...h, gap: gapRef.current }));
   }, []);
 
+  // ═══════════════════════════════════════════════════════════
+  // نهاية الجولة
+  // ═══════════════════════════════════════════════════════════
+  const finish = useCallback((end: 'victory' | 'defeat') => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    clearAllTimeouts();
+
+    const score = scoreRef.current;
+    const stars = end === 'victory' ? starsFromGap(gapRef.current) : 0;
+    setFinalStars(stars);
+    setFinalWrong(wrongCountRef.current);
+    setHud((h) => ({ ...h, gap: end === 'victory' ? gapRef.current : 0 }));
+
+    // XP: 2 + حسب الأداء (سقف 5)
+    let earned = 2;
+    if (score >= 15) earned += 3;
+    else if (score >= 10) earned += 2;
+    else if (score >= 5) earned += 1;
+    addXP(Math.min(5, earned + (end === 'victory' ? 1 : 0)));
+
+    // الرقم القياسي (عدد الإجابات الصحيحة)
+    const result = addScore(GAME_ID, childName, score, HERO_ID);
+    setIsNewRecord(result.isNewRecord);
+    if (result.isNewRecord) setPreviousHigh(result.previousTop);
+
+    seaSfx.playTrumpet(end === 'victory');
+    addTimeout(() => seaSfx.dispose(), 1800);
+
+    if (end === 'victory') {
+      setHeroMood('celebrating');
+      speak(result.isNewRecord ? 'وَصَلْتَ لِلجَزِيرَةِ! رَقَمٌ قِيَاسِيٌّ جَدِيد!' : 'وَصَلْنَا لِلجَزِيرَة! أَحْسَنْتَ!');
+      vibrate([0, 40, 40, 40, 40, 80]);
+      goPhase('victory');
+    } else {
+      setHeroMood('sad');
+      vibrate([0, 40, 40, 80]);
+      goPhase('caught');
+      addTimeout(() => {
+        speak('لا بَأْس يَا بَطَل! سَنَسْتَعِيدُ الكَنْزَ مَعاً. مَرَّةً أُخْرَى؟');
+        goPhase('defeat');
+      }, 1900);
+    }
+  }, [addXP, addTimeout, childName, clearAllTimeouts, goPhase, speak]);
+
+  // ═══════════════════════════════════════════════════════════
+  // المسائل
+  // ═══════════════════════════════════════════════════════════
+  const loadNextProblem = useCallback(() => {
+    const lvl = pickLevel(scoreRef.current, elapsedRef.current);
+    const prob = generateMulProblem(lvl);
+
+    // مسألة ذهبية؟
+    const queue = goldenQueueRef.current;
+    const golden = queue.length > 0 && elapsedRef.current >= queue[0];
+    if (golden) queue.shift();
+    goldenRef.current = golden;
+
+    // الوقت: تكيّف المحرك − ثانية إن كانت مدافعهم مفعّلة
+    let t = adaptiveTime(prob.timeSec, wrongStreakRef.current, streakRef.current);
+    if (gapRef.current > CANNON_THRESHOLD) t = Math.max(6, t - 1);
+    maxRef.current = t;
+    leftRef.current = t;
+    answeredRef.current = false;
+    problemRef.current = prob;
+
+    setCurrentProblem(prob);
+    setOptions(prob.options);
+    setLevel(lvl);
+    setIsGolden(golden);
+    setReveal(null);
+    setHeroMood(golden ? 'excited' : 'thinking');
+    setHud((h) => ({ ...h, left: t, max: t }));
+    if (golden) {
+      showToast('🧰 مَسْأَلَةٌ ذَهَبِيَّة! نِقَاطٌ ×2 وَبِلَا خَسَارَة');
+      seaSfx.playTrumpet(true);
+    }
+  }, [showToast]);
+
+  /** فشل مسألة (خطأ أو مهلة) */
+  const failProblem = useCallback((info: ReviewInfo, loss: number) => {
+    const prob = problemRef.current;
+    if (!prob) return;
+    const golden = goldenRef.current;
+
+    if (!golden) streakRef.current = 0;
+    wrongStreakRef.current += 1;
+    wrongCountRef.current += 1;
+    gapRef.current = Math.max(0, gapRef.current - (golden ? 0 : loss));
+
+    setReveal({ picked: info.wrongValue, correct: prob.answer });
+    setHeroMood('sad');
+    say(WRONG_PHRASES[Math.floor(Math.random() * WRONG_PHRASES.length)]);
+    seaSfx.playTrumpet(false);
+    vibrate([0, 50, 30, 50]);
+    syncStats();
+    goPhase('reveal');
+
+    if (gapRef.current <= 0) {
+      addTimeout(() => finish('defeat'), REVEAL_MS);
+    } else {
+      addTimeout(() => {
+        setReview(info);
+        goPhase('review');
+      }, REVEAL_MS);
+    }
+  }, [addTimeout, finish, goPhase, say, syncStats]);
+
+  const handleAnswer = useCallback((opt: MulOption) => {
+    const prob = problemRef.current;
+    if (!prob || phaseRef.current !== 'playing' || answeredRef.current) return;
+    answeredRef.current = true;
+
+    if (opt.kind !== 'correct') {
+      failProblem(
+        { kind: opt.kind, why: opt.why, wrongValue: opt.value, stepIndex: opt.stepIndex },
+        LOSS_WRONG,
+      );
+      return;
+    }
+
+    // ✅ صحيح
+    const golden = goldenRef.current;
+    streakRef.current += 1;
+    wrongStreakRef.current = 0;
+    scoreRef.current += 1;
+    const st = streakRef.current;
+
+    const fast = leftRef.current > maxRef.current * (2 / 3);
+    const mult = st >= 5 ? 2 : st >= 3 ? 1.5 : 1;
+    pointsRef.current += Math.round((10 + (fast ? 5 : 0)) * mult * (golden ? 2 : 1));
+
+    let gain = golden ? 12 : st >= 3 ? 10 : 6;
+    if (elapsedRef.current >= SESSION_SECONDS - 10) gain += 2;   // سباق الجزيرة
+    if (st > 0 && st % 5 === 0) {
+      gain += 8;
+      showToast('💥 مِدْفَعُ رَيَّان!');
+      say('مِدْفَعِي! ارْجِعُوا يَا قَرَاصِنَة!');
+      speak('مِدْفَعِي!');
+    } else if (st === 3) {
+      showToast('🔥 الرِّيحُ مَعَنَا!');
+    }
+    gapRef.current = Math.min(GAP_MAX, gapRef.current + gain);
+
+    setReveal({ picked: opt.value, correct: prob.answer });
+    setHeroMood('excited');
+    seaSfx.playTrumpet(true);
+    vibrate(30);
+    syncStats();
+
+    addTimeout(() => {
+      if (phaseRef.current === 'playing') loadNextProblem();
+    }, REVEAL_MS);
+  }, [addTimeout, failProblem, loadNextProblem, say, showToast, speak, syncStats]);
+
+  const handleTimeout = useCallback(() => {
+    if (!problemRef.current || answeredRef.current) return;
+    answeredRef.current = true;
+    failProblem({ kind: 'timeout', why: 'انْتَهَى الوَقْت! إِلَيْكَ الحَلُّ خُطْوَةً خُطْوَة.', wrongValue: null }, LOSS_TIMEOUT);
+  }, [failProblem]);
+
+  // ═══════════════════════════════════════════════════════════
+  // ساعة اللعب الواحدة
+  // ═══════════════════════════════════════════════════════════
+  const stepClock = (dt: number) => {
+    if (phaseRef.current !== 'playing') return;
+
+    elapsedRef.current = Math.min(SESSION_SECONDS, elapsedRef.current + dt);
+
+    // السحب البطيء
+    if (elapsedRef.current > WARMUP_SEC) {
+      gapRef.current = Math.max(0, gapRef.current - dt * DRAG_PER_SEC);
+    }
+
+    // مؤقت المسألة
+    let timedOut = false;
+    if (!answeredRef.current && problemRef.current) {
+      leftRef.current = Math.max(0, leftRef.current - dt);
+      if (leftRef.current <= 0) timedOut = true;
+    }
+
+    // تحذير الخطر مرة واحدة
+    if (gapRef.current < ROPE_THRESHOLD && !dangerWarnedRef.current) {
+      dangerWarnedRef.current = true;
+      setHeroMood('thinking');
+      say('القَرَاصِنَةُ يَقْتَرِبُون!', 2200);
+    } else if (gapRef.current >= 40) {
+      dangerWarnedRef.current = false;
+    }
+
+    setHud({
+      gap: gapRef.current,
+      elapsed: elapsedRef.current,
+      left: leftRef.current,
+      max: maxRef.current,
+    });
+
+    if (gapRef.current <= 0) { finish('defeat'); return; }
+    if (elapsedRef.current >= SESSION_SECONDS) { finish('victory'); return; }
+    if (timedOut) handleTimeout();
+  };
+  stepClockRef.current = stepClock;
+
+  useEffect(() => {
+    if (phase !== 'playing') return;
+    lastTickRef.current = performance.now();
+    const id = setInterval(() => {
+      const now = performance.now();
+      const dt = Math.min(0.25, (now - lastTickRef.current) / 1000);
+      lastTickRef.current = now;
+      stepClockRef.current(dt);
+    }, 100);
+    return () => clearInterval(id);
+  }, [phase]);
+
+  // ═══ البرق (العاصفة فقط · محترماً تقليل الحركة) ═══
+  const sceneGap = phase === 'caught' ? 0 : Math.round(Math.min(99, hud.gap));
+  const sceneElapsed = Math.floor(hud.elapsed);
+  const weather = getWeather(sceneGap, sceneElapsed);
+  const roundActive = phase === 'playing' || phase === 'reveal' || phase === 'review';
+
+  useEffect(() => {
+    if (!roundActive || weather !== 'storm' || reducedMotion.current) return;
+    let id: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      id = setTimeout(() => {
+        setIsLightning(true);
+        addTimeout(() => setIsLightning(false), 300);
+        addTimeout(() => seaSfx.playThunder(), 1000);   // الرعد بعد البرق بثانية ثابتة
+        schedule();
+      }, 7000 + Math.random() * 5000);
+    };
+    schedule();
+    return () => clearTimeout(id);
+  }, [roundActive, weather, addTimeout]);
+
+  // ═══════════════════════════════════════════════════════════
+  // البدء · الحبل · المتابعة
+  // ═══════════════════════════════════════════════════════════
   const startRace = useCallback(() => {
-    // فحص التذكرة (إن لم تكن المعاينة)
     if (!isPreviewMode()) {
       if (tickets < 1) {
         buyTicket();
-        // بعد buyTicket · نتحقق مرة أخرى
-        const after = useProgressStore.getState().tickets;
-        if (after < 1) return;
+        if (useProgressStore.getState().tickets < 1) return;
       }
       consumeTicket();
     }
 
     clearAllTimeouts();
-    clearAllIntervals();
-    seaSfx.init();
+    gapRef.current = GAP_START;
+    elapsedRef.current = 0;
+    scoreRef.current = 0;
+    pointsRef.current = 0;
+    streakRef.current = 0;
+    wrongStreakRef.current = 0;
+    wrongCountRef.current = 0;
+    ropeUsedRef.current = false;
+    answeredRef.current = true;
+    goldenRef.current = false;
+    dangerWarnedRef.current = false;
+    finishedRef.current = false;
+    problemRef.current = null;
+    const r = (a: number, b: number) => a + Math.random() * (b - a);
+    goldenQueueRef.current = [r(15, 40), r(55, 80)];
 
-    setGap(GAP_START);
+    setHud({ gap: GAP_START, elapsed: 0, left: 8, max: 8 });
     setScoreCount(0);
+    setPoints(0);
     setStreak(0);
-    setErrorStreak(0);
     setLevel(1);
-    setElapsedSec(0);
     setRopeUsed(false);
+    setIsGolden(false);
     setIsNewRecord(false);
-    setErrorDetails(null);
+    setCurrentProblem(null);
+    setReveal(null);
+    setReview(null);
+    setToast(null);
     setHeroMood('excited');
-
-    const msg = 'أسرع يا بطل! القراصنة خلفنا!';
-    speak(msg);
+    say('أَسْرِعْ يَا بَطَل! القَرَاصِنَةُ خَلْفَنَا!');
+    speak('أَسْرِعْ يَا بَطَل! القَرَاصِنَةُ خَلْفَنَا!');
     vibrate(50);
 
+    seaSfx.setMute(!soundOn);
+    seaSfx.init();                       // أول لمسة = مسموح بالصوت على الجوال
+
+    goPhase('ready');
     addTimeout(() => {
-      loadNextProblem(1, 0);
-      setGameState('playing');
+      loadNextProblem();
+      goPhase('playing');
     }, 900);
   }, [
-    tickets, buyTicket, consumeTicket, speak,
-    clearAllTimeouts, clearAllIntervals, addTimeout, loadNextProblem,
+    tickets, buyTicket, consumeTicket, clearAllTimeouts, say, speak,
+    soundOn, goPhase, addTimeout, loadNextProblem,
   ]);
 
-  const finishGame = useCallback(
-    (endState: 'victory' | 'defeat') => {
-      clearAllTimeouts();
-      clearAllIntervals();
-      setGameState(endState);
-      seaSfx.playTrumpet(endState === 'victory');
-
-      // XP: 2 + 1/2/3 حسب الأداء (سقف 5)
-      let earnedXP = 2;
-      if (scoreCount >= 15) earnedXP += 3;
-      else if (scoreCount >= 10) earnedXP += 2;
-      else if (scoreCount >= 5) earnedXP += 1;
-      if (earnedXP > 5) earnedXP = 5;
-      addXP(earnedXP);
-
-      // الرقم القياسي
-      const result = addScore(GAME_ID, childName, scoreCount, HERO_ID);
-      if (result.isNewRecord) {
-        setIsNewRecord(true);
-        setPreviousHigh(result.previousTop);
-        setHeroMood('celebrating');
-        const msg = endState === 'victory'
-          ? 'وصلت للجزيرة! رقم قياسي جديد!'
-          : 'رقم قياسي جديد!';
-        speak(msg);
-      } else {
-        setIsNewRecord(false);
-        setHeroMood(endState === 'victory' ? 'celebrating' : 'sad');
-        const msg = endState === 'victory'
-          ? 'وصلت للجزيرة! أحسنت!'
-          : 'أمسك بنا القراصنة! حاول مجدداً.';
-        speak(msg);
-      }
-
-      if (endState === 'defeat') {
-        vibrate([0, 40, 40, 80]);
-      } else {
-        vibrate([0, 40, 40, 40, 40, 80]);
-      }
-    },
-    [scoreCount, addXP, speak, childName, clearAllTimeouts, clearAllIntervals],
-  );
-
-  // ═══ معالجة الإجابة ═══
-  const handleAnswer = useCallback(
-    (opt: MulOption) => {
-      if (!currentProblem || gameState !== 'playing') return;
-
-      if (opt.kind === 'correct') {
-        seaSfx.playTrumpet(true);
-        vibrate(30);
-
-        const newStreak = streak + 1;
-        const newScore = scoreCount + 1;
-        const bonus = newStreak >= 3 ? 10 : 6;
-        const newGap = Math.min(100, gap + bonus);
-
-        setStreak(newStreak);
-        setScoreCount(newScore);
-        setErrorStreak(0);
-        setGap(newGap);
-        setHeroMood('excited');
-
-        if (newGap >= 100) {
-          finishGame('victory');
-          return;
-        }
-
-        // ترقية المستوى كل 5 إجابات
-        const newLevel = Math.min(4, Math.floor(newScore / 5) + 1) as MulLevel;
-        setLevel(newLevel);
-
-        addTimeout(() => loadNextProblem(newLevel, 0), 500);
-      } else {
-        seaSfx.playTrumpet(false);
-        vibrate([0, 50, 30, 50]);
-
-        const newGap = Math.max(0, gap - 12);
-        const newErrorStreak = errorStreak + 1;
-
-        setErrorStreak(newErrorStreak);
-        setStreak(0);
-        setGap(newGap);
-        setHeroMood('sad');
-
-        if (newGap <= 0) {
-          finishGame('defeat');
-          return;
-        }
-
-        setErrorDetails({ wrongOption: opt, correctAnswer: currentProblem.answer });
-        setReviewStepIndex(0);
-        setGameState('error_review');
-      }
-    },
-    [
-      currentProblem, gameState, streak, scoreCount, gap, errorStreak,
-      finishGame, addTimeout, loadNextProblem,
-    ],
-  );
-
-  // ═══ انتهاء وقت المسألة ═══
-  const handleTimeout = useCallback(() => {
-    if (!currentProblem || gameState !== 'playing') return;
-
-    seaSfx.playTrumpet(false);
-    vibrate([0, 50, 30, 50]);
-
-    const newGap = Math.max(0, gap - 15);
-    setGap(newGap);
-    setStreak(0);
-    const newErrorStreak = errorStreak + 1;
-    setErrorStreak(newErrorStreak);
-    setHeroMood('sad');
-
-    if (newGap <= 0) {
-      finishGame('defeat');
-      return;
-    }
-
-    // عرض الإجابة الصحيحة (لكن لا نُسمّيه خطأ · فقط انتهى الوقت)
-    const timeoutOption: MulOption = {
-      value: -1,
-      kind: 'near',
-      why: 'انتهى الوقت! إليك الحل الصحيح.',
-    };
-    setErrorDetails({ wrongOption: timeoutOption, correctAnswer: currentProblem.answer });
-    setReviewStepIndex(0);
-    setGameState('error_review');
-  }, [currentProblem, gameState, gap, errorStreak, finishGame]);
-
-  // ═══ المؤقت لكل مسألة ═══
-  useEffect(() => {
-    if (gameState !== 'playing') return;
-
-    problemTimerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          // نُوقف المؤقت · ثم نعالج
-          if (problemTimerRef.current) {
-            clearInterval(problemTimerRef.current);
-            problemTimerRef.current = null;
-          }
-          // نُشغّل قبل انتهاء useEffect
-          setTimeout(() => handleTimeout(), 0);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (problemTimerRef.current) {
-        clearInterval(problemTimerRef.current);
-        problemTimerRef.current = null;
-      }
-    };
-  }, [gameState, currentProblem, handleTimeout]);
-
-  // ═══ مؤقت الزمن المنقضي (للجزيرة) ═══
-  useEffect(() => {
-    if (gameState !== 'playing') return;
-
-    elapsedTimerRef.current = setInterval(() => {
-      setElapsedSec((s) => Math.min(SESSION_SECONDS, s + 1));
-    }, 1000);
-
-    return () => {
-      if (elapsedTimerRef.current) {
-        clearInterval(elapsedTimerRef.current);
-        elapsedTimerRef.current = null;
-      }
-    };
-  }, [gameState]);
-
-  // ═══ البرق في العاصفة ═══
-  useEffect(() => {
-    if (gameState !== 'playing') return;
-    if (gap >= ROPE_THRESHOLD) return;
-
-    const scheduleLightning = () => {
-      const delay = 7000 + Math.random() * 5000;
-      lightningTimerRef.current = setTimeout(() => {
-        setIsLightning(true);
-        seaSfx.playThunder();
-        addTimeout(() => setIsLightning(false), 300);
-        scheduleLightning();
-      }, delay);
-    };
-
-    scheduleLightning();
-
-    return () => {
-      if (lightningTimerRef.current) {
-        clearTimeout(lightningTimerRef.current);
-        lightningTimerRef.current = null;
-      }
-    };
-  }, [gameState, gap, addTimeout]);
-
-  // ═══ رمية حبل ريان ═══
-  const useRayanRope = useCallback(() => {
-    if (ropeUsed || gap >= ROPE_THRESHOLD || !currentProblem) return;
+  const handleRope = useCallback(() => {
+    if (
+      ropeUsedRef.current ||
+      gapRef.current >= ROPE_THRESHOLD ||
+      !problemRef.current ||
+      answeredRef.current ||
+      phaseRef.current !== 'playing'
+    ) return;
+    ropeUsedRef.current = true;
     setRopeUsed(true);
     vibrate(40);
-
-    // نحذف خياراً خاطئاً واحداً
-    const wrongOptions = displayOptions.filter((o) => o.kind !== 'correct');
-    if (wrongOptions.length > 0) {
-      const toRemove = wrongOptions[0];
-      setDisplayOptions((prev) => prev.filter((o) => o !== toRemove));
-    }
     seaSfx.playTrumpet(true);
-  }, [ropeUsed, gap, currentProblem, displayOptions]);
+    showToast('🤝 حَبْلُ رَيَّان!');
 
-  // ═══ متابعة بعد عرض الخطأ ═══
+    // نحذف خياراً خاطئاً واحداً (عشوائياً)
+    setOptions((prev) => {
+      const wrong = prev.filter((o) => o.kind !== 'correct');
+      if (wrong.length === 0) return prev;
+      const rm = wrong[Math.floor(Math.random() * wrong.length)];
+      return prev.filter((o) => o !== rm);
+    });
+  }, [showToast]);
+
   const handleContinueReview = useCallback(() => {
-    setErrorDetails(null);
-    setReviewStepIndex(0);
-    setGameState('playing');
-    loadNextProblem(level, errorStreak);
-  }, [level, errorStreak, loadNextProblem]);
+    if (phaseRef.current !== 'review') return;
+    setReview(null);
+    goPhase('playing');
+    loadNextProblem();
+  }, [goPhase, loadNextProblem]);
 
-  // ═══ إعادة اللعب ═══
-  const handleReplay = useCallback(() => {
-    startRace();
-  }, [startRace]);
-
-  // ═══ الحالة الجوية ═══
-  const weather: Weather = getWeather(gap);
-  const islandElapsed = Math.min(elapsedSec, SESSION_SECONDS);
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    seaSfx.setMute(!next);
+    try { localStorage.setItem(SOUND_KEY, next ? 'on' : 'off'); } catch { /* ignore */ }
+  };
 
   // ═══════════════════════════════════════════════════════════
   // شاشة البداية
   // ═══════════════════════════════════════════════════════════
-  if (gameState === 'welcome') {
+  if (phase === 'welcome') {
     return (
-      <div
-        dir="rtl"
-        className="min-h-screen bg-gradient-to-b from-slate-950 via-rose-950/40 to-slate-950 text-white flex flex-col"
-      >
+      <div dir="rtl" className="min-h-screen bg-gradient-to-b from-slate-950 via-rose-950/40 to-slate-950 text-white flex flex-col">
         <div className="flex items-center gap-2 p-4">
-          <button
-            onClick={onBack}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
-            aria-label="رجوع"
-          >
+          <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition" aria-label="رجوع">
             <ArrowRight className="w-6 h-6 text-rose-400" />
           </button>
         </div>
@@ -523,11 +611,9 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
             <div className="w-28 h-28 rounded-full bg-rose-500/20 border-2 border-rose-400 flex items-center justify-center text-6xl shadow-2xl shadow-rose-500/30">
               🏴‍☠️
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-rose-400">
-              سِبَاقُ القَرَاصِنَة
-            </h1>
+            <h1 className="text-3xl sm:text-4xl font-black text-rose-400">سِبَاقُ القَرَاصِنَة</h1>
             <p className="text-slate-400 text-sm sm:text-base max-w-xs leading-relaxed">
-              أَسْرِعْ بِإِجَابَاتِكَ الصَّحِيحَة لِتَسْبِقَ سَفِينَةَ القَرَاصِنَة!
+              اضْرِبْ بِسُرْعَةٍ لِتَبْقَى أَمَامَ القَرَاصِنَة. اصْمُدْ 90 ثَانِيَةً حَتَّى تَصِلَ إِلَى الجَزِيرَة!
             </p>
           </motion.div>
 
@@ -551,60 +637,80 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
   // ═══════════════════════════════════════════════════════════
   // شاشة النصر
   // ═══════════════════════════════════════════════════════════
-  if (gameState === 'victory') {
-    const stars = Math.floor(scoreCount / 3);
+  if (phase === 'victory') {
     return (
-      <div
-        dir="rtl"
-        className="min-h-screen bg-gradient-to-b from-emerald-950 via-slate-950 to-slate-950 text-white flex flex-col items-center justify-center p-6"
-      >
+      <div dir="rtl" className="min-h-screen bg-gradient-to-b from-emerald-950 via-slate-950 to-slate-950 text-white flex flex-col items-center justify-center p-4 gap-3">
+        <div className="w-full max-w-sm rounded-2xl overflow-hidden border border-amber-400/40" style={{ aspectRatio: '360 / 220' }}>
+          <Scene gap={100} elapsedSec={SESSION_SECONDS} isLightning={false} weather="sunny" />
+        </div>
+
         <motion.div
-          initial={{ scale: 0.85, y: 30 }}
+          initial={{ scale: 0.9, y: 24 }}
           animate={{ scale: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 240, damping: 22 }}
-          className={`w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl flex flex-col items-center gap-4 border-2 ${
+          className={`w-full max-w-sm rounded-3xl p-5 text-center shadow-2xl flex flex-col items-center gap-3 border-2 ${
             isNewRecord
               ? 'bg-gradient-to-br from-amber-900/40 via-slate-800 to-amber-900/40 border-amber-400/70'
               : 'bg-slate-800 border-emerald-700'
           }`}
         >
-          <div className="text-5xl">🏝️</div>
           <h2 className={`text-2xl font-black ${isNewRecord ? 'text-amber-300' : 'text-emerald-400'}`}>
             {isNewRecord ? '🎉 رَقَمٌ قِيَاسِيٌّ جَدِيد!' : 'وَصَلْتَ لِلجَزِيرَة!'}
           </h2>
 
-          <div className="w-full bg-slate-900/80 rounded-2xl border border-slate-700/50 p-4 flex flex-col gap-2">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-400">العَمَلِيَّاتُ الصَّحِيحَة:</span>
-              <span className="text-rose-300 font-bold text-base tabular-nums">{scoreCount}</span>
+          {/* صندوق الكنز */}
+          <div className="flex flex-col items-center gap-1">
+            <motion.div
+              initial={{ rotate: -8, scale: 0.8 }}
+              animate={{ rotate: [-8, 8, 0], scale: [0.8, 1.15, 1] }}
+              transition={{ duration: 1.2 }}
+              className="text-5xl"
+            >
+              🧰
+            </motion.div>
+            <div className="flex gap-2">
+              {[1, 2, 3].map((n) => (
+                <motion.div
+                  key={n}
+                  initial={{ y: -30, opacity: 0, scale: 0 }}
+                  animate={{ y: 0, opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 + n * 0.25, type: 'spring', stiffness: 300, damping: 14 }}
+                >
+                  <Star className={`w-9 h-9 ${n <= finalStars ? 'text-amber-300 fill-amber-300' : 'text-slate-600'}`} />
+                </motion.div>
+              ))}
             </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-400">النُّجُوم:</span>
-              <span className="text-amber-300 font-bold tabular-nums">
-                {'⭐'.repeat(Math.min(stars, 5))} {stars}
-              </span>
+            <p className="text-amber-200 text-xs font-bold">🪙 × {finalStars} قِطْعَةٌ ذَهَبِيَّة</p>
+          </div>
+
+          <div className="w-full bg-slate-900/80 rounded-2xl border border-slate-700/50 p-3 flex flex-col gap-1.5 text-sm">
+            <div className="flex justify-between">
+              <span className="text-slate-400">الإِجَابَاتُ الصَّحِيحَة:</span>
+              <span className="text-rose-300 font-bold tabular-nums">{scoreCount}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">الأَخْطَاء:</span>
+              <span className="text-slate-300 font-bold tabular-nums">{finalWrong}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">النِّقَاط:</span>
+              <span className="text-amber-300 font-bold tabular-nums">{points}</span>
             </div>
             {previousHigh && (
-              <div className="flex justify-between items-center text-sm">
+              <div className="flex justify-between">
                 <span className="text-slate-400 flex items-center gap-1.5">
                   {isNewRecord ? <Crown className="w-3.5 h-3.5" /> : <Trophy className="w-3.5 h-3.5 text-amber-300" />}
                   {isNewRecord ? 'كُنْتَ:' : 'الرَّقَم:'}
                 </span>
-                <span className="text-amber-300 font-bold tabular-nums">
-                  {previousHigh.value} ({previousHigh.name})
-                </span>
+                <span className="text-amber-300 font-bold tabular-nums">{previousHigh.value} ({previousHigh.name})</span>
               </div>
             )}
           </div>
 
-          <div className="flex flex-col gap-3 w-full mt-1">
+          <div className="flex flex-col gap-2.5 w-full">
             <button
-              onClick={handleReplay}
-              className={`w-full font-bold py-3 rounded-xl active:scale-95 transition flex items-center justify-center gap-2 ${
-                isNewRecord
-                  ? 'bg-gradient-to-l from-amber-500 to-amber-700 text-white shadow-lg shadow-amber-500/30'
-                  : 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20'
-              }`}
+              onClick={startRace}
+              className="w-full font-bold py-3 rounded-xl active:scale-95 transition flex items-center justify-center gap-2 bg-gradient-to-l from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20"
               style={{ touchAction: 'manipulation' }}
             >
               <RotateCcw className="w-4 h-4" />
@@ -627,52 +733,53 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
   // ═══════════════════════════════════════════════════════════
   // شاشة الهزيمة
   // ═══════════════════════════════════════════════════════════
-  if (gameState === 'defeat') {
+  if (phase === 'defeat') {
     return (
-      <div
-        dir="rtl"
-        className="min-h-screen bg-gradient-to-b from-rose-950 via-slate-950 to-slate-950 text-white flex flex-col items-center justify-center p-6"
-      >
+      <div dir="rtl" className="min-h-screen bg-gradient-to-b from-rose-950 via-slate-950 to-slate-950 text-white flex flex-col items-center justify-center p-6">
         <motion.div
           initial={{ scale: 0.85, y: 30 }}
           animate={{ scale: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 240, damping: 22 }}
           className="w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl flex flex-col items-center gap-4 bg-slate-800 border-2 border-rose-700"
         >
-          <div className="text-5xl">🏴‍☠️</div>
-          <h2 className="text-2xl font-black text-rose-500">
-            أَمْسَكَ بِكَ القَرَاصِنَة!
-          </h2>
-          <p className="text-slate-400 text-sm">
-            لا بأس يا بطل · سَنَسْتَعِيدُ الكَنْز مَعاً. مُحَاوَلَة أُخْرَى؟
+          <div className="text-5xl">🦜</div>
+          <h2 className="text-2xl font-black text-rose-400">سَرَقُوا الكَنْز... مُؤَقَّتاً!</h2>
+          <p className="text-slate-400 text-sm leading-relaxed">
+            لا بَأْسَ يَا بَطَل · سَنَسْتَعِيدُهُ مَعاً. مَرَّةً أُخْرَى؟
           </p>
 
-          <div className="w-full bg-slate-900/80 rounded-2xl border border-slate-700/50 p-4 flex flex-col gap-2">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-400">العَمَلِيَّاتُ الصَّحِيحَة:</span>
-              <span className="text-rose-300 font-bold text-base tabular-nums">{scoreCount}</span>
+          <div className="w-full bg-slate-900/80 rounded-2xl border border-slate-700/50 p-3 flex flex-col gap-1.5 text-sm">
+            <div className="flex justify-between">
+              <span className="text-slate-400">الإِجَابَاتُ الصَّحِيحَة:</span>
+              <span className="text-rose-300 font-bold tabular-nums">{scoreCount}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">النِّقَاط:</span>
+              <span className="text-amber-300 font-bold tabular-nums">{points}</span>
             </div>
             {previousHigh && (
-              <div className="flex justify-between items-center text-sm">
+              <div className="flex justify-between">
                 <span className="text-slate-400 flex items-center gap-1.5">
                   <Trophy className="w-3.5 h-3.5 text-amber-300" />
                   الرَّقَم:
                 </span>
-                <span className="text-amber-300 font-bold tabular-nums">
-                  {previousHigh.value} ({previousHigh.name})
-                </span>
+                <span className="text-amber-300 font-bold tabular-nums">{previousHigh.value} ({previousHigh.name})</span>
               </div>
             )}
+            <div className="flex justify-between">
+              <span className="text-slate-400">🪙 قِطْعَةٌ لِلْمُحَاوَلَة:</span>
+              <span className="text-amber-300 font-bold tabular-nums">1</span>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-3 w-full mt-1">
+          <div className="flex flex-col gap-2.5 w-full">
             <button
-              onClick={handleReplay}
+              onClick={startRace}
               className="w-full bg-rose-500 hover:bg-rose-400 text-white font-bold py-3 rounded-xl shadow-lg shadow-rose-500/20 active:scale-95 transition flex items-center justify-center gap-2"
               style={{ touchAction: 'manipulation' }}
             >
               <RotateCcw className="w-4 h-4" />
-              🔄 حَاوِلْ مُجَدَّداً
+              حَاوِلْ مُجَدَّداً
             </button>
             <button
               onClick={onBack}
@@ -689,15 +796,16 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // شاشة اللعب + مراجعة الخطأ
+  // شاشة اللعب (ready · playing · reveal · review · caught)
   // ═══════════════════════════════════════════════════════════
-  const problemTimerPct = timerMax > 0 ? (timeLeft / timerMax) * 100 : 0;
-  const timerColor =
-    problemTimerPct > 50
-      ? 'bg-sky-400'
-      : problemTimerPct > 25
-      ? 'bg-amber-400'
-      : 'bg-rose-500';
+  const problemPct = hud.max > 0 ? (hud.left / hud.max) * 100 : 0;
+  const timerColor = problemPct > 50 ? 'bg-sky-400' : problemPct > 25 ? 'bg-amber-400' : 'bg-rose-500';
+  const raceLeft = Math.max(0, Math.ceil(SESSION_SECONDS - hud.elapsed));
+  const secLeft = Math.ceil(hud.left);
+  const showCountdown = phase === 'playing' && !reveal && secLeft <= 3;
+  const ropeAvailable = !ropeUsed && hud.gap < ROPE_THRESHOLD;
+  const bubble = heroLine ?? defaultBubble(hud.gap, streak, ropeAvailable, hud.elapsed);
+  const danger = hud.gap < ROPE_THRESHOLD && roundActive;
 
   return (
     <div
@@ -708,11 +816,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
       {/* ═══ الرأس ═══ */}
       <div className="sticky top-0 z-20 bg-slate-900/85 backdrop-blur-md border-b border-rose-500/20">
         <div className="flex items-center justify-between gap-2 p-3">
-          <button
-            onClick={onBack}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0"
-            aria-label="رجوع"
-          >
+          <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0" aria-label="رجوع">
             <ArrowRight className="w-5 h-5 text-rose-400" />
           </button>
 
@@ -720,97 +824,187 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
             <GameCompanion heroId={HERO_ID} mood={heroMood} />
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={toggleSound}
+              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+              aria-label={soundOn ? 'كتم الصوت' : 'تشغيل الصوت'}
+            >
+              {soundOn ? <Volume2 className="w-4 h-4 text-sky-300" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
+            </button>
             <div className="bg-slate-950/80 px-2 py-1.5 rounded-lg border border-rose-500/30 text-rose-300 font-bold text-xs flex items-center gap-1">
               🎯 <span className="tabular-nums">{scoreCount}</span>
             </div>
             <div className="bg-slate-950/80 px-2 py-1.5 rounded-lg border border-sky-500/30 text-sky-300 font-bold text-xs flex items-center gap-1">
-              ⏱️ <span className="tabular-nums">{timeLeft}</span>
+              ⏳ <span className="tabular-nums">{raceLeft}</span>
             </div>
           </div>
         </div>
-        {/* شريط المؤقت */}
+        {/* شريط وقت المسألة */}
         <div className="h-1.5 bg-slate-800">
           <div
-            className={`h-full transition-all duration-1000 ease-linear ${timerColor}`}
-            style={{ width: `${problemTimerPct}%` }}
+            className={`h-full transition-[width] duration-100 ease-linear ${timerColor} ${showCountdown ? 'animate-pulse' : ''}`}
+            style={{ width: `${phase === 'ready' ? 100 : problemPct}%` }}
           />
         </div>
       </div>
 
       {/* ═══ المشهد ═══ */}
-      <div className="px-3 pt-3 pb-1">
-        <PirateScene
-          gap={gap}
-          elapsedSec={islandElapsed}
-          isLightning={isLightning}
-          weather={weather}
-        />
-      </div>
+      <div className="px-3 pt-3">
+        <div
+          className="relative w-full rounded-2xl overflow-hidden"
+          style={{
+            aspectRatio: '360 / 220',
+            boxShadow: danger ? 'inset 0 0 40px 6px rgba(239,68,68,0.55)' : undefined,
+          }}
+        >
+          <Scene gap={sceneGap} elapsedSec={sceneElapsed} isLightning={isLightning} weather={weather} />
 
-      {/* ═══ السؤال + الأزرار ═══ */}
-      {currentProblem && (
-        <div className="flex-1 flex flex-col justify-between px-3 pb-3 gap-2">
-          <div className="bg-slate-900/90 border-2 border-rose-500/40 rounded-2xl p-3 shadow-xl">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-[11px] font-bold text-slate-300 bg-black/40 px-2 py-1 rounded-full border border-white/10">
-                المُسْتَوَى {level}
-              </div>
-              {gap < ROPE_THRESHOLD && !ropeUsed && (
-                <button
-                  onClick={useRayanRope}
-                  className="px-2.5 py-1 rounded-full border border-amber-400/60 bg-amber-950/80 text-amber-300 text-[11px] font-extrabold flex items-center gap-1 active:scale-95 transition"
-                  style={{ touchAction: 'manipulation' }}
-                >
-                  <Hand className="w-3.5 h-3.5" />
-                  رَمْيَة رَيَّان
-                </button>
-              )}
-            </div>
-            <div className="text-3xl sm:text-4xl font-black text-amber-300 text-center font-mono">
-              {currentProblem.a} × {currentProblem.b} = ؟
+          {/* فقاعة ريان */}
+          <div className="absolute top-2 inset-x-3 flex justify-center pointer-events-none">
+            <div className="max-w-full bg-slate-900/80 backdrop-blur-sm border border-amber-400/30 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-md">
+              <span className="text-base shrink-0">👦</span>
+              <span className="text-[11px] font-bold text-amber-100 truncate">{bubble}</span>
             </div>
           </div>
 
-          {/* الأزرار */}
-          <div className="grid grid-cols-3 gap-2 my-2">
-            {displayOptions.map((opt, i) => (
+          {/* إشعار (كومبو · مدفع · ذهبية · حبل) */}
+          <AnimatePresence>
+            {toast && (
+              <motion.div
+                key={toast.id}
+                initial={{ opacity: 0, y: 14, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute inset-x-0 top-1/2 flex justify-center pointer-events-none"
+              >
+                <span className="px-4 py-1.5 rounded-full bg-amber-400 text-slate-950 text-sm font-black shadow-lg shadow-amber-500/40">
+                  {toast.text}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* القبض */}
+          <AnimatePresence>
+            {phase === 'caught' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="absolute inset-0 bg-rose-950/70 flex flex-col items-center justify-center gap-1"
+              >
+                <motion.div
+                  animate={{ rotate: [-6, 6, -6, 6, 0], scale: [1, 1.2, 1] }}
+                  transition={{ duration: 0.6 }}
+                  className="text-5xl"
+                >
+                  🏴‍☠️
+                </motion.div>
+                <p className="text-rose-100 font-black text-lg">أَمْسَكُوا بِنَا!</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* ═══ السؤال + الأزرار ═══ */}
+      <div className="flex-1 flex flex-col justify-between px-3 pt-3 gap-3 pb-[max(16px,env(safe-area-inset-bottom))]">
+        <div
+          className={`relative rounded-2xl p-3 shadow-xl border-2 ${
+            isGolden ? 'bg-amber-950/80 border-amber-400/80' : 'bg-slate-900/90 border-rose-500/40'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5">
+              <div className="text-[11px] font-bold text-slate-300 bg-black/40 px-2 py-1 rounded-full border border-white/10">
+                المُسْتَوَى {level}
+              </div>
+              {isGolden && (
+                <div className="text-[11px] font-black text-amber-300 bg-amber-900/70 px-2 py-1 rounded-full border border-amber-400/50">
+                  🧰 ذَهَبِيَّة ×2
+                </div>
+              )}
+              {streak >= 2 && (
+                <div className="text-[11px] font-black text-orange-300 bg-orange-950/70 px-2 py-1 rounded-full border border-orange-400/50">
+                  🔥 {streak}
+                </div>
+              )}
+            </div>
+            {ropeAvailable && phase === 'playing' && (
+              <button
+                onClick={handleRope}
+                className="px-2.5 py-1 rounded-full border border-amber-400/60 bg-amber-950/80 text-amber-300 text-[11px] font-extrabold flex items-center gap-1 active:scale-95 transition"
+                style={{ touchAction: 'manipulation' }}
+              >
+                <Hand className="w-3.5 h-3.5" />
+                حَبْلُ رَيَّان
+              </button>
+            )}
+          </div>
+
+          {currentProblem ? (
+            <div className="text-4xl font-black text-amber-300 text-center font-mono tabular-nums" dir="ltr">
+              {currentProblem.a} × {currentProblem.b} = ؟
+            </div>
+          ) : (
+            <div className="text-2xl font-black text-sky-300 text-center py-1 animate-pulse">⛵ اسْتَعِدّ!</div>
+          )}
+
+          {showCountdown && (
+            <motion.div
+              key={secLeft}
+              initial={{ scale: 1.6, opacity: 0.4 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="absolute top-2 left-3 text-2xl font-black text-rose-400 tabular-nums"
+            >
+              {secLeft}
+            </motion.div>
+          )}
+        </div>
+
+        {/* الأزرار: خشبية محايدة قبل الاختيار */}
+        <div className={`grid gap-2 ${options.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+          {currentProblem && options.map((opt) => {
+            let bg = '#7c4a1e';
+            let border = '#b45309';
+            let opacity = 1;
+            if (reveal) {
+              if (opt.value === reveal.correct) { bg = '#15803d'; border = '#4ade80'; }
+              else if (opt.value === reveal.picked) { bg = '#b91c1c'; border = '#fca5a5'; }
+              else opacity = 0.45;
+            }
+            return (
               <motion.button
-                key={`${opt.value}-${i}`}
-                whileTap={{ scale: 0.94 }}
+                key={`${currentProblem.id}-${opt.value}`}
+                whileTap={{ scale: 0.94, y: 3 }}
+                animate={reveal && opt.value === reveal.picked && opt.value !== reveal.correct ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }}
+                transition={{ duration: 0.3 }}
                 onClick={() => handleAnswer(opt)}
-                className="h-16 rounded-2xl font-black text-2xl text-amber-50 shadow-lg active:scale-95 transition flex items-center justify-center"
+                disabled={phase !== 'playing' || !!reveal}
+                className="h-[60px] rounded-2xl font-black text-2xl text-amber-50 shadow-lg flex items-center justify-center tabular-nums font-mono transition-colors duration-200"
                 style={{
-                  backgroundColor: '#7c4a1e',
+                  backgroundColor: bg,
                   borderWidth: 2,
-                  borderColor: '#b45309',
+                  borderColor: border,
+                  opacity,
+                  boxShadow: '0 4px 0 rgba(0,0,0,0.45)',
                   touchAction: 'manipulation',
                 }}
               >
                 {opt.value}
               </motion.button>
-            ))}
-          </div>
-
-          {/* فقاعة ريان */}
-          <div className="bg-slate-900/85 border border-amber-500/20 rounded-2xl px-3 py-2 flex items-center gap-2 shadow-md">
-            <span className="text-xl shrink-0">👦</span>
-            <span className="text-xs font-bold text-amber-200/90 leading-snug">
-              رَيَّان: "{getHeroBubble(gap, streak, ropeUsed, gameState)}"
-            </span>
-          </div>
+            );
+          })}
         </div>
-      )}
+      </div>
 
-      {/* ═══ بطاقة الخطأ ═══ */}
+      {/* ═══ الجسر التعليمي ═══ */}
       <AnimatePresence>
-        {gameState === 'error_review' && currentProblem && errorDetails && (
+        {phase === 'review' && currentProblem && review && (
           <ErrorReviewCard
             key={currentProblem.id}
             problem={currentProblem}
-            errorDetails={errorDetails}
-            stepIndex={reviewStepIndex}
-            setStepIndex={setReviewStepIndex}
+            info={review}
             onContinue={handleContinueReview}
           />
         )}
@@ -820,48 +1014,41 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// بطاقة الخطأ · منفصلة لتنظيف المنطق
+// الجسر التعليمي: خطوات كوجيما على المعداد
+//   0 → الخطوة 1 → ... → الناتج · 0.8 ث/خطوة · لمسة = تخطٍّ
+//   الزمن متوقف طوال العرض (الطور 'review' خارج ساعة اللعب)
 // ═══════════════════════════════════════════════════════════════════
 function ErrorReviewCard({
   problem,
-  errorDetails,
-  stepIndex,
-  setStepIndex,
+  info,
   onContinue,
 }: {
   problem: MulProblem;
-  errorDetails: ErrorDetails;
-  stepIndex: number;
-  setStepIndex: (n: number) => void;
+  info: ReviewInfo;
   onContinue: () => void;
 }) {
   const steps = problem.steps;
-  const currentStep = steps[Math.min(stepIndex, steps.length - 1)];
-  const isLastStep = stepIndex >= steps.length - 1;
-  const [autoPlay, setAutoPlay] = useState(true);
+  const last = steps.length - 1;
+  const [idx, setIdx] = useState(-1);   // -1 = معداد فارغ
 
-  // الانتقال التلقائي بين الخطوات
   useEffect(() => {
-    if (!autoPlay) return;
-    if (isLastStep) {
-      setAutoPlay(false);
-      return;
-    }
-    const t = setTimeout(() => setStepIndex(stepIndex + 1), 1200);
+    if (idx >= last) return;
+    const t = setTimeout(() => setIdx((i) => i + 1), idx === -1 ? 500 : 800);
     return () => clearTimeout(t);
-  }, [stepIndex, isLastStep, autoPlay, setStepIndex]);
+  }, [idx, last]);
 
-  const handleNext = () => {
-    setAutoPlay(false);
-    if (!isLastStep) setStepIndex(stepIndex + 1);
-  };
+  const skip = () => setIdx(last);
 
-  const runningValue = currentStep?.running ?? problem.answer;
-  const digits = rodsFromNumber(runningValue, 5);
-  const activeRods = currentStep
-    ? [currentStep.onesRod, currentStep.tensRod]
-    : [0, 0];
-  const arcValue = currentStep?.product ?? 0;
+  const step = idx >= 0 ? steps[idx] : null;
+  const running = step ? step.running : 0;
+  const digits = rodsFromNumber(running, 5);
+  // الأعمدة تُرسم من اليسار: الآحاد = العمود 4
+  const activeRods = step ? [4 - step.onesRod, 4 - step.tensRod] : [];
+  const isErrorStep = info.stepIndex !== undefined && idx === info.stepIndex;
+  const errorLabel =
+    info.kind === 'missed' ? 'هَذَا الجُزْءُ الَّذِي نَسِيتَه'
+    : info.kind === 'carry' ? 'هُنَا يَجِبُ الحَمْل'
+    : 'هُنَا مَوْضِعُ الخَطَأ';
 
   return (
     <motion.div
@@ -869,67 +1056,74 @@ function ErrorReviewCard({
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: '100%', opacity: 0 }}
       transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-      className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-between p-4"
+      onClick={skip}
+      className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md overflow-y-auto"
+      dir="rtl"
     >
-      {/* رأس البطاقة */}
-      <div className="w-full max-w-md flex items-center justify-between border-b border-slate-800 pb-2">
-        <div className="flex items-center gap-2 text-rose-400 font-bold text-sm">
-          <Zap className="w-5 h-5" />
-          <span>تَصْحِيحُ المَسَار</span>
+      <div className="min-h-full w-full max-w-md mx-auto flex flex-col justify-between gap-3 p-4">
+        {/* الرأس */}
+        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div className="flex items-center gap-2 text-rose-400 font-bold text-sm">
+            <Zap className="w-5 h-5" />
+            <span>تَصْحِيحُ المَسَار</span>
+          </div>
+          <div className="text-[11px] text-slate-400">⏸ الوَقْتُ مُتَوَقِّف</div>
         </div>
-        <div className="text-[11px] text-slate-400">
-          خُطُوَة {Math.min(stepIndex + 1, steps.length)} / {steps.length}
+
+        {/* المسألة والاختيار */}
+        <div className="text-center">
+          <div className="text-2xl font-black text-amber-300 font-mono" dir="ltr">
+            {problem.a} × {problem.b}
+          </div>
+          {info.wrongValue !== null && (
+            <div className="text-xs text-rose-300 mt-1">اخْتَرْتَ {info.wrongValue}</div>
+          )}
         </div>
-      </div>
 
-      {/* الشرح */}
-      <div className="w-full max-w-md bg-slate-900/85 border border-rose-500/30 rounded-2xl p-3 text-center text-xs text-rose-100 font-bold leading-relaxed">
-        {errorDetails.wrongOption.why}
-      </div>
+        {/* سبب الخطأ */}
+        <div className="bg-slate-900/85 border border-rose-500/30 rounded-2xl p-3 text-center text-xs text-rose-100 font-bold leading-relaxed">
+          {info.why}
+        </div>
 
-      {/* المعداد */}
-      <div className="w-full max-w-md">
+        {/* المعداد */}
         <MultiRodAbacus
           digits={digits}
           activeRods={activeRods}
           unitRodIndex={4}
-          arcValue={arcValue}
-          runningTotal={runningValue}
+          arcValue={step ? step.product : undefined}
+          runningTotal={running}
           columns={5}
         />
-      </div>
 
-      {/* نص الخطوة */}
-      {currentStep?.text && (
-        <div className="w-full max-w-md bg-slate-900/85 border border-amber-500/30 rounded-2xl p-2.5 text-center text-xs text-amber-200 font-bold leading-snug">
-          {currentStep.text}
+        {/* نص الخطوة (إطار متقطع أحمر عند الخطوة الخاطئة) */}
+        <div
+          className={`min-h-[64px] rounded-2xl p-2.5 text-center text-xs font-bold leading-snug flex flex-col items-center justify-center gap-1 ${
+            isErrorStep
+              ? 'bg-rose-950/70 border-2 border-dashed border-rose-400 text-rose-100'
+              : 'bg-slate-900/85 border border-amber-500/30 text-amber-200'
+          }`}
+        >
+          {isErrorStep && <span className="text-rose-300 font-black">🔴 {errorLabel}</span>}
+          <span>
+            {step
+              ? `الخُطْوَة ${idx + 1} / ${steps.length}: ${step.text}`
+              : 'نَبْدَأُ مِنْ مِعْدَادٍ فَارِغ...'}
+          </span>
         </div>
-      )}
 
-      {/* الإجابة النهائية */}
-      <div className="text-sm font-bold text-amber-300">
-        الإِجَابَةُ الصَّحِيحَة: <span className="text-base">{problem.answer}</span>
-      </div>
+        {/* الجواب */}
+        <div className="text-center text-sm font-bold text-amber-300">
+          الإِجَابَةُ الصَّحِيحَة: <span className="text-lg font-mono tabular-nums">{problem.answer}</span>
+        </div>
 
-      {/* الأزرار */}
-      <div className="w-full max-w-md flex gap-2">
-        {!isLastStep ? (
-          <button
-            onClick={handleNext}
-            className="flex-1 py-3 rounded-2xl bg-sky-500 hover:bg-sky-400 text-white font-black shadow-lg active:scale-95 transition"
-            style={{ touchAction: 'manipulation' }}
-          >
-            الخُطُوَةُ التَّالِيَة
-          </button>
-        ) : (
-          <button
-            onClick={onContinue}
-            className="flex-1 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-lg active:scale-95 transition"
-            style={{ touchAction: 'manipulation' }}
-          >
-            ▶️ مُتَابَعَةُ السِّبَاق
-          </button>
-        )}
+        <button
+          onClick={(e) => { e.stopPropagation(); onContinue(); }}
+          className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-lg active:scale-95 transition"
+          style={{ touchAction: 'manipulation' }}
+        >
+          ▶️ مُتَابَعَةُ السِّبَاق
+        </button>
+        {idx < last && <p className="text-center text-[10px] text-slate-500">المَسْ الشَّاشَةَ لِتَخَطِّي الخُطُوَات</p>}
       </div>
     </motion.div>
   );
