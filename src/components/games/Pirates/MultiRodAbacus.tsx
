@@ -1,0 +1,297 @@
+// ═══════════════════════════════════════════════════════════════════
+// 🏴‍☠️ src/components/games/Pirates/MultiRodAbacus.tsx
+// ═══════════════════════════════════════════════════════════════════
+//
+// معداد سوروبان SVG · متعدد الأعمدة (حتى 5) · للعرض فقط
+// يُستخدم في سباق القراصنة لعرض خطوات الحل بعد الخطأ
+//
+// الإصلاحات عن نسخة جيميني:
+//   1. initial={false} على كل الخرزات (تفادي القفز من y=0)
+//   2. القوس داخل الإطار (172/182 بدل 178/195)
+//   3. إزالة AnimatePresence من SVG (استبدال بـ key + initial/animate)
+//   4. تحسين أداء · لا تغييرات بنيوية
+// ═══════════════════════════════════════════════════════════════════
+
+import React from 'react';
+import { motion } from 'framer-motion';
+
+interface MultiRodAbacusProps {
+  digits: number[];           // من اليسار لليمين · مثل [3, 3, 2, 0]
+  activeRods?: number[];      // الأعمدة المُضاءة · مثل [2, 3]
+  unitRodIndex?: number;      // 4 = الآحاد (من اليسار · افتراضي)
+  arcValue?: number;          // 12 = الرقم المعروض تحت القوس
+  runningTotal?: number;      // 3320 = المجموع التراكمي · أعلى المعداد
+  columns?: number;           // 5 افتراضياً
+}
+
+const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
+  digits = [0, 0, 0, 0, 0],
+  activeRods = [],
+  unitRodIndex = 4,
+  arcValue,
+  runningTotal,
+  columns = 5,
+}) => {
+  // ═══ إحداثيات الأعمدة داخل viewBox 320×220 ═══
+  const startX = 52;
+  const endX = 268;
+  const rodSpacing = columns > 1 ? (endX - startX) / (columns - 1) : 0;
+
+  // ═══ تسميات الأعمدة ═══
+  const labels =
+    columns === 5
+      ? ['ع.ك', 'ك', 'م', 'ع', 'آ']
+      : ['ت', 'ك', 'م', 'ع', 'آ'].slice(5 - columns);
+
+  // ═══ القوس أسفل الأعمدة النشطة (داخل الإطار) ═══
+  let arcPath = '';
+  let arcCenterX = 160;
+  if (activeRods.length > 0) {
+    const minRod = Math.min(...activeRods);
+    const maxRod = Math.max(...activeRods);
+    const x1 = startX + minRod * rodSpacing - 18;
+    const x2 = startX + maxRod * rodSpacing + 18;
+    arcCenterX = (x1 + x2) / 2;
+    // القوس داخل الإطار (قمة عند 182 · نهايات عند 172)
+    arcPath = `M ${x1} 172 Q ${arcCenterX} 182 ${x2} 172`;
+  }
+
+  // ═══ إعدادات حركة موحّدة للخرزات ═══
+  const beadSpring = {
+    type: 'spring' as const,
+    stiffness: 500,
+    damping: 30,
+  };
+
+  return (
+    <div className="w-full flex items-center justify-center select-none">
+      <svg
+        viewBox="0 0 320 220"
+        className="w-full h-auto max-w-[360px] drop-shadow-2xl"
+        style={{ overflow: 'visible' }}
+      >
+        <defs>
+          {/* إطار خشبي */}
+          <linearGradient id="woodFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#78350f" />
+            <stop offset="50%" stopColor="#572507" />
+            <stop offset="100%" stopColor="#451a03" />
+          </linearGradient>
+
+          {/* عارضة ذهبية */}
+          <linearGradient id="beamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#fde68a" />
+            <stop offset="50%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#d4a017" />
+          </linearGradient>
+
+          {/* توهج الليزر */}
+          <filter id="laser-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3.5" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
+        {/* ═══ 1. الإطار الخشبي ═══ */}
+        <rect
+          x="14" y="10" width="292" height="182" rx="12"
+          fill="url(#woodFrame)"
+          stroke="#92400e"
+          strokeWidth="3"
+        />
+        <rect
+          x="24" y="20" width="272" height="162" rx="8"
+          fill="#090d16"
+          fillOpacity="0.85"
+        />
+
+        {/* ═══ 2. عدّاد المجموع التراكمي (أعلى الإطار) ═══ */}
+        {runningTotal !== undefined && (
+          <g transform="translate(160, 32)">
+            <rect
+              x="-45" y="-11" width="90" height="20" rx="6"
+              fill="#0f172a"
+              stroke="#0ea5e9"
+              strokeWidth="1"
+              strokeOpacity="0.6"
+            />
+            <motion.text
+              key={runningTotal}
+              initial={{ opacity: 0, y: -3 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.15 }}
+              x="0" y="3"
+              textAnchor="middle"
+              fill="#bae6fd"
+              fontSize="12"
+              fontWeight="800"
+              fontFamily="monospace"
+              style={{ fontVariantNumeric: 'tabular-nums' }}
+            >
+              {runningTotal}
+            </motion.text>
+          </g>
+        )}
+
+        {/* ═══ 3. العارضة الوسطى ═══ */}
+        <rect
+          x="20" y="84" width="280" height="6" rx="2"
+          fill="url(#beamGrad)"
+          stroke="#b45309"
+          strokeWidth="1"
+        />
+
+        {/* ═══ 4. الأعمدة والخرزات ═══ */}
+        {Array.from({ length: columns }).map((_, i) => {
+          const rodX = startX + i * rodSpacing;
+          const isActiveRod = activeRods.includes(i);
+          const isUnitRod = unitRodIndex === i;
+          const digit = digits[i] ?? 0;
+          const hasUpper = digit >= 5;
+          const lowerVal = digit % 5;
+
+          // الخرزة العلوية: مفعّلة (تنزل للعارضة) أو خاملة
+          const upperY = hasUpper ? 64 : 36;
+
+          return (
+            <g
+              key={i}
+              opacity={isActiveRod ? 1 : 0.55}
+              style={{ transition: 'opacity 0.2s ease' }}
+            >
+              {/* العمود المعدني */}
+              <line
+                x1={rodX} y1="26" x2={rodX} y2="178"
+                stroke="#94a3b8"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+              />
+
+              {/* نقطة الآحاد */}
+              {isUnitRod && (
+                <circle
+                  cx={rodX} cy="87" r="3.5"
+                  fill="#ef4444"
+                  stroke="#991b1b"
+                  strokeWidth="1"
+                />
+              )}
+
+              {/* نبضة ليزر على العمود النشط */}
+              {isActiveRod && (
+                <motion.line
+                  initial={{ opacity: 0.3 }}
+                  animate={{ opacity: [0.3, 0.8, 0.3] }}
+                  transition={{ repeat: Infinity, duration: 1.2 }}
+                  x1={rodX} y1="26" x2={rodX} y2="178"
+                  stroke="#38bdf8"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  filter="url(#laser-glow)"
+                />
+              )}
+
+              {/* ═══ الخرزة العلوية (5) ═══ */}
+              <motion.g
+                initial={false}
+                animate={{ y: upperY }}
+                transition={beadSpring}
+              >
+                <rect
+                  x={rodX - 21} y="0" width="42" height="18" rx="9"
+                  fill={isActiveRod ? '#075985' : '#1e293b'}
+                  stroke={isActiveRod ? '#7dd3fc' : '#334155'}
+                  strokeWidth={isActiveRod ? 2 : 1}
+                  filter={isActiveRod ? 'url(#laser-glow)' : undefined}
+                />
+                <rect
+                  x={rodX - 14} y="3" width="28" height="3" rx="1.5"
+                  fill={isActiveRod ? '#bae6fd' : '#475569'}
+                  pointerEvents="none"
+                />
+              </motion.g>
+
+              {/* ═══ الخرزات الأربع السفلية ═══ */}
+              {[0, 1, 2, 3].map((b) => {
+                const isPushedUp = b < lowerVal;
+                const restingY = 104 + b * 18;
+                const activeY = 90 + b * 18;
+                const beadY = isPushedUp ? activeY : restingY;
+
+                return (
+                  <motion.g
+                    key={b}
+                    initial={false}
+                    animate={{ y: beadY }}
+                    transition={beadSpring}
+                  >
+                    <rect
+                      x={rodX - 21} y="0" width="42" height="18" rx="9"
+                      fill={isActiveRod ? '#075985' : '#1e293b'}
+                      stroke={isActiveRod ? '#7dd3fc' : '#334155'}
+                      strokeWidth={isActiveRod ? 2 : 1}
+                      filter={isActiveRod ? 'url(#laser-glow)' : undefined}
+                    />
+                    <rect
+                      x={rodX - 14} y="3" width="28" height="3" rx="1.5"
+                      fill={isActiveRod ? '#bae6fd' : '#475569'}
+                      pointerEvents="none"
+                    />
+                  </motion.g>
+                );
+              })}
+
+              {/* تسمية العمود */}
+              <text
+                x={rodX} y="204"
+                textAnchor="middle"
+                fill={isActiveRod ? '#38bdf8' : '#94a3b8'}
+                fontSize="11"
+                fontWeight="bold"
+              >
+                {labels[i]}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* ═══ 5. القوس أسفل الأعمدة النشطة + قيمة الخطوة ═══ */}
+        {activeRods.length > 0 && arcPath && (
+          <g>
+            <path
+              d={arcPath}
+              fill="none"
+              stroke="#38bdf8"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              filter="url(#laser-glow)"
+            />
+            {arcValue !== undefined && (
+              <g transform={`translate(${arcCenterX}, 180)`}>
+                <rect
+                  x="-18" y="-9" width="36" height="18" rx="6"
+                  fill="#075985"
+                  stroke="#38bdf8"
+                  strokeWidth="1.5"
+                />
+                <text
+                  x="0" y="3"
+                  textAnchor="middle"
+                  fill="#e0f2fe"
+                  fontSize="11"
+                  fontWeight="900"
+                  fontFamily="monospace"
+                  style={{ fontVariantNumeric: 'tabular-nums' }}
+                >
+                  {String(arcValue).padStart(2, '0')}
+                </text>
+              </g>
+            )}
+          </g>
+        )}
+      </svg>
+    </div>
+  );
+};
+
+export default MultiRodAbacus;
