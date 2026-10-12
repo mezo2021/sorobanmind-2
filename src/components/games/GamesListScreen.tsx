@@ -1,10 +1,12 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/GamesListScreen.tsx — v6
+// 🆕 src/components/games/GamesListScreen.tsx — v7
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما تغيّر عن v5:
-//   - استيراد FriendsGame
-//   - ربط مسار 'friends'
+// ما تغيّر عن v6:
+//   1. منع استهلاك التذكرة على ألعاب 'building'
+//   2. تعطيل زر 'building' بصرياً (لا نقر · لا استهلاك)
+//   3. شارة "🚧 قيد التطوير" على بطاقة building
+//
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect } from 'react';
@@ -44,8 +46,10 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
   const canBuy = preview ? false : !hasTicket && ticketXP >= TICKET_COST;
   const progressPct = Math.min(100, (ticketXP / TICKET_COST) * 100);
 
+  // 🆕 لا استهلاك · لا فتح · لألعاب 'building'
   const handleOpenGame = (game: GameMeta) => {
     if (!hasTicket) return;
+    if (game.status !== 'ready') return;
     if (!preview) consumeTicket();
     setActive({ kind: 'game', gameId: game.id });
   };
@@ -241,26 +245,31 @@ function TicketMachine({
   );
 }
 
-// ═══ بطاقة لعبة (بلا تغيير) ═══
+// ═══ بطاقة لعبة — v7 ═══
 function GameCard({
   game, index, unlocked, onOpen,
 }: {
   game: GameMeta; index: number; unlocked: boolean; onOpen: () => void;
 }) {
+  const isBuilding = game.status !== 'ready';
+  const canOpen = unlocked && !isBuilding;
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.06 }}
       className={`rounded-2xl border p-3 sm:p-4 transition ${
-        unlocked
+        canOpen
           ? 'bg-white/5 border-white/10'
           : 'bg-white/[0.02] border-white/5 opacity-60'
       }`}
     >
       <div className="flex items-center gap-3">
         <div
-          className={`shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br ${game.gradient} flex items-center justify-center shadow-lg`}
+          className={`shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br ${game.gradient} flex items-center justify-center shadow-lg ${
+            isBuilding ? 'grayscale-[0.5]' : ''
+          }`}
         >
           <span className="text-2xl">{game.icon}</span>
         </div>
@@ -271,24 +280,31 @@ function GameCard({
           <p className="text-xs text-white/50 mt-0.5 truncate">
             {game.subtitle}
           </p>
-          <div className="flex items-center gap-3 mt-1">
+          <div className="flex items-center gap-3 mt-1 flex-wrap">
             <p className="text-[10px] text-amber-300/80">
               ⏱️ {game.duration}
             </p>
-            <HighScoreBadge gameId={game.id} variant="compact" />
+            {isBuilding ? (
+              <span className="text-[10px] text-amber-300/70 font-bold">
+                🚧 قيد التطوير
+              </span>
+            ) : (
+              <HighScoreBadge gameId={game.id} variant="compact" />
+            )}
           </div>
         </div>
         <button
           onClick={onOpen}
-          disabled={!unlocked}
+          disabled={!canOpen}
           className={`shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition ${
-            unlocked
+            canOpen
               ? 'bg-gradient-to-br ' + game.gradient + ' shadow-lg active:scale-90'
               : 'bg-white/5 text-white/30 cursor-not-allowed'
           }`}
           style={{ touchAction: 'manipulation' }}
+          aria-label={isBuilding ? 'قيد التطوير' : 'ابدأ اللعبة'}
         >
-          {unlocked ? (
+          {canOpen ? (
             <Play className="w-5 h-5 fill-white text-white" />
           ) : (
             <Lock className="w-5 h-5" />
