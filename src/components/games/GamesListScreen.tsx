@@ -1,10 +1,10 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/GamesListScreen.tsx — v8
+// 🆕 src/components/games/GamesListScreen.tsx — v9
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما تغيّر عن v7:
-//   - استيراد PirateRaceGame
-//   - ربط مسار 'pirate-race'
+// ما تغيّر عن v8:
+//   - استيراد SorobaniaGame
+//   - ربط مسار 'sorobania-island'
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect } from 'react';
@@ -15,6 +15,7 @@ import { FlyingAbacusGame } from './FlyingAbacus/FlyingAbacusGame';
 import { DetectiveGame } from './Detective/DetectiveGame';
 import { FriendsGame } from './Friends/FriendsGame';
 import { PirateRaceGame } from './Pirates/PirateRaceGame';
+import SorobaniaGame from './Sorobania/SorobaniaGame';
 import { HighScoreBadge } from './HighScoreBadge';
 import { useProgressStore, TICKET_COST } from '../../store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
@@ -65,6 +66,9 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
     }
     if (active.gameId === 'pirate-race') {
       return <PirateRaceGame onBack={() => setActive(null)} />;
+    }
+    if (active.gameId === 'sorobania-island') {
+      return <SorobaniaGame onBack={() => setActive(null)} />;
     }
 
     return (
