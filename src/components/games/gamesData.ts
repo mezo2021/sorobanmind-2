@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/gamesData.ts — v3
+// 🆕 src/components/games/gamesData.ts — v4
 // ═══════════════════════════════════════════════════════════════════
 //
-// ما تغيّر عن v2:
-//   - friends: building → ready
+// ما تغيّر عن v3:
+//   - pirate-race: building → ready
 // ═══════════════════════════════════════════════════════════════════
 
 import type { CharacterType } from '../../types';
@@ -57,7 +57,7 @@ export const GAMES: GameMeta[] = [
     gradient: 'from-emerald-500 to-teal-700',
     recommendHero: 'sham',
     duration: '90 ثانية',
-    status: 'ready',      // ✅ مكتمل
+    status: 'ready',
   },
   {
     id: 'pirate-race',
@@ -67,7 +67,7 @@ export const GAMES: GameMeta[] = [
     gradient: 'from-rose-500 to-red-700',
     recommendHero: 'rayan',
     duration: '90 ثانية',
-    status: 'building',
+    status: 'ready',      // ✅ مكتمل
   },
   {
     id: 'anzan-island',
