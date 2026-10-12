@@ -8,6 +8,7 @@
 // [FIX B4]  unify AND for visual anzan — 2026-10-04
 // [FIX N62] outcome انتقل إلى RemediationSession (اختياري) — 2026-10-05
 // [GAMES]   إضافة نظام التذاكر: ticketXP + tickets — 2026-10-11
+// [GAMES-v2] رفع السقف: 20 → 50 · TICKETS_MAX: 1 → 5 — 2026-10-13
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -35,16 +36,16 @@ export interface AnzanBadges {
   master_addition?: boolean;
   master_multiplication?: boolean;
   master_division?: boolean;
-  master_chains?: boolean;      // ✅ تمت الإضافة (L4: سلاسل)
-  master_mixed?: boolean;       // ✅ تمت الإضافة (L5: مختلط)
+  master_chains?: boolean;
+  master_mixed?: boolean;
 }
 
 export interface AnzanAudioBadges {
   master_addition_audio?: boolean;
   master_multiplication_audio?: boolean;
   master_division_audio?: boolean;
-  master_chains_audio?: boolean;   // ✅ تمت الإضافة
-  master_mixed_audio?: boolean;    // ✅ تمت الإضافة
+  master_chains_audio?: boolean;
+  master_mixed_audio?: boolean;
 }
 
 // ═══ درجات الأقسام (0-100) ═══
@@ -67,7 +68,6 @@ export interface PendingRemediation {
   level: LevelId;
   phase: RemediationPhase;
   skills: string[];
-  // [FIX N62] — أُزيل outcome (انتقل إلى RemediationSession)
   createdAt: number;
 }
 
@@ -80,14 +80,13 @@ export interface RemediationSession {
   correct: number;
   total: number;
   completedAt: number;
-  // [FIX N62] — نتيجة الجلسة (اختياري — توافق مع البيانات القديمة)
   outcome?: "passed" | "failed";
 }
 
 // ═══ ثوابت نظام التذاكر ═══
 export const TICKET_COST = 10;      // 10 XP = تذكرة واحدة
-export const TICKET_XP_CAP = 20;    // سقف ticketXP
-export const TICKETS_MAX = 1;       // تذكرة واحدة فقط في الجيب
+export const TICKET_XP_CAP = 50;    // سقف ticketXP (5 تذاكر)
+export const TICKETS_MAX = 5;       // 5 تذاكر كحد أقصى في الجيب
 
 // ═══ الحالة الكاملة ═══
 export interface ProgressState {
@@ -120,8 +119,8 @@ export interface ProgressState {
   hapticsEnabled: boolean;
 
   // 🆕 نظام التذاكر
-  ticketXP: number;    // رصيد XP الخاص بالتذاكر (سقف 20)
-  tickets: number;     // عدد التذاكر في الجيب (سقف 1)
+  ticketXP: number;    // رصيد XP الخاص بالتذاكر (سقف 50)
+  tickets: number;     // عدد التذاكر في الجيب (سقف 5)
 
   setChildName: (name: string) => void;
   setCategory: (category: Category) => void;
@@ -298,7 +297,6 @@ export const useProgressStore = create<ProgressState>()(
           };
         }),
 
-      // ─── الدرجات ───
       setGrade: (levelKey, phase, grade) =>
         set((state) => {
           const current = state.grades[levelKey] ?? { ...EMPTY_GRADES };
@@ -317,11 +315,6 @@ export const useProgressStore = create<ProgressState>()(
         return g ? { ...g } : { ...EMPTY_GRADES };
       },
 
-      // ─── النتيجة التراكمية ───
-      // المعادلة:
-      //   الاختبار × ٧٠٪  +  التمرّن × ١٠٪  +  السمعي × ١٠٪
-      //   + (البصري العادي × ٥٪ + البصري الفلاش × ٥٪)
-      // التقريب: ٠٫٥ → أعلى (Math.round)
       computeFinalScore: (levelKey) => {
         const g = get().grades[levelKey];
         if (!g) return null;
@@ -336,10 +329,8 @@ export const useProgressStore = create<ProgressState>()(
           return null;
         }
 
-        // [FIX N62] البصري: يشترط المكوّنين معًا (عادي + Flash) — مطابقة لقاعدة الفتح
         if (vNormal === null || vFlash === null) return null;
 
-        // وزن البصري: ٥٪ لكل مكوّن
         let visualWeighted = 0;
         if (vNormal !== null) visualWeighted += vNormal * 0.05;
         if (vFlash !== null) visualWeighted += vFlash * 0.05;
@@ -353,7 +344,6 @@ export const useProgressStore = create<ProgressState>()(
         return Math.round(raw);
       },
 
-      // ─── الجلسة العلاجية ───
       setPendingRemediation: (p) =>
         set({
           pendingRemediation: {
@@ -459,9 +449,9 @@ export const useProgressStore = create<ProgressState>()(
           };
         }),
 
-      // ═══ addXP — معدّل: يُحدّث totalXP + ticketXP ═══
+      // ═══ addXP — يُحدّث totalXP + ticketXP ═══
       // totalXP: بلا سقف (للمستويات)
-      // ticketXP: بسقف TICKET_XP_CAP (20)
+      // ticketXP: بسقف TICKET_XP_CAP (50)
       addXP: (amount) =>
         set((state) => {
           const safeAmount = Math.max(0, amount);
@@ -507,7 +497,6 @@ export const useProgressStore = create<ProgressState>()(
       // ═══ 🆕 نظام التذاكر ═══
 
       // شراء تذكرة: خصم 10 من ticketXP · إضافة تذكرة للجيب
-      // شروط: لا يوجد تذكرة في الجيب · الرصيد كافٍ
       buyTicket: () =>
         set((state) => {
           if (state.tickets >= TICKETS_MAX) return state;
@@ -518,8 +507,7 @@ export const useProgressStore = create<ProgressState>()(
           };
         }),
 
-      // استهلاك تذكرة: خصم 1 من الجيب · لا يلمس ticketXP
-      // يُستدعى عند فتح أي لعبة
+      // استهلاك تذكرة: خصم 1 من الجيب
       consumeTicket: () =>
         set((state) => {
           if (state.tickets <= 0) return state;
@@ -569,7 +557,6 @@ export const useProgressStore = create<ProgressState>()(
           } as ProgressState;
         }
 
-        // 🆕 v6 — إضافة نظام التذاكر (مع احتساب XP القديم)
         if (version < 6) {
           const oldTotalXP = (old.totalXP as number) || 0;
           return {
@@ -580,7 +567,6 @@ export const useProgressStore = create<ProgressState>()(
           } as ProgressState;
         }
 
-        // 🆕 v7 — احتساب XP الموجود إن كان ticketXP = 0
         if (version < 7) {
           const oldTotalXP = (old.totalXP as number) || 0;
           const existingTicketXP = (old.ticketXP as number) || 0;
@@ -595,7 +581,6 @@ export const useProgressStore = create<ProgressState>()(
           } as ProgressState;
         }
 
-        // 🆕 v8 — إصلاح إضافي
         if (version < 8) {
           const oldTotalXP = (old.totalXP as number) || 0;
           const existingTicketXP = (old.ticketXP as number) || 0;
@@ -610,15 +595,11 @@ export const useProgressStore = create<ProgressState>()(
           } as ProgressState;
         }
 
-        // 🆕 v9 — الإصلاح النهائي: أي مستخدم لديه totalXP > 0
-        //             لكن ticketXP = 0 → يُمنح رصيد من XP الموجود
         if (version < 9) {
           const oldTotalXP = (old.totalXP as number) || 0;
           const existingTicketXP = (old.ticketXP as number) || 0;
           const existingTickets = (old.tickets as number) || 0;
 
-          // إذا كان الـ ticketXP موجوداً فعلاً · لا نلمسه
-          // إن كان صفراً و totalXP > 0 · نمنح 20 (الحد الأقصى)
           const newTicketXP =
             existingTicketXP > 0
               ? existingTicketXP
@@ -639,7 +620,7 @@ export const useProgressStore = create<ProgressState>()(
 );
 
 // ═══════════════════════════════════════════════════════════
-// Selectors مساعدة
+// Selectors
 // ═══════════════════════════════════════════════════════════
 
 export const selectIsLevelComplete =
