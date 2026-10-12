@@ -4,24 +4,18 @@
 //
 // معداد سوروبان SVG · متعدد الأعمدة (حتى 5) · للعرض فقط
 // يُستخدم في سباق القراصنة لعرض خطوات الحل بعد الخطأ
-//
-// الإصلاحات عن نسخة جيميني:
-//   1. initial={false} على كل الخرزات (تفادي القفز من y=0)
-//   2. القوس داخل الإطار (172/182 بدل 178/195)
-//   3. إزالة AnimatePresence من SVG (استبدال بـ key + initial/animate)
-//   4. تحسين أداء · لا تغييرات بنيوية
 // ═══════════════════════════════════════════════════════════════════
 
 import React from 'react';
 import { motion } from 'framer-motion';
 
 interface MultiRodAbacusProps {
-  digits: number[];           // من اليسار لليمين · مثل [3, 3, 2, 0]
-  activeRods?: number[];      // الأعمدة المُضاءة · مثل [2, 3]
-  unitRodIndex?: number;      // 4 = الآحاد (من اليسار · افتراضي)
-  arcValue?: number;          // 12 = الرقم المعروض تحت القوس
-  runningTotal?: number;      // 3320 = المجموع التراكمي · أعلى المعداد
-  columns?: number;           // 5 افتراضياً
+  digits: number[];
+  activeRods?: number[];
+  unitRodIndex?: number;
+  arcValue?: number;
+  runningTotal?: number;
+  columns?: number;
 }
 
 const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
@@ -32,18 +26,15 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
   runningTotal,
   columns = 5,
 }) => {
-  // ═══ إحداثيات الأعمدة داخل viewBox 320×220 ═══
   const startX = 52;
   const endX = 268;
   const rodSpacing = columns > 1 ? (endX - startX) / (columns - 1) : 0;
 
-  // ═══ تسميات الأعمدة ═══
   const labels =
     columns === 5
       ? ['ع.ك', 'ك', 'م', 'ع', 'آ']
       : ['ت', 'ك', 'م', 'ع', 'آ'].slice(5 - columns);
 
-  // ═══ القوس أسفل الأعمدة النشطة (داخل الإطار) ═══
   let arcPath = '';
   let arcCenterX = 160;
   if (activeRods.length > 0) {
@@ -52,11 +43,9 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
     const x1 = startX + minRod * rodSpacing - 18;
     const x2 = startX + maxRod * rodSpacing + 18;
     arcCenterX = (x1 + x2) / 2;
-    // القوس داخل الإطار (قمة عند 182 · نهايات عند 172)
     arcPath = `M ${x1} 172 Q ${arcCenterX} 182 ${x2} 172`;
   }
 
-  // ═══ إعدادات حركة موحّدة للخرزات ═══
   const beadSpring = {
     type: 'spring' as const,
     stiffness: 500,
@@ -71,28 +60,25 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
         style={{ overflow: 'visible' }}
       >
         <defs>
-          {/* إطار خشبي */}
           <linearGradient id="woodFrame" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#78350f" />
             <stop offset="50%" stopColor="#572507" />
             <stop offset="100%" stopColor="#451a03" />
           </linearGradient>
 
-          {/* عارضة ذهبية */}
           <linearGradient id="beamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#fde68a" />
             <stop offset="50%" stopColor="#fbbf24" />
             <stop offset="100%" stopColor="#d4a017" />
           </linearGradient>
 
-          {/* توهج الليزر */}
           <filter id="laser-glow" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="3.5" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
         </defs>
 
-        {/* ═══ 1. الإطار الخشبي ═══ */}
+        {/* الإطار الخشبي */}
         <rect
           x="14" y="10" width="292" height="182" rx="12"
           fill="url(#woodFrame)"
@@ -105,7 +91,7 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
           fillOpacity="0.85"
         />
 
-        {/* ═══ 2. عدّاد المجموع التراكمي (أعلى الإطار) ═══ */}
+        {/* عدّاد المجموع */}
         {runningTotal !== undefined && (
           <g transform="translate(160, 32)">
             <rect
@@ -133,7 +119,7 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
           </g>
         )}
 
-        {/* ═══ 3. العارضة الوسطى ═══ */}
+        {/* العارضة */}
         <rect
           x="20" y="84" width="280" height="6" rx="2"
           fill="url(#beamGrad)"
@@ -141,7 +127,7 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
           strokeWidth="1"
         />
 
-        {/* ═══ 4. الأعمدة والخرزات ═══ */}
+        {/* الأعمدة والخرزات */}
         {Array.from({ length: columns }).map((_, i) => {
           const rodX = startX + i * rodSpacing;
           const isActiveRod = activeRods.includes(i);
@@ -149,8 +135,6 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
           const digit = digits[i] ?? 0;
           const hasUpper = digit >= 5;
           const lowerVal = digit % 5;
-
-          // الخرزة العلوية: مفعّلة (تنزل للعارضة) أو خاملة
           const upperY = hasUpper ? 64 : 36;
 
           return (
@@ -159,7 +143,6 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
               opacity={isActiveRod ? 1 : 0.55}
               style={{ transition: 'opacity 0.2s ease' }}
             >
-              {/* العمود المعدني */}
               <line
                 x1={rodX} y1="26" x2={rodX} y2="178"
                 stroke="#94a3b8"
@@ -167,7 +150,6 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
                 strokeLinecap="round"
               />
 
-              {/* نقطة الآحاد */}
               {isUnitRod && (
                 <circle
                   cx={rodX} cy="87" r="3.5"
@@ -177,7 +159,6 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
                 />
               )}
 
-              {/* نبضة ليزر على العمود النشط */}
               {isActiveRod && (
                 <motion.line
                   initial={{ opacity: 0.3 }}
@@ -191,7 +172,7 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
                 />
               )}
 
-              {/* ═══ الخرزة العلوية (5) ═══ */}
+              {/* الجدة */}
               <motion.g
                 initial={false}
                 animate={{ y: upperY }}
@@ -211,7 +192,7 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
                 />
               </motion.g>
 
-              {/* ═══ الخرزات الأربع السفلية ═══ */}
+              {/* الخرزات السفلية */}
               {[0, 1, 2, 3].map((b) => {
                 const isPushedUp = b < lowerVal;
                 const restingY = 104 + b * 18;
@@ -241,7 +222,6 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
                 );
               })}
 
-              {/* تسمية العمود */}
               <text
                 x={rodX} y="204"
                 textAnchor="middle"
@@ -255,7 +235,7 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
           );
         })}
 
-        {/* ═══ 5. القوس أسفل الأعمدة النشطة + قيمة الخطوة ═══ */}
+        {/* القوس */}
         {activeRods.length > 0 && arcPath && (
           <g>
             <path
