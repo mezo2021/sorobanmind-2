@@ -35,6 +35,7 @@ export interface MulOption {
   value: number;
   kind: 'correct' | MulErrorKind;
   why: string;        // يُعرض بعد الاختيار
+  stepIndex?: number; // فهرس الخطوة التي وقع فيها الخطأ في steps (للجسر التعليمي)
 }
 
 export interface MulProblem {
@@ -134,6 +135,7 @@ function buildWrongOptions(a: number, b: number, steps: MulStep[], answer: numbe
     candidates.push({
       value: answer - s.value + moved,
       kind: 'shift',
+      stepIndex: steps.indexOf(s),
       why: `مَوْضِعُ الجُزْءِ ${s.a}×${s.b} خَاطِئ: مَنْزِلَةُ آحَادِهِ = مَنْزِلَةُ ${s.a} + مَنْزِلَةُ ${s.b} = ${rodName(s.onesRod)}.`,
     });
   }
@@ -145,21 +147,25 @@ function buildWrongOptions(a: number, b: number, steps: MulStep[], answer: numbe
     candidates.push({
       value: answer - s.value + s.value * 10,
       kind: 'padding',
+      stepIndex: steps.indexOf(s),
       why: `نَاتِجُ رَقْمَيْنِ يَشْغَلُ مَنْزِلَتَيْنِ دَائِماً: ${s.a}×${s.b} = ${pad2(s.product)}، وَالصِّفْرُ يَبْقَى فِي ${rodName(s.tensRod)}.`,
     });
   }
 
   // 3) نسيان الحمل (جمع المنازل بدون ترحيل)
   const rods: number[] = Array(8).fill(0);
-  for (const s of steps) {
+  let firstCarry = -1;   // أول خطوة تتجاوز فيها منزلة 9 (يلزم الحمل)
+  steps.forEach((s, i) => {
     rods[s.tensRod] += Math.floor(s.product / 10);
     rods[s.onesRod] += s.product % 10;
-  }
+    if (firstCarry < 0 && (rods[s.tensRod] >= 10 || rods[s.onesRod] >= 10)) firstCarry = i;
+  });
   const noCarry = rods.reduce((sum, v, i) => sum + (v % 10) * 10 ** i, 0);
   if (noCarry !== answer) {
     candidates.push({
       value: noCarry,
       kind: 'carry',
+      stepIndex: firstCarry >= 0 ? firstCarry : undefined,
       why: 'نَسِيتَ الحَمْل: إِذَا زَادَتِ المَنْزِلَةُ عَنْ 9 فَاحْمِلْ 1 إِلَى المَنْزِلَةِ الَّتِي عَلَى يَسَارِهَا.',
     });
   }
@@ -170,6 +176,7 @@ function buildWrongOptions(a: number, b: number, steps: MulStep[], answer: numbe
     candidates.push({
       value: answer - s.value,
       kind: 'missed',
+      stepIndex: steps.indexOf(s),
       why: `نَسِيتَ الجُزْءَ ${s.a} × ${s.b}. اضْرِبْ كُلَّ رَقْمٍ فِي كُلِّ رَقْم.`,
     });
   }
@@ -182,6 +189,7 @@ function buildWrongOptions(a: number, b: number, steps: MulStep[], answer: numbe
     candidates.push({
       value: answer - s.value + sw * 10 ** s.onesRod,
       kind: 'swap',
+      stepIndex: steps.indexOf(s),
       why: `قَلَبْتَ رَقْمَيِ النَّاتِجِ: ${s.a}×${s.b} = ${s.product} (العَشَرَاتُ أَوَّلاً ثُمَّ الآحَاد).`,
     });
   }
