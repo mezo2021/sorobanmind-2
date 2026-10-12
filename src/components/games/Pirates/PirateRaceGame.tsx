@@ -17,12 +17,14 @@
 //   7. إصلاح عرض المعداد: activeRods = 4 − onesRod (الأعمدة من اليسار).
 //   8. مسألة ذهبية مرتين في الجولة (نقاط ×2 · بلا عقوبة) + كومبو + مدفع ريان.
 //   9. النجوم من gap الأخير · وصندوق الكنز على شاشة النصر.
+//  10. ضرب + قسمة عبر quizFactory (QuizProblem المشترك).
+//  11. الجسر التعليمي = SolutionPlayer (تفاعلي · كل الخطوات ظاهرة).
 // ═══════════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight, RotateCcw, Home, Trophy, Crown, Zap, Hand, Star,
+  ArrowRight, RotateCcw, Home, Trophy, Crown, Hand, Star,
   Volume2, VolumeX,
 } from 'lucide-react';
 import { GameCompanion, type HeroMood } from '../GameCompanion';
@@ -32,17 +34,12 @@ import { useCharacterVoice } from '@/hooks/useCharacterVoice';
 import { useProgressStore } from '@/store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
 import type { CharacterType } from '@/types';
-import MultiRodAbacus from './MultiRodAbacus';
+import SolutionPlayer from './SolutionPlayer';
 import PirateScene from './PirateScene';
 import { seaSfx } from './seaSfx';
-import {
-  generateMulProblem,
-  adaptiveTime,
-  rodsFromNumber,
-  type MulProblem,
-  type MulOption,
-  type MulLevel,
-} from './mulEngine';
+import { adaptiveTime, type MulLevel } from './mulEngine';
+import type { QuizProblem, QuizOption, ReviewInfo } from './quizTypes';
+import { generateQuiz, pickOp } from './quizFactory';
 
 const Scene = React.memo(PirateScene);
 
@@ -70,13 +67,6 @@ type Weather = 'sunny' | 'rain' | 'storm';
 
 interface PirateRaceGameProps {
   onBack: () => void;
-}
-
-interface ReviewInfo {
-  kind: MulOption['kind'] | 'timeout';
-  why: string;
-  wrongValue: number | null;
-  stepIndex?: number;
 }
 
 interface Hud {
@@ -175,7 +165,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
   const goldenQueueRef = useRef<number[]>([]);
   const dangerWarnedRef = useRef(false);
   const finishedRef = useRef(false);
-  const problemRef = useRef<MulProblem | null>(null);
+  const problemRef = useRef<QuizProblem | null>(null);
   const lastTickRef = useRef(0);
   const stepClockRef = useRef<(dt: number) => void>(() => {});
 
@@ -190,8 +180,8 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
   const [isLightning, setIsLightning] = useState(false);
   const [soundOn, setSoundOn] = useState<boolean>(loadSound);
 
-  const [currentProblem, setCurrentProblem] = useState<MulProblem | null>(null);
-  const [options, setOptions] = useState<MulOption[]>([]);
+  const [currentProblem, setCurrentProblem] = useState<QuizProblem | null>(null);
+  const [options, setOptions] = useState<QuizOption[]>([]);
   const [reveal, setReveal] = useState<{ picked: number | null; correct: number } | null>(null);
   const [review, setReview] = useState<ReviewInfo | null>(null);
 
@@ -307,7 +297,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
   // ═══════════════════════════════════════════════════════════
   const loadNextProblem = useCallback(() => {
     const lvl = pickLevel(scoreRef.current, elapsedRef.current);
-    const prob = generateMulProblem(lvl);
+    const prob = generateQuiz(pickOp(elapsedRef.current), lvl);
 
     // مسألة ذهبية؟
     const queue = goldenQueueRef.current;
@@ -365,7 +355,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
     }
   }, [addTimeout, finish, goPhase, say, syncStats]);
 
-  const handleAnswer = useCallback((opt: MulOption) => {
+  const handleAnswer = useCallback((opt: QuizOption) => {
     const prob = problemRef.current;
     if (!prob || phaseRef.current !== 'playing' || answeredRef.current) return;
     answeredRef.current = true;
@@ -919,6 +909,11 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
               <div className="text-[11px] font-bold text-slate-300 bg-black/40 px-2 py-1 rounded-full border border-white/10">
                 المُسْتَوَى {level}
               </div>
+              {currentProblem && (
+                <div className="text-[11px] font-bold text-sky-200 bg-sky-950/60 px-2 py-1 rounded-full border border-sky-500/30">
+                  {currentProblem.op === 'div' ? '➗ قِسْمَة' : '✖️ ضَرْب'}
+                </div>
+              )}
               {isGolden && (
                 <div className="text-[11px] font-black text-amber-300 bg-amber-900/70 px-2 py-1 rounded-full border border-amber-400/50">
                   🧰 ذَهَبِيَّة ×2
@@ -944,7 +939,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
 
           {currentProblem ? (
             <div className="text-4xl font-black text-amber-300 text-center font-mono tabular-nums" dir="ltr">
-              {currentProblem.a} × {currentProblem.b} = ؟
+              {currentProblem.a} {currentProblem.symbol} {currentProblem.b} = ؟
             </div>
           ) : (
             <div className="text-2xl font-black text-sky-300 text-center py-1 animate-pulse">⛵ اسْتَعِدّ!</div>
@@ -1001,7 +996,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
       {/* ═══ الجسر التعليمي ═══ */}
       <AnimatePresence>
         {phase === 'review' && currentProblem && review && (
-          <ErrorReviewCard
+          <SolutionPlayer
             key={currentProblem.id}
             problem={currentProblem}
             info={review}
@@ -1010,122 +1005,6 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// الجسر التعليمي: خطوات كوجيما على المعداد
-//   0 → الخطوة 1 → ... → الناتج · 0.8 ث/خطوة · لمسة = تخطٍّ
-//   الزمن متوقف طوال العرض (الطور 'review' خارج ساعة اللعب)
-// ═══════════════════════════════════════════════════════════════════
-function ErrorReviewCard({
-  problem,
-  info,
-  onContinue,
-}: {
-  problem: MulProblem;
-  info: ReviewInfo;
-  onContinue: () => void;
-}) {
-  const steps = problem.steps;
-  const last = steps.length - 1;
-  const [idx, setIdx] = useState(-1);   // -1 = معداد فارغ
-
-  useEffect(() => {
-    if (idx >= last) return;
-    const t = setTimeout(() => setIdx((i) => i + 1), idx === -1 ? 500 : 800);
-    return () => clearTimeout(t);
-  }, [idx, last]);
-
-  const skip = () => setIdx(last);
-
-  const step = idx >= 0 ? steps[idx] : null;
-  const running = step ? step.running : 0;
-  const digits = rodsFromNumber(running, 5);
-  // الأعمدة تُرسم من اليسار: الآحاد = العمود 4
-  const activeRods = step ? [4 - step.onesRod, 4 - step.tensRod] : [];
-  const isErrorStep = info.stepIndex !== undefined && idx === info.stepIndex;
-  const errorLabel =
-    info.kind === 'missed' ? 'هَذَا الجُزْءُ الَّذِي نَسِيتَه'
-    : info.kind === 'carry' ? 'هُنَا يَجِبُ الحَمْل'
-    : 'هُنَا مَوْضِعُ الخَطَأ';
-
-  return (
-    <motion.div
-      initial={{ y: '100%', opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: '100%', opacity: 0 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-      onClick={skip}
-      className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md overflow-y-auto"
-      dir="rtl"
-    >
-      <div className="min-h-full w-full max-w-md mx-auto flex flex-col justify-between gap-3 p-4">
-        {/* الرأس */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-          <div className="flex items-center gap-2 text-rose-400 font-bold text-sm">
-            <Zap className="w-5 h-5" />
-            <span>تَصْحِيحُ المَسَار</span>
-          </div>
-          <div className="text-[11px] text-slate-400">⏸ الوَقْتُ مُتَوَقِّف</div>
-        </div>
-
-        {/* المسألة والاختيار */}
-        <div className="text-center">
-          <div className="text-2xl font-black text-amber-300 font-mono" dir="ltr">
-            {problem.a} × {problem.b}
-          </div>
-          {info.wrongValue !== null && (
-            <div className="text-xs text-rose-300 mt-1">اخْتَرْتَ {info.wrongValue}</div>
-          )}
-        </div>
-
-        {/* سبب الخطأ */}
-        <div className="bg-slate-900/85 border border-rose-500/30 rounded-2xl p-3 text-center text-xs text-rose-100 font-bold leading-relaxed">
-          {info.why}
-        </div>
-
-        {/* المعداد */}
-        <MultiRodAbacus
-          digits={digits}
-          activeRods={activeRods}
-          unitRodIndex={4}
-          arcValue={step ? step.product : undefined}
-          runningTotal={running}
-          columns={5}
-        />
-
-        {/* نص الخطوة (إطار متقطع أحمر عند الخطوة الخاطئة) */}
-        <div
-          className={`min-h-[64px] rounded-2xl p-2.5 text-center text-xs font-bold leading-snug flex flex-col items-center justify-center gap-1 ${
-            isErrorStep
-              ? 'bg-rose-950/70 border-2 border-dashed border-rose-400 text-rose-100'
-              : 'bg-slate-900/85 border border-amber-500/30 text-amber-200'
-          }`}
-        >
-          {isErrorStep && <span className="text-rose-300 font-black">🔴 {errorLabel}</span>}
-          <span>
-            {step
-              ? `الخُطْوَة ${idx + 1} / ${steps.length}: ${step.text}`
-              : 'نَبْدَأُ مِنْ مِعْدَادٍ فَارِغ...'}
-          </span>
-        </div>
-
-        {/* الجواب */}
-        <div className="text-center text-sm font-bold text-amber-300">
-          الإِجَابَةُ الصَّحِيحَة: <span className="text-lg font-mono tabular-nums">{problem.answer}</span>
-        </div>
-
-        <button
-          onClick={(e) => { e.stopPropagation(); onContinue(); }}
-          className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-lg active:scale-95 transition"
-          style={{ touchAction: 'manipulation' }}
-        >
-          ▶️ مُتَابَعَةُ السِّبَاق
-        </button>
-        {idx < last && <p className="text-center text-[10px] text-slate-500">المَسْ الشَّاشَةَ لِتَخَطِّي الخُطُوَات</p>}
-      </div>
-    </motion.div>
   );
 }
 
