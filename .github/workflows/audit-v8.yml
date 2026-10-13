@@ -50,7 +50,9 @@ jobs:
       - name: Run AST audit
         id: audit
         continue-on-error: true
-        run: node scripts/audit-ast.js
+        run: |
+          cp scripts/audit-ast.js /tmp/audit.cjs
+          node /tmp/audit.cjs
 
       - name: Capture project checks
         id: checks
