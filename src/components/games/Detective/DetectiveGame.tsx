@@ -1,6 +1,8 @@
 // ═══════════════════════════════════════════════════════════════════
 // 🆕 src/components/games/Detective/DetectiveGame.tsx — Production Ready
 // ═══════════════════════════════════════════════════════════════════
+// [FIX NAME] — اسم الطفل صوتياً في handleStartGame — 2026-10-13
+// ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -290,14 +292,15 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
     setHeroMood('excited');
 
     const startMsg = pickUniquePhrase(JOUD_START_PHRASES, usedPhrasesRef.current);
-    setHeroText(startMsg);
-    speak(startMsg);
+    const greetMsg = `أهلاً ${childName}! ${startMsg}`;
+    setHeroText(greetMsg);
+    speak(greetMsg);
     vibrate(50);
 
     addTimeout(() => {
       fetchNextProblem();
     }, 1200);
-  }, [addTimeout, fetchNextProblem, speak, clearAllTimeouts]);
+  }, [addTimeout, fetchNextProblem, speak, clearAllTimeouts, childName]);
 
   const handleVerifyAnswer = useCallback(() => {
     if (!currentProblem || isCheckSuccess !== null) return;
@@ -516,7 +519,7 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
               {isCheckSuccess === true ? (
                 <>
                   <CheckCircle2 className="w-6 h-6 text-white" />
-                  <span>تمَّ إِغْلَاقُ المَلَفِّ بِنَجَاحٍ!</span>
+                  <span>تمَّ إِغْلَاقُ المَلَفِّ بِنَجَاحٍ!</span>
                 </>
               ) : isCheckSuccess === false ? (
                 <>
