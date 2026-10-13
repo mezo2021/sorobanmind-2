@@ -7,6 +7,9 @@
 // [FIX 11] — master_mixed → master_chains (بصري) · إضافة master_chains_audio (سمعي)
 // [FIX 12] — بطاقة "أسطورة السوروبان" عند 8/8
 // [FIX 13] — LevelNodeButton: "متاح" / "مكتمل" بدل "100 XP"
+// [FIX 14] — handleReset: توسيع keysToKeep (10 مفاتيح) — 2026-10-13
+// [FIX 15] — handleBackup: نسخ كامل localStorage بدون فلترة — 2026-10-13
+// [FIX 16] — handleRestore: مسح localStorage قبل الاستعادة — 2026-10-13
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMemo, useState, useRef } from 'react';
@@ -402,44 +405,31 @@ export function GuardianDashboard({
   };
 
   const handleReset = () => {
-  const keysToKeep = [
-    // هوية الطفل
-    'soroban_companion',
-    'soroban_child_name',
-    'soroban_child_full_name',
-
-    // السجلات القياسية
-    'soroban_high_scores_v1',
-    'soroban_high_scores_month',
-
-    // المتاجر الحيّة
-    'sorobanmind-v2-progress',
-    'soroban_mastery_badges',
-    'sorobanmind-v2-lang',
-    'srb_progress',
-
-    // تفضيلات
-    'soroban_number_style',
-  ];
-  Object.keys(localStorage).forEach((key) => {
-    if (!keysToKeep.includes(key)) localStorage.removeItem(key);
-  });
-  playSound('whoosh');
-  setShowResetConfirm(false);
-  window.location.reload();
-};
+    const keysToKeep = [
+      'soroban_companion',
+      'soroban_child_name',
+      'soroban_child_full_name',
+      'soroban_high_scores_v1',
+      'soroban_high_scores_month',
+      'sorobanmind-v2-progress',
+      'soroban_mastery_badges',
+      'sorobanmind-v2-lang',
+      'srb_progress',
+      'soroban_number_style',
+    ];
+    Object.keys(localStorage).forEach((key) => {
+      if (!keysToKeep.includes(key)) localStorage.removeItem(key);
+    });
+    playSound('whoosh');
+    setShowResetConfirm(false);
+    window.location.reload();
+  };
 
   const handleBackup = () => {
     try {
       const data: Record<string, string> = {};
       Object.keys(localStorage).forEach((key) => {
-        if (
-          key.startsWith('soroban') ||
-          key.startsWith('srb_') ||
-          key.startsWith('sorobanmind')
-        ) {
-          data[key] = localStorage.getItem(key) || '';
-        }
+        data[key] = localStorage.getItem(key) || '';
       });
       const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: 'application/json',
@@ -463,9 +453,15 @@ export function GuardianDashboard({
     reader.onload = (e) => {
       try {
         const data = JSON.parse(e.target?.result as string);
+
+        Object.keys(localStorage).forEach((key) => {
+          localStorage.removeItem(key);
+        });
+
         Object.entries(data).forEach(([key, value]) => {
           localStorage.setItem(key, value as string);
         });
+
         playSound('click');
         setTimeout(() => window.location.reload(), 300);
       } catch (err) {
