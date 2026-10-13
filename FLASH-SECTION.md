@@ -1,4 +1,4 @@
-📄 الملف الأول: FLASH_SECTION.md
+FLASH_SECTION.md
 
 # 🎬 قسم الفلاشات التعليمية
 
