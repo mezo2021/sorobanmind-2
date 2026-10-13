@@ -19,6 +19,8 @@
 //   9. النجوم من gap الأخير · وصندوق الكنز على شاشة النصر.
 //  10. ضرب + قسمة عبر quizFactory (QuizProblem المشترك).
 //  11. الجسر التعليمي = SolutionPlayer (تفاعلي · كل الخطوات ظاهرة).
+//
+// [FIX NAME] — اسم الطفل صوتياً في startRace — 2026-10-13
 // ═══════════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -525,8 +527,9 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
     setReview(null);
     setToast(null);
     setHeroMood('excited');
-    say('أَسْرِعْ يَا بَطَل! القَرَاصِنَةُ خَلْفَنَا!');
-    speak('أَسْرِعْ يَا بَطَل! القَرَاصِنَةُ خَلْفَنَا!');
+    const greetMsg = `أَسْرِعْ يَا ${childName}! القَرَاصِنَةُ خَلْفَنَا!`;
+    say(greetMsg);
+    speak(greetMsg);
     vibrate(50);
 
     seaSfx.setMute(!soundOn);
@@ -539,7 +542,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
     }, 900);
   }, [
     tickets, buyTicket, consumeTicket, clearAllTimeouts, say, speak,
-    soundOn, goPhase, addTimeout, loadNextProblem,
+    soundOn, goPhase, addTimeout, loadNextProblem, childName,
   ]);
 
   const handleRope = useCallback(() => {
