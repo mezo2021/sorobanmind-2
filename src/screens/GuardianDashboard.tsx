@@ -402,19 +402,32 @@ export function GuardianDashboard({
   };
 
   const handleReset = () => {
-    const keysToKeep = [
-      'soroban_companion',
-      'soroban_child_name',
-      'soroban_high_scores_v1',      // 🆕 الرقم القياسي
-      'soroban_high_scores_month',   // 🆕 شهر السجل
-    ];
-    Object.keys(localStorage).forEach((key) => {
-      if (!keysToKeep.includes(key)) localStorage.removeItem(key);
-    });
-    playSound('whoosh');
-    setShowResetConfirm(false);
-    window.location.reload();
-  };
+  const keysToKeep = [
+    // هوية الطفل
+    'soroban_companion',
+    'soroban_child_name',
+    'soroban_child_full_name',
+
+    // السجلات القياسية
+    'soroban_high_scores_v1',
+    'soroban_high_scores_month',
+
+    // المتاجر الحيّة
+    'sorobanmind-v2-progress',
+    'soroban_mastery_badges',
+    'sorobanmind-v2-lang',
+    'srb_progress',
+
+    // تفضيلات
+    'soroban_number_style',
+  ];
+  Object.keys(localStorage).forEach((key) => {
+    if (!keysToKeep.includes(key)) localStorage.removeItem(key);
+  });
+  playSound('whoosh');
+  setShowResetConfirm(false);
+  window.location.reload();
+};
 
   const handleBackup = () => {
     try {
