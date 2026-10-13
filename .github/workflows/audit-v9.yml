@@ -1,0 +1,58 @@
+name: SorobanMind Audit v9 (Complements v8)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "scripts/audit-v9.sh"
+      - ".github/workflows/audit-v9.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: audit-v9
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate script exists
+        run: |
+          test -f scripts/audit-v9.sh || { echo "::error::scripts/audit-v9.sh not found"; exit 1; }
+
+      - name: Run v9 audit
+        id: audit
+        continue-on-error: true
+        run: |
+          chmod +x scripts/audit-v9.sh
+          bash scripts/audit-v9.sh
+
+      - name: Upload v9 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-v9-${{ github.run_number }}
+          path: audit-v9.txt
+          if-no-files-found: warn
+          retention-days: 30
+          compression-level: 6
+
+      - name: Report result
+        if: steps.audit.outcome == 'failure'
+        run: |
+          echo "::warning::v9 script finished with errors. Download artifact to inspect."
