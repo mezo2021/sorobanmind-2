@@ -14,6 +14,8 @@
 //   4. نجوم لكل مسألة (٣ بلا خطأ) + سلسلة كومبو
 //   5. تدريب تكيّفي: القاعدة الأضعف تظهر أكثر
 //   6. أصوات لمس وتصفيق (WebAudio) + اهتزاز
+//
+// [FIX NAME] — اسم الطفل صوتياً في handleStartGame — 2026-10-13
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -426,12 +428,13 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
     setHeroMood('excited');
 
     const msg = pickUniquePhrase(SHAM_START_PHRASES, usedPhrasesRef.current);
-    setHeroText(msg);
-    speak(msg);
+    const greetMsg = `أهلاً ${childName}! ${msg}`;
+    setHeroText(greetMsg);
+    speak(greetMsg);
     vibrate(50);
 
     addTimeout(() => { fetchNextProblem(); }, 1200);
-  }, [addTimeout, fetchNextProblem, speak, clearAllTimeouts, setLocked]);
+  }, [addTimeout, fetchNextProblem, speak, clearAllTimeouts, setLocked, childName]);
 
   // ═══ إتمام مسألة كاملة ═══
   const completeProblem = useCallback(() => {
