@@ -196,6 +196,82 @@ function buildWrongOptions(b: number, trace: DivTraceStep[], answer: number, rng
   return picked;
 }
 
+// ═══ خطوات العرض: لكل رقم قسمة خطوتان (كما في دروس القسمة) ═══
+//   1) divide   : نأخذ المقسوم الجزئي ونكتب رقم القسمة في الناتج
+//   2) subtract : نطرح (رقم القسمة × القاسم) فيتناقص المقسوم
+//   رقم قسمة = 0 : خطوة واحدة (zero)
+// خطوات الدرس = البداية + هذه الخطوات + الختام.
+function buildSteps(a: number, b: number, trace: DivTraceStep[]): { steps: QuizStep[]; map: number[] } {
+  const cols = String(a).length;
+  const steps: QuizStep[] = [];
+  const map: number[] = [];
+  let dividend = a;
+
+  trace.forEach((t, ti) => {
+    map.push(steps.length);
+    const pRods = t.partial >= 10 ? [t.pos + 1, t.pos] : [t.pos];
+    const pStr = String(t.partial);
+    const takeChips = pRods.map((rod, k) => ({ rod, text: pStr[k] }));
+
+    if (t.q === 0) {
+      steps.push({
+        phase: 'zero',
+        text: `${t.partial} أَصْغَرُ مِنْ ${b} ← اكْتُبْ 0 عَلَى ${rodName(t.pos)} مِنَ النَّاتِجِ ثُمَّ أَنْزِلِ الرَّقْمَ التَّالِي`,
+        formula: `${t.partial} < ${b} ← 0`,
+        running: t.running,
+        rods: [t.pos],
+        add: [{ rod: t.pos, digit: 0 }],
+        arcText: `${t.partial} < ${b}`,
+        aux: { value: dividend, rods: pRods, chips: takeChips },
+      });
+      return;
+    }
+
+    const lead = ti === 0 && t.partial >= 10 ? `${Math.floor(t.partial / 10)} أَصْغَرُ مِنْ ${b} · ` : '';
+    steps.push({
+      phase: 'divide',
+      text: `${lead}نَأْخُذُ ${t.partial} ← ${t.partial} ÷ ${b} = ${t.q} ← اكْتُبْ ${t.q} عَلَى ${rodName(t.pos)} مِنَ النَّاتِج`,
+      formula: `${t.partial} ÷ ${b} = ${t.q}`,
+      running: t.running,
+      rods: [t.pos],
+      add: [{ rod: t.pos, digit: t.q }],
+      arcText: `${t.partial} ÷ ${b} = ${t.q}`,
+      tbl: [t.q, b],
+      big: t.partial >= 10,
+      aux: { value: dividend, rods: pRods, chips: takeChips, arcText: `نأخذ ${t.partial}` },
+    });
+
+    const newDividend = t.remainder * 10 ** t.pos + (a % 10 ** t.pos);
+    const tens = Math.floor(t.product / 10);
+    const ones = t.product % 10;
+    // ناتج الطرح يشغل منزلتين دائماً · المنزلة خارج المعداد تُهمل (رقمها صفر)
+    const subChips = [
+      { rod: t.pos + 1, text: `−${tens}`, dim: tens === 0 },
+      { rod: t.pos, text: `−${ones}`, dim: ones === 0 },
+    ].filter((c) => c.rod < cols);
+
+    steps.push({
+      phase: 'subtract',
+      text: `نَطْرَحُ ${t.q}×${b} = ${t.product} ← ${t.partial} − ${t.product} = ${t.remainder} · ${
+        newDividend === 0 ? 'يَبْقَى صِفْر' : `المَقْسُومُ الآنَ ${newDividend}`
+      }`,
+      formula: `${t.partial} − ${t.product} = ${t.remainder}`,
+      running: t.running,
+      rods: [],
+      add: [],
+      aux: {
+        value: newDividend,
+        rods: subChips.map((c) => c.rod),
+        chips: subChips,
+        arcText: `${t.partial}−${t.product}=${t.remainder}`,
+      },
+    });
+    dividend = newDividend;
+  });
+
+  return { steps, map };
+}
+
 // ═══ توليد مسألة ═══
 let counter = 0;
 
@@ -223,15 +299,11 @@ export function generateDivProblem(level: DivLevel, rng: Rng = Math.random): Qui
   };
   const options = shuffle([correct, ...wrong], rng);
 
-  const steps: QuizStep[] = trace.map((t) => ({
-    text: t.text,
-    formula: t.q === 0 ? `${t.partial} < ${b} ← 0` : `${t.partial} ÷ ${b} = ${t.q}`,
-    running: t.running,
-    rods: [t.pos],
-    arc: t.product,
-    arcText: `${t.q}×${b} = ${pad2(t.product)}`,
-    add: [{ rod: t.pos, digit: t.q }],
-  }));
+  const { steps, map } = buildSteps(a, b, trace);
+  // stepIndex في الخيارات يشير إلى trace → نحوّله إلى فهرس الخطوة المصغّرة
+  for (const o of options) {
+    if (o.stepIndex !== undefined) o.stepIndex = map[o.stepIndex];
+  }
 
   return {
     id: `div-${level}-${++counter}`,
