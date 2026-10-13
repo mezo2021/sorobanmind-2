@@ -300,7 +300,7 @@ function inspect(file) {
 }
 
 function table(headers, rows) {
-  const cell = v => String(v ?? '').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+  const cell = v => String(v ?? '').replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
   return [
     `| ${headers.map(cell).join(' | ')} |`,
     `| ${headers.map(() => '---').join(' | ')} |`,
