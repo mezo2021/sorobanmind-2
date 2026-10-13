@@ -7,6 +7,8 @@
 //   2. دعم التكيف التلقائي لوقت العرض عند وجود خطأين متتاليين (+35% وقت إضافي).
 //   3. تفعيل رد الفعل الصوتي والشفهي للبطل عند الإجابة الصحيحة (مصفوفات عبارات مشجعة ومتنوعة).
 //   4. إضافة عبارات دعم دافئة وخاصة من البطل أثناء وضع التكيف الذكي.
+//
+// [FIX NAME] — اسم الطفل صوتياً في handleStartGame — 2026-10-13
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -448,14 +450,15 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     setHeroMood('excited');
 
     const startMsg = pickUniquePhrase(START_PHRASES, usedStartRef.current);
-    setHeroText(startMsg);
-    speak(startMsg);
+    const greetMsg = `أهلاً ${childName}! ${startMsg}`;
+    setHeroText(greetMsg);
+    speak(greetMsg);
     vibrate(50);
 
     addTimeout(() => {
       startNextProblem(0, false);
     }, 1200);
-  }, [addTimeout, startNextProblem, speak, clearAllTimeouts]);
+  }, [addTimeout, startNextProblem, speak, clearAllTimeouts, childName]);
 
   // ═══ معالجة الإجابة مع التكيف الذكي والرد الصوتي ═══
   const handleAnswer = useCallback((ans: number) => {
