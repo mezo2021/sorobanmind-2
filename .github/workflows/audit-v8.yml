@@ -51,8 +51,8 @@ jobs:
         id: audit
         continue-on-error: true
         run: |
-          cp scripts/audit-ast.js /tmp/audit.cjs
-          node /tmp/audit.cjs
+          cp scripts/audit-ast.js scripts/audit-ast.cjs
+          node scripts/audit-ast.cjs
 
       - name: Capture project checks
         id: checks
