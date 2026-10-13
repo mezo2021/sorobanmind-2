@@ -9,6 +9,7 @@
 // [FIX N62] outcome انتقل إلى RemediationSession (اختياري) — 2026-10-05
 // [GAMES]   إضافة نظام التذاكر: ticketXP + tickets — 2026-10-11
 // [GAMES-v2] رفع السقف: 20 → 50 · TICKETS_MAX: 1 → 5 — 2026-10-13
+// [GAMES-v3] تذكرة مجانية عند الحبس الاقتصادي (tickets=0 · ticketXP<COST) — 2026-10-13
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -497,9 +498,16 @@ export const useProgressStore = create<ProgressState>()(
       // ═══ 🆕 نظام التذاكر ═══
 
       // شراء تذكرة: خصم 10 من ticketXP · إضافة تذكرة للجيب
+      // 🆕 تذكرة مجانية عند الحبس الاقتصادي (tickets=0 · ticketXP<COST)
       buyTicket: () =>
         set((state) => {
           if (state.tickets >= TICKETS_MAX) return state;
+
+          // 🆕 تذكرة مجانية عند الحبس الاقتصادي
+          if (state.tickets === 0 && state.ticketXP < TICKET_COST) {
+            return { tickets: 1 };
+          }
+
           if (state.ticketXP < TICKET_COST) return state;
           return {
             ticketXP: state.ticketXP - TICKET_COST,
