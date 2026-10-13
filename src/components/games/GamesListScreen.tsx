@@ -179,8 +179,8 @@ function TicketMachine({
           <Ticket className="w-5 h-5 text-amber-400" />
           <span className="text-sm font-bold text-white">تَذَاكِرُك</span>
         </div>
-        <span className="text-xs text-white/50 tabular-nums">
-          🪙 مَحْفَظَةُ النِّقَاط: {ticketXP} / {TICKET_COST}
+        <span className="text-xs text-white/50">
+          🪙 مَحْفَظَةُ النِّقَاط: <span className="tabular-nums" dir="ltr">{ticketXP}</span>
         </span>
       </div>
 
