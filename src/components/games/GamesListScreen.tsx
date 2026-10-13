@@ -1,10 +1,15 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🎪 src/components/games/GamesListScreen.tsx
+// 🆕 src/components/games/GamesListScreen.tsx — v9
+// ═══════════════════════════════════════════════════════════════════
+//
+// ما تغيّر عن v8:
+//   - استيراد SorobaniaGame
+//   - ربط مسار 'sorobania-island'
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Ticket, Lock, Play, Sparkles, Eye, Gift } from 'lucide-react';
+import { ArrowRight, Ticket, Lock, Play, Sparkles, Eye } from 'lucide-react';
 import { GAMES, type GameId, type GameMeta } from './gamesData';
 import { FlyingAbacusGame } from './FlyingAbacus/FlyingAbacusGame';
 import { DetectiveGame } from './Detective/DetectiveGame';
@@ -12,12 +17,7 @@ import { FriendsGame } from './Friends/FriendsGame';
 import { PirateRaceGame } from './Pirates/PirateRaceGame';
 import SorobaniaGame from './Sorobania/SorobaniaGame';
 import { HighScoreBadge } from './HighScoreBadge';
-import {
-  useProgressStore,
-  TICKET_COST,
-  TICKET_XP_CAP,
-  TICKETS_MAX,
-} from '../../store/progressStore';
+import { useProgressStore, TICKET_COST } from '../../store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
 
 interface GamesListScreenProps {
@@ -34,6 +34,7 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
 
   const ticketXP = useProgressStore((s) => s.ticketXP);
   const tickets = useProgressStore((s) => s.tickets);
+  const totalXP = useProgressStore((s) => s.totalXP);
   const buyTicket = useProgressStore((s) => s.buyTicket);
   const consumeTicket = useProgressStore((s) => s.consumeTicket);
 
@@ -42,9 +43,8 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
   }, []);
 
   const hasTicket = preview ? true : tickets >= 1;
-  const canBuy = preview ? false : tickets < TICKETS_MAX && ticketXP >= TICKET_COST;
-  const canGetFree = preview ? false : tickets === 0 && ticketXP < TICKET_COST;
-  const progressPct = Math.min(100, (ticketXP / TICKET_XP_CAP) * 100);
+  const canBuy = preview ? false : !hasTicket && ticketXP >= TICKET_COST;
+  const progressPct = Math.min(100, (ticketXP / TICKET_COST) * 100);
 
   const handleOpenGame = (game: GameMeta) => {
     if (!hasTicket) return;
@@ -53,6 +53,7 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
     setActive({ kind: 'game', gameId: game.id });
   };
 
+  // ═══ تشغيل لعبة ═══
   if (active?.kind === 'game') {
     if (active.gameId === 'flying-abacus') {
       return <FlyingAbacusGame onBack={() => setActive(null)} />;
@@ -125,12 +126,11 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
         {!preview && (
           <TicketMachine
             ticketXP={ticketXP}
-            tickets={tickets}
             hasTicket={hasTicket}
             canBuy={canBuy}
-            canGetFree={canGetFree}
             progressPct={progressPct}
             onBuy={buyTicket}
+            totalXP={totalXP}
           />
         )}
 
@@ -170,15 +170,10 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
 
 // ═══ ماكينة التذاكر ═══
 function TicketMachine({
-  ticketXP, tickets, hasTicket, canBuy, canGetFree, progressPct, onBuy,
+  ticketXP, hasTicket, canBuy, progressPct, onBuy, totalXP,
 }: {
-  ticketXP: number;
-  tickets: number;
-  hasTicket: boolean;
-  canBuy: boolean;
-  canGetFree: boolean;
-  progressPct: number;
-  onBuy: () => void;
+  ticketXP: number; hasTicket: boolean; canBuy: boolean;
+  progressPct: number; onBuy: () => void; totalXP: number;
 }) {
   return (
     <motion.div
@@ -189,15 +184,12 @@ function TicketMachine({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Ticket className="w-5 h-5 text-amber-400" />
-          <span className="text-sm font-bold text-white">مَحْفَظَةُ التَّذَاكِر</span>
+          <span className="text-sm font-bold text-white">تَذَاكِرُك</span>
         </div>
-        <span className="text-xs text-white/50 tabular-nums">
-          🪙 {ticketXP} / {TICKET_XP_CAP}
-        </span>
+        <span className="text-xs text-white/50">XP الكلي: {totalXP}</span>
       </div>
 
-      {/* عدد التذاكر */}
-      {tickets > 0 && (
+      {hasTicket && (
         <div className="flex items-center justify-center gap-2 py-2">
           <motion.div
             animate={{ scale: [1, 1.08, 1] }}
@@ -206,55 +198,53 @@ function TicketMachine({
           >
             🎟️
           </motion.div>
-          <span className="text-emerald-400 font-bold text-lg tabular-nums">
-            لَدَيْكَ {tickets} {tickets === 1 ? 'تَذْكِرَة' : 'تَذَاكِر'} · اخْتَرْ لُعْبَة!
+          <span className="text-emerald-400 font-bold text-lg">
+            لَدَيْكَ تَذْكِرَة · اخْتَرْ لُعْبَة!
           </span>
         </div>
       )}
 
-      {/* شريط التقدم */}
-      <div className="relative h-2 rounded-full bg-white/10 overflow-hidden mb-3">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${progressPct}%` }}
-          transition={{ duration: 0.4 }}
-          className={`absolute top-0 right-0 h-full ${
-            canGetFree
-              ? 'bg-gradient-to-l from-rose-400 to-rose-600'
-              : 'bg-gradient-to-l from-amber-400 to-amber-600'
-          }`}
-        />
-      </div>
-
-      {/* زر الشراء العادي */}
       {canBuy && (
-        <button
-          onClick={onBuy}
-          className="w-full py-3 rounded-xl bg-gradient-to-l from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600 text-white font-black text-base flex items-center justify-center gap-2 shadow-lg transition active:scale-95"
-          style={{ touchAction: 'manipulation' }}
-        >
-          <Ticket className="w-5 h-5" />
-          🎟️ اشْتَرِ تَذْكِرَة بِـ {TICKET_COST} XP
-        </button>
+        <div className="space-y-3">
+          <div className="relative h-2 rounded-full bg-white/10 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.4 }}
+              className="absolute top-0 right-0 h-full bg-gradient-to-l from-amber-400 to-amber-600"
+            />
+          </div>
+          <button
+            onClick={onBuy}
+            className="w-full py-3 rounded-xl bg-gradient-to-l from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600 text-white font-black text-base flex items-center justify-center gap-2 shadow-lg transition active:scale-95"
+            style={{ touchAction: 'manipulation' }}
+          >
+            <Ticket className="w-5 h-5" />
+            🎟️ اشْتَرِ تَذْكِرَة بِـ 10 XP
+          </button>
+        </div>
       )}
 
-      {/* زر التذكرة المجانية */}
-      {canGetFree && (
-        <button
-          onClick={onBuy}
-          className="w-full py-3 rounded-xl bg-gradient-to-l from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 text-white font-black text-base flex items-center justify-center gap-2 shadow-lg transition active:scale-95 animate-pulse"
-          style={{ touchAction: 'manipulation' }}
-        >
-          <Gift className="w-5 h-5" />
-          🎁 احْصُلْ عَلَى تَذْكِرَة مَجَّانِيَّة
-        </button>
-      )}
-
-      {/* رسالة عند الانتظار */}
-      {!hasTicket && !canBuy && !canGetFree && (
-        <p className="text-xs text-white/50 text-center">
-          اجْمَعْ {TICKET_COST - ticketXP} XP إِضَافِيَّة
-        </p>
+      {!hasTicket && !canBuy && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs text-white/60">
+            <span>التَّقَدُّمُ نَحْوَ التَّذْكِرَة</span>
+            <span className="font-bold text-amber-300 tabular-nums">
+              {ticketXP} / {TICKET_COST}
+            </span>
+          </div>
+          <div className="relative h-2 rounded-full bg-white/10 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.4 }}
+              className="absolute top-0 right-0 h-full bg-gradient-to-l from-sky-400 to-blue-600"
+            />
+          </div>
+          <p className="text-xs text-white/50 text-center pt-1">
+            اجْمَعْ {TICKET_COST - ticketXP} XP إِضَافِيَّة
+          </p>
+        </div>
       )}
     </motion.div>
   );
