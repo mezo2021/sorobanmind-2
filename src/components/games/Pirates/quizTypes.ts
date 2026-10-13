@@ -10,15 +10,32 @@ import type { MulProblem } from './mulEngine';
 
 export type QuizOp = 'mul' | 'div';
 
+/** شريحة تحت عمود: ما يُكتب أو يُطرح في هذه الخطوة */
+export interface AuxChip { rod: number; text: string; dim?: boolean }
+
+/** المعداد الثاني (المقسوم) في القسمة */
+export interface AuxView {
+  value: number;       // قيمة المقسوم المعروضة بعد الخطوة
+  rods: number[];      // الأعمدة المضاءة (0 = آحاد)
+  chips: AuxChip[];
+  arcText?: string;
+}
+
+export type StepPhase = 'partial' | 'divide' | 'subtract' | 'zero';
+
 /** خطوة عرض على المعداد (الجسر التعليمي) */
 export interface QuizStep {
   text: string;        // شرح الخطوة كاملاً
   formula?: string;    // صيغة قصيرة للقائمة: "4 × 7 = 28"
-  running: number;     // القيمة المعروضة على المعداد بعد الخطوة
+  running: number;     // قيمة المعداد الرئيسي (الناتج) بعد الخطوة
   rods: number[];      // الأعمدة المضاءة، مرقّمة من اليمين (0 = آحاد)
   arc?: number;        // (للتوافق) الناتج الجزئي
-  arcText?: string;    // نص الناتج الجزئي تحت المعداد: "4×7 = 28"
+  arcText?: string;    // نص تحت المعداد الرئيسي: "4×7 = 28"
   add?: { rod: number; digit: number }[];  // ما يُكتب على كل منزلة (0 = آحاد)
+  phase?: StepPhase;   // نوع الخطوة (للقسمة: divide ثم subtract)
+  aux?: AuxView;       // معداد المقسوم (القسمة فقط)
+  tbl?: [number, number];  // الجدول المطلوب تذكّره (لنموذج الزمن)
+  big?: boolean;       // مقسوم جزئي من رقمين (لنموذج الزمن)
 }
 
 /** سبب الخطأ + موضعه (يمرّره اللعب للجسر التعليمي) */
@@ -66,6 +83,8 @@ export function mulToQuiz(p: MulProblem): QuizProblem {
       running: s.running,
       rods: [s.onesRod, s.tensRod],
       arc: s.product,
+      phase: 'partial' as const,
+      tbl: [s.a, s.b] as [number, number],
       arcText: `${s.a}×${s.b} = ${s.product < 10 ? '0' : ''}${s.product}`,
       // ناتج رقمين يشغل منزلتين دائماً (العشرات ثم الآحاد) · الصفر يُكتب
       add: [
