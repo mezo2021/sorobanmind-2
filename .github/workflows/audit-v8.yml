@@ -1,0 +1,107 @@
+name: SorobanMind Audit v8
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "scripts/audit-ast.js"
+      - ".github/workflows/audit-v8.yml"
+      - "package.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: audit-v8
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate required files
+        run: |
+          test -f package.json || { echo "::error::package.json not found"; exit 1; }
+          test -f scripts/audit-ast.js || { echo "::error::scripts/audit-ast.js not found"; exit 1; }
+
+      - name: Install TypeScript
+        run: |
+          npm install \
+            --no-save \
+            --no-package-lock \
+            --ignore-scripts \
+            --no-audit \
+            --no-fund \
+            typescript
+
+      - name: Run AST audit
+        id: audit
+        continue-on-error: true
+        run: node scripts/audit-ast.js
+
+      - name: Capture project checks
+        id: checks
+        continue-on-error: true
+        run: |
+          mkdir -p audit-output/checks
+
+          if npm run | grep -qE '(^|[[:space:]])typecheck([[:space:]]|$)'; then
+            npm run typecheck > audit-output/checks/typecheck.log 2>&1
+            echo $? > audit-output/checks/typecheck.exitcode
+          else
+            echo "No typecheck script found." > audit-output/checks/typecheck.log
+            echo "not-configured" > audit-output/checks/typecheck.exitcode
+          fi
+
+          if npm run | grep -qE '(^|[[:space:]])build([[:space:]]|$)'; then
+            npm run build > audit-output/checks/build.log 2>&1
+            echo $? > audit-output/checks/build.exitcode
+          else
+            echo "No build script found." > audit-output/checks/build.log
+            echo "not-configured" > audit-output/checks/build.exitcode
+          fi
+
+      - name: Create run metadata
+        if: always()
+        run: |
+          mkdir -p audit-output
+          {
+            echo "# Audit Run Metadata"
+            echo ""
+            echo "- Repository: $GITHUB_REPOSITORY"
+            echo "- Branch/ref: $GITHUB_REF"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Workflow run: $GITHUB_RUN_ID"
+            echo "- Node: $(node --version)"
+            echo "- npm: $(npm --version)"
+            echo "- Lockfile present: $(test -f package-lock.json && echo yes || echo no)"
+          } > audit-output/RUN_METADATA.md
+
+      - name: Upload complete audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SorobanMind-Audit-v8-${{ github.run_number }}
+          path: audit-output/
+          if-no-files-found: warn
+          retention-days: 30
+          compression-level: 6
+
+      - name: Report audit result
+        if: steps.audit.outcome == 'failure'
+        run: |
+          echo "::error::Audit script failed. Download the artifact and inspect available logs."
+          exit 1
