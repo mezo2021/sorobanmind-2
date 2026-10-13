@@ -1,10 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/GamesListScreen.tsx — v9
-// ═══════════════════════════════════════════════════════════════════
-//
-// ما تغيّر عن v8:
-//   - استيراد SorobaniaGame
-//   - ربط مسار 'sorobania-island'
+// 🎪 src/components/games/GamesListScreen.tsx
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect } from 'react';
@@ -34,7 +29,6 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
 
   const ticketXP = useProgressStore((s) => s.ticketXP);
   const tickets = useProgressStore((s) => s.tickets);
-  const totalXP = useProgressStore((s) => s.totalXP);
   const buyTicket = useProgressStore((s) => s.buyTicket);
   const consumeTicket = useProgressStore((s) => s.consumeTicket);
 
@@ -130,7 +124,6 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
             canBuy={canBuy}
             progressPct={progressPct}
             onBuy={buyTicket}
-            totalXP={totalXP}
           />
         )}
 
@@ -170,10 +163,10 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
 
 // ═══ ماكينة التذاكر ═══
 function TicketMachine({
-  ticketXP, hasTicket, canBuy, progressPct, onBuy, totalXP,
+  ticketXP, hasTicket, canBuy, progressPct, onBuy,
 }: {
   ticketXP: number; hasTicket: boolean; canBuy: boolean;
-  progressPct: number; onBuy: () => void; totalXP: number;
+  progressPct: number; onBuy: () => void;
 }) {
   return (
     <motion.div
@@ -186,7 +179,9 @@ function TicketMachine({
           <Ticket className="w-5 h-5 text-amber-400" />
           <span className="text-sm font-bold text-white">تَذَاكِرُك</span>
         </div>
-        <span className="text-xs text-white/50">XP الكلي: {totalXP}</span>
+        <span className="text-xs text-white/50 tabular-nums">
+          🪙 مَحْفَظَةُ النِّقَاط: {ticketXP} / {TICKET_COST}
+        </span>
       </div>
 
       {hasTicket && (
@@ -229,7 +224,7 @@ function TicketMachine({
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-white/60">
             <span>التَّقَدُّمُ نَحْوَ التَّذْكِرَة</span>
-            <span className="font-bold text-amber-300 tabular-nums">
+            <span className="font-bold text-amber-300 tabular-nums" dir="ltr">
               {ticketXP} / {TICKET_COST}
             </span>
           </div>
@@ -241,8 +236,8 @@ function TicketMachine({
               className="absolute top-0 right-0 h-full bg-gradient-to-l from-sky-400 to-blue-600"
             />
           </div>
-          <p className="text-xs text-white/50 text-center pt-1">
-            اجْمَعْ {TICKET_COST - ticketXP} XP إِضَافِيَّة
+          <p className="text-xs text-emerald-300/80 text-center pt-1 font-bold">
+            📚 اِذْهَبْ إِلَى دُرُوسِك · اجْمَعْ {TICKET_COST - ticketXP} نِقَاط · وَعُدْ
           </p>
         </div>
       )}
