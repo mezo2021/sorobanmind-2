@@ -406,17 +406,18 @@ export function GuardianDashboard({
 
   const handleReset = () => {
     const keysToKeep = [
-      'soroban_companion',
-      'soroban_child_name',
-      'soroban_child_full_name',
-      'soroban_high_scores_v1',
-      'soroban_high_scores_month',
-      'sorobanmind-v2-progress',
-      'soroban_mastery_badges',
-      'sorobanmind-v2-lang',
-      'srb_progress',
-      'soroban_number_style',
-    ];
+  'soroban_companion',
+  'soroban_child_name',
+  'soroban_child_full_name',
+  'soroban_high_scores_v1',
+  'soroban_high_scores_month',
+  'sorobanmind-v2-progress',
+  'soroban_mastery_badges',
+  'sorobanmind-v2-lang',
+  'srb_progress',
+  'soroban_number_style',
+  'sorobania_progress_v2',
+];
     Object.keys(localStorage).forEach((key) => {
       if (!keysToKeep.includes(key)) localStorage.removeItem(key);
     });
