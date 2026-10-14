@@ -1,0 +1,28 @@
+name: P2 Compress Images
+on: workflow_dispatch
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y pngquant
+      - name: Before
+        run: find public src -name '*.png' -size +60k -exec ls -l {} \; | tee before.txt
+      - name: Compress
+        run: find public src -name '*.png' -size +60k -print0 | xargs -0 -I{} pngquant --quality=70-90 --skip-if-larger --force --ext .png {}
+      - name: After
+        run: |
+          find public src -name '*.png' -size +60k -exec ls -l {} \; | tee after.txt
+          { echo '### Before'; echo '```'; cat before.txt; echo '```'; echo '### After'; echo '```'; cat after.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: peter-evans/create-pull-request@v6
+        with:
+          branch: p2/compress-images
+          title: "perf: compress large PNGs"
+          commit-message: "perf: compress large PNGs (pngquant 70-90)"
+          body: "ضغط الصور الكبيرة بنفس الأسماء."
+          add-paths: |
+            public
+            src
