@@ -520,5 +520,3 @@ export function Rod2D5({
 }
 
 export default Rod2D5;
-
-يتبع
