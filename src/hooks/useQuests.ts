@@ -1,12 +1,19 @@
 // src/hooks/useQuests.ts
+// [F1] إصلاح مهام لوحة ولي الأمر:
+//   - practice · anzan · anzanHighScore · addition/subtraction/multiplication/division → localStorage (يُكتب الآن)
+//   - streak → progressStore.currentStreak
+//   - lessons → localStorage (soroban_completed_lessons)
+//   - badges → progressStore.anzanBadges + anzanAudioBadges + masteryBadgesStore
+
 import { useState, useEffect } from 'react';
 import { QUESTS } from '../data';
 import type { Quest } from '../types';
+import { useProgressStore } from '../store/progressStore';
+import { useMasteryBadgesStore } from '../store/masteryBadgesStore';
 
 const COMPLETED_STORAGE_KEY = 'soroban_completed_lessons';
 const ANZAN_STORAGE_KEY = 'soroban_anzan_stats';
 const PRACTICE_STORAGE_KEY = 'soroban_practice_stats';
-const STATS_STORAGE_KEY = 'sorobanmind-stats';
 
 interface AnzanStats {
   highScore: number;
@@ -23,14 +30,6 @@ interface PracticeStats {
   divisionProblems: number;
 }
 
-interface StoredStats {
-  xp: number;
-  streak: number;
-  level: number;
-  soundEnabled: boolean;
-  earnedBadges: string[];
-}
-
 function safeRead<T extends object>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
@@ -45,40 +44,7 @@ function safeRead<T extends object>(key: string, fallback: T): T {
   }
 }
 
-function calculateProgress(
-  type: string,
-  completed: number[],
-  anzanStats: AnzanStats,
-  practiceStats: PracticeStats,
-  stats: StoredStats,
-): number {
-  switch (type) {
-    case 'practice':
-      return practiceStats.totalProblems;
-    case 'anzan':
-      return anzanStats.totalCorrect;
-    case 'anzanHighScore':
-      return anzanStats.highScore;
-    case 'streak':
-      return stats.streak;
-    case 'lessons':
-      return completed.length;
-    case 'addition':
-      return practiceStats.additionProblems || 0;
-    case 'subtraction':
-      return practiceStats.subtractionProblems || 0;
-    case 'multiplication':
-      return practiceStats.multiplicationProblems || 0;
-    case 'division':
-      return practiceStats.divisionProblems || 0;
-    case 'badges':
-      return stats.earnedBadges.length;
-    default:
-      return 0;
-  }
-}
-
-function computeQuests(): Quest[] {
+function readLocalStats() {
   const completed: number[] = (() => {
     try {
       const raw = localStorage.getItem(COMPLETED_STORAGE_KEY);
@@ -88,13 +54,13 @@ function computeQuests(): Quest[] {
     }
   })();
 
-  const anzanStats = safeRead<AnzanStats>(ANZAN_STORAGE_KEY, {
+  const anzan = safeRead<AnzanStats>(ANZAN_STORAGE_KEY, {
     highScore: 0,
     totalRounds: 0,
     totalCorrect: 0,
   });
 
-  const practiceStats = safeRead<PracticeStats>(PRACTICE_STORAGE_KEY, {
+  const practice = safeRead<PracticeStats>(PRACTICE_STORAGE_KEY, {
     totalProblems: 0,
     correctAnswers: 0,
     additionProblems: 0,
@@ -103,47 +69,78 @@ function computeQuests(): Quest[] {
     divisionProblems: 0,
   });
 
-  const stats = safeRead<StoredStats>(STATS_STORAGE_KEY, {
-    xp: 0,
-    streak: 0,
-    level: 1,
-    soundEnabled: true,
-    earnedBadges: [],
-  });
-
-  return QUESTS.map((quest) => ({
-    ...quest,
-    progress: calculateProgress(
-      quest.type,
-      completed,
-      anzanStats,
-      practiceStats,
-      stats,
-    ),
-  }));
+  return { completed, anzan, practice };
 }
 
-export function useQuests() {
-  const [quests, setQuests] = useState<Quest[]>(() => computeQuests());
+export function useQuests(): Quest[] {
+  const [local, setLocal] = useState(readLocalStats);
 
+  // ✅ من progressStore (reactive)
+  const currentStreak = useProgressStore((s) => s.currentStreak);
+  const anzanBadges = useProgressStore((s) => s.anzanBadges);
+  const anzanAudioBadges = useProgressStore((s) => s.anzanAudioBadges);
+
+  // ✅ من masteryBadgesStore (reactive)
+  const masteryCount = useMasteryBadgesStore(
+    (s) => Object.keys(s.badges).length,
+  );
+
+  // ✅ تحديث دوري خفيف لقراءة localStorage (بعد كل جلسة)
   useEffect(() => {
-    const interval = setInterval(() => {
-      setQuests(computeQuests());
-    }, 2000);
-
-    const handleStorage = () => {
-      setQuests(computeQuests());
-    };
-
-    window.addEventListener('storage', handleStorage);
-
+    const refresh = () => setLocal(readLocalStats());
+    const interval = setInterval(refresh, 2000);
+    window.addEventListener('storage', refresh);
     return () => {
       clearInterval(interval);
-      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('storage', refresh);
     };
   }, []);
 
-  return quests;
+  const badgesCount =
+    Object.values(anzanBadges).filter(Boolean).length +
+    Object.values(anzanAudioBadges).filter(Boolean).length +
+    masteryCount;
+
+  return QUESTS.map((quest) => {
+    let progress = 0;
+
+    switch (quest.type) {
+      case 'practice':
+        progress = local.practice.totalProblems;
+        break;
+      case 'anzan':
+        progress = local.anzan.totalCorrect;
+        break;
+      case 'anzanHighScore':
+        progress = local.anzan.highScore;
+        break;
+      case 'streak':
+        progress = currentStreak ?? 0;
+        break;
+      case 'lessons':
+        progress = local.completed.length;
+        break;
+      case 'addition':
+        progress = local.practice.additionProblems || 0;
+        break;
+      case 'subtraction':
+        progress = local.practice.subtractionProblems || 0;
+        break;
+      case 'multiplication':
+        progress = local.practice.multiplicationProblems || 0;
+        break;
+      case 'division':
+        progress = local.practice.divisionProblems || 0;
+        break;
+      case 'badges':
+        progress = badgesCount;
+        break;
+      default:
+        progress = 0;
+    }
+
+    return { ...quest, progress };
+  });
 }
 
 export default useQuests;
