@@ -1,201 +1,315 @@
-📋 docs/PLAN_v3_STATUS.md
+خطة الإصلاح 80/20 — النسخة النهائية
 
-حالة PLAN_v3 — الفروق والربط مع الخطة الحالية
+الأساس
 
-آخر تحديث: 2026-10-14
-الغرض: توثيق الفروق بين PLAN_v3 (2026-10-07) والخطة الحالية (REPAIR_PLAN_INTEGRATED 2026-10-14)
-المصادر: ACHIEVEMENTS.md · STATE_OF_THE_PROJECT.md · audit-v8 · audit-v9
-القاعدة: الفروق موثقة بأدلة · لا تخمين
-
----
-
-1. بطاقة PLAN_v3 الأصلية
-
-البند القيمة
-التاريخ 2026-10-07
-المصدر ACHIEVEMENTS.md · PROJECT_MASTER.md
-الأساس تقرير v5
-الحالة المُعلنة 92% مكتمل
-المراحل P1 → P16
-الأولوية الأولى P9 (ربط adaptiveEngine)
+البند القرار
+الحقيقة v8 + v9 (لا v5/v6/v10)
+البيئة Chrome · GitHub web editor فقط
+المحرك مجمّد — لا لمس
+الهدف إعادة رفع نظيف · لا إضافات
+القيد لا ملفات جديدة في src/
+المنهج ملف واحد · اختبار · ثم التالي
+الأولوية وظيفي → أداء → تنظيف → SRB
 
 ---
 
-2. خريطة P1-P16 → الخطوة الحالية
+الترتيب (10 خطوات · ~6 ساعات)
 
-المرحلة PLAN_v3 يقول الحالة الفعلية (2026-10-14) في خطتنا؟
-P1 تثبيت نموذج البيانات ✅ مكتمل —
-P2 Badge Registry ⏸️ لاحقًا P3 (مدمج)
-P3 ربط BADGES الـ8 ⏸️ لاحقًا P3
-P4 توحيد Anzan Badges ⏸️ لاحقًا P3
-P5 إغلاق mastery duplication ⏸️ «لا تكرار فعلي» P3
-P6 تصنيف 35 مفتاح ⏸️ لاحقًا ✅ P0 أنجزه
-P7 recordAttempt في CE · PT ⏳ P7
-P8 ربط masteryTracker ⏳ تلقائي P3 (مدمج)
-P9 نقل adaptiveEngine إلى SRB ⏳ أولوية 1 🟡 تعارض
-P10 اختبار Adaptive ⏳ ⏸️ لاحقًا
-P11-P16 Badges UI · i18n · Export · Audit ⏸️ P8 · P10
+# الخطوة الوقت الأثر الحالة
+0 ✅ CI Build (منجزة) — بوابة ✅
+1 Lockfile 5 د ثبات بناء ⬜
+2 ضغط joud2.png 10 د −290 KB ⬜
+3 Lazy للشاشات 25 د JS أصغر ⬜
+4 F1 (لوحة ولي الأمر) 60 د 9 مهام ⬜
+5 recordAttempt CE/PT 30 د مهارات ⬜
+6 حذف 5 ملفات ميتة 15 د نظافة ⬜
+7 توحيد section2_unlocked 10 د إزالة تعارض ⬜
+8 إصلاح srb-adapter (3 دوال) 45 د SRB يعمل ⬜
+9 عزل SRB من الحزمة 20 د JS < 900KB ⬜
+10 توثيق + Tag 15 د نقطة عودة ⬜
 
----
-
-3. الفروق الجوهرية منذ 7 أكتوبر
-
-3.1 🟢 ما تقدّم
-
-البند PLAN_v3 (7 أكتوبر) اليوم (14 أكتوبر)
-i18n 65% · بلا زر ✅ زر 🌐 · pickLang.ts · Header مربوط
-الترجمة الفعلية لم تبدأ ✅ LessonScreen يستخدم useT
-P6 (المفاتيح) لاحقًا ✅ منجز في P0
-F12 (تصادم WEAK_KEY) غير معروف ✅ لا تصادم
-الملفات المحمية غير موثقة ✅ 15 ملفًا محددًا
-
-3.2 🔴 ما تغيّر أو صُحّح
-
-البند PLAN_v3 قال الحقيقة
-أسطر الكود 51,500 68,209
-الكود الميت ~2,176 سطرًا 9,600 سطرًا (35 ملفًا)
-المفاتيح اليتيمة 5 6
-adaptiveEngine «يُرحّل» معزول تمامًا — v9 مؤكد
-srb-adapter «3 دوال معطوبة» لم تُحدَّد — يحتاج اختبارات
-useTranslation «يُستورد فقط من Debug» حيّ في LessonScreen + Header
+المجموع: ~3.5 ساعات عمل + وقت المراجعة
 
 ---
 
-4. 🔴 التعارض: P9 (adaptiveEngine)
+تفاصيل كل خطوة
 
-PLAN_v3 قال:
+الخطوة 1 — Lockfile (5 دقائق)
 
-P9 — نقل adaptiveEngine إلى SRB · الأولوية 1 · ساعة.
+لماذا: بناء حتمي · حماية supply-chain · أفضل ممارسة CI.
 
-الحقيقة (v9):
+كيف:
 
-· adaptiveEngine.ts — ❌ لا مستورد خارجي.
-· problemGenerator.ts — ❌ لا مستورد.
-· masteryTracker.ts — يُستورد فقط من adaptiveEngine.
-· حلقة مغلقة: bank-raw → bank-v2 → bank-linked → engine.
+1. Add file → Create new file → .github/workflows/p1-lockfile.yml
+2. الصق:
 
-السؤال الحقيقي:
-
-هل نُفعّل adaptiveEngine أم نُجمّده؟
-
-الجانب ربطه بـSRB تجميده
-الفائدة تكيف تعليمي حقيقي استقرار · بلا خطر
-الخطر كسر CE · PT · Lessons صفر
-الوقت ساعة + اختبارات صفر
-الأدلة لا أحد يستورده v9 مؤكد
-الحالة الحالية معزول يعمل بلا مشاكل
-
-القرار الموصى به:
-
-تجميد آمن الآن · قرار منفصل للإعادة.
-
-الأسباب:
-
-1. v9 أثبت العزل القاطع.
-2. ربطه = إضافة كود · خطر.
-3. تجميده = لا فعل · لا خطر.
-4. يمكن ربطه لاحقًا بعد إنجاز P3 (F1-F4).
-5. ADR موثق يحفظ القرار.
-
-الإجراء: يُنشأ docs/decisions/ADR-engine-status.md.
-
----
-
-5. الربط مع الخطة الحالية (REPAIR_PLAN_INTEGRATED)
-
-ما يتوافق تمامًا
-
-PLAN_v3 REPAIR_PLAN_INTEGRATED
-P6 (تصنيف المفاتيح) P0 ✅
-P7 (recordAttempt في CE · PT) P7
-P8 (masteryTracker) P3
-P11 (Badges UI) P3
-P13-P14 (i18n) P10
-
-ما يختلف
-
-البند PLAN_v3 REPAIR_PLAN_INTEGRATED
-P9 ربط adaptiveEngine تجميد + ADR
-ترتيب البداية P9 (ربط المحرك) P3 (إصلاح F1-F4)
-حذف الكود الميت P16 (أخيرًا) P2 (مبكرًا)
-الترجمة P13-P14 P10 (اختياري)
-
----
-
-6. ما يستحق الاحتفاظ من PLAN_v3
-
-# العنصر السبب
-1 16 قاعدة ذهبية مبادئ التطوير
-2 سجل الجلسات خريطة تاريخية
-3 Bank A vs B (فلسفة) توثيق معماري
-4 توزيع Bank B جدول دقيق
-5 جدول تطور النسبة قياس التقدم
-
----
-
-7. ما يحتاج تحديثًا في الوثائق
-
-الوثيقة التحديث
-PROJECT_MASTER.md 119 ملفًا → 168+ · 51K → 68K سطرًا
-AL-ISLAH-V2.md 5 يتيمة → 6 · 2,176 → 9,600 سطر ميت
-ACHIEVEMENTS.md إضافة جلسات 25-26 (14 أكتوبر)
-PLAN_v3.md ترقيم P9 (تجميد لا ربط)
-
----
-
-8. الحقائق المحدّثة
-
-# الحقيقة المصدر
-1 Bank A = 275 سؤالًا v8 · مؤكد
-2 Bank B = 666 سؤالًا v8 · مؤكد
-3 الكود الميت = 9,600 سطرًا Claude reachability
-4 المفاتيح اليتيمة = 6 v9
-5 adaptiveEngine = معزول v9
-6 useTranslation = حيّ v9
-7 numberStyle = 3 مصادر v9
-8 لا Lockfile v9
-9 لا typecheck script v9
-10 0 اختبارات v9
-
----
-
-9. الأولويات الفورية (14 أكتوبر)
-
-# المهمة الأولوية المصدر
-1 إصلاح F1-F4 (لوحة ولي الأمر) 🔴 Claude
-2 حذف الكود الميت (35 ملفًا) 🟠 Claude
-3 إكمال i18n 🟠 PLAN_v3
-4 F10 (مصدر واحد للدروس) 🟠 Claude
-5 recordAttempt في CE · PT 🟡 PLAN_v3 P7
-6 تجميد adaptiveEngine 🟡 Claude + ADR
-7 حذف الملفات الميتة (4 ملفات) 🟢 P0
-
----
-
-10. الخلاصة في 3 أسطر
-
-1. PLAN_v3 بني على v5 — أرقامه تحتاج تحديثًا.
-2. P9 تغيّر — من «ربط» إلى «تجميد + ADR».
-3. الأولويات تغيّرت — F1-F4 أولًا لا P9.
-
----
-
-آخر تحديث: 2026-10-14
-المرجع: REPAIR_PLAN_INTEGRATED.md
-الحالة: وثيقة حالة مؤقتة · تُراجع بعد P3
-
----
-
-📌 المهمة الآن
-
-أنشئ الملف في GitHub:
-
-```
-1. github.com/mezo2021/sorobanmind-2
-2. Add file ▼ → Create new file
-3. الاسم: docs/PLAN_v3_STATUS.md
-4. الصق المحتوى
-5. Commit changes
+```yaml
+name: P1 Lockfile
+on: workflow_dispatch
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --package-lock-only --no-audit --no-fund
+      - uses: peter-evans/create-pull-request@v6
+        with:
+          branch: p1/lockfile
+          title: "chore: add package-lock.json"
+          add-paths: package-lock.json
 ```
 
-هذا الملف سيصبح مرجعًا عند أي التباس بين الخطتين. 🌹
+3. Commit changes على main
+4. Actions → P1 Lockfile → Run workflow
+5. Pull requests → Merge
+
+معيار النجاح: package-lock.json في الجذر.
+
+التراجع: Revert PR.
+
+---
+
+الخطوة 2 — ضغط joud2.png (10 دقائق)
+
+لماذا: 388 KB → ~100 KB · أسرع تحميل · لا كود.
+
+كيف:
+
+1. Add file → Create new file → .github/workflows/p2-images.yml
+2. الصق:
+
+```yaml
+name: P2 Compress Images
+on: workflow_dispatch
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y pngquant
+      - run: find public src -name '*.png' -size +60k -print0 | xargs -0 -I{} pngquant --quality=70-90 --skip-if-larger --force --ext .png {}
+      - uses: peter-evans/create-pull-request@v6
+        with:
+          branch: p2/compress-images
+          title: "perf: compress large PNGs"
+          add-paths: |
+            public
+            src
+```
+
+3. شغّل ← راجع Files changed ← تحقق بصري من joud2.png
+4. إذا سليمة: Merge
+
+معيار النجاح: joud2.png ≈ 100 KB · الصورة غير مشوّهة.
+
+التراجع: أغلق PR إن كانت مشوّهة.
+
+---
+
+الخطوة 3 — Lazy للشاشات (25 دقيقة)
+
+لماذا: 1.7 MB → أصغر · تحميل أسرع.
+
+كيف:
+
+1. أنشئ scripts/lazyify.cjs (سكربت يحوّل الاستيرادات)
+2. أنشئ .github/workflows/p3-lazy.yml
+3. شغّل ← راجع Summary ← Merge
+
+استثناء إلزامي: Header (مكوّن دائم — لا lazy).
+
+معيار النجاح: JS الرئيسي < 1.2 MB.
+
+التراجع: Revert · اختبر الجوال.
+
+---
+
+الخطوة 4 — F1 لوحة ولي الأمر (60 دقيقة)
+
+لماذا: 9 مهام تعرض 0 · 3 شارات لا تُمنح · أعلى أثر وظيفي.
+
+القيد: لا ملف جديد · لا نوع جديد · لا لمس progressStore · لا لمس الشاشات الثلاث.
+
+الملفات المسموح بها:
+
+· src/hooks/useQuests.ts
+· src/utils/badgeChecker.ts
+· src/screens/HeroDashboard.tsx (السطر 163 فقط)
+· src/hooks/useGameStats.ts (عند الضرورة)
+
+الخطوات الفرعية:
+
+· 4أ — تشخيص: أرسل الملفات · شخّص · انتظر الموافقة
+· 4ب — قرار: المصادر الحقيقية؟ المهام التي لا مصدر لها؟
+· 4ج — تنفيذ: ملف واحد · PR
+· 4د — قبول: CI ✅ · اختبار يدوي · Merge
+
+معيار النجاح:
+
+· لوحة ولي الأمر لا تنهار
+· المهام المربوطة تتحرك
+· لا مهمة تعرض 0 ثابتًا
+
+التراجع: Revert PR.
+
+---
+
+الخطوة 5 — recordAttempt في CE + PT (30 دقيقة)
+
+لماذا: مهارات CE/PT لا تُسجَّل · النظام العلاجي معطّل جزئيًا.
+
+كيف:
+
+· استدعاء واحد في كل شاشة (نفس نموذج PracticeScreen)
+· داخل handler الإجابة — لا في render
+· إضافة السطر فقط — لا إعادة هيكلة
+
+الملفات:
+
+· src/screens/CategoryExamScreen.tsx
+· src/screens/PlacementTestScreen.tsx
+
+معيار النجاح: حل امتحان → skillProgress يتحدث.
+
+التراجع: Revert.
+
+---
+
+الخطوة 6 — حذف 5 ملفات ميتة (15 دقيقة)
+
+الملفات (بترتيب آمن):
+
+# الملف الشرط
+1 src/utils/numerals.ts 0 مستورد
+2 src/components/NumberStyleToggle.tsx 0 مستورد
+3 src/utils/skillsChecker.ts 0 مستورد
+4 src/utils/audioAnzanBadges.ts 0 مستورد
+5 src/utils/anzanBadges.ts بعد F1 · فقط إن لم يُستورد
+
+كيف (لكل ملف):
+
+1. Search → ابحث الاسم بلا امتداد → تأكد 0 import
+2. افتح الملف → Delete file → فرع chore/remove-dead → PR
+3. CI ✅ → Merge
+
+معيار النجاح: Cannot find module لا يظهر في CI.
+
+التراجع: Revert PR.
+
+لا تُلمس: numberStyle.ts · numberStyleStore.ts · engine/ · bank-*.
+
+---
+
+الخطوة 7 — توحيد section2_unlocked (10 دقائق)
+
+المشكلة:
+
+· App.tsx:537 يكتب 'true'
+· CategoryExamScreen.tsx:245 يكتب JSON.stringify(true)
+
+الحل: صيغة واحدة (المقترح: 'true' كما في App).
+
+الملفات: CategoryExamScreen.tsx — سطر واحد.
+
+معيار النجاح: قيمة واحدة في الكود.
+
+---
+
+الخطوة 8 — إصلاح srb-adapter (45 دقيقة)
+
+المشكلة: 3 دوال معطوبة:
+
+· getTestQuestions → يعيد Bank A (خطأ)
+· getPlacementTestQuestions → يعيد فارغًا
+· getExamQuestions → غير موجودة
+
+الخطوات الفرعية:
+
+· 8أ — تشخيص: قراءة الملف + المستهلكين
+· 8ب — قرار: إصلاح أم تجاهل (إن لم تُستدعَ)؟
+· 8ج — تنفيذ: دالة واحدة في كل مرة
+· 8د — اختبار: CE + PT
+
+معيار النجاح: CE + PT يفتحان بلا خطأ.
+
+---
+
+الخطوة 9 — عزل SRB من الحزمة (20 دقيقة)
+
+المشكلة: App.tsx يستورد srb-adapter ساكنًا → SRB كامل في الحزمة الأولى.
+
+الحل: استيراد ديناميكي داخل الدالة المستخدِمة.
+
+معيار النجاح: JS الرئيسي ≤ 900 KB.
+
+تحذير: بعد lazy (الخطوة 3) — ليس قبلها.
+
+---
+
+الخطوة 10 — توثيق + Tag (15 دقيقة)
+
+الخطوات:
+
+1. تحديث docs/PLAN_v3_STATUS.md (سطر واحد: "أُنجز")
+2. git tag v2.0.1 (أو من GitHub Releases)
+3. نقطة عودة كاملة
+
+معيار النجاح: Tag موجود · الرجوع ممكن.
+
+---
+
+ما لا نفعله الآن (مستبعد عمدًا)
+
+البند السبب
+❌ حذف engine/ مجمّد بقرار
+❌ حذف bank-* حلقة مغلقة · سيبقى
+❌ ربط adaptiveEngine لا يعمل · لا نعرف جودته
+❌ توحيد المتاجر مؤجل
+❌ 74 مفتاحًا ديناميكيًا مؤجل
+❌ i18n (زر + إكمال) مؤجل
+❌ تفكيك الملفات الضخمة مؤجل
+❌ L4-L7 دروس محتوى · عمل بشري
+❌ اختبارات واسعة لا وقت
+❌ section2_unlocked كتابات ميتة خُطوة 7 فقط
+
+---
+
+القواعد المُلتزَم بها (من v10)
+
+# القاعدة
+1 لا حذف إلا ما أُلغي صريحًا
+2 المحرك الرياضي مجمّد
+3 bank-v2/raw لا يُحذفان
+4 curriculum/types.ts مجمّد
+5 SRB هو البنك الوحيد للأسئلة الجديدة
+6 ملف واحد · اختبار
+7 نسخة احتياطية قبل أي تعديل
+8 رأس موحّد لكل ملف معدّل
+24 لا "يُستورد" = "يعمل"
+25 لا نظام شارات جديد
+26 لا IndexedDB/Backend
+
+---
+
+المكاسب المُتوقَّعة
+
+المقياس قبل بعد
+JS الرئيسي 1,703 KB ≤ 900 KB
+joud2.png 388 KB ~100 KB
+ملفات ميتة 5 0
+مهام لوحة ولي الأمر 0/9 ~7/9
+Lockfile ❌ ✅
+تعارض section2 ✅ ❌
+srb-adapter معطوب 3 0
+SRB في الحزمة الأولى نعم لا
+
+---
