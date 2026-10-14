@@ -1,0 +1,127 @@
+name: P0 Baseline
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        continue-on-error: true
+        run: npm install --no-audit --no-fund 2>&1 | tail -20
+
+      - name: Build
+        continue-on-error: true
+        run: |
+          npm run build > /tmp/build.log 2>&1
+          echo "BUILD_EXIT=$?" > /tmp/build.exit
+
+      - name: Measure bundle
+        continue-on-error: true
+        run: |
+          echo "=== Bundle sizes ===" > baseline.txt
+          du -sh dist 2>/dev/null >> baseline.txt
+          find dist -type f -exec du -h {} + 2>/dev/null | sort -rh | head -30 >> baseline.txt
+          echo "" >> baseline.txt
+          echo "=== gzip sizes ===" >> baseline.txt
+          find dist -type f -name "*.js" -exec sh -c 'echo "$(gzip -c "$1" | wc -c) bytes gzip - $1"' _ {} \; 2>/dev/null >> baseline.txt
+
+      - name: Extract constants
+        continue-on-error: true
+        run: |
+          echo "# KEYS_RESOLVED.md" > KEYS_RESOLVED.md
+          echo "" >> KEYS_RESOLVED.md
+          echo "## جميع ثوابت المفاتيح" >> KEYS_RESOLVED.md
+          echo '```' >> KEYS_RESOLVED.md
+          grep -rnE "(_KEY|_KEY_|STORAGE_KEY|_PREFIX|PREFIX_)[[:space:]]*=" src/ 2>/dev/null | sort >> KEYS_RESOLVED.md || echo "(لا نتائج)" >> KEYS_RESOLVED.md
+          echo '```' >> KEYS_RESOLVED.md
+          echo "" >> KEYS_RESOLVED.md
+          echo "## WEAK_KEY — كشف التصادم" >> KEYS_RESOLVED.md
+          echo '```' >> KEYS_RESOLVED.md
+          grep -rn "WEAK_KEY\|WEAK_SKILLS_KEY" src/ 2>/dev/null >> KEYS_RESOLVED.md || echo "(لا نتائج)" >> KEYS_RESOLVED.md
+          echo '```' >> KEYS_RESOLVED.md
+
+      - name: Check F1 (missing writers)
+        continue-on-error: true
+        run: |
+          echo "# F1 — مفاتيح بلا كاتب" > F1_CHECK.md
+          echo "" >> F1_CHECK.md
+          for k in soroban_anzan_stats soroban_practice_stats sorobanmind-stats soroban_exam_result; do
+            echo "## $k" >> F1_CHECK.md
+            echo '```' >> F1_CHECK.md
+            grep -rn "$k" src/ 2>/dev/null >> F1_CHECK.md || echo "(لا ذكر — مفتاح ميت)" >> F1_CHECK.md
+            echo '```' >> F1_CHECK.md
+            echo "" >> F1_CHECK.md
+          done
+
+      - name: Check test:run
+        continue-on-error: true
+        run: |
+          echo "=== npm run test:run ===" > test_result.txt
+          timeout 120 npm run test:run > /tmp/test.log 2>&1
+          echo "EXIT=$?" >> test_result.txt
+          tail -50 /tmp/test.log >> test_result.txt
+
+      - name: Find style toggle
+        continue-on-error: true
+        run: |
+          echo "# NUMBER_STYLE_TOGGLE — مكان تبديل النمط" > STYLE_TOGGLE.md
+          echo '```' >> STYLE_TOGGLE.md
+          grep -rn "toggleStyle\|setStyle\|NumberStyleToggle\|loadNumberStyle\|saveNumberStyle" src/ 2>/dev/null >> STYLE_TOGGLE.md || echo "(لا نتائج)" >> STYLE_TOGGLE.md
+          echo '```' >> STYLE_TOGGLE.md
+
+      - name: Extract protected files list
+        continue-on-error: true
+        run: |
+          echo "# PROTECTED_FILES.md" > PROTECTED_FILES.md
+          echo "" >> PROTECTED_FILES.md
+          echo "## FLASH — ملفات محمية (من FLASH_SECTION.md)" >> PROTECTED_FILES.md
+          echo '```' >> PROTECTED_FILES.md
+          ls -la src/components/flash/ 2>/dev/null >> PROTECTED_FILES.md || echo "(المجلد غير موجود)" >> PROTECTED_FILES.md
+          echo '```' >> PROTECTED_FILES.md
+          echo "" >> PROTECTED_FILES.md
+          echo "## useSorobanLogic / Bead2D5 (من ميثاق عدم اللمس)" >> PROTECTED_FILES.md
+          echo '```' >> PROTECTED_FILES.md
+          find src -name "useSorobanLogic*" -o -name "Bead2D5*" -o -name "Soroban2D5*" -o -name "Rod2D5*" 2>/dev/null >> PROTECTED_FILES.md
+          echo '```' >> PROTECTED_FILES.md
+
+      - name: Collect summary
+        continue-on-error: true
+        run: |
+          echo "# P0 BASELINE — ملخص" > P0_SUMMARY.md
+          echo "" >> P0_SUMMARY.md
+          echo "**التاريخ:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> P0_SUMMARY.md
+          echo "**Commit:** ${{ github.sha }}" >> P0_SUMMARY.md
+          echo "" >> P0_SUMMARY.md
+          echo "## حالة البناء" >> P0_SUMMARY.md
+          echo '```' >> P0_SUMMARY.md
+          cat /tmp/build.exit 2>/dev/null >> P0_SUMMARY.md || echo "BUILD_EXIT=?" >> P0_SUMMARY.md
+          tail -5 /tmp/build.log 2>/dev/null >> P0_SUMMARY.md
+          echo '```' >> P0_SUMMARY.md
+
+      - name: Upload P0 reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p0-baseline
+          path: |
+            baseline.txt
+            KEYS_RESOLVED.md
+            F1_CHECK.md
+            test_result.txt
+            STYLE_TOGGLE.md
+            PROTECTED_FILES.md
+            P0_SUMMARY.md
+          retention-days: 14
