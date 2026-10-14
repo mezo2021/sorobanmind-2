@@ -14,6 +14,7 @@ interface Soroban2D5Props {
   onValueChange?: (value: number) => void;
   showValue?: boolean;
   interactive?: boolean;
+  revealValue?: boolean;
   demoValue?: number;
   size?: 'sm' | 'md' | 'lg' | 'auto';
   autoBeadSize?: boolean;
@@ -78,6 +79,7 @@ export function Soroban2D5({
   onValueChange,
   showValue = true,
   interactive = true,
+  revealValue = false,
   demoValue,
   size = 'auto',
   autoBeadSize = false,
@@ -147,6 +149,8 @@ export function Soroban2D5({
     vibrate('medium');
     resetAll();
   };
+
+  const shouldShowValue = revealValue || (!interactive && showValue);
 
   return (
     <div className="w-full flex flex-col items-center gap-3 sm:gap-5">
@@ -233,7 +237,7 @@ export function Soroban2D5({
         )}
       </motion.div>
 
-      {showValue && (
+      {shouldShowValue && (
         <AnimatePresence mode="popLayout">
           <motion.div
             key={`${totalValue}-${numberStyle}`}
