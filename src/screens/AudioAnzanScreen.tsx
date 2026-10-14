@@ -11,7 +11,6 @@
 // [FIX 1] — getAudioAnzanBadgeKey: خريطة صحيحة (S03/S04 جمع · S05/S06 ضرب · S07/S08 قسمة · S09/S10 سلاسل)
 // [FIX 2] — إضافة master_chains_audio (L4)
 // [FIX 3] — تمرير levelNum الحقيقي (0-7) إلى AdaptiveFeedback بدل 0
-// [STATS] trackAnzan — Phase F1
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -34,7 +33,6 @@ import {
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { useMasteryBadgesStore, classifySpeed } from '@/store/masteryBadgesStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
-import { trackAnzan } from '@/utils/statsTracker';
 import { numberToArabicWordsDecimal } from '@/utils/arabicNumbers';
 
 import {
@@ -346,7 +344,6 @@ export function AudioAnzanScreen({
       timestamp: Date.now(),
     };
     useProgressStore.getState().recordAttempt(attempt);
-    trackAnzan(isCorrect, isCorrect ? score + 1 : score);
 
     const timeMs = elapsedMs;
     trackPerformance(isCorrect, timeMs);
@@ -369,7 +366,7 @@ export function AudioAnzanScreen({
     setPhase('reveal');
   }, [
     currentQ, abacusValue, elapsedMs, feedback, playSound, sorobana,
-    onXP, burst, addXP, updateStreak, trackPerformance, score,
+    onXP, burst, addXP, updateStreak, trackPerformance,
   ]);
 
   const buildPerformances = useCallback((): SkillPerformance[] => {
@@ -454,6 +451,7 @@ export function AudioAnzanScreen({
     ],
   );
 
+  // ⏸️ الجزء 2 يبدأ من هنا — أرسل "تابع"
   const nextQuestion = useCallback(() => {
     sorobana.stop();
     stopSpeech();
@@ -783,6 +781,7 @@ export function AudioAnzanScreen({
     const passed = percentage >= PASS_THRESHOLD;
     const xpEarned = score * XP_PER_CORRECT;
 
+    // [FIX 4] — إضافة master_chains_audio
     const AUDIO_BADGE_LABELS: Record<string, string> = {
       master_addition_audio: '🎤 خبير جمع وطرح سماعي',
       master_multiplication_audio: '🎤 خبير ضرب سماعي',
