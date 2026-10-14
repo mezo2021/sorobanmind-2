@@ -9,6 +9,7 @@
 // ✅ زر "إنهاء" يخرج بلا تقييم
 // 📅 آخر تحديث: SRB Migration — Phase 1.5
 // [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
+// [STATS] trackPractice — Phase F1
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -27,6 +28,7 @@ import { useProgressStore } from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { useMasteryBadgesStore, classifySpeed } from '@/store/masteryBadgesStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
+import { trackPractice } from '@/utils/statsTracker';
 
 import {
   getPracticeQuestions,
@@ -306,6 +308,7 @@ const attempt = {
   timestamp: Date.now(),
 };
 useProgressStore.getState().recordAttempt(attempt);
+trackPractice(currentQ.operation, isCorrect);
 
 const timeMs = elapsedMs;
 trackPerformance(isCorrect, timeMs);
