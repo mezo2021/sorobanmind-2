@@ -193,6 +193,7 @@ export function SorobanPlayground({
             autoBeadSize={true}
             interactive={true}
             showValue={true}
+            revealValue={true}
           />
         </div>
       </div>
