@@ -1,4 +1,3 @@
-
 // src/screens/LessonScreen.tsx
 // 📖 شاشة الدرس — تدعم 3 أنواع:
 //   1. نظري (L0-INTRO) → introPages Carousel
@@ -178,6 +177,27 @@ function getExerciseResult(ex: LessonExercise): number {
 }
 
 // ═══════════════════════════════════════════════════════════
+// [PATCH] مُولِّد الاختيارات — مستقل عن currentTry/currentTryExpected
+// ═══════════════════════════════════════════════════════════
+function computeChoicesFor(
+  lesson: LessonNode,
+  moduleId: string | null,
+  idx: number,
+): number[] | null {
+  const hasMod = hasModules(lesson);
+  const mods = lesson.modules ?? [];
+  const mod = hasMod ? (mods.find((m) => m.id === moduleId) ?? mods[0]) : null;
+  const questions = hasMod
+    ? (mod?.tryPhase.exercises ?? [])
+    : (lesson.tryQuestions ?? []);
+  const q = questions[idx];
+  if (q && q.type === 'read') {
+    return generateChoices(getExerciseResult(q));
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════
 // الشاشة الرئيسية
 // ═══════════════════════════════════════════════════════════
 
@@ -299,6 +319,14 @@ export function LessonScreen({
     setCompanionMsg(msg);
     window.setTimeout(() => setCompanionMsg(null), duration);
   };
+
+  // 🔢 [PATCH] توليد الاختيارات عند الدخول على تبويب "جرّب"
+  useEffect(() => {
+    if (!sessionLoaded || !lesson || tab !== 'try') return;
+    const next = computeChoicesFor(lesson, activeModuleId, tryIdx);
+    if (next) setChoices(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessonId, sessionLoaded, tab, activeModuleId, tryIdx]);
 
   if (!lesson) {
     return (
@@ -458,7 +486,7 @@ export function LessonScreen({
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════
   // 🅱️ النوع 2 و 3: درس تفاعلي (وحدات أو قديم)
   // ═══════════════════════════════════════════════════════════
 
@@ -583,12 +611,8 @@ export function LessonScreen({
     setShowSteps(false);
   };
 
-  useEffect(() => {
-    if (tab === 'try' && currentTry && currentTry.type === 'read') {
-      setChoices(generateChoices(currentTryExpected));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, tryIdx, activeModuleId, currentTry?.id]);
+  // ✅ [PATCH] حُذف useEffect القديم من هنا — انتقل للأعلى قبل if (!lesson)
+  //    واستُبدل بالدالة المساعدة computeChoicesFor + useEffect الجديد.
 
   const reactToAnswer = (isCorrect: boolean, attempt: number) => {
     if (isCorrect) {
