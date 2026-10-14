@@ -1,3 +1,4 @@
+import { lazy } from 'react';
 // src/App.tsx
 // [FIX N42] XP now wired to real addXP — 2026-10-04
 // [FIX B9]  call recordPlacementAttempt — 2026-10-04
@@ -14,46 +15,46 @@ import { useProgressStore } from './store/progressStore';
 import type { LevelId } from './store/progressStore';
 
 // ═══ Screens ═══
-import WelcomeScreen from './screens/WelcomeScreen';
-import RoleSelection from './screens/RoleSelection';
-import HeroDashboard from './screens/HeroDashboard';
-import GuardianDashboard from './screens/GuardianDashboard';
+const WelcomeScreen = lazy(() => import('./screens/WelcomeScreen'));
+const RoleSelection = lazy(() => import('./screens/RoleSelection'));
+const HeroDashboard = lazy(() => import('./screens/HeroDashboard'));
+const GuardianDashboard = lazy(() => import('./screens/GuardianDashboard'));
 import Header from './screens/Header';
 
 // ═══ Category + Level ═══
-import CategoryScreen from './screens/CategoryScreen';
-import LevelScreen from './screens/LevelScreen';
-import PlacementTestScreen from './screens/PlacementTestScreen';
-import PracticeScreen from './screens/PracticeScreen';
-import AnzanScreen from './screens/AnzanScreen';
-import AudioAnzanScreen from './screens/AudioAnzanScreen';
+const CategoryScreen = lazy(() => import('./screens/CategoryScreen'));
+const LevelScreen = lazy(() => import('./screens/LevelScreen'));
+const PlacementTestScreen = lazy(() => import('./screens/PlacementTestScreen'));
+const PracticeScreen = lazy(() => import('./screens/PracticeScreen'));
+const AnzanScreen = lazy(() => import('./screens/AnzanScreen'));
+const AudioAnzanScreen = lazy(() => import('./screens/AudioAnzanScreen'));
 
 // ═══ 🆕 Lessons + Test ═══
-import FingerMathScreen from './screens/FingerMathScreen';
-import MagicSecretsScreen from './screens/MagicSecretsScreen';
-import LearnScreen from './screens/LearnScreen';
-import LessonScreen from './screens/LessonScreen';
+const FingerMathScreen = lazy(() => import('./screens/FingerMathScreen'));
+const MagicSecretsScreen = lazy(() => import('./screens/MagicSecretsScreen'));
+const LearnScreen = lazy(() => import('./screens/LearnScreen'));
+const LessonScreen = lazy(() => import('./screens/LessonScreen'));
 import { getLessonById } from './curriculum/lessons';
-import IntroductionScreen from './screens/IntroductionScreen';
-import LevelTestScreen from './screens/LevelTestScreen';
-import KidsCertificateScreen from './screens/KidsCertificateScreen';
-import CertificateScreen from './screens/CertificateScreen';
+const IntroductionScreen = lazy(() => import('./screens/IntroductionScreen'));
+const LevelTestScreen = lazy(() => import('./screens/LevelTestScreen'));
+const KidsCertificateScreen = lazy(() => import('./screens/KidsCertificateScreen'));
+const CertificateScreen = lazy(() => import('./screens/CertificateScreen'));
 
 // ═══ 🎬 Flash Lessons ═══
-import { FlashScreen } from './components/flash/FlashScreen';
-import { FlashListScreen } from './components/flash/FlashListScreen';
+const FlashScreen = lazy(() => import('./components/flash/FlashScreen').then(m => ({ default: m.FlashScreen })));
+const FlashListScreen = lazy(() => import('./components/flash/FlashListScreen').then(m => ({ default: m.FlashListScreen })));
 import { getFlashLessonById } from './components/flash/flashData';
 
 // ═══ Playground ═══
-import SorobanPlayground from './screens/SorobanPlayground';
+const SorobanPlayground = lazy(() => import('./screens/SorobanPlayground'));
 
 // ═══ Category Exam ═══
-import CategoryExamScreen from './screens/CategoryExamScreen';
-import RemediationScreen from './screens/RemediationScreen';
+const CategoryExamScreen = lazy(() => import('./screens/CategoryExamScreen'));
+const RemediationScreen = lazy(() => import('./screens/RemediationScreen'));
 import type { SRBLevel, SRBSection } from './data/srb-adapter';
 
 // ═══ Debug ═══
-import { DebugOverlay } from './components/DebugOverlay';
+const DebugOverlay = lazy(() => import('./components/DebugOverlay').then(m => ({ default: m.DebugOverlay })));
 
 // ═══ Types ═══
 type AppScreen = V1Screen | 'loading' | 'flash-list' | `flash-${string}`;
