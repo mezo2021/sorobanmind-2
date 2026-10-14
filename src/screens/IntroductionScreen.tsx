@@ -127,6 +127,7 @@ export function IntroductionScreen({
                 size="sm"
                 interactive={true}
                 showValue={true}
+                revealValue={true}
                 autoBeadSize={false}
               />
             </div>
