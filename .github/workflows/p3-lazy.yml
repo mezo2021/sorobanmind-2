@@ -1,0 +1,54 @@
+name: P3 Lazy Screens
+on: workflow_dispatch
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  lazy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-audit --no-fund
+      - name: Apply codemod
+        run: node scripts/lazyify.cjs 2>&1 | tee codemod.log
+      - name: Verify build
+        run: npm run build 2>&1 | tee build.log
+      - name: Report
+        if: always()
+        run: |
+          {
+            echo '### Codemod'
+            echo '```'
+            cat codemod.log 2>/dev/null || echo '(none)'
+            echo '```'
+            echo ''
+            echo '### Build tail'
+            echo '```'
+            tail -25 build.log 2>/dev/null || echo '(none)'
+            echo '```'
+            echo ''
+            echo '### dist/assets sizes'
+            echo '```'
+            ls -lh dist/assets/*.js 2>/dev/null || echo '(no dist)'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: peter-evans/create-pull-request@v6
+        with:
+          branch: p3/lazy-screens
+          title: "perf: lazy-load screens (reduce initial bundle)"
+          commit-message: "perf: lazy-load screens via React.lazy + Suspense"
+          add-paths: |
+            src/App.tsx
+            src/main.tsx
+          body: |
+            ## التغيير
+            - تحويل استيرادات الشاشات إلى lazy
+            - لفّ App بـ Suspense في main.tsx
+            - استثناء Header (مكوّن دائم)
+            
+            ## التحقق
+            - CI Build أخضر
+            - JS الرئيسي أصغر
