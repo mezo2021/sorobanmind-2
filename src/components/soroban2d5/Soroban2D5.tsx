@@ -54,7 +54,7 @@ const SIZE_CONFIG = {
     gap: 8,
     framePadding: 10,
     innerPadding: 8,
-    height: 260,
+    height: 300,
     topPadding: 24,
     bottomPadding: 8,
     titleSize: 'text-sm',
@@ -65,7 +65,7 @@ const SIZE_CONFIG = {
     gap: 12,
     framePadding: 14,
     innerPadding: 10,
-    height: 340,
+    height: 380,
     topPadding: 30,
     bottomPadding: 10,
     titleSize: 'text-base',
@@ -85,14 +85,14 @@ const SIZE_CONFIG = {
 };
 
 function getAutoBeadSize(columns: number): number {
-  if (columns <= 2) return 52;
-  if (columns <= 3) return 46;
-  if (columns <= 4) return 38;
-  if (columns <= 5) return 32;
+  if (columns <= 2) return 38;
+  if (columns <= 3) return 34;
+  if (columns <= 4) return 30;
+  if (columns <= 5) return 28;
   if (columns <= 6) return 28;
-  if (columns <= 7) return 26;
-  if (columns <= 9) return 24;
-  if (columns <= 11) return 22;
+  if (columns <= 7) return 24;
+  if (columns <= 9) return 22;
+  if (columns <= 11) return 20;
   return 18;
 }
 
@@ -165,9 +165,9 @@ export function Soroban2D5({
     ? getAutoBeadSize(displayedStates.length)
     : cfg.beadSize;
 
-  // 🆕 Math.min: لا يتجاوز الارتفاع القاعدة أبدًا
+  // ✅ Math.max: ارتفاع لا يقل عن cfg.height أبدًا
   const effectiveHeight = autoBeadSize
-    ? Math.min(
+    ? Math.max(
         cfg.height,
         Math.round(cfg.height * (effectiveBeadSize / cfg.beadSize)),
       )
