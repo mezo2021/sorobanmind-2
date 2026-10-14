@@ -12,7 +12,6 @@
 // [FIX 2] — getAnzanBadgeKey: S11/S12 → null (إلغاء master_mixed)
 // [FIX 3] — تمرير levelNum الحقيقي (0-7) إلى AdaptiveFeedback بدل 0
 // [FIX 4] — حذف master_mixed من ANZAN_BADGE_LABELS
-// [STATS] trackAnzan — Phase F1
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,7 +34,6 @@ import {
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { useMasteryBadgesStore, classifySpeed } from '@/store/masteryBadgesStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
-import { trackAnzan } from '@/utils/statsTracker';
 import { numberToArabicWordsDecimal } from '@/utils/arabicNumbers';
 
 import {
@@ -403,7 +401,6 @@ export function AnzanScreen({
       timestamp: Date.now(),
     };
     useProgressStore.getState().recordAttempt(attempt);
-    trackAnzan(isCorrect, isCorrect ? score + 1 : score);
 
     const timeMs = elapsedMs;
     trackPerformance(isCorrect, timeMs);
@@ -425,7 +422,7 @@ export function AnzanScreen({
     setPhase('reveal');
   }, [
     currentQ, abacusValue, elapsedMs, feedback, playSound, sorobana,
-    onXP, burst, addXP, updateStreak, trackPerformance, score,
+    onXP, burst, addXP, updateStreak, trackPerformance,
   ]);
 
   const buildPerformances = useCallback((): SkillPerformance[] => {
@@ -518,6 +515,7 @@ export function AnzanScreen({
     ],
   );
 
+  // ⏸️ الجزء 2 يبدأ من هنا — أرسل "تابع"
   const nextQuestion = useCallback(() => {
     sorobana.stop();
     stopSpeech();
