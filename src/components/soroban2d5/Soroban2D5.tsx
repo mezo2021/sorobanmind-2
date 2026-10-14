@@ -23,7 +23,7 @@ interface Soroban2D5Props {
   beamHighlight?: boolean;
   rodTint?: RodTint;
   highlightColumns?: number[];
-  dimColumns?: number[];   // 🆕 أعمدة مطموسة
+  dimColumns?: number[];
   hideColumnLabels?: boolean;
 }
 
@@ -49,9 +49,39 @@ function useResponsiveSize() {
 }
 
 const SIZE_CONFIG = {
-  sm: { beadSize: 34, gap: 10, framePadding: 14, innerPadding: 12, height: 380, topPadding: 34, bottomPadding: 10, titleSize: 'text-base', valueSize: 'text-2xl' },
-  md: { beadSize: 44, gap: 14, framePadding: 18, innerPadding: 14, height: 440, topPadding: 40, bottomPadding: 12, titleSize: 'text-lg', valueSize: 'text-3xl' },
-  lg: { beadSize: 56, gap: 20, framePadding: 26, innerPadding: 18, height: 520, topPadding: 48, bottomPadding: 14, titleSize: 'text-2xl', valueSize: 'text-5xl' },
+  sm: {
+    beadSize: 34,
+    gap: 8,
+    framePadding: 10,
+    innerPadding: 8,
+    height: 260,
+    topPadding: 24,
+    bottomPadding: 8,
+    titleSize: 'text-sm',
+    valueSize: 'text-xl',
+  },
+  md: {
+    beadSize: 44,
+    gap: 12,
+    framePadding: 14,
+    innerPadding: 10,
+    height: 340,
+    topPadding: 30,
+    bottomPadding: 10,
+    titleSize: 'text-base',
+    valueSize: 'text-2xl',
+  },
+  lg: {
+    beadSize: 56,
+    gap: 20,
+    framePadding: 26,
+    innerPadding: 18,
+    height: 520,
+    topPadding: 48,
+    bottomPadding: 14,
+    titleSize: 'text-2xl',
+    valueSize: 'text-5xl',
+  },
 };
 
 function getAutoBeadSize(columns: number): number {
@@ -60,8 +90,18 @@ function getAutoBeadSize(columns: number): number {
   if (columns <= 4) return 38;
   if (columns <= 5) return 32;
   if (columns <= 6) return 28;
-  if (columns <= 9) return 20;
-  return 16;
+  if (columns <= 7) return 26;
+  if (columns <= 9) return 24;
+  if (columns <= 11) return 22;
+  return 18;
+}
+
+// 🆕 فجوة ديناميكية: تضيق للأعمدة الكثيرة
+function getDynamicGap(columns: number, baseGap: number): number {
+  if (columns >= 11) return 4;
+  if (columns >= 9) return 5;
+  if (columns >= 7) return 6;
+  return baseGap;
 }
 
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
@@ -125,9 +165,16 @@ export function Soroban2D5({
     ? getAutoBeadSize(displayedStates.length)
     : cfg.beadSize;
 
+  // 🆕 Math.min: لا يتجاوز الارتفاع القاعدة أبدًا
   const effectiveHeight = autoBeadSize
-    ? Math.round(cfg.height * (effectiveBeadSize / cfg.beadSize))
+    ? Math.min(
+        cfg.height,
+        Math.round(cfg.height * (effectiveBeadSize / cfg.beadSize)),
+      )
     : cfg.height;
+
+  // 🆕 فجوة ديناميكية
+  const dynamicGap = getDynamicGap(displayedStates.length, cfg.gap);
 
   useEffect(() => {
     if (initialValue > 0) setValue(initialValue);
@@ -184,7 +231,11 @@ export function Soroban2D5({
         >
           <div
             className="flex flex-row-reverse items-center justify-center"
-            style={{ gap: cfg.gap, paddingTop: cfg.topPadding, paddingBottom: cfg.bottomPadding }}
+            style={{
+              gap: dynamicGap,
+              paddingTop: cfg.topPadding,
+              paddingBottom: cfg.bottomPadding,
+            }}
             dir="rtl"
           >
             {displayedStates.map((state, idx) => {
