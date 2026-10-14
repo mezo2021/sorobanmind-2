@@ -1,0 +1,19 @@
+name: P1 Lockfile
+on: workflow_dispatch
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --package-lock-only --no-audit --no-fund
+      - uses: peter-evans/create-pull-request@v6
+        with:
+          branch: p1/lockfile
+          title: "chore: add package-lock.json"
+          add-paths: package-lock.json
