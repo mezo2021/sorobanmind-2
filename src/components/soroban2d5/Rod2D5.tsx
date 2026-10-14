@@ -16,7 +16,7 @@ interface Rod2D5Props {
   isActive?: boolean;
   beamHighlight?: boolean;
   tint?: RodTint;
-  isDimmed?: boolean;   // 🆕
+  isDimmed?: boolean;
 }
 
 const COLUMN_LABELS: string[] = [
@@ -62,7 +62,7 @@ export function Rod2D5({
   isActive = false,
   beamHighlight = false,
   tint,
-  isDimmed = false,   // 🆕
+  isDimmed = false,
 }: Rod2D5Props) {
   const lowerBeads = [0, 1, 2, 3];
 
@@ -216,7 +216,10 @@ export function Rod2D5({
               position="lower"
               size={beadSize}
               onClick={() => {
-                if (isBeadActive && idx === state.lower - 1) {
+                // ✅ FIX: خطوة واحدة — بلا شرط idx الزائد
+                // - غير مفعّلة → ترتفع هي وكل ما فوقها (idx + 1)
+                // - مفعّلة → تنزل هي وكل ما تحتها (idx)
+                if (isBeadActive) {
                   onSetLower(idx);
                 } else {
                   onSetLower(idx + 1);
