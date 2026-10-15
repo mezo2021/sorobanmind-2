@@ -56,3 +56,172 @@
 3. `bank-v2 / raw` و `curriculum/types.ts` مجمّدة.
 4. نسخة احتياطية ورأس موحّد قبل أي تعديل.
 5. لا نظام شارات جديد ولا IndexedDB/Backend.
+
+# 📅 جلسة 2026-10-15 — ملخص وتوثيق
+
+## 🎯 ما أنجزناه اليوم
+
+### ✅ 1. Lockfile (الخطوة 1)
+- `package-lock.json` أُنشئ (120 KB)
+- ثبات نسخ الحزم
+
+### ✅ 2. ضغط الصور (الخطوة 2)
+- `joud2.png`: 379 KB → 109 KB
+- توفير ~270 KB
+
+### ✅ 3. Lazy للشاشات (الخطوة 3)
+- 24 استيرادًا حُوّل إلى `React.lazy`
+- JS الرئيسي: 1,703 KB → ~1,029 KB
+- 79 chunk منفصل
+- تحسين ~40%
+
+### ✅ 4. حذف p3-diagnose.yml
+- أداة تشخيص — أُنجزت مهمتها
+
+### ✅ 5. إصلاح Rod2D5 — النقر على الخرزات
+- إزالة الشرط الزائد
+- النقر يعمل كالمتوقع
+
+### ✅ 6. Soroban2D5 + Rod2D5 — إصلاحات جزئية
+- حجم الخرزات + الارتفاع (بعد تجربة)
+- أُلغي — المشكلة ما زالت قائمة للأعمدة 7+
+
+### ✅ 7. GuardianDashboard — دقة الملاحظة
+- نُقل حساب "دقة الملاحظة" إلى `progressStore`
+- selector جديد: `selectObservationAccuracy`
+
+### ✅ 8. حذف ملفات ميتة
+- `BadgeModal.tsx` ✅
+- `NumberStyleToggle.tsx` ✅
+- `skillsChecker.ts` ✅
+- `numerals.ts` ✅
+- `SorobanEngineDebug.tsx` ✅
+
+---
+
+## 🔴 ما توقفنا عنده
+
+### الحالة: **البناء فاشل** ❌
+
+**السبب:** حذف `src/data/bank.ts` كسر `bank-adapter.ts`
+
+**الخطأ:**
+```
+
+src/data/bank-adapter.ts(53,8): error TS2307:
+Cannot find module './bank' or its corresponding type declarations.
+
+```
+
+**التشخيص:**
+- `bank-adapter.ts` يستورد 3 types من `./bank` (المحذوف)
+- `bank-adapter` يستورده `bank-linked.ts`
+- `bank-linked` يستورده `engine/*`
+- `engine/*` كان يستورده `SorobanEngineDebug` (المحذوف الآن)
+
+**النتيجة:** عنقود كامل معزول — لكن `bank.ts` كان لبنة أساسية فيه
+
+---
+
+## 🎯 الحل — الخيارات
+
+### 🅰️ استعادة `data/bank.ts` (الأسرع · الآمن)
+- افتح commit `2285fab` على GitHub
+- اضغط `Revert`
+- PR جديد يُنشأ
+- ادمج
+- البناء ينجح ✅
+
+**⚠️ ملاحظة:** بعد الاستعادة — `bank.ts` يبقى معزولًا (لا أحد يستورده من الشاشات)
+
+### 🅱️ تعديل `bank-adapter.ts` — تعريف types محليًا
+- احذف `import type { BankQuestion, BankOperation, Difficulty } from "./bank"`
+- عرّفها محليًا في `bank-adapter.ts`
+- ⚠️ يحتاج التحقق من الأنواع الأصلية
+
+**التوصية:** 🅰️ — أبسط · أأمن · قابل للعكس
+
+---
+
+## 📋 حالة الخطوات (80/20)
+
+| # | الخطوة | الحالة |
+|:-:|--------|:------:|
+| 0 | CI Build | ✅ |
+| 1 | Lockfile | ✅ |
+| 2 | ضغط الصور | ✅ |
+| 3 | Lazy للشاشات | ✅ |
+| 4 | F1 (لوحة ولي الأمر) | 🟡 جزئي (دقة الملاحظة فقط) |
+| 5 | recordAttempt CE/PT | ⬜ |
+| 6 | حذف 5 ملفات ميتة | ✅ 5/5 |
+| 6أ | **استعادة bank.ts** | 🔴 **مطلوب الآن** |
+| 7 | توحيد section2_unlocked | ⬜ |
+| 8 | إصلاح srb-adapter | ⬜ |
+| 9 | عزل SRB من الحزمة | ⬜ |
+| 10 | توثيق + Tag | ⬜ |
+
+---
+
+## 🧹 قائمة التنظيف المؤجل
+
+### Workflows مؤقتة (تُحذف لاحقًا بـPR واحد):
+- `p0-baseline.yml`
+- `p1-lockfile.yml`
+- `p2-images.yml`
+- `p3-lazy.yml`
+
+### يبقى دائمًا:
+- `ci-build.yml`
+- `deploy.yml`
+- `lint.yml`
+- `audit.yml`
+- `audit-v8.yml`
+- `audit-v9.yml`
+
+---
+
+## ⏭️ الخطوة القادمة (بعد إصلاح البناء)
+
+1. **استعادة `bank.ts`** — الآن
+2. **F1 كامل** — ربط 9 مهام المغامرات (الملف `useQuests.ts` + `GuardianDashboard`)
+3. **recordAttempt CE/PT**
+4. **بقية الخطة**
+
+---
+
+## 📌 ملاحظات مهمة للمستقبل
+
+- **`progressStore.ts`** محمي — لا يُلمس إلا بموافقة صريحة
+- **`masteryBadgesStore.ts`** — لا يُلمس
+- **`engine/`** — مجمّد
+- **`bank-*`** — لا يُحذف إلا بعد تحقق grep مُثبت
+- **قاعدة:** قبل أي حذف → grep للملف + كل مراجع الاستيراد
+- **تم اكتشاف:** حذف ملف قد يكسر ملفًا آخر لم نتحقق منه — نتحقق دائمًا
+
+---
+
+## 🔗 روابط
+
+- المستودع: `github.com/mezo2021/sorobanmind-2`
+- Actions: `github.com/mezo2021/sorobanmind-2/actions`
+- Commit معطل: `2285fab` (Delete bank.ts)
+- الموقع: `mezo2021.github.io/sorobanmind-2`
+
+---
+
+**آخر تحديث:** 2026-10-15
+**الحالة:** 🟡 البناء فاشل — يُصلح فورًا
+```
+
+---
+
+📱 الخطوات لحفظ الملف
+
+1. اذهب إلى github.com/mezo2021/sorobanmind-2
+2. Add file → Create new file
+3. الاسم: docs/SESSION_2026-10-15.md
+4. الصق المحتوى أعلاه
+5. Commit changes → Commit directly to main
+
+---
+
