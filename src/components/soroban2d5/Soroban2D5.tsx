@@ -136,7 +136,7 @@ export function Soroban2D5({
   };
 
   const toggleRotation = () => {
-    playSound('click');
+    playSound('hit');
     vibrate('light');
     setIsRotated((prev) => !prev);
   };
