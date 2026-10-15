@@ -1,8 +1,10 @@
 // src/components/soroban2d5/Soroban2D5.tsx
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useSorobanLogic } from './useSorobanLogic';
-import { Rod2D5, type SorobanTheme } from './Rod2D5';
+import { Rod2D5 } from './Rod2D5';
+import { useBeadSound } from './useBeadSound';
+import { useBeadHaptics } from './useBeadHaptics';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import type { RodTint } from '@/components/flash/types';
 
@@ -23,10 +25,8 @@ interface Soroban2D5Props {
   highlightColumns?: number[];
   dimColumns?: number[];
   hideColumnLabels?: boolean;
-  theme?: SorobanTheme;
 }
 
-// 📐 هوك مراقبة أبعاد الشاشة مع Debounce و ReturnType الآمن للمتصفح
 function useViewportDimensions() {
   const [dimensions, setDimensions] = useState({
     width: typeof window !== 'undefined' ? window.innerWidth : 390,
@@ -34,35 +34,28 @@ function useViewportDimensions() {
   });
 
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
     const handleResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        setDimensions({
-          width: window.innerWidth,
-          height: window.innerHeight,
-        });
-      }, 100);
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
     };
-
     window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(timeoutId);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return dimensions;
 }
 
 function getAutoBeadSize(columns: number, viewportWidth: number): number {
-  if (columns <= 2) return 44;
-  if (columns <= 3) return 38;
-  if (columns <= 4) return 34;
-  if (columns <= 5) return 28;
-  if (columns <= 6) return 25;
-  const calculated = Math.round(viewportWidth * 0.07);
-  return Math.min(30, Math.max(20, calculated));
+  if (columns <= 2) return 52;
+  if (columns <= 3) return 46;
+  if (columns <= 4) return 38;
+  if (columns <= 5) return 32;
+  if (columns <= 6) return 28;
+  // للأعمدة 7 وما فوق: حجم ديناميكي مريح مع التمرير الأفقي
+  const calculated = Math.round(viewportWidth * 0.085);
+  return Math.min(36, Math.max(26, calculated));
 }
 
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
@@ -82,7 +75,7 @@ export function Soroban2D5({
   interactive = true,
   revealValue = false,
   demoValue,
-  size: _size = 'auto',
+  size = 'auto',
   autoBeadSize = true,
   activeRodIndex,
   hideTitle = false,
@@ -90,8 +83,7 @@ export function Soroban2D5({
   rodTint,
   highlightColumns,
   dimColumns,
-  hideColumnLabels: _hideColumnLabels = false,
-  theme: initialTheme = 'ocean-laser',
+  hideColumnLabels = false,
 }: Soroban2D5Props) {
   const {
     columns: colStates,
@@ -103,141 +95,92 @@ export function Soroban2D5({
     setValue,
   } = useSorobanLogic(columns);
 
-  const [currentTheme, setCurrentTheme] = useState<SorobanTheme>(initialTheme);
+  const playSound = useBeadSound();
+  const vibrate = useBeadHaptics();
+
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic';
 
   const { width: vw, height: vh } = useViewportDimensions();
   const [isRotated, setIsRotated] = useState(false);
 
-  const effectiveBeadSize = autoBeadSize ? getAutoBeadSize(columns, vw) : 32;
+  // 🎯 حساب الارتفاع الديناميكي (clamp بين 260px و 380px)
+  const dynamicHeight = Math.min(380, Math.max(260, Math.round(vh * 0.38)));
 
-  // 📐 القياسات والمسافات المحسوبة
-  const effectiveHeight = Math.min(330, Math.max(250, Math.round(vh * 0.36)));
-  const dynamicGap = columns > 6 ? 4 : columns > 4 ? 6 : 10;
+  // 🎯 حساب حجم الخرزة والارتفاع الفعلي
+  const effectiveBeadSize = autoBeadSize
+    ? getAutoBeadSize(columns, vw)
+    : 38;
 
-  // 🛡️ معالجة القيمة الأولية مرة واحدة فقط بشكل آمن
-  const isInitializedRef = useRef(false);
-  useEffect(() => {
-    if (!isInitializedRef.current && initialValue > 0) {
-      setValue(initialValue);
-      isInitializedRef.current = true;
-    }
-  }, [initialValue, setValue]);
+  const effectiveHeight = Math.max(250, dynamicHeight);
 
-  // 🛡️ معالجة العرض التوضيحي مع تصفير الحالة عند العودة لـ undefined
-  useEffect(() => {
-    if (demoValue !== undefined) {
-      setValue(demoValue);
-    } else if (!interactive) {
-      setValue(0);
-    }
-  }, [demoValue, interactive, setValue]);
-
-  // 🛡️ استقرار الإشعار باستخدام useRef
-  const onValueChangeRef = useRef(onValueChange);
-  useEffect(() => {
-    onValueChangeRef.current = onValueChange;
-  });
+  // 🎯 الفجوة الديناميكية حسب عدد الأعمدة
+  const dynamicGap = columns > 6 ? 8 : columns > 4 ? 10 : 14;
 
   useEffect(() => {
-    onValueChangeRef.current?.(totalValue);
+    if (initialValue > 0) setValue(initialValue);
+  }, []);
+
+  useEffect(() => {
+    if (demoValue !== undefined) setValue(demoValue);
+  }, [demoValue]);
+
+  useEffect(() => {
+    onValueChange?.(totalValue);
   }, [totalValue]);
 
+  const handleResetAll = () => {
+    playSound('slide');
+    vibrate('medium');
+    resetAll();
+  };
+
   const toggleRotation = () => {
+    playSound('hit');
+    vibrate('light');
     setIsRotated((prev) => !prev);
   };
 
   const shouldShowValue = revealValue || (!interactive && showValue);
 
-  // 🎨 تخزين أنماط الحاوية
-  const containerStyles = useMemo(() => {
-    if (currentTheme === 'classic-wood') {
-      return {
-        background: '#3d2817',
-        border: '3px solid #8b6344',
-        boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
-      };
-    }
-    if (currentTheme === 'barbie-pink') {
-      return {
-        background: 'linear-gradient(135deg, rgba(255,241,242,0.4) 0%, rgba(244,114,182,0.25) 50%, rgba(190,24,93,0.4) 100%)',
-        border: '2.5px solid rgba(244,114,182,0.8)',
-        boxShadow: '0 0 30px rgba(236,72,153,0.35), inset 0 0 15px rgba(255,255,255,0.7)',
-      };
-    }
-    return {
-      background: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(14,165,233,0.2) 30%, rgba(3,105,161,0.4) 70%, rgba(255,255,255,0.25) 100%)',
-      border: '2.5px solid rgba(186,230,253,0.8)',
-      boxShadow: '0 0 30px rgba(56,189,248,0.4), inset 0 0 20px rgba(255,255,255,0.6), 0 10px 25px rgba(0,0,0,0.5)',
-    };
-  }, [currentTheme]);
-
   return (
-    <div className="w-full flex flex-col items-center gap-1.5 select-none">
+    <div className="w-full flex flex-col items-center gap-2 sm:gap-4 select-none">
       {!hideTitle && (
-        <div className="flex items-center justify-between w-full max-w-xs px-2 mb-1">
-          <h3 className="text-xs sm:text-sm font-black text-cyan-200 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">
-            {currentTheme === 'ocean-laser' && '🌊 السوروبان الليزري'}
-            {currentTheme === 'classic-wood' && '🪵 السوروبان الخشبي'}
-            {currentTheme === 'barbie-pink' && '💖 سوروبان باربي'}
-          </h3>
+        <h3 className="text-base sm:text-lg font-bold text-amber-900 flex items-center gap-2">
+          🧮 عداد السوروبان
+        </h3>
+      )}
 
-          <div className="flex items-center gap-1.5 bg-slate-900/60 p-1 rounded-full border border-slate-700/50 backdrop-blur-md">
-            <button
-              type="button"
-              onClick={() => setCurrentTheme('ocean-laser')}
-              title="ثيم المحيط والليزر"
-              className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center transition ${currentTheme === 'ocean-laser' ? 'bg-cyan-500 scale-110 shadow-[0_0_8px_#06b6d4]' : 'opacity-60'}`}
-            >
-              🌊
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentTheme('classic-wood')}
-              title="الثيم الخشبي الكلاسيكي"
-              className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center transition ${currentTheme === 'classic-wood' ? 'bg-amber-700 scale-110 shadow-[0_0_8px_#b45309]' : 'opacity-60'}`}
-            >
-              🪵
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentTheme('barbie-pink')}
-              title="ثيم باربي الوردي"
-              className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center transition ${currentTheme === 'barbie-pink' ? 'bg-pink-500 scale-110 shadow-[0_0_8px_#ec4899]' : 'opacity-60'}`}
-            >
-              💖
-            </button>
-          </div>
-        </div>
+      {/* 🎯 إظهار تلميح السحب للأعمدة 7+ */}
+      {columns >= 7 && (
+        <p className="text-[11px] text-amber-700 font-medium animate-pulse">
+          ← اسحب أفقيًا لرؤية بقية الأعمدة →
+        </p>
       )}
 
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1, rotate: isRotated ? 90 : 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 22 }}
-        className="relative rounded-2xl sm:rounded-3xl max-w-full backdrop-blur-lg"
+        className="relative rounded-2xl sm:rounded-3xl max-w-full"
         style={{
-          padding: '6px 8px',
-          ...containerStyles,
+          padding: '12px',
+          background: 'linear-gradient(135deg, #8b6f47 0%, #6b4423 50%, #4a2e15 100%)',
+          boxShadow: 'inset 0 4px 12px rgba(255,200,150,0.15), inset 0 -6px 16px rgba(0,0,0,0.4), 0 12px 28px rgba(0,0,0,0.3)',
+          border: '2px solid rgba(0,0,0,0.25)',
         }}
       >
         <div
-          className="relative rounded-xl sm:rounded-2xl max-w-full overflow-x-auto scrollbar-none"
+          className="relative rounded-xl sm:rounded-2xl overflow-x-auto max-w-full scrollbar-thin"
           style={{
-            padding: '4px 8px',
-            background:
-              currentTheme === 'classic-wood'
-                ? '#2a1a0e'
-                : currentTheme === 'barbie-pink'
-                ? 'linear-gradient(180deg, rgba(131,24,67,0.5) 0%, rgba(88,28,135,0.6) 100%)'
-                : 'linear-gradient(180deg, rgba(12,74,110,0.5) 0%, rgba(8,47,73,0.7) 100%)',
-            boxShadow: 'inset 0 0 15px rgba(0,0,0,0.3)',
+            padding: '10px 14px',
+            background: 'linear-gradient(180deg, #fef9f0 0%, #f5e6c8 100%)',
+            boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.12)',
           }}
         >
           <div
-            className="flex flex-row-reverse items-center justify-center min-w-max mx-auto"
-            style={{ gap: dynamicGap, paddingTop: '38px', paddingBottom: '6px' }}
+            className="flex flex-row-reverse items-center justify-center min-w-max"
+            style={{ gap: dynamicGap, paddingTop: '28px', paddingBottom: '10px' }}
             dir="rtl"
           >
             {colStates.map((state, originalIdx) => {
@@ -268,7 +211,6 @@ export function Soroban2D5({
                     beamHighlight={beamHighlight}
                     tint={finalTint}
                     isDimmed={isDim}
-                    theme={currentTheme}
                   />
                 </div>
               );
@@ -276,21 +218,22 @@ export function Soroban2D5({
           </div>
         </div>
 
+        {/* 🎯 الأزرار التفاعلية (إعادة الكل + أزرار التحكم) */}
         {interactive && (
-          <div className="flex justify-center items-center gap-2 mt-1.5">
+          <div className="flex justify-center items-center gap-2 mt-2 sm:mt-3">
             <button
               type="button"
-              onClick={resetAll}
-              className="px-3 py-0.5 rounded-full bg-cyan-400/20 hover:bg-cyan-400/40 active:scale-95 text-cyan-100 font-extrabold shadow-[0_0_10px_rgba(34,211,238,0.4)] border border-cyan-200/40 backdrop-blur-md transition text-xs"
+              onClick={handleResetAll}
+              className="px-4 py-1.5 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 text-white font-bold shadow-md backdrop-blur-sm transition text-xs sm:text-sm"
             >
-              💧 إعادة الكل
+              ↺ إعادة الكل
             </button>
 
             <button
               type="button"
               onClick={toggleRotation}
               title="تدوير المعداد"
-              className="p-0.5 px-2 rounded-full bg-amber-400/20 hover:bg-amber-400/40 active:scale-95 text-amber-200 font-extrabold shadow-[0_0_10px_rgba(251,191,36,0.4)] border border-amber-200/40 backdrop-blur-md transition text-xs"
+              className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 text-white font-bold shadow-md backdrop-blur-sm transition text-xs"
             >
               ↻
             </button>
@@ -302,12 +245,12 @@ export function Soroban2D5({
         <AnimatePresence mode="popLayout">
           <motion.div
             key={`${totalValue}-${numberStyle}`}
-            initial={{ scale: 0.6, opacity: 0, y: 5 }}
+            initial={{ scale: 0.6, opacity: 0, y: 10 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.6, opacity: 0, y: -5 }}
+            exit={{ scale: 0.6, opacity: 0, y: -10 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-            className="text-xl sm:text-2xl font-black text-amber-300 tabular-nums drop-shadow-[0_0_12px_rgba(252,211,77,0.9)]"
-            style={{ fontFamily: 'monospace' }}
+            className="text-2xl sm:text-3xl font-black text-amber-900 tabular-nums"
+            style={{ fontFamily: 'monospace', textShadow: '0 2px 4px rgba(139,111,71,0.2)' }}
             dir={isArabic ? 'rtl' : 'ltr'}
           >
             {formatByStyle(totalValue, numberStyle)}
