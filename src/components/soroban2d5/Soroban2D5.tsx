@@ -14,6 +14,7 @@ interface Soroban2D5Props {
   interactive?: boolean;
   revealValue?: boolean;
   demoValue?: number;
+  size?: 'sm' | 'md' | 'lg' | 'auto';
   autoBeadSize?: boolean;
   activeRodIndex?: number;
   hideTitle?: boolean;
@@ -21,6 +22,7 @@ interface Soroban2D5Props {
   rodTint?: RodTint;
   highlightColumns?: number[];
   dimColumns?: number[];
+  hideColumnLabels?: boolean;
   theme?: SorobanTheme;
 }
 
@@ -80,6 +82,7 @@ export function Soroban2D5({
   interactive = true,
   revealValue = false,
   demoValue,
+  size: _size = 'auto',
   autoBeadSize = true,
   activeRodIndex,
   hideTitle = false,
@@ -87,6 +90,7 @@ export function Soroban2D5({
   rodTint,
   highlightColumns,
   dimColumns,
+  hideColumnLabels: _hideColumnLabels = false,
   theme: initialTheme = 'ocean-laser',
 }: Soroban2D5Props) {
   const {
@@ -94,6 +98,7 @@ export function Soroban2D5({
     totalValue,
     toggleUpper,
     setLower,
+    resetColumn,
     resetAll,
     setValue,
   } = useSorobanLogic(columns);
@@ -217,7 +222,6 @@ export function Soroban2D5({
           ...containerStyles,
         }}
       >
-        {/* تم إزالة overflow-hidden للسماح بظهور تسميات الأعمدة العلوية بوضوح تام */}
         <div
           className="relative rounded-xl sm:rounded-2xl max-w-full overflow-x-auto scrollbar-none"
           style={{
