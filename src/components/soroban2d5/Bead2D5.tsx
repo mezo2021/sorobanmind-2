@@ -123,6 +123,3 @@ export function Bead2D5({
 }
 
 export default Bead2D5;
-
-وضح التعديلات بعد كل ملف 
-كان المفروض نقاش قبل التعديل
