@@ -1,5 +1,3 @@
-تم البناء
-لكن اريد ان تقيم الاكواد ان كانت سليمة 
 // src/components/soroban2d5/Bead2D5.tsx
 import { motion } from 'framer-motion';
 
