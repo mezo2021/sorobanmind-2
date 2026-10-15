@@ -4,12 +4,13 @@ import { motion } from 'framer-motion';
 
 export type BeadColorType = 
   | 'charcoal' // أسود فحمي أنيق (الخامل)
-  | 'cyan'     // سماوي مائي (المحيط السفلي الملامس)
-  | 'gold'     // ذهبي شمسي (الشمس العلوي الملامس)
+  | 'cyan'     // سماوي مائي (المحيط السفلي)
+  | 'gold'     // ذهبي شمسي (الشمس العلوي)
   | 'emerald'  // أخضر ناصع (الفلاش - الناتج)
   | 'red'      // أحمر عنابي (الفلاش - المقسوم/المضروب)
-  | 'white'    // أبيض مضيء (الفلاش - التحديد)
-  | 'barbie'   // وردي نيون (باربي)
+  | 'white'    // أبيض لامع (السفلي في باربي / التحديد بالفلاش)
+  | 'barbie'   // وردي غامق (باربي)
+  | 'purple'   // بنفسجي مضاء (العلوي في باربي)
   | 'wood';    // خشبي كلاسيكي
 
 interface Bead2D5Props {
@@ -21,8 +22,7 @@ interface Bead2D5Props {
   animateOffset?: boolean;
 }
 
-// 📐 نسبة ارتفاع الخرزة المحددة بـ 42% من عرضها لمظهر البيضاوي المجسم
-const BEAD_ASPECT_RATIO = 0.42;
+export const BEAD_ASPECT_RATIO = 0.42;
 
 const COLOR_STYLES: Record<BeadColorType, { light: string; shadow: string }> = {
   charcoal: {
@@ -53,15 +53,16 @@ const COLOR_STYLES: Record<BeadColorType, { light: string; shadow: string }> = {
     light: 'linear-gradient(180deg, #f472b6 0%, #db2777 50%, #9d174d 100%)',
     shadow: 'inset 0 2px 4px rgba(255,255,255,0.6), inset 0 -3px 6px rgba(131,24,67,0.8), 0 0 12px rgba(236,72,153,0.75)',
   },
+  purple: {
+    light: 'linear-gradient(180deg, #a78bfa 0%, #7c3aed 50%, #5b21b6 100%)',
+    shadow: 'inset 0 2px 4px rgba(255,255,255,0.6), inset 0 -3px 6px rgba(76,29,149,0.8), 0 0 12px rgba(139,92,246,0.8)',
+  },
   wood: {
     light: 'linear-gradient(180deg, #c19a6b 0%, #a67c52 50%, #8b6344 100%)',
     shadow: 'inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -3px 6px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.3)',
   },
 };
 
-/**
- * 🧮 دالة مساعدة لحساب الإزاحة العمودية للخرزة وتبسيط الشروط المتداخلة
- */
 function calculateOffset(position: 'upper' | 'lower', active: boolean, animateOffset: boolean, size: number): number {
   if (!animateOffset) return 0;
   if (position === 'upper') {
@@ -109,7 +110,6 @@ export const Bead2D5 = memo(function Bead2D5({
         willChange: 'transform',
       }}
     >
-      {/* لمعة الانعكاس الزجاجي العلوية */}
       <span
         style={{
           position: 'absolute',
