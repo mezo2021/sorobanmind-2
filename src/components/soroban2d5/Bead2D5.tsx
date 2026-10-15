@@ -1,8 +1,8 @@
 // src/components/soroban2d5/Bead2D5.tsx
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 
-export type BeadColorType = 
+export type BeadColorType =
   | 'charcoal' // أسود فحمي أنيق (الخامل)
   | 'cyan'     // سماوي مائي (المحيط السفلي)
   | 'gold'     // ذهبي شمسي (الشمس العلوي)
@@ -13,6 +13,8 @@ export type BeadColorType =
   | 'purple'   // بنفسجي مضاء (العلوي في باربي)
   | 'wood';    // خشبي كلاسيكي
 
+export const BEAD_ASPECT_RATIO = 0.42;
+
 interface Bead2D5Props {
   color?: BeadColorType;
   active: boolean;
@@ -21,8 +23,6 @@ interface Bead2D5Props {
   onClick?: () => void;
   animateOffset?: boolean;
 }
-
-export const BEAD_ASPECT_RATIO = 0.42;
 
 const COLOR_STYLES: Record<BeadColorType, { light: string; shadow: string }> = {
   charcoal: {
@@ -63,15 +63,18 @@ const COLOR_STYLES: Record<BeadColorType, { light: string; shadow: string }> = {
   },
 };
 
-function calculateOffset(position: 'upper' | 'lower', active: boolean, animateOffset: boolean, size: number): number {
+function calculateOffset(
+  position: 'upper' | 'lower',
+  active: boolean,
+  animateOffset: boolean,
+  size: number
+): number {
   if (!animateOffset) return 0;
-  if (position === 'upper') {
-    return active ? size * 0.5 : 0;
-  }
+  if (position === 'upper') return active ? size * 0.5 : 0;
   return active ? -size * 0.6 : 0;
 }
 
-export const Bead2D5 = memo(function Bead2D5({
+function Bead2D5Component({
   color = 'charcoal',
   active,
   position,
@@ -80,7 +83,7 @@ export const Bead2D5 = memo(function Bead2D5({
   animateOffset = true,
 }: Bead2D5Props) {
   const offset = calculateOffset(position, active, animateOffset, size);
-  const styleConfig = COLOR_STYLES[color] ?? COLOR_STYLES.charcoal;
+  const styleConfig = COLOR_STYLES[color];
 
   return (
     <motion.button
@@ -91,10 +94,10 @@ export const Bead2D5 = memo(function Bead2D5({
       initial={false}
       animate={{ y: offset }}
       transition={{
-        type: 'spring',
-        stiffness: 500,
-        damping: 28,
-        mass: 0.8,
+        // النابض مخصص لحركة y العمودية (عند animateOffset = true)
+        y: { type: 'spring', stiffness: 500, damping: 28, mass: 0.8 },
+        // انتقال سريع لتفاعلات hover/tap
+        default: { duration: 0.15, ease: 'easeOut' },
       }}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
@@ -107,7 +110,6 @@ export const Bead2D5 = memo(function Bead2D5({
         border: '1px solid rgba(0,0,0,0.25)',
         cursor: 'pointer',
         position: 'relative',
-        willChange: 'transform',
       }}
     >
       <span
@@ -117,13 +119,33 @@ export const Bead2D5 = memo(function Bead2D5({
           left: '20%',
           width: '40%',
           height: '22%',
-          background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, transparent 70%)',
+          background:
+            'radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, transparent 70%)',
           borderRadius: '50%',
           pointerEvents: 'none',
         }}
       />
     </motion.button>
   );
-});
+}
+
+/**
+ * 🧠 مقارنة مخصصة لـ memo: نتجاهل مرجع onClick عن قصد.
+ *
+ * السبب: كل خرزة تستدعي onSetLower بقيمة ثابتة دلالياً مبنية على (idx, state.lower).
+ * عندما تحتاج دالة onClick إلى التغيير (بسبب تبدّل حالة التفعيل)،
+ * يتغيّر prop الـ active نفسه فيُعاد الرسم تلقائياً.
+ * لذا تجاهل onClick هنا آمن ويوفّر عشرات إعادات الرسم غير الضرورية
+ * عند استخدام 13 عموداً (٤ خرزات سفلية × ١٣ = ٥٢ خرزة).
+ */
+export const Bead2D5 = memo(
+  Bead2D5Component,
+  (prev, next) =>
+    prev.color === next.color &&
+    prev.active === next.active &&
+    prev.position === next.position &&
+    prev.size === next.size &&
+    prev.animateOffset === next.animateOffset
+);
 
 export default Bead2D5;
