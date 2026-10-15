@@ -61,15 +61,15 @@ export function Rod2D5({
   const gap = 2;
   const step = beadHeight + gap;
 
-  // سقف أقصى 330px للارتفاع الديناميكي بدون شريط تمرير زائد
   const effectiveHeight = Math.min(330, height);
   const rodHeight = effectiveHeight - 26;
   
-  // النسبة الدقيقة 1:4 للعارضة
+  // العارضة عند 25% من ارتفاع العمود القياسي
   const beamY = Math.round(rodHeight * 0.25);
 
   const upperBeadTop = 2;
-  const upperBeadActive = beamY - beadHeight - 2;
+  // المحاذاة الدقيقة: الخرزة العلوية تستقر تماماً فوق العارضة دون اختراقها
+  const upperBeadActive = beamY - beadHeight;
 
   const lowerAreaTop = beamY + 4;
   const lowerAreaBottom = rodHeight - beadHeight - 2;
@@ -79,9 +79,8 @@ export function Rod2D5({
   const labelFontSize = getLabelFontSize(labelText, isVertical);
 
   const wrapperOpacity = isDimmed ? 0.25 : 1;
-  const wrapperFilter = isDimmed ? 'grayscale(1)' : 'none';
+  const wrapperFilter = isDimmed ? 'grayscale(1) brightness(0.7)' : 'none';
 
-  // 🎨 تحديد ألوان الخرز بناءً على قسم الفلاش (tint) أو الثيمات وقاعدة التلامس
   let upperBeadColor: BeadColorType = 'charcoal';
   let lowerBeadColors: BeadColorType[] = [
     'charcoal',
@@ -90,36 +89,38 @@ export function Rod2D5({
     'charcoal',
   ];
 
+  const isUpperActive = state.upper === 5;
+
   if (tint) {
-    // 🟢 أو 🔴 حالة قسم الفلاش التعليمي (ألوان وظيفية صارمة)
+    // 🟢 أو 🔴 حالة الفلاش: فقط الخرزات المفاعلة تأخذ اللون الوظيفي والبقية فحمي
     const flashColor: BeadColorType =
       tint === 'emerald' ? 'emerald' : tint === 'red' ? 'red' : 'white';
-    upperBeadColor = flashColor;
-    lowerBeadColors = [flashColor, flashColor, flashColor, flashColor];
+    
+    upperBeadColor = isUpperActive ? flashColor : 'charcoal';
+    lowerBeadColors = lowerBeads.map((idx) =>
+      idx < state.lower ? flashColor : 'charcoal'
+    );
   } else {
-    // ✨ حالة الثيمات في الأقسام الأخرى (تعلم، تمرن، أنزان، اختبارات)
-    const isUpperActive = state.upper === 5;
-
+    // ✨ الثيمات العادية للدراسة والوضع الحر
     if (theme === 'classic-wood') {
       upperBeadColor = isUpperActive ? 'wood' : 'charcoal';
       lowerBeadColors = lowerBeads.map((idx) => (idx < state.lower ? 'wood' : 'charcoal'));
     } else if (theme === 'barbie-pink') {
-      upperBeadColor = isUpperActive ? 'barbie' : 'charcoal'; // وردي غامق للعلوي الملامس
+      upperBeadColor = isUpperActive ? 'barbie' : 'charcoal';
       lowerBeadColors = lowerBeads.map((idx) =>
         idx < state.lower ? ('cyan' as BeadColorType) : 'charcoal'
-      ); // تم توحيد السماوي والبنفسجي للتناسق الباربي الأنيق
+      );
     } else {
-      // Ocean Laser (الافتراضي)
-      upperBeadColor = isUpperActive ? 'gold' : 'charcoal'; // شمسي مضاء للعلوي الملامس
+      upperBeadColor = isUpperActive ? 'gold' : 'charcoal';
       lowerBeadColors = lowerBeads.map((idx) =>
         idx < state.lower ? ('cyan' as BeadColorType) : 'charcoal'
-      ); // سماوي فاتح مضاء للسفلي الملامس
+      );
     }
   }
 
   return (
     <div
-      className="relative flex flex-col items-center overflow-hidden"
+      className="relative flex flex-col items-center"
       style={{
         height: effectiveHeight,
         width: beadSize * 1.3,
@@ -135,7 +136,7 @@ export function Rod2D5({
         />
       )}
 
-      {/* عمود السوروبان (Rod) */}
+      {/* عمود السوروبان */}
       <div
         style={{
           position: 'absolute',
@@ -155,11 +156,11 @@ export function Rod2D5({
         }}
       />
 
-      {/* الخرزة العلوية (الشمس) */}
+      {/* الخرزة العلوية */}
       <div
         style={{
           position: 'absolute',
-          top: state.upper === 5 ? upperBeadActive : upperBeadTop,
+          top: isUpperActive ? upperBeadActive : upperBeadTop,
           left: '50%',
           transform: 'translateX(-50%)',
           transition: 'top 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -167,7 +168,7 @@ export function Rod2D5({
       >
         <Bead2D5
           color={upperBeadColor}
-          active={state.upper === 5}
+          active={isUpperActive}
           position="upper"
           size={beadSize}
           onClick={onToggleUpper}
@@ -175,7 +176,7 @@ export function Rod2D5({
         />
       </div>
 
-      {/* 🎯 العارضة الليزرية الرفيعة الجديدة (لا تغطي الخرزة العلوية) */}
+      {/* العارضة */}
       {theme === 'classic-wood' ? (
         <div
           style={{
@@ -207,7 +208,6 @@ export function Rod2D5({
             border: '0.5px solid rgba(255,255,255,0.9)',
           }}
         >
-          {/* شعاع الليزر المتحرك ذهاباً وإياباً */}
           <motion.div
             animate={{ x: ['-100%', '100%'] }}
             transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut', repeatType: 'reverse' }}
@@ -246,7 +246,7 @@ export function Rod2D5({
         />
       )}
 
-      {/* الخرزات السفلية (المحيط) */}
+      {/* الخرزات السفلية */}
       {lowerBeads.map((idx) => {
         const isBeadActive = idx < state.lower;
         const topActive = lowerAreaTop + idx * step;
