@@ -101,15 +101,10 @@ export function Soroban2D5({
   const { width: vw, height: vh } = useViewportDimensions();
   const [isRotated, setIsRotated] = useState(false);
 
-  // 🎯 الارتفاع ديناميكي مع سقف صارم لا يتجاوز 330px مطلقاً
   const dynamicHeight = Math.min(330, Math.max(250, Math.round(vh * 0.36)));
-
-  const effectiveBeadSize = autoBeadSize
-    ? getAutoBeadSize(columns, vw)
-    : 32;
-
+  const effectiveBeadSize = autoBeadSize ? getAutoBeadSize(columns, vw) : 32;
   const effectiveHeight = dynamicHeight;
-  const dynamicGap = columns > 6 ? 5 : columns > 4 ? 8 : 12;
+  const dynamicGap = columns > 6 ? 4 : columns > 4 ? 6 : 10;
 
   useEffect(() => {
     if (initialValue > 0) setValue(initialValue);
@@ -133,11 +128,10 @@ export function Soroban2D5({
 
   const shouldShowValue = revealValue || (!interactive && showValue);
 
-  // تخصيص نمط العلبة الخارجية للثيمات
   const getContainerStyles = () => {
     if (currentTheme === 'classic-wood') {
       return {
-        background: 'linear-[#3d2817]',
+        background: '#3d2817',
         border: '3px solid #8b6344',
         boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
       };
@@ -149,7 +143,6 @@ export function Soroban2D5({
         boxShadow: '0 0 30px rgba(236,72,153,0.35), inset 0 0 15px rgba(255,255,255,0.7)',
       };
     }
-    // Ocean Laser
     return {
       background: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(14,165,233,0.2) 30%, rgba(3,105,161,0.4) 70%, rgba(255,255,255,0.25) 100%)',
       border: '2.5px solid rgba(186,230,253,0.8)',
@@ -157,9 +150,10 @@ export function Soroban2D5({
     };
   };
 
+  const isSmallColumns = columns <= 4;
+
   return (
     <div className="w-full flex flex-col items-center gap-1.5 select-none">
-      {/* 🎯 شريط العنوان واختيار الثيمات */}
       {!hideTitle && (
         <div className="flex items-center justify-between w-full max-w-xs px-2 mb-1">
           <h3 className="text-xs sm:text-sm font-black text-cyan-200 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">
@@ -168,7 +162,6 @@ export function Soroban2D5({
             {currentTheme === 'barbie-pink' && '💖 سوروبان باربي'}
           </h3>
 
-          {/* أزرار التبديل السريع بين الثيمات الثلاثة */}
           <div className="flex items-center gap-1.5 bg-slate-900/60 p-1 rounded-full border border-slate-700/50 backdrop-blur-md">
             <button
               type="button"
@@ -198,7 +191,6 @@ export function Soroban2D5({
         </div>
       )}
 
-      {/* 🎯 الإطار العلبة الألماسية والزجاجية */}
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1, rotate: isRotated ? 90 : 0 }}
@@ -210,19 +202,20 @@ export function Soroban2D5({
         }}
       >
         <div
-          className="relative rounded-xl sm:rounded-2xl overflow-x-auto max-w-full scrollbar-none"
+          className={`relative rounded-xl sm:rounded-2xl max-w-full ${isSmallColumns ? 'overflow-hidden' : 'overflow-x-auto scrollbar-none'}`}
           style={{
             padding: '4px 8px',
-            background: currentTheme === 'classic-wood' 
-              ? '#2a1a0e' 
-              : currentTheme === 'barbie-pink'
-              ? 'linear-gradient(180deg, rgba(131,24,67,0.5) 0%, rgba(88,28,135,0.6) 100%)'
-              : 'linear-gradient(180deg, rgba(12,74,110,0.5) 0%, rgba(8,47,73,0.7) 100%)',
+            background:
+              currentTheme === 'classic-wood'
+                ? '#2a1a0e'
+                : currentTheme === 'barbie-pink'
+                ? 'linear-gradient(180deg, rgba(131,24,67,0.5) 0%, rgba(88,28,135,0.6) 100%)'
+                : 'linear-gradient(180deg, rgba(12,74,110,0.5) 0%, rgba(8,47,73,0.7) 100%)',
             boxShadow: 'inset 0 0 15px rgba(0,0,0,0.3)',
           }}
         >
           <div
-            className="flex flex-row-reverse items-center justify-center min-w-max"
+            className="flex flex-row-reverse items-center justify-center min-w-max mx-auto"
             style={{ gap: dynamicGap, paddingTop: '16px', paddingBottom: '4px' }}
             dir="rtl"
           >
@@ -262,7 +255,6 @@ export function Soroban2D5({
           </div>
         </div>
 
-        {/* 🎯 الأزرار السفلية الشفافة المضيئة */}
         {interactive && (
           <div className="flex justify-center items-center gap-2 mt-1.5">
             <button
@@ -285,7 +277,6 @@ export function Soroban2D5({
         )}
       </motion.div>
 
-      {/* 🎯 النتيجة المتوهجة */}
       {shouldShowValue && (
         <AnimatePresence mode="popLayout">
           <motion.div
