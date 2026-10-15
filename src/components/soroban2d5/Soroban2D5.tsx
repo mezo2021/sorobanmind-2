@@ -48,13 +48,13 @@ function useViewportDimensions() {
 }
 
 function getAutoBeadSize(columns: number, viewportWidth: number): number {
-  if (columns <= 2) return 52;
-  if (columns <= 3) return 46;
-  if (columns <= 4) return 38;
-  if (columns <= 5) return 32;
-  if (columns <= 6) return 28;
-  const calculated = Math.round(viewportWidth * 0.085);
-  return Math.min(36, Math.max(26, calculated));
+  if (columns <= 2) return 46;
+  if (columns <= 3) return 40;
+  if (columns <= 4) return 34;
+  if (columns <= 5) return 30;
+  if (columns <= 6) return 26;
+  const calculated = Math.round(viewportWidth * 0.075);
+  return Math.min(32, Math.max(22, calculated));
 }
 
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
@@ -103,15 +103,15 @@ export function Soroban2D5({
   const { width: vw, height: vh } = useViewportDimensions();
   const [isRotated, setIsRotated] = useState(false);
 
-  // 🎯 حساب الارتفاع الديناميكي المتناسب مع الجوال (clamp بين 260px و 380px)
-  const dynamicHeight = Math.min(380, Math.max(260, Math.round(vh * 0.38)));
+  // 🎯 تحديد الارتفاع بدقة: لا يتجاوز 320px إطلاقاً (سقف أقصى 320px)
+  const dynamicHeight = Math.min(320, Math.max(250, Math.round(vh * 0.35)));
 
   const effectiveBeadSize = autoBeadSize
     ? getAutoBeadSize(columns, vw)
-    : 38;
+    : 34;
 
-  const effectiveHeight = Math.max(250, dynamicHeight);
-  const dynamicGap = columns > 6 ? 8 : columns > 4 ? 10 : 14;
+  const effectiveHeight = dynamicHeight;
+  const dynamicGap = columns > 6 ? 6 : columns > 4 ? 8 : 12;
 
   useEffect(() => {
     if (initialValue > 0) setValue(initialValue);
@@ -140,44 +140,44 @@ export function Soroban2D5({
   const shouldShowValue = revealValue || (!interactive && showValue);
 
   return (
-    <div className="w-full flex flex-col items-center gap-2 sm:gap-4 select-none">
+    <div className="w-full flex flex-col items-center gap-1.5 sm:gap-3 select-none">
       {!hideTitle && (
-        <h3 className="text-base sm:text-lg font-extrabold text-cyan-300 flex items-center gap-2 drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]">
-          🌊 سوروبان الليزر والمحيط ☀️
+        <h3 className="text-sm sm:text-base font-black text-cyan-200 flex items-center gap-2 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)] tracking-wide">
+          💎 السوروبان الكريستالي 🌊
         </h3>
       )}
 
       {columns >= 7 && (
-        <p className="text-[11px] text-cyan-400 font-medium animate-pulse drop-shadow">
+        <p className="text-[10px] text-cyan-300 font-bold animate-pulse drop-shadow">
           ← اسحب أفقيًا لرؤية بقية الأعمدة →
         </p>
       )}
 
-      {/* 🎯 إطار الكرستال ومحيط الليزر */}
+      {/* 🎯 العلبة الألماسية الكريستالية (مستوحاة من الصورة) */}
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1, rotate: isRotated ? 90 : 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 22 }}
-        className="relative rounded-2xl sm:rounded-3xl max-w-full backdrop-blur-md"
+        className="relative rounded-2xl sm:rounded-3xl max-w-full backdrop-blur-lg"
         style={{
-          padding: '12px',
-          background: 'linear-gradient(135deg, rgba(14,116,144,0.85) 0%, rgba(3,105,161,0.9) 50%, rgba(15,23,42,0.95) 100%)',
-          boxShadow: '0 0 25px rgba(6,182,212,0.4), inset 0 0 15px rgba(255,255,255,0.2)',
-          border: '2px solid rgba(56,189,248,0.5)',
+          padding: '8px 10px',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(14,165,233,0.2) 30%, rgba(3,105,161,0.4) 70%, rgba(255,255,255,0.25) 100%)',
+          boxShadow: '0 0 30px rgba(56,189,248,0.4), inset 0 0 20px rgba(255,255,255,0.6), 0 10px 25px rgba(0,0,0,0.5)',
+          border: '2.5px solid rgba(186,230,253,0.75)',
         }}
       >
-        {/* 🎯 خلفية مياه البحر الشفافة */}
+        {/* 🎯 إطار الانعكاس المائي الداخلي */}
         <div
-          className="relative rounded-xl sm:rounded-2xl overflow-x-auto max-w-full scrollbar-thin"
+          className="relative rounded-xl sm:rounded-2xl overflow-x-auto max-w-full scrollbar-none"
           style={{
-            padding: '10px 14px',
-            background: 'linear-gradient(180deg, rgba(238,242,255,0.92) 0%, rgba(186,230,253,0.88) 100%)',
-            boxShadow: 'inset 0 4px 20px rgba(14,116,144,0.25), 0 0 10px rgba(255,255,255,0.5)',
+            padding: '6px 10px',
+            background: 'linear-gradient(180deg, rgba(12,74,110,0.5) 0%, rgba(8,47,73,0.7) 100%)',
+            boxShadow: 'inset 0 0 15px rgba(56,189,248,0.3), inset 0 2px 5px rgba(255,255,255,0.4)',
           }}
         >
           <div
             className="flex flex-row-reverse items-center justify-center min-w-max"
-            style={{ gap: dynamicGap, paddingTop: '28px', paddingBottom: '10px' }}
+            style={{ gap: dynamicGap, paddingTop: '18px', paddingBottom: '6px' }}
             dir="rtl"
           >
             {colStates.map((state, originalIdx) => {
@@ -215,22 +215,22 @@ export function Soroban2D5({
           </div>
         </div>
 
-        {/* 🎯 أزرار ليزرية تفاعلية */}
+        {/* 🎯 الأزرار الكريستالية المضيئة */}
         {interactive && (
-          <div className="flex justify-center items-center gap-3 mt-3">
+          <div className="flex justify-center items-center gap-2 mt-2">
             <button
               type="button"
               onClick={handleResetAll}
-              className="px-5 py-1.5 rounded-full bg-cyan-500/30 hover:bg-cyan-500/50 active:scale-95 text-cyan-100 font-bold shadow-[0_0_12px_rgba(6,182,212,0.5)] border border-cyan-300/40 backdrop-blur-sm transition text-xs sm:text-sm"
+              className="px-4 py-1 rounded-full bg-cyan-400/20 hover:bg-cyan-400/40 active:scale-95 text-cyan-100 font-extrabold shadow-[0_0_10px_rgba(34,211,238,0.5)] border border-cyan-200/50 backdrop-blur-md transition text-xs"
             >
-              🌊 إعادة الكل
+              💧 إعادة الكل
             </button>
 
             <button
               type="button"
               onClick={toggleRotation}
               title="تدوير المعداد"
-              className="p-1.5 rounded-full bg-amber-500/30 hover:bg-amber-500/50 active:scale-95 text-amber-200 font-bold shadow-[0_0_12px_rgba(245,158,11,0.5)] border border-amber-300/40 backdrop-blur-sm transition text-xs"
+              className="p-1 rounded-full bg-amber-400/20 hover:bg-amber-400/40 active:scale-95 text-amber-200 font-extrabold shadow-[0_0_10px_rgba(251,191,36,0.5)] border border-amber-200/50 backdrop-blur-md transition text-xs"
             >
               ↻
             </button>
@@ -238,16 +238,16 @@ export function Soroban2D5({
         )}
       </motion.div>
 
-      {/* 🎯 إظهار النتيجة بتوهج الليزر والشمس */}
+      {/* 🎯 إظهار النتيجة المتوهجة بذهب الشمس */}
       {shouldShowValue && (
         <AnimatePresence mode="popLayout">
           <motion.div
             key={`${totalValue}-${numberStyle}`}
-            initial={{ scale: 0.6, opacity: 0, y: 10 }}
+            initial={{ scale: 0.6, opacity: 0, y: 5 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.6, opacity: 0, y: -10 }}
+            exit={{ scale: 0.6, opacity: 0, y: -5 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-            className="text-3xl sm:text-4xl font-black text-amber-300 tabular-nums drop-shadow-[0_0_12px_rgba(251,191,36,0.8)]"
+            className="text-2xl sm:text-3xl font-black text-amber-300 tabular-nums drop-shadow-[0_0_12px_rgba(252,211,77,0.9)]"
             style={{ fontFamily: 'monospace' }}
             dir={isArabic ? 'rtl' : 'ltr'}
           >
