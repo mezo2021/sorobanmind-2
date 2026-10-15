@@ -14,7 +14,6 @@ interface Soroban2D5Props {
   interactive?: boolean;
   revealValue?: boolean;
   demoValue?: number;
-  size?: 'sm' | 'md' | 'lg' | 'auto';
   autoBeadSize?: boolean;
   activeRodIndex?: number;
   hideTitle?: boolean;
@@ -22,11 +21,10 @@ interface Soroban2D5Props {
   rodTint?: RodTint;
   highlightColumns?: number[];
   dimColumns?: number[];
-  hideColumnLabels?: boolean;
   theme?: SorobanTheme;
 }
 
-// 📐 هوك مراقبة أبعاد الشاشة مع تفعيل Debounce لحماية الأداء ومنع الاستدعاءات المفرطة
+// 📐 هوك مراقبة أبعاد الشاشة مع Debounce و ReturnType الآمن للمتصفح
 function useViewportDimensions() {
   const [dimensions, setDimensions] = useState({
     width: typeof window !== 'undefined' ? window.innerWidth : 390,
@@ -34,7 +32,7 @@ function useViewportDimensions() {
   });
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
     const handleResize = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
@@ -82,7 +80,6 @@ export function Soroban2D5({
   interactive = true,
   revealValue = false,
   demoValue,
-  size: _size = 'auto',
   autoBeadSize = true,
   activeRodIndex,
   hideTitle = false,
@@ -90,7 +87,6 @@ export function Soroban2D5({
   rodTint,
   highlightColumns,
   dimColumns,
-  hideColumnLabels: _hideColumnLabels = false,
   theme: initialTheme = 'ocean-laser',
 }: Soroban2D5Props) {
   const {
@@ -111,6 +107,10 @@ export function Soroban2D5({
 
   const effectiveBeadSize = autoBeadSize ? getAutoBeadSize(columns, vw) : 32;
 
+  // 📐 استخراج القياسات والمسافات لأعلى المكون لتنظيف الـ JSX
+  const effectiveHeight = Math.min(330, Math.max(250, Math.round(vh * 0.36)));
+  const dynamicGap = columns > 6 ? 4 : columns > 4 ? 6 : 10;
+
   // 🛡️ معالجة القيمة الأولية مرة واحدة فقط بشكل آمن ومحمي
   const isInitializedRef = useRef(false);
   useEffect(() => {
@@ -129,7 +129,7 @@ export function Soroban2D5({
     }
   }, [demoValue, interactive, setValue]);
 
-  // 🛡️ حماية onValueChange واستقرار الإشعار باستخدام useRef
+  // 🛡️ استقرار الإشعار باستخدام useRef لتفادي إعادة التشغيل غير الضرورية
   const onValueChangeRef = useRef(onValueChange);
   useEffect(() => {
     onValueChangeRef.current = onValueChange;
@@ -138,10 +138,6 @@ export function Soroban2D5({
   useEffect(() => {
     onValueChangeRef.current?.(totalValue);
   }, [totalValue]);
-
-  const handleResetAll = () => {
-    resetAll();
-  };
 
   const toggleRotation = () => {
     setIsRotated((prev) => !prev);
@@ -238,7 +234,7 @@ export function Soroban2D5({
         >
           <div
             className="flex flex-row-reverse items-center justify-center min-w-max mx-auto"
-            style={{ gap: columns > 6 ? 4 : columns > 4 ? 6 : 10, paddingTop: '16px', paddingBottom: '4px' }}
+            style={{ gap: dynamicGap, paddingTop: '16px', paddingBottom: '4px' }}
             dir="rtl"
           >
             {colStates.map((state, originalIdx) => {
@@ -261,7 +257,7 @@ export function Soroban2D5({
                     totalColumns={columns}
                     onToggleUpper={() => interactive && toggleUpper(originalIdx)}
                     onSetLower={(count) => interactive && setLower(originalIdx, count)}
-                    height={Math.min(330, Math.max(250, Math.round(vh * 0.36)))}
+                    height={effectiveHeight}
                     beadSize={effectiveBeadSize}
                     isActive={activeRodIndex === originalIdx}
                     beamHighlight={beamHighlight}
@@ -279,7 +275,7 @@ export function Soroban2D5({
           <div className="flex justify-center items-center gap-2 mt-1.5">
             <button
               type="button"
-              onClick={handleResetAll}
+              onClick={resetAll}
               className="px-3 py-0.5 rounded-full bg-cyan-400/20 hover:bg-cyan-400/40 active:scale-95 text-cyan-100 font-extrabold shadow-[0_0_10px_rgba(34,211,238,0.4)] border border-cyan-200/40 backdrop-blur-md transition text-xs"
             >
               💧 إعادة الكل
@@ -301,7 +297,6 @@ export function Soroban2D5({
         <AnimatePresence mode="wait">
           <motion.div
             key={`${totalValue}-${numberStyle}`}
-            layout
             initial={{ scale: 0.6, opacity: 0, y: 5 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.6, opacity: 0, y: -5 }}
