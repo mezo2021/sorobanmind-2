@@ -29,7 +29,7 @@ import { useQuests } from '../hooks/useQuests';
 import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
 
 // ═══ SRB Stores ═══
-import { useProgressStore } from '../store/progressStore';
+import { useProgressStore, selectObservationAccuracy } from '../store/progressStore';
 import { useMasteryBadgesStore } from '../store/masteryBadgesStore';
 
 // ═══ SRB Data ═══
@@ -315,6 +315,8 @@ export function GuardianDashboard({
   const earnedAudioCount = audioAnzanBadgeList.filter((b) => b.earned).length;
 
   // ═══ 📊 المهارات الأربع (SRB) ═══
+  const observation = useProgressStore(selectObservationAccuracy);
+
   const skills = useMemo(() => {
     const concentration = Math.min(
       100,
@@ -324,12 +326,6 @@ export function GuardianDashboard({
     const visualization = Math.min(
       100,
       Math.round((passedAnzanVisual.length / totalLevelsCount) * 100),
-    );
-
-    const masteryCount = Object.keys(masteryBadges).length;
-    const observation = Math.min(
-      100,
-      Math.round((masteryCount / 20) * 100),
     );
 
     const listening = Math.min(
@@ -343,7 +339,7 @@ export function GuardianDashboard({
       { id: 'observation', nameAr: 'دقة الملاحظة', descriptionAr: 'قدرة الطفل على حل المسائل من المحاولة الأولى', percentage: observation, available: true },
       { id: 'listening', nameAr: 'الاستماع والانتباه السمعي', descriptionAr: 'قدرة الطفل على الحساب من خلال السماع', percentage: listening, available: true },
     ];
-  }, [passedPractice, passedAnzanVisual, passedAnzanAudio, masteryBadges, totalLevelsCount]);
+  }, [passedPractice, passedAnzanVisual, passedAnzanAudio, totalLevelsCount, observation]);
 
   // ═══ 🗺️ خارطة المستويات [FIX 10] ═══
   const levelNodes: LevelNodeData[] = useMemo(
