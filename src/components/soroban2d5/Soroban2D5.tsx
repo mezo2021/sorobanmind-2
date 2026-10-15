@@ -1,6 +1,6 @@
 // src/components/soroban2d5/Soroban2D5.tsx
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useSorobanLogic } from './useSorobanLogic';
 import { Rod2D5, type SorobanTheme } from './Rod2D5';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
@@ -26,6 +26,7 @@ interface Soroban2D5Props {
   theme?: SorobanTheme;
 }
 
+// 📐 هوك مراقبة أبعاد الشاشة مع تفعيل Debounce لحماية الأداء ومنع الاستدعاءات المفرطة
 function useViewportDimensions() {
   const [dimensions, setDimensions] = useState({
     width: typeof window !== 'undefined' ? window.innerWidth : 390,
@@ -33,14 +34,22 @@ function useViewportDimensions() {
   });
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
     const handleResize = () => {
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setDimensions({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
+      }, 100);
     };
+
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return dimensions;
@@ -73,7 +82,7 @@ export function Soroban2D5({
   interactive = true,
   revealValue = false,
   demoValue,
-  size = 'auto',
+  size: _size = 'auto',
   autoBeadSize = true,
   activeRodIndex,
   hideTitle = false,
@@ -81,7 +90,7 @@ export function Soroban2D5({
   rodTint,
   highlightColumns,
   dimColumns,
-  hideColumnLabels = false,
+  hideColumnLabels: _hideColumnLabels = false,
   theme: initialTheme = 'ocean-laser',
 }: Soroban2D5Props) {
   const {
@@ -89,7 +98,6 @@ export function Soroban2D5({
     totalValue,
     toggleUpper,
     setLower,
-    resetColumn,
     resetAll,
     setValue,
   } = useSorobanLogic(columns);
@@ -101,21 +109,34 @@ export function Soroban2D5({
   const { width: vw, height: vh } = useViewportDimensions();
   const [isRotated, setIsRotated] = useState(false);
 
-  const dynamicHeight = Math.min(330, Math.max(250, Math.round(vh * 0.36)));
   const effectiveBeadSize = autoBeadSize ? getAutoBeadSize(columns, vw) : 32;
-  const effectiveHeight = dynamicHeight;
-  const dynamicGap = columns > 6 ? 4 : columns > 4 ? 6 : 10;
+
+  // 🛡️ معالجة القيمة الأولية مرة واحدة فقط بشكل آمن ومحمي
+  const isInitializedRef = useRef(false);
+  useEffect(() => {
+    if (!isInitializedRef.current && initialValue > 0) {
+      setValue(initialValue);
+      isInitializedRef.current = true;
+    }
+  }, [initialValue, setValue]);
+
+  // 🛡️ معالجة العرض التوضيحي مع تصفير الحالة بذكاء عند العودة إلى undefined
+  useEffect(() => {
+    if (demoValue !== undefined) {
+      setValue(demoValue);
+    } else if (!interactive) {
+      setValue(0);
+    }
+  }, [demoValue, interactive, setValue]);
+
+  // 🛡️ حماية onValueChange واستقرار الإشعار باستخدام useRef
+  const onValueChangeRef = useRef(onValueChange);
+  useEffect(() => {
+    onValueChangeRef.current = onValueChange;
+  });
 
   useEffect(() => {
-    if (initialValue > 0) setValue(initialValue);
-  }, []);
-
-  useEffect(() => {
-    if (demoValue !== undefined) setValue(demoValue);
-  }, [demoValue]);
-
-  useEffect(() => {
-    onValueChange?.(totalValue);
+    onValueChangeRef.current?.(totalValue);
   }, [totalValue]);
 
   const handleResetAll = () => {
@@ -128,7 +149,8 @@ export function Soroban2D5({
 
   const shouldShowValue = revealValue || (!interactive && showValue);
 
-  const getContainerStyles = () => {
+  // 🎨 تخزين الأنماط مؤقتاً لمنع إعادة إنشائها مع كل Render
+  const containerStyles = useMemo(() => {
     if (currentTheme === 'classic-wood') {
       return {
         background: '#3d2817',
@@ -148,7 +170,7 @@ export function Soroban2D5({
       border: '2.5px solid rgba(186,230,253,0.8)',
       boxShadow: '0 0 30px rgba(56,189,248,0.4), inset 0 0 20px rgba(255,255,255,0.6), 0 10px 25px rgba(0,0,0,0.5)',
     };
-  };
+  }, [currentTheme]);
 
   const isSmallColumns = columns <= 4;
 
@@ -198,7 +220,7 @@ export function Soroban2D5({
         className="relative rounded-2xl sm:rounded-3xl max-w-full backdrop-blur-lg"
         style={{
           padding: '6px 8px',
-          ...getContainerStyles(),
+          ...containerStyles,
         }}
       >
         <div
@@ -216,7 +238,7 @@ export function Soroban2D5({
         >
           <div
             className="flex flex-row-reverse items-center justify-center min-w-max mx-auto"
-            style={{ gap: dynamicGap, paddingTop: '16px', paddingBottom: '4px' }}
+            style={{ gap: columns > 6 ? 4 : columns > 4 ? 6 : 10, paddingTop: '16px', paddingBottom: '4px' }}
             dir="rtl"
           >
             {colStates.map((state, originalIdx) => {
@@ -235,13 +257,11 @@ export function Soroban2D5({
                 >
                   <Rod2D5
                     state={state}
-                    columnIndex={originalIdx}
                     displayOrder={displayOrder}
                     totalColumns={columns}
                     onToggleUpper={() => interactive && toggleUpper(originalIdx)}
                     onSetLower={(count) => interactive && setLower(originalIdx, count)}
-                    onReset={() => interactive && resetColumn(originalIdx)}
-                    height={effectiveHeight}
+                    height={Math.min(330, Math.max(250, Math.round(vh * 0.36)))}
                     beadSize={effectiveBeadSize}
                     isActive={activeRodIndex === originalIdx}
                     beamHighlight={beamHighlight}
@@ -278,9 +298,10 @@ export function Soroban2D5({
       </motion.div>
 
       {shouldShowValue && (
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence mode="wait">
           <motion.div
             key={`${totalValue}-${numberStyle}`}
+            layout
             initial={{ scale: 0.6, opacity: 0, y: 5 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.6, opacity: 0, y: -5 }}
