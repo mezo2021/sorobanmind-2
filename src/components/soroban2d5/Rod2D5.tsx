@@ -31,6 +31,8 @@ const COLUMN_LABELS: string[] = [
 ];
 
 const LOWER_BEADS = [0, 1, 2, 3] as const;
+
+// سقف دفاعي في حال استخدام Rod2D5 مستقلاً خارج Soroban2D5
 const MAX_EFFECTIVE_HEIGHT = 330;
 
 function getLabelFontSize(text: string, isVertical: boolean): number {
@@ -58,17 +60,16 @@ export function Rod2D5({
 }: Rod2D5Props) {
   const beadHeight = beadSize * BEAD_ASPECT_RATIO;
   const wrapperWidth = beadSize * 1.3;
-  const gap = 2;
-  const step = beadHeight + gap;
+  const step = beadHeight + 2;
 
   const effectiveHeight = Math.min(height, MAX_EFFECTIVE_HEIGHT);
   const rodHeight = effectiveHeight - 26;
-  
+
   // العارضة عند 25% من ارتفاع العمود (نسبة السوروبان القياسية 1:4)
   const beamY = Math.round(rodHeight * 0.25);
 
-  const upperBeadTop = 2;
-  const upperBeadActive = beamY - beadHeight - 2;
+  const upperBeadInactiveTop = 2;
+  const upperBeadActiveTop = beamY - beadHeight - 2;
 
   const lowerAreaTop = beamY + 4;
   const lowerAreaBottom = rodHeight - beadHeight - 2;
@@ -82,30 +83,40 @@ export function Rod2D5({
 
   const isWood = theme === 'classic-wood';
   const isBarbie = theme === 'barbie-pink';
+  const isUpperActive = state.upper === 5;
 
+  // 🎨 تحديد ألوان الخرز بناءً على قسم الفلاش (tint) أو الثيمات
   let upperBeadColor: BeadColorType = 'charcoal';
-  let lowerBeadColors: BeadColorType[] = ['charcoal', 'charcoal', 'charcoal', 'charcoal'];
+  let lowerBeadColors: BeadColorType[] = [
+    'charcoal',
+    'charcoal',
+    'charcoal',
+    'charcoal',
+  ];
 
   if (tint) {
+    // ألوان وظيفية صارمة لقسم الفلاش التعليمي
     const flashColor: BeadColorType =
       tint === 'emerald' ? 'emerald' : tint === 'red' ? 'red' : 'white';
     upperBeadColor = flashColor;
     lowerBeadColors = [flashColor, flashColor, flashColor, flashColor];
+  } else if (isWood) {
+    upperBeadColor = isUpperActive ? 'wood' : 'charcoal';
+    lowerBeadColors = LOWER_BEADS.map((idx) =>
+      idx < state.lower ? 'wood' : 'charcoal'
+    );
+  } else if (isBarbie) {
+    // 💖 ثيم باربي: العلوي بنفسجي مضاء، والسفلي أبيض لامع
+    upperBeadColor = isUpperActive ? 'purple' : 'charcoal';
+    lowerBeadColors = LOWER_BEADS.map((idx) =>
+      idx < state.lower ? 'white' : 'charcoal'
+    );
   } else {
-    const isUpperActive = state.upper === 5;
-
-    if (isWood) {
-      upperBeadColor = isUpperActive ? 'wood' : 'charcoal';
-      lowerBeadColors = LOWER_BEADS.map((idx) => (idx < state.lower ? 'wood' : 'charcoal'));
-    } else if (isBarbie) {
-      // 💖 ثيم باربي: العلوي بنفسجي مضاء، والسفلي أبيض لامع
-      upperBeadColor = isUpperActive ? 'purple' : 'charcoal';
-      lowerBeadColors = LOWER_BEADS.map((idx) => (idx < state.lower ? 'white' : 'charcoal'));
-    } else {
-      // 🌊 Ocean Laser (الافتراضي)
-      upperBeadColor = isUpperActive ? 'gold' : 'charcoal';
-      lowerBeadColors = LOWER_BEADS.map((idx) => (idx < state.lower ? 'cyan' : 'charcoal'));
-    }
+    // 🌊 Ocean Laser (الافتراضي)
+    upperBeadColor = isUpperActive ? 'gold' : 'charcoal';
+    lowerBeadColors = LOWER_BEADS.map((idx) =>
+      idx < state.lower ? 'cyan' : 'charcoal'
+    );
   }
 
   return (
@@ -145,11 +156,11 @@ export function Rod2D5({
         }}
       />
 
-      {/* الخرزة العلوية */}
+      {/* الخرزة العلوية (الشمس) */}
       <div
         style={{
           position: 'absolute',
-          top: state.upper === 5 ? upperBeadActive : upperBeadTop,
+          top: isUpperActive ? upperBeadActiveTop : upperBeadInactiveTop,
           left: '50%',
           transform: 'translateX(-50%)',
           transition: 'top 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -157,7 +168,7 @@ export function Rod2D5({
       >
         <Bead2D5
           color={upperBeadColor}
-          active={state.upper === 5}
+          active={isUpperActive}
           position="upper"
           size={beadSize}
           onClick={onToggleUpper}
@@ -198,7 +209,12 @@ export function Rod2D5({
         >
           <motion.div
             animate={isDimmed ? { x: 0 } : { x: ['-100%', '100%'] }}
-            transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut', repeatType: 'reverse' }}
+            transition={{
+              repeat: Infinity,
+              duration: 1.5,
+              ease: 'easeInOut',
+              repeatType: 'reverse',
+            }}
             style={{
               position: 'absolute',
               top: 1,
@@ -232,7 +248,7 @@ export function Rod2D5({
         />
       )}
 
-      {/* الخرزات السفلية */}
+      {/* الخرزات السفلية (المحيط) */}
       {LOWER_BEADS.map((idx) => {
         const isBeadActive = idx < state.lower;
         const topActive = lowerAreaTop + idx * step;
