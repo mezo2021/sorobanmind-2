@@ -1,6 +1,6 @@
 // src/components/soroban2d5/Soroban2D5.tsx
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useSorobanLogic } from './useSorobanLogic';
 import { Rod2D5, type SorobanTheme } from './Rod2D5';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
@@ -14,7 +14,6 @@ interface Soroban2D5Props {
   interactive?: boolean;
   revealValue?: boolean;
   demoValue?: number;
-  size?: 'sm' | 'md' | 'lg' | 'auto';
   autoBeadSize?: boolean;
   activeRodIndex?: number;
   hideTitle?: boolean;
@@ -22,10 +21,10 @@ interface Soroban2D5Props {
   rodTint?: RodTint;
   highlightColumns?: number[];
   dimColumns?: number[];
-  hideColumnLabels?: boolean;
   theme?: SorobanTheme;
 }
 
+// 📐 هوك مراقبة أبعاد الشاشة مع Debounce و ReturnType الآمن للمتصفح
 function useViewportDimensions() {
   const [dimensions, setDimensions] = useState({
     width: typeof window !== 'undefined' ? window.innerWidth : 390,
@@ -33,14 +32,22 @@ function useViewportDimensions() {
   });
 
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
     const handleResize = () => {
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setDimensions({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
+      }, 100);
     };
+
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return dimensions;
@@ -73,7 +80,6 @@ export function Soroban2D5({
   interactive = true,
   revealValue = false,
   demoValue,
-  size = 'auto',
   autoBeadSize = true,
   activeRodIndex,
   hideTitle = false,
@@ -81,7 +87,6 @@ export function Soroban2D5({
   rodTint,
   highlightColumns,
   dimColumns,
-  hideColumnLabels = false,
   theme: initialTheme = 'ocean-laser',
 }: Soroban2D5Props) {
   const {
@@ -89,7 +94,6 @@ export function Soroban2D5({
     totalValue,
     toggleUpper,
     setLower,
-    resetColumn,
     resetAll,
     setValue,
   } = useSorobanLogic(columns);
@@ -101,26 +105,39 @@ export function Soroban2D5({
   const { width: vw, height: vh } = useViewportDimensions();
   const [isRotated, setIsRotated] = useState(false);
 
-  const dynamicHeight = Math.min(330, Math.max(250, Math.round(vh * 0.36)));
   const effectiveBeadSize = autoBeadSize ? getAutoBeadSize(columns, vw) : 32;
-  const effectiveHeight = dynamicHeight;
+
+  // 📐 القياسات والمسافات المحسوبة
+  const effectiveHeight = Math.min(330, Math.max(250, Math.round(vh * 0.36)));
   const dynamicGap = columns > 6 ? 4 : columns > 4 ? 6 : 10;
 
+  // 🛡️ معالجة القيمة الأولية مرة واحدة فقط
+  const isInitializedRef = useRef(false);
   useEffect(() => {
-    if (initialValue > 0) setValue(initialValue);
-  }, []);
+    if (!isInitializedRef.current && initialValue > 0) {
+      setValue(initialValue);
+      isInitializedRef.current = true;
+    }
+  }, [initialValue, setValue]);
+
+  // 🛡️ معالجة العرض التوضيحي
+  useEffect(() => {
+    if (demoValue !== undefined) {
+      setValue(demoValue);
+    } else if (!interactive) {
+      setValue(0);
+    }
+  }, [demoValue, interactive, setValue]);
+
+  // 🛡️ استقرار الإشعار باستخدام useRef
+  const onValueChangeRef = useRef(onValueChange);
+  useEffect(() => {
+    onValueChangeRef.current = onValueChange;
+  });
 
   useEffect(() => {
-    if (demoValue !== undefined) setValue(demoValue);
-  }, [demoValue]);
-
-  useEffect(() => {
-    onValueChange?.(totalValue);
+    onValueChangeRef.current?.(totalValue);
   }, [totalValue]);
-
-  const handleResetAll = () => {
-    resetAll();
-  };
 
   const toggleRotation = () => {
     setIsRotated((prev) => !prev);
@@ -128,7 +145,8 @@ export function Soroban2D5({
 
   const shouldShowValue = revealValue || (!interactive && showValue);
 
-  const getContainerStyles = () => {
+  // 🎨 تخزين أنماط الحاوية
+  const containerStyles = useMemo(() => {
     if (currentTheme === 'classic-wood') {
       return {
         background: '#3d2817',
@@ -148,9 +166,7 @@ export function Soroban2D5({
       border: '2.5px solid rgba(186,230,253,0.8)',
       boxShadow: '0 0 30px rgba(56,189,248,0.4), inset 0 0 20px rgba(255,255,255,0.6), 0 10px 25px rgba(0,0,0,0.5)',
     };
-  };
-
-  const isSmallColumns = columns <= 4;
+  }, [currentTheme]);
 
   return (
     <div className="w-full flex flex-col items-center gap-1.5 select-none">
@@ -198,11 +214,12 @@ export function Soroban2D5({
         className="relative rounded-2xl sm:rounded-3xl max-w-full backdrop-blur-lg"
         style={{
           padding: '6px 8px',
-          ...getContainerStyles(),
+          ...containerStyles,
         }}
       >
+        {/* تم إزالة overflow-hidden للسماح بظهور تسميات الأعمدة العلوية بوضوح تام */}
         <div
-          className={`relative rounded-xl sm:rounded-2xl max-w-full ${isSmallColumns ? 'overflow-hidden' : 'overflow-x-auto scrollbar-none'}`}
+          className="relative rounded-xl sm:rounded-2xl max-w-full overflow-x-auto scrollbar-none"
           style={{
             padding: '4px 8px',
             background:
@@ -216,7 +233,7 @@ export function Soroban2D5({
         >
           <div
             className="flex flex-row-reverse items-center justify-center min-w-max mx-auto"
-            style={{ gap: dynamicGap, paddingTop: '16px', paddingBottom: '4px' }}
+            style={{ gap: dynamicGap, paddingTop: '36px', paddingBottom: '6px' }}
             dir="rtl"
           >
             {colStates.map((state, originalIdx) => {
@@ -259,7 +276,7 @@ export function Soroban2D5({
           <div className="flex justify-center items-center gap-2 mt-1.5">
             <button
               type="button"
-              onClick={handleResetAll}
+              onClick={resetAll}
               className="px-3 py-0.5 rounded-full bg-cyan-400/20 hover:bg-cyan-400/40 active:scale-95 text-cyan-100 font-extrabold shadow-[0_0_10px_rgba(34,211,238,0.4)] border border-cyan-200/40 backdrop-blur-md transition text-xs"
             >
               💧 إعادة الكل
