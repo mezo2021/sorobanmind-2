@@ -23,39 +23,45 @@ interface Soroban2D5Props {
   beamHighlight?: boolean;
   rodTint?: RodTint;
   highlightColumns?: number[];
-  dimColumns?: number[];
+  dimColumns?: number[];   // 🆕 أعمدة مطموسة
   hideColumnLabels?: boolean;
 }
 
-function useViewportDimensions() {
-  const [dimensions, setDimensions] = useState({
-    width: typeof window !== 'undefined' ? window.innerWidth : 390,
-    height: typeof window !== 'undefined' ? window.innerHeight : 844,
+function useResponsiveSize() {
+  const [size, setSize] = useState<'sm' | 'md' | 'lg'>(() => {
+    if (typeof window === 'undefined') return 'md';
+    const w = window.innerWidth;
+    if (w < 480) return 'sm';
+    if (w < 768) return 'md';
+    return 'lg';
   });
-
   useEffect(() => {
     const handleResize = () => {
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
+      const w = window.innerWidth;
+      if (w < 480) setSize('sm');
+      else if (w < 768) setSize('md');
+      else setSize('lg');
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  return dimensions;
+  return size;
 }
 
-function getAutoBeadSize(columns: number, viewportWidth: number): number {
+const SIZE_CONFIG = {
+  sm: { beadSize: 34, gap: 10, framePadding: 14, innerPadding: 12, height: 380, topPadding: 34, bottomPadding: 10, titleSize: 'text-base', valueSize: 'text-2xl' },
+  md: { beadSize: 44, gap: 14, framePadding: 18, innerPadding: 14, height: 440, topPadding: 40, bottomPadding: 12, titleSize: 'text-lg', valueSize: 'text-3xl' },
+  lg: { beadSize: 56, gap: 20, framePadding: 26, innerPadding: 18, height: 520, topPadding: 48, bottomPadding: 14, titleSize: 'text-2xl', valueSize: 'text-5xl' },
+};
+
+function getAutoBeadSize(columns: number): number {
   if (columns <= 2) return 52;
   if (columns <= 3) return 46;
   if (columns <= 4) return 38;
   if (columns <= 5) return 32;
   if (columns <= 6) return 28;
-  // للأعمدة 7 وما فوق: حجم ديناميكي مريح مع التمرير الأفقي
-  const calculated = Math.round(viewportWidth * 0.085);
-  return Math.min(36, Math.max(26, calculated));
+  if (columns <= 9) return 20;
+  return 16;
 }
 
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
@@ -76,7 +82,7 @@ export function Soroban2D5({
   revealValue = false,
   demoValue,
   size = 'auto',
-  autoBeadSize = true,
+  autoBeadSize = false,
   activeRodIndex,
   hideTitle = false,
   beamHighlight = false,
@@ -101,32 +107,41 @@ export function Soroban2D5({
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic';
 
-  const { width: vw, height: vh } = useViewportDimensions();
-  const [isRotated, setIsRotated] = useState(false);
+  const responsiveSize = useResponsiveSize();
+  const finalSize = size === 'auto' ? responsiveSize : size;
+  const cfg = SIZE_CONFIG[finalSize];
 
-  // 🎯 حساب الارتفاع الديناميكي (clamp بين 260px و 380px)
-  const dynamicHeight = Math.min(380, Math.max(260, Math.round(vh * 0.38)));
+  const visibleColumns = (() => {
+    if (!autoBeadSize && finalSize === 'sm' && columns > 4) {
+      return Math.min(4, columns);
+    }
+    return columns;
+  })();
 
-  // 🎯 حساب حجم الخرزة والارتفاع الفعلي
+  const displayedStates = colStates.slice(-visibleColumns);
+  const displayOffset = columns - visibleColumns;
+
   const effectiveBeadSize = autoBeadSize
-    ? getAutoBeadSize(columns, vw)
-    : 38;
+    ? getAutoBeadSize(displayedStates.length)
+    : cfg.beadSize;
 
-  const effectiveHeight = Math.max(250, dynamicHeight);
-
-  // 🎯 الفجوة الديناميكية حسب عدد الأعمدة
-  const dynamicGap = columns > 6 ? 8 : columns > 4 ? 10 : 14;
+  const effectiveHeight = autoBeadSize
+    ? Math.round(cfg.height * (effectiveBeadSize / cfg.beadSize))
+    : cfg.height;
 
   useEffect(() => {
     if (initialValue > 0) setValue(initialValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (demoValue !== undefined) setValue(demoValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [demoValue]);
 
   useEffect(() => {
     onValueChange?.(totalValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalValue]);
 
   const handleResetAll = () => {
@@ -135,107 +150,88 @@ export function Soroban2D5({
     resetAll();
   };
 
-  const toggleRotation = () => {
-    playSound('hit');
-    vibrate('light');
-    setIsRotated((prev) => !prev);
-  };
-
   const shouldShowValue = revealValue || (!interactive && showValue);
 
   return (
-    <div className="w-full flex flex-col items-center gap-2 sm:gap-4 select-none">
+    <div className="w-full flex flex-col items-center gap-3 sm:gap-5">
       {!hideTitle && (
-        <h3 className="text-base sm:text-lg font-bold text-amber-900 flex items-center gap-2">
+        <h3 className={`${cfg.titleSize} font-bold text-amber-900`}>
           🧮 عداد السوروبان
         </h3>
       )}
 
-      {/* 🎯 إظهار تلميح السحب للأعمدة 7+ */}
-      {columns >= 7 && (
-        <p className="text-[11px] text-amber-700 font-medium animate-pulse">
-          ← اسحب أفقيًا لرؤية بقية الأعمدة →
-        </p>
-      )}
-
       <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1, rotate: isRotated ? 90 : 0 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 22 }}
-        className="relative rounded-2xl sm:rounded-3xl max-w-full"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+        className="relative rounded-2xl sm:rounded-3xl"
         style={{
-          padding: '12px',
+          padding: cfg.framePadding,
           background: 'linear-gradient(135deg, #8b6f47 0%, #6b4423 50%, #4a2e15 100%)',
-          boxShadow: 'inset 0 4px 12px rgba(255,200,150,0.15), inset 0 -6px 16px rgba(0,0,0,0.4), 0 12px 28px rgba(0,0,0,0.3)',
+          boxShadow: 'inset 0 4px 12px rgba(255,200,150,0.15), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35), 0 8px 16px rgba(0,0,0,0.25)',
           border: '2px solid rgba(0,0,0,0.25)',
+          maxWidth: '100%',
         }}
       >
         <div
-          className="relative rounded-xl sm:rounded-2xl overflow-x-auto max-w-full scrollbar-thin"
+          className="relative rounded-xl sm:rounded-2xl"
           style={{
-            padding: '10px 14px',
+            padding: cfg.innerPadding,
             background: 'linear-gradient(180deg, #fef9f0 0%, #f5e6c8 100%)',
-            boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.12)',
+            boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.15)',
+            overflow: 'visible',
           }}
         >
           <div
-            className="flex flex-row-reverse items-center justify-center min-w-max"
-            style={{ gap: dynamicGap, paddingTop: '28px', paddingBottom: '10px' }}
+            className="flex flex-row-reverse items-center justify-center"
+            style={{ gap: cfg.gap, paddingTop: cfg.topPadding, paddingBottom: cfg.bottomPadding }}
             dir="rtl"
           >
-            {colStates.map((state, originalIdx) => {
+            {displayedStates.map((state, idx) => {
+              const originalIdx = idx + displayOffset;
               const displayOrder = columns - 1 - originalIdx;
               const isHighlighted = highlightColumns?.includes(originalIdx) ?? false;
               const isDim = dimColumns?.includes(originalIdx) ?? false;
               const finalTint: RodTint | undefined = isHighlighted ? 'white' : rodTint;
 
               return (
-                <div
+                <Rod2D5
                   key={originalIdx}
-                  style={{
-                    transform: isRotated ? 'rotate(-90deg)' : 'none',
-                    transition: 'transform 0.3s ease',
-                  }}
-                >
-                  <Rod2D5
-                    state={state}
-                    columnIndex={originalIdx}
-                    displayOrder={displayOrder}
-                    totalColumns={columns}
-                    onToggleUpper={() => interactive && toggleUpper(originalIdx)}
-                    onSetLower={(count) => interactive && setLower(originalIdx, count)}
-                    onReset={() => interactive && resetColumn(originalIdx)}
-                    height={effectiveHeight}
-                    beadSize={effectiveBeadSize}
-                    isActive={activeRodIndex === originalIdx}
-                    beamHighlight={beamHighlight}
-                    tint={finalTint}
-                    isDimmed={isDim}
-                  />
-                </div>
+                  state={state}
+                  columnIndex={originalIdx}
+                  displayOrder={displayOrder}
+                  totalColumns={displayedStates.length}
+                  onToggleUpper={() => interactive && toggleUpper(originalIdx)}
+                  onSetLower={(count) => interactive && setLower(originalIdx, count)}
+                  onReset={() => interactive && resetColumn(originalIdx)}
+                  height={effectiveHeight}
+                  beadSize={effectiveBeadSize}
+                  isActive={activeRodIndex === originalIdx}
+                  beamHighlight={beamHighlight}
+                  tint={finalTint}
+                  isDimmed={isDim}
+                />
               );
             })}
           </div>
+
+          {hideColumnLabels && <div className="h-0" />}
+
+          {displayOffset > 0 && (
+            <p className="text-center text-[10px] text-amber-700 mt-1 font-body">
+              ✨ يتم عرض {formatByStyle(visibleColumns, numberStyle)} أعمدة
+            </p>
+          )}
         </div>
 
-        {/* 🎯 الأزرار التفاعلية (إعادة الكل + أزرار التحكم) */}
         {interactive && (
-          <div className="flex justify-center items-center gap-2 mt-2 sm:mt-3">
+          <div className="flex justify-center gap-2 mt-3 sm:mt-4">
             <button
               type="button"
               onClick={handleResetAll}
-              className="px-4 py-1.5 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 text-white font-bold shadow-md backdrop-blur-sm transition text-xs sm:text-sm"
+              className="px-4 py-1.5 sm:px-6 sm:py-2 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold shadow-lg backdrop-blur-sm transition text-xs sm:text-sm"
             >
               ↺ إعادة الكل
-            </button>
-
-            <button
-              type="button"
-              onClick={toggleRotation}
-              title="تدوير المعداد"
-              className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 text-white font-bold shadow-md backdrop-blur-sm transition text-xs"
-            >
-              ↻
             </button>
           </div>
         )}
@@ -245,17 +241,23 @@ export function Soroban2D5({
         <AnimatePresence mode="popLayout">
           <motion.div
             key={`${totalValue}-${numberStyle}`}
-            initial={{ scale: 0.6, opacity: 0, y: 10 }}
+            initial={{ scale: 0.6, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.6, opacity: 0, y: -10 }}
+            exit={{ scale: 0.6, opacity: 0, y: -20 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-            className="text-2xl sm:text-3xl font-black text-amber-900 tabular-nums"
-            style={{ fontFamily: 'monospace', textShadow: '0 2px 4px rgba(139,111,71,0.2)' }}
+            className={`${cfg.valueSize} font-black text-amber-900 tabular-nums`}
+            style={{ fontFamily: 'monospace', textShadow: '0 4px 8px rgba(139,111,71,0.3)' }}
             dir={isArabic ? 'rtl' : 'ltr'}
           >
             {formatByStyle(totalValue, numberStyle)}
           </motion.div>
         </AnimatePresence>
+      )}
+
+      {interactive && (
+        <p className="text-[10px] sm:text-sm text-amber-700 text-center max-w-md px-2">
+          💡 اضغط على الخرزة لتفعيلها.
+        </p>
       )}
     </div>
   );
