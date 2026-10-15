@@ -651,6 +651,21 @@ export const selectRecentRemediation = (days: number) =>
     const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
     return state.remediationHistory.filter((s) => s.completedAt >= cutoff);
   };
+/**
+ * 🎯 دقة الملاحظة — نسبة الإجابات الصحيحة من مجموع المحاولات
+ * المصدر: skillProgress (حقيقي)
+ */
+export const selectObservationAccuracy = (state: ProgressState): number => {
+  const entries = Object.values(state.skillProgress);
+  let totalAttempts = 0;
+  let totalCorrect = 0;
+  for (const s of entries) {
+    totalAttempts += s.attempts ?? 0;
+    totalCorrect += s.correct ?? 0;
+  }
+  if (totalAttempts === 0) return 0;
+  return Math.min(100, Math.round((totalCorrect / totalAttempts) * 100));
+};
 
 // ═══ 🆕 Selectors نظام التذاكر ═══
 
