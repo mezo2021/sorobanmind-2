@@ -1,6 +1,6 @@
 // src/components/soroban2d5/Rod2D5.tsx
 import { motion } from 'framer-motion';
-import { Bead2D5 } from './Bead2D5';
+import { Bead2D5, type BeadColorType } from './Bead2D5';
 import type { BeadState } from './useSorobanLogic';
 import type { RodTint } from '@/components/flash/types';
 
@@ -61,10 +61,11 @@ export function Rod2D5({
   const gap = 2;
   const step = beadHeight + gap;
 
+  // سقف أقصى 330px للارتفاع الديناميكي بدون شريط تمرير زائد
   const effectiveHeight = Math.min(330, height);
   const rodHeight = effectiveHeight - 26;
   
-  // النسبة 1:4 للعارضة
+  // النسبة الدقيقة 1:4 للعارضة
   const beamY = Math.round(rodHeight * 0.25);
 
   const upperBeadTop = 2;
@@ -80,29 +81,45 @@ export function Rod2D5({
   const wrapperOpacity = isDimmed ? 0.25 : 1;
   const wrapperFilter = isDimmed ? 'grayscale(1)' : 'none';
 
-  // تحديد ألوان الخرز حسب الثيم
-  let upperColor: 'dark' | 'wood' | 'gold' = 'dark';
-  let lowerColor: 'dark' | 'wood' | 'gold' = 'dark';
-  let upperActiveFilter = '';
-  let lowerActiveFilter = '';
+  // 🎨 تحديد ألوان الخرز بناءً على قسم الفلاش (tint) أو الثيمات وقاعدة التلامس
+  let upperBeadColor: BeadColorType = 'charcoal';
+  let lowerBeadColors: BeadColorType[] = [
+    'charcoal',
+    'charcoal',
+    'charcoal',
+    'charcoal',
+  ];
 
-  if (theme === 'classic-wood') {
-    upperColor = 'dark';
-    lowerColor = 'wood';
-  } else if (theme === 'barbie-pink') {
-    upperColor = 'dark';
-    lowerColor = 'dark';
-    upperActiveFilter = 'sepia(1) saturate(6) hue-rotate(300deg) brightness(1.2)'; // ذهبي وردي
-    lowerActiveFilter = 'sepia(1) saturate(8) hue-rotate(280deg) brightness(1.1)'; // وردي نيون
+  if (tint) {
+    // 🟢 أو 🔴 حالة قسم الفلاش التعليمي (ألوان وظيفية صارمة)
+    const flashColor: BeadColorType =
+      tint === 'emerald' ? 'emerald' : tint === 'red' ? 'red' : 'white';
+    upperBeadColor = flashColor;
+    lowerBeadColors = [flashColor, flashColor, flashColor, flashColor];
   } else {
-    // Ocean Laser (الافتراضي)
-    upperActiveFilter = 'sepia(1) saturate(5) hue-rotate(-10deg) brightness(1.2)'; // ذهبي شتوي
-    lowerActiveFilter = 'sepia(1) saturate(5) hue-rotate(150deg) brightness(1.1)'; // سماوي مائي
+    // ✨ حالة الثيمات في الأقسام الأخرى (تعلم، تمرن، أنزان، اختبارات)
+    const isUpperActive = state.upper === 5;
+
+    if (theme === 'classic-wood') {
+      upperBeadColor = isUpperActive ? 'wood' : 'charcoal';
+      lowerBeadColors = lowerBeads.map((idx) => (idx < state.lower ? 'wood' : 'charcoal'));
+    } else if (theme === 'barbie-pink') {
+      upperBeadColor = isUpperActive ? 'barbie' : 'charcoal'; // وردي غامق للعلوي الملامس
+      lowerBeadColors = lowerBeads.map((idx) =>
+        idx < state.lower ? ('cyan' as BeadColorType) : 'charcoal'
+      ); // تم توحيد السماوي والبنفسجي للتناسق الباربي الأنيق
+    } else {
+      // Ocean Laser (الافتراضي)
+      upperBeadColor = isUpperActive ? 'gold' : 'charcoal'; // شمسي مضاء للعلوي الملامس
+      lowerBeadColors = lowerBeads.map((idx) =>
+        idx < state.lower ? ('cyan' as BeadColorType) : 'charcoal'
+      ); // سماوي فاتح مضاء للسفلي الملامس
+    }
   }
 
   return (
     <div
-      className="relative flex flex-col items-center"
+      className="relative flex flex-col items-center overflow-hidden"
       style={{
         height: effectiveHeight,
         width: beadSize * 1.3,
@@ -118,26 +135,27 @@ export function Rod2D5({
         />
       )}
 
-      {/* Rod line */}
+      {/* عمود السوروبان (Rod) */}
       <div
         style={{
           position: 'absolute',
           top: 0,
           left: '50%',
           transform: 'translateX(-50%)',
-          width: 5,
+          width: 4,
           height: rodHeight,
-          background: theme === 'classic-wood' 
-            ? 'linear-gradient(90deg, #3d2817 0%, #8b6344 50%, #3d2817 100%)'
-            : theme === 'barbie-pink'
-            ? 'linear-gradient(90deg, #831843 0%, #ec4899 50%, #831843 100%)'
-            : 'linear-gradient(90deg, #1e293b 0%, #38bdf8 50%, #1e293b 100%)',
-          borderRadius: 3,
+          background:
+            theme === 'classic-wood'
+              ? 'linear-gradient(90deg, #3d2817 0%, #8b6344 50%, #3d2817 100%)'
+              : theme === 'barbie-pink'
+              ? 'linear-gradient(90deg, #831843 0%, #ec4899 50%, #831843 100%)'
+              : 'linear-gradient(90deg, #1e293b 0%, #38bdf8 50%, #1e293b 100%)',
+          borderRadius: 2,
           boxShadow: '0 0 6px rgba(0,0,0,0.3)',
         }}
       />
 
-      {/* Upper bead */}
+      {/* الخرزة العلوية (الشمس) */}
       <div
         style={{
           position: 'absolute',
@@ -147,64 +165,67 @@ export function Rod2D5({
           transition: 'top 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}
       >
-        <div style={state.upper === 5 && theme !== 'classic-wood' ? { filter: upperActiveFilter } : {}}>
-          <Bead2D5
-            color={upperColor}
-            active={state.upper === 5}
-            position="upper"
-            size={beadSize}
-            onClick={onToggleUpper}
-            animateOffset={false}
-          />
-        </div>
+        <Bead2D5
+          color={upperBeadColor}
+          active={state.upper === 5}
+          position="upper"
+          size={beadSize}
+          onClick={onToggleUpper}
+          animateOffset={false}
+        />
       </div>
 
-      {/* Beam */}
+      {/* 🎯 العارضة الليزرية الرفيعة الجديدة (لا تغطي الخرزة العلوية) */}
       {theme === 'classic-wood' ? (
         <div
           style={{
             position: 'absolute',
-            top: beamY - 3,
-            left: -8,
-            width: beadSize * 1.3 + 16,
-            height: 6,
+            top: beamY - 2,
+            left: -6,
+            width: beadSize * 1.3 + 12,
+            height: 4,
             background: 'linear-gradient(180deg, #3d2817 0%, #1a0f08 100%)',
-            borderRadius: 3,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
+            borderRadius: 2,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
           }}
         />
       ) : (
         <div
           style={{
             position: 'absolute',
-            top: beamY - 4,
-            left: -10,
-            width: beadSize * 1.3 + 20,
-            height: 8,
-            background: theme === 'barbie-pink' 
-              ? 'linear-gradient(180deg, rgba(255,192,203,0.9) 0%, rgba(219,39,119,0.7) 100%)'
-              : 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(200,220,240,0.7) 100%)',
-            borderRadius: 4,
-            boxShadow: '0 0 12px rgba(255,255,255,0.8), 0 2px 6px rgba(0,0,0,0.3)',
+            top: beamY - 2.5,
+            left: -8,
+            width: beadSize * 1.3 + 16,
+            height: 5,
+            background:
+              theme === 'barbie-pink'
+                ? 'linear-gradient(180deg, rgba(255,192,203,0.95) 0%, rgba(219,39,119,0.8) 100%)'
+                : 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(200,220,240,0.8) 100%)',
+            borderRadius: 2.5,
+            boxShadow: '0 0 10px rgba(255,255,255,0.9), 0 2px 4px rgba(0,0,0,0.4)',
             overflow: 'hidden',
-            border: '1px solid rgba(255,255,255,0.9)',
+            border: '0.5px solid rgba(255,255,255,0.9)',
           }}
         >
-          {/* Laser scanning back and forth */}
+          {/* شعاع الليزر المتحرك ذهاباً وإياباً */}
           <motion.div
             animate={{ x: ['-100%', '100%'] }}
             transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut', repeatType: 'reverse' }}
             style={{
               position: 'absolute',
-              top: 2,
+              top: 1,
               left: 0,
               width: '50%',
-              height: 4,
-              background: theme === 'barbie-pink'
-                ? 'linear-gradient(90deg, transparent, #ec4899, #f472b6, #ec4899, transparent)'
-                : 'linear-gradient(90deg, transparent, #ef4444, #ff7b7b, #ef4444, transparent)',
-              boxShadow: theme === 'barbie-pink' ? '0 0 8px #ec4899, 0 0 15px #db2777' : '0 0 8px #ef4444, 0 0 15px #dc2626',
-              borderRadius: 2,
+              height: 3,
+              background:
+                theme === 'barbie-pink'
+                  ? 'linear-gradient(90deg, transparent, #ec4899, #f472b6, #ec4899, transparent)'
+                  : 'linear-gradient(90deg, transparent, #ef4444, #ff7b7b, #ef4444, transparent)',
+              boxShadow:
+                theme === 'barbie-pink'
+                  ? '0 0 6px #ec4899, 0 0 12px #db2777'
+                  : '0 0 6px #ef4444, 0 0 12px #dc2626',
+              borderRadius: 1.5,
             }}
           />
         </div>
@@ -214,22 +235,23 @@ export function Rod2D5({
         <div
           className="absolute animate-pulse pointer-events-none z-20"
           style={{
-            top: beamY - 8,
-            left: -10,
-            width: beadSize * 1.3 + 20,
-            height: 16,
-            borderRadius: 8,
+            top: beamY - 6,
+            left: -8,
+            width: beadSize * 1.3 + 16,
+            height: 12,
+            borderRadius: 6,
             background: 'rgba(239,68,68,0.35)',
-            boxShadow: '0 0 20px rgba(239,68,68,0.8), 0 0 40px rgba(239,68,68,0.4)',
+            boxShadow: '0 0 16px rgba(239,68,68,0.8), 0 0 30px rgba(239,68,68,0.4)',
           }}
         />
       )}
 
-      {/* Lower beads */}
+      {/* الخرزات السفلية (المحيط) */}
       {lowerBeads.map((idx) => {
         const isBeadActive = idx < state.lower;
         const topActive = lowerAreaTop + idx * step;
         const topInactive = lowerAreaBottom - (3 - idx) * step;
+        const beadColor = lowerBeadColors[idx] ?? 'charcoal';
 
         return (
           <div
@@ -242,27 +264,25 @@ export function Rod2D5({
               transition: 'top 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
             }}
           >
-            <div style={isBeadActive && theme !== 'classic-wood' ? { filter: lowerActiveFilter } : {}}>
-              <Bead2D5
-                color={lowerColor}
-                active={isBeadActive}
-                position="lower"
-                size={beadSize}
-                onClick={() => {
-                  if (isBeadActive) {
-                    onSetLower(idx);
-                  } else {
-                    onSetLower(idx + 1);
-                  }
-                }}
-                animateOffset={false}
-              />
-            </div>
+            <Bead2D5
+              color={beadColor}
+              active={isBeadActive}
+              position="lower"
+              size={beadSize}
+              onClick={() => {
+                if (isBeadActive) {
+                  onSetLower(idx);
+                } else {
+                  onSetLower(idx + 1);
+                }
+              }}
+              animateOffset={false}
+            />
           </div>
         );
       })}
 
-      {/* Column label */}
+      {/* تسمية العمود */}
       <div
         className="absolute text-cyan-200 font-extrabold drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]"
         style={{
