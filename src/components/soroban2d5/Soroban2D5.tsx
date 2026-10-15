@@ -116,7 +116,7 @@ export function Soroban2D5({
   const effectiveHeight = Math.min(330, Math.max(250, Math.round(vh * 0.36)));
   const dynamicGap = columns > 6 ? 4 : columns > 4 ? 6 : 10;
 
-  // 🛡️ معالجة القيمة الأولية مرة واحدة فقط
+  // 🛡️ معالجة القيمة الأولية مرة واحدة فقط بشكل آمن
   const isInitializedRef = useRef(false);
   useEffect(() => {
     if (!isInitializedRef.current && initialValue > 0) {
@@ -125,7 +125,7 @@ export function Soroban2D5({
     }
   }, [initialValue, setValue]);
 
-  // 🛡️ معالجة العرض التوضيحي
+  // 🛡️ معالجة العرض التوضيحي مع تصفير الحالة عند العودة لـ undefined
   useEffect(() => {
     if (demoValue !== undefined) {
       setValue(demoValue);
@@ -237,7 +237,7 @@ export function Soroban2D5({
         >
           <div
             className="flex flex-row-reverse items-center justify-center min-w-max mx-auto"
-            style={{ gap: dynamicGap, paddingTop: '36px', paddingBottom: '6px' }}
+            style={{ gap: dynamicGap, paddingTop: '38px', paddingBottom: '6px' }}
             dir="rtl"
           >
             {colStates.map((state, originalIdx) => {
