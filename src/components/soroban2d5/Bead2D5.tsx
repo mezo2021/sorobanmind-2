@@ -1,10 +1,11 @@
 // src/components/soroban2d5/Bead2D5.tsx
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 
 export type BeadColorType = 
-  | 'charcoal' // أسود فحمي أنيق (الأساسي غير المفعّل)
-  | 'cyan'     // سماوي مائي (المحيط السفلي)
-  | 'gold'     // ذهبي شمسي (الشمس العلوي)
+  | 'charcoal' // أسود فحمي أنيق (الخامل)
+  | 'cyan'     // سماوي مائي (المحيط السفلي الملامس)
+  | 'gold'     // ذهبي شمسي (الشمس العلوي الملامس)
   | 'emerald'  // أخضر ناصع (الفلاش - الناتج)
   | 'red'      // أحمر عنابي (الفلاش - المقسوم/المضروب)
   | 'white'    // أبيض مضيء (الفلاش - التحديد)
@@ -19,6 +20,9 @@ interface Bead2D5Props {
   onClick?: () => void;
   animateOffset?: boolean;
 }
+
+// 📐 نسبة ارتفاع الخرزة المحددة بـ 42% من عرضها لمظهر البيضاوي المجسم
+const BEAD_ASPECT_RATIO = 0.42;
 
 const COLOR_STYLES: Record<BeadColorType, { light: string; shadow: string }> = {
   charcoal: {
@@ -55,7 +59,18 @@ const COLOR_STYLES: Record<BeadColorType, { light: string; shadow: string }> = {
   },
 };
 
-export function Bead2D5({
+/**
+ * 🧮 دالة مساعدة لحساب الإزاحة العمودية للخرزة وتبسيط الشروط المتداخلة
+ */
+function calculateOffset(position: 'upper' | 'lower', active: boolean, animateOffset: boolean, size: number): number {
+  if (!animateOffset) return 0;
+  if (position === 'upper') {
+    return active ? size * 0.5 : 0;
+  }
+  return active ? -size * 0.6 : 0;
+}
+
+export const Bead2D5 = memo(function Bead2D5({
   color = 'charcoal',
   active,
   position,
@@ -63,22 +78,14 @@ export function Bead2D5({
   onClick,
   animateOffset = true,
 }: Bead2D5Props) {
-  const offset = animateOffset
-    ? position === 'upper'
-      ? active
-        ? size * 0.5
-        : 0
-      : active
-      ? -size * 0.6
-      : 0
-    : 0;
-
+  const offset = calculateOffset(position, active, animateOffset, size);
   const styleConfig = COLOR_STYLES[color] ?? COLOR_STYLES.charcoal;
 
   return (
     <motion.button
       type="button"
       aria-label={`خرزة ${color} ${active ? 'مفعّلة' : 'غير مفعّلة'}`}
+      aria-pressed={active}
       onClick={onClick}
       initial={false}
       animate={{ y: offset }}
@@ -88,18 +95,18 @@ export function Bead2D5({
         damping: 28,
         mass: 0.8,
       }}
-      whileHover={{ scale: 1.06 }}
-      whileTap={{ scale: 0.94 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       style={{
         width: size,
-        height: size * 0.42,
+        height: size * BEAD_ASPECT_RATIO,
         background: styleConfig.light,
         boxShadow: styleConfig.shadow,
         borderRadius: '50%',
         border: '1px solid rgba(0,0,0,0.25)',
         cursor: 'pointer',
         position: 'relative',
-        transformStyle: 'preserve-3d',
+        willChange: 'transform',
       }}
     >
       {/* لمعة الانعكاس الزجاجي العلوية */}
@@ -117,6 +124,6 @@ export function Bead2D5({
       />
     </motion.button>
   );
-}
+});
 
 export default Bead2D5;
