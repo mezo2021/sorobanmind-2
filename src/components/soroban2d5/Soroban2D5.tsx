@@ -1,6 +1,6 @@
 // src/components/soroban2d5/Soroban2D5.tsx
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSorobanLogic } from './useSorobanLogic';
 import { Rod2D5 } from './Rod2D5';
 import { useBeadSound } from './useBeadSound';
@@ -210,35 +210,27 @@ export function Soroban2D5({
   const finalSize = size === 'auto' ? responsiveSize : size;
   const cfg = SIZE_CONFIG[finalSize];
 
+  // 🆕 كشف Flash Context
+  const isFlashContext = rodTint === 'red' || rodTint === 'emerald' || rodTint === 'white';
+
+  // 🎨 الثيم الفعلي — يُجبر classic في Flash
   const [currentTheme, setCurrentTheme] = useState<SorobanTheme>(() => {
     if (typeof window === 'undefined') return initialTheme;
     const saved = window.localStorage.getItem(THEME_STORAGE_KEY) as SorobanTheme | null;
     return saved && THEMES[saved] ? saved : initialTheme;
   });
 
+  // 💾 حفظ الثيم — فقط خارج Flash
   useEffect(() => {
+    if (isFlashContext) return;
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
     }
-  }, [currentTheme]);
+  }, [currentTheme, isFlashContext]);
 
-  // 🆕 إضاءة العمود عند اللمس (لا إطار)
-  const [touchGlow, setTouchGlow] = useState(false);
-  const touchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleBeadInteract = () => {
-    setTouchGlow(true);
-    if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
-    touchTimerRef.current = setTimeout(() => setTouchGlow(false), 2000);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
-    };
-  }, []);
-
-  const ts = THEMES[currentTheme];
+  // 🎨 الثيم المستخدم فعليًا
+  const effectiveTheme: SorobanTheme = isFlashContext ? 'classic' : currentTheme;
+  const ts = THEMES[effectiveTheme];
 
   const visibleColumns = (() => {
     if (!autoBeadSize && finalSize === 'sm' && columns > 4) return Math.min(4, columns);
@@ -275,49 +267,51 @@ export function Soroban2D5({
 
   return (
     <div className="w-full flex flex-col items-center gap-2 relative">
-      {/* العنوان + مُبدّل الثيمات */}
-      <div className="flex items-center justify-between gap-2 w-full px-1">
-        <div className="flex gap-1.5">
-          {(['classic', 'ocean', 'barbie'] as SorobanTheme[]).map((t) => {
-            const active = currentTheme === t;
-            return (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setCurrentTheme(t)}
-                aria-label={THEMES[t].name}
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: active ? `${THEMES[t].frameGlow}33` : 'rgba(255,255,255,0.06)',
-                  border: active ? `2px solid ${THEMES[t].frameGlow}` : '2px solid transparent',
-                  boxShadow: active ? `0 0 12px ${THEMES[t].frameGlow}` : 'none',
-                  fontSize: 15,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {THEMES[t].icon}
-              </button>
-            );
-          })}
-        </div>
+      {/* 🎨 صف الثيمات + العنوان — يُخفى في Flash */}
+      {!isFlashContext && (
+        <div className="flex items-center justify-between gap-2 w-full px-1">
+          <div className="flex gap-1.5">
+            {(['classic', 'ocean', 'barbie'] as SorobanTheme[]).map((t) => {
+              const active = currentTheme === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setCurrentTheme(t)}
+                  aria-label={THEMES[t].name}
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: active ? `${THEMES[t].frameGlow}33` : 'rgba(255,255,255,0.06)',
+                    border: active ? `2px solid ${THEMES[t].frameGlow}` : '2px solid transparent',
+                    boxShadow: active ? `0 0 12px ${THEMES[t].frameGlow}` : 'none',
+                    fontSize: 15,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {THEMES[t].icon}
+                </button>
+              );
+            })}
+          </div>
 
-        {!hideTitle && (
-          <h3
-            className={`${cfg.titleSize} font-bold`}
-            style={{ color: ts.titleColor, transition: 'color 0.15s' }}
-          >
-            {currentTheme === 'classic' && '🟤 السوروبان الخشبي'}
-            {currentTheme === 'ocean' && '🏄 السوروبان الليزري'}
-            {currentTheme === 'barbie' && '❤️ سوروبان باربي'}
-          </h3>
-        )}
-      </div>
+          {!hideTitle && (
+            <h3
+              className={`${cfg.titleSize} font-bold`}
+              style={{ color: ts.titleColor, transition: 'color 0.15s' }}
+            >
+              {currentTheme === 'classic' && '🟤 السوروبان الخشبي'}
+              {currentTheme === 'ocean' && '🏄 السوروبان الليزري'}
+              {currentTheme === 'barbie' && '❤️ سوروبان باربي'}
+            </h3>
+          )}
+        </div>
+      )}
 
       {/* الإطار */}
       <div className="relative inline-flex">
@@ -380,7 +374,6 @@ export function Soroban2D5({
                     onToggleUpper={() => interactive && toggleUpper(originalIdx)}
                     onSetLower={(count) => interactive && setLower(originalIdx, count)}
                     onReset={() => interactive && resetColumn(originalIdx)}
-                    onBeadInteract={handleBeadInteract}
                     height={effectiveHeight}
                     beadSize={effectiveBeadSize}
                     isActive={activeRodIndex === originalIdx}
@@ -423,7 +416,7 @@ export function Soroban2D5({
       {shouldShowValue && (
         <AnimatePresence mode="popLayout">
           <motion.div
-            key={`${totalValue}-${numberStyle}-${currentTheme}`}
+            key={`${totalValue}-${numberStyle}-${effectiveTheme}`}
             initial={{ scale: 0.6, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.6, opacity: 0, y: -20 }}
