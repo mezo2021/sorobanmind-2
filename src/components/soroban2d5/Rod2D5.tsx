@@ -1,5 +1,5 @@
 // src/components/soroban2d5/Rod2D5.tsx
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useRef, useState } from 'react';
 import { Bead2D5 } from './Bead2D5';
 import type { BeadState } from './useSorobanLogic';
 import type { RodTint } from '@/components/flash/types';
@@ -13,7 +13,6 @@ interface Rod2D5Props {
   onToggleUpper: () => void;
   onSetLower: (count: number) => void;
   onReset: () => void;
-  onBeadInteract?: () => void;
   height?: number;
   beadSize?: number;
   isActive?: boolean;
@@ -54,7 +53,11 @@ function getLabelFontSize(text: string, isVertical: boolean): number {
   return 10;
 }
 
-// 🆕 غلاف زجاجي — يُعطَّل تمامًا في وضع Flash
+// ============================================================
+// 🌟 غلاف زجاجي جميل (التصميم الأول)
+//    - mix-blend-mode + backdrop-filter للزجاج الحقيقي
+//    - يُعطَّل تمامًا في Flash Mode
+// ============================================================
 function BeadGlass({
   children,
   isBeadActive,
@@ -70,6 +73,7 @@ function BeadGlass({
   dotColor: string;
   isFlashMode: boolean;
 }) {
+  // 🚫 في وضع Flash: لا شيء
   if (isFlashMode) {
     return <>{children}</>;
   }
@@ -78,30 +82,36 @@ function BeadGlass({
     <div style={{ position: 'relative' }}>
       {children}
 
+      {/* تلوين بلون الثيم — mix-blend-mode */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           borderRadius: '50%',
           background: tintColor,
+          mixBlendMode: 'color',
           pointerEvents: 'none',
         }}
       />
 
+      {/* زجاج كريستال حقيقي — backdrop-filter */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           borderRadius: '50%',
           background:
-            'linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.02) 40%, rgba(255,255,255,0.28) 100%)',
-          border: '1px solid rgba(255,255,255,0.5)',
+            'linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.35) 100%)',
+          border: '1px solid rgba(255,255,255,0.6)',
           boxShadow:
-            'inset 0 1px 3px rgba(255,255,255,0.8), inset 0 -2px 3px rgba(0,0,0,0.12)',
+            'inset 0 1px 4px rgba(255,255,255,0.9), inset 0 -2px 4px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.15)',
+          backdropFilter: 'blur(1.5px)',
+          WebkitBackdropFilter: 'blur(1.5px)',
           pointerEvents: 'none',
         }}
       />
 
+      {/* النقطة الملونة */}
       <div
         style={{
           position: 'absolute',
@@ -112,11 +122,12 @@ function BeadGlass({
           height: 3,
           borderRadius: '50%',
           background: dotColor,
-          boxShadow: `0 0 3px ${dotColor}`,
+          boxShadow: `0 0 3px ${dotColor}, 0 0 6px ${dotColor}88`,
           pointerEvents: 'none',
         }}
       />
 
+      {/* الإضاءة عند التفعيل */}
       {isBeadActive && (
         <div
           className="bead-glow-pulse"
@@ -124,7 +135,8 @@ function BeadGlass({
             position: 'absolute',
             inset: -6,
             borderRadius: '50%',
-            background: `radial-gradient(ellipse at center, ${glowColor}cc 0%, ${glowColor}44 45%, transparent 80%)`,
+            background: `radial-gradient(ellipse at center, ${glowColor}dd 0%, ${glowColor}55 45%, transparent 80%)`,
+            filter: 'blur(2px)',
             pointerEvents: 'none',
             willChange: 'opacity, transform',
           }}
@@ -141,7 +153,6 @@ export function Rod2D5({
   onToggleUpper,
   onSetLower,
   onReset: _onReset,
-  onBeadInteract,
   height = 440,
   beadSize = 44,
   isActive = false,
@@ -202,14 +213,7 @@ export function Rod2D5({
     setClickGlow(true);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setClickGlow(false), 2000);
-    onBeadInteract?.();
   };
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
 
   const handleUpperClick = () => {
     triggerGlow();
@@ -273,6 +277,7 @@ export function Rod2D5({
         />
       )}
 
+      {/* العمود */}
       <div
         style={{
           position: 'absolute',
@@ -288,6 +293,7 @@ export function Rod2D5({
         }}
       />
 
+      {/* العلوية */}
       <div
         style={{
           position: 'absolute',
@@ -317,6 +323,7 @@ export function Rod2D5({
         </BeadGlass>
       </div>
 
+      {/* العارضة */}
       <div
         style={{
           position: 'absolute',
@@ -371,6 +378,7 @@ export function Rod2D5({
         />
       )}
 
+      {/* السفلية */}
       {lowerBeads.map((idx) => {
         const isBeadActive = idx < state.lower;
         const topActive = lowerAreaTop + idx * step;
@@ -409,6 +417,7 @@ export function Rod2D5({
         );
       })}
 
+      {/* التسمية */}
       {showLabel && (
         <div
           className="absolute font-bold"
