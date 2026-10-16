@@ -55,7 +55,7 @@ function getLabelFontSize(text: string, isVertical: boolean): number {
 }
 
 // ============================================================
-// 🌟 غلاف زجاجي — بدون وهج خارجي، فقط ضوء داخلي عند التفعيل
+// 🌟 غلاف زجاجي موحّد — بلا ظل خارجي، حد داخلي رقيق، نقطة بيضاء
 // ============================================================
 function BeadGlass({
   children,
@@ -74,12 +74,10 @@ function BeadGlass({
   isFlashMode: boolean;
   enableGlass: boolean;
 }) {
-  // 🚫 Flash mode
   if (isFlashMode) {
     return <>{children}</>;
   }
 
-  // 🪵 classic: خشبي أصلي + ضوء داخلي فقط
   if (!enableGlass) {
     return (
       <div style={{ position: 'relative' }}>
@@ -102,7 +100,6 @@ function BeadGlass({
     );
   }
 
-  // ✨ ocean / barbie: زجاج + نقطة + ضوء داخلي
   return (
     <div style={{ position: 'relative' }}>
       {children}
@@ -118,22 +115,24 @@ function BeadGlass({
         }}
       />
 
+      {/* زجاج داخلي — بلا ظل خارجي */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           borderRadius: '50%',
           background:
-            'linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.35) 100%)',
-          border: '1px solid rgba(255,255,255,0.6)',
+            'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.03) 40%, rgba(255,255,255,0.28) 100%)',
+          border: '1px solid rgba(255,255,255,0.45)',
           boxShadow:
-            'inset 0 1px 4px rgba(255,255,255,0.9), inset 0 -2px 4px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.15)',
+            'inset 0 1px 3px rgba(255,255,255,0.85), inset 0 -1px 3px rgba(0,0,0,0.12)',
           backdropFilter: 'blur(1.5px)',
           WebkitBackdropFilter: 'blur(1.5px)',
           pointerEvents: 'none',
         }}
       />
 
+      {/* النقطة البيضاء */}
       <div
         style={{
           position: 'absolute',
@@ -144,12 +143,11 @@ function BeadGlass({
           height: 3,
           borderRadius: '50%',
           background: dotColor,
-          boxShadow: `0 0 3px ${dotColor}, 0 0 6px ${dotColor}88`,
+          boxShadow: `0 0 3px ${dotColor}, 0 0 6px ${dotColor}66`,
           pointerEvents: 'none',
         }}
       />
 
-      {/* 🆕 ضوء داخلي فقط — بدون وهج خارجي */}
       {isBeadActive && (
         <div
           className="bead-glow-pulse"
@@ -200,8 +198,8 @@ export function Rod2D5({
     lowerBeadTint: 'rgba(139,111,71,0.10)',
     upperBeadGlow: '#F5D896',
     lowerBeadGlow: '#E8C88A',
-    upperDot: '#8b6f47',
-    lowerDot: '#c19a6b',
+    upperDot: '#FFFFFF',
+    lowerDot: '#FFFFFF',
     labelColor: '#8b6f47',
     titleColor: '#8b6f47',
     valueColor: '#C9A227',
@@ -215,9 +213,12 @@ export function Rod2D5({
   const rodHeight = height - 30;
   const beamY = rodHeight * 0.25;
 
+  // 🆕 فجوة متناسبة بين الخرزة والعارضة (4px كحد أدنى)
+  const beamGap = Math.max(4, Math.round(beadSize * 0.12));
+
   const upperBeadTop = 2;
-  const upperBeadActive = beamY - beadHeight - 2;
-  const lowerAreaTop = beamY + 4;
+  const upperBeadActive = beamY - beadHeight - beamGap;
+  const lowerAreaTop = beamY + 4 + beamGap;
   const lowerAreaBottom = rodHeight - beadHeight - 2;
 
   const isVertical = (totalColumns ?? 0) >= 6;
@@ -257,7 +258,6 @@ export function Rod2D5({
     else onSetLower(idx + 1);
   };
 
-  // 🆕 معاكسة اتجاه الدوران للكتابة عند الدوران
   const labelTransform = isRotated
     ? 'translateX(-50%) rotate(-90deg)'
     : 'translateX(-50%)';
@@ -459,7 +459,11 @@ export function Rod2D5({
             bottom: 'calc(100% + 4px)',
             left: '50%',
             transform: labelTransform,
-            writingMode: isRotated ? 'horizontal-tb' : (isVertical ? 'vertical-rl' : 'horizontal-tb'),
+            writingMode: isRotated
+              ? 'horizontal-tb'
+              : isVertical
+              ? 'vertical-rl'
+              : 'horizontal-tb',
             textOrientation: 'mixed',
             lineHeight: 1.05,
             letterSpacing: isVertical && !isRotated ? 0 : 0.3,
@@ -472,7 +476,7 @@ export function Rod2D5({
           title={labelText}
         >
           {labelText}
-        </div>
+        </label>
       )}
     </div>
   );
