@@ -14,6 +14,7 @@ interface Rod2D5Props {
   onToggleUpper: () => void;
   onSetLower: (count: number) => void;
   onReset: () => void;
+  onBeadInteract?: () => void; // 🆕
   height?: number;
   beadSize?: number;
   isActive?: boolean;
@@ -21,7 +22,8 @@ interface Rod2D5Props {
   tint?: RodTint;
   isDimmed?: boolean;
   showLabel?: boolean;
-  themeStyles?: ThemeStyles; // 🆕
+  themeStyles?: ThemeStyles;
+  isRotated?: boolean; // 🆕
 }
 
 const COLUMN_LABELS: string[] = [
@@ -54,7 +56,7 @@ function getLabelFontSize(text: string, isVertical: boolean): number {
   return 10;
 }
 
-// 🆕 غلاف الخرزة: زجاج كريستال + تلوين + نقطة + إضاءة
+// غلاف زجاجي
 function BeadGlass({
   children,
   isBeadActive,
@@ -72,7 +74,6 @@ function BeadGlass({
     <div style={{ position: 'relative' }}>
       {children}
 
-      {/* تلوين بلون الثيم */}
       <div
         style={{
           position: 'absolute',
@@ -84,7 +85,6 @@ function BeadGlass({
         }}
       />
 
-      {/* زجاج كريستال */}
       <div
         style={{
           position: 'absolute',
@@ -101,7 +101,6 @@ function BeadGlass({
         }}
       />
 
-      {/* النقطة الملونة الصغيرة جدًا */}
       <div
         style={{
           position: 'absolute',
@@ -117,7 +116,6 @@ function BeadGlass({
         }}
       />
 
-      {/* الإضاءة عند التفعيل */}
       {isBeadActive && (
         <motion.div
           animate={{ opacity: [0.75, 1, 0.75], scale: [1, 1.08, 1] }}
@@ -143,6 +141,7 @@ export function Rod2D5({
   onToggleUpper,
   onSetLower,
   onReset: _onReset,
+  onBeadInteract,
   height = 440,
   beadSize = 44,
   isActive = false,
@@ -151,17 +150,17 @@ export function Rod2D5({
   isDimmed = false,
   showLabel = true,
   themeStyles,
+  isRotated = false,
 }: Rod2D5Props) {
-  // fallback في حال لم تُمرَّر themeStyles
   const ts: ThemeStyles = themeStyles ?? {
     icon: '', name: '',
-    frameBg: '', frameGlow: '#FFD700',
+    frameBg: '', frameGlow: '#C9A227',
     innerBg: '', innerBorder: '',
     rodGradient: 'linear-gradient(90deg, #5a5a5a 0%, #999 50%, #5a5a5a 100%)',
     rodGlow: '#999',
     beamBase: 'linear-gradient(180deg, #3d2817 0%, #1a0f08 100%)',
     beamSegments: '#8b6f47',
-    beamLaser: '#FFD700',
+    beamLaser: '#C9A227',
     upperBeadTint: 'rgba(139,111,71,0.10)',
     lowerBeadTint: 'rgba(139,111,71,0.10)',
     upperBeadGlow: '#5a3a1f',
@@ -170,16 +169,18 @@ export function Rod2D5({
     lowerDot: '#c19a6b',
     labelColor: '#8b6f47',
     titleColor: '#8b6f47',
-    valueColor: '#FFD700',
+    valueColor: '#C9A227',
   };
 
   const lowerBeads = [0, 1, 2, 3];
   const beadHeight = beadSize * 0.42;
-  const gap = 2;
+  const gap = 4; // ✅ تباعد جديد
   const step = beadHeight + gap;
 
   const rodHeight = height - 30;
-  const beamY = rodHeight / 2;
+
+  // ✅ العارضة على 25% (نسبة 1:3)
+  const beamY = rodHeight * 0.25;
 
   const upperBeadTop = 2;
   const upperBeadActive = beamY - beadHeight - 2;
@@ -196,14 +197,15 @@ export function Rod2D5({
   const wrapperOpacity = isDimmed ? 0.25 : 1;
   const wrapperFilter = isDimmed ? 'grayscale(1)' : 'none';
 
-  // 🆕 إضاءة العمود عند النقر — 3 ثوانٍ
+  // ✅ إضاءة العمود عند النقر — ٢ ثوانٍ
   const [clickGlow, setClickGlow] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const triggerGlow = () => {
     setClickGlow(true);
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setClickGlow(false), 3000);
+    timerRef.current = setTimeout(() => setClickGlow(false), 2000);
+    onBeadInteract?.(); // 🆕 يُبلّغ الأب
   };
 
   useEffect(() => {
@@ -223,6 +225,9 @@ export function Rod2D5({
     else onSetLower(idx + 1);
   };
 
+  // ✅ عند الدوران، نُدوّر التسمية عكس الاتجاه لتبقى مقروءة
+  const labelTransform = `translateX(-50%)${isRotated ? ' rotate(-90deg)' : ''}`;
+
   return (
     <div
       className="relative flex flex-col items-center"
@@ -234,12 +239,11 @@ export function Rod2D5({
         transition: 'opacity 0.4s, filter 0.4s',
       }}
     >
-      {/* 🆕 إضاءة العمود عند النقر — 3s */}
       {clickGlow && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 1, 1, 0] }}
-          transition={{ duration: 3, times: [0, 0.1, 0.7, 1] }}
+          transition={{ duration: 2, times: [0, 0.1, 0.7, 1] }}
           className="absolute pointer-events-none z-20"
           style={{
             inset: -8,
@@ -250,7 +254,6 @@ export function Rod2D5({
         />
       )}
 
-      {/* Amber glow (basics only) */}
       {isActive && (
         <div
           className="absolute border-2 rounded-xl animate-pulse pointer-events-none z-10"
@@ -263,7 +266,6 @@ export function Rod2D5({
         />
       )}
 
-      {/* White highlight ring */}
       {isWhiteHighlight && (
         <div
           className="absolute rounded-xl pointer-events-none z-20 animate-pulse"
@@ -276,7 +278,7 @@ export function Rod2D5({
         />
       )}
 
-      {/* Rod */}
+      {/* العمود */}
       <div
         style={{
           position: 'absolute',
@@ -292,7 +294,7 @@ export function Rod2D5({
         }}
       />
 
-      {/* Upper bead */}
+      {/* الخرزة العلوية */}
       <div
         style={{
           position: 'absolute',
@@ -321,7 +323,7 @@ export function Rod2D5({
         </BeadGlass>
       </div>
 
-      {/* Beam */}
+      {/* العارضة */}
       <div
         style={{
           position: 'absolute',
@@ -336,7 +338,6 @@ export function Rod2D5({
           boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
         }}
       >
-        {/* مقاطع ملونة صغيرة على العارضة */}
         <div
           style={{
             position: 'absolute',
@@ -346,7 +347,6 @@ export function Rod2D5({
           }}
         />
 
-        {/* 🆕 نبضة ليزر تمر عبر العارضة عند النقر */}
         {clickGlow && (
           <motion.div
             initial={{ left: '-30%' }}
@@ -364,7 +364,6 @@ export function Rod2D5({
         )}
       </div>
 
-      {/* Beam highlight (basics) */}
       {beamHighlight && (
         <div
           className="absolute animate-pulse pointer-events-none z-20"
@@ -380,7 +379,7 @@ export function Rod2D5({
         />
       )}
 
-      {/* Lower beads */}
+      {/* الخرزات السفلية */}
       {lowerBeads.map((idx) => {
         const isBeadActive = idx < state.lower;
         const topActive = lowerAreaTop + idx * step;
@@ -418,7 +417,7 @@ export function Rod2D5({
         );
       })}
 
-      {/* Column label */}
+      {/* التسمية */}
       {showLabel && (
         <div
           className="absolute font-bold"
@@ -426,7 +425,7 @@ export function Rod2D5({
             fontSize: labelFontSize,
             bottom: 'calc(100% + 4px)',
             left: '50%',
-            transform: 'translateX(-50%)',
+            transform: labelTransform, // ✅ معاكس للدوران
             writingMode: isVertical ? 'vertical-rl' : 'horizontal-tb',
             textOrientation: 'mixed',
             lineHeight: 1.05,
@@ -435,7 +434,7 @@ export function Rod2D5({
             pointerEvents: 'none',
             textAlign: 'center',
             color: ts.labelColor,
-            transition: 'color 0.15s',
+            transition: 'color 0.15s, transform 0.35s ease',
           }}
           title={labelText}
         >
