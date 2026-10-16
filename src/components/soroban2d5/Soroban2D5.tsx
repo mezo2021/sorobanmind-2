@@ -22,6 +22,7 @@ export interface ThemeStyles {
   rodClickGlow: string;
   beadGlassEnabled: boolean;
   beadGap: number;
+  beadSizeBoost: number;
   beamBase: string;
   beamSegments: string;
   beamLaser: string;
@@ -48,6 +49,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     rodClickGlow: '#C9A227',
     beadGlassEnabled: false,
     beadGap: 4,
+    beadSizeBoost: 1.12, // 🆕 +12% لخرزات classic
     beamBase: 'linear-gradient(180deg, #3d2817 0%, #1a0f08 100%)',
     beamSegments: '#8b6f47',
     beamLaser: '#C9A227',
@@ -71,7 +73,8 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     rodGlow: '#7FDBFF',
     rodClickGlow: '#7FDBFF',
     beadGlassEnabled: true,
-    beadGap: 10,
+    beadGap: 12, // 🆕 +2 (كان 10)
+    beadSizeBoost: 1,
     beamBase: 'linear-gradient(180deg, #ffffff 0%, #d0e8f5 50%, #ffffff 100%)',
     beamSegments: '#FF4136',
     beamLaser: '#FF4136',
@@ -95,7 +98,8 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     rodGlow: '#FF69B4',
     rodClickGlow: '#FFFFFF',
     beadGlassEnabled: true,
-    beadGap: 10,
+    beadGap: 12, // 🆕 +2 (كان 10)
+    beadSizeBoost: 1,
     beamBase: 'linear-gradient(180deg, #ffffff 0%, #ffe0f0 50%, #ffffff 100%)',
     beamSegments: '#FF69B4',
     beamLaser: '#FFFFFF',
@@ -135,9 +139,9 @@ function useResponsiveSize() {
 }
 
 const SIZE_CONFIG = {
-  sm: { beadSize: 34, gap: 10, framePaddingY: 14, framePaddingX: 6,  innerPaddingY: 12, innerPaddingX: 4, height: 350, topPadding: 34, bottomPadding: 10, titleSize: 'text-base', valueSize: 'text-2xl' },
-  md: { beadSize: 44, gap: 14, framePaddingY: 18, framePaddingX: 8,  innerPaddingY: 14, innerPaddingX: 5, height: 410, topPadding: 40, bottomPadding: 12, titleSize: 'text-lg',   valueSize: 'text-3xl' },
-  lg: { beadSize: 56, gap: 20, framePaddingY: 26, framePaddingX: 12, innerPaddingY: 18, innerPaddingX: 8, height: 490, topPadding: 48, bottomPadding: 14, titleSize: 'text-2xl',  valueSize: 'text-5xl' },
+  sm: { beadSize: 34, gap: 10, framePaddingY: 14, framePaddingX: 6,  innerPaddingY: 12, innerPaddingX: 4, height: 360, topPadding: 34, bottomPadding: 10, titleSize: 'text-base', valueSize: 'text-2xl' },
+  md: { beadSize: 44, gap: 14, framePaddingY: 18, framePaddingX: 8,  innerPaddingY: 14, innerPaddingX: 5, height: 420, topPadding: 40, bottomPadding: 12, titleSize: 'text-lg',   valueSize: 'text-3xl' },
+  lg: { beadSize: 56, gap: 20, framePaddingY: 26, framePaddingX: 12, innerPaddingY: 18, innerPaddingX: 8, height: 500, topPadding: 48, bottomPadding: 14, titleSize: 'text-2xl',  valueSize: 'text-5xl' },
 };
 
 function getAutoBeadSize(columns: number): number {
@@ -214,7 +218,6 @@ export function Soroban2D5({
   const isFlashContext =
     rodTint === 'red' || rodTint === 'emerald' || rodTint === 'white';
 
-  // 🆕 وضع الأعمدة الكثيرة (7+)
   const isSmallLayout = !isFlashContext && columns >= 7;
 
   const [currentTheme, setCurrentTheme] = useState<SorobanTheme>(() => {
@@ -248,16 +251,20 @@ export function Soroban2D5({
   // 🎯 حجم الخرزة
   // ═══════════════════════════════════════════════════════
   const effectiveBeadSize = (() => {
+    // Flash: مسار خاص
     if (isFlashContext && autoBeadSize) {
       return FLASH_BEAD_SIZE_BY_COLUMNS[displayedStates.length]
         ?? Math.max(10, Math.floor(150 / displayedStates.length / 1.3));
     }
-    // 🆕 7+: تصغير ليتمكن الكل من الدخول بلا scroll
+    // 🆕 7+ أعمدة: تصغير ليتمكن الكل من الدخول
     if (isSmallLayout) {
       return Math.max(16, Math.round(cfg.beadSize * 0.45));
     }
+    // 🆕 1-6 أعمدة: لا تصغير — استخدم الحجم الأساسي
+    if (autoBeadSize && displayedStates.length <= 6) return cfg.beadSize;
     if (autoBeadSize) return getAutoBeadSize(displayedStates.length);
-    return cfg.beadSize;
+    // الوضع العادي: طبّق boost الثيم
+    return Math.round(cfg.beadSize * ts.beadSizeBoost);
   })();
 
   const baseHeight = cfg.height;
@@ -266,7 +273,6 @@ export function Soroban2D5({
 
   const flashScale = effectiveBeadSize / cfg.beadSize;
 
-  // 🆕 7+: فجوة صغيرة (3) — الباقي cfg.gap
   const effectiveGap = isSmallLayout
     ? 3
     : isFlashContext && autoBeadSize
@@ -367,7 +373,7 @@ export function Soroban2D5({
             >
               {currentTheme === 'classic' && '🟤 السوروبان الخشبي'}
               {currentTheme === 'ocean' && '🏄 السوروبان الليزري'}
-              {currentTheme === 'barbie' && '❤️ سوروبان باربان'}
+              {currentTheme === 'barbie' && '❤️ سوروبان باربي'}
             </h3>
           )}
         </div>
