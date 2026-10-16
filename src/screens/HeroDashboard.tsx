@@ -111,7 +111,6 @@ export function HeroDashboard({
   playSound,
   xp,
   streak,
-  earnedBadges: _earnedBadges,
 }: HeroDashboardProps) {
   const [exam2Passed, setExam2Passed] = useState(false);
   const [showGames, setShowGames] = useState(false);
