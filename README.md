@@ -638,3 +638,5 @@ Built with love for children across the Arab world 🌍
 ![Offline](https://img.shields.io/badge/Offline-✅-blue?style=for-the-badge)
 
 </div>
+
+---
