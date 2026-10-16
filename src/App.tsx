@@ -4,6 +4,7 @@ import { lazy } from 'react';
 // [FIX B9]  call recordPlacementAttempt — 2026-10-04
 // [FIX 7]  ربط الشهادة الذهبية (CertificateScreen) — 2026-10-05
 // [FIX 10-10] ربط الفلاشات التعليمية — FlashScreen + FlashListScreen — 2026-10-10
+// [v10] حذف earnedBadges — 2026-10-16
 
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
@@ -481,34 +482,33 @@ export default function App() {
               playSound={handleSound}
               xp={stats.xp}
               streak={stats.streak}
-              earnedBadges={stats.earnedBadges}
             />
           </>
         );
 
       case 'guardian-dashboard':
-  return (
-    <>
-      <Header
-        xp={stats.xp}
-        streak={stats.streak}
-        level={stats.level}
-        soundEnabled={stats.soundEnabled}
-        onToggleSound={toggleSound}
-        onHome={handleBackToRole}
-      />
-      <GuardianDashboard
-        onBack={handleBackToRole}
-        playSound={handleSound}
-        childName={localStorage.getItem('soroban_child_name') || 'البطل'}
-        childXP={stats.xp}
-        childStreak={stats.streak}
-        childLevel={stats.level}
-        onSwitchToHero={handleSwitchToHero}
-        onShowWelcome={handleShowWelcome}
-      />
-    </>
-  );
+        return (
+          <>
+            <Header
+              xp={stats.xp}
+              streak={stats.streak}
+              level={stats.level}
+              soundEnabled={stats.soundEnabled}
+              onToggleSound={toggleSound}
+              onHome={handleBackToRole}
+            />
+            <GuardianDashboard
+              onBack={handleBackToRole}
+              playSound={handleSound}
+              childName={localStorage.getItem('soroban_child_name') || 'البطل'}
+              childXP={stats.xp}
+              childStreak={stats.streak}
+              childLevel={stats.level}
+              onSwitchToHero={handleSwitchToHero}
+              onShowWelcome={handleShowWelcome}
+            />
+          </>
+        );
 
       case 'placement-test':
         return (
