@@ -120,3 +120,54 @@ html {
   background: rgba(168, 85, 247, 0.35);
   color: #fff;
 }
+
+/* ============================================================
+   Soroban 2D5 — Animations
+   ============================================================ */
+
+/* 1. نبض إضاءة الخرزة عند التفعيل */
+@keyframes beadPulse {
+  0%, 100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+.bead-glow-pulse {
+  animation: beadPulse 1.4s ease-in-out infinite;
+}
+
+/* 2. إضاءة العمود عند النقر — تظهر ثم تختفي خلال ثانيتين */
+@keyframes rodClickGlow {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.rod-click-glow {
+  animation: rodClickGlow 2s ease-in-out forwards;
+}
+
+/* 3. نبضة الليزر على العارضة */
+@keyframes beamLaser {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(500%);
+  }
+}
+.beam-laser-pulse {
+  animation: beamLaser 0.9s linear infinite;
+}
