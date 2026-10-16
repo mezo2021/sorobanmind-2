@@ -213,8 +213,8 @@ export function Rod2D5({
   const rodHeight = height - 30;
   const beamY = rodHeight * 0.25;
 
-  // 🆕 فجوة متناسبة بين الخرزة والعارضة (4px كحد أدنى)
-  const beamGap = Math.max(4, Math.round(beadSize * 0.12));
+  // 🆕 فجوة متناسبة بين الخرزة والعارضة (8px كحد أدنى)
+  const beamGap = Math.max(8, Math.round(beadSize * 0.2));
 
   const upperBeadTop = 2;
   const upperBeadActive = beamY - beadHeight - beamGap;
