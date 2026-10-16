@@ -22,7 +22,6 @@ interface HeroDashboardProps {
   playSound: (type: 'click' | 'whoosh') => void;
   xp: number;
   streak: number;
-  earnedBadges: string[];
 }
 
 function toArabicNumber(value: number | string): string {
