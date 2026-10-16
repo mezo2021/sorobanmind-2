@@ -55,10 +55,7 @@ function getLabelFontSize(text: string, isVertical: boolean): number {
 }
 
 // ============================================================
-// 🌟 غلاف زجاجي
-//    - يُعطَّل في Flash
-//    - في ثيم classic → فقط الإضاءة عند التفعيل (خشبي أصلي)
-//    - في ocean/barbie → زجاج + نقطة + إضاءة قوية
+// 🌟 غلاف زجاجي — بدون وهج خارجي، فقط ضوء داخلي عند التفعيل
 // ============================================================
 function BeadGlass({
   children,
@@ -77,12 +74,12 @@ function BeadGlass({
   isFlashMode: boolean;
   enableGlass: boolean;
 }) {
-  // 🚫 Flash mode: لا شيء
+  // 🚫 Flash mode
   if (isFlashMode) {
     return <>{children}</>;
   }
 
-  // 🆕 classic: خشبي أصلي + إضاءة عند التفعيل فقط
+  // 🪵 classic: خشبي أصلي + ضوء داخلي فقط
   if (!enableGlass) {
     return (
       <div style={{ position: 'relative' }}>
@@ -92,12 +89,12 @@ function BeadGlass({
             className="bead-glow-pulse"
             style={{
               position: 'absolute',
-              inset: -8,
+              inset: 0,
               borderRadius: '50%',
-              background: `radial-gradient(ellipse at center, ${glowColor} 0%, ${glowColor}cc 40%, ${glowColor}55 70%, transparent 90%)`,
-              filter: 'blur(3px)',
+              background: `radial-gradient(circle at 50% 42%, ${glowColor}ee 0%, ${glowColor}99 45%, ${glowColor}33 78%, transparent 100%)`,
               pointerEvents: 'none',
-              willChange: 'opacity, transform',
+              mixBlendMode: 'screen',
+              willChange: 'opacity',
             }}
           />
         )}
@@ -105,7 +102,7 @@ function BeadGlass({
     );
   }
 
-  // ✨ ocean / barbie: زجاج كريستال + نقطة + إضاءة قوية
+  // ✨ ocean / barbie: زجاج + نقطة + ضوء داخلي
   return (
     <div style={{ position: 'relative' }}>
       {children}
@@ -152,18 +149,18 @@ function BeadGlass({
         }}
       />
 
-      {/* 🆕 إضاءة أقوى */}
+      {/* 🆕 ضوء داخلي فقط — بدون وهج خارجي */}
       {isBeadActive && (
         <div
           className="bead-glow-pulse"
           style={{
             position: 'absolute',
-            inset: -10,
+            inset: 0,
             borderRadius: '50%',
-            background: `radial-gradient(ellipse at center, ${glowColor} 0%, ${glowColor}dd 35%, ${glowColor}88 60%, transparent 90%)`,
-            filter: 'blur(3px)',
+            background: `radial-gradient(circle at 50% 42%, ${glowColor} 0%, ${glowColor}cc 40%, ${glowColor}66 72%, transparent 100%)`,
             pointerEvents: 'none',
-            willChange: 'opacity, transform',
+            mixBlendMode: 'screen',
+            willChange: 'opacity',
           }}
         />
       )}
@@ -201,8 +198,8 @@ export function Rod2D5({
     beamLaser: '#C9A227',
     upperBeadTint: 'rgba(139,111,71,0.10)',
     lowerBeadTint: 'rgba(139,111,71,0.10)',
-    upperBeadGlow: '#5a3a1f',
-    lowerBeadGlow: '#5a3a1f',
+    upperBeadGlow: '#F5D896',
+    lowerBeadGlow: '#E8C88A',
     upperDot: '#8b6f47',
     lowerDot: '#c19a6b',
     labelColor: '#8b6f47',
@@ -260,7 +257,10 @@ export function Rod2D5({
     else onSetLower(idx + 1);
   };
 
-  const labelTransform = `translateX(-50%)${isRotated ? ' rotate(-90deg)' : ''}`;
+  // 🆕 معاكسة اتجاه الدوران للكتابة عند الدوران
+  const labelTransform = isRotated
+    ? 'translateX(-50%) rotate(-90deg)'
+    : 'translateX(-50%)';
 
   return (
     <div
@@ -273,7 +273,6 @@ export function Rod2D5({
         transition: 'opacity 0.4s, filter 0.4s',
       }}
     >
-      {/* إضاءة العمود عند النقر — لون حسب الثيم (أبيض في barbie) */}
       {clickGlow && !isFlashMode && (
         <div
           className="rod-click-glow"
@@ -314,7 +313,6 @@ export function Rod2D5({
         />
       )}
 
-      {/* العمود */}
       <div
         style={{
           position: 'absolute',
@@ -330,7 +328,6 @@ export function Rod2D5({
         }}
       />
 
-      {/* العلوية */}
       <div
         style={{
           position: 'absolute',
@@ -361,7 +358,6 @@ export function Rod2D5({
         </BeadGlass>
       </div>
 
-      {/* العارضة */}
       <div
         style={{
           position: 'absolute',
@@ -416,7 +412,6 @@ export function Rod2D5({
         />
       )}
 
-      {/* السفلية */}
       {lowerBeads.map((idx) => {
         const isBeadActive = idx < state.lower;
         const topActive = lowerAreaTop + idx * step;
@@ -456,7 +451,6 @@ export function Rod2D5({
         );
       })}
 
-      {/* التسمية */}
       {showLabel && (
         <div
           className="absolute font-bold"
@@ -465,10 +459,10 @@ export function Rod2D5({
             bottom: 'calc(100% + 4px)',
             left: '50%',
             transform: labelTransform,
-            writingMode: isVertical ? 'vertical-rl' : 'horizontal-tb',
+            writingMode: isRotated ? 'horizontal-tb' : (isVertical ? 'vertical-rl' : 'horizontal-tb'),
             textOrientation: 'mixed',
             lineHeight: 1.05,
-            letterSpacing: isVertical ? 0 : 0.3,
+            letterSpacing: isVertical && !isRotated ? 0 : 0.3,
             whiteSpace: 'nowrap',
             pointerEvents: 'none',
             textAlign: 'center',
