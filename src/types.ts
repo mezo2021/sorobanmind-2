@@ -334,35 +334,6 @@ export const PASS_THRESHOLDS = {
 export const PLACEMENT_COOLDOWN_MS = 48 * 60 * 60 * 1000;
 
 // ------------------------------------------------------------
-// المهام (Quests)
-// ------------------------------------------------------------
-export type QuestType =
-  | 'practice'
-  | 'anzan'
-  | 'anzanHighScore'
-  | 'streak'
-  | 'lessons'
-  | 'addition'
-  | 'subtraction'
-  | 'multiplication'
-  | 'division'
-  | 'chain';
-
-export interface Quest {
-  id: number;
-  title: string;
-  titleAr: string;
-  description: string;
-  descriptionAr: string;
-  xpReward: number;
-  progress: number;
-  target: number;
-  icon: string;
-  color: string;
-  type: QuestType;
-}
-
-// ------------------------------------------------------------
 // أسئلة التدريب
 // ------------------------------------------------------------
 export interface PracticeQuestion {
@@ -422,7 +393,6 @@ export interface GameStats {
   streak: number;
   level: number;
   soundEnabled: boolean;
-  earnedBadges: string[];
 }
 
 export interface ProgressData {
