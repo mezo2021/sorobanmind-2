@@ -33,6 +33,7 @@ export interface ThemeStyles {
   labelColor: string;
   titleColor: string;
   valueColor: string;
+  beadGap: number;
 }
 
 export const THEMES: Record<SorobanTheme, ThemeStyles> = {
@@ -58,6 +59,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     labelColor: '#8b6f47',
     titleColor: '#8b6f47',
     valueColor: '#C9A227',
+    beadGap: 4,
   },
   ocean: {
     icon: '🌊', name: 'البحري',
@@ -81,6 +83,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     labelColor: '#FFFFFF',
     titleColor: '#FFFFFF',
     valueColor: '#FFFFFF',
+    beadGap: 7,
   },
   barbie: {
     icon: '❤️', name: 'باربي',
@@ -104,6 +107,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     labelColor: '#FFC0CB',
     titleColor: '#FF69B4',
     valueColor: '#FF69B4',
+    beadGap: 7,
   },
 };
 
@@ -246,25 +250,28 @@ export function Soroban2D5({
   const displayedStates = colStates.slice(-visibleColumns);
   const displayOffset = columns - visibleColumns;
 
-  // 🆕 تصغير إلزامي في 7+
-  const shouldAutoSize = autoBeadSize || isSmallLayout;
+  const effectiveBeadSize = (() => {
+    // Flash → تصغير كامل حسب عدد الأعمدة
+    if (isFlashContext && autoBeadSize) {
+      return FLASH_BEAD_SIZE_BY_COLUMNS[displayedStates.length]
+        ?? Math.max(10, Math.floor(150 / displayedStates.length / 1.3));
+    }
+    // 🆕 وضع 7+ → إبقاء الحجم كبيرًا ليظهر scroll + تقليل لطيف
+    if (isSmallLayout) {
+      return Math.max(28, Math.round(cfg.beadSize * 0.7));
+    }
+    // وضع عادي
+    if (autoBeadSize) return getAutoBeadSize(displayedStates.length);
+    return cfg.beadSize;
+  })();
 
-  const effectiveBeadSize = shouldAutoSize
-    ? isFlashContext
-      ? (FLASH_BEAD_SIZE_BY_COLUMNS[displayedStates.length] ??
-          Math.max(10, Math.floor(150 / displayedStates.length / 1.3)))
-      : getAutoBeadSize(displayedStates.length)
-    : cfg.beadSize;
+  const baseHeight = cfg.height;
+
+  // 🆕 7+ = تخفيض كبير (ليتناسب مع التدوير) | تدوير = بلا تغيير
+  const heightFactor = isSmallLayout ? 0.6 : 1;
+  const effectiveHeight = Math.round(baseHeight * heightFactor);
 
   const flashScale = effectiveBeadSize / cfg.beadSize;
-
-  const baseHeight = shouldAutoSize
-    ? Math.round(cfg.height * (effectiveBeadSize / cfg.beadSize))
-    : cfg.height;
-
-  // 🆕 7+ = تخفيض ارتفاع | تدوير = زيادة خفيفة
-  const heightFactor = (isSmallLayout ? 0.75 : 1) * (isRotated ? 1.2 : 1);
-  const effectiveHeight = Math.round(baseHeight * heightFactor);
 
   const effectiveGap =
     isFlashContext && autoBeadSize
@@ -390,10 +397,12 @@ export function Soroban2D5({
           </div>
         )}
 
-        <div className="relative inline-flex max-w-full min-w-0">
+        <div className="relative inline-flex max-w-full min-w-0 w-full justify-center">
           <div
             className="relative rounded-2xl"
             style={{
+              width: isSmallLayout ? '92%' : undefined,
+              maxWidth: '100%',
               paddingTop: framePaddingY,
               paddingBottom: framePaddingY,
               paddingLeft: framePaddingX,
@@ -401,7 +410,6 @@ export function Soroban2D5({
               background: ts.frameBg,
               boxShadow: 'inset 0 4px 12px rgba(255,255,255,0.08), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35)',
               border: '2px solid rgba(0,0,0,0.25)',
-              maxWidth: '100%',
               transition: 'background 0.15s',
             }}
           >
@@ -468,6 +476,7 @@ export function Soroban2D5({
                       showLabel={!hideColumnLabels}
                       themeStyles={ts}
                       isRotated={isRotated}
+                      beadGap={ts.beadGap}
                     />
                   );
                 })}
