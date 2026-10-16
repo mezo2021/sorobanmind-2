@@ -21,6 +21,7 @@ export interface ThemeStyles {
   rodGlow: string;
   rodClickGlow: string;
   beadGlassEnabled: boolean;
+  beadGap: number;
   beamBase: string;
   beamSegments: string;
   beamLaser: string;
@@ -33,7 +34,6 @@ export interface ThemeStyles {
   labelColor: string;
   titleColor: string;
   valueColor: string;
-  beadGap: number;
 }
 
 export const THEMES: Record<SorobanTheme, ThemeStyles> = {
@@ -47,6 +47,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     rodGlow: '#C9A227',
     rodClickGlow: '#C9A227',
     beadGlassEnabled: false,
+    beadGap: 4,
     beamBase: 'linear-gradient(180deg, #3d2817 0%, #1a0f08 100%)',
     beamSegments: '#8b6f47',
     beamLaser: '#C9A227',
@@ -59,7 +60,6 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     labelColor: '#8b6f47',
     titleColor: '#8b6f47',
     valueColor: '#C9A227',
-    beadGap: 4,
   },
   ocean: {
     icon: '🌊', name: 'البحري',
@@ -71,6 +71,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     rodGlow: '#7FDBFF',
     rodClickGlow: '#7FDBFF',
     beadGlassEnabled: true,
+    beadGap: 10,
     beamBase: 'linear-gradient(180deg, #ffffff 0%, #d0e8f5 50%, #ffffff 100%)',
     beamSegments: '#FF4136',
     beamLaser: '#FF4136',
@@ -83,7 +84,6 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     labelColor: '#FFFFFF',
     titleColor: '#FFFFFF',
     valueColor: '#FFFFFF',
-    beadGap: 7,
   },
   barbie: {
     icon: '❤️', name: 'باربي',
@@ -95,6 +95,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     rodGlow: '#FF69B4',
     rodClickGlow: '#FFFFFF',
     beadGlassEnabled: true,
+    beadGap: 10,
     beamBase: 'linear-gradient(180deg, #ffffff 0%, #ffe0f0 50%, #ffffff 100%)',
     beamSegments: '#FF69B4',
     beamLaser: '#FFFFFF',
@@ -107,7 +108,6 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     labelColor: '#FFC0CB',
     titleColor: '#FF69B4',
     valueColor: '#FF69B4',
-    beadGap: 7,
   },
 };
 
@@ -223,7 +223,6 @@ export function Soroban2D5({
     return saved && THEMES[saved] ? saved : initialTheme;
   });
 
-  // 💾 حفظ الثيم — فقط خارج Flash و خارج 7+
   useEffect(() => {
     if (isFlashContext || isSmallLayout) return;
     if (typeof window !== 'undefined') {
@@ -231,14 +230,9 @@ export function Soroban2D5({
     }
   }, [currentTheme, isFlashContext, isSmallLayout]);
 
-  // 🎨 الثيم الفعلي — classic إلزامي في Flash و 7+
   const effectiveTheme: SorobanTheme =
     isFlashContext || isSmallLayout ? 'classic' : currentTheme;
   const ts = THEMES[effectiveTheme];
-
-  // 🆕 زر التدوير
-  const [isRotated, setIsRotated] = useState(false);
-  const canRotate = !isFlashContext && columns >= 7;
 
   const visibleColumns = (() => {
     if (!autoBeadSize && !isSmallLayout && finalSize === 'sm' && columns > 4) {
@@ -250,33 +244,34 @@ export function Soroban2D5({
   const displayedStates = colStates.slice(-visibleColumns);
   const displayOffset = columns - visibleColumns;
 
+  // ═══════════════════════════════════════════════════════
+  // 🎯 حجم الخرزة
+  // ═══════════════════════════════════════════════════════
   const effectiveBeadSize = (() => {
-    // Flash → تصغير كامل حسب عدد الأعمدة
     if (isFlashContext && autoBeadSize) {
       return FLASH_BEAD_SIZE_BY_COLUMNS[displayedStates.length]
         ?? Math.max(10, Math.floor(150 / displayedStates.length / 1.3));
     }
-    // 🆕 وضع 7+ → إبقاء الحجم كبيرًا ليظهر scroll + تقليل لطيف
+    // 🆕 7+: تصغير ليتمكن الكل من الدخول بلا scroll
     if (isSmallLayout) {
-      return Math.max(28, Math.round(cfg.beadSize * 0.7));
+      return Math.max(16, Math.round(cfg.beadSize * 0.45));
     }
-    // وضع عادي
     if (autoBeadSize) return getAutoBeadSize(displayedStates.length);
     return cfg.beadSize;
   })();
 
   const baseHeight = cfg.height;
-
-  // 🆕 7+ = تخفيض كبير (ليتناسب مع التدوير) | تدوير = بلا تغيير
   const heightFactor = isSmallLayout ? 0.6 : 1;
   const effectiveHeight = Math.round(baseHeight * heightFactor);
 
   const flashScale = effectiveBeadSize / cfg.beadSize;
 
-  const effectiveGap =
-    isFlashContext && autoBeadSize
-      ? Math.max(3, Math.round(effectiveBeadSize * 0.17))
-      : cfg.gap;
+  // 🆕 7+: فجوة صغيرة (3) — الباقي cfg.gap
+  const effectiveGap = isSmallLayout
+    ? 3
+    : isFlashContext && autoBeadSize
+    ? Math.max(3, Math.round(effectiveBeadSize * 0.17))
+    : cfg.gap;
 
   const framePaddingX =
     isFlashContext && autoBeadSize
@@ -331,210 +326,152 @@ export function Soroban2D5({
 
   const shouldShowValue = revealValue || (!interactive && showValue);
 
-  const counterRotate = isRotated ? 'rotate(-90deg)' : 'none';
-  const counterTransition = 'transform 0.35s ease';
-
   return (
     <div className="w-full flex flex-col items-center gap-2 relative min-w-0">
-      <div
-        className="flex flex-col items-center gap-2"
-        style={{
-          transform: `rotate(${isRotated ? 90 : 0}deg)`,
-          transition: counterTransition,
-          transformOrigin: 'center center',
-        }}
-      >
-        {/* 🎨 صف الثيمات + العنوان — يختفي في Flash و 7+ */}
-        {!isFlashContext && !isSmallLayout && (
-          <div className="flex items-center justify-between gap-2 w-full px-1">
-            <div
-              className="flex gap-1.5"
-              style={{ transform: counterRotate, transition: counterTransition }}
+      {!isFlashContext && !isSmallLayout && (
+        <div className="flex items-center justify-between gap-2 w-full px-1">
+          <div className="flex gap-1.5">
+            {(['classic', 'ocean', 'barbie'] as SorobanTheme[]).map((t) => {
+              const active = currentTheme === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setCurrentTheme(t)}
+                  aria-label={THEMES[t].name}
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: active ? `${THEMES[t].frameGlow}33` : 'rgba(255,255,255,0.06)',
+                    border: active ? `2px solid ${THEMES[t].frameGlow}` : '2px solid transparent',
+                    boxShadow: active ? `0 0 12px ${THEMES[t].frameGlow}` : 'none',
+                    fontSize: 15,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {THEMES[t].icon}
+                </button>
+              );
+            })}
+          </div>
+
+          {!hideTitle && (
+            <h3
+              className={`${cfg.titleSize} font-bold`}
+              style={{ color: ts.titleColor, transition: 'color 0.15s' }}
             >
-              {(['classic', 'ocean', 'barbie'] as SorobanTheme[]).map((t) => {
-                const active = currentTheme === t;
+              {currentTheme === 'classic' && '🟤 السوروبان الخشبي'}
+              {currentTheme === 'ocean' && '🏄 السوروبان الليزري'}
+              {currentTheme === 'barbie' && '❤️ سوروبان باربان'}
+            </h3>
+          )}
+        </div>
+      )}
+
+      <div className="relative inline-flex max-w-full min-w-0">
+        <div
+          className="relative rounded-2xl"
+          style={{
+            paddingTop: framePaddingY,
+            paddingBottom: framePaddingY,
+            paddingLeft: framePaddingX,
+            paddingRight: framePaddingX,
+            background: ts.frameBg,
+            boxShadow: 'inset 0 4px 12px rgba(255,255,255,0.08), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35)',
+            border: '2px solid rgba(0,0,0,0.25)',
+            maxWidth: '100%',
+            transition: 'background 0.15s',
+          }}
+        >
+          <div
+            className="relative rounded-xl"
+            style={{
+              paddingTop: innerPaddingY,
+              paddingBottom: innerPaddingY,
+              paddingLeft: innerPaddingX,
+              paddingRight: innerPaddingX,
+              background: ts.innerBg,
+              boxShadow: `inset 0 4px 12px rgba(0,0,0,0.2), inset 0 0 30px ${ts.frameGlow}22`,
+              border: `1px solid ${ts.innerBorder}`,
+              overflow: 'visible',
+              transition: 'background 0.15s, border 0.15s',
+            }}
+          >
+            <div
+              className="absolute top-0 left-0 right-0 rounded-t-xl pointer-events-none"
+              style={{
+                height: '30%',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%)',
+              }}
+            />
+
+            <div
+              className="flex flex-row-reverse items-center justify-center relative"
+              style={{
+                gap: effectiveGap,
+                paddingTop: topPadding,
+                paddingBottom: bottomPadding,
+              }}
+              dir="rtl"
+            >
+              {displayedStates.map((state, idx) => {
+                const originalIdx = idx + displayOffset;
+                const displayOrder = columns - 1 - originalIdx;
+                const isHighlighted = highlightColumns?.includes(originalIdx) ?? false;
+                const isDim = dimColumns?.includes(originalIdx) ?? false;
+                const finalTint: RodTint | undefined = isHighlighted ? 'white' : rodTint;
+
                 return (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setCurrentTheme(t)}
-                    aria-label={THEMES[t].name}
-                    style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: active ? `${THEMES[t].frameGlow}33` : 'rgba(255,255,255,0.06)',
-                      border: active ? `2px solid ${THEMES[t].frameGlow}` : '2px solid transparent',
-                      boxShadow: active ? `0 0 12px ${THEMES[t].frameGlow}` : 'none',
-                      fontSize: 15,
-                      cursor: 'pointer',
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    {THEMES[t].icon}
-                  </button>
+                  <Rod2D5
+                    key={originalIdx}
+                    state={state}
+                    columnIndex={originalIdx}
+                    displayOrder={displayOrder}
+                    totalColumns={displayedStates.length}
+                    onToggleUpper={() => interactive && toggleUpper(originalIdx)}
+                    onSetLower={(count) => interactive && setLower(originalIdx, count)}
+                    onReset={() => interactive && resetColumn(originalIdx)}
+                    height={effectiveHeight}
+                    beadSize={effectiveBeadSize}
+                    isActive={activeRodIndex === originalIdx}
+                    beamHighlight={beamHighlight}
+                    tint={finalTint}
+                    isDimmed={isDim}
+                    showLabel={!hideColumnLabels}
+                    themeStyles={ts}
+                    beadGap={ts.beadGap}
+                  />
                 );
               })}
             </div>
 
-            {!hideTitle && (
-              <h3
-                className={`${cfg.titleSize} font-bold`}
-                style={{
-                  color: ts.titleColor,
-                  transition: `color 0.15s, ${counterTransition}`,
-                  transform: counterRotate,
-                }}
-              >
-                {currentTheme === 'classic' && '🟤 السوروبان الخشبي'}
-                {currentTheme === 'ocean' && '🏄 السوروبان الليزري'}
-                {currentTheme === 'barbie' && '❤️ سوروبان باربي'}
-              </h3>
+            {displayOffset > 0 && (
+              <p className="text-center text-[10px] mt-1" style={{ color: ts.labelColor }}>
+                ✨ {formatByStyle(visibleColumns, numberStyle)} أعمدة
+              </p>
             )}
           </div>
-        )}
 
-        <div className="relative inline-flex max-w-full min-w-0 w-full justify-center">
-          <div
-            className="relative rounded-2xl"
-            style={{
-              width: isSmallLayout ? '92%' : undefined,
-              maxWidth: '100%',
-              paddingTop: framePaddingY,
-              paddingBottom: framePaddingY,
-              paddingLeft: framePaddingX,
-              paddingRight: framePaddingX,
-              background: ts.frameBg,
-              boxShadow: 'inset 0 4px 12px rgba(255,255,255,0.08), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35)',
-              border: '2px solid rgba(0,0,0,0.25)',
-              transition: 'background 0.15s',
-            }}
-          >
-            <div
-              className="relative rounded-xl"
-              style={{
-                paddingTop: innerPaddingY,
-                paddingBottom: innerPaddingY,
-                paddingLeft: innerPaddingX,
-                paddingRight: innerPaddingX,
-                background: ts.innerBg,
-                boxShadow: `inset 0 4px 12px rgba(0,0,0,0.2), inset 0 0 30px ${ts.frameGlow}22`,
-                border: `1px solid ${ts.innerBorder}`,
-                overflow: 'visible',
-                transition: 'background 0.15s, border 0.15s',
-              }}
-            >
-              <div
-                className="absolute top-0 left-0 right-0 rounded-t-xl pointer-events-none"
+          {interactive && (
+            <div className="flex justify-center gap-2 mt-2">
+              <button
+                type="button"
+                onClick={handleResetAll}
+                className="px-4 py-1.5 rounded-full font-bold transition text-xs"
                 style={{
-                  height: '30%',
-                  background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%)',
+                  background: 'rgba(255,255,255,0.15)',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.25)',
                 }}
-              />
-
-              {/* 🆕 حاوية الأعمدة — شريط تمرير أفقي في 7+ فقط */}
-              <div
-                className={`flex flex-row-reverse items-center relative ${
-                  isSmallLayout ? 'justify-start' : 'justify-center'
-                }`}
-                style={{
-                  gap: effectiveGap,
-                  paddingTop: topPadding,
-                  paddingBottom: bottomPadding,
-                  overflowX: isSmallLayout ? 'auto' : 'visible',
-                  overflowY: isSmallLayout ? 'hidden' : 'visible',
-                  width: '100%',
-                }}
-                dir="rtl"
               >
-                {displayedStates.map((state, idx) => {
-                  const originalIdx = idx + displayOffset;
-                  const displayOrder = columns - 1 - originalIdx;
-                  const isHighlighted = highlightColumns?.includes(originalIdx) ?? false;
-                  const isDim = dimColumns?.includes(originalIdx) ?? false;
-                  const finalTint: RodTint | undefined = isHighlighted ? 'white' : rodTint;
-
-                  return (
-                    <Rod2D5
-                      key={originalIdx}
-                      state={state}
-                      columnIndex={originalIdx}
-                      displayOrder={displayOrder}
-                      totalColumns={displayedStates.length}
-                      onToggleUpper={() => interactive && toggleUpper(originalIdx)}
-                      onSetLower={(count) => interactive && setLower(originalIdx, count)}
-                      onReset={() => interactive && resetColumn(originalIdx)}
-                      height={effectiveHeight}
-                      beadSize={effectiveBeadSize}
-                      isActive={activeRodIndex === originalIdx}
-                      beamHighlight={beamHighlight}
-                      tint={finalTint}
-                      isDimmed={isDim}
-                      showLabel={!hideColumnLabels}
-                      themeStyles={ts}
-                      isRotated={isRotated}
-                      beadGap={ts.beadGap}
-                    />
-                  );
-                })}
-              </div>
-
-              {displayOffset > 0 && (
-                <p className="text-center text-[10px] mt-1" style={{ color: ts.labelColor }}>
-                  ✨ {formatByStyle(visibleColumns, numberStyle)} أعمدة
-                </p>
-              )}
+                ↺ إعادة الكل
+              </button>
             </div>
-
-            {interactive && (
-              <div
-                className="flex justify-center gap-2 mt-2"
-                style={{ transform: counterRotate, transition: counterTransition }}
-              >
-                <button
-                  type="button"
-                  onClick={handleResetAll}
-                  className="px-4 py-1.5 rounded-full font-bold transition text-xs"
-                  style={{
-                    background: 'rgba(255,255,255,0.15)',
-                    color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.25)',
-                  }}
-                >
-                  ↺ إعادة الكل
-                </button>
-              </div>
-            )}
-          </div>
-
-          {canRotate && (
-            <button
-              type="button"
-              onClick={() => setIsRotated((r) => !r)}
-              aria-label="تدوير المعداد"
-              title="تدوير المعداد 90°"
-              className="absolute top-1/2 -translate-y-1/2 z-30"
-              style={{
-                right: -42,
-                width: 34,
-                height: 34,
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.15)',
-                border: `1.5px solid ${ts.frameGlow}`,
-                color: ts.frameGlow,
-                fontSize: 18,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backdropFilter: 'blur(8px)',
-              }}
-            >
-              ↻
-            </button>
           )}
         </div>
       </div>
