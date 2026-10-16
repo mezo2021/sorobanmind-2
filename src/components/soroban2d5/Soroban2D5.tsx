@@ -41,7 +41,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     icon: '🟤',
     name: 'الخشبي',
     frameBg: 'linear-gradient(135deg, #8b6f47 0%, #6b4423 50%, #4a2e15 100%)',
-    frameGlow: '#C9A227', // ✅ أهدأ
+    frameGlow: '#C9A227',
     innerBg: 'linear-gradient(180deg, rgba(254,249,240,0.95) 0%, rgba(245,230,200,0.92) 100%)',
     innerBorder: 'rgba(139,111,71,0.4)',
     rodGradient: 'linear-gradient(180deg, #8b6f47 0%, #5a3a1f 50%, #8b6f47 100%)',
@@ -77,15 +77,15 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     lowerBeadGlow: '#7FDBFF',
     upperDot: '#FFD700',
     lowerDot: '#7FDBFF',
-    labelColor: '#FFFFFF', // ✅ أبيض
-    titleColor: '#FFFFFF', // ✅ أبيض
-    valueColor: '#FFD700',
+    labelColor: '#FFFFFF',
+    titleColor: '#FFFFFF',
+    valueColor: '#FFFFFF', // ✅ أبيض
   },
   barbie: {
     icon: '❤️',
     name: 'باربي',
     frameBg: 'linear-gradient(135deg, #4a1942 0%, #c71585 50%, #ff69b4 100%)',
-    frameGlow: '#FFFFFF', // ✅ أبيض خفيف بدل وردي
+    frameGlow: '#FFFFFF',
     innerBg: 'linear-gradient(180deg, rgba(74,25,66,0.95) 0%, rgba(199,21,133,0.85) 100%)',
     innerBorder: 'rgba(255,105,180,0.35)',
     rodGradient: 'linear-gradient(180deg, #FF69B4 0%, #FFC0CB 50%, #FF69B4 100%)',
@@ -101,25 +101,11 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     lowerDot: '#FF69B4',
     labelColor: '#FFC0CB',
     titleColor: '#FF69B4',
-    valueColor: '#FFFFFF',
+    valueColor: '#FF69B4', // ✅ وردي
   },
 };
 
 const THEME_STORAGE_KEY = 'soroban2d5-theme';
-
-// ظل الإطار — حسب الثيم (classic أهدأ)
-function getFrameShadow(theme: SorobanTheme, on: boolean): string {
-  if (!on) return 'none';
-  const t = THEMES[theme];
-  switch (theme) {
-    case 'classic':
-      return `0 0 6px ${t.frameGlow}, 0 0 12px ${t.frameGlow}44`;
-    case 'ocean':
-      return `0 0 16px ${t.frameGlow}, 0 0 32px ${t.frameGlow}88`;
-    case 'barbie':
-      return `0 0 12px ${t.frameGlow}, 0 0 24px ${t.frameGlow}77`;
-  }
-}
 
 // ============================================================
 // أدوات
@@ -224,24 +210,21 @@ export function Soroban2D5({
   const finalSize = size === 'auto' ? responsiveSize : size;
   const cfg = SIZE_CONFIG[finalSize];
 
-  // 🆕 الثيم — يُقرأ من localStorage إن وُجد (يحفظ عبر أسئلة التمارين)
   const [currentTheme, setCurrentTheme] = useState<SorobanTheme>(() => {
     if (typeof window === 'undefined') return initialTheme;
     const saved = window.localStorage.getItem(THEME_STORAGE_KEY) as SorobanTheme | null;
     return saved && THEMES[saved] ? saved : initialTheme;
   });
 
-  // 💾 حفظ الثيم
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
     }
   }, [currentTheme]);
 
-  // 🆕 دوران المعداد
   const [isRotated, setIsRotated] = useState(false);
 
-  // 🆕 إضاءة الإطار عند اللمس فقط (٢ ثانية)
+  // 🆕 إضاءة العمود عند اللمس (لا إطار — فقط عمود)
   const [touchGlow, setTouchGlow] = useState(false);
   const touchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -297,14 +280,16 @@ export function Soroban2D5({
 
   return (
     <div className="w-full flex flex-col items-center gap-2 relative">
-      {/* 🔄 كل شيء داخل هذا الـ motion.div يدور معًا */}
-      <motion.div
-        animate={{ rotate: isRotated ? 90 : 0 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+      {/* 🚀 دوران بدون motion.div — CSS transition فقط */}
+      <div
         className="flex flex-col items-center gap-2"
-        style={{ transformOrigin: 'center center' }}
+        style={{
+          transform: `rotate(${isRotated ? 90 : 0}deg)`,
+          transition: counterTransition,
+          transformOrigin: 'center center',
+        }}
       >
-        {/* العنوان + مُبدّل الثيمات — معاكسان للدوران ليبقى النص مقروءًا */}
+        {/* العنوان + مُبدّل الثيمات */}
         <div className="flex items-center justify-between gap-2 w-full px-1">
           <div
             className="flex gap-1.5"
@@ -357,10 +342,7 @@ export function Soroban2D5({
 
         {/* الإطار */}
         <div className="relative inline-flex">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+          <div
             className="relative rounded-2xl"
             style={{
               paddingTop: cfg.framePaddingY,
@@ -374,16 +356,7 @@ export function Soroban2D5({
               transition: 'background 0.15s',
             }}
           >
-            {/* إضاءة الإطار — فقط عند اللمس */}
-            <div
-              className="absolute inset-0 rounded-2xl pointer-events-none"
-              style={{
-                border: `2px solid ${ts.frameGlow}`,
-                boxShadow: getFrameShadow(currentTheme, touchGlow),
-                opacity: touchGlow ? 1 : 0,
-                transition: 'opacity 0.4s ease-in-out',
-              }}
-            />
+            {/* ❌ تم حذف إضاءة الإطار نهائيًا */}
 
             {/* الداخل: ماء زجاجي */}
             <div
@@ -394,8 +367,6 @@ export function Soroban2D5({
                 paddingLeft: cfg.innerPaddingX,
                 paddingRight: cfg.innerPaddingX,
                 background: ts.innerBg,
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
                 boxShadow: `inset 0 4px 12px rgba(0,0,0,0.2), inset 0 0 30px ${ts.frameGlow}22`,
                 border: `1px solid ${ts.innerBorder}`,
                 overflow: 'visible',
@@ -467,16 +438,15 @@ export function Soroban2D5({
                     background: 'rgba(255,255,255,0.15)',
                     color: '#fff',
                     border: '1px solid rgba(255,255,255,0.25)',
-                    backdropFilter: 'blur(8px)',
                   }}
                 >
                   ↺ إعادة الكل
                 </button>
               </div>
             )}
-          </motion.div>
+          </div>
 
-          {/* 🆕 زر التدوير — منتصف الجانب الأيمن للإطار */}
+          {/* زر التدوير */}
           <button
             type="button"
             onClick={() => setIsRotated((r) => !r)}
@@ -490,20 +460,18 @@ export function Soroban2D5({
               borderRadius: '50%',
               background: 'rgba(255,255,255,0.15)',
               border: `1.5px solid ${ts.frameGlow}`,
-              boxShadow: `0 0 12px ${ts.frameGlow}66`,
               color: ts.frameGlow,
               fontSize: 18,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backdropFilter: 'blur(8px)',
             }}
           >
             ↻
           </button>
         </div>
-      </motion.div>
+      </div>
 
       {shouldShowValue && (
         <AnimatePresence mode="popLayout">
