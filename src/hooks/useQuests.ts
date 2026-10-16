@@ -1,149 +1,236 @@
 // src/hooks/useQuests.ts
-import { useState, useEffect } from 'react';
-import { QUESTS } from '../data';
-import type { Quest } from '../types';
+// ✅ 12 إنجازاً نوعياً من progressStore + masteryBadgesStore
+// ✅ مرتّب: الأقرب للتحقيق أولاً
+// 📅 v10 — 2026-10-16
 
-const COMPLETED_STORAGE_KEY = 'soroban_completed_lessons';
-const ANZAN_STORAGE_KEY = 'soroban_anzan_stats';
-const PRACTICE_STORAGE_KEY = 'soroban_practice_stats';
-const STATS_STORAGE_KEY = 'sorobanmind-stats';
+import { useMemo } from 'react';
+import {
+  useProgressStore,
+  type ProgressStats,
+  type SkillProgress,
+  type RemediationSession,
+} from '../store/progressStore';
+import {
+  useMasteryBadgesStore,
+  type MasteryBadge,
+} from '../store/masteryBadgesStore';
+import { SRB_SECTIONS } from '../data/srb/curriculum';
 
-interface AnzanStats {
-  highScore: number;
-  totalRounds: number;
-  totalCorrect: number;
+// ═══════════════════════════════════════════════════════════
+// النوع
+// ═══════════════════════════════════════════════════════════
+
+export interface Achievement {
+  id: string;
+  titleAr: string;
+  descriptionAr: string;
+  icon: string;
+  progress: number;
+  target: number;
+  earned: boolean;
 }
 
-interface PracticeStats {
-  totalProblems: number;
-  correctAnswers: number;
-  additionProblems: number;
-  subtractionProblems: number;
-  multiplicationProblems: number;
-  divisionProblems: number;
-}
+// ═══════════════════════════════════════════════════════════
+// دوال مساعدة
+// ═══════════════════════════════════════════════════════════
 
-interface StoredStats {
-  xp: number;
-  streak: number;
-  level: number;
-  soundEnabled: boolean;
-  earnedBadges: string[];
-}
-
-function safeRead<T extends object>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') {
-      return { ...fallback, ...parsed } as T;
-    }
-    return fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function calculateProgress(
-  type: string,
-  completed: number[],
-  anzanStats: AnzanStats,
-  practiceStats: PracticeStats,
-  stats: StoredStats,
+function countConqueredSections(
+  skillProgress: Record<string, SkillProgress>,
 ): number {
-  switch (type) {
-    case 'practice':
-      return practiceStats.totalProblems;
-    case 'anzan':
-      return anzanStats.totalCorrect;
-    case 'anzanHighScore':
-      return anzanStats.highScore;
-    case 'streak':
-      return stats.streak;
-    case 'lessons':
-      return completed.length;
-    case 'addition':
-      return practiceStats.additionProblems || 0;
-    case 'subtraction':
-      return practiceStats.subtractionProblems || 0;
-    case 'multiplication':
-      return practiceStats.multiplicationProblems || 0;
-    case 'division':
-      return practiceStats.divisionProblems || 0;
-    case 'badges':
-      return stats.earnedBadges.length;
-    default:
-      return 0;
+  let count = 0;
+  for (const section of SRB_SECTIONS) {
+    const allMastered = Array.from(
+      { length: section.moduleCount },
+      (_, i) => `m${i + 1}`,
+    ).every((m) => {
+      const sp = skillProgress[`${section.level}-${section.id}-${m}`];
+      return sp && sp.attempts >= 5 && sp.attempts === sp.correct;
+    });
+    if (allMastered) count++;
   }
+  return count;
 }
 
-function computeQuests(): Quest[] {
-  const completed: number[] = (() => {
-    try {
-      const raw = localStorage.getItem(COMPLETED_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  })();
+function countChainGuardians(
+  skillProgress: Record<string, SkillProgress>,
+): number {
+  return Object.values(skillProgress).filter((s) => {
+    const parts = s.skillId.split('-');
+    if (parts.length !== 3) return false;
+    if (parts[1] !== 'S09' && parts[1] !== 'S10') return false;
+    return (s.peakStreak ?? 0) >= 15;
+  }).length;
+}
 
-  const anzanStats = safeRead<AnzanStats>(ANZAN_STORAGE_KEY, {
-    highScore: 0,
-    totalRounds: 0,
-    totalCorrect: 0,
-  });
+// ═══════════════════════════════════════════════════════════
+// الحساب
+// ═══════════════════════════════════════════════════════════
 
-  const practiceStats = safeRead<PracticeStats>(PRACTICE_STORAGE_KEY, {
-    totalProblems: 0,
-    correctAnswers: 0,
-    additionProblems: 0,
-    subtractionProblems: 0,
-    multiplicationProblems: 0,
-    divisionProblems: 0,
-  });
+function computeAchievements(
+  skillProgress: Record<string, SkillProgress>,
+  stats: ProgressStats,
+  remediationHistory: RemediationSession[],
+  masteryBadges: Record<string, MasteryBadge>,
+): Achievement[] {
+  const skills = Object.values(skillProgress);
+  const badges = Object.values(masteryBadges);
 
-  const stats = safeRead<StoredStats>(STATS_STORAGE_KEY, {
-    xp: 0,
-    streak: 0,
-    level: 1,
-    soundEnabled: true,
-    earnedBadges: [],
-  });
+  const remediatedIds = new Set<string>();
+  remediationHistory.forEach((r) =>
+    r.skills.forEach((id) => remediatedIds.add(id)),
+  );
 
-  return QUESTS.map((quest) => ({
-    ...quest,
-    progress: calculateProgress(
-      quest.type,
-      completed,
-      anzanStats,
-      practiceStats,
-      stats,
-    ),
+  const raw: Achievement[] = [
+    {
+      id: 'sniper',
+      titleAr: 'القنّاص',
+      descriptionAr: 'مهارة بدقة ٩٥٪',
+      icon: '🎯',
+      progress: skills.filter(
+        (s) => s.attempts >= 10 && s.correct / s.attempts >= 0.95,
+      ).length,
+      target: 1,
+      earned: false,
+    },
+    {
+      id: 'flow',
+      titleAr: 'المتدفق',
+      descriptionAr: '٢٥ إجابة متتالية',
+      icon: '🌊',
+      progress: skills.filter((s) => (s.peakStreak ?? 0) >= 25).length,
+      target: 1,
+      earned: false,
+    },
+    {
+      id: 'persistent',
+      titleAr: 'المثابر',
+      descriptionAr: '١٠٠ محاولة إجمالية',
+      icon: '🏋️',
+      progress: stats.totalAttempts,
+      target: 100,
+      earned: false,
+    },
+    {
+      id: 'explorer',
+      titleAr: 'المستكشف',
+      descriptionAr: 'جرّب ٢٠ مهارة',
+      icon: '🧭',
+      progress: skills.filter((s) => s.attempts >= 1).length,
+      target: 20,
+      earned: false,
+    },
+    {
+      id: 'resilient',
+      titleAr: 'الصامد',
+      descriptionAr: 'تعافى من جلسة علاجية',
+      icon: '⛰️',
+      progress: badges.filter((b) => remediatedIds.has(b.skillId)).length,
+      target: 1,
+      earned: false,
+    },
+    {
+      id: 'fast',
+      titleAr: 'السريع',
+      descriptionAr: '٥ مهارات بزمن قياسي',
+      icon: '⚡',
+      progress: badges.filter((b) => b.bestTimeMs < 3000).length,
+      target: 5,
+      earned: false,
+    },
+    {
+      id: 'excellent',
+      titleAr: 'المتفوق',
+      descriptionAr: '٨ شارات إتقان',
+      icon: '🌟',
+      progress: badges.length,
+      target: 8,
+      earned: false,
+    },
+    {
+      id: 'accurate',
+      titleAr: 'الدقيق',
+      descriptionAr: '٥ مهارات بلا خطأ',
+      icon: '🔍',
+      progress: skills.filter(
+        (s) => s.attempts >= 5 && s.attempts === s.correct,
+      ).length,
+      target: 5,
+      earned: false,
+    },
+    {
+      id: 'rising',
+      titleAr: 'الصاعد',
+      descriptionAr: 'دقة ٨٥٪ في مهارة مكثفة',
+      icon: '🚀',
+      progress: skills.filter(
+        (s) => s.attempts >= 20 && s.correct / s.attempts >= 0.85,
+      ).length,
+      target: 1,
+      earned: false,
+    },
+    {
+      id: 'guardian',
+      titleAr: 'الحارس',
+      descriptionAr: '١٥ متتالية في السلاسل',
+      icon: '🛡️',
+      progress: countChainGuardians(skillProgress),
+      target: 1,
+      earned: false,
+    },
+    {
+      id: 'conqueror',
+      titleAr: 'الفاتح',
+      descriptionAr: 'أتم قسم كامل',
+      icon: '🎓',
+      progress: countConqueredSections(skillProgress),
+      target: 1,
+      earned: false,
+    },
+    {
+      id: 'pioneer',
+      titleAr: 'الرائد',
+      descriptionAr: '٥٠٠ إجابة صحيحة',
+      icon: '👑',
+      progress: stats.totalCorrect,
+      target: 500,
+      earned: false,
+    },
+  ];
+
+  const withEarned = raw.map((a) => ({
+    ...a,
+    earned: a.progress >= a.target,
   }));
+
+  // ترتيب: المحقق أولاً · ثم الأقرب للتحقيق
+  return withEarned.sort((a, b) => {
+    if (a.earned !== b.earned) return a.earned ? -1 : 1;
+    const pctA = Math.min(1, a.progress / a.target);
+    const pctB = Math.min(1, b.progress / b.target);
+    return pctB - pctA;
+  });
 }
 
-export function useQuests() {
-  const [quests, setQuests] = useState<Quest[]>(() => computeQuests());
+// ═══════════════════════════════════════════════════════════
+// Hook
+// ═══════════════════════════════════════════════════════════
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setQuests(computeQuests());
-    }, 2000);
+export function useQuests(): Achievement[] {
+  const skillProgress = useProgressStore((s) => s.skillProgress);
+  const stats = useProgressStore((s) => s.stats);
+  const remediationHistory = useProgressStore((s) => s.remediationHistory);
+  const masteryBadges = useMasteryBadgesStore((s) => s.badges);
 
-    const handleStorage = () => {
-      setQuests(computeQuests());
-    };
-
-    window.addEventListener('storage', handleStorage);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('storage', handleStorage);
-    };
-  }, []);
-
-  return quests;
+  return useMemo(
+    () =>
+      computeAchievements(
+        skillProgress,
+        stats,
+        remediationHistory,
+        masteryBadges,
+      ),
+    [skillProgress, stats, remediationHistory, masteryBadges],
+  );
 }
 
 export default useQuests;
