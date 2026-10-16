@@ -21,7 +21,6 @@ interface Rod2D5Props {
   isDimmed?: boolean;
   showLabel?: boolean;
   themeStyles?: ThemeStyles;
-  isRotated?: boolean;
   beadGap?: number;
 }
 
@@ -55,9 +54,6 @@ function getLabelFontSize(text: string, isVertical: boolean): number {
   return 10;
 }
 
-// ============================================================
-// 🌟 غلاف زجاجي موحّد — بلا ظل خارجي، حد داخلي رقيق
-// ============================================================
 function BeadGlass({
   children,
   isBeadActive,
@@ -116,7 +112,6 @@ function BeadGlass({
         }}
       />
 
-      {/* زجاج داخلي — بلا ظل خارجي */}
       <div
         style={{
           position: 'absolute',
@@ -133,7 +128,6 @@ function BeadGlass({
         }}
       />
 
-      {/* النقطة البيضاء */}
       <div
         style={{
           position: 'absolute',
@@ -182,7 +176,6 @@ export function Rod2D5({
   isDimmed = false,
   showLabel = true,
   themeStyles,
-  isRotated = false,
   beadGap,
 }: Rod2D5Props) {
   const ts: ThemeStyles = themeStyles ?? {
@@ -193,6 +186,7 @@ export function Rod2D5({
     rodGlow: '#999',
     rodClickGlow: '#C9A227',
     beadGlassEnabled: false,
+    beadGap: 4,
     beamBase: 'linear-gradient(180deg, #3d2817 0%, #1a0f08 100%)',
     beamSegments: '#8b6f47',
     beamLaser: '#C9A227',
@@ -205,7 +199,6 @@ export function Rod2D5({
     labelColor: '#8b6f47',
     titleColor: '#8b6f47',
     valueColor: '#C9A227',
-    beadGap: 4,
   };
 
   const lowerBeads = [0, 1, 2, 3];
@@ -257,10 +250,6 @@ export function Rod2D5({
     if (isBeadActive) onSetLower(idx);
     else onSetLower(idx + 1);
   };
-
-  const labelTransform = isRotated
-    ? 'translateX(-50%) rotate(-90deg)'
-    : 'translateX(-50%)';
 
   return (
     <div
@@ -459,20 +448,16 @@ export function Rod2D5({
             fontSize: labelFontSize,
             bottom: 'calc(100% + 4px)',
             left: '50%',
-            transform: labelTransform,
-            writingMode: isRotated
-              ? 'horizontal-tb'
-              : isVertical
-              ? 'vertical-rl'
-              : 'horizontal-tb',
+            transform: 'translateX(-50%)',
+            writingMode: isVertical ? 'vertical-rl' : 'horizontal-tb',
             textOrientation: 'mixed',
             lineHeight: 1.05,
-            letterSpacing: isVertical && !isRotated ? 0 : 0.3,
+            letterSpacing: isVertical ? 0 : 0.3,
             whiteSpace: 'nowrap',
             pointerEvents: 'none',
             textAlign: 'center',
             color: ts.labelColor,
-            transition: 'color 0.15s, transform 0.35s ease',
+            transition: 'color 0.15s',
           }}
           title={labelText}
         >
