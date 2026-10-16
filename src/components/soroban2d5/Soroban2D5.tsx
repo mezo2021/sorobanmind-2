@@ -22,6 +22,8 @@ export interface ThemeStyles {
   innerBorder: string;
   rodGradient: string;
   rodGlow: string;
+  rodClickGlow: string;        // 🆕 لون إضاءة العمود عند النقر
+  beadGlassEnabled: boolean;   // 🆕 تفعيل الزجاج (classic = false)
   beamBase: string;
   beamSegments: string;
   beamLaser: string;
@@ -45,6 +47,8 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     innerBorder: 'rgba(139,111,71,0.4)',
     rodGradient: 'linear-gradient(180deg, #8b6f47 0%, #5a3a1f 50%, #8b6f47 100%)',
     rodGlow: '#C9A227',
+    rodClickGlow: '#C9A227',
+    beadGlassEnabled: false,  // 🆕 خشبي أصلي
     beamBase: 'linear-gradient(180deg, #3d2817 0%, #1a0f08 100%)',
     beamSegments: '#8b6f47',
     beamLaser: '#C9A227',
@@ -66,6 +70,8 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     innerBorder: 'rgba(127,219,255,0.35)',
     rodGradient: 'linear-gradient(180deg, #7FDBFF 0%, #0074D9 50%, #7FDBFF 100%)',
     rodGlow: '#7FDBFF',
+    rodClickGlow: '#7FDBFF',
+    beadGlassEnabled: true,
     beamBase: 'linear-gradient(180deg, #ffffff 0%, #d0e8f5 50%, #ffffff 100%)',
     beamSegments: '#FF4136',
     beamLaser: '#FF4136',
@@ -87,6 +93,8 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     innerBorder: 'rgba(255,105,180,0.35)',
     rodGradient: 'linear-gradient(180deg, #FF69B4 0%, #FFC0CB 50%, #FF69B4 100%)',
     rodGlow: '#FF69B4',
+    rodClickGlow: '#FFFFFF',    // 🆕 أبيض حصرًا
+    beadGlassEnabled: true,
     beamBase: 'linear-gradient(180deg, #ffffff 0%, #ffe0f0 50%, #ffffff 100%)',
     beamSegments: '#FF69B4',
     beamLaser: '#FFFFFF',
@@ -144,17 +152,8 @@ function getAutoBeadSize(columns: number): number {
   return 16;
 }
 
-// 🆕 أحجام مخصصة لسياق Flash — تُبقي المعدادين معًا بلا تداخل
 const FLASH_BEAD_SIZE_BY_COLUMNS: Record<number, number> = {
-  1: 40,
-  2: 36,
-  3: 30,
-  4: 26,
-  5: 23,
-  6: 21,
-  7: 19,
-  8: 18,
-  9: 17,
+  1: 40, 2: 36, 3: 30, 4: 26, 5: 23, 6: 21, 7: 19, 8: 18, 9: 17,
 };
 
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
@@ -220,11 +219,9 @@ export function Soroban2D5({
   const finalSize = size === 'auto' ? responsiveSize : size;
   const cfg = SIZE_CONFIG[finalSize];
 
-  // 🆕 كشف Flash Context
   const isFlashContext =
     rodTint === 'red' || rodTint === 'emerald' || rodTint === 'white';
 
-  // 🎨 الثيم
   const [currentTheme, setCurrentTheme] = useState<SorobanTheme>(() => {
     if (typeof window === 'undefined') return initialTheme;
     const saved = window.localStorage.getItem(THEME_STORAGE_KEY) as SorobanTheme | null;
@@ -241,6 +238,10 @@ export function Soroban2D5({
   const effectiveTheme: SorobanTheme = isFlashContext ? 'classic' : currentTheme;
   const ts = THEMES[effectiveTheme];
 
+  // 🆕 زر التدوير
+  const [isRotated, setIsRotated] = useState(false);
+  const canRotate = !isFlashContext && columns >= 7;
+
   const visibleColumns = (() => {
     if (!autoBeadSize && finalSize === 'sm' && columns > 4) return Math.min(4, columns);
     return columns;
@@ -249,9 +250,6 @@ export function Soroban2D5({
   const displayedStates = colStates.slice(-visibleColumns);
   const displayOffset = columns - visibleColumns;
 
-  // ═══════════════════════════════════════════════════════════
-  // 🎯 حساب الأبعاد — Flash vs Normal
-  // ═══════════════════════════════════════════════════════════
   const effectiveBeadSize = autoBeadSize
     ? isFlashContext
       ? (FLASH_BEAD_SIZE_BY_COLUMNS[displayedStates.length] ??
@@ -259,7 +257,6 @@ export function Soroban2D5({
       : getAutoBeadSize(displayedStates.length)
     : cfg.beadSize;
 
-  // نسبة تصغير عامة عند Flash
   const flashScale = effectiveBeadSize / cfg.beadSize;
 
   const effectiveHeight = autoBeadSize
@@ -301,9 +298,6 @@ export function Soroban2D5({
       ? Math.max(6, Math.round(cfg.bottomPadding * flashScale))
       : cfg.bottomPadding;
 
-  // ═══════════════════════════════════════════════════════════
-  // Effects
-  // ═══════════════════════════════════════════════════════════
   useEffect(() => {
     if (initialValue > 0) setValue(initialValue);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -327,154 +321,205 @@ export function Soroban2D5({
 
   const shouldShowValue = revealValue || (!interactive && showValue);
 
+  const counterRotate = isRotated ? 'rotate(-90deg)' : 'none';
+  const counterTransition = 'transform 0.35s ease';
+
   return (
     <div className="w-full flex flex-col items-center gap-2 relative min-w-0">
-      {/* 🎨 صف الثيمات + العنوان — يُخفى في Flash */}
-      {!isFlashContext && (
-        <div className="flex items-center justify-between gap-2 w-full px-1">
-          <div className="flex gap-1.5">
-            {(['classic', 'ocean', 'barbie'] as SorobanTheme[]).map((t) => {
-              const active = currentTheme === t;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setCurrentTheme(t)}
-                  aria-label={THEMES[t].name}
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: active ? `${THEMES[t].frameGlow}33` : 'rgba(255,255,255,0.06)',
-                    border: active ? `2px solid ${THEMES[t].frameGlow}` : '2px solid transparent',
-                    boxShadow: active ? `0 0 12px ${THEMES[t].frameGlow}` : 'none',
-                    fontSize: 15,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  {THEMES[t].icon}
-                </button>
-              );
-            })}
-          </div>
-
-          {!hideTitle && (
-            <h3
-              className={`${cfg.titleSize} font-bold`}
-              style={{ color: ts.titleColor, transition: 'color 0.15s' }}
-            >
-              {currentTheme === 'classic' && '🟤 السوروبان الخشبي'}
-              {currentTheme === 'ocean' && '🏄 السوروبان الليزري'}
-              {currentTheme === 'barbie' && '❤️ سوروبان باربي'}
-            </h3>
-          )}
-        </div>
-      )}
-
-      {/* الإطار */}
-      <div className="relative inline-flex max-w-full min-w-0">
-        <div
-          className="relative rounded-2xl"
-          style={{
-            paddingTop: framePaddingY,
-            paddingBottom: framePaddingY,
-            paddingLeft: framePaddingX,
-            paddingRight: framePaddingX,
-            background: ts.frameBg,
-            boxShadow: 'inset 0 4px 12px rgba(255,255,255,0.08), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35)',
-            border: '2px solid rgba(0,0,0,0.25)',
-            maxWidth: '100%',
-            transition: 'background 0.15s',
-          }}
-        >
-          {/* الداخل */}
-          <div
-            className="relative rounded-xl"
-            style={{
-              paddingTop: innerPaddingY,
-              paddingBottom: innerPaddingY,
-              paddingLeft: innerPaddingX,
-              paddingRight: innerPaddingX,
-              background: ts.innerBg,
-              boxShadow: `inset 0 4px 12px rgba(0,0,0,0.2), inset 0 0 30px ${ts.frameGlow}22`,
-              border: `1px solid ${ts.innerBorder}`,
-              overflow: 'visible',
-              transition: 'background 0.15s, border 0.15s',
-            }}
-          >
+      {/* 🆕 كل شيء داخل هذا الغلاف يدور معًا */}
+      <div
+        className="flex flex-col items-center gap-2"
+        style={{
+          transform: `rotate(${isRotated ? 90 : 0}deg)`,
+          transition: counterTransition,
+          transformOrigin: 'center center',
+        }}
+      >
+        {/* 🎨 صف الثيمات + العنوان */}
+        {!isFlashContext && (
+          <div className="flex items-center justify-between gap-2 w-full px-1">
             <div
-              className="absolute top-0 left-0 right-0 rounded-t-xl pointer-events-none"
-              style={{
-                height: '30%',
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%)',
-              }}
-            />
-
-            <div
-              className="flex flex-row-reverse items-center justify-center relative"
-              style={{
-                gap: effectiveGap,
-                paddingTop: topPadding,
-                paddingBottom: bottomPadding,
-              }}
-              dir="rtl"
+              className="flex gap-1.5"
+              style={{ transform: counterRotate, transition: counterTransition }}
             >
-              {displayedStates.map((state, idx) => {
-                const originalIdx = idx + displayOffset;
-                const displayOrder = columns - 1 - originalIdx;
-                const isHighlighted = highlightColumns?.includes(originalIdx) ?? false;
-                const isDim = dimColumns?.includes(originalIdx) ?? false;
-                const finalTint: RodTint | undefined = isHighlighted ? 'white' : rodTint;
-
+              {(['classic', 'ocean', 'barbie'] as SorobanTheme[]).map((t) => {
+                const active = currentTheme === t;
                 return (
-                  <Rod2D5
-                    key={originalIdx}
-                    state={state}
-                    columnIndex={originalIdx}
-                    displayOrder={displayOrder}
-                    totalColumns={displayedStates.length}
-                    onToggleUpper={() => interactive && toggleUpper(originalIdx)}
-                    onSetLower={(count) => interactive && setLower(originalIdx, count)}
-                    onReset={() => interactive && resetColumn(originalIdx)}
-                    height={effectiveHeight}
-                    beadSize={effectiveBeadSize}
-                    isActive={activeRodIndex === originalIdx}
-                    beamHighlight={beamHighlight}
-                    tint={finalTint}
-                    isDimmed={isDim}
-                    showLabel={!hideColumnLabels}
-                    themeStyles={ts}
-                  />
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setCurrentTheme(t)}
+                    aria-label={THEMES[t].name}
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: active ? `${THEMES[t].frameGlow}33` : 'rgba(255,255,255,0.06)',
+                      border: active ? `2px solid ${THEMES[t].frameGlow}` : '2px solid transparent',
+                      boxShadow: active ? `0 0 12px ${THEMES[t].frameGlow}` : 'none',
+                      fontSize: 15,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {THEMES[t].icon}
+                  </button>
                 );
               })}
             </div>
 
-            {displayOffset > 0 && (
-              <p className="text-center text-[10px] mt-1" style={{ color: ts.labelColor }}>
-                ✨ {formatByStyle(visibleColumns, numberStyle)} أعمدة
-              </p>
+            {!hideTitle && (
+              <h3
+                className={`${cfg.titleSize} font-bold`}
+                style={{
+                  color: ts.titleColor,
+                  transition: `color 0.15s, ${counterTransition}`,
+                  transform: counterRotate,
+                }}
+              >
+                {currentTheme === 'classic' && '🟤 السوروبان الخشبي'}
+                {currentTheme === 'ocean' && '🏄 السوروبان الليزري'}
+                {currentTheme === 'barbie' && '❤️ سوروبان باربي'}
+              </h3>
+            )}
+          </div>
+        )}
+
+        {/* الإطار */}
+        <div className="relative inline-flex max-w-full min-w-0">
+          <div
+            className="relative rounded-2xl"
+            style={{
+              paddingTop: framePaddingY,
+              paddingBottom: framePaddingY,
+              paddingLeft: framePaddingX,
+              paddingRight: framePaddingX,
+              background: ts.frameBg,
+              boxShadow: 'inset 0 4px 12px rgba(255,255,255,0.08), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35)',
+              border: '2px solid rgba(0,0,0,0.25)',
+              maxWidth: '100%',
+              transition: 'background 0.15s',
+            }}
+          >
+            <div
+              className="relative rounded-xl"
+              style={{
+                paddingTop: innerPaddingY,
+                paddingBottom: innerPaddingY,
+                paddingLeft: innerPaddingX,
+                paddingRight: innerPaddingX,
+                background: ts.innerBg,
+                boxShadow: `inset 0 4px 12px rgba(0,0,0,0.2), inset 0 0 30px ${ts.frameGlow}22`,
+                border: `1px solid ${ts.innerBorder}`,
+                overflow: 'visible',
+                transition: 'background 0.15s, border 0.15s',
+              }}
+            >
+              <div
+                className="absolute top-0 left-0 right-0 rounded-t-xl pointer-events-none"
+                style={{
+                  height: '30%',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%)',
+                }}
+              />
+
+              <div
+                className="flex flex-row-reverse items-center justify-center relative"
+                style={{
+                  gap: effectiveGap,
+                  paddingTop: topPadding,
+                  paddingBottom: bottomPadding,
+                }}
+                dir="rtl"
+              >
+                {displayedStates.map((state, idx) => {
+                  const originalIdx = idx + displayOffset;
+                  const displayOrder = columns - 1 - originalIdx;
+                  const isHighlighted = highlightColumns?.includes(originalIdx) ?? false;
+                  const isDim = dimColumns?.includes(originalIdx) ?? false;
+                  const finalTint: RodTint | undefined = isHighlighted ? 'white' : rodTint;
+
+                  return (
+                    <Rod2D5
+                      key={originalIdx}
+                      state={state}
+                      columnIndex={originalIdx}
+                      displayOrder={displayOrder}
+                      totalColumns={displayedStates.length}
+                      onToggleUpper={() => interactive && toggleUpper(originalIdx)}
+                      onSetLower={(count) => interactive && setLower(originalIdx, count)}
+                      onReset={() => interactive && resetColumn(originalIdx)}
+                      height={effectiveHeight}
+                      beadSize={effectiveBeadSize}
+                      isActive={activeRodIndex === originalIdx}
+                      beamHighlight={beamHighlight}
+                      tint={finalTint}
+                      isDimmed={isDim}
+                      showLabel={!hideColumnLabels}
+                      themeStyles={ts}
+                      isRotated={isRotated}
+                    />
+                  );
+                })}
+              </div>
+
+              {displayOffset > 0 && (
+                <p className="text-center text-[10px] mt-1" style={{ color: ts.labelColor }}>
+                  ✨ {formatByStyle(visibleColumns, numberStyle)} أعمدة
+                </p>
+              )}
+            </div>
+
+            {interactive && (
+              <div
+                className="flex justify-center gap-2 mt-2"
+                style={{ transform: counterRotate, transition: counterTransition }}
+              >
+                <button
+                  type="button"
+                  onClick={handleResetAll}
+                  className="px-4 py-1.5 rounded-full font-bold transition text-xs"
+                  style={{
+                    background: 'rgba(255,255,255,0.15)',
+                    color: '#fff',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                  }}
+                >
+                  ↺ إعادة الكل
+                </button>
+              </div>
             )}
           </div>
 
-          {interactive && (
-            <div className="flex justify-center gap-2 mt-2">
-              <button
-                type="button"
-                onClick={handleResetAll}
-                className="px-4 py-1.5 rounded-full font-bold transition text-xs"
-                style={{
-                  background: 'rgba(255,255,255,0.15)',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.25)',
-                }}
-              >
-                ↺ إعادة الكل
-              </button>
-            </div>
+          {/* 🆕 زر التدوير — يظهر فقط عند 7+ أعمدة */}
+          {canRotate && (
+            <button
+              type="button"
+              onClick={() => setIsRotated((r) => !r)}
+              aria-label="تدوير المعداد"
+              title="تدوير المعداد 90°"
+              className="absolute top-1/2 -translate-y-1/2 z-30"
+              style={{
+                right: -42,
+                width: 34,
+                height: 34,
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.15)',
+                border: `1.5px solid ${ts.frameGlow}`,
+                color: ts.frameGlow,
+                fontSize: 18,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              ↻
+            </button>
           )}
         </div>
       </div>
