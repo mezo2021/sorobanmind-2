@@ -192,6 +192,7 @@ export function GuardianDashboard({
 
   // ═══ الأزرار الإدارية ═══
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showAllRemediation, setShowAllRemediation] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inPreview = isPreviewMode();
 
@@ -608,7 +609,7 @@ export function GuardianDashboard({
         </div>
       </motion.div>
 
-      {/* ═══ شارات إتقان المهارات — شبكة 4×3 ═══ */}
+      {/* ═══ شارات إتقان المهارات — شبكة 3×N ═══ */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.23 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -625,7 +626,7 @@ export function GuardianDashboard({
             🏅 لم يتقن الطفل أي مهارة بعد — أكمل بزمن قياسي للحصول على شارة!
           </p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
             {masteryBadgesList.map((badge) => {
               const label = getSkillLabel(badge.skillId);
               const timeSec = Math.round(badge.bestTimeMs / 1000);
@@ -634,19 +635,19 @@ export function GuardianDashboard({
                   key={badge.skillId}
                   initial={{ opacity: 0, scale: 0.85 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-gradient-to-br from-gold-400/20 to-amber-500/10 border border-gold-400/40"
+                  className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-gradient-to-br from-gold-400/20 to-amber-500/10 border border-gold-400/40"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-lg">
-                    <Trophy className="w-7 h-7 text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-md">
+                    <Trophy className="w-5 h-5 text-white" />
                   </div>
-                  <p className="text-[10px] font-bold text-white text-center leading-tight" dir="ltr">
+                  <p className="text-[9px] font-bold text-white text-center leading-tight" dir="ltr">
                     {badge.skillId}
                   </p>
-                  <p className="text-[10px] text-gold-200 text-center leading-tight truncate w-full">
+                  <p className="text-[9px] text-gold-200 text-center leading-tight truncate w-full">
                     {label}
                   </p>
-                  <p className="text-[10px] text-white/50 flex items-center gap-1">
-                    <Timer className="w-3 h-3" />
+                  <p className="text-[9px] text-white/50 flex items-center gap-0.5">
+                    <Timer className="w-2.5 h-2.5" />
                     {toArabicNumber(timeSec)}s
                   </p>
                 </motion.div>
@@ -720,7 +721,7 @@ export function GuardianDashboard({
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {remediationSummary.map((item) => {
+            {(showAllRemediation ? remediationSummary : remediationSummary.slice(0, 5)).map((item) => {
               const parsed = parseSkillId(item.skillId);
               const label = parsed
                 ? getModuleName(parsed.section, parsed.module)
@@ -762,6 +763,18 @@ export function GuardianDashboard({
               );
             })}
           </div>
+
+          {remediationSummary.length > 5 && (
+            <button
+              type="button"
+              onClick={() => { playSound('click'); setShowAllRemediation((v) => !v); }}
+              className="mt-3 w-full py-2 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-200 text-xs font-bold hover:bg-amber-500/25 transition"
+            >
+              {showAllRemediation
+                ? 'عرض أقل'
+                : `عرض ${toArabicNumber(remediationSummary.length - 5)} أخرى`}
+            </button>
+          )}
         </motion.div>
       )}
 
@@ -876,7 +889,7 @@ export function GuardianDashboard({
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
           {quests.map((quest, i) => {
             const pct = Math.min(100, (quest.progress / quest.target) * 100);
             return (
@@ -885,21 +898,21 @@ export function GuardianDashboard({
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.35 + i * 0.04 }}
-                className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${
+                className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border ${
                   quest.earned
                     ? 'bg-gradient-to-br from-gold-400/20 to-amber-500/10 border-gold-400/50 shadow-lg shadow-gold-500/20'
                     : 'bg-white/[0.02] border-white/10'
                 }`}
               >
-                <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${quest.earned ? 'bg-gradient-to-br from-gold-400 to-gold-600' : 'bg-white/5'}`}>
-                  <span className={`text-2xl ${quest.earned ? '' : 'opacity-30 grayscale'}`}>{quest.icon}</span>
+                <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${quest.earned ? 'bg-gradient-to-br from-gold-400 to-gold-600' : 'bg-white/5'}`}>
+                  <span className={`text-lg ${quest.earned ? '' : 'opacity-30 grayscale'}`}>{quest.icon}</span>
                 </div>
-                <p className={`text-xs font-bold font-body text-center leading-tight ${quest.earned ? 'text-gold-100' : 'text-white/60'}`}>
+                <p className={`text-[10px] font-bold font-body text-center leading-tight ${quest.earned ? 'text-gold-100' : 'text-white/60'}`}>
                   {quest.titleAr}
                 </p>
-                <p className="text-[10px] text-white/40 font-body text-center leading-tight">{quest.descriptionAr}</p>
-                <div className="w-full mt-1">
-                  <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <p className="text-[9px] text-white/40 font-body text-center leading-tight line-clamp-2">{quest.descriptionAr}</p>
+                <div className="w-full mt-0.5">
+                  <div className="h-1 rounded-full bg-white/10 overflow-hidden">
                     <motion.div
                       className={`h-full rounded-full ${quest.earned ? 'bg-gradient-to-r from-gold-300 to-gold-500' : 'bg-gradient-to-r from-purple-400 to-electric-500'}`}
                       initial={{ width: 0 }}
@@ -907,9 +920,9 @@ export function GuardianDashboard({
                       transition={{ delay: 0.4 + i * 0.04, duration: 0.6 }}
                     />
                   </div>
-                  <p className={`text-[10px] font-body text-center mt-1 ${quest.earned ? 'text-gold-200' : 'text-white/50'}`}>
+                  <p className={`text-[9px] font-body text-center mt-0.5 ${quest.earned ? 'text-gold-200' : 'text-white/50'}`}>
                     {quest.earned
-                      ? '✅ محقق'
+                      ? '✅'
                       : `${toArabicNumber(Math.min(quest.progress, quest.target))}/${toArabicNumber(quest.target)}`}
                   </p>
                 </div>
