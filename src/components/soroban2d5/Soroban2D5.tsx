@@ -8,9 +8,6 @@ import { useBeadHaptics } from './useBeadHaptics';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import type { RodTint } from '@/components/flash/types';
 
-// ============================================================
-// 🎨 THEMES
-// ============================================================
 export type SorobanTheme = 'classic' | 'ocean' | 'barbie';
 
 export interface ThemeStyles {
@@ -22,8 +19,8 @@ export interface ThemeStyles {
   innerBorder: string;
   rodGradient: string;
   rodGlow: string;
-  rodClickGlow: string;        // 🆕 لون إضاءة العمود عند النقر
-  beadGlassEnabled: boolean;   // 🆕 تفعيل الزجاج (classic = false)
+  rodClickGlow: string;
+  beadGlassEnabled: boolean;
   beamBase: string;
   beamSegments: string;
   beamLaser: string;
@@ -48,14 +45,14 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     rodGradient: 'linear-gradient(180deg, #8b6f47 0%, #5a3a1f 50%, #8b6f47 100%)',
     rodGlow: '#C9A227',
     rodClickGlow: '#C9A227',
-    beadGlassEnabled: false,  // 🆕 خشبي أصلي
+    beadGlassEnabled: false,
     beamBase: 'linear-gradient(180deg, #3d2817 0%, #1a0f08 100%)',
     beamSegments: '#8b6f47',
     beamLaser: '#C9A227',
     upperBeadTint: 'rgba(139,111,71,0.10)',
     lowerBeadTint: 'rgba(139,111,71,0.10)',
-    upperBeadGlow: '#5a3a1f',
-    lowerBeadGlow: '#5a3a1f',
+    upperBeadGlow: '#F5D896',
+    lowerBeadGlow: '#E8C88A',
     upperDot: '#8b6f47',
     lowerDot: '#c19a6b',
     labelColor: '#8b6f47',
@@ -77,8 +74,8 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     beamLaser: '#FF4136',
     upperBeadTint: 'rgba(255,215,0,0.45)',
     lowerBeadTint: 'rgba(127,219,255,0.55)',
-    upperBeadGlow: '#FFD700',
-    lowerBeadGlow: '#7FDBFF',
+    upperBeadGlow: '#FFE55C',
+    lowerBeadGlow: '#B8ECFF',
     upperDot: '#FFD700',
     lowerDot: '#7FDBFF',
     labelColor: '#FFFFFF',
@@ -93,7 +90,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     innerBorder: 'rgba(255,105,180,0.35)',
     rodGradient: 'linear-gradient(180deg, #FF69B4 0%, #FFC0CB 50%, #FF69B4 100%)',
     rodGlow: '#FF69B4',
-    rodClickGlow: '#FFFFFF',    // 🆕 أبيض حصرًا
+    rodClickGlow: '#FFFFFF',
     beadGlassEnabled: true,
     beamBase: 'linear-gradient(180deg, #ffffff 0%, #ffe0f0 50%, #ffffff 100%)',
     beamSegments: '#FF69B4',
@@ -101,7 +98,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     upperBeadTint: 'rgba(255,255,255,0.55)',
     lowerBeadTint: 'rgba(255,105,180,0.55)',
     upperBeadGlow: '#FFFFFF',
-    lowerBeadGlow: '#FF69B4',
+    lowerBeadGlow: '#FFB8D8',
     upperDot: '#FFFFFF',
     lowerDot: '#FF69B4',
     labelColor: '#FFC0CB',
@@ -112,9 +109,6 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
 
 const THEME_STORAGE_KEY = 'soroban2d5-theme';
 
-// ============================================================
-// أدوات
-// ============================================================
 function useResponsiveSize() {
   const [size, setSize] = useState<'sm' | 'md' | 'lg'>(() => {
     if (typeof window === 'undefined') return 'md';
@@ -165,9 +159,6 @@ function formatByStyle(value: number, style: 'arabic' | 'latin'): string {
   return str;
 }
 
-// ============================================================
-// Props
-// ============================================================
 interface Soroban2D5Props {
   columns?: number;
   initialValue?: number;
@@ -188,9 +179,6 @@ interface Soroban2D5Props {
   theme?: SorobanTheme;
 }
 
-// ============================================================
-// Component
-// ============================================================
 export function Soroban2D5({
   columns = 4,
   initialValue = 0,
@@ -259,9 +247,14 @@ export function Soroban2D5({
 
   const flashScale = effectiveBeadSize / cfg.beadSize;
 
-  const effectiveHeight = autoBeadSize
+  // 🆕 توسعة الارتفاع عند الدوران → يظهر أعرض
+  const rotatedHeightBoost = isRotated ? 1.2 : 1;
+
+  const baseHeight = autoBeadSize
     ? Math.round(cfg.height * (effectiveBeadSize / cfg.beadSize))
     : cfg.height;
+
+  const effectiveHeight = Math.round(baseHeight * rotatedHeightBoost);
 
   const effectiveGap =
     isFlashContext && autoBeadSize
@@ -326,7 +319,6 @@ export function Soroban2D5({
 
   return (
     <div className="w-full flex flex-col items-center gap-2 relative min-w-0">
-      {/* 🆕 كل شيء داخل هذا الغلاف يدور معًا */}
       <div
         className="flex flex-col items-center gap-2"
         style={{
@@ -335,7 +327,6 @@ export function Soroban2D5({
           transformOrigin: 'center center',
         }}
       >
-        {/* 🎨 صف الثيمات + العنوان */}
         {!isFlashContext && (
           <div className="flex items-center justify-between gap-2 w-full px-1">
             <div
@@ -388,7 +379,6 @@ export function Soroban2D5({
           </div>
         )}
 
-        {/* الإطار */}
         <div className="relative inline-flex max-w-full min-w-0">
           <div
             className="relative rounded-2xl"
@@ -494,7 +484,6 @@ export function Soroban2D5({
             )}
           </div>
 
-          {/* 🆕 زر التدوير — يظهر فقط عند 7+ أعمدة */}
           {canRotate && (
             <button
               type="button"
