@@ -12,6 +12,7 @@ export function useGameStats() {
   const totalXP = useProgressStore((s) => s.totalXP);
   const currentStreak = useProgressStore((s) => s.currentStreak);
   const soundEnabled = useProgressStore((s) => s.soundEnabled);
+  const completedLevelsCount = useProgressStore((s) => s.completedLevels.length);
 
   const addXPStore = useProgressStore((s) => s.addXP);
   const updateStreakStore = useProgressStore((s) => s.updateStreak);
@@ -22,7 +23,9 @@ export function useGameStats() {
     updateStreakStore();
   }, [updateStreakStore]);
 
-  const level = Math.floor(totalXP / 100) + 1;
+  // ─── المستوى = عدد المستويات المُنجزة ───
+  // 0 → L0 (التمهيدي) · 1 → L1 · 2 → L2 (حالتك) · 8 → L7 (سقف)
+  const level = Math.min(completedLevelsCount, 7);
 
   const stats: GameStats = {
     xp: totalXP,
