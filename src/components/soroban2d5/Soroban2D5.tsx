@@ -210,20 +210,26 @@ export function Soroban2D5({
   const isFlashContext =
     rodTint === 'red' || rodTint === 'emerald' || rodTint === 'white';
 
+  // 🆕 وضع الأعمدة الكثيرة (7+)
+  const isSmallLayout = !isFlashContext && columns >= 7;
+
   const [currentTheme, setCurrentTheme] = useState<SorobanTheme>(() => {
     if (typeof window === 'undefined') return initialTheme;
     const saved = window.localStorage.getItem(THEME_STORAGE_KEY) as SorobanTheme | null;
     return saved && THEMES[saved] ? saved : initialTheme;
   });
 
+  // 💾 حفظ الثيم — فقط خارج Flash و خارج 7+
   useEffect(() => {
-    if (isFlashContext) return;
+    if (isFlashContext || isSmallLayout) return;
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
     }
-  }, [currentTheme, isFlashContext]);
+  }, [currentTheme, isFlashContext, isSmallLayout]);
 
-  const effectiveTheme: SorobanTheme = isFlashContext ? 'classic' : currentTheme;
+  // 🎨 الثيم الفعلي — classic إلزامي في Flash و 7+
+  const effectiveTheme: SorobanTheme =
+    isFlashContext || isSmallLayout ? 'classic' : currentTheme;
   const ts = THEMES[effectiveTheme];
 
   // 🆕 زر التدوير
@@ -231,30 +237,34 @@ export function Soroban2D5({
   const canRotate = !isFlashContext && columns >= 7;
 
   const visibleColumns = (() => {
-    if (!autoBeadSize && finalSize === 'sm' && columns > 4) return Math.min(4, columns);
+    if (!autoBeadSize && !isSmallLayout && finalSize === 'sm' && columns > 4) {
+      return Math.min(4, columns);
+    }
     return columns;
   })();
 
   const displayedStates = colStates.slice(-visibleColumns);
   const displayOffset = columns - visibleColumns;
 
-  const effectiveBeadSize = autoBeadSize
+  // 🆕 تصغير إلزامي في 7+
+  const shouldAutoSize = autoBeadSize || isSmallLayout;
+
+  const effectiveBeadSize = shouldAutoSize
     ? isFlashContext
       ? (FLASH_BEAD_SIZE_BY_COLUMNS[displayedStates.length] ??
-          Math.max(14, Math.floor(150 / displayedStates.length / 1.3)))
+          Math.max(10, Math.floor(150 / displayedStates.length / 1.3)))
       : getAutoBeadSize(displayedStates.length)
     : cfg.beadSize;
 
   const flashScale = effectiveBeadSize / cfg.beadSize;
 
-  // 🆕 توسعة الارتفاع عند الدوران → يظهر أعرض
-  const rotatedHeightBoost = isRotated ? 1.2 : 1;
-
-  const baseHeight = autoBeadSize
+  const baseHeight = shouldAutoSize
     ? Math.round(cfg.height * (effectiveBeadSize / cfg.beadSize))
     : cfg.height;
 
-  const effectiveHeight = Math.round(baseHeight * rotatedHeightBoost);
+  // 🆕 7+ = تخفيض ارتفاع | تدوير = زيادة خفيفة
+  const heightFactor = (isSmallLayout ? 0.75 : 1) * (isRotated ? 1.2 : 1);
+  const effectiveHeight = Math.round(baseHeight * heightFactor);
 
   const effectiveGap =
     isFlashContext && autoBeadSize
@@ -327,7 +337,8 @@ export function Soroban2D5({
           transformOrigin: 'center center',
         }}
       >
-        {!isFlashContext && (
+        {/* 🎨 صف الثيمات + العنوان — يختفي في Flash و 7+ */}
+        {!isFlashContext && !isSmallLayout && (
           <div className="flex items-center justify-between gap-2 w-full px-1">
             <div
               className="flex gap-1.5"
@@ -416,12 +427,18 @@ export function Soroban2D5({
                 }}
               />
 
+              {/* 🆕 حاوية الأعمدة — شريط تمرير أفقي في 7+ فقط */}
               <div
-                className="flex flex-row-reverse items-center justify-center relative"
+                className={`flex flex-row-reverse items-center relative ${
+                  isSmallLayout ? 'justify-start' : 'justify-center'
+                }`}
                 style={{
                   gap: effectiveGap,
                   paddingTop: topPadding,
                   paddingBottom: bottomPadding,
+                  overflowX: isSmallLayout ? 'auto' : 'visible',
+                  overflowY: isSmallLayout ? 'hidden' : 'visible',
+                  width: '100%',
                 }}
                 dir="rtl"
               >
