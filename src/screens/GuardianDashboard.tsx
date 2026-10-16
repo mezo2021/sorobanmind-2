@@ -1,15 +1,7 @@
 // src/screens/GuardianDashboard.tsx
 // ✅ SRB-first: يقرأ من progressStore + masteryBadgesStore
-// ✅ Props محفوظة للتوافق (deprecated — تُقرأ من store)
-// ✅ أزرار إدارية: حفظ نسخة + استعادة + فتح الكل + تصفير
-// [FIX 7] — زر المعاينة (بدل فتح الكل)
-// [FIX 10] — المستويات المكتملة مشتقة من 3 مراحل (تمرّن + بصري + سمعي)
-// [FIX 11] — master_mixed → master_chains (بصري) · إضافة master_chains_audio (سمعي)
-// [FIX 12] — بطاقة "أسطورة السوروبان" عند 8/8
-// [FIX 13] — LevelNodeButton: "متاح" / "مكتمل" بدل "100 XP"
-// [FIX 14] — handleReset: توسيع keysToKeep (10 مفاتيح) — 2026-10-13
-// [FIX 15] — handleBackup: نسخ كامل localStorage بدون فلترة — 2026-10-13
-// [FIX 16] — handleRestore: مسح localStorage قبل الاستعادة — 2026-10-13
+// [v10] — 4 تحسينات: مغامرات 4×3 + شارات إتقان 4×3 + جلسات علاجية 2×N + شارات أنزان 7+7
+// 📅 2026-10-16
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMemo, useState, useRef } from 'react';
@@ -25,7 +17,6 @@ import {
 
 import { useQuests } from '../hooks/useQuests';
 
-// [FIX 7] — وضع المعاينة (toggle)
 import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
 
 // ═══ SRB Stores ═══
@@ -74,7 +65,7 @@ function getSkillLabel(skillId: string): string {
 }
 
 // ═══════════════════════════════════════════════════════════
-// ثوابت — Gradients · Icons
+// ثوابت
 // ═══════════════════════════════════════════════════════════
 
 const LEVEL_GRADIENTS: Record<string, string> = {
@@ -118,7 +109,7 @@ interface LevelNodeData {
 }
 
 // ═══════════════════════════════════════════════════════════
-// LevelNodeButton — [FIX 13]
+// LevelNodeButton
 // ═══════════════════════════════════════════════════════════
 
 function LevelNodeButton({
@@ -196,17 +187,15 @@ export function GuardianDashboard({
   // ═══ masteryBadgesStore ═══
   const masteryBadges = useMasteryBadgesStore((s) => s.badges);
 
-  // ═══ Quests ═══
+  // ═══ الإنجازات (v10 — 12 إنجازاً) ═══
   const quests = useQuests();
 
-  // ═══ 🛠️ الأزرار الإدارية ═══
+  // ═══ الأزرار الإدارية ═══
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // [FIX 7] — وضع المعاينة
   const inPreview = isPreviewMode();
 
-  // ═══ 🩺 الجلسات العلاجية (آخر 7 أيام) ═══
+  // ═══ الجلسات العلاجية (آخر 7 أيام) ═══
   const recentRemediation = useMemo(() => {
     const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
     return remediationHistory.filter((s) => s.completedAt >= cutoff);
@@ -226,11 +215,7 @@ export function GuardianDashboard({
           existing.count += 1;
           existing.lastAt = Math.max(existing.lastAt, s.completedAt);
         } else {
-          map.set(skillId, {
-            skillId,
-            count: 1,
-            lastAt: s.completedAt,
-          });
+          map.set(skillId, { skillId, count: 1, lastAt: s.completedAt });
         }
       });
     });
@@ -243,9 +228,8 @@ export function GuardianDashboard({
 
   // ═══ مشتقات ═══
   const childLevel = Math.floor(totalXP / 100) + 1;
-  const totalLevelsCount = SRB_LEVELS.length; // 8
+  const totalLevelsCount = SRB_LEVELS.length;
 
-  // [FIX 10] — المستويات المكتملة = اجتاز 3 مراحل
   const effectiveCompletedLevels = useMemo(() => {
     return SRB_LEVELS
       .filter((lv) => {
@@ -261,11 +245,10 @@ export function GuardianDashboard({
 
   const effectiveCompletedCount = effectiveCompletedLevels.length;
 
-  // [FIX 12] — هل الطفل أسطورة؟
   const isLegend =
     effectiveCompletedCount === totalLevelsCount && totalLevelsCount > 0;
 
-  // ═══ 🎓 شارات إنجاز المستوى [FIX 10] ═══
+  // ═══ شارات إنجاز المستوى ═══
   const levelBadges = useMemo(
     () =>
       SRB_LEVELS.map((lv, idx) => ({
@@ -282,56 +265,51 @@ export function GuardianDashboard({
 
   const earnedLevelBadges = levelBadges.filter((b) => b.earned).length;
 
-  // ═══ 🏅 شارات إتقان المهارات ═══
+  // ═══ شارات إتقان المهارات ═══
   const masteryBadgesList = useMemo(
     () => Object.values(masteryBadges).sort((a, b) => b.masteredAt - a.masteredAt),
     [masteryBadges],
   );
 
-  // ═══ 🧠 شارات الأنزان البصري [FIX 11] ═══
+  // ═══ شارات الأنزان البصري — 7 شارات ═══
   const anzanBadgeList = useMemo(
     () => [
       { id: 'master_addition', label: 'خبير جمع وطرح', icon: '🧠', color: 'from-cyan-500 to-blue-700', earned: !!anzanBadges.master_addition },
       { id: 'master_multiplication', label: 'خبير ضرب', icon: '✖️', color: 'from-indigo-500 to-purple-700', earned: !!anzanBadges.master_multiplication },
       { id: 'master_division', label: 'خبير قسمة', icon: '➗', color: 'from-blue-500 to-cyan-700', earned: !!anzanBadges.master_division },
       { id: 'master_chains', label: 'خبير سلاسل', icon: '🔗', color: 'from-teal-500 to-cyan-700', earned: !!anzanBadges.master_chains },
+      { id: 'master_advanced', label: 'خبير المتقدم', icon: '🎯', color: 'from-fuchsia-500 to-purple-700', earned: !!anzanBadges.master_advanced },
+      { id: 'master_decimals', label: 'خبير العشريات', icon: '🔢', color: 'from-rose-500 to-pink-700', earned: !!anzanBadges.master_decimals },
+      { id: 'master_roots', label: 'خبير الجذور', icon: '√', color: 'from-slate-500 to-gray-700', earned: !!anzanBadges.master_roots },
     ],
     [anzanBadges],
   );
 
   const earnedAnzanCount = anzanBadgeList.filter((b) => b.earned).length;
 
-  // ═══ 🎧 شارات الأنزان السماعي [FIX 11] ═══
+  // ═══ شارات الأنزان السمعي — 7 شارات ═══
   const audioAnzanBadgeList = useMemo(
     () => [
       { id: 'master_addition_audio', label: 'خبير جمع وطرح سماعي', icon: '🎤', color: 'from-cyan-500 to-blue-700', earned: !!anzanAudioBadges.master_addition_audio },
       { id: 'master_multiplication_audio', label: 'خبير ضرب سماعي', icon: '🎤', color: 'from-indigo-500 to-purple-700', earned: !!anzanAudioBadges.master_multiplication_audio },
       { id: 'master_division_audio', label: 'خبير قسمة سماعية', icon: '🎤', color: 'from-blue-500 to-cyan-700', earned: !!anzanAudioBadges.master_division_audio },
       { id: 'master_chains_audio', label: 'خبير سلاسل سماعي', icon: '🎤', color: 'from-teal-500 to-cyan-700', earned: !!anzanAudioBadges.master_chains_audio },
+      { id: 'master_advanced_audio', label: 'خبير المتقدم سماعي', icon: '🎤', color: 'from-fuchsia-500 to-purple-700', earned: !!anzanAudioBadges.master_advanced_audio },
+      { id: 'master_decimals_audio', label: 'خبير العشريات سماعي', icon: '🎤', color: 'from-rose-500 to-pink-700', earned: !!anzanAudioBadges.master_decimals_audio },
+      { id: 'master_roots_audio', label: 'خبير الجذور سماعي', icon: '🎤', color: 'from-slate-500 to-gray-700', earned: !!anzanAudioBadges.master_roots_audio },
     ],
     [anzanAudioBadges],
   );
 
   const earnedAudioCount = audioAnzanBadgeList.filter((b) => b.earned).length;
 
-  // ═══ 📊 المهارات الأربع (SRB) ═══
+  // ═══ المهارات الأربع ═══
   const observation = useProgressStore(selectObservationAccuracy);
 
   const skills = useMemo(() => {
-    const concentration = Math.min(
-      100,
-      Math.round((passedPractice.length / totalLevelsCount) * 100),
-    );
-
-    const visualization = Math.min(
-      100,
-      Math.round((passedAnzanVisual.length / totalLevelsCount) * 100),
-    );
-
-    const listening = Math.min(
-      100,
-      Math.round((passedAnzanAudio.length / totalLevelsCount) * 100),
-    );
+    const concentration = Math.min(100, Math.round((passedPractice.length / totalLevelsCount) * 100));
+    const visualization = Math.min(100, Math.round((passedAnzanVisual.length / totalLevelsCount) * 100));
+    const listening = Math.min(100, Math.round((passedAnzanAudio.length / totalLevelsCount) * 100));
 
     return [
       { id: 'concentration', nameAr: 'التركيز والانتباه', descriptionAr: 'قدرة الطفل على البقاء مركّزاً خلال الجلسات', percentage: concentration, available: true },
@@ -341,7 +319,7 @@ export function GuardianDashboard({
     ];
   }, [passedPractice, passedAnzanVisual, passedAnzanAudio, totalLevelsCount, observation]);
 
-  // ═══ 🗺️ خارطة المستويات [FIX 10] ═══
+  // ═══ خارطة المستويات ═══
   const levelNodes: LevelNodeData[] = useMemo(
     () =>
       SRB_LEVELS.map((lv, idx) => {
@@ -351,9 +329,7 @@ export function GuardianDashboard({
 
         const status: LevelStatus = isCompleted
           ? 'completed'
-          : prevCompleted
-            ? 'available'
-            : 'locked';
+          : prevCompleted ? 'available' : 'locked';
 
         return {
           id: lv.order,
@@ -366,7 +342,7 @@ export function GuardianDashboard({
     [effectiveCompletedLevels],
   );
 
-  // ═══ 📅 نشاط الأسبوع ═══
+  // ═══ نشاط الأسبوع ═══
   const weeklyXP = useMemo(() => {
     const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
     const today = new Date().getDay();
@@ -378,7 +354,7 @@ export function GuardianDashboard({
 
   const maxWeeklyXP = Math.max(...weeklyXP.map((d) => d.xp), 1);
 
-  // ═══ 📈 الإحصائيات العلوية ═══
+  // ═══ الإحصائيات العلوية ═══
   const stats = [
     { label: 'نقاط الخبرة', labelEn: 'XP Points', value: toArabicNumber(totalXP), icon: Zap, gradient: 'from-gold-400 to-gold-600', glow: 'shadow-gold-500/30' },
     { label: 'المستوى', labelEn: 'Level', value: toArabicNumber(childLevel), icon: Award, gradient: 'from-purple-500 to-purple-700', glow: 'shadow-purple-500/30' },
@@ -392,8 +368,7 @@ export function GuardianDashboard({
     window.location.reload();
   };
 
-  // ═══ دوال الأزرار الإدارية ═══
-
+  // ═══ الأزرار الإدارية ═══
   const handlePreviewToggle = () => {
     togglePreviewMode();
     playSound('click');
@@ -402,18 +377,18 @@ export function GuardianDashboard({
 
   const handleReset = () => {
     const keysToKeep = [
-  'soroban_companion',
-  'soroban_child_name',
-  'soroban_child_full_name',
-  'soroban_high_scores_v1',
-  'soroban_high_scores_month',
-  'sorobanmind-v2-progress',
-  'soroban_mastery_badges',
-  'sorobanmind-v2-lang',
-  'srb_progress',
-  'soroban_number_style',
-  'sorobania_progress_v2',
-];
+      'soroban_companion',
+      'soroban_child_name',
+      'soroban_child_full_name',
+      'soroban_high_scores_v1',
+      'soroban_high_scores_month',
+      'sorobanmind-v2-progress',
+      'soroban_mastery_badges',
+      'sorobanmind-v2-lang',
+      'srb_progress',
+      'soroban_number_style',
+      'sorobania_progress_v2',
+    ];
     Object.keys(localStorage).forEach((key) => {
       if (!keysToKeep.includes(key)) localStorage.removeItem(key);
     });
@@ -428,9 +403,7 @@ export function GuardianDashboard({
       Object.keys(localStorage).forEach((key) => {
         data[key] = localStorage.getItem(key) || '';
       });
-      const blob = new Blob([JSON.stringify(data, null, 2)], {
-        type: 'application/json',
-      });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -450,15 +423,10 @@ export function GuardianDashboard({
     reader.onload = (e) => {
       try {
         const data = JSON.parse(e.target?.result as string);
-
-        Object.keys(localStorage).forEach((key) => {
-          localStorage.removeItem(key);
-        });
-
+        Object.keys(localStorage).forEach((key) => localStorage.removeItem(key));
         Object.entries(data).forEach(([key, value]) => {
           localStorage.setItem(key, value as string);
         });
-
         playSound('click');
         setTimeout(() => window.location.reload(), 300);
       } catch (err) {
@@ -468,110 +436,69 @@ export function GuardianDashboard({
     reader.readAsText(file);
   };
 
-  // ═══ بداية JSX ═══
+  // ═══════════════════════════════════════════════════════════
+  // JSX
+  // ═══════════════════════════════════════════════════════════
   return (
     <div className="px-3 sm:px-6 py-6 max-w-5xl mx-auto" dir="rtl">
       {/* ═══ رأس الصفحة ═══ */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
-        <button
-          onClick={() => { playSound('click'); onBack(); }}
-          className="btn-ghost !px-3 !py-2"
-        >
+        <button onClick={() => { playSound('click'); onBack(); }} className="btn-ghost !px-3 !py-2">
           <ArrowRight className="w-5 h-5" />
           <span className="hidden sm:inline">تبديل الدور</span>
         </button>
 
-        <button
-          onClick={handleRefresh}
-          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-500/15 border border-blue-400/30 text-blue-200 hover:bg-blue-500/25 transition-all text-sm font-body"
-        >
+        <button onClick={handleRefresh} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-500/15 border border-blue-400/30 text-blue-200 hover:bg-blue-500/25 transition-all text-sm font-body">
           <RefreshCw className="w-4 h-4" />
           <span>تحديث الصفحة</span>
         </button>
 
         {onShowWelcome && (
-          <button
-            onClick={() => { playSound('click'); onShowWelcome(); }}
-            className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-200 hover:bg-amber-500/25 transition-all text-sm font-body"
-          >
+          <button onClick={() => { playSound('click'); onShowWelcome(); }} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-200 hover:bg-amber-500/25 transition-all text-sm font-body">
             <PlayCircle className="w-4 h-4" />
             <span>شاشة الترحيب</span>
           </button>
         )}
 
         {onSwitchToHero && (
-          <button
-            onClick={() => { playSound('click'); onSwitchToHero(); }}
-            className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-purple-500/15 border border-purple-400/30 text-purple-200 hover:bg-purple-500/25 transition-all text-sm font-body"
-          >
+          <button onClick={() => { playSound('click'); onSwitchToHero(); }} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-purple-500/15 border border-purple-400/30 text-purple-200 hover:bg-purple-500/25 transition-all text-sm font-body">
             <Home className="w-4 h-4" />
             <span>وضع البطل</span>
           </button>
         )}
 
-        <button
-          type="button"
-          onClick={handleBackup}
-          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-500/20 border border-blue-400/40 text-blue-100 hover:bg-blue-500/30 transition-all text-xs font-body"
-        >
+        <button type="button" onClick={handleBackup} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-500/20 border border-blue-400/40 text-blue-100 hover:bg-blue-500/30 transition-all text-xs font-body">
           <Download className="w-4 h-4" />
           <span>حفظ نسخة</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-body"
-        >
+        <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-body">
           <Upload className="w-4 h-4" />
           <span>استعادة</span>
         </button>
 
-        <input
-          type="file"
-          accept=".json"
-          ref={fileInputRef}
-          onChange={handleRestore}
-          style={{ display: 'none' }}
-        />
+        <input type="file" accept=".json" ref={fileInputRef} onChange={handleRestore} style={{ display: 'none' }} />
 
-        <button
-          type="button"
-          onClick={handlePreviewToggle}
-          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-bold font-body"
-        >
+        <button type="button" onClick={handlePreviewToggle} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-bold font-body">
           <Unlock className="w-4 h-4" />
           <span>{inPreview ? '🚪 خروج من المعاينة' : '👁️ وضع المعاينة'}</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => { playSound('click'); setShowResetConfirm(true); }}
-          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-red-500/10 border border-red-400/30 text-red-300 hover:bg-red-500/20 transition-all text-xs font-body"
-        >
+        <button type="button" onClick={() => { playSound('click'); setShowResetConfirm(true); }} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-red-500/10 border border-red-400/30 text-red-300 hover:bg-red-500/20 transition-all text-xs font-body">
           <Trash2 className="w-4 h-4" />
           <span>تصفير</span>
         </button>
 
         <div className="flex-1" />
-
         <span className="text-[10px] text-white/40 font-body">SRB · محدّث آنياً</span>
       </div>
 
       {/* ═══ نظرة عامة على الطفل ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-card p-5 sm:p-6 mb-6 relative overflow-hidden"
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5 sm:p-6 mb-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-emerald2-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-40 h-40 bg-gold-500/10 rounded-full blur-3xl" />
         <div className="relative flex items-center gap-4">
-          <motion.div
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 3, repeat: Infinity }}
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-electric-500 flex items-center justify-center shadow-xl shadow-purple-500/40 shrink-0"
-          >
+          <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 3, repeat: Infinity }} className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-electric-500 flex items-center justify-center shadow-xl shadow-purple-500/40 shrink-0">
             <Brain className="w-9 h-9 sm:w-11 sm:h-11 text-white" />
           </motion.div>
           <div className="flex-1 min-w-0">
@@ -579,9 +506,7 @@ export function GuardianDashboard({
               <Sparkles className="w-4 h-4 text-gold-300" />
               <p className="text-xs text-gold-300 font-body font-bold">تقدم الطفل</p>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white truncate">
-              {savedName}
-            </h2>
+            <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white truncate">{savedName}</h2>
             <p className="text-sm text-emerald2-300 font-body mt-0.5">
               مستوى {toArabicNumber(childLevel)} ·{' '}
               {toArabicNumber(effectiveCompletedCount)}/{toArabicNumber(totalLevelsCount)} مستويات مكتملة
@@ -590,75 +515,24 @@ export function GuardianDashboard({
         </div>
       </motion.div>
 
-      {/* [FIX 12] — 👑 بطاقة أسطورة السوروبان */}
+      {/* ═══ أسطورة السوروبان ═══ */}
       {isLegend && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.85, y: 30 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ delay: 0.15, type: 'spring', stiffness: 150, damping: 18 }}
-          className="relative mb-6 rounded-3xl overflow-hidden"
-        >
-          {/* توهج خارجي متحرك */}
-          <motion.div
-            animate={{ opacity: [0.4, 0.9, 0.4], scale: [1, 1.05, 1] }}
-            transition={{ duration: 3, repeat: Infinity }}
-            className="absolute -inset-4 bg-gold-400/30 blur-3xl pointer-events-none"
-          />
-
-          {/* خلفية ذهبية متدرجة */}
+        <motion.div initial={{ opacity: 0, scale: 0.85, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: 0.15, type: 'spring', stiffness: 150, damping: 18 }} className="relative mb-6 rounded-3xl overflow-hidden">
+          <motion.div animate={{ opacity: [0.4, 0.9, 0.4], scale: [1, 1.05, 1] }} transition={{ duration: 3, repeat: Infinity }} className="absolute -inset-4 bg-gold-400/30 blur-3xl pointer-events-none" />
           <div className="relative rounded-3xl border-2 border-gold-400/70 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-gold-500/40 via-amber-500/25 to-yellow-600/15" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_25%,rgba(250,204,21,0.45),transparent_65%)]" />
-
-            {/* نجوم متلألئة */}
-            <motion.div
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 2.5, repeat: Infinity }}
-              className="absolute top-4 right-6 text-gold-200 text-xl"
-            >✨</motion.div>
-            <motion.div
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 3, repeat: Infinity, delay: 0.7 }}
-              className="absolute top-8 left-8 text-gold-200 text-lg"
-            >⭐</motion.div>
-            <motion.div
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 2.8, repeat: Infinity, delay: 1.4 }}
-              className="absolute bottom-6 right-10 text-gold-200 text-lg"
-            >✨</motion.div>
-
-            {/* المحتوى */}
+            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 2.5, repeat: Infinity }} className="absolute top-4 right-6 text-gold-200 text-xl">✨</motion.div>
+            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 3, repeat: Infinity, delay: 0.7 }} className="absolute top-8 left-8 text-gold-200 text-lg">⭐</motion.div>
+            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 2.8, repeat: Infinity, delay: 1.4 }} className="absolute bottom-6 right-10 text-gold-200 text-lg">✨</motion.div>
             <div className="relative p-6 sm:p-8">
               <div className="text-center">
-                <motion.div
-                  animate={{ y: [0, -10, 0], rotate: [0, 4, -4, 0] }}
-                  transition={{ duration: 4, repeat: Infinity }}
-                  className="inline-block text-6xl sm:text-7xl mb-4 drop-shadow-[0_0_25px_rgba(250,204,21,0.8)]"
-                >
-                  👑
-                </motion.div>
-
-                <motion.h2
-                  initial={{ opacity: 0, letterSpacing: '0.5em' }}
-                  animate={{ opacity: 1, letterSpacing: '0.15em' }}
-                  transition={{ delay: 0.4, duration: 0.8 }}
-                  className="text-3xl sm:text-4xl font-extrabold font-display text-gold-50 mb-3"
-                  style={{ textShadow: '0 0 30px rgba(250,204,21,0.6), 0 2px 10px rgba(0,0,0,0.5)' }}
-                >
-                  أسطورة السوروبان
-                </motion.h2>
-
-                <p className="text-sm sm:text-base text-gold-100 font-body mb-5 leading-relaxed">
-                  🎉 يا <strong>{savedName}</strong>! أتممت جميع مستويات أكاديمية السوروبان
-                </p>
-
+                <motion.div animate={{ y: [0, -10, 0], rotate: [0, 4, -4, 0] }} transition={{ duration: 4, repeat: Infinity }} className="inline-block text-6xl sm:text-7xl mb-4 drop-shadow-[0_0_25px_rgba(250,204,21,0.8)]">👑</motion.div>
+                <motion.h2 initial={{ opacity: 0, letterSpacing: '0.5em' }} animate={{ opacity: 1, letterSpacing: '0.15em' }} transition={{ delay: 0.4, duration: 0.8 }} className="text-3xl sm:text-4xl font-extrabold font-display text-gold-50 mb-3" style={{ textShadow: '0 0 30px rgba(250,204,21,0.6), 0 2px 10px rgba(0,0,0,0.5)' }}>أسطورة السوروبان</motion.h2>
+                <p className="text-sm sm:text-base text-gold-100 font-body mb-5 leading-relaxed">🎉 يا <strong>{savedName}</strong>! أتممت جميع مستويات أكاديمية السوروبان</p>
                 <div className="flex flex-wrap items-center justify-center gap-3">
-                  <span className="px-4 py-2 rounded-2xl bg-gold-400/40 border border-gold-300/60 text-gold-50 text-sm font-bold flex items-center gap-2">
-                    🏆 {toArabicNumber(totalLevelsCount)}/{toArabicNumber(totalLevelsCount)}
-                  </span>
-                  <span className="px-4 py-2 rounded-2xl bg-gold-400/40 border border-gold-300/60 text-gold-50 text-sm font-bold flex items-center gap-2">
-                    ⭐ {toArabicNumber(totalXP)} XP
-                  </span>
+                  <span className="px-4 py-2 rounded-2xl bg-gold-400/40 border border-gold-300/60 text-gold-50 text-sm font-bold flex items-center gap-2">🏆 {toArabicNumber(totalLevelsCount)}/{toArabicNumber(totalLevelsCount)}</span>
+                  <span className="px-4 py-2 rounded-2xl bg-gold-400/40 border border-gold-300/60 text-gold-50 text-sm font-bold flex items-center gap-2">⭐ {toArabicNumber(totalXP)} XP</span>
                 </div>
               </div>
             </div>
@@ -666,24 +540,16 @@ export function GuardianDashboard({
         </motion.div>
       )}
 
-      {/* ═══ الإحصائيات ═══ */}
+      {/* ═══ الإحصائيات العلوية ═══ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {stats.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.08, type: 'spring', stiffness: 200, damping: 20 }}
-              className="glass-card p-4 sm:p-5 text-center"
-            >
+            <motion.div key={stat.label} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.08, type: 'spring', stiffness: 200, damping: 20 }} className="glass-card p-4 sm:p-5 text-center">
               <div className={`inline-flex w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br ${stat.gradient} items-center justify-center shadow-lg ${stat.glow} mb-3`}>
                 <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
-              <p className="text-2xl sm:text-3xl font-extrabold font-display text-white mb-0.5">
-                {stat.value}
-              </p>
+              <p className="text-2xl sm:text-3xl font-extrabold font-display text-white mb-0.5">{stat.value}</p>
               <p className="text-xs sm:text-sm text-white/60 font-body">{stat.label}</p>
               <p className="text-[10px] text-white/30 font-body">{stat.labelEn}</p>
             </motion.div>
@@ -692,134 +558,62 @@ export function GuardianDashboard({
       </div>
 
       {/* ═══ المهارات الأربع ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="glass-card p-5 sm:p-6 mb-6"
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Target className="w-5 h-5 text-emerald2-300" />
           <h3 className="text-xl font-extrabold font-display text-white">المهارات</h3>
         </div>
-
         <div className="space-y-4">
           {skills.map((skill, i) => (
-            <motion.div
-              key={skill.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.25 + i * 0.08 }}
-            >
+            <motion.div key={skill.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 + i * 0.08 }}>
               <div className="flex items-center justify-between mb-1.5">
-                <p className="text-sm font-bold font-body text-white/80">
-                  {skill.nameAr}
-                </p>
-                <span
-                  className={`text-xs font-bold font-display ${
-                    skill.percentage >= 70 ? 'text-emerald2-300'
-                    : skill.percentage >= 40 ? 'text-gold-300'
-                    : 'text-red-300'
-                  }`}
-                >
+                <p className="text-sm font-bold font-body text-white/80">{skill.nameAr}</p>
+                <span className={`text-xs font-bold font-display ${skill.percentage >= 70 ? 'text-emerald2-300' : skill.percentage >= 40 ? 'text-gold-300' : 'text-red-300'}`}>
                   {toArabicNumber(skill.percentage)}٪
                 </span>
               </div>
               <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
-                <motion.div
-                  className={`h-full rounded-full ${
-                    skill.percentage >= 70 ? 'bg-gradient-to-r from-emerald2-400 to-emerald2-600'
-                    : skill.percentage >= 40 ? 'bg-gradient-to-r from-gold-400 to-gold-600'
-                    : 'bg-gradient-to-r from-red-400 to-red-600'
-                  }`}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${skill.percentage}%` }}
-                  transition={{ delay: 0.35 + i * 0.08, duration: 0.8 }}
-                />
+                <motion.div className={`h-full rounded-full ${skill.percentage >= 70 ? 'bg-gradient-to-r from-emerald2-400 to-emerald2-600' : skill.percentage >= 40 ? 'bg-gradient-to-r from-gold-400 to-gold-600' : 'bg-gradient-to-r from-red-400 to-red-600'}`} initial={{ width: 0 }} animate={{ width: `${skill.percentage}%` }} transition={{ delay: 0.35 + i * 0.08, duration: 0.8 }} />
               </div>
-              <p className="text-[10px] text-white/40 font-body mt-1.5">
-                {skill.descriptionAr}
-              </p>
+              <p className="text-[10px] text-white/40 font-body mt-1.5">{skill.descriptionAr}</p>
             </motion.div>
           ))}
         </div>
       </motion.div>
 
-      {/* ⏸️ الجزء 2 يبدأ من هنا — أرسل "تابع" */}
-      {/* ═══ 🎓 شارات إنجاز المستوى (8) ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.22 }}
-        className="glass-card p-5 sm:p-6 mb-6"
-      >
+      {/* ═══ شارات إنجاز المستوى (8) ═══ */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-gold-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">
-              🎓 شارات إنجاز المستوى
-            </h3>
+            <h3 className="text-xl font-extrabold font-display text-white">🎓 شارات إنجاز المستوى</h3>
           </div>
           <span className="badge bg-gold-400/15 border-gold-400/20 text-gold-200 text-xs">
             {toArabicNumber(earnedLevelBadges)}/{toArabicNumber(levelBadges.length)}
           </span>
         </div>
-
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {levelBadges.map((badge, i) => {
             const Icon = badge.Icon;
             return (
-              <motion.div
-                key={badge.id}
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.06 }}
-                className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${
-                  badge.earned
-                    ? 'bg-white/5 border-white/10'
-                    : 'bg-white/[0.02] border-white/5'
-                }`}
-              >
-                <div
-                  className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
-                    badge.earned ? `bg-gradient-to-br ${badge.gradient}` : 'bg-white/5'
-                  }`}
-                >
-                  {badge.earned ? (
-                    <Icon className="w-7 h-7 text-white" />
-                  ) : (
-                    <LockBadge className="w-6 h-6 text-white/25" />
-                  )}
+              <motion.div key={badge.id} initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.06 }} className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${badge.earned ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5'}`}>
+                <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${badge.earned ? `bg-gradient-to-br ${badge.gradient}` : 'bg-white/5'}`}>
+                  {badge.earned ? <Icon className="w-7 h-7 text-white" /> : <LockBadge className="w-6 h-6 text-white/25" />}
                 </div>
-                <p
-                  className={`text-xs font-bold font-body text-center ${
-                    badge.earned ? 'text-white/80' : 'text-white/30'
-                  }`}
-                >
-                  {badge.label}
-                </p>
-                <p className="text-[10px] text-white/40 font-body text-center leading-tight">
-                  {badge.labelEn}
-                </p>
+                <p className={`text-xs font-bold font-body text-center ${badge.earned ? 'text-white/80' : 'text-white/30'}`}>{badge.label}</p>
+                <p className="text-[10px] text-white/40 font-body text-center leading-tight">{badge.labelEn}</p>
               </motion.div>
             );
           })}
         </div>
       </motion.div>
 
-      {/* ═══ 🏅 شارات إتقان المهارات ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.23 }}
-        className="glass-card p-5 sm:p-6 mb-6"
-      >
+      {/* ═══ شارات إتقان المهارات — شبكة 4×3 ═══ */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.23 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5 text-gold-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">
-              🏅 شارات إتقان المهارات
-            </h3>
+            <h3 className="text-xl font-extrabold font-display text-white">🏅 شارات إتقان المهارات</h3>
           </div>
           <span className="badge bg-gold-400/15 border-gold-400/20 text-gold-200 text-xs">
             {toArabicNumber(masteryBadgesList.length)}
@@ -831,171 +625,90 @@ export function GuardianDashboard({
             🏅 لم يتقن الطفل أي مهارة بعد — أكمل بزمن قياسي للحصول على شارة!
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {masteryBadgesList.slice(0, 10).map((badge) => {
-              const parsed = parseSkillId(badge.skillId);
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {masteryBadgesList.map((badge) => {
               const label = getSkillLabel(badge.skillId);
               const timeSec = Math.round(badge.bestTimeMs / 1000);
-
               return (
                 <motion.div
                   key={badge.skillId}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-l from-gold-400/10 to-transparent border border-gold-400/30"
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-gradient-to-br from-gold-400/20 to-amber-500/10 border border-gold-400/40"
                 >
-                  <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-lg">
-                    <Trophy className="w-5 h-5 text-white" />
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-lg">
+                    <Trophy className="w-7 h-7 text-white" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-white truncate">
-                      {parsed
-                        ? `${parsed.level}-${parsed.section}-${parsed.module}`
-                        : badge.skillId}
-                    </p>
-                    <p className="text-[10px] text-gold-200 truncate">{label}</p>
-                    <p className="text-[10px] text-white/50 flex items-center gap-1">
-                      <Timer className="w-3 h-3" />
-                      {toArabicNumber(timeSec)}s (قياسي)
-                    </p>
-                  </div>
+                  <p className="text-[10px] font-bold text-white text-center leading-tight" dir="ltr">
+                    {badge.skillId}
+                  </p>
+                  <p className="text-[10px] text-gold-200 text-center leading-tight truncate w-full">
+                    {label}
+                  </p>
+                  <p className="text-[10px] text-white/50 flex items-center gap-1">
+                    <Timer className="w-3 h-3" />
+                    {toArabicNumber(timeSec)}s
+                  </p>
                 </motion.div>
               );
             })}
           </div>
         )}
-
-        {masteryBadgesList.length > 10 && (
-          <p className="text-center text-white/40 font-body text-xs mt-3">
-            و {toArabicNumber(masteryBadgesList.length - 10)} شارة أخرى...
-          </p>
-        )}
       </motion.div>
 
-      {/* ═══ 🧠 شارات الأنزان البصري ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.24 }}
-        className="glass-card p-5 sm:p-6 mb-6"
-      >
+      {/* ═══ شارات الأنزان البصري (7) ═══ */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-purple-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">
-              شارات الأنزان البصري
-            </h3>
+            <h3 className="text-xl font-extrabold font-display text-white">شارات الأنزان البصري</h3>
           </div>
           <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-200 text-xs">
             {toArabicNumber(earnedAnzanCount)}/{toArabicNumber(anzanBadgeList.length)}
           </span>
         </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {anzanBadgeList.map((badge, i) => (
-            <motion.div
-              key={badge.id}
-              initial={{ opacity: 0, scale: 0.7 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.08 }}
-              className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${
-                badge.earned
-                  ? 'bg-white/5 border-white/10'
-                  : 'bg-white/[0.02] border-white/5'
-              }`}
-            >
-              <div
-                className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
-                  badge.earned ? `bg-gradient-to-br ${badge.color}` : 'bg-white/5'
-                }`}
-              >
-                {badge.earned ? (
-                  <span className="text-2xl">{badge.icon}</span>
-                ) : (
-                  <LockBadge className="w-6 h-6 text-white/25" />
-                )}
+            <motion.div key={badge.id} initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.06 }} className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${badge.earned ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5'}`}>
+              <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${badge.earned ? `bg-gradient-to-br ${badge.color}` : 'bg-white/5'}`}>
+                {badge.earned ? <span className="text-2xl">{badge.icon}</span> : <LockBadge className="w-6 h-6 text-white/25" />}
               </div>
-              <p
-                className={`text-xs font-bold font-body text-center ${
-                  badge.earned ? 'text-white/80' : 'text-white/30'
-                }`}
-              >
-                {badge.label}
-              </p>
+              <p className={`text-[10px] font-bold font-body text-center leading-tight ${badge.earned ? 'text-white/80' : 'text-white/30'}`}>{badge.label}</p>
             </motion.div>
           ))}
         </div>
       </motion.div>
 
-      {/* ═══ 🎧 شارات الأنزان السماعي ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
-        className="glass-card p-5 sm:p-6 mb-6"
-      >
+      {/* ═══ شارات الأنزان السمعي (7) ═══ */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Volume2 className="w-5 h-5 text-purple-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">
-              شارات الأنزان السماعي
-            </h3>
+            <h3 className="text-xl font-extrabold font-display text-white">شارات الأنزان السماعي</h3>
           </div>
           <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-200 text-xs">
             {toArabicNumber(earnedAudioCount)}/{toArabicNumber(audioAnzanBadgeList.length)}
           </span>
         </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {audioAnzanBadgeList.map((badge, i) => (
-            <motion.div
-              key={badge.id}
-              initial={{ opacity: 0, scale: 0.7 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.08 }}
-              className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${
-                badge.earned
-                  ? 'bg-white/5 border-white/10'
-                  : 'bg-white/[0.02] border-white/5'
-              }`}
-            >
-              <div
-                className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
-                  badge.earned ? `bg-gradient-to-br ${badge.color}` : 'bg-white/5'
-                }`}
-              >
-                {badge.earned ? (
-                  <span className="text-2xl">{badge.icon}</span>
-                ) : (
-                  <LockBadge className="w-6 h-6 text-white/25" />
-                )}
+            <motion.div key={badge.id} initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.06 }} className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${badge.earned ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5'}`}>
+              <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${badge.earned ? `bg-gradient-to-br ${badge.color}` : 'bg-white/5'}`}>
+                {badge.earned ? <span className="text-2xl">{badge.icon}</span> : <LockBadge className="w-6 h-6 text-white/25" />}
               </div>
-              <p
-                className={`text-[10px] font-bold font-body text-center leading-tight ${
-                  badge.earned ? 'text-white/80' : 'text-white/30'
-                }`}
-              >
-                {badge.label}
-              </p>
+              <p className={`text-[10px] font-bold font-body text-center leading-tight ${badge.earned ? 'text-white/80' : 'text-white/30'}`}>{badge.label}</p>
             </motion.div>
           ))}
         </div>
       </motion.div>
 
-      {/* ═══ 🩺 الجلسات العلاجية (آخر 7 أيام) ═══ */}
+      {/* ═══ الجلسات العلاجية — شبكة 2×N ═══ */}
       {remediationSummary.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.32 }}
-          className="glass-card p-5 sm:p-6 mb-6"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }} className="glass-card p-5 sm:p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Lightbulb className="w-5 h-5 text-amber-300" />
-              <h3 className="text-xl font-extrabold font-display text-white">
-                🩺 الجلسات العلاجية
-              </h3>
+              <h3 className="text-xl font-extrabold font-display text-white">🩺 الجلسات العلاجية</h3>
             </div>
             <span className="badge bg-amber-400/15 border-amber-400/20 text-amber-200 text-xs">
               {toArabicNumber(remediationSummary.length)} مهارة
@@ -1006,8 +719,8 @@ export function GuardianDashboard({
             آخر ٧ أيام — المهارات التي خضع لها الطفل لجلسات علاجية
           </p>
 
-          <div className="space-y-2">
-            {remediationSummary.slice(0, 8).map((item) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {remediationSummary.map((item) => {
               const parsed = parseSkillId(item.skillId);
               const label = parsed
                 ? getModuleName(parsed.section, parsed.module)
@@ -1016,30 +729,31 @@ export function GuardianDashboard({
                 (Date.now() - item.lastAt) / (24 * 60 * 60 * 1000),
               );
               const daysLabel =
-                daysAgo === 0
-                  ? 'اليوم'
-                  : daysAgo === 1
-                    ? 'أمس'
-                    : `منذ ${toArabicNumber(daysAgo)} أيام`;
+                daysAgo === 0 ? 'اليوم'
+                : daysAgo === 1 ? 'أمس'
+                : `منذ ${toArabicNumber(daysAgo)} أيام`;
+
+              // 🎨 تلوين حسب التكرار
+              const intensity = item.count >= 5 ? 'high' : item.count >= 3 ? 'mid' : 'low';
+              const colors = {
+                high: { gradient: 'from-red-500 to-red-700', bg: 'bg-red-500/10', border: 'border-red-400/40' },
+                mid:  { gradient: 'from-orange-500 to-orange-700', bg: 'bg-orange-500/10', border: 'border-orange-400/40' },
+                low:  { gradient: 'from-yellow-500 to-yellow-700', bg: 'bg-yellow-500/10', border: 'border-yellow-400/40' },
+              }[intensity];
 
               return (
                 <motion.div
                   key={item.skillId}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-400/30"
+                  className={`flex items-center gap-3 p-3 rounded-xl ${colors.bg} border ${colors.border}`}
                 >
-                  <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg">
+                  <div className={`shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br ${colors.gradient} flex items-center justify-center shadow-lg`}>
                     <Lightbulb className="w-5 h-5 text-white" />
                   </div>
-
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-white truncate">
-                      {item.skillId}
-                    </p>
-                    <p className="text-[10px] text-amber-200 truncate">
-                      {label}
-                    </p>
+                    <p className="text-xs font-bold text-white truncate" dir="ltr">{item.skillId}</p>
+                    <p className="text-[10px] text-white/70 truncate">{label}</p>
                     <p className="text-[10px] text-white/50 mt-0.5">
                       {daysLabel} · {toArabicNumber(item.count)} جلسة
                     </p>
@@ -1048,34 +762,20 @@ export function GuardianDashboard({
               );
             })}
           </div>
-
-          {remediationSummary.length > 8 && (
-            <p className="text-center text-white/40 font-body text-xs mt-3">
-              و {toArabicNumber(remediationSummary.length - 8)} مهارة أخرى...
-            </p>
-          )}
         </motion.div>
       )}
 
-      {/* ═══ 🗺️ خارطة المستويات ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
-        className="glass-card p-5 sm:p-6 mb-6"
-      >
+      {/* ═══ خارطة المستويات ═══ */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">
-              خارطة المستويات
-            </h3>
+            <h3 className="text-xl font-extrabold font-display text-white">خارطة المستويات</h3>
           </div>
           <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-300 text-xs">
             {toArabicNumber(effectiveCompletedCount)}/{toArabicNumber(totalLevelsCount)} مكتمل
           </span>
         </div>
-
         <div className="relative overflow-x-auto scrollbar-hide pb-4">
           <div className="flex items-start gap-3 sm:gap-5 min-w-max pr-2 pl-8">
             <div className="absolute top-8 right-0 left-0 h-1 bg-gradient-to-r from-purple-500/30 via-electric-500/30 to-white/5 rounded-full" />
@@ -1086,13 +786,8 @@ export function GuardianDashboard({
         </div>
       </motion.div>
 
-      {/* ═══ 📅 نشاط الأسبوع ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="glass-card p-5 sm:p-6 mb-6"
-      >
+      {/* ═══ نشاط الأسبوع ═══ */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center gap-2 mb-5">
           <BarChart3 className="w-5 h-5 text-electric-400" />
           <h3 className="text-lg font-extrabold font-display text-white">نشاط الأسبوع</h3>
@@ -1102,307 +797,159 @@ export function GuardianDashboard({
             const height = (day.xp / maxWeeklyXP) * 100;
             return (
               <div key={day.day} className="flex flex-col items-center gap-2 flex-1">
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: `${height}%` }}
-                  transition={{
-                    delay: 0.5 + i * 0.06,
-                    type: 'spring',
-                    stiffness: 100,
-                    damping: 15,
-                  }}
-                  className="w-full rounded-t-xl bg-gradient-to-t from-purple-600 to-electric-400 min-h-[4px] relative group"
-                >
-                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-white/0 group-hover:text-white/80 transition-colors whitespace-nowrap">
-                    {toArabicNumber(day.xp)}
-                  </span>
+                <motion.div initial={{ height: 0 }} animate={{ height: `${height}%` }} transition={{ delay: 0.5 + i * 0.06, type: 'spring', stiffness: 100, damping: 15 }} className="w-full rounded-t-xl bg-gradient-to-t from-purple-600 to-electric-400 min-h-[4px] relative group">
+                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-white/0 group-hover:text-white/80 transition-colors whitespace-nowrap">{toArabicNumber(day.xp)}</span>
                 </motion.div>
-                <span className="text-[10px] sm:text-xs text-white/50 font-body">
-                  {day.day}
-                </span>
+                <span className="text-[10px] sm:text-xs text-white/50 font-body">{day.day}</span>
               </div>
             );
           })}
         </div>
       </motion.div>
 
-      {/* ═══ 📊 إحصائيات مفصلة ═══ */}
+      {/* ═══ إحصائيات مفصلة ═══ */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="glass-card p-5"
-        >
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }} className="glass-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="w-5 h-5 text-emerald2-400" />
             <p className="text-sm text-white/60 font-body">تمارين ناجحة</p>
           </div>
-          <p className="text-3xl font-extrabold font-display text-white">
-            {toArabicNumber(passedPractice.length)}
-          </p>
-          <p className="text-xs text-emerald2-300 font-body mt-1">
-            من {toArabicNumber(totalLevelsCount)}
-          </p>
+          <p className="text-3xl font-extrabold font-display text-white">{toArabicNumber(passedPractice.length)}</p>
+          <p className="text-xs text-emerald2-300 font-body mt-1">من {toArabicNumber(totalLevelsCount)}</p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.55 }}
-          className="glass-card p-5"
-        >
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.55 }} className="glass-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <Eye className="w-5 h-5 text-electric-400" />
             <p className="text-sm text-white/60 font-body">أنزان بصري ناجح</p>
           </div>
-          <p className="text-3xl font-extrabold font-display text-white">
-            {toArabicNumber(passedAnzanVisual.length)}
-          </p>
-          <p className="text-xs text-electric-300 font-body mt-1">
-            من {toArabicNumber(totalLevelsCount)}
-          </p>
+          <p className="text-3xl font-extrabold font-display text-white">{toArabicNumber(passedAnzanVisual.length)}</p>
+          <p className="text-xs text-electric-300 font-body mt-1">من {toArabicNumber(totalLevelsCount)}</p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
-          className="glass-card p-5"
-        >
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }} className="glass-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <Award className="w-5 h-5 text-gold-400" />
             <p className="text-sm text-white/60 font-body">إجمالي الشارات</p>
           </div>
           <p className="text-3xl font-extrabold font-display text-white">
-            {toArabicNumber(
-              earnedLevelBadges +
-                masteryBadgesList.length +
-                earnedAnzanCount +
-                earnedAudioCount,
-            )}
+            {toArabicNumber(earnedLevelBadges + masteryBadgesList.length + earnedAnzanCount + earnedAudioCount)}
           </p>
           <p className="text-xs text-gold-300 font-body mt-1">جميع الأنواع</p>
         </motion.div>
       </div>
 
-      {/* ═══ 📈 تقدم المستويات ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.65 }}
-        className="glass-card p-5 sm:p-6 mb-6"
-      >
+      {/* ═══ تقدم المستويات ═══ */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="w-5 h-5 text-purple-400" />
           <h3 className="text-lg font-extrabold font-display text-white">تقدم المستويات</h3>
         </div>
         <div className="space-y-2.5">
           {levelNodes.map((node, i) => {
-            const pct =
-              node.status === 'completed' ? 100
-              : node.status === 'available' ? 40
-              : 0;
+            const pct = node.status === 'completed' ? 100 : node.status === 'available' ? 40 : 0;
             return (
-              <motion.div
-                key={node.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 + i * 0.04 }}
-                className="flex items-center gap-3"
-              >
-                <span
-                  className={`w-2 h-2 rounded-full shrink-0 ${
-                    node.status === 'completed' ? 'bg-emerald2-400'
-                    : node.status === 'available' ? 'bg-purple-400 animate-pulse'
-                    : 'bg-white/20'
-                  }`}
-                />
-                <span
-                  className={`text-sm font-body w-28 sm:w-36 shrink-0 ${
-                    node.status === 'locked' ? 'text-white/30' : 'text-white/70'
-                  }`}
-                >
-                  {node.nameAr}
-                </span>
+              <motion.div key={node.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.7 + i * 0.04 }} className="flex items-center gap-3">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${node.status === 'completed' ? 'bg-emerald2-400' : node.status === 'available' ? 'bg-purple-400 animate-pulse' : 'bg-white/20'}`} />
+                <span className={`text-sm font-body w-28 sm:w-36 shrink-0 ${node.status === 'locked' ? 'text-white/30' : 'text-white/70'}`}>{node.nameAr}</span>
                 <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
-                  <motion.div
-                    className={`h-full rounded-full ${
-                      node.status === 'completed'
-                        ? 'bg-gradient-to-r from-emerald2-400 to-emerald2-600'
-                        : node.status === 'available'
-                          ? 'bg-gradient-to-r from-purple-400 to-electric-500'
-                          : 'bg-white/10'
-                    }`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ delay: 0.8 + i * 0.04, duration: 0.6 }}
-                  />
+                  <motion.div className={`h-full rounded-full ${node.status === 'completed' ? 'bg-gradient-to-r from-emerald2-400 to-emerald2-600' : node.status === 'available' ? 'bg-gradient-to-r from-purple-400 to-electric-500' : 'bg-white/10'}`} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.8 + i * 0.04, duration: 0.6 }} />
                 </div>
-                <span className="text-xs text-white/40 font-body w-8 text-left shrink-0">
-                  {toArabicNumber(node.xpRequired)}
-                </span>
+                <span className="text-xs text-white/40 font-body w-8 text-left shrink-0">{toArabicNumber(node.xpRequired)}</span>
               </motion.div>
             );
           })}
         </div>
       </motion.div>
-{/* ═══ ⚔️ مغامرات [اسم الطفل] — 12 إنجازاً ═══ */}
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: 0.3 }}
-  className="glass-card p-5 sm:p-6 mb-6"
->
-  <div className="flex items-center justify-between mb-4">
-    <div className="flex items-center gap-2">
-      <Swords className="w-5 h-5 text-gold-300" />
-      <h3 className="text-xl font-extrabold font-display text-white">
-        ⚔️ مغامرات {savedName}
-      </h3>
-    </div>
-    <span className="badge bg-gold-400/15 border-gold-400/20 text-gold-200 text-xs">
-      {toArabicNumber(quests.filter((q) => q.earned).length)}/{toArabicNumber(quests.length)}
-    </span>
-  </div>
 
-  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-    {quests.map((quest, i) => {
-      const pct = Math.min(100, (quest.progress / quest.target) * 100);
-      return (
-        <motion.div
-          key={quest.id}
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.35 + i * 0.04 }}
-          className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${
-            quest.earned
-              ? 'bg-gradient-to-br from-gold-400/20 to-amber-500/10 border-gold-400/50 shadow-lg shadow-gold-500/20'
-              : 'bg-white/[0.02] border-white/10'
-          }`}
-        >
-          {/* الأيقونة */}
-          <div
-            className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
-              quest.earned
-                ? 'bg-gradient-to-br from-gold-400 to-gold-600'
-                : 'bg-white/5'
-            }`}
-          >
-            <span className={`text-2xl ${quest.earned ? '' : 'opacity-30 grayscale'}`}>
-              {quest.icon}
-            </span>
+      {/* ═══ ⚔️ مغامرات [اسم الطفل] — 12 إنجازاً ═══ */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-5 sm:p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Swords className="w-5 h-5 text-gold-300" />
+            <h3 className="text-xl font-extrabold font-display text-white">
+              ⚔️ مغامرات {savedName}
+            </h3>
           </div>
+          <span className="badge bg-gold-400/15 border-gold-400/20 text-gold-200 text-xs">
+            {toArabicNumber(quests.filter((q) => q.earned).length)}/{toArabicNumber(quests.length)}
+          </span>
+        </div>
 
-          {/* الاسم */}
-          <p
-            className={`text-xs font-bold font-body text-center leading-tight ${
-              quest.earned ? 'text-gold-100' : 'text-white/60'
-            }`}
-          >
-            {quest.titleAr}
-          </p>
-
-          {/* الوصف */}
-          <p className="text-[10px] text-white/40 font-body text-center leading-tight">
-            {quest.descriptionAr}
-          </p>
-
-          {/* Progress bar */}
-          <div className="w-full mt-1">
-            <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {quests.map((quest, i) => {
+            const pct = Math.min(100, (quest.progress / quest.target) * 100);
+            return (
               <motion.div
-                className={`h-full rounded-full ${
+                key={quest.id}
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.35 + i * 0.04 }}
+                className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${
                   quest.earned
-                    ? 'bg-gradient-to-r from-gold-300 to-gold-500'
-                    : 'bg-gradient-to-r from-purple-400 to-electric-500'
+                    ? 'bg-gradient-to-br from-gold-400/20 to-amber-500/10 border-gold-400/50 shadow-lg shadow-gold-500/20'
+                    : 'bg-white/[0.02] border-white/10'
                 }`}
-                initial={{ width: 0 }}
-                animate={{ width: `${pct}%` }}
-                transition={{ delay: 0.4 + i * 0.04, duration: 0.6 }}
-              />
-            </div>
-            <p
-              className={`text-[10px] font-body text-center mt-1 ${
-                quest.earned ? 'text-gold-200' : 'text-white/50'
-              }`}
-            >
-              {quest.earned
-                ? '✅ محقق'
-                : `${toArabicNumber(Math.min(quest.progress, quest.target))}/${toArabicNumber(quest.target)}`}
-            </p>
-          </div>
-        </motion.div>
-      );
-    })}
-  </div>
+              >
+                <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${quest.earned ? 'bg-gradient-to-br from-gold-400 to-gold-600' : 'bg-white/5'}`}>
+                  <span className={`text-2xl ${quest.earned ? '' : 'opacity-30 grayscale'}`}>{quest.icon}</span>
+                </div>
+                <p className={`text-xs font-bold font-body text-center leading-tight ${quest.earned ? 'text-gold-100' : 'text-white/60'}`}>
+                  {quest.titleAr}
+                </p>
+                <p className="text-[10px] text-white/40 font-body text-center leading-tight">{quest.descriptionAr}</p>
+                <div className="w-full mt-1">
+                  <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                    <motion.div
+                      className={`h-full rounded-full ${quest.earned ? 'bg-gradient-to-r from-gold-300 to-gold-500' : 'bg-gradient-to-r from-purple-400 to-electric-500'}`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ delay: 0.4 + i * 0.04, duration: 0.6 }}
+                    />
+                  </div>
+                  <p className={`text-[10px] font-body text-center mt-1 ${quest.earned ? 'text-gold-200' : 'text-white/50'}`}>
+                    {quest.earned
+                      ? '✅ محقق'
+                      : `${toArabicNumber(Math.min(quest.progress, quest.target))}/${toArabicNumber(quest.target)}`}
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
 
-  {quests.length === 0 && (
-    <p className="text-center text-white/40 font-body text-sm py-6">
-      لا توجد إنجازات بعد — ابدأ رحلة التعلم!
-    </p>
-  )}
-</motion.div>
+        {quests.length === 0 && (
+          <p className="text-center text-white/40 font-body text-sm py-6">
+            لا توجد إنجازات بعد — ابدأ رحلة التعلم!
+          </p>
+        )}
+      </motion.div>
 
-      {/* ═══ 🗑️ مودال تأكيد التصفير ═══ */}
+      {/* ═══ مودال تأكيد التصفير ═══ */}
       <AnimatePresence>
         {showResetConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0, y: 30 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.85, opacity: 0, y: 30 }}
-              transition={{ type: 'spring', stiffness: 250, damping: 25 }}
-              className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-red-500/30 text-center"
-              dir="rtl"
-            >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.85, opacity: 0, y: 30 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.85, opacity: 0, y: 30 }} transition={{ type: 'spring', stiffness: 250, damping: 25 }} className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-red-500/30 text-center" dir="rtl">
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-500/20 border border-red-400/30 flex items-center justify-center">
                 <Trash2 className="w-8 h-8 text-red-300" />
               </div>
-              <h3 className="text-xl font-extrabold font-display text-white mb-2">
-                تصفير التقدم؟
-              </h3>
+              <h3 className="text-xl font-extrabold font-display text-white mb-2">تصفير التقدم؟</h3>
               <p className="text-sm text-white/60 font-body mb-4 leading-relaxed">
-                سيتم حذف جميع نقاط الخبرة، الشارات، والدروس المكتملة.
-                <br />
+                سيتم حذف جميع نقاط الخبرة، الشارات، والدروس المكتملة.<br />
                 <span className="text-emerald-300">الرفيق والاسم سيُحفظان.</span>
               </p>
-
               <div className="mb-5 p-3 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-right">
                 <p className="text-xs text-amber-200 font-body leading-relaxed mb-3">
                   💡 <strong>تنبيه:</strong> يُنصح بحفظ نسخة احتياطية قبل التصفير.
-                  ستتمكن من استعادة تقدمك لاحقًا.
                 </p>
-                <button
-                  type="button"
-                  onClick={handleBackup}
-                  className="w-full py-2.5 rounded-xl bg-blue-500/25 border border-blue-400/50 text-blue-100 font-bold text-xs flex items-center justify-center gap-2 hover:bg-blue-500/35 transition"
-                >
+                <button type="button" onClick={handleBackup} className="w-full py-2.5 rounded-xl bg-blue-500/25 border border-blue-400/50 text-blue-100 font-bold text-xs flex items-center justify-center gap-2 hover:bg-blue-500/35 transition">
                   <Download className="w-4 h-4" />
                   حفظ نسخة احتياطية الآن
                 </button>
               </div>
-
               <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="btn-primary flex-1 !bg-gradient-to-br !from-red-500 !to-red-700"
-                >
-                  نعم، صفّر
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { playSound('click'); setShowResetConfirm(false); }}
-                  className="btn-ghost flex-1"
-                >
-                  إلغاء
-                </button>
+                <button type="button" onClick={handleReset} className="btn-primary flex-1 !bg-gradient-to-br !from-red-500 !to-red-700">نعم، صفّر</button>
+                <button type="button" onClick={() => { playSound('click'); setShowResetConfirm(false); }} className="btn-ghost flex-1">إلغاء</button>
               </div>
             </motion.div>
           </motion.div>
