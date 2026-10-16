@@ -1,5 +1,6 @@
 // src/store/progressStore.ts
 // [v10] — peakStreak + stats + 7 شارات أنزان (بصري + سمعي) — 2026-10-16
+// ✅ لا earnedBadges · لا QUESTS · لا BADGES
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -28,33 +29,35 @@ export type LevelId =
   | "L12" | "L13" | "L14" | "L15"
   | "L16" | "L17" | "L18" | "L19" | "L20";
 
-// ✅ 7 شارات بصري (بدل 4)
+// ✅ 7 شارات أنزان بصري
 export interface AnzanBadges {
   master_addition?: boolean;
   master_multiplication?: boolean;
   master_division?: boolean;
   master_chains?: boolean;
-  master_advanced?: boolean;    // 🆕 S11·S12
-  master_decimals?: boolean;    // 🆕 S13·S14
-  master_roots?: boolean;       // 🆕 S15
+  master_advanced?: boolean;    // S11·S12
+  master_decimals?: boolean;    // S13·S14
+  master_roots?: boolean;       // S15
 }
 
-// ✅ 7 شارات سمعي (بدل 4)
+// ✅ 7 شارات أنزان سمعي
 export interface AnzanAudioBadges {
   master_addition_audio?: boolean;
   master_multiplication_audio?: boolean;
   master_division_audio?: boolean;
   master_chains_audio?: boolean;
-  master_advanced_audio?: boolean;    // 🆕
-  master_decimals_audio?: boolean;    // 🆕
-  master_roots_audio?: boolean;       // 🆕
+  master_advanced_audio?: boolean;
+  master_decimals_audio?: boolean;
+  master_roots_audio?: boolean;
 }
 
+// ═══ إحصائيات تراكمية (v10) ═══
 export interface ProgressStats {
   totalAttempts: number;
   totalCorrect: number;
 }
 
+// ═══ درجات الأقسام ═══
 export interface LevelGrades {
   practice: number | null;
   anzanVisualNormal: number | null;
@@ -87,10 +90,12 @@ export interface RemediationSession {
   outcome?: "passed" | "failed";
 }
 
+// ═══ ثوابت التذاكر ═══
 export const TICKET_COST = 10;
 export const TICKET_XP_CAP = 50;
 export const TICKETS_MAX = 5;
 
+// ═══ الحالة الكاملة ═══
 export interface ProgressState {
   childName: string;
   category: Category | null;
@@ -296,7 +301,13 @@ export const useProgressStore = create<ProgressState>()(
       computeFinalScore: (levelKey) => {
         const g = get().grades[levelKey];
         if (!g) return null;
-        const { levelTest: test, practice, anzanVisualNormal: vNormal, anzanVisualFlash: vFlash, anzanAudio: audio } = g;
+        const {
+          levelTest: test,
+          practice,
+          anzanVisualNormal: vNormal,
+          anzanVisualFlash: vFlash,
+          anzanAudio: audio,
+        } = g;
         if (test === null || practice === null || audio === null) return null;
         if (vNormal === null || vFlash === null) return null;
         const visualWeighted = vNormal * 0.05 + vFlash * 0.05;
@@ -330,12 +341,19 @@ export const useProgressStore = create<ProgressState>()(
         set((state) => ({ anzanBadges: { ...state.anzanBadges, [key]: value } })),
 
       setAnzanAudioBadge: (key, value) =>
-        set((state) => ({ anzanAudioBadges: { ...state.anzanAudioBadges, [key]: value } })),
+        set((state) => ({
+          anzanAudioBadges: { ...state.anzanAudioBadges, [key]: value },
+        })),
 
       completeEnrichment: (enrichmentId) =>
         set((state) => {
           if (state.completedEnrichment.includes(enrichmentId)) return state;
-          return { completedEnrichment: uniqueStrings([...state.completedEnrichment, enrichmentId]) };
+          return {
+            completedEnrichment: uniqueStrings([
+              ...state.completedEnrichment,
+              enrichmentId,
+            ]),
+          };
         }),
 
       recordAttempt: (attempt) =>
@@ -351,12 +369,18 @@ export const useProgressStore = create<ProgressState>()(
 
           const attempts = existing.attempts + 1;
           const correct = existing.correct + (attempt.correct ? 1 : 0);
-          const consecutiveCorrect = attempt.correct ? existing.consecutiveCorrect + 1 : 0;
+          const consecutiveCorrect = attempt.correct
+            ? existing.consecutiveCorrect + 1
+            : 0;
           const avgTimeMs =
             existing.attempts === 0
               ? attempt.timeMs
-              : (existing.avgTimeMs * existing.attempts + attempt.timeMs) / attempts;
-          const peakStreak = Math.max(existing.peakStreak ?? 0, consecutiveCorrect);
+              : (existing.avgTimeMs * existing.attempts + attempt.timeMs) /
+                attempts;
+          const peakStreak = Math.max(
+            existing.peakStreak ?? 0,
+            consecutiveCorrect,
+          );
 
           return {
             skillProgress: {
@@ -372,14 +396,17 @@ export const useProgressStore = create<ProgressState>()(
             },
             stats: {
               totalAttempts: state.stats.totalAttempts + 1,
-              totalCorrect: state.stats.totalCorrect + (attempt.correct ? 1 : 0),
+              totalCorrect:
+                state.stats.totalCorrect + (attempt.correct ? 1 : 0),
             },
           };
         }),
 
       completeLevel: (result, levelId) =>
         set((state) => {
-          const wasCompleted = state.completedLevels.includes(levelId as LevelId);
+          const wasCompleted = state.completedLevels.includes(
+            levelId as LevelId,
+          );
           return {
             levelExams: { ...state.levelExams, [result.examId]: result },
             completedLevels: wasCompleted
@@ -403,7 +430,10 @@ export const useProgressStore = create<ProgressState>()(
         const last = get().lastPlayedDate;
         if (last === today) return;
         if (last === yesterday) {
-          set((state) => ({ currentStreak: state.currentStreak + 1, lastPlayedDate: today }));
+          set((state) => ({
+            currentStreak: state.currentStreak + 1,
+            lastPlayedDate: today,
+          }));
         } else {
           set({ currentStreak: 1, lastPlayedDate: today });
         }
@@ -412,7 +442,8 @@ export const useProgressStore = create<ProgressState>()(
       setLanguage: (language) => set({ language }),
       toggleSound: () => set((state) => ({ soundEnabled: !state.soundEnabled })),
       toggleVoice: () => set((state) => ({ voiceEnabled: !state.voiceEnabled })),
-      toggleHaptics: () => set((state) => ({ hapticsEnabled: !state.hapticsEnabled })),
+      toggleHaptics: () =>
+        set((state) => ({ hapticsEnabled: !state.hapticsEnabled })),
 
       reset: () => set({ ...initialState }),
 
@@ -420,7 +451,10 @@ export const useProgressStore = create<ProgressState>()(
         set((state) => {
           if (state.tickets >= TICKETS_MAX) return state;
           if (state.ticketXP < TICKET_COST) return state;
-          return { ticketXP: state.ticketXP - TICKET_COST, tickets: state.tickets + 1 };
+          return {
+            ticketXP: state.ticketXP - TICKET_COST,
+            tickets: state.tickets + 1,
+          };
         }),
 
       consumeTicket: () =>
@@ -439,27 +473,38 @@ export const useProgressStore = create<ProgressState>()(
           return {
             ...initialState,
             childName: (old.childName as string) || "",
-            skillProgress: (old.skillProgress as Record<string, SkillProgress>) || {},
+            skillProgress:
+              (old.skillProgress as Record<string, SkillProgress>) || {},
             levelExams: (old.levelExams as Record<string, ExamResult>) || {},
             totalXP: (old.xp as number) || (old.totalXP as number) || 0,
-            currentStreak: (old.streak as number) || (old.currentStreak as number) || 0,
+            currentStreak:
+              (old.streak as number) || (old.currentStreak as number) || 0,
             lastPlayedDate: (old.lastPlayedDate as string) || null,
             completedLevels: (old.completedLevels as LevelId[]) || [],
             completedLessons: [] as string[],
           };
         }
+
         if (version < 4) {
-          return { ...initialState, ...old, completedLessons: (old.completedLessons as string[]) || [] } as ProgressState;
+          return {
+            ...initialState,
+            ...old,
+            completedLessons: (old.completedLessons as string[]) || [],
+          } as ProgressState;
         }
+
         if (version < 5) {
           return {
             ...initialState,
             ...old,
             grades: (old.grades as Record<string, LevelGrades>) || {},
-            pendingRemediation: (old.pendingRemediation as PendingRemediation | null) || null,
-            remediationHistory: (old.remediationHistory as RemediationSession[]) || [],
+            pendingRemediation:
+              (old.pendingRemediation as PendingRemediation | null) || null,
+            remediationHistory:
+              (old.remediationHistory as RemediationSession[]) || [],
           } as ProgressState;
         }
+
         if (version < 6 || version < 7 || version < 8 || version < 9) {
           const oldTotalXP = (old.totalXP as number) || 0;
           const existingTicketXP = (old.ticketXP as number) || 0;
@@ -467,25 +512,34 @@ export const useProgressStore = create<ProgressState>()(
           return {
             ...initialState,
             ...old,
-            ticketXP: existingTicketXP > 0 ? existingTicketXP : Math.min(TICKET_XP_CAP, oldTotalXP),
+            ticketXP:
+              existingTicketXP > 0
+                ? existingTicketXP
+                : Math.min(TICKET_XP_CAP, oldTotalXP),
             tickets: existingTickets,
           } as ProgressState;
         }
 
         if (version < 10) {
-          const oldSkillProgress = (old.skillProgress as Record<string, SkillProgress>) || {};
+          const oldSkillProgress =
+            (old.skillProgress as Record<string, SkillProgress>) || {};
           const upgraded: Record<string, SkillProgress> = {};
           for (const [k, v] of Object.entries(oldSkillProgress)) {
+            const sp = v as SkillProgress;
             upgraded[k] = {
-              ...(v as SkillProgress),
-              peakStreak: (v as SkillProgress).peakStreak ?? (v as SkillProgress).consecutiveCorrect ?? 0,
+              ...sp,
+              peakStreak: sp.peakStreak ?? sp.consecutiveCorrect ?? 0,
             };
           }
           return {
             ...initialState,
             ...old,
             skillProgress: upgraded,
-            stats: (old.stats as ProgressStats) || { totalAttempts: 0, totalCorrect: 0 },
+            stats:
+              (old.stats as ProgressStats) || {
+                totalAttempts: 0,
+                totalCorrect: 0,
+              },
           } as ProgressState;
         }
 
@@ -499,27 +553,34 @@ export const useProgressStore = create<ProgressState>()(
 // Selectors
 // ═══════════════════════════════════════════════════════════
 
-export const selectIsLevelComplete = (levelId: LevelId) => (state: ProgressState) =>
-  state.completedLevels.includes(levelId);
+export const selectIsLevelComplete =
+  (levelId: LevelId) => (state: ProgressState) =>
+    state.completedLevels.includes(levelId);
 
-export const selectIsLessonCompleted = (lessonId: string) => (state: ProgressState) =>
-  state.completedLessons.includes(lessonId);
+export const selectIsLessonCompleted =
+  (lessonId: string) => (state: ProgressState) =>
+    state.completedLessons.includes(lessonId);
 
-export const selectIsPracticePassed = (num: number) => (state: ProgressState) =>
-  state.passedPractice.includes(num);
+export const selectIsPracticePassed =
+  (num: number) => (state: ProgressState) =>
+    state.passedPractice.includes(num);
 
-export const selectIsAnzanVisualPassed = (num: number) => (state: ProgressState) =>
-  state.passedAnzanVisual.includes(num);
+export const selectIsAnzanVisualPassed =
+  (num: number) => (state: ProgressState) =>
+    state.passedAnzanVisual.includes(num);
 
-export const selectIsAnzanAudioPassed = (num: number) => (state: ProgressState) =>
-  state.passedAnzanAudio.includes(num);
+export const selectIsAnzanAudioPassed =
+  (num: number) => (state: ProgressState) =>
+    state.passedAnzanAudio.includes(num);
 
-export const selectPendingRemediation = (state: ProgressState) => state.pendingRemediation;
+export const selectPendingRemediation = (state: ProgressState) =>
+  state.pendingRemediation;
 
-export const selectRecentRemediation = (days: number) => (state: ProgressState) => {
-  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
-  return state.remediationHistory.filter((s) => s.completedAt >= cutoff);
-};
+export const selectRecentRemediation =
+  (days: number) => (state: ProgressState) => {
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    return state.remediationHistory.filter((s) => s.completedAt >= cutoff);
+  };
 
 export const selectObservationAccuracy = (state: ProgressState): number => {
   const entries = Object.values(state.skillProgress);
