@@ -213,12 +213,9 @@ export function Rod2D5({
   const rodHeight = height - 30;
   const beamY = rodHeight * 0.25;
 
-  // 🆕 فجوة متناسبة بين الخرزة والعارضة (8px كحد أدنى)
-  const beamGap = Math.max(8, Math.round(beadSize * 0.2));
-
   const upperBeadTop = 2;
-  const upperBeadActive = beamY - beadHeight - beamGap;
-  const lowerAreaTop = beamY + 4 + beamGap;
+  const upperBeadActive = beamY - beadHeight - 10;
+  const lowerAreaTop = beamY + 10;
   const lowerAreaBottom = rodHeight - beadHeight - 2;
 
   const isVertical = (totalColumns ?? 0) >= 6;
@@ -268,6 +265,7 @@ export function Rod2D5({
       style={{
         height,
         width: beadSize * 1.3,
+        flexShrink: 0,
         opacity: wrapperOpacity,
         filter: wrapperFilter,
         transition: 'opacity 0.4s, filter 0.4s',
