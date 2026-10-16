@@ -84,23 +84,31 @@ function extractHint(q: SRBQuestion | undefined): string | null {
   return m ? m[1].trim() : null;
 }
 
-// [FIX 1 + FIX 2] — خريطة صحيحة مع master_chains_audio
+// [v10] — 7 شارات سمعي: S11·S12 · S13·S14 · S15 مضافة
 function getAudioAnzanBadgeKey(
   section: SRBSection,
 ): keyof AnzanAudioBadges | null {
   switch (section) {
     case 'S03':
     case 'S04':
-      return 'master_addition_audio';       // L1 · جمع وطرح
+      return 'master_addition_audio';
     case 'S05':
     case 'S06':
-      return 'master_multiplication_audio'; // L2 · ضرب
+      return 'master_multiplication_audio';
     case 'S07':
     case 'S08':
-      return 'master_division_audio';       // L3 · قسمة
+      return 'master_division_audio';
     case 'S09':
     case 'S10':
-      return 'master_chains_audio';         // L4 · سلاسل
+      return 'master_chains_audio';
+    case 'S11':
+    case 'S12':
+      return 'master_advanced_audio';
+    case 'S13':
+    case 'S14':
+      return 'master_decimals_audio';
+    case 'S15':
+      return 'master_roots_audio';
     default:
       return null;
   }
@@ -781,12 +789,15 @@ export function AudioAnzanScreen({
     const passed = percentage >= PASS_THRESHOLD;
     const xpEarned = score * XP_PER_CORRECT;
 
-    // [FIX 4] — إضافة master_chains_audio
+    // [v10] — 7 شارات سمعي
     const AUDIO_BADGE_LABELS: Record<string, string> = {
       master_addition_audio: '🎤 خبير جمع وطرح سماعي',
       master_multiplication_audio: '🎤 خبير ضرب سماعي',
       master_division_audio: '🎤 خبير قسمة سماعية',
       master_chains_audio: '🎤 خبير سلاسل سماعي',
+      master_advanced_audio: '🎤 خبير المتقدم سماعي',
+      master_decimals_audio: '🎤 خبير العشريات سماعي',
+      master_roots_audio: '🎤 خبير الجذور سماعي',
     };
 
     return (
