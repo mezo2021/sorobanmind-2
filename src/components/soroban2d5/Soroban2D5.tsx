@@ -1,6 +1,6 @@
 // src/components/soroban2d5/Soroban2D5.tsx
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSorobanLogic } from './useSorobanLogic';
 import { Rod2D5 } from './Rod2D5';
 import { useBeadSound } from './useBeadSound';
@@ -9,36 +9,28 @@ import { useNumberStyleStore } from '@/store/numberStyleStore';
 import type { RodTint } from '@/components/flash/types';
 
 // ============================================================
-// 🎨 THEMES — كل الألوان في مكان واحد
+// 🎨 THEMES
 // ============================================================
 export type SorobanTheme = 'classic' | 'ocean' | 'barbie';
 
 export interface ThemeStyles {
   icon: string;
   name: string;
-  // الإطار
   frameBg: string;
   frameGlow: string;
-  // الداخل (ماء زجاجي)
   innerBg: string;
   innerBorder: string;
-  // العمود
   rodGradient: string;
   rodGlow: string;
-  // العارضة
   beamBase: string;
   beamSegments: string;
   beamLaser: string;
-  // الخرزات — طبقة التلوين
   upperBeadTint: string;
   lowerBeadTint: string;
-  // الخرزات — الإضاءة عند التفعيل
   upperBeadGlow: string;
   lowerBeadGlow: string;
-  // النقطة في وسط الخرزة
   upperDot: string;
   lowerDot: string;
-  // النصوص
   labelColor: string;
   titleColor: string;
   valueColor: string;
@@ -49,14 +41,14 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     icon: '🟤',
     name: 'الخشبي',
     frameBg: 'linear-gradient(135deg, #8b6f47 0%, #6b4423 50%, #4a2e15 100%)',
-    frameGlow: '#FFD700',
+    frameGlow: '#C9A227', // ✅ أهدأ
     innerBg: 'linear-gradient(180deg, rgba(254,249,240,0.95) 0%, rgba(245,230,200,0.92) 100%)',
     innerBorder: 'rgba(139,111,71,0.4)',
     rodGradient: 'linear-gradient(180deg, #8b6f47 0%, #5a3a1f 50%, #8b6f47 100%)',
-    rodGlow: '#FFD700',
+    rodGlow: '#C9A227',
     beamBase: 'linear-gradient(180deg, #3d2817 0%, #1a0f08 100%)',
     beamSegments: '#8b6f47',
-    beamLaser: '#FFD700',
+    beamLaser: '#C9A227',
     upperBeadTint: 'rgba(139,111,71,0.10)',
     lowerBeadTint: 'rgba(139,111,71,0.10)',
     upperBeadGlow: '#5a3a1f',
@@ -65,7 +57,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     lowerDot: '#c19a6b',
     labelColor: '#8b6f47',
     titleColor: '#8b6f47',
-    valueColor: '#FFD700',
+    valueColor: '#C9A227',
   },
   ocean: {
     icon: '🌊',
@@ -85,15 +77,15 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     lowerBeadGlow: '#7FDBFF',
     upperDot: '#FFD700',
     lowerDot: '#7FDBFF',
-    labelColor: '#7FDBFF',
-    titleColor: '#7FDBFF',
+    labelColor: '#FFFFFF', // ✅ أبيض
+    titleColor: '#FFFFFF', // ✅ أبيض
     valueColor: '#FFD700',
   },
   barbie: {
     icon: '❤️',
     name: 'باربي',
     frameBg: 'linear-gradient(135deg, #4a1942 0%, #c71585 50%, #ff69b4 100%)',
-    frameGlow: '#FF69B4',
+    frameGlow: '#FFFFFF', // ✅ أبيض خفيف بدل وردي
     innerBg: 'linear-gradient(180deg, rgba(74,25,66,0.95) 0%, rgba(199,21,133,0.85) 100%)',
     innerBorder: 'rgba(255,105,180,0.35)',
     rodGradient: 'linear-gradient(180deg, #FF69B4 0%, #FFC0CB 50%, #FF69B4 100%)',
@@ -109,12 +101,28 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     lowerDot: '#FF69B4',
     labelColor: '#FFC0CB',
     titleColor: '#FF69B4',
-    valueColor: '#FF69B4',
+    valueColor: '#FFFFFF',
   },
 };
 
+const THEME_STORAGE_KEY = 'soroban2d5-theme';
+
+// ظل الإطار — حسب الثيم (classic أهدأ)
+function getFrameShadow(theme: SorobanTheme, on: boolean): string {
+  if (!on) return 'none';
+  const t = THEMES[theme];
+  switch (theme) {
+    case 'classic':
+      return `0 0 6px ${t.frameGlow}, 0 0 12px ${t.frameGlow}44`;
+    case 'ocean':
+      return `0 0 16px ${t.frameGlow}, 0 0 32px ${t.frameGlow}88`;
+    case 'barbie':
+      return `0 0 12px ${t.frameGlow}, 0 0 24px ${t.frameGlow}77`;
+  }
+}
+
 // ============================================================
-// أدوات مساعدة
+// أدوات
 // ============================================================
 function useResponsiveSize() {
   const [size, setSize] = useState<'sm' | 'md' | 'lg'>(() => {
@@ -137,10 +145,9 @@ function useResponsiveSize() {
   return size;
 }
 
-// 🔻 تم إنقاص الارتفاع 30 — والحشو الأفقي كذلك
 const SIZE_CONFIG = {
-  sm: { beadSize: 34, gap: 10, framePaddingY: 14, framePaddingX: 6, innerPaddingY: 12, innerPaddingX: 4, height: 350, topPadding: 34, bottomPadding: 10, titleSize: 'text-base', valueSize: 'text-2xl' },
-  md: { beadSize: 44, gap: 14, framePaddingY: 18, framePaddingX: 8, innerPaddingY: 14, innerPaddingX: 5, height: 410, topPadding: 40, bottomPadding: 12, titleSize: 'text-lg',   valueSize: 'text-3xl' },
+  sm: { beadSize: 34, gap: 10, framePaddingY: 14, framePaddingX: 6,  innerPaddingY: 12, innerPaddingX: 4, height: 350, topPadding: 34, bottomPadding: 10, titleSize: 'text-base', valueSize: 'text-2xl' },
+  md: { beadSize: 44, gap: 14, framePaddingY: 18, framePaddingX: 8,  innerPaddingY: 14, innerPaddingX: 5, height: 410, topPadding: 40, bottomPadding: 12, titleSize: 'text-lg',   valueSize: 'text-3xl' },
   lg: { beadSize: 56, gap: 20, framePaddingY: 26, framePaddingX: 12, innerPaddingY: 18, innerPaddingX: 8, height: 490, topPadding: 48, bottomPadding: 14, titleSize: 'text-2xl',  valueSize: 'text-5xl' },
 };
 
@@ -183,7 +190,7 @@ interface Soroban2D5Props {
   highlightColumns?: number[];
   dimColumns?: number[];
   hideColumnLabels?: boolean;
-  theme?: SorobanTheme; // 🆕
+  theme?: SorobanTheme;
 }
 
 // ============================================================
@@ -206,7 +213,7 @@ export function Soroban2D5({
   highlightColumns,
   dimColumns,
   hideColumnLabels = false,
-  theme = 'classic',
+  theme: initialTheme = 'classic',
 }: Soroban2D5Props) {
   const { columns: colStates, totalValue, toggleUpper, setLower, resetColumn, resetAll, setValue } = useSorobanLogic(columns);
   const playSound = useBeadSound();
@@ -217,16 +224,40 @@ export function Soroban2D5({
   const finalSize = size === 'auto' ? responsiveSize : size;
   const cfg = SIZE_CONFIG[finalSize];
 
-  // 🆕 الثيم الحالي — يبدأ من prop، ثم يتحكم به المُبدّل
-  const [currentTheme, setCurrentTheme] = useState<SorobanTheme>(theme);
-  const ts = THEMES[currentTheme];
+  // 🆕 الثيم — يُقرأ من localStorage إن وُجد (يحفظ عبر أسئلة التمارين)
+  const [currentTheme, setCurrentTheme] = useState<SorobanTheme>(() => {
+    if (typeof window === 'undefined') return initialTheme;
+    const saved = window.localStorage.getItem(THEME_STORAGE_KEY) as SorobanTheme | null;
+    return saved && THEMES[saved] ? saved : initialTheme;
+  });
 
-  // 🆕 إضاءة الإطار: 3 ثوانٍ تشغيل، 3 ثوانٍ إطفاء
-  const [frameGlowOn, setFrameGlowOn] = useState(true);
+  // 💾 حفظ الثيم
   useEffect(() => {
-    const interval = setInterval(() => setFrameGlowOn((p) => !p), 3000);
-    return () => clearInterval(interval);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
+    }
+  }, [currentTheme]);
+
+  // 🆕 دوران المعداد
+  const [isRotated, setIsRotated] = useState(false);
+
+  // 🆕 إضاءة الإطار عند اللمس فقط (٢ ثانية)
+  const [touchGlow, setTouchGlow] = useState(false);
+  const touchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleBeadInteract = () => {
+    setTouchGlow(true);
+    if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+    touchTimerRef.current = setTimeout(() => setTouchGlow(false), 2000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+    };
   }, []);
+
+  const ts = THEMES[currentTheme];
 
   const visibleColumns = (() => {
     if (!autoBeadSize && finalSize === 'sm' && columns > 4) return Math.min(4, columns);
@@ -235,7 +266,6 @@ export function Soroban2D5({
 
   const displayedStates = colStates.slice(-visibleColumns);
   const displayOffset = columns - visibleColumns;
-
   const effectiveBeadSize = autoBeadSize ? getAutoBeadSize(displayedStates.length) : cfg.beadSize;
   const effectiveHeight = autoBeadSize ? Math.round(cfg.height * (effectiveBeadSize / cfg.beadSize)) : cfg.height;
 
@@ -262,162 +292,217 @@ export function Soroban2D5({
 
   const shouldShowValue = revealValue || (!interactive && showValue);
 
+  const counterRotate = isRotated ? 'rotate(-90deg)' : 'none';
+  const counterTransition = 'transform 0.35s ease';
+
   return (
-    <div className="w-full flex flex-col items-center gap-2">
-      {/* 🆕 صف: أيقونات الثيمات يسار — العنوان يمين */}
-      <div className="w-full flex items-center justify-between gap-2 px-1">
-        <div className="flex gap-1.5">
-          {(['classic', 'ocean', 'barbie'] as SorobanTheme[]).map((t) => {
-            const active = currentTheme === t;
-            return (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setCurrentTheme(t)}
-                aria-label={THEMES[t].name}
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: active ? `${THEMES[t].frameGlow}33` : 'rgba(255,255,255,0.06)',
-                  border: active ? `2px solid ${THEMES[t].frameGlow}` : '2px solid transparent',
-                  boxShadow: active ? `0 0 12px ${THEMES[t].frameGlow}` : 'none',
-                  fontSize: 15,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {THEMES[t].icon}
-              </button>
-            );
-          })}
-        </div>
-
-        {!hideTitle && (
-          <h3 className={`${cfg.titleSize} font-bold`} style={{ color: ts.titleColor, transition: 'color 0.15s' }}>
-            {currentTheme === 'classic' && '🟤 السوروبان الخشبي'}
-            {currentTheme === 'ocean' && '🏄 السوروبان الليزري'}
-            {currentTheme === 'barbie' && '❤️ سوروبان باربي'}
-          </h3>
-        )}
-      </div>
-
+    <div className="w-full flex flex-col items-center gap-2 relative">
+      {/* 🔄 كل شيء داخل هذا الـ motion.div يدور معًا */}
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-        className="relative rounded-2xl"
-        style={{
-          paddingTop: cfg.framePaddingY,
-          paddingBottom: cfg.framePaddingY,
-          paddingLeft: cfg.framePaddingX,
-          paddingRight: cfg.framePaddingX,
-          background: ts.frameBg,
-          boxShadow: 'inset 0 4px 12px rgba(255,255,255,0.08), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35)',
-          border: '2px solid rgba(0,0,0,0.25)',
-          maxWidth: '100%',
-          transition: 'background 0.15s',
-        }}
+        animate={{ rotate: isRotated ? 90 : 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+        className="flex flex-col items-center gap-2"
+        style={{ transformOrigin: 'center center' }}
       >
-        {/* 🆕 إضاءة الإطار — 3s on / 3s off */}
-        <div
-          className="absolute inset-0 rounded-2xl pointer-events-none"
-          style={{
-            border: `2px solid ${ts.frameGlow}`,
-            boxShadow: `0 0 20px ${ts.frameGlow}, 0 0 40px ${ts.frameGlow}66`,
-            opacity: frameGlowOn ? 1 : 0,
-            transition: 'opacity 0.6s ease-in-out',
-          }}
-        />
-
-        {/* 🆕 الداخل: ماء زجاجي */}
-        <div
-          className="relative rounded-xl"
-          style={{
-            paddingTop: cfg.innerPaddingY,
-            paddingBottom: cfg.innerPaddingY,
-            paddingLeft: cfg.innerPaddingX,
-            paddingRight: cfg.innerPaddingX,
-            background: ts.innerBg,
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            boxShadow: `inset 0 4px 12px rgba(0,0,0,0.2), inset 0 0 30px ${ts.frameGlow}22`,
-            border: `1px solid ${ts.innerBorder}`,
-            overflow: 'visible',
-            transition: 'background 0.15s, border 0.15s',
-          }}
-        >
-          {/* انعكاس ضوئي علوي يحاكي سطح الماء */}
+        {/* العنوان + مُبدّل الثيمات — معاكسان للدوران ليبقى النص مقروءًا */}
+        <div className="flex items-center justify-between gap-2 w-full px-1">
           <div
-            className="absolute top-0 left-0 right-0 rounded-t-xl pointer-events-none"
-            style={{
-              height: '30%',
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%)',
-            }}
-          />
-
-          <div
-            className="flex flex-row-reverse items-center justify-center relative"
-            style={{ gap: cfg.gap, paddingTop: cfg.topPadding, paddingBottom: cfg.bottomPadding }}
-            dir="rtl"
+            className="flex gap-1.5"
+            style={{ transform: counterRotate, transition: counterTransition }}
           >
-            {displayedStates.map((state, idx) => {
-              const originalIdx = idx + displayOffset;
-              const displayOrder = columns - 1 - originalIdx;
-              const isHighlighted = highlightColumns?.includes(originalIdx) ?? false;
-              const isDim = dimColumns?.includes(originalIdx) ?? false;
-              const finalTint: RodTint | undefined = isHighlighted ? 'white' : rodTint;
-
+            {(['classic', 'ocean', 'barbie'] as SorobanTheme[]).map((t) => {
+              const active = currentTheme === t;
               return (
-                <Rod2D5
-                  key={originalIdx}
-                  state={state}
-                  columnIndex={originalIdx}
-                  displayOrder={displayOrder}
-                  totalColumns={displayedStates.length}
-                  onToggleUpper={() => interactive && toggleUpper(originalIdx)}
-                  onSetLower={(count) => interactive && setLower(originalIdx, count)}
-                  onReset={() => interactive && resetColumn(originalIdx)}
-                  height={effectiveHeight}
-                  beadSize={effectiveBeadSize}
-                  isActive={activeRodIndex === originalIdx}
-                  beamHighlight={beamHighlight}
-                  tint={finalTint}
-                  isDimmed={isDim}
-                  showLabel={!hideColumnLabels}
-                  themeStyles={ts}
-                />
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setCurrentTheme(t)}
+                  aria-label={THEMES[t].name}
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: active ? `${THEMES[t].frameGlow}33` : 'rgba(255,255,255,0.06)',
+                    border: active ? `2px solid ${THEMES[t].frameGlow}` : '2px solid transparent',
+                    boxShadow: active ? `0 0 12px ${THEMES[t].frameGlow}` : 'none',
+                    fontSize: 15,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {THEMES[t].icon}
+                </button>
               );
             })}
           </div>
 
-          {displayOffset > 0 && (
-            <p className="text-center text-[10px] mt-1" style={{ color: ts.labelColor }}>
-              ✨ {formatByStyle(visibleColumns, numberStyle)} أعمدة
-            </p>
+          {!hideTitle && (
+            <h3
+              className={`${cfg.titleSize} font-bold`}
+              style={{
+                color: ts.titleColor,
+                transition: `color 0.15s, ${counterTransition}`,
+                transform: counterRotate,
+              }}
+            >
+              {currentTheme === 'classic' && '🟤 السوروبان الخشبي'}
+              {currentTheme === 'ocean' && '🏄 السوروبان الليزري'}
+              {currentTheme === 'barbie' && '❤️ سوروبان باربي'}
+            </h3>
           )}
         </div>
 
-        {interactive && (
-          <div className="flex justify-center gap-2 mt-2">
-            <button
-              type="button"
-              onClick={handleResetAll}
-              className="px-4 py-1.5 rounded-full font-bold transition text-xs"
+        {/* الإطار */}
+        <div className="relative inline-flex">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+            className="relative rounded-2xl"
+            style={{
+              paddingTop: cfg.framePaddingY,
+              paddingBottom: cfg.framePaddingY,
+              paddingLeft: cfg.framePaddingX,
+              paddingRight: cfg.framePaddingX,
+              background: ts.frameBg,
+              boxShadow: 'inset 0 4px 12px rgba(255,255,255,0.08), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35)',
+              border: '2px solid rgba(0,0,0,0.25)',
+              maxWidth: '100%',
+              transition: 'background 0.15s',
+            }}
+          >
+            {/* إضاءة الإطار — فقط عند اللمس */}
+            <div
+              className="absolute inset-0 rounded-2xl pointer-events-none"
               style={{
-                background: 'rgba(255,255,255,0.15)',
-                color: '#fff',
-                border: '1px solid rgba(255,255,255,0.25)',
-                backdropFilter: 'blur(8px)',
+                border: `2px solid ${ts.frameGlow}`,
+                boxShadow: getFrameShadow(currentTheme, touchGlow),
+                opacity: touchGlow ? 1 : 0,
+                transition: 'opacity 0.4s ease-in-out',
+              }}
+            />
+
+            {/* الداخل: ماء زجاجي */}
+            <div
+              className="relative rounded-xl"
+              style={{
+                paddingTop: cfg.innerPaddingY,
+                paddingBottom: cfg.innerPaddingY,
+                paddingLeft: cfg.innerPaddingX,
+                paddingRight: cfg.innerPaddingX,
+                background: ts.innerBg,
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                boxShadow: `inset 0 4px 12px rgba(0,0,0,0.2), inset 0 0 30px ${ts.frameGlow}22`,
+                border: `1px solid ${ts.innerBorder}`,
+                overflow: 'visible',
+                transition: 'background 0.15s, border 0.15s',
               }}
             >
-              ↺ إعادة الكل
-            </button>
-          </div>
-        )}
+              <div
+                className="absolute top-0 left-0 right-0 rounded-t-xl pointer-events-none"
+                style={{
+                  height: '30%',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%)',
+                }}
+              />
+
+              <div
+                className="flex flex-row-reverse items-center justify-center relative"
+                style={{ gap: cfg.gap, paddingTop: cfg.topPadding, paddingBottom: cfg.bottomPadding }}
+                dir="rtl"
+              >
+                {displayedStates.map((state, idx) => {
+                  const originalIdx = idx + displayOffset;
+                  const displayOrder = columns - 1 - originalIdx;
+                  const isHighlighted = highlightColumns?.includes(originalIdx) ?? false;
+                  const isDim = dimColumns?.includes(originalIdx) ?? false;
+                  const finalTint: RodTint | undefined = isHighlighted ? 'white' : rodTint;
+
+                  return (
+                    <Rod2D5
+                      key={originalIdx}
+                      state={state}
+                      columnIndex={originalIdx}
+                      displayOrder={displayOrder}
+                      totalColumns={displayedStates.length}
+                      onToggleUpper={() => interactive && toggleUpper(originalIdx)}
+                      onSetLower={(count) => interactive && setLower(originalIdx, count)}
+                      onReset={() => interactive && resetColumn(originalIdx)}
+                      onBeadInteract={handleBeadInteract}
+                      height={effectiveHeight}
+                      beadSize={effectiveBeadSize}
+                      isActive={activeRodIndex === originalIdx}
+                      beamHighlight={beamHighlight}
+                      tint={finalTint}
+                      isDimmed={isDim}
+                      showLabel={!hideColumnLabels}
+                      themeStyles={ts}
+                      isRotated={isRotated}
+                    />
+                  );
+                })}
+              </div>
+
+              {displayOffset > 0 && (
+                <p className="text-center text-[10px] mt-1" style={{ color: ts.labelColor }}>
+                  ✨ {formatByStyle(visibleColumns, numberStyle)} أعمدة
+                </p>
+              )}
+            </div>
+
+            {interactive && (
+              <div
+                className="flex justify-center gap-2 mt-2"
+                style={{ transform: counterRotate, transition: counterTransition }}
+              >
+                <button
+                  type="button"
+                  onClick={handleResetAll}
+                  className="px-4 py-1.5 rounded-full font-bold transition text-xs"
+                  style={{
+                    background: 'rgba(255,255,255,0.15)',
+                    color: '#fff',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    backdropFilter: 'blur(8px)',
+                  }}
+                >
+                  ↺ إعادة الكل
+                </button>
+              </div>
+            )}
+          </motion.div>
+
+          {/* 🆕 زر التدوير — منتصف الجانب الأيمن للإطار */}
+          <button
+            type="button"
+            onClick={() => setIsRotated((r) => !r)}
+            aria-label="تدوير المعداد"
+            title="تدوير المعداد 90°"
+            className="absolute top-1/2 -translate-y-1/2 z-30"
+            style={{
+              right: -42,
+              width: 34,
+              height: 34,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.15)',
+              border: `1.5px solid ${ts.frameGlow}`,
+              boxShadow: `0 0 12px ${ts.frameGlow}66`,
+              color: ts.frameGlow,
+              fontSize: 18,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            ↻
+          </button>
+        </div>
       </motion.div>
 
       {shouldShowValue && (
