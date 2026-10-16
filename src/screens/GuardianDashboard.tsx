@@ -1247,66 +1247,102 @@ export function GuardianDashboard({
           })}
         </div>
       </motion.div>
+{/* ═══ ⚔️ مغامرات [اسم الطفل] — 12 إنجازاً ═══ */}
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.3 }}
+  className="glass-card p-5 sm:p-6 mb-6"
+>
+  <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center gap-2">
+      <Swords className="w-5 h-5 text-gold-300" />
+      <h3 className="text-xl font-extrabold font-display text-white">
+        ⚔️ مغامرات {savedName}
+      </h3>
+    </div>
+    <span className="badge bg-gold-400/15 border-gold-400/20 text-gold-200 text-xs">
+      {toArabicNumber(quests.filter((q) => q.earned).length)}/{toArabicNumber(quests.length)}
+    </span>
+  </div>
 
-      {/* ═══ ⚔️ المغامرات النشطة ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="glass-card p-5 sm:p-6"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Swords className="w-5 h-5 text-gold-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">
-              المغامرات النشطة
-            </h3>
+  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+    {quests.map((quest, i) => {
+      const pct = Math.min(100, (quest.progress / quest.target) * 100);
+      return (
+        <motion.div
+          key={quest.id}
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.35 + i * 0.04 }}
+          className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${
+            quest.earned
+              ? 'bg-gradient-to-br from-gold-400/20 to-amber-500/10 border-gold-400/50 shadow-lg shadow-gold-500/20'
+              : 'bg-white/[0.02] border-white/10'
+          }`}
+        >
+          {/* الأيقونة */}
+          <div
+            className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
+              quest.earned
+                ? 'bg-gradient-to-br from-gold-400 to-gold-600'
+                : 'bg-white/5'
+            }`}
+          >
+            <span className={`text-2xl ${quest.earned ? '' : 'opacity-30 grayscale'}`}>
+              {quest.icon}
+            </span>
           </div>
-        </div>
 
-        <div className="space-y-3">
-          {quests.slice(0, 3).map((quest, i) => {
-            const pct = Math.min(100, (quest.progress / quest.target) * 100);
-            return (
+          {/* الاسم */}
+          <p
+            className={`text-xs font-bold font-body text-center leading-tight ${
+              quest.earned ? 'text-gold-100' : 'text-white/60'
+            }`}
+          >
+            {quest.titleAr}
+          </p>
+
+          {/* الوصف */}
+          <p className="text-[10px] text-white/40 font-body text-center leading-tight">
+            {quest.descriptionAr}
+          </p>
+
+          {/* Progress bar */}
+          <div className="w-full mt-1">
+            <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
               <motion.div
-                key={quest.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + i * 0.1 }}
-                className="p-4 rounded-2xl bg-white/5 border border-white/10"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-bold text-white font-body text-sm">
-                    {quest.titleAr}
-                  </p>
-                  <span className="text-xs font-bold text-gold-300">
-                    +{toArabicNumber(quest.xpReward)} XP
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2.5 rounded-full bg-white/10 overflow-hidden">
-                    <motion.div
-                      className={`h-full rounded-full bg-gradient-to-r ${quest.color}`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ delay: 0.5 + i * 0.1, duration: 0.8 }}
-                    />
-                  </div>
-                  <span className="text-xs text-white/50 font-body whitespace-nowrap">
-                    {toArabicNumber(quest.progress)}/{toArabicNumber(quest.target)}
-                  </span>
-                </div>
-              </motion.div>
-            );
-          })}
-
-          {quests.length === 0 && (
-            <div className="text-center py-6 text-white/40 font-body text-sm">
-              لا توجد مغامرات نشطة حالياً.
+                className={`h-full rounded-full ${
+                  quest.earned
+                    ? 'bg-gradient-to-r from-gold-300 to-gold-500'
+                    : 'bg-gradient-to-r from-purple-400 to-electric-500'
+                }`}
+                initial={{ width: 0 }}
+                animate={{ width: `${pct}%` }}
+                transition={{ delay: 0.4 + i * 0.04, duration: 0.6 }}
+              />
             </div>
-          )}
-        </div>
-      </motion.div>
+            <p
+              className={`text-[10px] font-body text-center mt-1 ${
+                quest.earned ? 'text-gold-200' : 'text-white/50'
+              }`}
+            >
+              {quest.earned
+                ? '✅ محقق'
+                : `${toArabicNumber(Math.min(quest.progress, quest.target))}/${toArabicNumber(quest.target)}`}
+            </p>
+          </div>
+        </motion.div>
+      );
+    })}
+  </div>
+
+  {quests.length === 0 && (
+    <p className="text-center text-white/40 font-body text-sm py-6">
+      لا توجد إنجازات بعد — ابدأ رحلة التعلم!
+    </p>
+  )}
+</motion.div>
 
       {/* ═══ 🗑️ مودال تأكيد التصفير ═══ */}
       <AnimatePresence>
