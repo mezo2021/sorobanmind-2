@@ -268,7 +268,7 @@ export function Soroban2D5({
   })();
 
   const baseHeight = cfg.height;
-  const heightFactor = isSmallLayout ? 0.4 : 1;
+  const heightFactor = isSmallLayout ? 0.34 : 1;
   const effectiveHeight = Math.round(baseHeight * heightFactor);
 
   const flashScale = effectiveBeadSize / cfg.beadSize;
