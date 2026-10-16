@@ -38,8 +38,7 @@ export interface ThemeStyles {
 
 export const THEMES: Record<SorobanTheme, ThemeStyles> = {
   classic: {
-    icon: '🟤',
-    name: 'الخشبي',
+    icon: '🟤', name: 'الخشبي',
     frameBg: 'linear-gradient(135deg, #8b6f47 0%, #6b4423 50%, #4a2e15 100%)',
     frameGlow: '#C9A227',
     innerBg: 'linear-gradient(180deg, rgba(254,249,240,0.95) 0%, rgba(245,230,200,0.92) 100%)',
@@ -60,8 +59,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     valueColor: '#C9A227',
   },
   ocean: {
-    icon: '🌊',
-    name: 'البحري',
+    icon: '🌊', name: 'البحري',
     frameBg: 'linear-gradient(135deg, #0a2540 0%, #1a4d7a 50%, #0d3b66 100%)',
     frameGlow: '#7FDBFF',
     innerBg: 'linear-gradient(180deg, rgba(10,37,64,0.95) 0%, rgba(13,59,102,0.90) 100%)',
@@ -82,8 +80,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     valueColor: '#FFFFFF',
   },
   barbie: {
-    icon: '❤️',
-    name: 'باربي',
+    icon: '❤️', name: 'باربي',
     frameBg: 'linear-gradient(135deg, #4a1942 0%, #c71585 50%, #ff69b4 100%)',
     frameGlow: '#FFFFFF',
     innerBg: 'linear-gradient(180deg, rgba(74,25,66,0.95) 0%, rgba(199,21,133,0.85) 100%)',
@@ -146,6 +143,19 @@ function getAutoBeadSize(columns: number): number {
   if (columns <= 9) return 20;
   return 16;
 }
+
+// 🆕 أحجام مخصصة لسياق Flash — تُبقي المعدادين معًا بلا تداخل
+const FLASH_BEAD_SIZE_BY_COLUMNS: Record<number, number> = {
+  1: 40,
+  2: 36,
+  3: 30,
+  4: 26,
+  5: 23,
+  6: 21,
+  7: 19,
+  8: 18,
+  9: 17,
+};
 
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 function formatByStyle(value: number, style: 'arabic' | 'latin'): string {
@@ -211,16 +221,16 @@ export function Soroban2D5({
   const cfg = SIZE_CONFIG[finalSize];
 
   // 🆕 كشف Flash Context
-  const isFlashContext = rodTint === 'red' || rodTint === 'emerald' || rodTint === 'white';
+  const isFlashContext =
+    rodTint === 'red' || rodTint === 'emerald' || rodTint === 'white';
 
-  // 🎨 الثيم الفعلي — يُجبر classic في Flash
+  // 🎨 الثيم
   const [currentTheme, setCurrentTheme] = useState<SorobanTheme>(() => {
     if (typeof window === 'undefined') return initialTheme;
     const saved = window.localStorage.getItem(THEME_STORAGE_KEY) as SorobanTheme | null;
     return saved && THEMES[saved] ? saved : initialTheme;
   });
 
-  // 💾 حفظ الثيم — فقط خارج Flash
   useEffect(() => {
     if (isFlashContext) return;
     if (typeof window !== 'undefined') {
@@ -228,7 +238,6 @@ export function Soroban2D5({
     }
   }, [currentTheme, isFlashContext]);
 
-  // 🎨 الثيم المستخدم فعليًا
   const effectiveTheme: SorobanTheme = isFlashContext ? 'classic' : currentTheme;
   const ts = THEMES[effectiveTheme];
 
@@ -239,9 +248,62 @@ export function Soroban2D5({
 
   const displayedStates = colStates.slice(-visibleColumns);
   const displayOffset = columns - visibleColumns;
-  const effectiveBeadSize = autoBeadSize ? getAutoBeadSize(displayedStates.length) : cfg.beadSize;
-  const effectiveHeight = autoBeadSize ? Math.round(cfg.height * (effectiveBeadSize / cfg.beadSize)) : cfg.height;
 
+  // ═══════════════════════════════════════════════════════════
+  // 🎯 حساب الأبعاد — Flash vs Normal
+  // ═══════════════════════════════════════════════════════════
+  const effectiveBeadSize = autoBeadSize
+    ? isFlashContext
+      ? (FLASH_BEAD_SIZE_BY_COLUMNS[displayedStates.length] ??
+          Math.max(14, Math.floor(150 / displayedStates.length / 1.3)))
+      : getAutoBeadSize(displayedStates.length)
+    : cfg.beadSize;
+
+  // نسبة تصغير عامة عند Flash
+  const flashScale = effectiveBeadSize / cfg.beadSize;
+
+  const effectiveHeight = autoBeadSize
+    ? Math.round(cfg.height * (effectiveBeadSize / cfg.beadSize))
+    : cfg.height;
+
+  const effectiveGap =
+    isFlashContext && autoBeadSize
+      ? Math.max(3, Math.round(effectiveBeadSize * 0.17))
+      : cfg.gap;
+
+  const framePaddingX =
+    isFlashContext && autoBeadSize
+      ? Math.max(3, Math.round(cfg.framePaddingX * flashScale))
+      : cfg.framePaddingX;
+
+  const framePaddingY =
+    isFlashContext && autoBeadSize
+      ? Math.max(8, Math.round(cfg.framePaddingY * flashScale))
+      : cfg.framePaddingY;
+
+  const innerPaddingX =
+    isFlashContext && autoBeadSize
+      ? Math.max(2, Math.round(cfg.innerPaddingX * flashScale))
+      : cfg.innerPaddingX;
+
+  const innerPaddingY =
+    isFlashContext && autoBeadSize
+      ? Math.max(6, Math.round(cfg.innerPaddingY * flashScale))
+      : cfg.innerPaddingY;
+
+  const topPadding =
+    isFlashContext && autoBeadSize
+      ? Math.max(24, Math.round(cfg.topPadding * flashScale))
+      : cfg.topPadding;
+
+  const bottomPadding =
+    isFlashContext && autoBeadSize
+      ? Math.max(6, Math.round(cfg.bottomPadding * flashScale))
+      : cfg.bottomPadding;
+
+  // ═══════════════════════════════════════════════════════════
+  // Effects
+  // ═══════════════════════════════════════════════════════════
   useEffect(() => {
     if (initialValue > 0) setValue(initialValue);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -266,7 +328,7 @@ export function Soroban2D5({
   const shouldShowValue = revealValue || (!interactive && showValue);
 
   return (
-    <div className="w-full flex flex-col items-center gap-2 relative">
+    <div className="w-full flex flex-col items-center gap-2 relative min-w-0">
       {/* 🎨 صف الثيمات + العنوان — يُخفى في Flash */}
       {!isFlashContext && (
         <div className="flex items-center justify-between gap-2 w-full px-1">
@@ -314,14 +376,14 @@ export function Soroban2D5({
       )}
 
       {/* الإطار */}
-      <div className="relative inline-flex">
+      <div className="relative inline-flex max-w-full min-w-0">
         <div
           className="relative rounded-2xl"
           style={{
-            paddingTop: cfg.framePaddingY,
-            paddingBottom: cfg.framePaddingY,
-            paddingLeft: cfg.framePaddingX,
-            paddingRight: cfg.framePaddingX,
+            paddingTop: framePaddingY,
+            paddingBottom: framePaddingY,
+            paddingLeft: framePaddingX,
+            paddingRight: framePaddingX,
             background: ts.frameBg,
             boxShadow: 'inset 0 4px 12px rgba(255,255,255,0.08), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35)',
             border: '2px solid rgba(0,0,0,0.25)',
@@ -329,14 +391,14 @@ export function Soroban2D5({
             transition: 'background 0.15s',
           }}
         >
-          {/* الداخل: ماء زجاجي */}
+          {/* الداخل */}
           <div
             className="relative rounded-xl"
             style={{
-              paddingTop: cfg.innerPaddingY,
-              paddingBottom: cfg.innerPaddingY,
-              paddingLeft: cfg.innerPaddingX,
-              paddingRight: cfg.innerPaddingX,
+              paddingTop: innerPaddingY,
+              paddingBottom: innerPaddingY,
+              paddingLeft: innerPaddingX,
+              paddingRight: innerPaddingX,
               background: ts.innerBg,
               boxShadow: `inset 0 4px 12px rgba(0,0,0,0.2), inset 0 0 30px ${ts.frameGlow}22`,
               border: `1px solid ${ts.innerBorder}`,
@@ -354,7 +416,11 @@ export function Soroban2D5({
 
             <div
               className="flex flex-row-reverse items-center justify-center relative"
-              style={{ gap: cfg.gap, paddingTop: cfg.topPadding, paddingBottom: cfg.bottomPadding }}
+              style={{
+                gap: effectiveGap,
+                paddingTop: topPadding,
+                paddingBottom: bottomPadding,
+              }}
               dir="rtl"
             >
               {displayedStates.map((state, idx) => {
