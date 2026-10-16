@@ -1,14 +1,8 @@
 // src/store/progressStore.ts
-//
-// 📝 التعديل: computeFinalScore — وزن البصري ٥٪ عادي + ٥٪ فلاش
-// 🎯 الوظيفة: مطابقة قاعدة التقريب (٠٫٥ → أعلى) مع تسلسل التقريب المتفق عليه
-// 📅 الجلسة: 14
+// 📝 التعديل: migration v10 — إضافة peakStreak + stats
+// 🎯 الوظيفة: تتبع تقدم الطفل · إنجازات نوعية · أنزان + سلاسل
 // ✅ الحالة: البناء أخضر
-// [FIX B1]  removed dead reload() — 2026-10-04
-// [FIX B4]  unify AND for visual anzan — 2026-10-04
-// [FIX N62] outcome انتقل إلى RemediationSession (اختياري) — 2026-10-05
-// [GAMES]   إضافة نظام التذاكر: ticketXP + tickets — 2026-10-11
-// [GAMES-v2] رفع السقف: 20 → 50 · TICKETS_MAX: 1 → 5 — 2026-10-13
+// [v10] — peakStreak + stats.totalAttempts/totalCorrect — 2026-10-16
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -16,8 +10,16 @@ import type {
   Attempt,
   Category,
   ExamResult,
-  SkillProgress,
+  SkillProgress as BaseSkillProgress,
 } from "../curriculum/types";
+
+// ═══════════════════════════════════════════════════════════
+// امتداد محلي — لا يمس curriculum/types.ts
+// ═══════════════════════════════════════════════════════════
+
+export interface SkillProgress extends BaseSkillProgress {
+  peakStreak?: number;
+}
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -48,6 +50,12 @@ export interface AnzanAudioBadges {
   master_mixed_audio?: boolean;
 }
 
+// ═══ إحصائيات تراكمية (v10) ═══
+export interface ProgressStats {
+  totalAttempts: number;
+  totalCorrect: number;
+}
+
 // ═══ درجات الأقسام (0-100) ═══
 export interface LevelGrades {
   practice: number | null;
@@ -57,7 +65,6 @@ export interface LevelGrades {
   levelTest: number | null;
 }
 
-// ═══ حالة الجلسة العلاجية الإجبارية ═══
 export type RemediationPhase =
   | "practice"
   | "anzanVisualNormal"
@@ -71,7 +78,6 @@ export interface PendingRemediation {
   createdAt: number;
 }
 
-// ═══ سجل جلسة علاجية ═══
 export interface RemediationSession {
   id: string;
   level: LevelId;
@@ -83,12 +89,10 @@ export interface RemediationSession {
   outcome?: "passed" | "failed";
 }
 
-// ═══ ثوابت نظام التذاكر ═══
-export const TICKET_COST = 10;      // 10 XP = تذكرة واحدة
-export const TICKET_XP_CAP = 50;    // سقف ticketXP (5 تذاكر)
-export const TICKETS_MAX = 5;       // 5 تذاكر كحد أقصى في الجيب
+export const TICKET_COST = 10;
+export const TICKET_XP_CAP = 50;
+export const TICKETS_MAX = 5;
 
-// ═══ الحالة الكاملة ═══
 export interface ProgressState {
   childName: string;
   category: Category | null;
@@ -117,10 +121,9 @@ export interface ProgressState {
   soundEnabled: boolean;
   voiceEnabled: boolean;
   hapticsEnabled: boolean;
-
-  // 🆕 نظام التذاكر
-  ticketXP: number;    // رصيد XP الخاص بالتذاكر (سقف 50)
-  tickets: number;     // عدد التذاكر في الجيب (سقف 5)
+  ticketXP: number;
+  tickets: number;
+  stats: ProgressStats;
 
   setChildName: (name: string) => void;
   setCategory: (category: Category) => void;
@@ -130,19 +133,13 @@ export interface ProgressState {
   markAnzanVisualPassed: (num: number) => void;
   markAnzanAudioPassed: (num: number) => void;
 
-  setGrade: (
-    levelKey: string,
-    phase: keyof LevelGrades,
-    grade: number,
-  ) => void;
+  setGrade: (levelKey: string, phase: keyof LevelGrades, grade: number) => void;
   getGrades: (levelKey: string) => LevelGrades;
   computeFinalScore: (levelKey: string) => number | null;
 
   setPendingRemediation: (p: Omit<PendingRemediation, "createdAt">) => void;
   clearPendingRemediation: () => void;
-  addRemediationSession: (
-    s: Omit<RemediationSession, "id" | "completedAt">,
-  ) => void;
+  addRemediationSession: (s: Omit<RemediationSession, "id" | "completedAt">) => void;
 
   setExam1Passed: (passed: boolean) => void;
   setExam2Passed: (passed: boolean) => void;
@@ -160,9 +157,8 @@ export interface ProgressState {
   toggleHaptics: () => void;
   reset: () => void;
 
-  // 🆕 نظام التذاكر
-  buyTicket: () => void;       // شراء تذكرة (10 XP من ticketXP)
-  consumeTicket: () => void;   // استهلاك تذكرة عند فتح لعبة
+  buyTicket: () => void;
+  consumeTicket: () => void;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -205,13 +201,13 @@ const initialState = {
   soundEnabled: true,
   voiceEnabled: true,
   hapticsEnabled: true,
-  // 🆕 نظام التذاكر
   ticketXP: 0,
   tickets: 0,
+  stats: { totalAttempts: 0, totalCorrect: 0 } as ProgressStats,
 };
 
 // ═══════════════════════════════════════════════════════════
-// أدوات مساعدة
+// أدوات
 // ═══════════════════════════════════════════════════════════
 
 function getToday(): string {
@@ -252,49 +248,36 @@ export const useProgressStore = create<ProgressState>()(
       setChildName: (name) => set({ childName: name.trim() }),
 
       setCategory: (category) =>
-        set({
-          category,
-          categoryChosenAt: new Date().toISOString(),
-        }),
+        set({ category, categoryChosenAt: new Date().toISOString() }),
 
       markLevelComplete: (levelId) =>
         set((state) => {
           if (state.completedLevels.includes(levelId)) return state;
-          return {
-            completedLevels: uniqueLevels([...state.completedLevels, levelId]),
-          };
+          return { completedLevels: uniqueLevels([...state.completedLevels, levelId]) };
         }),
 
       markLessonCompleted: (lessonId) =>
         set((state) => {
           if (state.completedLessons.includes(lessonId)) return state;
-          return {
-            completedLessons: uniqueStrings([...state.completedLessons, lessonId]),
-          };
+          return { completedLessons: uniqueStrings([...state.completedLessons, lessonId]) };
         }),
 
       markPracticePassed: (num) =>
         set((state) => {
           if (state.passedPractice.includes(num)) return state;
-          return {
-            passedPractice: uniqueNums([...state.passedPractice, num]),
-          };
+          return { passedPractice: uniqueNums([...state.passedPractice, num]) };
         }),
 
       markAnzanVisualPassed: (num) =>
         set((state) => {
           if (state.passedAnzanVisual.includes(num)) return state;
-          return {
-            passedAnzanVisual: uniqueNums([...state.passedAnzanVisual, num]),
-          };
+          return { passedAnzanVisual: uniqueNums([...state.passedAnzanVisual, num]) };
         }),
 
       markAnzanAudioPassed: (num) =>
         set((state) => {
           if (state.passedAnzanAudio.includes(num)) return state;
-          return {
-            passedAnzanAudio: uniqueNums([...state.passedAnzanAudio, num]),
-          };
+          return { passedAnzanAudio: uniqueNums([...state.passedAnzanAudio, num]) };
         }),
 
       setGrade: (levelKey, phase, grade) =>
@@ -303,10 +286,7 @@ export const useProgressStore = create<ProgressState>()(
           const prev = current[phase];
           const next = prev === null || grade > prev ? grade : prev;
           return {
-            grades: {
-              ...state.grades,
-              [levelKey]: { ...current, [phase]: next },
-            },
+            grades: { ...state.grades, [levelKey]: { ...current, [phase]: next } },
           };
         }),
 
@@ -318,57 +298,28 @@ export const useProgressStore = create<ProgressState>()(
       computeFinalScore: (levelKey) => {
         const g = get().grades[levelKey];
         if (!g) return null;
-
-        const test = g.levelTest;
-        const practice = g.practice;
-        const vNormal = g.anzanVisualNormal;
-        const vFlash = g.anzanVisualFlash;
-        const audio = g.anzanAudio;
-
-        if (test === null || practice === null || audio === null) {
-          return null;
-        }
-
+        const { levelTest: test, practice, anzanVisualNormal: vNormal, anzanVisualFlash: vFlash, anzanAudio: audio } = g;
+        if (test === null || practice === null || audio === null) return null;
         if (vNormal === null || vFlash === null) return null;
-
-        let visualWeighted = 0;
-        if (vNormal !== null) visualWeighted += vNormal * 0.05;
-        if (vFlash !== null) visualWeighted += vFlash * 0.05;
-
-        const raw =
-          test * 0.7 +
-          practice * 0.1 +
-          audio * 0.1 +
-          visualWeighted;
-
+        const visualWeighted = vNormal * 0.05 + vFlash * 0.05;
+        const raw = test * 0.7 + practice * 0.1 + audio * 0.1 + visualWeighted;
         return Math.round(raw);
       },
 
       setPendingRemediation: (p) =>
-        set({
-          pendingRemediation: {
-            ...p,
-            createdAt: Date.now(),
-          },
-        }),
+        set({ pendingRemediation: { ...p, createdAt: Date.now() } }),
 
-      clearPendingRemediation: () =>
-        set({ pendingRemediation: null }),
+      clearPendingRemediation: () => set({ pendingRemediation: null }),
 
       addRemediationSession: (s) =>
         set((state) => ({
           remediationHistory: [
-            {
-              ...s,
-              id: makeRemediationId(),
-              completedAt: Date.now(),
-            },
+            { ...s, id: makeRemediationId(), completedAt: Date.now() },
             ...state.remediationHistory,
           ].slice(0, 100),
         })),
 
       setExam1Passed: (passed) => set({ exam1Passed: passed }),
-
       setExam2Passed: (passed) => set({ exam2Passed: passed }),
 
       recordPlacementAttempt: () =>
@@ -378,24 +329,15 @@ export const useProgressStore = create<ProgressState>()(
         })),
 
       setAnzanBadge: (key, value) =>
-        set((state) => ({
-          anzanBadges: { ...state.anzanBadges, [key]: value },
-        })),
+        set((state) => ({ anzanBadges: { ...state.anzanBadges, [key]: value } })),
 
       setAnzanAudioBadge: (key, value) =>
-        set((state) => ({
-          anzanAudioBadges: { ...state.anzanAudioBadges, [key]: value },
-        })),
+        set((state) => ({ anzanAudioBadges: { ...state.anzanAudioBadges, [key]: value } })),
 
       completeEnrichment: (enrichmentId) =>
         set((state) => {
           if (state.completedEnrichment.includes(enrichmentId)) return state;
-          return {
-            completedEnrichment: uniqueStrings([
-              ...state.completedEnrichment,
-              enrichmentId,
-            ]),
-          };
+          return { completedEnrichment: uniqueStrings([...state.completedEnrichment, enrichmentId]) };
         }),
 
       recordAttempt: (attempt) =>
@@ -406,18 +348,17 @@ export const useProgressStore = create<ProgressState>()(
             correct: 0,
             consecutiveCorrect: 0,
             avgTimeMs: 0,
+            peakStreak: 0,
           };
 
           const attempts = existing.attempts + 1;
           const correct = existing.correct + (attempt.correct ? 1 : 0);
-          const consecutiveCorrect = attempt.correct
-            ? existing.consecutiveCorrect + 1
-            : 0;
+          const consecutiveCorrect = attempt.correct ? existing.consecutiveCorrect + 1 : 0;
           const avgTimeMs =
             existing.attempts === 0
               ? attempt.timeMs
-              : (existing.avgTimeMs * existing.attempts + attempt.timeMs) /
-                attempts;
+              : (existing.avgTimeMs * existing.attempts + attempt.timeMs) / attempts;
+          const peakStreak = Math.max(existing.peakStreak ?? 0, consecutiveCorrect);
 
           return {
             skillProgress: {
@@ -428,39 +369,33 @@ export const useProgressStore = create<ProgressState>()(
                 correct,
                 consecutiveCorrect,
                 avgTimeMs,
+                peakStreak,
               },
+            },
+            stats: {
+              totalAttempts: state.stats.totalAttempts + 1,
+              totalCorrect: state.stats.totalCorrect + (attempt.correct ? 1 : 0),
             },
           };
         }),
 
       completeLevel: (result, levelId) =>
         set((state) => {
-          const wasCompleted = state.completedLevels.includes(
-            levelId as LevelId,
-          );
+          const wasCompleted = state.completedLevels.includes(levelId as LevelId);
           return {
-            levelExams: {
-              ...state.levelExams,
-              [result.examId]: result,
-            },
+            levelExams: { ...state.levelExams, [result.examId]: result },
             completedLevels: wasCompleted
               ? state.completedLevels
               : uniqueLevels([...state.completedLevels, levelId as LevelId]),
           };
         }),
 
-      // ═══ addXP — يُحدّث totalXP + ticketXP ═══
-      // totalXP: بلا سقف (للمستويات)
-      // ticketXP: بسقف TICKET_XP_CAP (50)
       addXP: (amount) =>
         set((state) => {
           const safeAmount = Math.max(0, amount);
           return {
             totalXP: state.totalXP + safeAmount,
-            ticketXP: Math.min(
-              TICKET_XP_CAP,
-              state.ticketXP + safeAmount,
-            ),
+            ticketXP: Math.min(TICKET_XP_CAP, state.ticketXP + safeAmount),
           };
         }),
 
@@ -468,46 +403,28 @@ export const useProgressStore = create<ProgressState>()(
         const today = getToday();
         const yesterday = getYesterday();
         const last = get().lastPlayedDate;
-
         if (last === today) return;
-
         if (last === yesterday) {
-          set((state) => ({
-            currentStreak: state.currentStreak + 1,
-            lastPlayedDate: today,
-          }));
+          set((state) => ({ currentStreak: state.currentStreak + 1, lastPlayedDate: today }));
         } else {
           set({ currentStreak: 1, lastPlayedDate: today });
         }
       },
 
       setLanguage: (language) => set({ language }),
-
-      toggleSound: () =>
-        set((state) => ({ soundEnabled: !state.soundEnabled })),
-
-      toggleVoice: () =>
-        set((state) => ({ voiceEnabled: !state.voiceEnabled })),
-
-      toggleHaptics: () =>
-        set((state) => ({ hapticsEnabled: !state.hapticsEnabled })),
+      toggleSound: () => set((state) => ({ soundEnabled: !state.soundEnabled })),
+      toggleVoice: () => set((state) => ({ voiceEnabled: !state.voiceEnabled })),
+      toggleHaptics: () => set((state) => ({ hapticsEnabled: !state.hapticsEnabled })),
 
       reset: () => set({ ...initialState }),
 
-      // ═══ 🆕 نظام التذاكر ═══
-
-      // شراء تذكرة: خصم 10 من ticketXP · إضافة تذكرة للجيب
       buyTicket: () =>
         set((state) => {
           if (state.tickets >= TICKETS_MAX) return state;
           if (state.ticketXP < TICKET_COST) return state;
-          return {
-            ticketXP: state.ticketXP - TICKET_COST,
-            tickets: state.tickets + 1,
-          };
+          return { ticketXP: state.ticketXP - TICKET_COST, tickets: state.tickets + 1 };
         }),
 
-      // استهلاك تذكرة: خصم 1 من الجيب
       consumeTicket: () =>
         set((state) => {
           if (state.tickets <= 0) return state;
@@ -516,7 +433,7 @@ export const useProgressStore = create<ProgressState>()(
     }),
     {
       name: "sorobanmind-v2-progress",
-      version: 9,
+      version: 10,
       migrate: (persistedState, version) => {
         const old = (persistedState as Record<string, unknown>) || {};
 
@@ -524,92 +441,53 @@ export const useProgressStore = create<ProgressState>()(
           return {
             ...initialState,
             childName: (old.childName as string) || "",
-            skillProgress:
-              (old.skillProgress as Record<string, SkillProgress>) || {},
+            skillProgress: (old.skillProgress as Record<string, SkillProgress>) || {},
             levelExams: (old.levelExams as Record<string, ExamResult>) || {},
             totalXP: (old.xp as number) || (old.totalXP as number) || 0,
-            currentStreak:
-              (old.streak as number) || (old.currentStreak as number) || 0,
+            currentStreak: (old.streak as number) || (old.currentStreak as number) || 0,
             lastPlayedDate: (old.lastPlayedDate as string) || null,
-            completedLevels:
-              (old.completedLevels as LevelId[]) || [],
+            completedLevels: (old.completedLevels as LevelId[]) || [],
             completedLessons: [] as string[],
           };
         }
-
         if (version < 4) {
-          return {
-            ...initialState,
-            ...old,
-            completedLessons: (old.completedLessons as string[]) || [],
-          } as ProgressState;
+          return { ...initialState, ...old, completedLessons: (old.completedLessons as string[]) || [] } as ProgressState;
         }
-
         if (version < 5) {
           return {
             ...initialState,
             ...old,
             grades: (old.grades as Record<string, LevelGrades>) || {},
-            pendingRemediation:
-              (old.pendingRemediation as PendingRemediation | null) || null,
-            remediationHistory:
-              (old.remediationHistory as RemediationSession[]) || [],
+            pendingRemediation: (old.pendingRemediation as PendingRemediation | null) || null,
+            remediationHistory: (old.remediationHistory as RemediationSession[]) || [],
           } as ProgressState;
         }
-
-        if (version < 6) {
-          const oldTotalXP = (old.totalXP as number) || 0;
-          return {
-            ...initialState,
-            ...old,
-            ticketXP: Math.min(TICKET_XP_CAP, oldTotalXP),
-            tickets: 0,
-          } as ProgressState;
-        }
-
-        if (version < 7) {
-          const oldTotalXP = (old.totalXP as number) || 0;
-          const existingTicketXP = (old.ticketXP as number) || 0;
-          return {
-            ...initialState,
-            ...old,
-            ticketXP:
-              existingTicketXP > 0
-                ? existingTicketXP
-                : Math.min(TICKET_XP_CAP, oldTotalXP),
-            tickets: 0,
-          } as ProgressState;
-        }
-
-        if (version < 8) {
-          const oldTotalXP = (old.totalXP as number) || 0;
-          const existingTicketXP = (old.ticketXP as number) || 0;
-          return {
-            ...initialState,
-            ...old,
-            ticketXP:
-              existingTicketXP > 0
-                ? existingTicketXP
-                : Math.min(TICKET_XP_CAP, oldTotalXP),
-            tickets: (old.tickets as number) || 0,
-          } as ProgressState;
-        }
-
-        if (version < 9) {
+        if (version < 6 || version < 7 || version < 8 || version < 9) {
           const oldTotalXP = (old.totalXP as number) || 0;
           const existingTicketXP = (old.ticketXP as number) || 0;
           const existingTickets = (old.tickets as number) || 0;
-
-          const newTicketXP =
-            existingTicketXP > 0
-              ? existingTicketXP
-              : Math.min(TICKET_XP_CAP, oldTotalXP);
-
           return {
             ...initialState,
             ...old,
-            ticketXP: newTicketXP,
+            ticketXP: existingTicketXP > 0 ? existingTicketXP : Math.min(TICKET_XP_CAP, oldTotalXP),
             tickets: existingTickets,
+          } as ProgressState;
+        }
+
+        if (version < 10) {
+          const oldSkillProgress = (old.skillProgress as Record<string, SkillProgress>) || {};
+          const upgraded: Record<string, SkillProgress> = {};
+          for (const [k, v] of Object.entries(oldSkillProgress)) {
+            upgraded[k] = {
+              ...(v as SkillProgress),
+              peakStreak: (v as SkillProgress).peakStreak ?? (v as SkillProgress).consecutiveCorrect ?? 0,
+            };
+          }
+          return {
+            ...initialState,
+            ...old,
+            skillProgress: upgraded,
+            stats: (old.stats as ProgressStats) || { totalAttempts: 0, totalCorrect: 0 },
           } as ProgressState;
         }
 
@@ -623,38 +501,28 @@ export const useProgressStore = create<ProgressState>()(
 // Selectors
 // ═══════════════════════════════════════════════════════════
 
-export const selectIsLevelComplete =
-  (levelId: LevelId) => (state: ProgressState) =>
-    state.completedLevels.includes(levelId);
+export const selectIsLevelComplete = (levelId: LevelId) => (state: ProgressState) =>
+  state.completedLevels.includes(levelId);
 
-export const selectIsLessonCompleted =
-  (lessonId: string) => (state: ProgressState) =>
-    state.completedLessons.includes(lessonId);
+export const selectIsLessonCompleted = (lessonId: string) => (state: ProgressState) =>
+  state.completedLessons.includes(lessonId);
 
-export const selectIsPracticePassed =
-  (num: number) => (state: ProgressState) =>
-    state.passedPractice.includes(num);
+export const selectIsPracticePassed = (num: number) => (state: ProgressState) =>
+  state.passedPractice.includes(num);
 
-export const selectIsAnzanVisualPassed =
-  (num: number) => (state: ProgressState) =>
-    state.passedAnzanVisual.includes(num);
+export const selectIsAnzanVisualPassed = (num: number) => (state: ProgressState) =>
+  state.passedAnzanVisual.includes(num);
 
-export const selectIsAnzanAudioPassed =
-  (num: number) => (state: ProgressState) =>
-    state.passedAnzanAudio.includes(num);
+export const selectIsAnzanAudioPassed = (num: number) => (state: ProgressState) =>
+  state.passedAnzanAudio.includes(num);
 
-export const selectPendingRemediation = (state: ProgressState) =>
-  state.pendingRemediation;
+export const selectPendingRemediation = (state: ProgressState) => state.pendingRemediation;
 
-export const selectRecentRemediation = (days: number) =>
-  (state: ProgressState) => {
-    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
-    return state.remediationHistory.filter((s) => s.completedAt >= cutoff);
-  };
-/**
- * 🎯 دقة الملاحظة — نسبة الإجابات الصحيحة من مجموع المحاولات
- * المصدر: skillProgress (حقيقي)
- */
+export const selectRecentRemediation = (days: number) => (state: ProgressState) => {
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+  return state.remediationHistory.filter((s) => s.completedAt >= cutoff);
+};
+
 export const selectObservationAccuracy = (state: ProgressState): number => {
   const entries = Object.values(state.skillProgress);
   let totalAttempts = 0;
@@ -667,18 +535,11 @@ export const selectObservationAccuracy = (state: ProgressState): number => {
   return Math.min(100, Math.round((totalCorrect / totalAttempts) * 100));
 };
 
-// ═══ 🆕 Selectors نظام التذاكر ═══
-
 export const selectTicketXP = (state: ProgressState) => state.ticketXP;
-
 export const selectTickets = (state: ProgressState) => state.tickets;
-
 export const selectCanBuyTicket = (state: ProgressState) =>
   state.tickets < TICKETS_MAX && state.ticketXP >= TICKET_COST;
-
-export const selectHasTicket = (state: ProgressState) =>
-  state.tickets >= 1;
-
+export const selectHasTicket = (state: ProgressState) => state.tickets >= 1;
 export const selectTicketProgress = (state: ProgressState) =>
   Math.min(100, (state.ticketXP / TICKET_COST) * 100);
 
