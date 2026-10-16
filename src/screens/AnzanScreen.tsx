@@ -97,7 +97,7 @@ function displayTextSize(len: number, isBuildOrRead: boolean): string {
   return 'text-5xl sm:text-7xl';
 }
 
-// [FIX 2] — S11/S12 → null (حذف master_mixed)
+// [v10] — 7 شارات: S11·S12 · S13·S14 · S15 مضافة
 function getAnzanBadgeKey(section: SRBSection): keyof AnzanBadges | null {
   switch (section) {
     case 'S03':
@@ -114,7 +114,12 @@ function getAnzanBadgeKey(section: SRBSection): keyof AnzanBadges | null {
       return 'master_chains';
     case 'S11':
     case 'S12':
-      return null;
+      return 'master_advanced';
+    case 'S13':
+    case 'S14':
+      return 'master_decimals';
+    case 'S15':
+      return 'master_roots';
     default:
       return null;
   }
@@ -908,12 +913,15 @@ export function AnzanScreen({
     const passed = percentage >= PASS_THRESHOLD;
     const xpEarned = score * XP_PER_CORRECT;
 
-    // [FIX 4] — حذف master_mixed
+    // [v10] — 7 شارات (إضافة S11·S12 · S13·S14 · S15)
     const ANZAN_BADGE_LABELS: Record<string, string> = {
       master_addition: '🧠 خبير جمع وطرح',
       master_multiplication: '✖️ خبير ضرب',
       master_division: '➗ خبير قسمة',
       master_chains: '🔗 خبير سلاسل',
+      master_advanced: '🎯 خبير المتقدم',
+      master_decimals: '🔢 خبير العشريات',
+      master_roots: '√ خبير الجذور',
     };
 
     return (
