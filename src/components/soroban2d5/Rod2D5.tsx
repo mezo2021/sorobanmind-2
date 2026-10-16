@@ -22,6 +22,7 @@ interface Rod2D5Props {
   showLabel?: boolean;
   themeStyles?: ThemeStyles;
   isRotated?: boolean;
+  beadGap?: number;
 }
 
 const COLUMN_LABELS: string[] = [
@@ -182,6 +183,7 @@ export function Rod2D5({
   showLabel = true,
   themeStyles,
   isRotated = false,
+  beadGap,
 }: Rod2D5Props) {
   const ts: ThemeStyles = themeStyles ?? {
     icon: '', name: '',
@@ -203,11 +205,12 @@ export function Rod2D5({
     labelColor: '#8b6f47',
     titleColor: '#8b6f47',
     valueColor: '#C9A227',
+    beadGap: 4,
   };
 
   const lowerBeads = [0, 1, 2, 3];
   const beadHeight = beadSize * 0.42;
-  const gap = 4;
+  const gap = beadGap ?? 4;
   const step = beadHeight + gap;
 
   const rodHeight = height - 30;
