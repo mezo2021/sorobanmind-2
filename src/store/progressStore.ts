@@ -1,8 +1,5 @@
 // src/store/progressStore.ts
-// 📝 التعديل: migration v10 — إضافة peakStreak + stats
-// 🎯 الوظيفة: تتبع تقدم الطفل · إنجازات نوعية · أنزان + سلاسل
-// ✅ الحالة: البناء أخضر
-// [v10] — peakStreak + stats.totalAttempts/totalCorrect — 2026-10-16
+// [v10] — peakStreak + stats + 7 شارات أنزان (بصري + سمعي) — 2026-10-16
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -13,10 +10,7 @@ import type {
   SkillProgress as BaseSkillProgress,
 } from "../curriculum/types";
 
-// ═══════════════════════════════════════════════════════════
-// امتداد محلي — لا يمس curriculum/types.ts
-// ═══════════════════════════════════════════════════════════
-
+// ═══ امتداد محلي — لا يمس curriculum/types.ts ═══
 export interface SkillProgress extends BaseSkillProgress {
   peakStreak?: number;
 }
@@ -34,29 +28,33 @@ export type LevelId =
   | "L12" | "L13" | "L14" | "L15"
   | "L16" | "L17" | "L18" | "L19" | "L20";
 
+// ✅ 7 شارات بصري (بدل 4)
 export interface AnzanBadges {
   master_addition?: boolean;
   master_multiplication?: boolean;
   master_division?: boolean;
   master_chains?: boolean;
-  master_mixed?: boolean;
+  master_advanced?: boolean;    // 🆕 S11·S12
+  master_decimals?: boolean;    // 🆕 S13·S14
+  master_roots?: boolean;       // 🆕 S15
 }
 
+// ✅ 7 شارات سمعي (بدل 4)
 export interface AnzanAudioBadges {
   master_addition_audio?: boolean;
   master_multiplication_audio?: boolean;
   master_division_audio?: boolean;
   master_chains_audio?: boolean;
-  master_mixed_audio?: boolean;
+  master_advanced_audio?: boolean;    // 🆕
+  master_decimals_audio?: boolean;    // 🆕
+  master_roots_audio?: boolean;       // 🆕
 }
 
-// ═══ إحصائيات تراكمية (v10) ═══
 export interface ProgressStats {
   totalAttempts: number;
   totalCorrect: number;
 }
 
-// ═══ درجات الأقسام (0-100) ═══
 export interface LevelGrades {
   practice: number | null;
   anzanVisualNormal: number | null;
