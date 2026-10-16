@@ -333,7 +333,7 @@ Real child progress data remains 100% untouched
 
 ## 🌐 Live Web Application
 
-Try the application: **[mezo2021.github.io/sorobanmind-2](https://mezo2021.github.io/sorobanmind-2)**
+Try the application: **[mezo2021.github.io/sorobanmindm-2](https://mezo2021.github.io/sorobanmind-m2)**
 
 Supports: 💻 Desktop · 📱 Mobile · 📱 Tablets.
 
