@@ -1,5 +1,4 @@
 // src/components/soroban2d5/Rod2D5.tsx
-import { motion } from 'framer-motion';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Bead2D5 } from './Bead2D5';
 import type { BeadState } from './useSorobanLogic';
@@ -14,7 +13,7 @@ interface Rod2D5Props {
   onToggleUpper: () => void;
   onSetLower: (count: number) => void;
   onReset: () => void;
-  onBeadInteract?: () => void; // 🆕
+  onBeadInteract?: () => void;
   height?: number;
   beadSize?: number;
   isActive?: boolean;
@@ -23,7 +22,7 @@ interface Rod2D5Props {
   isDimmed?: boolean;
   showLabel?: boolean;
   themeStyles?: ThemeStyles;
-  isRotated?: boolean; // 🆕
+  isRotated?: boolean;
 }
 
 const COLUMN_LABELS: string[] = [
@@ -56,24 +55,35 @@ function getLabelFontSize(text: string, isVertical: boolean): number {
   return 10;
 }
 
-// غلاف زجاجي
+// ============================================================
+// 🆕 غلاف زجاجي خفيف — بدون backdrop-filter وبدون motion
+//    في وضع Flash يُعطَّل تمامًا ليبقى الفلتر نقيًا
+// ============================================================
 function BeadGlass({
   children,
   isBeadActive,
   tintColor,
   glowColor,
   dotColor,
+  isFlashMode,
 }: {
   children: ReactNode;
   isBeadActive: boolean;
   tintColor: string;
   glowColor: string;
   dotColor: string;
+  isFlashMode: boolean;
 }) {
+  // 🚫 في وضع Flash: لا شيء — نرجع الخرزة الأصلية فقط
+  if (isFlashMode) {
+    return <>{children}</>;
+  }
+
   return (
     <div style={{ position: 'relative' }}>
       {children}
 
+      {/* تلوين بلون الثيم — بديل mixBlendMode */}
       <div
         style={{
           position: 'absolute',
@@ -81,26 +91,25 @@ function BeadGlass({
           borderRadius: '50%',
           background: tintColor,
           pointerEvents: 'none',
-          mixBlendMode: 'color',
         }}
       />
 
+      {/* طبقة زجاج خفيفة — بدون backdrop-filter */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           borderRadius: '50%',
           background:
-            'linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.35) 100%)',
-          border: '1px solid rgba(255,255,255,0.6)',
+            'linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.02) 40%, rgba(255,255,255,0.28) 100%)',
+          border: '1px solid rgba(255,255,255,0.5)',
           boxShadow:
-            'inset 0 1px 4px rgba(255,255,255,0.9), inset 0 -2px 4px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.15)',
-          backdropFilter: 'blur(1.5px)',
-          WebkitBackdropFilter: 'blur(1.5px)',
+            'inset 0 1px 3px rgba(255,255,255,0.8), inset 0 -2px 3px rgba(0,0,0,0.12)',
           pointerEvents: 'none',
         }}
       />
 
+      {/* النقطة الملونة */}
       <div
         style={{
           position: 'absolute',
@@ -111,22 +120,22 @@ function BeadGlass({
           height: 3,
           borderRadius: '50%',
           background: dotColor,
-          boxShadow: `0 0 3px ${dotColor}, 0 0 6px ${dotColor}88`,
+          boxShadow: `0 0 3px ${dotColor}`,
           pointerEvents: 'none',
         }}
       />
 
+      {/* الإضاءة عند التفعيل — CSS animation بدل motion.div */}
       {isBeadActive && (
-        <motion.div
-          animate={{ opacity: [0.75, 1, 0.75], scale: [1, 1.08, 1] }}
-          transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+        <div
+          className="bead-glow-pulse"
           style={{
             position: 'absolute',
             inset: -6,
             borderRadius: '50%',
-            background: `radial-gradient(ellipse at center, ${glowColor}dd 0%, ${glowColor}55 45%, transparent 80%)`,
-            filter: 'blur(2px)',
+            background: `radial-gradient(ellipse at center, ${glowColor}cc 0%, ${glowColor}44 45%, transparent 80%)`,
             pointerEvents: 'none',
+            willChange: 'opacity, transform',
           }}
         />
       )}
@@ -174,12 +183,10 @@ export function Rod2D5({
 
   const lowerBeads = [0, 1, 2, 3];
   const beadHeight = beadSize * 0.42;
-  const gap = 4; // ✅ تباعد جديد
+  const gap = 4;
   const step = beadHeight + gap;
 
   const rodHeight = height - 30;
-
-  // ✅ العارضة على 25% (نسبة 1:3)
   const beamY = rodHeight * 0.25;
 
   const upperBeadTop = 2;
@@ -194,10 +201,13 @@ export function Rod2D5({
   const isWhiteHighlight = tint === 'white';
   const beadFilter = getBeadFilter(tint);
 
+  // 🆕 تحديد وضع Flash
+  const isFlashMode = tint === 'red' || tint === 'emerald' || tint === 'white';
+
   const wrapperOpacity = isDimmed ? 0.25 : 1;
   const wrapperFilter = isDimmed ? 'grayscale(1)' : 'none';
 
-  // ✅ إضاءة العمود عند النقر — ٢ ثوانٍ
+  // إضاءة العمود عند النقر — 2 ثوانٍ
   const [clickGlow, setClickGlow] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -205,7 +215,7 @@ export function Rod2D5({
     setClickGlow(true);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setClickGlow(false), 2000);
-    onBeadInteract?.(); // 🆕 يُبلّغ الأب
+    onBeadInteract?.();
   };
 
   useEffect(() => {
@@ -225,7 +235,6 @@ export function Rod2D5({
     else onSetLower(idx + 1);
   };
 
-  // ✅ عند الدوران، نُدوّر التسمية عكس الاتجاه لتبقى مقروءة
   const labelTransform = `translateX(-50%)${isRotated ? ' rotate(-90deg)' : ''}`;
 
   return (
@@ -239,17 +248,19 @@ export function Rod2D5({
         transition: 'opacity 0.4s, filter 0.4s',
       }}
     >
-      {clickGlow && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 1, 0] }}
-          transition={{ duration: 2, times: [0, 0.1, 0.7, 1] }}
-          className="absolute pointer-events-none z-20"
+      {/* إضاءة العمود — فقط في الوضع العادي */}
+      {clickGlow && !isFlashMode && (
+        <div
+          className="rod-click-glow"
           style={{
+            position: 'absolute',
             inset: -8,
             borderRadius: 16,
             border: `2px solid ${ts.rodGlow}`,
             boxShadow: `0 0 20px ${ts.rodGlow}, 0 0 40px ${ts.rodGlow}88, inset 0 0 20px ${ts.rodGlow}44`,
+            pointerEvents: 'none',
+            zIndex: 20,
+            willChange: 'opacity',
           }}
         />
       )}
@@ -311,6 +322,7 @@ export function Rod2D5({
           tintColor={ts.upperBeadTint}
           glowColor={ts.upperBeadGlow}
           dotColor={ts.upperDot}
+          isFlashMode={isFlashMode}
         >
           <Bead2D5
             color="dark"
@@ -347,11 +359,10 @@ export function Rod2D5({
           }}
         />
 
-        {clickGlow && (
-          <motion.div
-            initial={{ left: '-30%' }}
-            animate={{ left: '110%' }}
-            transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }}
+        {/* نبضة الليزر — فقط في الوضع العادي */}
+        {clickGlow && !isFlashMode && (
+          <div
+            className="beam-laser-pulse"
             style={{
               position: 'absolute',
               top: 0,
@@ -359,6 +370,7 @@ export function Rod2D5({
               width: '25%',
               background: `linear-gradient(90deg, transparent 0%, ${ts.beamLaser} 50%, transparent 100%)`,
               boxShadow: `0 0 12px ${ts.beamLaser}, 0 0 20px ${ts.beamLaser}aa`,
+              willChange: 'transform',
             }}
           />
         )}
@@ -403,6 +415,7 @@ export function Rod2D5({
               tintColor={ts.lowerBeadTint}
               glowColor={ts.lowerBeadGlow}
               dotColor={ts.lowerDot}
+              isFlashMode={isFlashMode}
             >
               <Bead2D5
                 color="wood"
@@ -425,7 +438,7 @@ export function Rod2D5({
             fontSize: labelFontSize,
             bottom: 'calc(100% + 4px)',
             left: '50%',
-            transform: labelTransform, // ✅ معاكس للدوران
+            transform: labelTransform,
             writingMode: isVertical ? 'vertical-rl' : 'horizontal-tb',
             textOrientation: 'mixed',
             lineHeight: 1.05,
