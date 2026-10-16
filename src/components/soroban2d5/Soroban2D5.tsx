@@ -79,7 +79,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     lowerDot: '#7FDBFF',
     labelColor: '#FFFFFF',
     titleColor: '#FFFFFF',
-    valueColor: '#FFFFFF', // ✅ أبيض
+    valueColor: '#FFFFFF',
   },
   barbie: {
     icon: '❤️',
@@ -101,7 +101,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     lowerDot: '#FF69B4',
     labelColor: '#FFC0CB',
     titleColor: '#FF69B4',
-    valueColor: '#FF69B4', // ✅ وردي
+    valueColor: '#FF69B4',
   },
 };
 
@@ -222,9 +222,7 @@ export function Soroban2D5({
     }
   }, [currentTheme]);
 
-  const [isRotated, setIsRotated] = useState(false);
-
-  // 🆕 إضاءة العمود عند اللمس (لا إطار — فقط عمود)
+  // 🆕 إضاءة العمود عند اللمس (لا إطار)
   const [touchGlow, setTouchGlow] = useState(false);
   const touchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -275,201 +273,150 @@ export function Soroban2D5({
 
   const shouldShowValue = revealValue || (!interactive && showValue);
 
-  const counterRotate = isRotated ? 'rotate(-90deg)' : 'none';
-  const counterTransition = 'transform 0.35s ease';
-
   return (
     <div className="w-full flex flex-col items-center gap-2 relative">
-      {/* 🚀 دوران بدون motion.div — CSS transition فقط */}
-      <div
-        className="flex flex-col items-center gap-2"
-        style={{
-          transform: `rotate(${isRotated ? 90 : 0}deg)`,
-          transition: counterTransition,
-          transformOrigin: 'center center',
-        }}
-      >
-        {/* العنوان + مُبدّل الثيمات */}
-        <div className="flex items-center justify-between gap-2 w-full px-1">
-          <div
-            className="flex gap-1.5"
-            style={{ transform: counterRotate, transition: counterTransition }}
-          >
-            {(['classic', 'ocean', 'barbie'] as SorobanTheme[]).map((t) => {
-              const active = currentTheme === t;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setCurrentTheme(t)}
-                  aria-label={THEMES[t].name}
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: active ? `${THEMES[t].frameGlow}33` : 'rgba(255,255,255,0.06)',
-                    border: active ? `2px solid ${THEMES[t].frameGlow}` : '2px solid transparent',
-                    boxShadow: active ? `0 0 12px ${THEMES[t].frameGlow}` : 'none',
-                    fontSize: 15,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  {THEMES[t].icon}
-                </button>
-              );
-            })}
-          </div>
-
-          {!hideTitle && (
-            <h3
-              className={`${cfg.titleSize} font-bold`}
-              style={{
-                color: ts.titleColor,
-                transition: `color 0.15s, ${counterTransition}`,
-                transform: counterRotate,
-              }}
-            >
-              {currentTheme === 'classic' && '🟤 السوروبان الخشبي'}
-              {currentTheme === 'ocean' && '🏄 السوروبان الليزري'}
-              {currentTheme === 'barbie' && '❤️ سوروبان باربي'}
-            </h3>
-          )}
+      {/* العنوان + مُبدّل الثيمات */}
+      <div className="flex items-center justify-between gap-2 w-full px-1">
+        <div className="flex gap-1.5">
+          {(['classic', 'ocean', 'barbie'] as SorobanTheme[]).map((t) => {
+            const active = currentTheme === t;
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setCurrentTheme(t)}
+                aria-label={THEMES[t].name}
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: active ? `${THEMES[t].frameGlow}33` : 'rgba(255,255,255,0.06)',
+                  border: active ? `2px solid ${THEMES[t].frameGlow}` : '2px solid transparent',
+                  boxShadow: active ? `0 0 12px ${THEMES[t].frameGlow}` : 'none',
+                  fontSize: 15,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {THEMES[t].icon}
+              </button>
+            );
+          })}
         </div>
 
-        {/* الإطار */}
-        <div className="relative inline-flex">
+        {!hideTitle && (
+          <h3
+            className={`${cfg.titleSize} font-bold`}
+            style={{ color: ts.titleColor, transition: 'color 0.15s' }}
+          >
+            {currentTheme === 'classic' && '🟤 السوروبان الخشبي'}
+            {currentTheme === 'ocean' && '🏄 السوروبان الليزري'}
+            {currentTheme === 'barbie' && '❤️ سوروبان باربي'}
+          </h3>
+        )}
+      </div>
+
+      {/* الإطار */}
+      <div className="relative inline-flex">
+        <div
+          className="relative rounded-2xl"
+          style={{
+            paddingTop: cfg.framePaddingY,
+            paddingBottom: cfg.framePaddingY,
+            paddingLeft: cfg.framePaddingX,
+            paddingRight: cfg.framePaddingX,
+            background: ts.frameBg,
+            boxShadow: 'inset 0 4px 12px rgba(255,255,255,0.08), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35)',
+            border: '2px solid rgba(0,0,0,0.25)',
+            maxWidth: '100%',
+            transition: 'background 0.15s',
+          }}
+        >
+          {/* الداخل: ماء زجاجي */}
           <div
-            className="relative rounded-2xl"
+            className="relative rounded-xl"
             style={{
-              paddingTop: cfg.framePaddingY,
-              paddingBottom: cfg.framePaddingY,
-              paddingLeft: cfg.framePaddingX,
-              paddingRight: cfg.framePaddingX,
-              background: ts.frameBg,
-              boxShadow: 'inset 0 4px 12px rgba(255,255,255,0.08), inset 0 -6px 16px rgba(0,0,0,0.4), 0 20px 40px rgba(0,0,0,0.35)',
-              border: '2px solid rgba(0,0,0,0.25)',
-              maxWidth: '100%',
-              transition: 'background 0.15s',
+              paddingTop: cfg.innerPaddingY,
+              paddingBottom: cfg.innerPaddingY,
+              paddingLeft: cfg.innerPaddingX,
+              paddingRight: cfg.innerPaddingX,
+              background: ts.innerBg,
+              boxShadow: `inset 0 4px 12px rgba(0,0,0,0.2), inset 0 0 30px ${ts.frameGlow}22`,
+              border: `1px solid ${ts.innerBorder}`,
+              overflow: 'visible',
+              transition: 'background 0.15s, border 0.15s',
             }}
           >
-            {/* ❌ تم حذف إضاءة الإطار نهائيًا */}
-
-            {/* الداخل: ماء زجاجي */}
             <div
-              className="relative rounded-xl"
+              className="absolute top-0 left-0 right-0 rounded-t-xl pointer-events-none"
               style={{
-                paddingTop: cfg.innerPaddingY,
-                paddingBottom: cfg.innerPaddingY,
-                paddingLeft: cfg.innerPaddingX,
-                paddingRight: cfg.innerPaddingX,
-                background: ts.innerBg,
-                boxShadow: `inset 0 4px 12px rgba(0,0,0,0.2), inset 0 0 30px ${ts.frameGlow}22`,
-                border: `1px solid ${ts.innerBorder}`,
-                overflow: 'visible',
-                transition: 'background 0.15s, border 0.15s',
+                height: '30%',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%)',
               }}
+            />
+
+            <div
+              className="flex flex-row-reverse items-center justify-center relative"
+              style={{ gap: cfg.gap, paddingTop: cfg.topPadding, paddingBottom: cfg.bottomPadding }}
+              dir="rtl"
             >
-              <div
-                className="absolute top-0 left-0 right-0 rounded-t-xl pointer-events-none"
-                style={{
-                  height: '30%',
-                  background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%)',
-                }}
-              />
+              {displayedStates.map((state, idx) => {
+                const originalIdx = idx + displayOffset;
+                const displayOrder = columns - 1 - originalIdx;
+                const isHighlighted = highlightColumns?.includes(originalIdx) ?? false;
+                const isDim = dimColumns?.includes(originalIdx) ?? false;
+                const finalTint: RodTint | undefined = isHighlighted ? 'white' : rodTint;
 
-              <div
-                className="flex flex-row-reverse items-center justify-center relative"
-                style={{ gap: cfg.gap, paddingTop: cfg.topPadding, paddingBottom: cfg.bottomPadding }}
-                dir="rtl"
-              >
-                {displayedStates.map((state, idx) => {
-                  const originalIdx = idx + displayOffset;
-                  const displayOrder = columns - 1 - originalIdx;
-                  const isHighlighted = highlightColumns?.includes(originalIdx) ?? false;
-                  const isDim = dimColumns?.includes(originalIdx) ?? false;
-                  const finalTint: RodTint | undefined = isHighlighted ? 'white' : rodTint;
-
-                  return (
-                    <Rod2D5
-                      key={originalIdx}
-                      state={state}
-                      columnIndex={originalIdx}
-                      displayOrder={displayOrder}
-                      totalColumns={displayedStates.length}
-                      onToggleUpper={() => interactive && toggleUpper(originalIdx)}
-                      onSetLower={(count) => interactive && setLower(originalIdx, count)}
-                      onReset={() => interactive && resetColumn(originalIdx)}
-                      onBeadInteract={handleBeadInteract}
-                      height={effectiveHeight}
-                      beadSize={effectiveBeadSize}
-                      isActive={activeRodIndex === originalIdx}
-                      beamHighlight={beamHighlight}
-                      tint={finalTint}
-                      isDimmed={isDim}
-                      showLabel={!hideColumnLabels}
-                      themeStyles={ts}
-                      isRotated={isRotated}
-                    />
-                  );
-                })}
-              </div>
-
-              {displayOffset > 0 && (
-                <p className="text-center text-[10px] mt-1" style={{ color: ts.labelColor }}>
-                  ✨ {formatByStyle(visibleColumns, numberStyle)} أعمدة
-                </p>
-              )}
+                return (
+                  <Rod2D5
+                    key={originalIdx}
+                    state={state}
+                    columnIndex={originalIdx}
+                    displayOrder={displayOrder}
+                    totalColumns={displayedStates.length}
+                    onToggleUpper={() => interactive && toggleUpper(originalIdx)}
+                    onSetLower={(count) => interactive && setLower(originalIdx, count)}
+                    onReset={() => interactive && resetColumn(originalIdx)}
+                    onBeadInteract={handleBeadInteract}
+                    height={effectiveHeight}
+                    beadSize={effectiveBeadSize}
+                    isActive={activeRodIndex === originalIdx}
+                    beamHighlight={beamHighlight}
+                    tint={finalTint}
+                    isDimmed={isDim}
+                    showLabel={!hideColumnLabels}
+                    themeStyles={ts}
+                  />
+                );
+              })}
             </div>
 
-            {interactive && (
-              <div
-                className="flex justify-center gap-2 mt-2"
-                style={{ transform: counterRotate, transition: counterTransition }}
-              >
-                <button
-                  type="button"
-                  onClick={handleResetAll}
-                  className="px-4 py-1.5 rounded-full font-bold transition text-xs"
-                  style={{
-                    background: 'rgba(255,255,255,0.15)',
-                    color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.25)',
-                  }}
-                >
-                  ↺ إعادة الكل
-                </button>
-              </div>
+            {displayOffset > 0 && (
+              <p className="text-center text-[10px] mt-1" style={{ color: ts.labelColor }}>
+                ✨ {formatByStyle(visibleColumns, numberStyle)} أعمدة
+              </p>
             )}
           </div>
 
-          {/* زر التدوير */}
-          <button
-            type="button"
-            onClick={() => setIsRotated((r) => !r)}
-            aria-label="تدوير المعداد"
-            title="تدوير المعداد 90°"
-            className="absolute top-1/2 -translate-y-1/2 z-30"
-            style={{
-              right: -42,
-              width: 34,
-              height: 34,
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.15)',
-              border: `1.5px solid ${ts.frameGlow}`,
-              color: ts.frameGlow,
-              fontSize: 18,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            ↻
-          </button>
+          {interactive && (
+            <div className="flex justify-center gap-2 mt-2">
+              <button
+                type="button"
+                onClick={handleResetAll}
+                className="px-4 py-1.5 rounded-full font-bold transition text-xs"
+                style={{
+                  background: 'rgba(255,255,255,0.15)',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                }}
+              >
+                ↺ إعادة الكل
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
