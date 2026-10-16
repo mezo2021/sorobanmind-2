@@ -55,7 +55,7 @@ function getLabelFontSize(text: string, isVertical: boolean): number {
 }
 
 // ============================================================
-// 🌟 غلاف زجاجي موحّد — بلا ظل خارجي، حد داخلي رقيق، نقطة بيضاء
+// 🌟 غلاف زجاجي موحّد — بلا ظل خارجي، حد داخلي رقيق
 // ============================================================
 function BeadGlass({
   children,
@@ -476,7 +476,7 @@ export function Rod2D5({
           title={labelText}
         >
           {labelText}
-        </label>
+        </div>
       )}
     </div>
   );
