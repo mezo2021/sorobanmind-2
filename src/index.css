@@ -127,14 +127,8 @@ html {
 
 /* 1. نبض إضاءة الخرزة عند التفعيل */
 @keyframes beadPulse {
-  0%, 100% {
-    opacity: 0.75;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.08);
-  }
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1;   }
 }
 .bead-glow-pulse {
   animation: beadPulse 1.4s ease-in-out infinite;
