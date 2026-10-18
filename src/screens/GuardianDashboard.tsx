@@ -228,7 +228,6 @@ export function GuardianDashboard({
   const savedName = storedName || childName;
 
   // ═══ مشتقات ═══
-  const childLevel = Math.floor(totalXP / 100) + 1;
   const totalLevelsCount = SRB_LEVELS.length;
 
   const effectiveCompletedLevels = useMemo(() => {
