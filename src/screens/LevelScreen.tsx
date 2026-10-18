@@ -5,8 +5,6 @@
 // 📅 الجلسة: 14
 // ✅ الحالة: البناء أخضر
 // [FIX 7] — استخدام أداة المعاينة
-// [FIX N74] — إزالة soroban_passed_level_tests والاعتماد على progressStore
-// [FIX N80] — فصل شروط العرض عن شروط النجاح الفعلي (الزر الأخير لا يعتمد على المعاينة)
 
 import { motion } from 'framer-motion';
 import {
@@ -136,6 +134,15 @@ function toArabicNumber(value: number | string): string {
   return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 }
 
+function loadPassedLevelTests(): string[] {
+  try {
+    const raw = localStorage.getItem('soroban_passed_level_tests');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 // ═══════════════════════════════════════════════════════════
 // SectionCard
 // ═══════════════════════════════════════════════════════════
@@ -226,6 +233,9 @@ export function LevelScreen({
   const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
   const computeFinalScore = useProgressStore((s) => s.computeFinalScore);
 
+  // ─── passedLevelTests (localStorage مؤقتًا) ───
+  const passedLevelTests = loadPassedLevelTests();
+
   // ─── درجات المستوى الحالي ───
   const levelGrades = grades[levelId] ?? {
     practice: null,
@@ -261,33 +271,47 @@ export function LevelScreen({
 
   const levelLessons = getLessonsByLevel(levelId as string);
 
-  // [FIX N80] — شروط العرض (تحترم وضع المعاينة)
-  const isLessonCompleted = inPreview || (levelLessons.length > 0 && levelLessons.every((l) => completedLessons.includes(l.id)));
+  // [FIX 7] — في وضع المعاينة: كل شيء مفتوح
+  const isLessonCompleted =
+    inPreview ||
+    (levelLessons.length > 0 &&
+      levelLessons.every((l) => completedLessons.includes(l.id)));
+
   const isPracticePassed = inPreview || passedPractice.includes(level.practiceNum);
   const isAnzanVisualPassed = inPreview || passedAnzanVisual.includes(level.anzanNum);
   const isAnzanAudioPassed = inPreview || passedAnzanAudio.includes(level.anzanNum);
-  const isLevelTestPassed = inPreview || (levelGrades.levelTest !== null && levelGrades.levelTest >= 80);
-
-  // [FIX N80] — الشروط الصارمة (لا تحترم المعاينة - لتحديد ظهور الزر الأخضر)
-  const strictLessonCompleted = levelLessons.length > 0 && levelLessons.every((l) => completedLessons.includes(l.id));
-  const strictPracticePassed = passedPractice.includes(level.practiceNum);
-  const strictAnzanVisualPassed = passedAnzanVisual.includes(level.anzanNum);
-  const strictAnzanAudioPassed = passedAnzanAudio.includes(level.anzanNum);
-  const strictLevelTestPassed = (levelGrades.levelTest ?? 0) >= 80;
-  
-  const isLevelStrictlyComplete = strictLessonCompleted && strictPracticePassed && strictAnzanVisualPassed && strictAnzanAudioPassed && strictLevelTestPassed;
+  const isLevelTestPassed = inPreview || passedLevelTests.includes(levelId);
 
   // 🩺 الجلسة العلاجية الإجبارية — إن كانت للمستوى الحالي
-  const hasPendingRemediation = pendingRemediation !== null && pendingRemediation.level === levelId;
+  const hasPendingRemediation =
+    pendingRemediation !== null && pendingRemediation.level === levelId;
 
-  const practiceLocked = !isLessonCompleted || hasPendingRemediation;
-  const anzanVisualLocked = !isPracticePassed || hasPendingRemediation;
-  const anzanAudioLocked = !isAnzanVisualPassed || hasPendingRemediation;
-  const levelTestLocked = !isAnzanAudioPassed || hasPendingRemediation;
+  // 🎯 منطق القفل الجديد:
+  // - practiceLocked: يحتاج إنهاء الدروس + عدم وجود جلسة علاجية معلّقة
+  const practiceLocked =
+    !isLessonCompleted || hasPendingRemediation;
 
-  const remediationTarget = hasPendingRemediation && pendingRemediation ? pendingRemediation.phase : null;
+  // - anzanVisualLocked: يحتاج النجاح في التمرّن + عدم وجود جلسة علاجية
+  const anzanVisualLocked =
+    !isPracticePassed || hasPendingRemediation;
 
-  const completionPct = ([isLessonCompleted, isPracticePassed, isAnzanVisualPassed, isAnzanAudioPassed, isLevelTestPassed].filter(Boolean).length / 5) * 100;
+  // - anzanAudioLocked: يحتاج النجاح في الأنزان البصري + عدم وجود جلسة علاجية
+  const anzanAudioLocked =
+    !isAnzanVisualPassed || hasPendingRemediation;
+
+  // - levelTestLocked: يحتاج النجاح في كل المسارات + عدم وجود جلسة علاجية
+  const levelTestLocked =
+    !isAnzanAudioPassed || hasPendingRemediation;
+
+  // 🎯 المسار "التالي" لفتحه (لإظهار الجلسة العلاجية)
+  const remediationTarget =
+    hasPendingRemediation && pendingRemediation
+      ? pendingRemediation.phase
+      : null;
+
+  const completionPct =
+    ([isLessonCompleted, isPracticePassed, isAnzanVisualPassed, isAnzanAudioPassed, isLevelTestPassed]
+      .filter(Boolean).length / 5) * 100;
 
   // 🏅 النتيجة التراكمية + المستوى التالي
   const finalScore = computeFinalScore(levelId);
@@ -503,8 +527,7 @@ export function LevelScreen({
         </div>
 
         {/* 🏅 نجاح كامل — الدرجة التراكمية */}
-        {/* [FIX N80] استخدام المتغير الصارم بدلاً من المتغير الذي يحترم المعاينة */}
-        {isLevelStrictlyComplete && (
+        {isLessonCompleted && isPracticePassed && isAnzanVisualPassed && isAnzanAudioPassed && isLevelTestPassed && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
