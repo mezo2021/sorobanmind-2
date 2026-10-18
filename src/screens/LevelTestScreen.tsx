@@ -3,7 +3,7 @@
 // 📅 آخر تحديث: 2026-10-08 — إصلاح ديناميكي لكل المستويات
 // [FIX LT1] — getTestQuestions(levelId) بدل buildL0Test() الثابت
 // [FIX LT2] — صيغة زمنية تكيفية: FIXED + (Σ avg × 1.5) + BUFFER
-// [FIX LT3] — عتبة نجاح 70% (بدل 80%)
+// [FIX N70] — عتبة نجاح 80% + لف markLevelComplete بشرط النجاح لمنع التلوث
 // [FIX LT4] — cooldown 30 دقيقة لكل مستوى (بدل 24 ساعة)
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
@@ -26,7 +26,7 @@ import {
 // ثوابت
 // ═══════════════════════════════════════════════════════════
 
-const PASS_THRESHOLD = 70;                       // 70%
+const PASS_THRESHOLD = 80;                       // 80%
 const COOLDOWN_MS = 30 * 60 * 1000;              // 30 دقيقة
 const FIXED_SEC = 20;                             // تعليمات + تنقل
 const ARAB_FACTOR = 1.5;                          // معامل الطفل العربي
@@ -250,7 +250,11 @@ export function LevelTestScreen({
 
       const store = useProgressStore.getState();
       store.setGrade(levelId, 'levelTest', score);
-store.markLevelComplete(levelId as never);
+      
+      // [FIX N70] لف markLevelComplete بشرط النجاح لمنع التلوث
+      if (passed) {
+        store.markLevelComplete(levelId as never);
+      }
     } catch { /* ignore */ }
 
     setPhase('result');
@@ -298,7 +302,6 @@ store.markLevelComplete(levelId as never);
     finalizeTest(answers);
   }, [answers, finalizeTest]);
 
-  // ⏸️ الجزء 2 يبدأ من هنا — أرسل "تابع"
   // ═══ Cooldown ═══
   if (phase === 'cooldown') {
     return (
