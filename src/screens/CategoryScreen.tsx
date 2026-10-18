@@ -3,6 +3,7 @@
 // [FIX N69] — عرض درجات الأنزان البصري (متوسط) والسمعي في الأزرار
 // [FIX LK1] — فحص مزدوج لفتح المستوى: completedLevels أو passedLevelTests
 // [FIX LK2] — فتح المستوى المُوصى به من امتحان تحديد المستوى
+// [FIX N75] — إزالة soroban_passed_level_tests نهائياً والاعتماد على completedLevels فقط
 
 import { motion } from 'framer-motion';
 import {
@@ -174,15 +175,6 @@ function toArabicNumber(value: number | string): string {
   return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 }
 
-function loadPassedLevelTests(): string[] {
-  try {
-    const raw = localStorage.getItem('soroban_passed_level_tests');
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
 function loadPlacementData() {
   try {
     const weakSkillsRaw = localStorage.getItem('soroban_placement_weak_skills');
@@ -235,23 +227,20 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
   // ✅ المستوى يُفتح إذا:
   //    - المعاينة مفعّلة
-  //    - أو المستوى مُوصى به من امتحان تحديد المستوى  ← 🆕
+  //    - أو المستوى مُوصى به من امتحان تحديد المستوى
   //    - أو كان الأول
-  //    - أو المستوى السابق مكتمل/مُختبر
+  //    - أو المستوى السابق مكتمل
   const isLevelUnlocked = (levelId: LevelId, index: number): boolean => {
     if (inPreview) return true;
 
-    // 🆕 [FIX LK2] — فتح المستوى المُوصى به من امتحان تحديد المستوى
+    // [FIX LK2] — فتح المستوى المُوصى به من امتحان تحديد المستوى
     if (placement.recommendedLevel === levelId) return true;
 
     if (index === 0) return true;
     const prevLevel = data.levels[index - 1];
-    // [FIX LK1] — فحص مزدوج: completedLevels أو passedLevelTests
-    const passedTests = loadPassedLevelTests();
-    return (
-      completedLevels.includes(prevLevel.id) ||
-      passedTests.includes(prevLevel.id)
-    );
+    
+    // [FIX N75] — الاعتماد فقط على completedLevels الذي يُحدّثه progressStore
+    return completedLevels.includes(prevLevel.id);
   };
 
   // ✅ المستوى "مكتمل" = كل دروسه مكتملة
