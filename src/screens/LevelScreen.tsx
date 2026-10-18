@@ -5,6 +5,7 @@
 // 📅 الجلسة: 14
 // ✅ الحالة: البناء أخضر
 // [FIX 7] — استخدام أداة المعاينة
+// [FIX N74] — إزالة soroban_passed_level_tests والاعتماد على progressStore
 
 import { motion } from 'framer-motion';
 import {
@@ -134,15 +135,6 @@ function toArabicNumber(value: number | string): string {
   return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 }
 
-function loadPassedLevelTests(): string[] {
-  try {
-    const raw = localStorage.getItem('soroban_passed_level_tests');
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
 // ═══════════════════════════════════════════════════════════
 // SectionCard
 // ═══════════════════════════════════════════════════════════
@@ -233,9 +225,6 @@ export function LevelScreen({
   const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
   const computeFinalScore = useProgressStore((s) => s.computeFinalScore);
 
-  // ─── passedLevelTests (localStorage مؤقتًا) ───
-  const passedLevelTests = loadPassedLevelTests();
-
   // ─── درجات المستوى الحالي ───
   const levelGrades = grades[levelId] ?? {
     practice: null,
@@ -280,7 +269,9 @@ export function LevelScreen({
   const isPracticePassed = inPreview || passedPractice.includes(level.practiceNum);
   const isAnzanVisualPassed = inPreview || passedAnzanVisual.includes(level.anzanNum);
   const isAnzanAudioPassed = inPreview || passedAnzanAudio.includes(level.anzanNum);
-  const isLevelTestPassed = inPreview || passedLevelTests.includes(levelId);
+  
+  // [FIX N74] — الاعتماد على progressStore فقط للاختبار
+  const isLevelTestPassed = inPreview || (levelGrades.levelTest !== null && levelGrades.levelTest >= 80);
 
   // 🩺 الجلسة العلاجية الإجبارية — إن كانت للمستوى الحالي
   const hasPendingRemediation =
