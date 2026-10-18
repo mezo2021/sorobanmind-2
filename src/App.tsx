@@ -1,10 +1,19 @@
-import { lazy } from 'react';
+// [FIX N43] إصلاح شاشة التحميل: شاشات الدخول صارت استيراداً عادياً + حدّ Suspense داخلي — 2026-10-18
+// وظيفة التغيير:
+//   1) WelcomeScreen / RoleSelection / HeroDashboard / GuardianDashboard صارت imports عادية
+//      → لا تختفي عند أول زيارة أو بعد نشر جديد (كانت lazy فتفشل بلا شبكة أو مع chunk قديم)
+//   2) تغليف renderScreen() بـ Suspense داخلي على مستوى محتوى الشاشة فقط
+//      → عند تحميل أي شاشة lazy أخرى (CategoryScreen, PracticeScreen, ...) لا يختفي الـ Header ولا الصفحة كلها
+//   3) استيراد Suspense من react (كان lazy فقط)
+
+import { lazy, Suspense } from 'react';
 // src/App.tsx
 // [FIX N42] XP now wired to real addXP — 2026-10-04
 // [FIX B9]  call recordPlacementAttempt — 2026-10-04
 // [FIX 7]  ربط الشهادة الذهبية (CertificateScreen) — 2026-10-05
 // [FIX 10-10] ربط الفلاشات التعليمية — FlashScreen + FlashListScreen — 2026-10-10
 // [v10] حذف earnedBadges — 2026-10-16
+// [FIX N43] شاشات الدخول imports عادية + Suspense داخلي — 2026-10-18
 
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
@@ -16,10 +25,11 @@ import { useProgressStore } from './store/progressStore';
 import type { LevelId } from './store/progressStore';
 
 // ═══ Screens ═══
-const WelcomeScreen = lazy(() => import('./screens/WelcomeScreen'));
-const RoleSelection = lazy(() => import('./screens/RoleSelection'));
-const HeroDashboard = lazy(() => import('./screens/HeroDashboard'));
-const GuardianDashboard = lazy(() => import('./screens/GuardianDashboard'));
+// [FIX N43] الأربعة الأولى: imports عادية (كانت lazy)
+import WelcomeScreen from './screens/WelcomeScreen';
+import RoleSelection from './screens/RoleSelection';
+import HeroDashboard from './screens/HeroDashboard';
+import GuardianDashboard from './screens/GuardianDashboard';
 import Header from './screens/Header';
 
 // ═══ Category + Level ═══
@@ -709,7 +719,19 @@ export default function App() {
   return (
     <>
       <div key={screen}>
-        {renderScreen()}
+        {/* [FIX N43] حدّ Suspense داخلي: عند تحميل شاشة lazy لا تختفي الصفحة كلها */}
+        <Suspense
+          fallback={
+            <div dir="rtl" className="min-h-screen flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-5xl mb-4">🧮</div>
+                <p className="text-xl text-amber-400 font-bold">جاري التحميل...</p>
+              </div>
+            </div>
+          }
+        >
+          {renderScreen()}
+        </Suspense>
       </div>
 
       {import.meta.env.DEV && <DebugOverlay />}
