@@ -6,6 +6,7 @@
 // ✅ الحالة: البناء أخضر
 // [FIX 7] — استخدام أداة المعاينة
 // [FIX N74] — إزالة soroban_passed_level_tests والاعتماد على progressStore
+// [FIX N80] — فصل شروط العرض عن شروط النجاح الفعلي (الزر الأخير لا يعتمد على المعاينة)
 
 import { motion } from 'framer-motion';
 import {
@@ -260,49 +261,33 @@ export function LevelScreen({
 
   const levelLessons = getLessonsByLevel(levelId as string);
 
-  // [FIX 7] — في وضع المعاينة: كل شيء مفتوح
-  const isLessonCompleted =
-    inPreview ||
-    (levelLessons.length > 0 &&
-      levelLessons.every((l) => completedLessons.includes(l.id)));
-
+  // [FIX N80] — شروط العرض (تحترم وضع المعاينة)
+  const isLessonCompleted = inPreview || (levelLessons.length > 0 && levelLessons.every((l) => completedLessons.includes(l.id)));
   const isPracticePassed = inPreview || passedPractice.includes(level.practiceNum);
   const isAnzanVisualPassed = inPreview || passedAnzanVisual.includes(level.anzanNum);
   const isAnzanAudioPassed = inPreview || passedAnzanAudio.includes(level.anzanNum);
-  
-  // [FIX N74] — الاعتماد على progressStore فقط للاختبار
   const isLevelTestPassed = inPreview || (levelGrades.levelTest !== null && levelGrades.levelTest >= 80);
 
+  // [FIX N80] — الشروط الصارمة (لا تحترم المعاينة - لتحديد ظهور الزر الأخضر)
+  const strictLessonCompleted = levelLessons.length > 0 && levelLessons.every((l) => completedLessons.includes(l.id));
+  const strictPracticePassed = passedPractice.includes(level.practiceNum);
+  const strictAnzanVisualPassed = passedAnzanVisual.includes(level.anzanNum);
+  const strictAnzanAudioPassed = passedAnzanAudio.includes(level.anzanNum);
+  const strictLevelTestPassed = (levelGrades.levelTest ?? 0) >= 80;
+  
+  const isLevelStrictlyComplete = strictLessonCompleted && strictPracticePassed && strictAnzanVisualPassed && strictAnzanAudioPassed && strictLevelTestPassed;
+
   // 🩺 الجلسة العلاجية الإجبارية — إن كانت للمستوى الحالي
-  const hasPendingRemediation =
-    pendingRemediation !== null && pendingRemediation.level === levelId;
+  const hasPendingRemediation = pendingRemediation !== null && pendingRemediation.level === levelId;
 
-  // 🎯 منطق القفل الجديد:
-  // - practiceLocked: يحتاج إنهاء الدروس + عدم وجود جلسة علاجية معلّقة
-  const practiceLocked =
-    !isLessonCompleted || hasPendingRemediation;
+  const practiceLocked = !isLessonCompleted || hasPendingRemediation;
+  const anzanVisualLocked = !isPracticePassed || hasPendingRemediation;
+  const anzanAudioLocked = !isAnzanVisualPassed || hasPendingRemediation;
+  const levelTestLocked = !isAnzanAudioPassed || hasPendingRemediation;
 
-  // - anzanVisualLocked: يحتاج النجاح في التمرّن + عدم وجود جلسة علاجية
-  const anzanVisualLocked =
-    !isPracticePassed || hasPendingRemediation;
+  const remediationTarget = hasPendingRemediation && pendingRemediation ? pendingRemediation.phase : null;
 
-  // - anzanAudioLocked: يحتاج النجاح في الأنزان البصري + عدم وجود جلسة علاجية
-  const anzanAudioLocked =
-    !isAnzanVisualPassed || hasPendingRemediation;
-
-  // - levelTestLocked: يحتاج النجاح في كل المسارات + عدم وجود جلسة علاجية
-  const levelTestLocked =
-    !isAnzanAudioPassed || hasPendingRemediation;
-
-  // 🎯 المسار "التالي" لفتحه (لإظهار الجلسة العلاجية)
-  const remediationTarget =
-    hasPendingRemediation && pendingRemediation
-      ? pendingRemediation.phase
-      : null;
-
-  const completionPct =
-    ([isLessonCompleted, isPracticePassed, isAnzanVisualPassed, isAnzanAudioPassed, isLevelTestPassed]
-      .filter(Boolean).length / 5) * 100;
+  const completionPct = ([isLessonCompleted, isPracticePassed, isAnzanVisualPassed, isAnzanAudioPassed, isLevelTestPassed].filter(Boolean).length / 5) * 100;
 
   // 🏅 النتيجة التراكمية + المستوى التالي
   const finalScore = computeFinalScore(levelId);
@@ -518,7 +503,8 @@ export function LevelScreen({
         </div>
 
         {/* 🏅 نجاح كامل — الدرجة التراكمية */}
-        {isLessonCompleted && isPracticePassed && isAnzanVisualPassed && isAnzanAudioPassed && isLevelTestPassed && (
+        {/* [FIX N80] استخدام المتغير الصارم بدلاً من المتغير الذي يحترم المعاينة */}
+        {isLevelStrictlyComplete && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
