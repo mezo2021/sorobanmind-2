@@ -3,8 +3,7 @@
 // 📅 آخر تحديث: 2026-10-08 — إصلاح ديناميكي لكل المستويات
 // [FIX LT1] — getTestQuestions(levelId) بدل buildL0Test() الثابت
 // [FIX LT2] — صيغة زمنية تكيفية: FIXED + (Σ avg × 1.5) + BUFFER
-// [FIX N70] — عتبة نجاح 80% + لف markLevelComplete بشرط النجاح لمنع التلوث
-// [FIX N73] — واجهة إجابة ذكية لـ L1 (addition/subtraction) دون المساس بواجهة L0
+// [FIX LT3] — عتبة نجاح 70% (بدل 80%)
 // [FIX LT4] — cooldown 30 دقيقة لكل مستوى (بدل 24 ساعة)
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
@@ -27,7 +26,7 @@ import {
 // ثوابت
 // ═══════════════════════════════════════════════════════════
 
-const PASS_THRESHOLD = 80;                       // 80%
+const PASS_THRESHOLD = 70;                       // 70%
 const COOLDOWN_MS = 30 * 60 * 1000;              // 30 دقيقة
 const FIXED_SEC = 20;                             // تعليمات + تنقل
 const ARAB_FACTOR = 1.5;                          // معامل الطفل العربي
@@ -251,11 +250,7 @@ export function LevelTestScreen({
 
       const store = useProgressStore.getState();
       store.setGrade(levelId, 'levelTest', score);
-      
-      // [FIX N70] لف markLevelComplete بشرط النجاح لمنع التلوث
-      if (passed) {
-        store.markLevelComplete(levelId as never);
-      }
+store.markLevelComplete(levelId as never);
     } catch { /* ignore */ }
 
     setPhase('result');
@@ -303,6 +298,7 @@ export function LevelTestScreen({
     finalizeTest(answers);
   }, [answers, finalizeTest]);
 
+  // ⏸️ الجزء 2 يبدأ من هنا — أرسل "تابع"
   // ═══ Cooldown ═══
   if (phase === 'cooldown') {
     return (
@@ -420,7 +416,7 @@ export function LevelTestScreen({
               سؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-[10px] text-white/50">
-              {currentQ.section}-{currentQ.module} · {currentQ.operation === 'read' ? 'اقرأ' : currentQ.operation === 'build' ? 'مثّل' : 'احسب'}
+              {currentQ.section}-{currentQ.module} · {currentQ.operation === 'read' ? 'اقرأ' : 'مثّل'}
             </p>
           </div>
           <div className={'flex items-center gap-1.5 px-3 py-2 rounded-xl border ' + (timeWarning ? 'bg-red-500/20 border-red-500/50 animate-pulse' : 'bg-white/5 border-white/10')}>
@@ -452,24 +448,22 @@ export function LevelTestScreen({
           >
             <p className="text-lg font-extrabold text-white mb-4">{currentQ.question}</p>
 
-            {/* L0: قراءة الرقم — عداد ثابت واختيارات */}
+            {/* نوع: قراءة — اختيارات */}
             {currentQ.operation === 'read' && (
               <>
                 <div className="flex justify-center mb-4">
                   <Soroban2D5
-                    key={`read-${currentQ.id}`}
+                    key={'read-' + currentQ.id}
                     columns={getColumns(currentQ.result)}
                     demoValue={currentQ.result}
                     interactive={false}
                     showValue={false}
                   />
                 </div>
-
                 <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
                   {currentChoices.map((c) => (
                     <button
                       key={c}
-                      type="button"
                       onClick={() => handleChoice(c)}
                       className="py-4 rounded-2xl bg-white/10 border-2 border-white/20 text-white font-display font-black text-2xl hover:bg-white/20 hover:scale-105 active:scale-95 transition"
                     >
@@ -480,12 +474,12 @@ export function LevelTestScreen({
               </>
             )}
 
-            {/* L0: بناء الرقم — عداد تفاعلي */}
-            {currentQ.operation === 'build' && (
+            {/* نوع: بناء — سوروبان */}
+            {(currentQ.operation === 'build' || currentQ.operation === 'read') && currentQ.operation === 'build' && (
               <>
                 <div className="flex justify-center mb-3">
                   <Soroban2D5
-                    key={`build-${currentQ.id}`}
+                    key={'build-' + currentQ.id}
                     columns={getColumns(currentQ.result)}
                     initialValue={0}
                     autoBeadSize={true}
@@ -494,57 +488,14 @@ export function LevelTestScreen({
                     onValueChange={setAbacusValue}
                   />
                 </div>
-
                 <div className="flex gap-2 justify-center">
                   <button
-                    type="button"
                     onClick={handleCheckBuild}
                     className="btn-primary !py-2.5 !px-6 !text-sm"
                   >
                     <CheckCircle2 className="w-4 h-4" /> تحقق
                   </button>
                   <button
-                    type="button"
-                    onClick={() => { playSound('click'); setAbacusValue(0); }}
-                    className="btn-ghost !py-2.5 !px-4 !text-sm"
-                  >
-                    <RotateCcw className="w-4 h-4" /> مسح
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* L1: الجمع والطرح — تنفيذ العملية على المعداد */}
-            {(currentQ.operation === 'addition' || currentQ.operation === 'subtraction') && (
-              <>
-                <div className="text-sm text-white/80 mb-3">
-                  {currentQ.operation === 'addition'
-                    ? 'استخدم المعداد لإجراء عملية الجمع.'
-                    : 'استخدم المعداد لإجراء عملية الطرح.'}
-                </div>
-
-                <div className="flex justify-center mb-3">
-                  <Soroban2D5
-                    key={`calculate-${currentQ.id}`}
-                    columns={getColumns(currentQ.result)}
-                    initialValue={0}
-                    autoBeadSize={true}
-                    interactive={true}
-                    showValue={true}
-                    onValueChange={setAbacusValue}
-                  />
-                </div>
-
-                <div className="flex gap-2 justify-center">
-                  <button
-                    type="button"
-                    onClick={handleCheckBuild}
-                    className="btn-primary !py-2.5 !px-6 !text-sm"
-                  >
-                    <CheckCircle2 className="w-4 h-4" /> تحقق
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => { playSound('click'); setAbacusValue(0); }}
                     className="btn-ghost !py-2.5 !px-4 !text-sm"
                   >
