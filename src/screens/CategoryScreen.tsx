@@ -1,8 +1,7 @@
 // src/screens/CategoryScreen.tsx
 // [FIX 7] — فحص المعاينة موحّد عبر الأداة
 // [FIX N69] — عرض درجات الأنزان البصري (متوسط) والسمعي في الأزرار
-// [FIX LK1] — فحص مزدوج لفتح المستوى: completedLevels أو passedLevelTests
-// [FIX LK2] — فتح المستوى المُوصى به من امتحان تحديد المستوى
+// [SURGICAL FIX] — الاعتماد على درجات الاختبار (>=80%) لفتح المستويات وإظهار علامة الاكتمال
 
 import { motion } from 'framer-motion';
 import {
@@ -174,15 +173,6 @@ function toArabicNumber(value: number | string): string {
   return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 }
 
-function loadPassedLevelTests(): string[] {
-  try {
-    const raw = localStorage.getItem('soroban_passed_level_tests');
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
 function loadPlacementData() {
   try {
     const weakSkillsRaw = localStorage.getItem('soroban_placement_weak_skills');
@@ -233,28 +223,19 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   // [FIX 7] — استخدام أداة المعاينة
   const inPreview = isPreviewMode();
 
-  // ✅ المستوى يُفتح إذا:
-  //    - المعاينة مفعّلة
-  //    - أو المستوى مُوصى به من امتحان تحديد المستوى  ← 🆕
-  //    - أو كان الأول
-  //    - أو المستوى السابق مكتمل/مُختبر
+  // ✅ [SURGICAL FIX] — المستوى يُفتح فقط إذا كانت درجة اختبار المستوى السابق >= 80%
   const isLevelUnlocked = (levelId: LevelId, index: number): boolean => {
     if (inPreview) return true;
-
-    // 🆕 [FIX LK2] — فتح المستوى المُوصى به من امتحان تحديد المستوى
     if (placement.recommendedLevel === levelId) return true;
-
     if (index === 0) return true;
+
     const prevLevel = data.levels[index - 1];
-    // [FIX LK1] — فحص مزدوج: completedLevels أو passedLevelTests
-    const passedTests = loadPassedLevelTests();
-    return (
-      completedLevels.includes(prevLevel.id) ||
-      passedTests.includes(prevLevel.id)
-    );
+    const prevGrade = grades[prevLevel.id];
+    
+    return prevGrade && prevGrade.levelTest !== null && prevGrade.levelTest >= 80;
   };
 
-  // ✅ المستوى "مكتمل" = كل دروسه مكتملة
+  // ✅ المستوى "مكتمل" (لأغراض فتح التمرين) = كل دروسه مكتملة
   const isLevelCompleted = (levelId: LevelId): boolean => {
     if (inPreview) return true;
     const lessons = getLessonsByLevel(levelId as string);
@@ -299,14 +280,22 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     return passedAnzanAudio.includes(anzanNum);
   };
 
+  // ✅ [SURGICAL FIX] — الامتحان النهائي يتطلب اجتياز اختبار كل مستوى (>= 80%)
   const isExamUnlocked = (): boolean => {
     if (inPreview) return true;
-    return data.levels.every((_, idx) =>
-      isLevelCompleted(data.levels[idx].id) &&
-      isPracticePassed(idx) &&
-      isAnzanVisualPassed(idx) &&
-      isAnzanAudioPassed(idx)
-    );
+    return data.levels.every((_, idx) => {
+      const levelId = data.levels[idx].id;
+      const grade = grades[levelId];
+      const isTestPassed = grade && grade.levelTest !== null && grade.levelTest >= 80;
+
+      return (
+        isLevelCompleted(levelId) &&
+        isPracticePassed(idx) &&
+        isAnzanVisualPassed(idx) &&
+        isAnzanAudioPassed(idx) &&
+        isTestPassed
+      );
+    });
   };
 
   const isExamPassed = category === 'kids' ? placement.exam1Passed : placement.exam2Passed;
@@ -314,7 +303,12 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   const renderLevelCard = (level: LevelItem, idx: number) => {
     const Icon = level.icon;
     const unlocked = isLevelUnlocked(level.id, idx);
-    const completed = isLevelCompleted(level.id);
+    
+    // ✅ [SURGICAL FIX] — علامة "مكتمل" تظهر فقط إذا اجتاز الاختبار
+    const grade = grades[level.id];
+    const isTestPassed = grade && grade.levelTest !== null && grade.levelTest >= 80;
+    const completed = isLevelCompleted(level.id) && isTestPassed;
+
     const practiceUnlocked = isPracticeUnlocked(idx);
     const practicePassed = isPracticePassed(idx);
     const anzanVUnlocked = isAnzanVisualUnlocked(idx);
