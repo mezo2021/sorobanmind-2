@@ -1,6 +1,7 @@
 // src/screens/LevelTestScreen.tsx
 // اختبار نهاية المستوى — من بنك SRB (phase: X)
 // [SURGICAL FIX] — نسبة النجاح 80%، إلغاء الأزرار (المعداد فقط)، شرط النجاح لفتح المستوى التالي، عقوبة 30 دقيقة عند الفشل فقط.
+// [LOGIC FIX] — تحديد أعمدة المعداد بناءً على أكبر رقم في السؤال (وليس النتيجة فقط) لدعم الاستلاف.
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,7 +23,7 @@ import {
 // ثوابت
 // ═══════════════════════════════════════════════════════════
 
-const PASS_THRESHOLD = 80;                       // ✅ تم التعديل: 80%
+const PASS_THRESHOLD = 80;                       // نسبة النجاح
 const COOLDOWN_MS = 30 * 60 * 1000;              // 30 دقيقة
 const FIXED_SEC = 20;                             // تعليمات + تنقل
 const ARAB_FACTOR = 1.5;                          // معامل الطفل العربي
@@ -35,12 +36,15 @@ const LAST_ATTEMPT_KEY = (levelId: string) =>
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
-function getColumns(value: number): number {
-  const abs = Math.abs(value);
-  if (abs < 10) return 1;
-  if (abs < 100) return 2;
-  if (abs < 1000) return 3;
-  if (abs < 10000) return 4;
+// ✅ التعديل: حساب الأعمدة بناءً على أكبر رقم في المسألة (النتيجة أو الأرقام الداخلة)
+function getColumnsForQuestion(q: SRBQuestion): number {
+  const candidates = [Math.abs(q.result), ...q.operands.map((op) => Math.abs(op))];
+  const maxAbs = Math.max(...candidates);
+  
+  if (maxAbs < 10) return 1;           // آحاد
+  if (maxAbs < 100) return 2;          // عشرات
+  if (maxAbs < 1000) return 3;         // مئات
+  if (maxAbs < 10000) return 4;        // آلاف
   return 6;
 }
 
@@ -396,7 +400,7 @@ export function LevelTestScreen({
             <div className="flex justify-center mb-3" dir="rtl">
               <Soroban2D5
                 key={'build-' + currentQ.id}
-                columns={getColumns(currentQ.result)}
+                columns={getColumnsForQuestion(currentQ)} // ✅ التعديل الجديد هنا
                 initialValue={0}
                 autoBeadSize={true}
                 interactive={true}
