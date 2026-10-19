@@ -1,6 +1,6 @@
 // src/screens/GuardianDashboard.tsx
 // ✅ SRB-first: يقرأ من progressStore + masteryBadgesStore
-// [v10] — 4 تحسينات: مغامرات 4×3 + شارات إتقان 4×3 + جلسات علاجية 2×N + شارات أنزان 7+7
+// [SURGICAL FIX] — حساب المستوى المكتمل بناءً على درجة الاختبار (>=80%) فقط + عرض L1 بدلاً من 1
 // 📅 2026-10-16
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -180,6 +180,7 @@ export function GuardianDashboard({
   const passedPractice = useProgressStore((s) => s.passedPractice);
   const passedAnzanVisual = useProgressStore((s) => s.passedAnzanVisual);
   const passedAnzanAudio = useProgressStore((s) => s.passedAnzanAudio);
+  const grades = useProgressStore((s) => s.grades); // ✅ قراءة الدرجات
   const anzanBadges = useProgressStore((s) => s.anzanBadges);
   const anzanAudioBadges = useProgressStore((s) => s.anzanAudioBadges);
   const remediationHistory = useProgressStore((s) => s.remediationHistory);
@@ -228,23 +229,22 @@ export function GuardianDashboard({
   const savedName = storedName || childName;
 
   // ═══ مشتقات ═══
-  const childLevel = Math.floor(totalXP / 100) + 1;
   const totalLevelsCount = SRB_LEVELS.length;
 
+  // ✅ [SURGICAL FIX] — المستويات المكتملة هي التي درجة اختبارها 80% أو أكثر
   const effectiveCompletedLevels = useMemo(() => {
     return SRB_LEVELS
       .filter((lv) => {
-        const num = parseInt(lv.id.replace('L', ''), 10);
-        return (
-          passedPractice.includes(num) &&
-          passedAnzanVisual.includes(num) &&
-          passedAnzanAudio.includes(num)
-        );
+        const grade = grades[lv.id];
+        return grade && grade.levelTest !== null && grade.levelTest >= 80;
       })
       .map((lv) => lv.id);
-  }, [passedPractice, passedAnzanVisual, passedAnzanAudio]);
+  }, [grades]);
 
   const effectiveCompletedCount = effectiveCompletedLevels.length;
+
+  // ✅ [SURGICAL FIX] — المستوى الحالي يعتمد على عدد المستويات المكتملة (بحد أقصى 7)
+  const childLevel = Math.min(effectiveCompletedCount, 7);
 
   const isLegend =
     effectiveCompletedCount === totalLevelsCount && totalLevelsCount > 0;
@@ -358,7 +358,8 @@ export function GuardianDashboard({
   // ═══ الإحصائيات العلوية ═══
   const stats = [
     { label: 'نقاط الخبرة', labelEn: 'XP Points', value: toArabicNumber(totalXP), icon: Zap, gradient: 'from-gold-400 to-gold-600', glow: 'shadow-gold-500/30' },
-    { label: 'المستوى', labelEn: 'Level', value: toArabicNumber(childLevel), icon: Award, gradient: 'from-purple-500 to-purple-700', glow: 'shadow-purple-500/30' },
+    // ✅ [SURGICAL FIX] — عرض L1 بدلاً من 1
+    { label: 'المستوى', labelEn: 'Level', value: `L${childLevel}`, icon: Award, gradient: 'from-purple-500 to-purple-700', glow: 'shadow-purple-500/30' },
     { label: 'الأيام المتتالية', labelEn: 'Day Streak', value: toArabicNumber(currentStreak), icon: TrendingUp, gradient: 'from-orange-500 to-red-500', glow: 'shadow-orange-500/30' },
     { label: 'المهارات المتقنة', labelEn: 'Mastered', value: toArabicNumber(masteryBadgesList.length), icon: Target, gradient: 'from-emerald2-500 to-emerald2-700', glow: 'shadow-emerald2-500/30' },
   ];
@@ -508,8 +509,9 @@ export function GuardianDashboard({
               <p className="text-xs text-gold-300 font-body font-bold">تقدم الطفل</p>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white truncate">{savedName}</h2>
+            {/* ✅ [SURGICAL FIX] — عرض L1 بدلاً من 1 */}
             <p className="text-sm text-emerald2-300 font-body mt-0.5">
-              مستوى {toArabicNumber(childLevel)} ·{' '}
+              مستوى {`L${childLevel}`} ·{' '}
               {toArabicNumber(effectiveCompletedCount)}/{toArabicNumber(totalLevelsCount)} مستويات مكتملة
             </p>
           </div>
