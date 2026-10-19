@@ -1,12 +1,8 @@
 // src/screens/LevelTestScreen.tsx
 // اختبار نهاية المستوى — من بنك SRB (phase: X)
-// 📅 آخر تحديث: 2026-10-08 — إصلاح ديناميكي لكل المستويات
-// [FIX LT1] — getTestQuestions(levelId) بدل buildL0Test() الثابت
-// [FIX LT2] — صيغة زمنية تكيفية: FIXED + (Σ avg × 1.5) + BUFFER
-// [FIX LT3] — عتبة نجاح 70% (بدل 80%)
-// [FIX LT4] — cooldown 30 دقيقة لكل مستوى (بدل 24 ساعة)
+// [SURGICAL FIX] — نسبة النجاح 80%، إلغاء الأزرار (المعداد فقط)، شرط النجاح لفتح المستوى التالي، عقوبة 30 دقيقة عند الفشل فقط.
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Clock, CheckCircle2, XCircle, Trophy, Play, RotateCcw } from 'lucide-react';
 
@@ -26,13 +22,12 @@ import {
 // ثوابت
 // ═══════════════════════════════════════════════════════════
 
-const PASS_THRESHOLD = 70;                       // 70%
+const PASS_THRESHOLD = 80;                       // ✅ تم التعديل: 80%
 const COOLDOWN_MS = 30 * 60 * 1000;              // 30 دقيقة
 const FIXED_SEC = 20;                             // تعليمات + تنقل
 const ARAB_FACTOR = 1.5;                          // معامل الطفل العربي
 const BUFFER_SEC = 90;                            // احتياط (1.5 دقيقة)
 const QUESTION_COUNT = 10;
-const PASSED_TESTS_KEY = 'soroban_passed_level_tests';
 const LAST_ATTEMPT_KEY = (levelId: string) =>
   `soroban_level_test_last_attempt_${levelId}`;
 
@@ -63,44 +58,12 @@ function formatTimeLeft(ms: number): string {
   return `${mins} دقيقة و ${secs} ثانية`;
 }
 
-// [FIX LT2] — الصيغة التكيفية
 function computeTotalTime(questions: SRBQuestion[]): number {
   const sumAvgMs = questions.reduce(
     (sum, q) => sum + (q.target_time_ms[0] + q.target_time_ms[1]) / 2,
     0,
   );
   return FIXED_SEC + Math.round((sumAvgMs / 1000) * ARAB_FACTOR) + BUFFER_SEC;
-}
-
-// RNG + توليد خيارات (للأسئلة من نوع read)
-function createRng(seed: number): () => number {
-  let value = seed >>> 0;
-  return (): number => {
-    value += 0x6d2b79f5;
-    let t = value;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function generateChoices(correct: number, seed: number): number[] {
-  const rng = createRng(seed);
-  const choices = new Set<number>([correct]);
-  let guard = 0;
-  while (choices.size < 4 && guard < 60) {
-    guard++;
-    const delta = Math.floor(rng() * 5) - 2; // -2..+2
-    if (delta === 0) continue;
-    const candidate = correct + delta;
-    if (candidate >= 0 && candidate <= 99999) choices.add(candidate);
-  }
-  const arr = [...choices];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -127,8 +90,7 @@ export function LevelTestScreen({
   playSound,
 }: LevelTestScreenProps) {
   const { style: numberStyle } = useNumberStyleStore();
-  const isArabic = numberStyle === 'arabic';
-
+  
   const [phase, setPhase] = useState<Phase>('intro');
   const [questions, setQuestions] = useState<SRBQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -142,14 +104,7 @@ export function LevelTestScreen({
   const [cooldownMs, setCooldownMs] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const currentQ = questions[currentIdx];
-
-  // خيارات الـ read (memoized لكل سؤال)
-  const currentChoices = useMemo(() => {
-    if (!currentQ || currentQ.operation !== 'read') return [];
-    return generateChoices(currentQ.result, currentQ.id.length + currentIdx * 17);
-  }, [currentQ, currentIdx]);
 
   // ═══ Cooldown check ═══
   useEffect(() => {
@@ -228,29 +183,23 @@ export function LevelTestScreen({
     setFinalPassed(passed);
 
     try {
-      localStorage.setItem(LAST_ATTEMPT_KEY(levelId), String(Date.now()));
+      const store = useProgressStore.getState();
+      
+      // حفظ الدرجة دائماً في المتجر
+      store.setGrade(levelId, 'levelTest', score);
 
       if (passed) {
-        const raw = localStorage.getItem(PASSED_TESTS_KEY);
-        const arr: string[] = raw ? JSON.parse(raw) : [];
-        if (!arr.includes(levelId)) {
-          arr.push(levelId);
-          localStorage.setItem(PASSED_TESTS_KEY, JSON.stringify(arr));
-        }
+        // ✅ حالة النجاح: فتح المستوى التالي، وعدم حفظ وقت الانتظار (حتى لا يُعاقب)
+        store.markLevelComplete(levelId as any);
+      } else {
+        // ❌ حالة الفشل: حفظ وقت المحاولة لتبدأ عقوبة الـ 30 دقيقة
+        localStorage.setItem(LAST_ATTEMPT_KEY(levelId), String(Date.now()));
       }
 
+      // حفظ الدرجة في SRB (لأغراض التغذية الراجعة) - لا يؤثر على المنطق الأساسي
       const firstSection = (questions[0]?.section ?? 'S01') as SRBSection;
-      saveSectionGrade(
-        levelId as SRBLevel,
-        firstSection,
-        'test',
-        score,
-        [],
-      );
-
-      const store = useProgressStore.getState();
-      store.setGrade(levelId, 'levelTest', score);
-store.markLevelComplete(levelId as never);
+      saveSectionGrade(levelId as SRBLevel, firstSection, 'test', score, []);
+      
     } catch { /* ignore */ }
 
     setPhase('result');
@@ -285,10 +234,6 @@ store.markLevelComplete(levelId as never);
     }
   }, [currentQ, currentIdx, questions, answers, finalizeTest, playSound]);
 
-  const handleChoice = useCallback((chosen: number) => {
-    submitAnswer(chosen);
-  }, [submitAnswer]);
-
   const handleCheckBuild = useCallback(() => {
     submitAnswer(abacusValue);
   }, [abacusValue, submitAnswer]);
@@ -298,7 +243,6 @@ store.markLevelComplete(levelId as never);
     finalizeTest(answers);
   }, [answers, finalizeTest]);
 
-  // ⏸️ الجزء 2 يبدأ من هنا — أرسل "تابع"
   // ═══ Cooldown ═══
   if (phase === 'cooldown') {
     return (
@@ -416,7 +360,7 @@ store.markLevelComplete(levelId as never);
               سؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-[10px] text-white/50">
-              {currentQ.section}-{currentQ.module} · {currentQ.operation === 'read' ? 'اقرأ' : 'مثّل'}
+              {currentQ.section}-{currentQ.module} · مثّل الإجابة
             </p>
           </div>
           <div className={'flex items-center gap-1.5 px-3 py-2 rounded-xl border ' + (timeWarning ? 'bg-red-500/20 border-red-500/50 animate-pulse' : 'bg-white/5 border-white/10')}>
@@ -448,62 +392,33 @@ store.markLevelComplete(levelId as never);
           >
             <p className="text-lg font-extrabold text-white mb-4">{currentQ.question}</p>
 
-            {/* نوع: قراءة — اختيارات */}
-            {currentQ.operation === 'read' && (
-              <>
-                <div className="flex justify-center mb-4">
-                  <Soroban2D5
-                    key={'read-' + currentQ.id}
-                    columns={getColumns(currentQ.result)}
-                    demoValue={currentQ.result}
-                    interactive={false}
-                    showValue={false}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
-                  {currentChoices.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => handleChoice(c)}
-                      className="py-4 rounded-2xl bg-white/10 border-2 border-white/20 text-white font-display font-black text-2xl hover:bg-white/20 hover:scale-105 active:scale-95 transition"
-                    >
-                      {formatNumber(c, numberStyle)}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {/* نوع: بناء — سوروبان */}
-            {(currentQ.operation === 'build' || currentQ.operation === 'read') && currentQ.operation === 'build' && (
-              <>
-                <div className="flex justify-center mb-3">
-                  <Soroban2D5
-                    key={'build-' + currentQ.id}
-                    columns={getColumns(currentQ.result)}
-                    initialValue={0}
-                    autoBeadSize={true}
-                    interactive={true}
-                    showValue={true}
-                    onValueChange={setAbacusValue}
-                  />
-                </div>
-                <div className="flex gap-2 justify-center">
-                  <button
-                    onClick={handleCheckBuild}
-                    className="btn-primary !py-2.5 !px-6 !text-sm"
-                  >
-                    <CheckCircle2 className="w-4 h-4" /> تحقق
-                  </button>
-                  <button
-                    onClick={() => { playSound('click'); setAbacusValue(0); }}
-                    className="btn-ghost !py-2.5 !px-4 !text-sm"
-                  >
-                    <RotateCcw className="w-4 h-4" /> مسح
-                  </button>
-                </div>
-              </>
-            )}
+            {/* ✅ واجهة الإجابة الوحيدة: المعداد التفاعلي لجميع الأسئلة */}
+            <div className="flex justify-center mb-3" dir="rtl">
+              <Soroban2D5
+                key={'build-' + currentQ.id}
+                columns={getColumns(currentQ.result)}
+                initialValue={0}
+                autoBeadSize={true}
+                interactive={true}
+                showValue={true}
+                onValueChange={setAbacusValue}
+              />
+            </div>
+            
+            <div className="flex gap-2 justify-center">
+              <button
+                onClick={handleCheckBuild}
+                className="btn-primary !py-2.5 !px-6 !text-sm"
+              >
+                <CheckCircle2 className="w-4 h-4" /> تحقق
+              </button>
+              <button
+                onClick={() => { playSound('click'); setAbacusValue(0); }}
+                className="btn-ghost !py-2.5 !px-4 !text-sm"
+              >
+                <RotateCcw className="w-4 h-4" /> مسح
+              </button>
+            </div>
           </motion.div>
         </div>
 
