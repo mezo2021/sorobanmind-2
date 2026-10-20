@@ -8,6 +8,7 @@
 // ✅ لا يوجد تقييم فوري (الانتقال فوري)
 // ✅ يدعم نمط الأرقام (عربي / لاتيني)
 // ✅ الأعمدة = max(السلسلة، الناتج) + عرض بصري
+// [ADDED] — تسجيل المهارات (recordAttempt) في المتجر لتغذية الإحصائيات
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +19,7 @@ import {
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { useProgressStore } from '@/store/progressStore'; // ✅ [ADDED]
 import { formatText, formatNumber } from '@/utils/numberStyle';
 
 import {
@@ -105,6 +107,9 @@ export function PlacementTestScreen({
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME_SEC);
   const [result, setResult] = useState<PlacementResult | null>(null);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  
+  // ✅ [ADDED] — لقياس زمن السؤال وتسجيله في skillProgress
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -124,6 +129,7 @@ export function PlacementTestScreen({
     setTimeLeft(TOTAL_TIME_SEC);
     setResult(null);
     setShowEndConfirm(false);
+    setQuestionStartTime(Date.now()); // ✅ [ADDED]
     setPhase('running');
     playSound('click');
   }, [playSound]);
@@ -159,6 +165,7 @@ export function PlacementTestScreen({
     (idx: number) => {
       if (idx < 0 || idx >= questions.length) return;
       setCurrentIdx(idx);
+      setQuestionStartTime(Date.now()); // ✅ [ADDED]
       const targetQ = questions[idx];
       if (targetQ) {
         setAbacusValue(answers.get(targetQ.placementId) ?? 0);
@@ -171,6 +178,21 @@ export function PlacementTestScreen({
   const handleCheck = useCallback(() => {
     if (!currentQ) return;
 
+    // ✅ [ADDED] — تسجيل المحاولة في المتجر (skillProgress)
+    const isDecimal = currentQ.result % 1 !== 0;
+    const factor = isDecimal ? 100 : 1;
+    const targetValue = Math.round(currentQ.result * factor);
+    const isCorrect = abacusValue === targetValue;
+    
+    const timeMs = Date.now() - questionStartTime;
+    const attempt = {
+      skillId: (currentQ as any).skillId || `${currentQ.level}-${currentQ.section}-${(currentQ as any).module || 'm1'}`,
+      correct: isCorrect,
+      timeMs: timeMs,
+      timestamp: Date.now(),
+    };
+    useProgressStore.getState().recordAttempt(attempt);
+
     const newAnswers = new Map(answers);
     newAnswers.set(currentQ.placementId, abacusValue);
     setAnswers(newAnswers);
@@ -181,13 +203,14 @@ export function PlacementTestScreen({
       const nextQ = questions[nextIdx];
       setCurrentIdx(nextIdx);
       setAbacusValue(newAnswers.get(nextQ.placementId) ?? 0);
+      setQuestionStartTime(Date.now()); // ✅ [ADDED]
     } else {
       const res = evaluatePlacementTest(questions, newAnswers);
       setResult(res);
       setPhase('result');
       playSound('levelup');
     }
-  }, [currentQ, currentIdx, questions, answers, abacusValue, playSound]);
+  }, [currentQ, currentIdx, questions, answers, abacusValue, playSound, questionStartTime]);
 
   // ─── السابق ───
   const handlePrevious = useCallback(() => {
