@@ -1,5 +1,6 @@
 // src/store/progressStore.ts
 // [v10] — peakStreak + stats + 7 شارات أنزان (بصري + سمعي) — 2026-10-16
+// [v11] — إضافة dailyXP لتتبع نشاط الأسبوع — 2026-10-20
 // ✅ لا earnedBadges · لا QUESTS · لا BADGES
 
 import { create } from "zustand";
@@ -127,6 +128,7 @@ export interface ProgressState {
   ticketXP: number;
   tickets: number;
   stats: ProgressStats;
+  dailyXP: Record<string, number>; // 🆕 v11: سجل النقاط اليومية
 
   setChildName: (name: string) => void;
   setCategory: (category: Category) => void;
@@ -207,6 +209,7 @@ const initialState = {
   ticketXP: 0,
   tickets: 0,
   stats: { totalAttempts: 0, totalCorrect: 0 } as ProgressStats,
+  dailyXP: {} as Record<string, number>, // 🆕 v11
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -418,9 +421,23 @@ export const useProgressStore = create<ProgressState>()(
       addXP: (amount) =>
         set((state) => {
           const safeAmount = Math.max(0, amount);
+          const today = getToday();
+          
+          // 🆕 v11: تحديث سجل النقاط اليومية
+          const newDailyXP = { ...(state.dailyXP || {}) };
+          newDailyXP[today] = (newDailyXP[today] || 0) + safeAmount;
+
+          // تنظيف السجل للاحتفاظ بآخر 14 يوماً فقط لمنع امتلاء الذاكرة
+          const dates = Object.keys(newDailyXP).sort();
+          if (dates.length > 14) {
+            const toRemove = dates.slice(0, dates.length - 14);
+            toRemove.forEach(d => delete newDailyXP[d]);
+          }
+
           return {
             totalXP: state.totalXP + safeAmount,
             ticketXP: Math.min(TICKET_XP_CAP, state.ticketXP + safeAmount),
+            dailyXP: newDailyXP,
           };
         }),
 
@@ -465,7 +482,7 @@ export const useProgressStore = create<ProgressState>()(
     }),
     {
       name: "sorobanmind-v2-progress",
-      version: 10,
+      version: 11,
       migrate: (persistedState, version) => {
         const old = (persistedState as Record<string, unknown>) || {};
 
@@ -543,6 +560,15 @@ export const useProgressStore = create<ProgressState>()(
           } as ProgressState;
         }
 
+        // 🆕 v11: إضافة dailyXP للمستخدمين القدامى
+        if (version < 11) {
+          return {
+            ...initialState,
+            ...old,
+            dailyXP: (old.dailyXP as Record<string, number>) || {},
+          } as ProgressState;
+        }
+
         return persistedState as ProgressState;
       },
     },
@@ -601,5 +627,8 @@ export const selectCanBuyTicket = (state: ProgressState) =>
 export const selectHasTicket = (state: ProgressState) => state.tickets >= 1;
 export const selectTicketProgress = (state: ProgressState) =>
   Math.min(100, (state.ticketXP / TICKET_COST) * 100);
+
+// 🆕 v11: Selector لنشاط الأسبوع
+export const selectDailyXP = (state: ProgressState) => state.dailyXP;
 
 export default useProgressStore;
