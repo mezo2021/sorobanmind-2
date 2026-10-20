@@ -8,6 +8,7 @@
 // [i18n] كل نصوص الواجهة في قاموس UI المحلي ثنائي اللغة
 // [i18n] dir يتبع اللغة (RTL/LTR) · المعداد يبقى RTL دائمًا
 // [i18n] قصص الصوت mp3 عربية فقط → يُخفى زر "موجز القصة" في الإنجليزية
+// [LOGIC FIX] — تحديد أعمدة المعداد بناءً على أكبر رقم في السؤال (وليس النتيجة فقط) لدعم الاستلاف.
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -134,6 +135,15 @@ function getColumnsForValue(value: number): number {
   if (abs < 1000) return 3;
   if (abs < 10000) return 4;
   return 6;
+}
+
+// ✅ [LOGIC FIX] حساب الأعمدة بناءً على أكبر رقم في السؤال أو النتيجة
+function getColumnsForProblem(text: string, result: number): number {
+  const numbers = text.match(/\d+/g);
+  const parsedNumbers = numbers ? numbers.map(Number) : [];
+  const candidates = [Math.abs(result), ...parsedNumbers.map(Math.abs)];
+  const maxVal = Math.max(...candidates, 0);
+  return getColumnsForValue(maxVal);
 }
 
 function generateChoices(correct: number): number[] {
@@ -1089,7 +1099,7 @@ export function LessonScreen({
                   <div dir="rtl" className="flex justify-center mb-4">
                     <Soroban2D5
                       key={`ex-${currentExample.id}`}
-                      columns={getColumnsForValue(getExampleResult(currentExample))}
+                      columns={getColumnsForProblem(getExampleText(currentExample), getExampleResult(currentExample))}
                       demoValue={getExampleResult(currentExample)}
                       interactive={false}
                       showValue={true}
@@ -1209,7 +1219,7 @@ export function LessonScreen({
                     <div dir="rtl" className="flex justify-center mb-4">
                       <Soroban2D5
                         key={`tr-${currentTry.id}`}
-                        columns={getColumnsForValue(currentTryExpected)}
+                        columns={getColumnsForProblem(getExerciseText(currentTry), currentTryExpected)}
                         demoValue={currentTryExpected}
                         interactive={false}
                         showValue={false}
@@ -1237,7 +1247,7 @@ export function LessonScreen({
                     <div dir="rtl" className="flex justify-center mb-3">
                       <Soroban2D5
                         key={`tr-${currentTry.id}`}
-                        columns={getColumnsForValue(currentTryExpected)}
+                        columns={getColumnsForProblem(getExerciseText(currentTry), currentTryExpected)}
                         initialValue={0}
                         autoBeadSize={true}
                         interactive={feedback !== 'reveal' && feedback !== 'correct'}
