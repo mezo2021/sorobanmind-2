@@ -8,6 +8,7 @@
 // ✅ شارة عدد الأعمدة
 // ✅ 80% للنجاح + 48 ساعة انتظار بعد الفشل
 // [FIX 7] — فحص المعاينة (تجاوز cooldown + عدم لمس بيانات الطفل)
+// [ADDED] — تسجيل المهارات (recordAttempt) في المتجر لتغذية الإحصائيات
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +19,7 @@ import {
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { useProgressStore } from '@/store/progressStore'; // ✅ [ADDED]
 import { formatText, formatNumber } from '@/utils/numberStyle';
 
 // [FIX 7] — أداة المعاينة
@@ -133,6 +135,9 @@ export function CategoryExamScreen({
   const [finalPassed, setFinalPassed] = useState(false);
   const [cooldownMs, setCooldownMs] = useState<number>(0);
   const [lastAttemptTime, setLastAttemptTime] = useState<number | null>(null);
+  
+  // ✅ [ADDED] — لقياس زمن السؤال وتسجيله في skillProgress
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -194,6 +199,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
     setCurrentAttempt(1);
     setFeedback('idle');
     setTimeLeft(cfg.totalTimeSec);
+    setQuestionStartTime(Date.now()); // ✅ [ADDED]
     setPhase('running');
     playSound('click');
   }, [category, cfg.totalTimeSec, playSound, inPreview]);
@@ -262,6 +268,16 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
     const targetValue = Math.round(currentQ.result * factor);
     const isCorrect = abacusValue === targetValue;
 
+    // ✅ [ADDED] — تسجيل المحاولة في المتجر (skillProgress)
+    const timeMs = Date.now() - questionStartTime;
+    const attempt = {
+      skillId: `${currentQ.level}-${currentQ.section}-${currentQ.module}`,
+      correct: isCorrect,
+      timeMs: timeMs,
+      timestamp: Date.now(),
+    };
+    useProgressStore.getState().recordAttempt(attempt);
+
     const newAttempts = new Map(attempts);
 
     if (isCorrect) {
@@ -314,12 +330,13 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
         }, 1500);
       }
     }
-  }, [currentQ, abacusValue, attempts, currentAttempt, feedback, playSound]);
+  }, [currentQ, abacusValue, attempts, currentAttempt, feedback, playSound, questionStartTime]);
 
   // ─── الانتقال للسؤال التالي ───
   const advanceToNext = useCallback((currentAttempts: Map<string, QuestionAttempt>) => {
     setFeedback('idle');
     setCurrentAttempt(1);
+    setQuestionStartTime(Date.now()); // ✅ [ADDED]
 
     if (currentIdx + 1 >= questions.length) {
       finalizeExam(currentAttempts);
@@ -337,6 +354,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
     setCurrentIdx(idx);
     setCurrentAttempt(1);
     setFeedback('idle');
+    setQuestionStartTime(Date.now()); // ✅ [ADDED]
     const targetQ = questions[idx];
     if (targetQ) {
       setAbacusValue(attempts.get(targetQ.id)?.value ?? 0);
