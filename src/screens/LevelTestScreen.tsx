@@ -2,6 +2,7 @@
 // اختبار نهاية المستوى — من بنك SRB (phase: X)
 // [SURGICAL FIX] — نسبة النجاح 80%، إلغاء الأزرار (المعداد فقط)، شرط النجاح لفتح المستوى التالي، عقوبة 30 دقيقة عند الفشل فقط.
 // [LOGIC FIX] — تحديد أعمدة المعداد بناءً على أكبر رقم في السؤال (وليس النتيجة فقط) لدعم الاستلاف.
+// [TIME FIX] — حساب الوقت الفعلي للأسئلة × 1.5، ثم التقريب لأعلى دقيقة.
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,9 +26,6 @@ import {
 
 const PASS_THRESHOLD = 80;                       // نسبة النجاح
 const COOLDOWN_MS = 30 * 60 * 1000;              // 30 دقيقة
-const FIXED_SEC = 20;                             // تعليمات + تنقل
-const ARAB_FACTOR = 1.5;                          // معامل الطفل العربي
-const BUFFER_SEC = 90;                            // احتياط (1.5 دقيقة)
 const QUESTION_COUNT = 10;
 const LAST_ATTEMPT_KEY = (levelId: string) =>
   `soroban_level_test_last_attempt_${levelId}`;
@@ -36,7 +34,7 @@ const LAST_ATTEMPT_KEY = (levelId: string) =>
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
-// ✅ التعديل: حساب الأعمدة بناءً على أكبر رقم في المسألة (النتيجة أو الأرقام الداخلة)
+// ✅ حساب الأعمدة بناءً على أكبر رقم في المسألة (النتيجة أو الأرقام الداخلة)
 function getColumnsForQuestion(q: SRBQuestion): number {
   const candidates = [Math.abs(q.result), ...q.operands.map((op) => Math.abs(op))];
   const maxAbs = Math.max(...candidates);
@@ -62,12 +60,18 @@ function formatTimeLeft(ms: number): string {
   return `${mins} دقيقة و ${secs} ثانية`;
 }
 
+// ✅ دالة الوقت الجديدة: مجموع الوقت الفعلي للأسئلة × 1.5، مقرباً لأقرب دقيقة
 function computeTotalTime(questions: SRBQuestion[]): number {
-  const sumAvgMs = questions.reduce(
-    (sum, q) => sum + (q.target_time_ms[0] + q.target_time_ms[1]) / 2,
-    0,
-  );
-  return FIXED_SEC + Math.round((sumAvgMs / 1000) * ARAB_FACTOR) + BUFFER_SEC;
+  // نأخذ الوقت الفعلي لكل سؤال (الحد الأدنى target_time_ms[0])
+  const exactSumMs = questions.reduce((sum, q) => sum + q.target_time_ms[0], 0);
+  
+  // نضرب في 1.5
+  const totalSeconds = (exactSumMs * 1.5) / 1000;
+  
+  // نقرب لأعلى دقيقة (60 ثانية)
+  const totalMinutes = Math.ceil(totalSeconds / 60);
+  
+  return totalMinutes * 60;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -316,7 +320,7 @@ export function LevelTestScreen({
             </div>
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">٢.</span>
-              <p>الزمن يُحدَّد تلقائيًا حسب صعوبة المستوى</p>
+              <p>الزمن محسوب بناءً على صعوبة الأسئلة</p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">٣.</span>
@@ -400,7 +404,7 @@ export function LevelTestScreen({
             <div className="flex justify-center mb-3" dir="rtl">
               <Soroban2D5
                 key={'build-' + currentQ.id}
-                columns={getColumnsForQuestion(currentQ)} // ✅ التعديل الجديد هنا
+                columns={getColumnsForQuestion(currentQ)}
                 initialValue={0}
                 autoBeadSize={true}
                 interactive={true}
