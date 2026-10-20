@@ -4,7 +4,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// ═══ Cleanup: dead keys (one-time, v10) ═══
+// ═══ Cleanup: dead keys (one-time, v11) ═══
 [
   'soroban_practice_stats',
   'soroban_anzan_stats',
@@ -12,6 +12,8 @@ import "./index.css";
   'soroban_exam_result',
   'soroban_anzan_badges',
   'soroban_anzan_audio_badges',
+  'soroban_passed_level_tests',   // 🆕 v11 — لا قارئ ولا كاتب بعد إصلاحات 2026-10-20
+  'soroban_weak_skills_v2',       // 🆕 v11 — لا قارئ ولا كاتب بعد إصلاحات 2026-10-20
 ].forEach((k) => {
   try {
     localStorage.removeItem(k);
