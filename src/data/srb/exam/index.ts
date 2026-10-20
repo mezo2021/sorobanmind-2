@@ -1,5 +1,6 @@
 // src/data/srb/exam/index.ts
 // ✅ Bank B كامل: CE1 · CE2 · PT
+// [SURGICAL FIX] — إصلاح خطأ مطبعي في pickLongest، إضافة العشوائية لامتحان تحديد المستوى، وإزالة التكرار في حفظ المهارات الضعيفة.
 
 import type { SRBQuestion } from "../types";
 
@@ -112,9 +113,15 @@ function pickHardest(
   return shuffleArray(topPool, rng).slice(0, count);
 }
 
-function pickLongest(pool: SRBQuestion[], count: number): SRBQuestion[] {
-  const sorted = [...pool].sort(
-    (a, b) => b.operand_count - a.operand_count,
+// ✅ [SURGICAL FIX 1+2] — إصلاح الخطأ المطبعي (operands.length) وإضافة العشوائية (rng) لضمان تنوع الأسئلة
+function pickLongest(
+  pool: SRBQuestion[],
+  count: number,
+  rng: () => number,
+): SRBQuestion[] {
+  const shuffled = shuffleArray(pool, rng); // خلط أولاً لضمان العشوائية
+  const sorted = shuffled.sort(
+    (a, b) => b.operands.length - a.operands.length,
   );
   return sorted.slice(0, Math.min(count, sorted.length));
 }
@@ -205,7 +212,8 @@ export function buildPlacementTest(seed = Date.now()): PlacementQuestion[] {
     const pool = getExamQuestionsByLevel(levelId);
     if (pool.length === 0) continue;
 
-    const selected = pickLongest(pool, QUESTIONS_PER_LEVEL);
+    // ✅ [SURGICAL FIX] — تمرير rng للدالة
+    const selected = pickLongest(pool, QUESTIONS_PER_LEVEL, rng);
     const source: "EX1" | "EX2" = EX1_LEVELS.has(levelId) ? "EX1" : "EX2";
 
     for (const q of selected) {
@@ -252,29 +260,7 @@ export function evaluatePlacementTest(
       levelData.correct += 1;
     } else {
       levelData.weakSkills.add(q.section);
-      try {
-        const WEAK_KEY = "soroban_weak_skills_v2";
-        const raw = localStorage.getItem(WEAK_KEY);
-        const data = raw ? JSON.parse(raw) : {};
-        const current = data[q.section] ?? {
-          skillId: q.section,
-          attempts: 0,
-          correct: 0,
-          wrong: 0,
-          avgTimeMs: 0,
-          lastAttempt: 0,
-          weaknessScore: 0,
-        };
-        current.attempts += 1;
-        current.wrong += 1;
-        current.lastAttempt = Date.now();
-        current.weaknessScore = Math.min(
-          100,
-          (current.wrong / current.attempts) * 60 + 20,
-        );
-        data[q.section] = current;
-        localStorage.setItem(WEAK_KEY, JSON.stringify(data));
-      } catch { /* ignore */ }
+      // ✅ [SURGICAL FIX 3] — حذف كود localStorage لتجنب التكرار (نعتمد الآن على المتجر)
     }
   }
 
