@@ -9,6 +9,7 @@
 // ✅ 80% للنجاح + 48 ساعة انتظار بعد الفشل
 // [FIX 7] — فحص المعاينة (تجاوز cooldown + عدم لمس بيانات الطفل)
 // [ADDED] — تسجيل المهارات (recordAttempt) في المتجر لتغذية الإحصائيات
+// [SURGICAL FIX v11] — حذف كتابة في مفاتيح ميتة (soroban_section2_unlocked, soroban_kids_certificate_ready) ومزامنة النتيجة مع المتجر
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -232,25 +233,21 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
 
     // [FIX 7] — في وضع المعاينة: لا تلمس بيانات الطفل الحقيقية
     if (!inPreview) {
-      // حفظ النتيجة
+      // حفظ النتيجة في localStorage (لأن CategoryScreen يقرأها)
       try {
         localStorage.setItem(`${cfg.storageKey}_passed`, JSON.stringify(passed));
         localStorage.setItem(`${cfg.storageKey}_score`, JSON.stringify(score));
         localStorage.setItem(`${cfg.storageKey}_last_attempt`, String(Date.now()));
       } catch { /* ignore */ }
 
-      // لو نجح Exam 1 → افتح L4
-      if (passed && category === 'kids') {
-        try {
-          const raw = localStorage.getItem('soroban_completed_levels');
-          const arr = raw ? JSON.parse(raw) : [];
-          if (!arr.includes('L4')) {
-            // لا نضعها كـ "completed" — بل نفتح القسم الثاني
-          }
-          // فتح القسم الثاني (يُدار عبر App)
-          localStorage.setItem('soroban_section2_unlocked', JSON.stringify(true));
-          localStorage.setItem('soroban_kids_certificate_ready', 'true'); // ← جديد
-        } catch { /* ignore */ }
+      // [SURGICAL FIX v11] — مزامنة النتيجة مع المتجر (بدلاً من مفاتيح ميتة بلا قارئ)
+      // حُذفت كتابة soroban_section2_unlocked و soroban_kids_certificate_ready
+      // لأن audit-v9 أكد أنهما بلا قارئ.
+      const store = useProgressStore.getState();
+      if (category === 'kids') {
+        store.setExam1Passed(passed);
+      } else {
+        store.setExam2Passed(passed);
       }
     }
 
