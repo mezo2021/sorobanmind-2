@@ -1,7 +1,8 @@
 // src/screens/GuardianDashboard.tsx
 // ✅ SRB-first: يقرأ من progressStore + masteryBadgesStore
 // [SURGICAL FIX] — حساب المستوى المكتمل بناءً على درجة الاختبار (>=80%) فقط + عرض L1 بدلاً من 1
-// 📅 2026-10-16
+// [FEATURE] — عرض النشاط اليومي الحقيقي وتصحيح أعمدة الرسم البياني + إضافة بطاقة الأنزان السمعي
+// 📅 2026-10-20
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMemo, useState, useRef } from 'react';
@@ -180,10 +181,11 @@ export function GuardianDashboard({
   const passedPractice = useProgressStore((s) => s.passedPractice);
   const passedAnzanVisual = useProgressStore((s) => s.passedAnzanVisual);
   const passedAnzanAudio = useProgressStore((s) => s.passedAnzanAudio);
-  const grades = useProgressStore((s) => s.grades); // ✅ قراءة الدرجات
+  const grades = useProgressStore((s) => s.grades);
   const anzanBadges = useProgressStore((s) => s.anzanBadges);
   const anzanAudioBadges = useProgressStore((s) => s.anzanAudioBadges);
   const remediationHistory = useProgressStore((s) => s.remediationHistory);
+  const dailyXP = useProgressStore((s) => s.dailyXP); // 🆕 قراءة سجل النقاط اليومية
 
   // ═══ masteryBadgesStore ═══
   const masteryBadges = useMasteryBadgesStore((s) => s.badges);
@@ -344,21 +346,32 @@ export function GuardianDashboard({
   );
 
   // ═══ نشاط الأسبوع ═══
+  // ✅ [SURGICAL FIX] — جلب بيانات السجل اليومي الحقيقية ومطابقتها مع أيام الأسبوع
   const weeklyXP = useMemo(() => {
     const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
-    const today = new Date().getDay();
-    return days.map((day, idx) => ({
-      day,
-      xp: idx === (today + 1) % 7 ? totalXP : 0,
-    }));
-  }, [totalXP]);
+    const today = new Date();
+    const jsDay = today.getDay(); // 0 = الأحد، 6 = السبت
+    const daysSinceSat = (jsDay + 1) % 7; 
+    
+    const lastSaturday = new Date(today);
+    lastSaturday.setDate(today.getDate() - daysSinceSat);
+
+    return days.map((dayName, idx) => {
+      const d = new Date(lastSaturday);
+      d.setDate(lastSaturday.getDate() + idx);
+      const dateStr = d.toISOString().split('T')[0];
+      return {
+        day: dayName,
+        xp: dailyXP[dateStr] || 0
+      };
+    });
+  }, [dailyXP]);
 
   const maxWeeklyXP = Math.max(...weeklyXP.map((d) => d.xp), 1);
 
   // ═══ الإحصائيات العلوية ═══
   const stats = [
     { label: 'نقاط الخبرة', labelEn: 'XP Points', value: toArabicNumber(totalXP), icon: Zap, gradient: 'from-gold-400 to-gold-600', glow: 'shadow-gold-500/30' },
-    // ✅ [SURGICAL FIX] — عرض L1 بدلاً من 1
     { label: 'المستوى', labelEn: 'Level', value: `L${childLevel}`, icon: Award, gradient: 'from-purple-500 to-purple-700', glow: 'shadow-purple-500/30' },
     { label: 'الأيام المتتالية', labelEn: 'Day Streak', value: toArabicNumber(currentStreak), icon: TrendingUp, gradient: 'from-orange-500 to-red-500', glow: 'shadow-orange-500/30' },
     { label: 'المهارات المتقنة', labelEn: 'Mastered', value: toArabicNumber(masteryBadgesList.length), icon: Target, gradient: 'from-emerald2-500 to-emerald2-700', glow: 'shadow-emerald2-500/30' },
@@ -807,15 +820,22 @@ export function GuardianDashboard({
           <BarChart3 className="w-5 h-5 text-electric-400" />
           <h3 className="text-lg font-extrabold font-display text-white">نشاط الأسبوع</h3>
         </div>
-        <div className="flex items-end justify-between gap-2 sm:gap-3 h-40">
+        <div className="flex items-end justify-between gap-2 sm:gap-3 h-40 mt-4">
           {weeklyXP.map((day, i) => {
-            const height = (day.xp / maxWeeklyXP) * 100;
+            const heightPct = maxWeeklyXP > 0 ? (day.xp / maxWeeklyXP) * 100 : 0;
             return (
-              <div key={day.day} className="flex flex-col items-center gap-2 flex-1">
-                <motion.div initial={{ height: 0 }} animate={{ height: `${height}%` }} transition={{ delay: 0.5 + i * 0.06, type: 'spring', stiffness: 100, damping: 15 }} className="w-full rounded-t-xl bg-gradient-to-t from-purple-600 to-electric-400 min-h-[4px] relative group">
-                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-white/0 group-hover:text-white/80 transition-colors whitespace-nowrap">{toArabicNumber(day.xp)}</span>
+              <div key={day.day} className="flex flex-col items-center justify-end gap-2 flex-1 h-full">
+                <motion.div 
+                  initial={{ height: 0 }} 
+                  animate={{ height: `${Math.max(2, heightPct)}%` }} 
+                  transition={{ delay: 0.5 + i * 0.06, type: 'spring', stiffness: 100, damping: 15 }} 
+                  className="w-full rounded-t-xl bg-gradient-to-t from-purple-600 to-electric-400 min-h-[4px] relative group"
+                >
+                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-white/0 group-hover:text-white/80 transition-colors whitespace-nowrap">
+                    {toArabicNumber(day.xp)}
+                  </span>
                 </motion.div>
-                <span className="text-[10px] sm:text-xs text-white/50 font-body">{day.day}</span>
+                <span className="text-[10px] sm:text-xs text-white/50 font-body whitespace-nowrap">{day.day}</span>
               </div>
             );
           })}
@@ -823,7 +843,7 @@ export function GuardianDashboard({
       </motion.div>
 
       {/* ═══ إحصائيات مفصلة ═══ */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }} className="glass-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="w-5 h-5 text-emerald2-400" />
@@ -842,7 +862,17 @@ export function GuardianDashboard({
           <p className="text-xs text-electric-300 font-body mt-1">من {toArabicNumber(totalLevelsCount)}</p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }} className="glass-card p-5">
+        {/* 🆕 بطاقة الأنزان السمعي */}
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.58 }} className="glass-card p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <Volume2 className="w-5 h-5 text-rose-400" />
+            <p className="text-sm text-white/60 font-body">أنزان سمعي ناجح</p>
+          </div>
+          <p className="text-3xl font-extrabold font-display text-white">{toArabicNumber(passedAnzanAudio.length)}</p>
+          <p className="text-xs text-rose-300 font-body mt-1">من {toArabicNumber(totalLevelsCount)}</p>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.62 }} className="glass-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <Award className="w-5 h-5 text-gold-400" />
             <p className="text-sm text-white/60 font-body">إجمالي الشارات</p>
