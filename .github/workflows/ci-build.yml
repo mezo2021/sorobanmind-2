@@ -1,7 +1,5 @@
 name: CI Build
 on:
-  push:
-    branches: [main]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -14,21 +12,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci --no-audit --no-fund
+      - run: npm install --no-audit --no-fund
       - name: Build
         run: |
           set -o pipefail
           npm run build 2>&1 | tee build.log
-      - name: Report
+      - name: Bundle report
         if: always()
         run: |
           {
             echo '### Build output'
             echo '```'
-            grep -E 'dist/assets/.*\.js|built in|error' build.log | head -80
-            echo '```'
-            echo '### Eager assets (loaded by index.html)'
-            echo '```'
-            grep -oE 'assets/[^"]+\.(js|css)' dist/index.html || true
+            grep -E 'dist/|built in|error|dynamically imported' build.log | head -80
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
