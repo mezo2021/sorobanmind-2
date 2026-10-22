@@ -112,7 +112,6 @@ export function HeroDashboard({
   xp,
   streak,
 }: HeroDashboardProps) {
-  const [exam2Passed, setExam2Passed] = useState(false);
   const [showGames, setShowGames] = useState(false);
 
   // 🆕 [PLACE] — عدد محاولات امتحان تحديد المستوى
@@ -128,17 +127,9 @@ export function HeroDashboard({
 
   const hasTakenPlacement = placementAttempts > 0 || recommendedLevel !== null;
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('soroban_exam2_passed');
-      if (raw) setExam2Passed(JSON.parse(raw) === true);
-    } catch { /* ignore */ }
-  }, []);
-
   const [companion, setCompanion] = useState<CharacterType>('sham');
   const [showSelector, setShowSelector] = useState(false);
   const [childName, setChildName] = useState<string>('');
-  const [examPassed, setExamPassed] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('soroban_companion');
@@ -156,14 +147,6 @@ export function HeroDashboard({
 
     const savedName = localStorage.getItem('soroban_child_name');
     if (savedName) setChildName(savedName);
-
-    try {
-      const raw = localStorage.getItem('soroban_exam_result');
-      if (raw) {
-        const data = JSON.parse(raw);
-        if (data?.passed === true) setExamPassed(true);
-      }
-    } catch { /* ignore */ }
   }, []);
 
   const handleCompanionChange = (character: CharacterType) => {
