@@ -1,54 +1,19 @@
 name: Lint
-
 on:
   workflow_dispatch:
   push:
     branches: [main]
-
 permissions:
   contents: read
-
 jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Install ESLint
-        run: |
-          npm install --no-save --no-package-lock \
-            eslint@8 \
-            @typescript-eslint/parser \
-            @typescript-eslint/eslint-plugin \
-            eslint-plugin-react-hooks
-
+      - run: npm ci --no-audit --no-fund
       - name: Run ESLint
-        run: |
-          npx eslint src --ext .ts,.tsx \
-            --no-eslintrc \
-            --parser @typescript-eslint/parser \
-            --plugin @typescript-eslint \
-            --plugin react-hooks \
-            --rule '@typescript-eslint/no-unused-vars: warn' \
-            --rule 'react-hooks/rules-of-hooks: error' \
-            --rule 'react-hooks/exhaustive-deps: warn' \
-            --max-warnings 9999 > eslint-report.txt 2>&1 || true
-          echo "===== ESLint Summary ====="
-          echo "Warnings: $(grep -c 'warning' eslint-report.txt || echo 0)"
-          echo "Errors:   $(grep -c 'error' eslint-report.txt || echo 0)"
-          echo "=========================="
-          head -60 eslint-report.txt
-
-      - name: Upload report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: eslint-report
-          path: eslint-report.txt
-          retention-days: 7
+        run: npm run lint
