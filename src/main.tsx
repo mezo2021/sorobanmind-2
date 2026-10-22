@@ -14,6 +14,10 @@ import "./index.css";
   'soroban_anzan_audio_badges',
   'soroban_passed_level_tests',   // 🆕 v11 — لا قارئ ولا كاتب بعد إصلاحات 2026-10-20
   'soroban_weak_skills_v2',       // 🆕 v11 — لا قارئ ولا كاتب بعد إصلاحات 2026-10-20
+  // 🆕 [m3-d] مفاتيح توقفنا عن الكتابة فيها بعد تنظيف App.tsx
+  'soroban_completed_levels',
+  'soroban_placement_result',
+  'soroban_section2_unlocked',
 ].forEach((k) => {
   try {
     localStorage.removeItem(k);
