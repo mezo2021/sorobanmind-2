@@ -980,9 +980,9 @@ export function GuardianDashboard({
               </div>
               <h3 className="text-xl font-extrabold font-display text-white mb-2">تصفير التقدم؟</h3>
               <p className="text-sm text-white/60 font-body mb-4 leading-relaxed">
-                سيتم حذف جميع نقاط الخبرة، الشارات، والدروس المكتملة.<br />
-                <span className="text-emerald-300">الرفيق والاسم سيُحفظان.</span>
-              </p>
+  سيتم مسح البيانات المؤقتة والجلسات فقط.<br />
+  <span className="text-emerald-300">تقدمك، شاراتك، ونقاط الخبرة ستبقى محفوظة بأمان.</span>
+</p>
               <div className="mb-5 p-3 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-right">
                 <p className="text-xs text-amber-200 font-body leading-relaxed mb-3">
                   💡 <strong>تنبيه:</strong> يُنصح بحفظ نسخة احتياطية قبل التصفير.
