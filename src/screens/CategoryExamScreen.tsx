@@ -233,9 +233,8 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
 
     // [FIX 7] — في وضع المعاينة: لا تلمس بيانات الطفل الحقيقية
     if (!inPreview) {
-      // حفظ النتيجة في localStorage (لأن CategoryScreen يقرأها)
+      // حفظ النتيجة في localStorage (الدرجة للشهادة، والوقت للعقوبة)
       try {
-        localStorage.setItem(`${cfg.storageKey}_passed`, JSON.stringify(passed));
         localStorage.setItem(`${cfg.storageKey}_score`, JSON.stringify(score));
         localStorage.setItem(`${cfg.storageKey}_last_attempt`, String(Date.now()));
       } catch { /* ignore */ }
