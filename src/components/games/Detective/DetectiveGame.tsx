@@ -126,7 +126,7 @@ function pickUniquePhrase(phrases: string[], used: Set<string>): string {
 
 function readChildName(): string {
   if (typeof window === 'undefined') return 'بطل';
-  try { return localStorage.getItem('soroban_child_name')?.trim() || 'بطل'; } catch { return 'بطل'; }
+  try { return useProgressStore.getState().childName?.trim() || 'بطل'; } catch { return 'بطل'; }
 }
 
 function getDetectiveTitle(solvedCount: number): string {
