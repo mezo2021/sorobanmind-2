@@ -42,7 +42,6 @@ import { pickLang, type Localized } from '@/i18n/pickLang';
 // الثوابت
 // ═══════════════════════════════════════════════════════════
 
-const LESSON_PROGRESS_KEY = 'soroban_completed_lessons';
 const LESSON_SESSION_PREFIX = 'soroban_lesson_session_';
 const MAX_TRIES = 2;
 
@@ -362,14 +361,6 @@ export function LessonScreen({
 
     const handleFinishIntro = () => {
       playSound('levelup');
-      try {
-        const raw = localStorage.getItem(LESSON_PROGRESS_KEY);
-        const arr: string[] = raw ? JSON.parse(raw) : [];
-        if (!arr.includes(lessonId)) {
-          arr.push(lessonId);
-          localStorage.setItem(LESSON_PROGRESS_KEY, JSON.stringify(arr));
-        }
-      } catch { /* ignore */ }
       markLessonCompleted(lessonId);
       clearSession(lessonId);
 
@@ -684,14 +675,6 @@ export function LessonScreen({
     sorobana.stop();
     setIsReadingStory(false);
     setIsReadingModuleStory(false);
-    try {
-      const raw = localStorage.getItem(LESSON_PROGRESS_KEY);
-      const arr: string[] = raw ? JSON.parse(raw) : [];
-      if (!arr.includes(lessonId)) {
-        arr.push(lessonId);
-        localStorage.setItem(LESSON_PROGRESS_KEY, JSON.stringify(arr));
-      }
-    } catch { /* ignore */ }
     markLessonCompleted(lessonId);
     clearSession(lessonId);
 
