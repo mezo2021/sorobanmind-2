@@ -177,13 +177,15 @@ function loadPlacementData() {
   try {
     const weakSkillsRaw = localStorage.getItem('soroban_placement_weak_skills');
     const recommendedRaw = localStorage.getItem('soroban_placement_recommended');
-    const exam1Raw = localStorage.getItem('soroban_exam1_passed');
-    const exam2Raw = localStorage.getItem('soroban_exam2_passed');
+    
+    // قراءة حالة النجاح من المتجر (المصدر الوحيد)
+    const store = useProgressStore.getState();
+
     return {
       weakSkills: weakSkillsRaw ? JSON.parse(weakSkillsRaw) : [],
       recommendedLevel: recommendedRaw || null,
-      exam1Passed: exam1Raw ? JSON.parse(exam1Raw) : false,
-      exam2Passed: exam2Raw ? JSON.parse(exam2Raw) : false,
+      exam1Passed: store.exam1Passed,
+      exam2Passed: store.exam2Passed,
     };
   } catch {
     return { weakSkills: [], recommendedLevel: null, exam1Passed: false, exam2Passed: false };
