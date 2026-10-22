@@ -330,14 +330,6 @@ export default function App() {
           lessonId={lessonId}
           onBack={() => setScreen(('learn-' + levelId) as AppScreen)}
           onComplete={() => {
-            try {
-              const raw = localStorage.getItem('soroban_completed_lessons');
-              const arr: string[] = raw ? JSON.parse(raw) : [];
-              if (!arr.includes(lessonId)) {
-                arr.push(lessonId);
-                localStorage.setItem('soroban_completed_lessons', JSON.stringify(arr));
-              }
-            } catch { /* ignore */ }
             useProgressStore.getState().markLessonCompleted(lessonId);
             setScreen(('learn-' + levelId) as AppScreen);
           }}
@@ -373,14 +365,7 @@ export default function App() {
             }
           }}
           onComplete={(id) => {
-            try {
-              const raw = localStorage.getItem('soroban_completed_lessons');
-              const arr: string[] = raw ? JSON.parse(raw) : [];
-              if (!arr.includes(id)) {
-                arr.push(id);
-                localStorage.setItem('soroban_completed_lessons', JSON.stringify(arr));
-              }
-            } catch { /* ignore */ }
+            useProgressStore.getState().markLessonCompleted(id);
           }}
           playSound={handleSound}
           onXP={(amount) => useProgressStore.getState().addXP(amount)}
@@ -594,19 +579,7 @@ export default function App() {
               handleBackToCategory(practiceNum <= 3 ? 'kids' : 'teens')
             }
             onComplete={(passed, _score) => {
-              if (passed) {
-                try {
-                  const raw = localStorage.getItem('soroban_passed_practice');
-                  const arr: number[] = raw ? JSON.parse(raw) : [];
-                  if (!arr.includes(practiceNum)) {
-                    arr.push(practiceNum);
-                    localStorage.setItem(
-                      'soroban_passed_practice',
-                      JSON.stringify(arr),
-                    );
-                  }
-                } catch { /* ignore */ }
-              }
+              /* التقدّم يُحفظ في المتجر عبر markPracticePassed داخل PracticeScreen */
             }}
             playSound={handleSound}
             onXP={(amount) => useProgressStore.getState().addXP(amount)}
