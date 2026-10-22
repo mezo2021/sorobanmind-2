@@ -219,39 +219,14 @@ export default function App() {
     weakSkills: string[],
   ) => {
     try {
-      const LEVEL_ORDER = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7'];
-      const recommendedIdx = LEVEL_ORDER.indexOf(recommendedLevel);
-
-      const previousLevels = recommendedIdx > 0
-        ? LEVEL_ORDER.slice(0, recommendedIdx)
-        : [];
-
-      const newCompletedLevels = [...previousLevels];
-
-      localStorage.setItem(
-        'soroban_completed_levels',
-        JSON.stringify(newCompletedLevels),
-      );
-
       localStorage.setItem(
         'soroban_placement_weak_skills',
         JSON.stringify(weakSkills),
       );
-
       localStorage.setItem(
         'soroban_placement_recommended',
         recommendedLevel,
       );
-
-      localStorage.setItem(
-        'soroban_placement_result',
-        JSON.stringify({
-          recommendedLevel,
-          weakSkills,
-          date: Date.now(),
-        }),
-      );
-
       useProgressStore.getState().recordPlacementAttempt();
     } catch { /* ignore */ }
 
@@ -543,14 +518,7 @@ export default function App() {
             category="kids"
             onBack={() => handleBackToCategory('kids')}
             onComplete={(passed, _score) => {
-              if (passed) {
-                try {
-                  localStorage.setItem('soroban_section2_unlocked', 'true');
-                } catch { /* ignore */ }
-                setScreen('kids-certificate');
-              } else {
-                setScreen('category-kids');
-              }
+              setScreen(passed ? 'kids-certificate' : 'category-kids');
             }}
             playSound={handleSound}
           />
