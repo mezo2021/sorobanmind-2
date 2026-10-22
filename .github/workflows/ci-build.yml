@@ -13,8 +13,8 @@ jobs:
         with:
           node-version: 20
       - run: npm ci --no-audit --no-fund
-      # - name: Tests
-      #   run: npm run test:run
+      - name: Tests
+        run: npm run test:run
       - name: Build
         run: |
           set -o pipefail
