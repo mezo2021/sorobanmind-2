@@ -3,7 +3,7 @@
 // [PLACE]  — قفل امتحان تحديد المستوى بعد أول محاولة
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import {
   Sparkles, Flame, Brain, Zap, Palette,
   X, Users, Trophy, Target, Grid3X3, Film,
@@ -14,7 +14,7 @@ import {
 import type { Screen, CharacterType } from '@/types';
 import { Companion } from '@/components/Companion';
 import { CharacterSelector } from '@/components/CharacterSelector';
-import { GamesListScreen } from '@/components/games/GamesListScreen';
+const GamesListScreen = lazy(() => import('@/components/games/GamesListScreen').then(m => ({ default: m.GamesListScreen })));
 import { useProgressStore } from '@/store/progressStore';
 
 interface HeroDashboardProps {
@@ -162,12 +162,18 @@ export function HeroDashboard({
 
   if (showGames) {
     return (
-      <GamesListScreen
-        onBack={() => {
-          playSound('click');
-          setShowGames(false);
-        }}
-      />
+      <Suspense fallback={
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white/70 text-lg font-bold">
+          جارٍ تحميل مدينة الألعاب... 🎮
+        </div>
+      }>
+        <GamesListScreen
+          onBack={() => {
+            playSound('click');
+            setShowGames(false);
+          }}
+        />
+      </Suspense>
     );
   }
 
