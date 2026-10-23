@@ -93,7 +93,7 @@ function vibrate(pattern: number | number[]): void {
 
 function readChildName(): string {
   if (typeof window === 'undefined') return 'بطل';
-  try { return localStorage.getItem('soroban_child_name')?.trim() || 'بطل'; } catch { return 'بطل'; }
+  try { return useProgressStore.getState().childName?.trim() || 'بطل'; } catch { return 'بطل'; }
 }
 
 function loadSound(): boolean {
