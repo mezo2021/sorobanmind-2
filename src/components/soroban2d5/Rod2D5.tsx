@@ -1,5 +1,5 @@
 // src/components/soroban2d5/Rod2D5.tsx
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState, memo } from 'react';
 import { Bead2D5 } from './Bead2D5';
 import type { BeadState } from './useSorobanLogic';
 import type { RodTint } from '@/components/flash/types';
@@ -122,8 +122,7 @@ function BeadGlass({
           border: '1px solid rgba(255,255,255,0.45)',
           boxShadow:
             'inset 0 1px 3px rgba(255,255,255,0.85), inset 0 -1px 3px rgba(0,0,0,0.12)',
-          backdropFilter: 'blur(1.5px)',
-          WebkitBackdropFilter: 'blur(1.5px)',
+          // 🚀 [PERF] تم إزالة backdropFilter لحل مشكلة البطء على الأجهزة المحمولة
           pointerEvents: 'none',
         }}
       />
@@ -161,7 +160,7 @@ function BeadGlass({
   );
 }
 
-export function Rod2D5({
+function Rod2D5Base({
   state,
   displayOrder,
   totalColumns,
@@ -319,13 +318,14 @@ export function Rod2D5({
         }}
       />
 
+      {/* 🚀 [PERF] استخدام translateY بدلاً من top لتحسين الأداء */}
       <div
         style={{
           position: 'absolute',
-          top: state.upper === 5 ? upperBeadActive : upperBeadTop,
+          top: 0,
           left: '50%',
-          transform: 'translateX(-50%)',
-          transition: 'top 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          transform: `translate(-50%, ${state.upper === 5 ? upperBeadActive : upperBeadTop}px)`,
+          transition: 'transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
           filter: beadFilter,
           zIndex: 5,
         }}
@@ -413,10 +413,11 @@ export function Rod2D5({
             key={idx}
             style={{
               position: 'absolute',
-              top: isBeadActive ? topActive : topInactive,
+              top: 0,
               left: '50%',
-              transform: 'translateX(-50%)',
-              transition: 'top 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              // 🚀 [PERF] استخدام translateY بدلاً من top لتحسين الأداء
+              transform: `translate(-50%, ${isBeadActive ? topActive : topInactive}px)`,
+              transition: 'transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
               filter: beadFilter,
               zIndex: 5,
             }}
@@ -469,4 +470,6 @@ export function Rod2D5({
   );
 }
 
+// 🚀 [PERF] تغليف المكون بـ memo لمنع إعادة الرسم غير الضرورية
+export const Rod2D5 = memo(Rod2D5Base);
 export default Rod2D5;
