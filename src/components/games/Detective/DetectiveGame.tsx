@@ -498,7 +498,6 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
               interactive={true}
               showValue={false}
               hideTitle={true}
-              rodTint="white"
             />
           </motion.div>
 
