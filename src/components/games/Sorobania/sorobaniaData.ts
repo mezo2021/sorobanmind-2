@@ -17,6 +17,7 @@
 // ═══════════════════════════════════════════════════════════════════
 
 import type { CharacterType } from '@/types';
+import { useProgressStore } from '@/store/progressStore';
 
 // ═══════════════════════════════════════════════════════════════════
 // ثوابت
@@ -147,7 +148,7 @@ export const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.lengt
 
 export const getLocalChildName = (): string => {
   try {
-    return localStorage.getItem('soroban_child_name')?.trim() || 'بطل';
+    return useProgressStore.getState().childName?.trim() || 'بطل';
   } catch {
     return 'بطل';
   }
