@@ -5,10 +5,10 @@
 // الإضافات المحدثة:
 //   1. خوارزمية التدرج الذكي التكيفي (Dynamic Micro-Adaptation) لمنع الإحباط.
 //   2. دعم التكيف التلقائي لوقت العرض عند وجود خطأين متتاليين (+35% وقت إضافي).
-//   3. تفعيل رد الفعل الصوتي والشفهي للبطل عند الإجابة الصحيحة (مصفوفات عبارات مشجعة ومتنوعة).
+//   3. تفعيل رد الفعل الصوتي والشفهي للبطل عند الإجابة الصحيحة.
 //   4. إضافة عبارات دعم دافئة وخاصة من البطل أثناء وضع التكيف الذكي.
 //
-// [FIX NAME] — اسم الطفل صوتياً في handleStartGame — 2026-10-13
+// [PERF] — عزل المؤقت لمنع إعادة الرسم كل ثانية، وتخفيف حركات الخروج.
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -103,7 +103,6 @@ const ERROR_PHRASES = [
   'رَكِّزْ أَكْثَر، أَنْتَ تَقْدِر!',
 ];
 
-// 🆕 عبارات الدعم التكيفي الذكي (تظهر بعد خطأين متتاليين)
 const ADAPTIVE_SUPPORT_PHRASES = [
   'خُذْ نَفَساً عميقاً، أَنَا مَعَكَ!',
   'لا بَأْسَ يَا بَطَلُ، خُذْ وَقْتَكَ لِلتَّرْكِيزِ!',
@@ -237,13 +236,9 @@ function generateWrongOptions(correct: number): number[] {
   return shuffled.slice(0, 2);
 }
 
-/**
- * 🆕 توليد المسألة مع دمج التكيف الذكي (Dynamic Micro-Adaptation)
- */
 function generateProblem(elapsedSec: number, used: Set<number>, isAdaptive: boolean = false): Problem {
   const { minVal, maxVal, showMs } = getPhaseConfig(elapsedSec);
 
-  // إذا كان وضع التكيف مفعلاً (بعد خطأين متتاليين)، يتم زيادة الوقت بـ 35% اختيار قيمة بسيطة
   const finalShowMs = isAdaptive ? Math.round(showMs * 1.35) : showMs;
   const targetMax = isAdaptive ? Math.min(maxVal, minVal + Math.floor((maxVal - minVal) / 2)) : maxVal;
 
@@ -284,6 +279,30 @@ function getXpForScore(correct: number): number {
   return xp;
 }
 
+// ═══ [PERF] مكون مستقل للمؤقت لمنع إعادة رسم اللعبة كلها كل ثانية ═══
+function GameTimer({ isPlaying, isGameOver, onTimeOut }: { isPlaying: boolean, isGameOver: boolean, onTimeOut: () => void }) {
+  const [timeLeft, setTimeLeft] = useState(SESSION_SECONDS);
+
+  useEffect(() => {
+    if (!isPlaying || isGameOver) {
+      if (!isPlaying && !isGameOver) setTimeLeft(SESSION_SECONDS); // إعادة الضبط عند البدء
+      return;
+    }
+    if (timeLeft <= 0) {
+      onTimeOut();
+      return;
+    }
+    const timer = setTimeout(() => setTimeLeft(t => t - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [isPlaying, isGameOver, timeLeft, onTimeOut]);
+
+  return (
+    <div className="bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-rose-500/30 text-rose-300 font-bold text-sm flex items-center gap-1">
+      ⏳ <span className="tabular-nums">{timeLeft}</span>
+    </div>
+  );
+}
+
 // ═══ المكوّن الرئيسي ═══
 export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameProps) {
   const heroId: CharacterType = propHero ?? readSelectedHero();
@@ -292,9 +311,9 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
   const addXP = useProgressStore((s) => s.addXP);
 
   // حالة الجلسة
-  const [sessionTimeLeft, setSessionTimeLeft] = useState(SESSION_SECONDS);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
+  const startTimeRef = useRef<number>(0); // 🚀 لتسجيل وقت البدء
 
   // حالة المسألة
   const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
@@ -307,7 +326,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
   const [heroMood, setHeroMood] = useState<HeroMood>('idle');
   const [heroText, setHeroText] = useState('مُسْتَعِدٌّ لِلتَّحَدِّي؟');
 
-  // 🆕 متتبع الأخطاء المتتالية للتكيف الذكي
   const [consecutiveErrors, setConsecutiveErrors] = useState(0);
 
   // نتائج
@@ -329,14 +347,15 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
   const usedEndRef = useRef<Set<string>>(new Set());
 
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // 🚀 [PERF] إزالة المؤقت من المصفوفة بعد انتهائه لمنع تسريب الذاكرة
   const addTimeout = useCallback((fn: () => void, ms: number) => {
     const id = setTimeout(() => {
       fn();
-      // 🚀 [PERF] إزالة المؤقت من المصفوفة بعد انتهائه لمنع تسريب الذاكرة
       timeoutsRef.current = timeoutsRef.current.filter((t) => t !== id);
     }, ms);
     timeoutsRef.current.push(id);
   }, []);
+  
   const clearAllTimeouts = useCallback(() => {
     timeoutsRef.current.forEach((id) => clearTimeout(id));
     timeoutsRef.current = [];
@@ -357,24 +376,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     setPreviousHigh(getHighScore(GAME_ID));
   }, []);
 
-  // مؤقت الجلسة
-  useEffect(() => {
-    if (!isPlaying || isGameOver) return;
-    const timer = setInterval(() => {
-      setSessionTimeLeft((prev) => (prev <= 1 ? 0 : prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [isPlaying, isGameOver]);
-
-  // نهاية الجلسة
-  useEffect(() => {
-    if (sessionTimeLeft === 0 && isPlaying && !isGameOver) {
-      // eslint-disable-next-line no-use-before-define
-      endGame();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionTimeLeft, isPlaying, isGameOver]);
-
   // ═══ بدء مسألة مع مراعاة التكيف الذكي ═══
   const startNextProblem = useCallback((elapsed: number, isAdaptive: boolean = false) => {
     const problem = generateProblem(elapsed, usedValuesRef.current, isAdaptive);
@@ -386,7 +387,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     if (isAdaptive) {
       const adaptiveText = pickUniquePhrase(ADAPTIVE_SUPPORT_PHRASES, usedAdaptiveRef.current);
       setHeroText(adaptiveText);
-      speak(adaptiveText); // 🔊 نطق رسالة الدعم الصوتية التكيفية من البطل
+      speak(adaptiveText);
     } else {
       setHeroText(pickUniquePhrase(THINKING_PHRASES, usedThinkingRef.current));
     }
@@ -445,7 +446,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     setIsPlaying(true);
     setIsGameOver(false);
     setIsNewRecord(false);
-    setSessionTimeLeft(SESSION_SECONDS);
+    startTimeRef.current = Date.now(); // 🚀 تسجيل وقت البدء
     setCorrectCount(0);
     setConsecutiveErrors(0);
     setXpEarned(0);
@@ -469,12 +470,13 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     if (selectedAnswer !== null || isAbacusVisible || !currentProblem) return;
     setSelectedAnswer(ans);
 
-    const elapsedNow = SESSION_SECONDS - sessionTimeLeft;
+    // 🚀 [PERF] حساب الوقت المنقضي باستخدام ساعة النظام بدلاً من الحالة
+    const elapsedNow = Math.floor((Date.now() - startTimeRef.current) / 1000);
     const isCorrect = ans === currentProblem.value;
 
     if (isCorrect) {
       vibrate(30);
-      setConsecutiveErrors(0); // 🔄 تصفير الأخطاء المتتالية عند الإجابة الصحيحة
+      setConsecutiveErrors(0);
       const newStreak = streak + 1;
       setStreak(newStreak);
       setCorrectCount((c) => c + 1);
@@ -493,10 +495,9 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
           setHeroMood('celebrating');
         }
       } else {
-        // 🔊 رد فعل صوتي وشفهي دائم للبطل عند الإجابة الصحيحة
         const correctMsg = pickUniquePhrase(CORRECT_PHRASES, usedCorrectRef.current);
         setHeroText(correctMsg);
-        speak(correctMsg); // 🔊 نطق العبارات المشجعة صوتياً للبطل
+        speak(correctMsg);
         if (!isGoldMode) setHeroMood('celebrating');
       }
 
@@ -512,7 +513,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
       const nextErrorCount = consecutiveErrors + 1;
       setConsecutiveErrors(nextErrorCount);
 
-      // تفعيل وضع التكيف التلقائي إذا تكرر الخطأ مرتين
       const shouldAdapt = nextErrorCount >= 2;
 
       if (!shouldAdapt) {
@@ -529,7 +529,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     selectedAnswer,
     isAbacusVisible,
     currentProblem,
-    sessionTimeLeft,
     streak,
     isGoldMode,
     consecutiveErrors,
@@ -575,9 +574,9 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <div className="bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-rose-500/30 text-rose-300 font-bold text-sm flex items-center gap-1">
-            ⏳ <span className="tabular-nums">{sessionTimeLeft}</span>
-          </div>
+          {/* 🚀 [PERF] استخدام المكون المعزول للمؤقت */}
+          <GameTimer isPlaying={isPlaying} isGameOver={isGameOver} onTimeOut={endGame} />
+          
           <div className="bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-emerald-500/30 text-emerald-300 font-bold text-sm flex items-center gap-1">
             🎯 <span className="tabular-nums">{correctCount}</span>
           </div>
@@ -630,6 +629,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                   key={`abacus-${currentProblem.id}`}
                   initial={{ y: 40, opacity: 0, scale: 0.85 }}
                   animate={{ y: 0, opacity: 1, scale: 1 }}
+                  // 🚀 [PERF] إزالة scale من حركة الخروج لتخفيف العبء على المتصفح
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.25, ease: 'easeOut' }}
                   className={`p-3 rounded-2xl transition-shadow ${
