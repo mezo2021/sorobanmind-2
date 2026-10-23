@@ -2,64 +2,31 @@
 // 🧠 src/engine/adaptiveEngine.ts — المحرك التكيفي
 // ═══════════════════════════════════════════════════════════════════
 //
-// الوظيفة:
-//   - تحديد المستوى (Placement Test)
-//   - توليد توصيات علاجية
-//   - بناء جلسات علاجية
-//   - تشخيص المهارات الضعيفة
-//
-// 🚨 ارتباطات حرجة (SRB Migration Points):
-//
-//   ⚠️⚠️⚠️ الملف يستورد من "../data/bank-linked" ⚠️⚠️⚠️
-//
-//   هذا هو الملف الذي يسبب التعارض مع البنوك.
-//
-//   📋 ما يُستورد حاليًا:
-//     1. SOROBAN_BANK          → يُستبدل بـ SRB (بنك SRB الجديد)
-//     2. evaluateBankAnswer    → يُستبدل بـ SRB.evaluate()
-//     3. type BankQuestion     → يُستبدل بـ SRBQuestion
-//     4. type QuestionEvaluation → يبقى أو يُستبدل بـ SRBEvaluation
-//
-//   🔗 خطة الربط المستقبلي (SRB - المرحلة 5):
-//
-//     1. بناء src/data/srb/ كاملًا
-//     2. بناء src/data/srb-adapter.ts
-//     3. استبدال import من bank-linked → srb-adapter
-//     4. اختبار شامل
-//     5. حذف bank-linked نهائيًا
-//
-// 📥 الاعتماديات الأخرى:
-//   - ./masteryTracker (نظيف ✅)
-//   - ../curriculum/types (العقد الأساسي ✅)
-//
-// 📤 الصادرات الرئيسية:
-//   - createPlacementTest()
-//   - evaluatePlacementTest()
-//   - processAttempt()
-//   - selectRemediationQuestions()
-//   - buildRemediationSession()
-//   - findWeakSkills()
-//   - diagnoseSkill()
-//
-// ⚠️ الحالة الحالية:
-//   - يعمل، لكن معرّفات المستويات L01-L20 قديمة
-//   - levelNumber() يفترض صيغة "L{رقم}" — ستحتاج تحديثًا لـ SRB
-//
-// آخر تحديث: 2026-09-29
-//   - إضافة توثيق شامل + علامات SRB
-//   - لا تغيير في المنطق
+// 📌 خطوة التطوير القادمة (Next Step: SRB Integration):
+//   - تم عزل هذا الملف عن البنك القديم (bank-linked) لحذفه نهائياً.
+//   - الدوال أدناه (التي تعتمد على البنك) تعمل حالياً بـ Stubs وهمية.
+//   - عند ربط المنهج الجديد (SRB):
+//     1. استبدل Stubs الاستيراد بـ `import { SRB } from '../data/srb-adapter'`.
+//     2. استبدل `SOROBAN_BANK` بـ `SRB.getAll()`.
+//     3. استبدل `BankQuestion` بـ `SRBQuestion`.
+//     4. احذف الـ Stubs الوهمية في أعلى الملف.
 //
 // ═══════════════════════════════════════════════════════════════════
 
-// 🔗 SRB-MIGRATION: هذا الاستيراد سيُستبدل لاحقًا بـ srb-adapter
-//    مؤقتًا: bank-linked
-//    المستقبل: ../data/srb-adapter
-import {
-  SOROBAN_BANK,           // 🔗 يُستبدل بـ SRB.getAll()
-  evaluateBankAnswer,     // 🔗 يُستبدل بـ SRB.evaluate()
-  type BankQuestion,      // 🔗 يُستبدل بـ SRBQuestion
-  type QuestionEvaluation // 🔗 يبقى (أو SRBEvaluation)
-} from "../data/bank-linked";
+// 🚨 [BANK-DECOUPLING] بدائل مؤقتة (Stub) حتى يتم الربط مع SRB لاحقاً
+// هذه البدائل تمنع انهيار TypeScript بعد حذف البنك الميت.
+export type BankQuestion = any;
+export type QuestionEvaluation = any;
+const SOROBAN_BANK: BankQuestion[] = [];
+
+function evaluateBankAnswer(
+  _question: BankQuestion,
+  _userAnswer: number,
+  _timeMs: number
+): QuestionEvaluation {
+  return { correct: false, tooSlow: false, timeout: false, issue: "none" };
+}
+// ═══════════════════════════════════════════════════════════════════
 
 import {
   createProgress,
@@ -259,11 +226,6 @@ function createRng(
 
 /**
  * استخراج رقم المستوى من L01 / L02 ...
- *
- * 🔗 SRB-MIGRATION: هذا سيحتاج تحديثًا لـ SRB IDs
- *    الصيغة الحالية: L01, L02, ...
- *    صيغة SRB: L0, L1, L2, ... (بدون صفر)
- *    أو: SRB-L0-S01-B001 (كامل)
  */
 function levelNumber(
   levelId: string
@@ -288,15 +250,12 @@ function levelNumber(
 
 /**
  * إنشاء اختبار تحديد المستوى.
- *
- * 🔗 SRB-MIGRATION: يعتمد على SOROBAN_BANK من bank-linked
- *    سيُستبدل بـ SRB.getAll() لاحقًا.
  */
 export function createPlacementTest(
-  bank: readonly BankQuestion[] = SOROBAN_BANK,  // 🔗 SRB
+  bank: readonly BankQuestion[] = SOROBAN_BANK,
   questionCount = 30,
   seed = Date.now()
-): BankQuestion[] {  // 🔗 SRB
+): BankQuestion[] {
   if (
     questionCount <= 0 ||
     !Number.isInteger(
@@ -314,7 +273,7 @@ export function createPlacementTest(
   const levelMap =
     new Map<
       string,
-      BankQuestion[]  // 🔗 SRB
+      BankQuestion[]
     >();
 
   for (const question of bank) {
@@ -345,7 +304,7 @@ export function createPlacementTest(
     return [];
   }
 
-  const result: BankQuestion[] = [];  // 🔗 SRB
+  const result: BankQuestion[] = [];
 
   const basePerLevel =
     Math.floor(
@@ -424,11 +383,9 @@ export function createPlacementTest(
 
 /**
  * تقييم اختبار تحديد المستوى.
- *
- * 🔗 SRB-MIGRATION: يعتمد على evaluateBankAnswer و SOROBAN_BANK
  */
 export function evaluatePlacementTest(
-  questions: readonly BankQuestion[],  // 🔗 SRB
+  questions: readonly BankQuestion[],
   answers: readonly PlacementAnswer[],
   levels?: readonly CurriculumLevel[]
 ): PlacementResult {
@@ -517,7 +474,7 @@ export function evaluatePlacementTest(
     }
 
     const evaluation =
-      evaluateBankAnswer(  // 🔗 SRB.evaluate()
+      evaluateBankAnswer(
         question,
         answer.answer,
         answer.timeMs
@@ -652,7 +609,7 @@ export function evaluatePlacementTest(
   const remediationQuestionIds =
     selectRemediationQuestions(
       errors,
-      SOROBAN_BANK,  // 🔗 SRB.getAll()
+      SOROBAN_BANK,
       10
     ).map(
       recommendation =>
@@ -673,11 +630,9 @@ export function evaluatePlacementTest(
 
 /**
  * تسجيل محاولة واحدة داخل المحرك التكيفي.
- *
- * 🔗 SRB-MIGRATION: يعتمد على BankQuestion (من bank-linked)
  */
 export function processAttempt(
-  question: BankQuestion,  // 🔗 SRB
+  question: BankQuestion,
   userAnswer: number,
   timeMs: number,
   progress?: SkillProgress
@@ -728,12 +683,10 @@ export function processAttempt(
 
 /**
  * إنشاء توصيات علاجية بناءً على الأخطاء.
- *
- * 🔗 SRB-MIGRATION: يعتمد على SOROBAN_BANK
  */
 export function selectRemediationQuestions(
   errors: readonly LearningError[],
-  bank: readonly BankQuestion[] = SOROBAN_BANK,  // 🔗 SRB
+  bank: readonly BankQuestion[] = SOROBAN_BANK,
   count = 10
 ): AdaptiveRecommendation[] {
   if (
@@ -880,14 +833,12 @@ export function selectRemediationQuestions(
 
 /**
  * بناء جلسة علاجية من خطأ محدد.
- *
- * 🔗 SRB-MIGRATION: يعتمد على SOROBAN_BANK
  */
 export function buildRemediationSession(
   questionId: string,
   count = 5,
-  bank: readonly BankQuestion[] = SOROBAN_BANK  // 🔗 SRB
-): BankQuestion[] {  // 🔗 SRB
+  bank: readonly BankQuestion[] = SOROBAN_BANK
+): BankQuestion[] {
   const source =
     bank.find(
       question =>
@@ -969,7 +920,6 @@ export function buildRemediationSession(
 
 /**
  * تحديد المهارات الأضعف من سجل المحاولات.
- *
  * ✅ لا يعتمد على bank — نظيف
  */
 export function findWeakSkills(
@@ -1041,7 +991,6 @@ export function findWeakSkills(
 
 /**
  * إنشاء توصية مباشرة من SkillProgress.
- *
  * ✅ لا يعتمد على bank — نظيف
  */
 export function diagnoseSkill(
