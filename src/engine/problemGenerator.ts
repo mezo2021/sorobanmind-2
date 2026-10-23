@@ -2,61 +2,39 @@
 // 🎲 src/engine/problemGenerator.ts — مولّد المسائل والجلسات
 // ═══════════════════════════════════════════════════════════════════
 //
-// الوظيفة:
-//   - توليد مسألة واحدة (generateProblem)
-//   - توليد جلسة من مهارة (generateSession)
-//   - توليد جلسة علاجية لقاعدة (generateRuleSession)
-//   - أدوات مساعدة: randomInt · shuffle · createRng
+// 📌 خطوة التطوير القادمة (Next Step: SRB Integration):
+//   - تم عزل هذا الملف عن البنك القديم (bank-linked) لحذفه نهائياً.
+//   - الدوال أدناه (التي تعتمد على البنك) تعمل حالياً بـ Stubs وهمية.
+//   - عند ربط المنهج الجديد (SRB):
+//     1. استبدل Stubs الاستيراد بـ `import { SRB } from '../data/srb-adapter'`.
+//     2. استبدل `SOROBAN_BANK` بـ `SRB.getAll()`.
+//     3. استبدل `getQuestionsBySkill` بـ `SRB.getBySkill()`.
+//     4. استبدل `getQuestionsByRule` بـ `SRB.getByRule()`.
+//     5. استبدل `bankQuestionToProblem` بـ `SRB.toProblem()`.
+//     6. احذف الـ Stubs الوهمية في أعلى الملف.
 //
-// 🚨 ارتباطات حرجة (SRB Migration Points):
-//
-//   ⚠️⚠️⚠️ الملف يستورد من "../data/bank-linked" ⚠️⚠️⚠️
-//
-//   📋 ما يُستورد حاليًا:
-//     1. SOROBAN_BANK          → يُستبدل بـ SRB.getAll()
-//     2. getQuestionsBySkill   → يُستبدل بـ SRB.getBySkill()
-//     3. getQuestionsByRule    → يُستبدل بـ SRB.getByRule()
-//     4. bankQuestionToProblem → يُستبدل بـ SRB.toProblem()
-//     5. type BankQuestion     → يُستبدل بـ SRBQuestion
-//
-//   🔗 خطة الربط المستقبلي (SRB - المرحلة 5):
-//     1. بناء src/data/srb/ كاملًا
-//     2. بناء src/data/srb-adapter.ts
-//     3. استبدال import من bank-linked → srb-adapter
-//     4. اختبار شامل
-//     5. حذف bank-linked نهائيًا
-//
-// 📥 الاعتماديات الأخرى:
-//   - ../curriculum/types (العقد الأساسي ✅)
-//
-// 📤 الصادرات الرئيسية:
-//   - randomInt()
-//   - shuffle()
-//   - generateProblem()
-//   - generateSession()
-//   - generateRuleSession()
-//
-// آخر تحديث: 2026-09-29
-//   - إضافة توثيق شامل + علامات SRB-MIGRATION
-//   - لا تغيير في المنطق
-//
+// ═══════════════════════════════════════════════════════════════════
+
+// 🚨 [BANK-DECOUPLING] بدائل مؤقتة (Stub) حتى يتم الربط مع SRB لاحقاً
+// هذه البدائل تمنع انهيار TypeScript بعد حذف البنك الميت.
+export type BankQuestion = any;
+const SOROBAN_BANK: BankQuestion[] = [];
+
+function getQuestionsBySkill(_skillId: string): BankQuestion[] {
+  return [];
+}
+function getQuestionsByRule(_ruleId: string): BankQuestion[] {
+  return [];
+}
+function bankQuestionToProblem(_question: BankQuestion): any {
+  return {};
+}
 // ═══════════════════════════════════════════════════════════════════
 
 import type {
   Problem,
   ProblemGeneratorSpec
 } from "../curriculum/types";
-
-// 🔗 SRB-MIGRATION: هذا الاستيراد سيُستبدل لاحقًا بـ srb-adapter
-//    مؤقتًا: bank-linked
-//    المستقبل: ../data/srb-adapter
-import {
-  SOROBAN_BANK,           // 🔗 يُستبدل بـ SRB.getAll()
-  getQuestionsBySkill,    // 🔗 يُستبدل بـ SRB.getBySkill()
-  getQuestionsByRule,     // 🔗 يُستبدل بـ SRB.getByRule()
-  bankQuestionToProblem,  // 🔗 يُستبدل بـ SRB.toProblem()
-  type BankQuestion       // 🔗 يُستبدل بـ SRBQuestion
-} from "../data/bank-linked";
 
 // ═══════════════════════════════════════════════════════════════════
 // 🛠️ أدوات مساعدة
@@ -158,14 +136,12 @@ export function shuffle<T>(
 
 /**
  * فلترة البنك وفق المواصفات.
- *
- * 🔗 SRB-MIGRATION: يعتمد على SOROBAN_BANK من bank-linked
  */
 function filterBank(
   spec: ProblemGeneratorSpec
-): BankQuestion[] {  // 🔗 SRB
+): BankQuestion[] {
   let questions =
-    [...SOROBAN_BANK];  // 🔗 SRB.getAll()
+    [...SOROBAN_BANK];
 
   const constraints =
     spec.constraints;
@@ -260,8 +236,6 @@ function filterBank(
 
 /**
  * توليد سؤال واحد.
- *
- * 🔗 SRB-MIGRATION: يعتمد على SOROBAN_BANK + bankQuestionToProblem
  */
 export function generateProblem(
   spec: ProblemGeneratorSpec
@@ -287,28 +261,24 @@ export function generateProblem(
       )
     ];
 
-  return bankQuestionToProblem(  // 🔗 SRB.toProblem()
+  return bankQuestionToProblem(
     selected
   );
 }
 
 /**
  * البحث عن مهارة ضمن البنك.
- *
- * 🔗 SRB-MIGRATION: يعتمد على getQuestionsBySkill
  */
 function getSkillQuestions(
   skillId: string
-): BankQuestion[] {  // 🔗 SRB
-  return getQuestionsBySkill(  // 🔗 SRB.getBySkill()
+): BankQuestion[] {
+  return getQuestionsBySkill(
     skillId
   );
 }
 
 /**
  * توليد جلسة من مهارة محددة.
- *
- * 🔗 SRB-MIGRATION: يعتمد على getQuestionsBySkill + bankQuestionToProblem
  */
 export function generateSession(
   skillId: string,
@@ -345,7 +315,7 @@ export function generateSession(
       rng
     );
 
-  const selected: BankQuestion[] = [];  // 🔗 SRB
+  const selected: BankQuestion[] = [];
 
   for (
     let index = 0;
@@ -361,14 +331,12 @@ export function generateSession(
   }
 
   return selected.map(
-    bankQuestionToProblem  // 🔗 SRB.toProblem()
+    bankQuestionToProblem
   );
 }
 
 /**
  * توليد جلسة علاجية لقاعدة معينة.
- *
- * 🔗 SRB-MIGRATION: يعتمد على getQuestionsByRule + bankQuestionToProblem
  */
 export function generateRuleSession(
   ruleId: string,
@@ -384,7 +352,7 @@ export function generateRuleSession(
   }
 
   const questions =
-    getQuestionsByRule(  // 🔗 SRB.getByRule()
+    getQuestionsByRule(
       ruleId
     );
 
@@ -408,7 +376,7 @@ export function generateRuleSession(
   return Array.from(
     { length: count },
     (_, index) =>
-      bankQuestionToProblem(  // 🔗 SRB.toProblem()
+      bankQuestionToProblem(
         shuffled[
           index %
             shuffled.length
@@ -419,7 +387,6 @@ export function generateRuleSession(
 
 /**
  * تحويل النص إلى seed ثابت.
- *
  * ✅ لا يعتمد على bank — نظيف
  */
 function hashSkillId(
