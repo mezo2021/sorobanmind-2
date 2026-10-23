@@ -330,7 +330,11 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
 
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const addTimeout = useCallback((fn: () => void, ms: number) => {
-    const id = setTimeout(fn, ms);
+    const id = setTimeout(() => {
+      fn();
+      // 🚀 [PERF] إزالة المؤقت من المصفوفة بعد انتهائه لمنع تسريب الذاكرة
+      timeoutsRef.current = timeoutsRef.current.filter((t) => t !== id);
+    }, ms);
     timeoutsRef.current.push(id);
   }, []);
   const clearAllTimeouts = useCallback(() => {
@@ -626,7 +630,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                   key={`abacus-${currentProblem.id}`}
                   initial={{ y: 40, opacity: 0, scale: 0.85 }}
                   animate={{ y: 0, opacity: 1, scale: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
+                  exit={{ opacity: 0 }}
                   transition={{ duration: 0.25, ease: 'easeOut' }}
                   className={`p-3 rounded-2xl transition-shadow ${
                     isGoldMode
