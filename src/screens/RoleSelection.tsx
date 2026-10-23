@@ -5,6 +5,7 @@ import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight } from 'lucide-reac
 import type { Role, CharacterType } from '@/types';
 import { CharacterSelector } from '@/components/CharacterSelector';
 import { NameInputModal } from '@/components/NameInputModal';
+import { useProgressStore } from '@/store/progressStore';
 
 interface RoleSelectionProps {
   onSelect: (role: Role) => void;
@@ -44,7 +45,12 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   };
 
   const handleNameSaved = (name: string) => {
-    localStorage.setItem(NAME_STORAGE_KEY, name);
+    const trimmedName = name.trim();
+    localStorage.setItem(NAME_STORAGE_KEY, trimmedName);
+    
+    // 🆕 تحديث المتجر المركزي ليتزامن مع الألعاب
+    useProgressStore.getState().setChildName(trimmedName);
+
     const savedCompanion = localStorage.getItem(COMPANION_STORAGE_KEY);
     if (savedCompanion) {
       setStep('idle');
