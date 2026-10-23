@@ -646,7 +646,6 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                     interactive={false}
                     showValue={false}
                     hideTitle
-                    rodTint={isGoldMode ? 'amber' : 'white'}
                   />
                 </motion.div>
               ) : (
