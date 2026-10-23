@@ -3,6 +3,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { useProgressStore } from './store/progressStore'; // 👈 [m6-b] استيراد المتجر
 
 // ═══ Cleanup: dead keys (one-time, v11) ═══
 [
@@ -25,6 +26,15 @@ import "./index.css";
     /* ignore */
   }
 });
+
+// ═══ Migration: نقل اسم الطفل من المفاتيح القديمة إلى المتجر ═══
+// 👈 [m6-b] هذا الكود ينقل الاسم القديم تلقائياً حتى لا يضطر الطفل لكتابته مجدداً
+try {
+  const legacyName = localStorage.getItem('soroban_child_name');
+  if (legacyName && !useProgressStore.getState().childName) {
+    useProgressStore.getState().setChildName(legacyName.trim());
+  }
+} catch { /* ignore */ }
 
 // إعادة تحميل تلقائية مرة واحدة إذا فشل جلب جزء بعد نشر جديد
 window.addEventListener('vite:preloadError', () => {
