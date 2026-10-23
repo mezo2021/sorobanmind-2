@@ -1,6 +1,6 @@
 // src/components/soroban2d5/Soroban2D5.tsx
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import { useSorobanLogic } from './useSorobanLogic';
 import { Rod2D5 } from './Rod2D5';
 import { useBeadSound } from './useBeadSound';
@@ -187,7 +187,7 @@ interface Soroban2D5Props {
   theme?: SorobanTheme;
 }
 
-export function Soroban2D5({
+function Soroban2D5Base({
   columns = 4,
   initialValue = 0,
   onValueChange,
@@ -506,4 +506,5 @@ export function Soroban2D5({
   );
 }
 
+export const Soroban2D5 = memo(Soroban2D5Base);
 export default Soroban2D5;
