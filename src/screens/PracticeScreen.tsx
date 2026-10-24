@@ -369,7 +369,7 @@ trackPerformance(isCorrect, timeMs);
       // [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
       const levelNum = parseInt(level.replace('L', ''), 10);
       if (!isNaN(levelNum) && levelNum >= 0 && levelNum <= 7) {
-        markPracticePassed(levelNum);
+        markPracticePassed(level);
       }
     }
 
