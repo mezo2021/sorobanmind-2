@@ -1,9 +1,9 @@
 // src/curriculum/lessons/L4/S09.ts
 // 🔗 درس S09: سلاسل الجمع — L4
-// ✅ id بصيغة L4-S09 (البروتوكول المعتمد)
+// ✅ id بصيغة L4-S09
 // ✅ محتوى مطابق 100% لبنك الأسئلة L4_QUESTIONS
-// ✅ ثنائي اللغة (AR/EN)
-// ✅ TTS عبر storyAudioText — لا MP3 (يحتاج تعديل LessonScreen)
+// ✅ ثنائي اللغة (AR/EN) 100%
+// ✅ TTS عبر storyAudioText — لا MP3
 
 import type { LessonNode } from "../types";
 
@@ -91,7 +91,7 @@ export const S09_LESSON: LessonNode = {
               "الناتج: 9 | Result: 9",
             ],
             result: 9,
-            beadVisual: "5 + 4 = 9",
+            beadVisual: "5 + 4 = 9 | 5 + 4 = 9",
           },
         ],
       },
@@ -159,10 +159,10 @@ export const S09_LESSON: LessonNode = {
       rule: {
         description: "أصدقاء 5 👵: عندما لا تكفي السفليات، فعّل 5 بالسبابة ⬇️ واطرد الصديق بالإبهام ⬇️ (نزول مزدوج ⬇️⬇️). | Friends of 5 👵: When lower beads insufficient, activate 5 with index ⬇️ and push friend with thumb ⬇️ (Double Drop ⬇️⬇️).",
         cases: [
-          { from: 1, formula: "+1 = +5 − 4 (صديق 1 هو 4)" },
-          { from: 2, formula: "+2 = +5 − 3 (صديق 2 هو 3)" },
-          { from: 3, formula: "+3 = +5 − 2 (صديق 3 هو 2)" },
-          { from: 4, formula: "+4 = +5 − 1 (صديق 4 هو 1)" },
+          { from: 1, formula: "+1 = +5 − 4" },
+          { from: 2, formula: "+2 = +5 − 3" },
+          { from: 3, formula: "+3 = +5 − 2" },
+          { from: 4, formula: "+4 = +5 − 1" },
         ],
       },
       condition: {
