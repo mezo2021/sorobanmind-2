@@ -67,6 +67,36 @@
 
 ### [2026-10-23] — المرحلة م7: تصحيح زر التصفير
 - **الإجراء:** تعديل النص التحذيري في `GuardianDashboard.tsx` ليكون صادقاً مع سلوك الكود (مسح البيانات المؤقتة فقط، وليس التقدم). لحماية بيانات المطور.
+### [2026-10-24] — المرحلة م8: توحيد LevelId (v12)
+
+**الهدف:** إزالة نظام v1 (الأرقام) من `progressStore` نهائياً، وتوحيد كل شيء على نظام SRB (نصوص L0-L7).
+
+**الملفات المعدلة (6):**
+
+| # | الملف | عدد التعديلات | طبيعة التعديل |
+|:-:|-------|:---:|-------|
+| 1 | `src/store/progressStore.ts` | 12 | تحويل الحقول + Migration v12 |
+| 2 | `src/screens/PracticeScreen.tsx` | 1 | `markPracticePassed(level)` بدل `levelNum` |
+| 3 | `src/screens/AnzanScreen.tsx` | 1 | `markAnzanVisualPassed(level)` |
+| 4 | `src/screens/AudioAnzanScreen.tsx` | 1 | `markAnzanAudioPassed(level)` |
+| 5 | `src/screens/CategoryScreen.tsx` | 4 | 3× `\`L${num}\`` + استيراد SRBLevel |
+| 6 | `src/screens/LevelScreen.tsx` | 3 | 3× `\`L${num}\` as LevelId` |
+
+**آلية Migration v12:**
+- دالة `applyLevelIdMigration` تُغلِّف كل مسار ترحيل (v3-v11)
+- `toLevelId` ترفض أي قيمة خارج نطاق `L0-L7`
+- `safeMap` تتعامل مع مصفوفات تالفة
+- Version bumped من 11 → 12
+
+**التحقق النهائي:**
+- ✅ CI أخضر
+- ✅ لا تغيير في منطق اللعبة
+- ✅ نسخة احتياطية محفوظة (sorobanmind-backup-2026-10-23.json)
+- ⬜ التحقق من DevTools (version=12, passedPractice=['L0','L1','L2'])
+- ⬜ Smoke Test يدوي (GuardianDashboard, LevelScreen, Practice)
+
+**ملاحظة:** لم يُلمس أي ملف محمي، ولم يتغير أي منطق عمل.
+
 
 ### [2026-10-23] — المرحلة م9: ESLint والتنظيف
 - **الإجراء:** تثبيت حزم ESLint في `package.json`، إنشاء `.eslintrc.cjs`، وتحديث `lint.yml`. تحديث `package-lock.json` عبر PR. وتغيير قواعد ESLint لتحذير بدلاً من إيقاف البناء عند استخدام `any`.
