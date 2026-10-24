@@ -5,7 +5,7 @@ import App from "./App";
 import "./index.css";
 import { useProgressStore } from './store/progressStore'; // 👈 [m6-b] استيراد المتجر
 
-// ═══ Cleanup: dead keys (one-time, v11) ═══
+// ═══ Cleanup: dead keys (one-time, v12) ═══
 [
   'soroban_practice_stats',
   'soroban_anzan_stats',
@@ -19,6 +19,9 @@ import { useProgressStore } from './store/progressStore'; // 👈 [m6-b] است�
   'soroban_completed_levels',
   'soroban_placement_result',
   'soroban_section2_unlocked',
+  // 🆕 [m11] مفاتيح ميتة بعد م6-أ (لا قارئ ولا كاتب — أكد البحث)
+  'soroban_completed_lessons',
+  'soroban_passed_practice',
 ].forEach((k) => {
   try {
     localStorage.removeItem(k);
