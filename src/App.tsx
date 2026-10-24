@@ -6,6 +6,12 @@
 //      → عند تحميل أي شاشة lazy أخرى (CategoryScreen, PracticeScreen, ...) لا يختفي الـ Header ولا الصفحة كلها
 //   3) استيراد Suspense من react (كان lazy فقط)
 
+// [m5-ب] إزالة الاستيراد الساكن لـ curriculum/lessons — 2026-10-24
+//   1) حذف import { getLessonById } من App.tsx
+//   2) إضافة دالة levelOfLesson التي تستنتج المستوى من SRB_LEVELS
+//   3) تعديل فرع lesson-view- لاستخدام levelOfLesson بدل getLessonById
+//   → بعد هذا، الدروس (4,737 سطر) تخرج من الحزمة الرئيسية وتُحمّل كسولاً
+
 import { lazy, Suspense } from 'react';
 // src/App.tsx
 // [FIX N42] XP now wired to real addXP — 2026-10-04
@@ -14,6 +20,7 @@ import { lazy, Suspense } from 'react';
 // [FIX 10-10] ربط الفلاشات التعليمية — FlashScreen + FlashListScreen — 2026-10-10
 // [v10] حذف earnedBadges — 2026-10-16
 // [FIX N43] شاشات الدخول imports عادية + Suspense داخلي — 2026-10-18
+// [m5-ب] إزالة getLessonById الساكن — 2026-10-24
 
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
@@ -23,6 +30,8 @@ import { useConfetti } from './hooks/useConfetti';
 import type { Screen as V1Screen, Role } from './types';
 import { useProgressStore } from './store/progressStore';
 import type { LevelId } from './store/progressStore';
+// [m5-ب] استيراد SRB_LEVELS لاستنتاج مستوى الدرس بدون getLessonById
+import { SRB_LEVELS } from './data/srb/curriculum';
 
 // ═══ Screens ═══
 // [FIX N43] الأربعة الأولى: imports عادية (كانت lazy)
@@ -45,7 +54,6 @@ const FingerMathScreen = lazy(() => import('./screens/FingerMathScreen'));
 const MagicSecretsScreen = lazy(() => import('./screens/MagicSecretsScreen'));
 const LearnScreen = lazy(() => import('./screens/LearnScreen'));
 const LessonScreen = lazy(() => import('./screens/LessonScreen'));
-import { getLessonById } from './curriculum/lessons';
 const IntroductionScreen = lazy(() => import('./screens/IntroductionScreen'));
 const LevelTestScreen = lazy(() => import('./screens/LevelTestScreen'));
 const KidsCertificateScreen = lazy(() => import('./screens/KidsCertificateScreen'));
@@ -91,6 +99,18 @@ function markWelcomeSeen() {
   try {
     localStorage.setItem(WELCOME_STORAGE_KEY, String(Date.now()));
   } catch { /* ignore */ }
+}
+
+// ═══ [m5-ب] مستوى الدرس من معرّفه — يدعم الصيغتين: "L0-S01" و"S03" ═══
+function levelOfLesson(lessonId: string): string {
+  // 1) صيغة "L0-..." → استخراج مباشر
+  const prefixed = lessonId.match(/^(L[0-7])-/);
+  if (prefixed) return prefixed[1];
+  // 2) صيغة "S03" → البحث في SRB_LEVELS عن المستوى الذي يحتوي هذا القسم
+  const lv = SRB_LEVELS.find((l) =>
+    (l.sections as readonly string[]).includes(lessonId),
+  );
+  return lv?.id ?? 'L0';
 }
 
 // ═══ Coming Soon ═══
@@ -348,10 +368,10 @@ export default function App() {
     }
 
     // ═══ 🆕 lesson-view-L0-S1 ... ═══
+    // [m5-ب] استبدال getLessonById بـ levelOfLesson (يخرج 4,737 سطر من الحزمة الرئيسية)
     if (screen.startsWith('lesson-view-')) {
       const lessonId = screen.replace('lesson-view-', '');
-      const lessonNode = getLessonById(lessonId);
-      const levelId = lessonNode?.levelId ?? 'L0';
+      const levelId = levelOfLesson(lessonId);
 
       return (
         <LessonScreen
