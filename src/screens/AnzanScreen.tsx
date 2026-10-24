@@ -492,7 +492,7 @@ export function AnzanScreen({
         if (normalOk && flashOk) {
           const levelNum = parseInt(level.replace('L', ''), 10);
           if (!isNaN(levelNum) && levelNum >= 0 && levelNum <= 7) {
-            markAnzanVisualPassed(levelNum);
+            markAnzanVisualPassed(level);
           }
         }
       }
