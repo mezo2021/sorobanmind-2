@@ -30,7 +30,7 @@ export const S09_LESSON: LessonNode = {
         title: "قطار الأرقام | The Number Train",
         emoji: "🚂",
         story: "قال قائد القطار: يا أبطال، القطار يسير بسرعة! أضِف كل عربة واحدة تلو الأخرى، وابدأ من العربات الكبيرة (العشرات) قبل الصغيرة (الآحاد). | The train conductor said: Heroes, the train is moving fast! Add each carriage one by one, starting with the large carriages (tens) before the small ones (units).",
-        storyAudioText: "قال قائد القطار: يا أبطال، القطار يسير بسرعة. أضف كل عربة واحدة تلو الأخرى، وابدأ من العربات الكبيرة، العشرات، قبل الصغيرة، الآحاد. | The train conductor said: Heroes, the train is moving fast. Add each carriage one by one, starting with the large carriages, tens, before the small ones, units.",
+        storyAudioText: "قَالَ قَائِدُ القِطَار: يَا أَبْطَال، القِطَارُ يَسِيرُ بِسُرْعَة. أَضِفْ كُلَّ عَرَبَةٍ وَاحِدَةً تِلْوَ الأُخْرَى، وَابْدَأْ مِنَ العَرَبَاتِ الكَبِيرَة، العَشَرَات، قَبْلَ الصَّغِيرَة، الآحَاد. | The train conductor said: Heroes, the train is moving fast. Add each carriage one by one, starting with the large carriages, tens, before the small ones, units.",
         storyAudioId: null,
       },
       rule: {
@@ -153,7 +153,7 @@ export const S09_LESSON: LessonNode = {
         title: "الجدة 5 في القطار | Grandma 5 on the Train",
         emoji: "👵",
         story: "عندما تمتلئ عربة الآحاد في القطار، تظهر الجدة 5 لتساعد! أضف 5 بالسبابة وأبعد الصديق بالإبهام — نزول مزدوج ⬇️⬇️. | When the units carriage is full, Grandma 5 appears to help! Add 5 with index and push the friend with thumb — double drop ⬇️⬇️.",
-        storyAudioText: "عندما تمتلئ عربة الآحاد في القطار، تظهر الجدة خمسة لتساعد. أضف خمسة بالسبابة وأبعد الصديق بالإبهام، نزول مزدوج. | When the units carriage is full, Grandma 5 appears to help. Add 5 with index and push the friend with thumb — double drop.",
+        storyAudioText: "عِنْدَمَا تَمْتَلِئُ عَرَبَةُ الآحَادِ فِي القِطَار، تَظْهَرُ الجَدَّةُ خَمْسَة لِتُسَاعِد. أَضِفْ خَمْسَةً بِالسَّبَّابَةِ وَأَبْعِدِ الصَّدِيقَ بِالإِبْهَام، نُزُولٌ مُزْدَوَج. | When the units carriage is full, Grandma 5 appears to help. Add 5 with index and push the friend with thumb — double drop.",
         storyAudioId: null,
       },
       rule: {
@@ -289,7 +289,7 @@ export const S09_LESSON: LessonNode = {
         title: "العملاق 10 يفتح عربة جديدة | Giant 10 Opens a New Carriage",
         emoji: "🦶",
         story: "عندما يفيض الآحاد عن 9، ينزل العملاق 10 ويضيف خرزة في العشرات! اطرح الصديق من الآحاد بالسبابة ⬇️ وأضف 1 للعشرات بالإبهام ⬆️. | When units exceed 9, Giant 10 arrives and adds a bead to tens! Subtract friend from units with index ⬇️ and add 1 to tens with thumb ⬆️.",
-        storyAudioText: "عندما يفيض الآحاد عن تسعة، ينزل العملاق عشرة ويضيف خرزة في العشرات. اطرح الصديق من الآحاد بالسبابة وأضف واحداً للعشرات بالإبهام. | When units exceed 9, Giant 10 arrives and adds a bead to tens. Subtract friend from units with index and add 1 to tens with thumb.",
+        storyAudioText: "عِنْدَمَا يَفِيضُ الآحَادُ عَنْ تِسْعَة، يَنْزِلُ العِمْلَاقُ عَشَرَة وَيُضِيفُ خَرَزَةً فِي العَشَرَات. اطْرَحِ الصَّدِيقَ مِنَ الآحَادِ بِالسَّبَّابَةِ وَأَضِفْ وَاحِداً لِلْعَشَرَاتِ بِالإِبْهَام. | When units exceed 9, Giant 10 arrives and adds a bead to tens. Subtract friend from units with index and add 1 to tens with thumb.",
         storyAudioId: null,
       },
       rule: {
@@ -431,7 +431,7 @@ export const S09_LESSON: LessonNode = {
         title: "التنسيق الثلاثي | The Triple Alliance",
         emoji: "👑",
         story: "أحياناً تحتاج الجدة 5 والعملاق 10 معاً! التنسيق بينهما هو سر البطل الحقيقي — الجدة تتدخل أولاً، ثم العملاق يُكمل المهمة. | Sometimes you need Grandma 5 and Giant 10 together! Coordinating them is the real hero's secret — Grandma steps in first, then Giant completes the mission.",
-        storyAudioText: "أحياناً تحتاج الجدة خمسة والعملاق عشرة معاً. التنسيق بينهما هو سر البطل الحقيقي، الجدة تتدخل أولاً، ثم العملاق يكمل المهمة. | Sometimes you need Grandma 5 and Giant 10 together. Coordinating them is the real hero's secret, Grandma steps in first, then Giant completes the mission.",
+        storyAudioText: "أَحْيَاناً تَحْتَاجُ الجَدَّةُ خَمْسَة وَالعِمْلَاقُ عَشَرَة مَعاً. التَّنْسِيقُ بَيْنَهُمَا هُوَ سِرُّ البَطَلِ الحَقِيقِيّ، الجَدَّةُ تَتَدَخَّلُ أَوَّلاً، ثُمَّ العِمْلَاقُ يُكْمِلُ المَهَمَّة. | Sometimes you need Grandma 5 and Giant 10 together. Coordinating them is the real hero's secret, Grandma steps in first, then Giant completes the mission.",
         storyAudioId: null,
       },
       rule: {
