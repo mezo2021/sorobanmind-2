@@ -16,7 +16,8 @@ export const L0_S02: LessonNode = {
   story: {
     ar: "مرحباً بكم يا أبطال ! هل تعلمون أن المعداد مليء ببيوت ملونة ؟ البيت الأول على اليمين هو بيت الآحاد الصغار، و الثاني هو بيت العشرات الأبطال، ثم المئات والآلاف! تعالوا نتعلم كيف نبني الأعداد كالمهندسين الكبار!",
     en: "Welcome, heroes! Did you know that the abacus is full of colorful houses? The first house on the right is the little Units house, and the second is the hero Tens house, then Hundreds and Thousands! Let's learn how to build numbers like master architects!",
-},
+  },
+  storyAudioText: "مَرْحَباً بِكُمْ يَا أَبْطَال! هَلْ تَعْلَمُونَ أَنَّ المِعْدَادَ مَلِيءٌ بِبُيُوتٍ مُلَوَّنَة؟ البَيْتُ الأَوَّلُ عَلَى اليَمِينِ هُوَ بَيْتُ الآحَادِ الصِّغَار، وَالثَّانِي هُوَ بَيْتُ العَشَرَاتِ الأَبْطَال، ثُمَّ المِئَاتُ وَالآلَاف! تَعَالَوْا نَتَعَلَّمْ كَيْفَ نَبْنِي الأَعْدَادَ كَالمُهَنْدِسِينَ الكِبَار! | Welcome, heroes! Did you know that the abacus is full of colorful houses? The first house on the right is the little Units house, and the second is the hero Tens house, then Hundreds and Thousands! Let's learn how to build numbers like master architects!",
   storyAudioId: 10,
 
   modules: [
@@ -33,7 +34,7 @@ export const L0_S02: LessonNode = {
         description: "بيوت الأرقام 🏡: كل عمود يمثّل بيتاً مجاوراً — بيت الآحاد الصغير على اليمين، وبيت العشرات البطل على يساره مباشرة! | Number Houses 🏡: Each rod is a neighborhood house — the small Units house on the right, and the mighty Tens house right to its left!",
       },
       condition: {
-        formula: "n = عشرات × 10 + آحاد",
+        formula: "n = عشرات × 10 + آحاد | n = Tens × 10 + Units",
         explanation: "ابدأ دائماً بتفعيل خرزات بيت العشرات الكبيرة أولاً، ثم انتقل لبيت الآحاد! | Always start by setting beads in the Tens house first, then move to the Units house!",
       },
       discrimination: {
@@ -41,12 +42,14 @@ export const L0_S02: LessonNode = {
           {
             question: "هل يحتوي العدد على عشرات؟ | Does the number have tens?",
             type: "yes-no",
+            actual: "العدد يحتوي على عشرات | Number has tens",
             answer: "نعم → ارفع الخرزات في العمود الثاني (العشرات) ⬆️ | Yes → Lift beads in the second rod (Tens) ⬆️",
             hint: "بيت العشرات هو العمود الثاني من جهة اليمين | Tens house is the second rod from the right",
           },
           {
             question: "كم عدد الآحاد؟ | How many units?",
             type: "value",
+            actual: "عدد الآحاد ≥ 0 | Units count ≥ 0",
             answer: "مثّل الآحاد في العمود الأول (اليمين) ⬆️⬇️ | Set units in the first rod (Right) ⬆️⬇️",
             hint: "بيت الآحاد هو العمود الأول على اليمين | Units house is the first rod on the right",
           },
@@ -190,7 +193,7 @@ export const L0_S02: LessonNode = {
         description: "قلعة المئات وبيت الآلاف 🏰: تتواصل البيوت السعيدة! العمود الثالث هو قلعة المئات 💯، والعمود الرابع هو بيت الآلاف العملاق 🏰! | Hundreds Castle & Thousands House 🏰: The happy houses continue! The 3rd rod is the Hundreds Castle 💯, and the 4th rod is the Giant Thousands House 🏰!",
       },
       condition: {
-        formula: "n = آلاف×1000 + مئات×100 + عشرات×10 + آحاد",
+        formula: "n = آلاف×1000 + مئات×100 + عشرات×10 + آحاد | n = Thousands×1000 + Hundreds×100 + Tens×10 + Units",
         explanation: "ابدأ البناء دائماً من أكبر منزلة على اليسار واصل طريقك نحو اليمين! | Always build from the largest rod on the left and move right!",
       },
       discrimination: {
@@ -198,6 +201,7 @@ export const L0_S02: LessonNode = {
           {
             question: "ما هي أكبر منزلة في العدد؟ | What is the largest place value in the number?",
             type: "value",
+            actual: "المنزلة الكبرى تحدد نقطة البداية | Largest place value determines starting point",
             answer: "ابدأ بتفعيل خرزاتها أولاً من اليسار! | Start by setting its beads first from the left!",
             hint: "آلاف ← مئات ← عشرات ← آحاد | Thousands ← Hundreds ← Tens ← Units",
           },
