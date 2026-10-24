@@ -20,14 +20,14 @@ export const S07_LESSON: LessonNode = {
     {
       id: "m1",
       ruleCategory: "direct",
-      title: "القسمة البسيطة | Direct Division",
+      title: "القسمة البسيطة",
       titleEn: "Direct Division",
       emoji: "✨",
       miniStory: {
         title: "مفتاح البداية - التوزيع المباشر | Beginning Key - Direct Distribution",
         emoji: "🧙",
         story: "في قلعة السوروبان، يوزع الحكيم معداد مفاتيح الكنز بالعدل. سألته البطلة بانة: كيف نوزع 84 حلوى على صديقين؟ قال: نقسم العشرات أولاً ثم الآحاد مباشرة دون استعارة! | In Soroban Castle, Master Abacus distributes treasure keys fairly. Hero Bana asked: How do we share 84 candies between 2 friends? He said: Divide tens first, then units directly without borrowing!",
-        storyAudioText: "في قلعة السوروبان، يوزع الحكيم معداد الحلوى بالعدل. ثمانية قسمة اثنين تساوي أربعة في عشرات الخارج، وأربعة قسمة اثنين تساوي اثنين في آحاد الخارج. الناتج اثنان وأربعون. | In Soroban Castle, Master Abacus shares candies fairly. 8 divided by 2 equals 4 in tens quotient, 4 divided by 2 equals 2 in units quotient. Result is 42.",
+        storyAudioText: "فِي قَلْعَةِ السُّورُوبَان، يُوَزِّعُ الحَكِيمُ مِعْدَاد الحَلْوَى بِالعَدْل. ثَمَانِيَة قِسْمَة اثْنَيْنِ تُسَاوِي أَرْبَعَة فِي عَشَرَاتِ الخَارِج، وَأَرْبَعَة قِسْمَة اثْنَيْنِ تُسَاوِي اثْنَيْنِ فِي آحَادِ الخَارِج. النَّاتِجُ اثْنَانِ وَأَرْبَعُون. | In Soroban Castle, Master Abacus shares candies fairly. 8 divided by 2 equals 4 in tens quotient, 4 divided by 2 equals 2 in units quotient. Result is 42.",
         storyAudioId: null,
       },
       rule: {
@@ -215,14 +215,14 @@ export const S07_LESSON: LessonNode = {
     {
       id: "m2",
       ruleCategory: "small_friends",
-      title: "القسمة بأصدقاء 5 | Division with Friends of 5",
+      title: "القسمة بأصدقاء 5",
       titleEn: "Division with Friends of 5",
       emoji: "🤝",
       miniStory: {
         title: "مفتاح الجدة 5 - التبادل الذكي | Grandma 5's Key - Smart Exchange",
         emoji: "👵",
         story: "في الغرفة الثانية، أراد الأبطال قسمة 54 حلوى على 3 أصدقاء. 5 قسمة 3 تساوي 1، لكن الخصم يحتاج طرح 3 من 5! ابتسمت الجدة 5 من السطح وقالت: ارفعوني لأعلى وارفعوا صديقي 2 معكم بحركة رفع مزدوج! | In room 2, heroes wanted to divide 54 candies among 3 friends. 5 ÷ 3 = 1, but subtracting 3 from 5 needs help! Grandma 5 smiled from above: Lift me up and lift my friend 2 with a Double Lift!",
-        storyAudioText: "أربع وخمسون حلوى على ثلاثة أصدقاء. خمس عشرات قسمة ثلاثة تساوي عشرة واحدة. لكن الطرح يحتاج طرح ثلاثة من خمسة. الجدة خمسة تتدخل: ارفع خمسة وارفع اثنين. الناتج ثمانية عشر. | 54 candies shared among 3 friends. 5 tens divided by 3 equals 1 ten. Subtracting 3 from 5 needs Grandma 5: Lift 5 and lift 2. Result is 18.",
+        storyAudioText: "أَرْبَعٌ وَخَمْسُون حَلْوَى عَلَى ثَلَاثَةِ أَصْدِقَاء. خَمْسُ عَشَرَاتٍ قِسْمَة ثَلَاثَة تُسَاوِي عَشَرَةً وَاحِدَة. لَكِنَّ الطَّرْحَ يَحْتَاجُ طَرْحَ ثَلَاثَة مِنْ خَمْسَة. الجَدَّة خَمْسَة تَتَدَخَّل: ارْفَعْ خَمْسَة وَارْفَعْ اثْنَيْن. النَّاتِجُ ثَمَانِيَة عَشَر. | 54 candies shared among 3 friends. 5 tens divided by 3 equals 1 ten. Subtracting 3 from 5 needs Grandma 5: Lift 5 and lift 2. Result is 18.",
         storyAudioId: null,
       },
       rule: {
@@ -249,6 +249,7 @@ export const S07_LESSON: LessonNode = {
           {
             question: "هل الخرزة العلوية 5 مفعّلة؟ | Is Upper 5 active?",
             type: "yes-no",
+            actual: "5 مفعّلة | 5 active",
             answer: "نعم → نفذ حركة رفع مزدوج ⬆️⬆️ | Yes → Perform Double Lift ⬆️⬆️",
           },
         ],
@@ -414,14 +415,14 @@ export const S07_LESSON: LessonNode = {
     {
       id: "m3",
       ruleCategory: "big_friends",
-      title: "القسمة بأصدقاء 10 | Division with Friends of 10",
+      title: "القسمة بأصدقاء 10",
       titleEn: "Division with Friends of 10",
       emoji: "🌟",
       miniStory: {
         title: "مفتاح العملاق 10 - الاستعارة الكبرى | Giant 10's Key - Big Borrowing",
         emoji: "🦶",
         story: "في المحطة الثالثة، واجه الأبطال مسألة 152 ÷ 8. 15 عشرات قسمة 8 تساوي 1، لكن طرح 8 من 5 غير ممكن مباشرة! نادى البطل العملاق 10 يساراً: اطرح 10 من المئات بسحبة سبابة ⬇️ وأضف الصديق 2 في العشرات بالإبهام! | In stage 3, heroes faced 152 ÷ 8. 15 tens ÷ 8 = 1, but subtracting 8 from 5 is impossible directly! The hero called Giant 10 on the left: Subtract 10 from hundreds with index pull ⬇️ and add friend 2 to tens with thumb!",
-        storyAudioText: "مئة واثنان وخمسون حلوى على ثمانية أصدقاء. خمس عشرة عشرة قسمة ثمانية تساوي عشرة واحدة. طرح ثمانية يحتاج استعارة من المئات. اطرح عشرة وأضف اثنين. الناتج تسعة عشر. | 152 candies shared among 8 friends. 15 tens divided by 8 equals 1 ten. Subtracting 8 needs borrowing from hundreds. Subtract 10 and add 2. Result is 19.",
+        storyAudioText: "مِئَة وَاثْنَانِ وَخَمْسُون حَلْوَى عَلَى ثَمَانِيَةِ أَصْدِقَاء. خَمْسُ عَشَرَةَ عَشَرَة قِسْمَة ثَمَانِيَة تُسَاوِي عَشَرَةً وَاحِدَة. طَرْحُ ثَمَانِيَة يَحْتَاجُ اسْتِعَارَة مِنْ المِئَات. اطْرَحْ عَشَرَة وَأَضِفْ اثْنَيْن. النَّاتِجُ تِسْعَة عَشَر. | 152 candies shared among 8 friends. 15 tens divided by 8 equals 1 ten. Subtracting 8 needs borrowing from hundreds. Subtract 10 and add 2. Result is 19.",
         storyAudioId: null,
       },
       rule: {
@@ -447,11 +448,13 @@ export const S07_LESSON: LessonNode = {
           {
             question: "هل الخرزات المتاحة بالعمود أقل من المطلوب طرحه؟ | Are available column beads less than required?",
             type: "yes-no",
+            actual: "الخرزات < المطلوب | Beads < Subtrahend",
             answer: "نعم → استخدم أصدقاء 10 | Yes → Use Friends of 10",
           },
           {
             question: "هل العمود الأيسر يحتوي على خرزة للاستعارة؟ | Does the left column have a bead to borrow?",
             type: "yes-no",
+            actual: "العمود الأيسر > 0 | Left column > 0",
             answer: "نعم → اطرح 10 من اليسار وأضف صديق 10 | Yes → Subtract 10 from left and add Friend of 10",
           },
         ],
@@ -613,14 +616,14 @@ export const S07_LESSON: LessonNode = {
     {
       id: "m4",
       ruleCategory: "combined",
-      title: "القسمة المركّبة | Compound Division",
+      title: "القسمة المركّبة",
       titleEn: "Compound Division",
       emoji: "🎯",
       miniStory: {
         title: "مفتاح التحالف المزدوج - قوة أصدقاء 10 و5 | Dual Alliance Key - Power of Friends of 10 & 5",
         emoji: "👑",
         story: "في التحدي النهائي الغرفة السرية 216 ÷ 8: 21 قسمة 8 تساوي 2، لكن طرح 16 يحتاج استعارة 10 وأصدقاء 5 لإضافة المكمل! اتحد الجدة 5 والعملاق 10 لفتح الباب: اطرح 10 من اليسار بسحبة سبابة ⬇️، وتفعيل 5 بالسبابة وطرد الخرزات الزائدة بنزول مزدوج ⬇️⬇️! | In the final room 216 ÷ 8: 21 ÷ 8 = 2, but subtracting 16 requires borrowing 10 AND using Friends of 5 to add the complement! Grandma 5 and Giant 10 united: Subtract 10 from left with index pull ⬇️, activate 5 and push excess beads down with Double Drop ⬇️⬇️!",
-        storyAudioText: "مئتان وستة عشر حلوى على ثمانية أصدقاء. واحد وعشرون قسمة ثمانية تساوي اثنين. لكن طرح ستة عشر يحتاج استعارة عشرة وأيضا صديق خمسة. الجدة خمسة والعملاق عشرة يتعاونان. الناتج سبعة وعشرون. | 216 candies shared among 8 friends. 21 divided by 8 equals 2. Subtracting 16 needs borrowing 10 and Friend of 5. Grandma 5 and Giant 10 cooperate. Result is 27.",
+        storyAudioText: "مِئَتَانِ وَسِتَّةَ عَشَرَ حَلْوَى عَلَى ثَمَانِيَةِ أَصْدِقَاء. وَاحِدٌ وَعِشْرُونَ قِسْمَة ثَمَانِيَة تُسَاوِي اثْنَيْن. لَكِنَّ طَرْحَ سِتَّةَ عَشَرَ يَحْتَاجُ اسْتِعَارَةَ عَشَرَة وَأَيْضًا صَدِيقَ خَمْسَة. الجَدَّة خَمْسَة وَالعِمْلَاق عَشَرَة يَتَعَاوَنَان. النَّاتِجُ سَبْعَة وَعِشْرُون. | 216 candies shared among 8 friends. 21 divided by 8 equals 2. Subtracting 16 needs borrowing 10 and Friend of 5. Grandma 5 and Giant 10 cooperate. Result is 27.",
         storyAudioId: null,
       },
       rule: {
@@ -641,11 +644,13 @@ export const S07_LESSON: LessonNode = {
           {
             question: "هل الخرزات المتاحة أقل من المطلوب طرحه؟ | Are available beads less than required?",
             type: "yes-no",
+            actual: "الخرزات < المطلوب | Beads < Subtrahend",
             answer: "نعم → نحتاج استعارة 10 | Yes → Need to borrow 10",
           },
           {
             question: "هل الخرزات السفلية غير كافية لإضافة المكمل المباشر؟ | Are lower beads insufficient to add the direct complement?",
             type: "yes-no",
+            actual: "السفليات < المكمل | Lower beads < Complement",
             answer: "نعم → استخدم التحالف المزدوج (−10 + 5 − k) | Yes → Use Dual Alliance (−10 + 5 − k)",
           },
         ],
@@ -800,7 +805,7 @@ export const S07_LESSON: LessonNode = {
         ],
       },
     },
-  ],   // ← ✅ [FIX] — إغلاق مصفوفة modules (كان مفقودًا)
+  ],
 
   outro: {
     summary: "أتقنت القسمة على رقم واحد: بسيطة · أصدقاء 5 · أصدقاء 10 · مركّبة! | Mastered division by one digit: Direct, Friends of 5, Friends of 10, and Compound!",
