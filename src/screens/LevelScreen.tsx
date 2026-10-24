@@ -266,9 +266,9 @@ export function LevelScreen({
     (levelLessons.length > 0 &&
       levelLessons.every((l) => completedLessons.includes(l.id)));
 
-  const isPracticePassed = inPreview || passedPractice.includes(level.practiceNum);
-  const isAnzanVisualPassed = inPreview || passedAnzanVisual.includes(level.anzanNum);
-  const isAnzanAudioPassed = inPreview || passedAnzanAudio.includes(level.anzanNum);
+  const isPracticePassed = inPreview || passedPractice.includes(`L${level.practiceNum}` as LevelId);
+  const isAnzanVisualPassed = inPreview || passedAnzanVisual.includes(`L${level.anzanNum}` as LevelId);
+  const isAnzanAudioPassed = inPreview || passedAnzanAudio.includes(`L${level.anzanNum}` as LevelId);
 
   // ✅ [SURGICAL FIX] — توحيد مصدر النجاح ليعتمد على درجة الاختبار من المتجر (>= 80)
   const isLevelTestPassed = inPreview || (levelGrades.levelTest !== null && levelGrades.levelTest !== undefined && levelGrades.levelTest >= 80);
