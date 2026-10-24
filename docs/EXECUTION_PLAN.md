@@ -1,6 +1,6 @@
-# 🎯 خطة التنفيذ والحالة الفعلية — SorobanMind v2 (rev.6)
+# 🎯 خطة التنفيذ والحالة الفعلية — SorobanMind v2 (rev.7)
 
-**التاريخ:** 2026-10-24 (مراجعة شاملة نهائية — إنجاز م8 وم5-ب وم10 وم11 + القرارات الاستراتيجية).
+**التاريخ:** 2026-10-24 (مراجعة شاملة — إضافة خطة TTS للدروس).
 **الغرض:** خطة تنفيذ كاملة بأكواد جاهزة للصق، محدثة لتعكس ما تم إنجازه وما تبقى. بديل كامل عن `REPAIR_PLAN` + `PROBLEMS`.
 **القواعد:** (1) لا ملفات جديدة في `src/` · (2) لا توسيع أنواع · (3) لا حذف ميزات حقيقية · (4) مصدر واحد للبيانات · (5) لا تخمين · (6) الملفات المحمية لا تُلمس بلا موافقة · (7) CI أخضر قبل أي merge · (8) Revert جاهز.
 
@@ -9,7 +9,7 @@
 ## 📑 الفهرس
 
 1. رسالة للمساعد القادم
-2. 🔴 القرارات الاستراتيجية النهائية (جديد — اقرأ أولاً)
+2. 🔴 القرارات الاستراتيجية النهائية
 3. تصحيحات إلزامية (H1–H8) والملاحظات النهائية
 4. التحققات الإلزامية (U1–U6) ونتائجها
 5. حالة المراحل (ما تم تنفيذه بالكامل)
@@ -18,6 +18,7 @@
 8. خارطة الطريق المتبقية (ما تبقى)
 9. التحسينات الإضافية (Performance & UI)
 10. قائمة التتبع النهائية + رسالة أخيرة
+11. 🎙️ **[جديد] خطة تفعيل TTS في الدروس (نهاية الجلسة)**
 
 ---
 
@@ -85,11 +86,11 @@ L7 S15 L7-S15
 // في App.tsx — لا تحذفها أبداً
 function levelOfLesson(lessonId: string): string {
   const prefixed = lessonId.match(/^(L[0-7])-/);
-  if (prefixed) return prefixed[1];  // "L0-S01" → "L0" أو "L4-S09" → "L4"
+  if (prefixed) return prefixed[1];
   const lv = SRB_LEVELS.find((l) =>
     (l.sections as readonly string[]).includes(lessonId),
   );
-  return lv?.id ?? 'L0';  // "S03" → "L1"
+  return lv?.id ?? 'L0';
 }
 ```
 
@@ -108,10 +109,10 @@ function levelOfLesson(lessonId: string): string {
 أ) تصحيحات كلاود (H1–H8)
 
 # التصحيح الدليل / الحالة
-H1 🔴 «عزل SRB» فرضية خاطئة. App.tsx:65 هو import type — يُمحى عند البناء ولا يدخل الحزمة. (حُلّت جذرياً في م5-ب + م10). تحليل الاستيراد الساكن
-H1-أ 🔴 الحجم الحقيقي: ألعاب (9,885 سطراً) · دروس (4,737 سطراً). تم فصل الدروس (م5-ب) والألعاب (م5-ج). reachability
-H2 🔴 soroban_placement_result ما زال يُكتب — «كاتب بلا قارئ». (تم حذفه في م3-ب). v8 KEYS_TABLE
-H3 🔴 placement_recommended وplacement_weak_skills نشطان. لا تحذفهما. v8 > v9
+H1 🔴 «عزل SRB» فرضية خاطئة. App.tsx:65 هو import type. (حُلّت جذرياً في م5-ب + م10). تحليل الاستيراد الساكن
+H1-أ 🔴 الحجم الحقيقي: ألعاب (9,885 سطراً) · دروس (4,737 سطراً). تم فصلها. reachability
+H2 🔴 soroban_placement_result — «كاتب بلا قارئ». (تم حذفه في م3-ب). v8 KEYS_TABLE
+H3 🔴 placement_recommended وplacement_weak_skills نشطان. v8 > v9
 H4 🟡 soroban_child_name له كاتب. (تم توحيده في م6-ب). v8 > v9
 H5 🟡 soroban_section2_unlocked ما زال يُكتب. (تم حذفه في م3-ب). v8
 H6 🟡 68 فجوة ديناميكية (كانت 80). v8-172
@@ -120,137 +121,66 @@ H8 🟡 soroban_exam_result قارئ بلا كاتب. (تم حذفه في م3-ج
 
 ب) التصحيحات النهائية المعتمدة (2026-10-24 · لا تُناقش)
 
-1. م0 (CI): اعتماد كود محصّن يطبع الأصول (Assets) لفحص حجم 315KB.
-2. م3-أ (حذف الملفات): أُلغيت فكرة الحذف العشوائي. القاعدة الآن "اقرأ الملف كاملاً (أول 40 سطراً) ثم قرر".
-3. م6-ب (اسم الطفل): تم تنفيذها بنجاح عبر توحيد جميع الألعاب.
-4. م7 (التصفير): الخيار (أ) فقط (تعديل النص) لحماية بيانات المطور.
-5. U5 (فحص الدروس): موسّع ليشمل الدروس التسعة (L0-L3).
-6. م5-ب (فصل الدروس): تم تنفيذها بطريقة كلاود (levelOfLesson بدلاً من توحيد IDs).
-7. م8 (توحيد LevelId): تم تنفيذها (v12) بنجاح.
-8. م10 (إعدام البنوك): تم تنفيذها بنجاح.
-9. م11 (تنظيف المفاتيح): تم تنفيذها بنجاح.
-10. m13 (توحيد L1-L3): مُلغاة نهائياً بقرار استراتيجي.
+1. م0 (CI): اعتماد كود محصّن يطبع الأصول (Assets).
+2. م3-أ: "اقرأ الملف كاملاً (أول 40 سطراً) ثم قرر".
+3. م6-ب: تم تنفيذها بنجاح.
+4. م7: الخيار (أ) فقط (تعديل النص).
+5. U5: موسّع ليشمل الدروس التسعة (L0-L3).
+6. م5-ب: تم تنفيذها بطريقة كلاود (levelOfLesson).
+7. م8: تم تنفيذها (v12).
+8. م10: تم تنفيذها.
+9. م11: تم تنفيذها.
+10. m13 (توحيد L1-L3): مُلغاة نهائياً.
 
 ---
 
 🔍 4) التحققات الإلزامية (U1–U6) ونتائجها
 
 # الملف السؤال النتيجة / القرار
-U1 src/screens/LessonScreen.tsx قيمة LESSON_PROGRESS_KEY؟ soroban_completed_lessons. تم حذف الكتابة الخام في م6-أ.
-U2 src/screens/HeroDashboard.tsx ماذا يفعل soroban_exam_result؟ لا يتحكم بأي شيء مرئي. تم حذف الكود الميت في م3-ج.
-U3 src/screens/GuardianDashboard.tsx هل يمسح sorobanmind-v2-progress؟ لا يمسحه. تم اعتماد الخيار (أ) في م7.
-U4 index.html assets ما أكبر الملفات؟ الألعاب (فُصلت بـ Lazy). الدروس (فُصلت في م5-ب).
-U5 curriculum/lessons/L1/S03.ts هل يبدأ id بـ L1-؟ ❌ فشل. المعرفات مختلطة. قرار: استخدم levelOfLesson بدلاً من توحيد IDs.
-U6 src/store/progressStore.ts Boolean أم ExamResult؟ boolean. تم توحيد قراءته في م6-ج.
+U1 LessonScreen.tsx قيمة LESSON_PROGRESS_KEY؟ soroban_completed_lessons. حُذفت في م6-أ.
+U2 HeroDashboard.tsx ماذا يفعل soroban_exam_result؟ لا يتحكم بشيء. حُذف في م3-ج.
+U3 GuardianDashboard.tsx هل يمسح sorobanmind-v2-progress؟ لا. اعتمد الخيار (أ) في م7.
+U4 index.html assets ما أكبر الملفات؟ الألعاب (Lazy). الدروس (م5-ب).
+U5 L1/S03.ts هل يبدأ id بـ L1-؟ ❌ فشل. قرار: levelOfLesson.
+U6 progressStore.ts Boolean أم ExamResult؟ boolean. وُحّد في م6-ج.
 
 ---
 
 📋 5) حالة المراحل (ما تم تنفيذه بالكامل)
 
-☑ م0 — CI: تم استخدام الكود المحصّن، وتفعيل الاختبارات.
-☑ م1 — تصحيح HANDOFF: تم دمج تصحيحات H1-H8.
-☑ م2 — التحققات: تم فحص U1-U6.
-☑ م3 — تنظيف آمن:
-  · م3-أ: حذف data/index.ts · data/modes.ts · data/curriculum.ts · test-pool.ts.
-  · م3-ب: تنظيف App.tsx (حذف كتابات soroban_placement_result و section2_unlocked).
-  · م3-ج: حذف الكود الميت من HeroDashboard.tsx.
-  · م3-د: تحديث مصفوفة التنظيف في main.tsx.
-  · إضافي: حذف سكربت lazyify.cjs + 4 workflows مؤقتة.
-☑ م4 — اختبارات Vitest: إنشاء الاختبارين وتفعيلهما في CI.
-☑ م5-ج — Lazy للألعاب: تحويل GamesListScreen إلى Lazy.
-☑ م5-ب — تقليل الحزمة (Chunk Splitting): إزالة getLessonById الساكنة من App.tsx + إضافة levelOfLesson. النتيجة: index-*.js من 911 KB → 445 KB.
-☑ م6-أ — توحيد الدروس: حذف الكتابة الخام، الاعتماد على المتجر.
-☑ م6-ب — توحيد اسم الطفل: تحديث RoleSelection + 5 ألعاب + Migration في main.tsx.
-☑ م6-ج — توحيد الامتحانات: قراءة من المتجر، حذف الكتابة الميتة.
+☑ م0 — CI: كود محصّن + تفعيل الاختبارات.
+☑ م1 — تصحيح HANDOFF: H1-H8.
+☑ م2 — التحققات: U1-U6.
+☑ م3 — تنظيف آمن: (أ) حذف 4 ملفات؛ (ب) تنظيف App.tsx؛ (ج) تنظيف HeroDashboard؛ (د) main.tsx؛ + lazyify.cjs + 4 workflows.
+☑ م4 — Vitest: اختباران في CI.
+☑ م5-ج — Lazy للألعاب: GamesListScreen → Lazy.
+☑ م5-ب — تقليل الحزمة: getLessonById أُزيل + levelOfLesson. 911 KB → 445 KB.
+☑ م6-أ — توحيد الدروس: قراءة من المتجر.
+☑ م6-ب — توحيد اسم الطفل: RoleSelection + 5 ألعاب + Migration.
+☑ م6-ج — توحيد الامتحانات: قراءة من المتجر.
 ☑ م7 — زر التصفير: تصحيح النص.
-☑ م8 — توحيد LevelId (v12): تم تنفيذها بنجاح (6 ملفات + Migration محصّنة).
-☑ م9أ — ESLint: تثبيت + إصلاح Lockfile.
-☑ م9ب — ترتيب Workflows: حذف p0 · p1 · p2 · p3.
-☑ م10 — إعدام البنوك وفصل المحرك: حذف 7,000+ سطر ميت.
-☑ م11 — تنظيف المفاتيح الميتة: إضافة completed_lessons + passed_practice للـ cleanup.
-· [❌] m13 — توحيد L1-L3: مُلغاة نهائياً بقرار استراتيجي.
+☑ م8 — توحيد LevelId (v12): 6 ملفات + Migration محصّنة.
+☑ م9أ — ESLint: تثبيت + Lockfile.
+☑ م9ب — ترتيب Workflows: حذف p0-p3.
+☑ م10 — إعدام البنوك: 7,000+ سطر محذوف.
+☑ م11 — تنظيف المفاتيح: completed_lessons + passed_practice.
+· [❌] m13 — توحيد L1-L3: مُلغاة نهائياً.
 
 م8 — تفاصيل التعديلات (6 ملفات · 13 تعديلاً)
 
-📄 الملف 1: src/store/progressStore.ts (10 تعديلات)
-
-# التعديل السبب
-1 استيراد LevelId من @/data/srb-adapter توحيد مصدر النوع في مكان واحد
-2 حذف تعريف LevelId المحلي واستبداله بـ export type { LevelId }; إزالة التعريف المختلط (L0-L7 + L00-L20)
-3 passedPractice: number[] → LevelId[] تخزين معرّفات نصية
-4 passedAnzanVisual: number[] → LevelId[] نفس السبب
-5 passedAnzanAudio: number[] → LevelId[] نفس السبب
-6 تحديث تواقيع الدوال الثلاث Type safety
-7 تحديث initialState (مصفوفات as LevelId[]) تطابق النوع
-8 حذف دالة uniqueNums + استخدام uniqueLevels Dead code
-9 تحديث تنفيذ الدوال الثلاث العمل مع النص
-10 تحديث الـ Selectors الثلاثة الاتساق النوعي
-11 version: 11 → 12 + إضافة applyLevelIdMigration Migration ذكي
-12 إصلاح فرع v3 بإضافة as ProgressState إرضاء TypeScript
-
-📄 الملف 2: src/screens/PracticeScreen.tsx (تعديل واحد)
-
-```typescript
-// قبل:
-markPracticePassed(levelNum);
-// بعد:
-markPracticePassed(level);
-```
-
-📄 الملف 3: src/screens/AnzanScreen.tsx (تعديل واحد)
-
-```typescript
-// قبل:
-markAnzanVisualPassed(levelNum);
-// بعد:
-markAnzanVisualPassed(level);
-```
-
-📄 الملف 4: src/screens/AudioAnzanScreen.tsx (تعديل واحد)
-
-```typescript
-// قبل:
-markAnzanAudioPassed(levelNum);
-// بعد:
-markAnzanAudioPassed(level);
-```
-
-📄 الملف 5: src/screens/CategoryScreen.tsx (4 تعديلات)
-
-```typescript
-import type { SRBLevel } from '@/data/srb-adapter';
-
-// 3 تعديلات:
-passedPractice.includes(`L${practiceNum}` as SRBLevel)
-passedAnzanVisual.includes(`L${anzanNum}` as SRBLevel)
-passedAnzanAudio.includes(`L${anzanNum}` as SRBLevel)
-```
-
-📄 الملف 6: src/screens/LevelScreen.tsx (3 تعديلات)
-
-```typescript
-passedPractice.includes(`L${level.practiceNum}` as LevelId)
-passedAnzanVisual.includes(`L${level.anzanNum}` as LevelId)
-passedAnzanAudio.includes(`L${level.anzanNum}` as LevelId)
-```
+# الملف التعديل
+1 progressStore.ts استيراد LevelId من srb-adapter + حذف التعريف المحلي + تحويل 3 حقول + 3 تواقيع + initialState + حذف uniqueNums + تحديث الدوال + Selectors + v12 + applyLevelIdMigration + إصلاح v3.
+2 PracticeScreen.tsx markPracticePassed(level).
+3 AnzanScreen.tsx markAnzanVisualPassed(level).
+4 AudioAnzanScreen.tsx markAnzanAudioPassed(level).
+5 CategoryScreen.tsx 3× \L${num}` as SRBLevel` + استيراد.
+6 LevelScreen.tsx 3× \L${num}` as LevelId`.
 
 م5-ب — تفاصيل تقليل الحزمة
 
-الملف الوحيد: src/App.tsx
-
-الإجراءات:
-
-1. حذف import { getLessonById } from './curriculum/lessons'.
-2. إضافة import { SRB_LEVELS } from './data/srb/curriculum'.
-3. إضافة دالة levelOfLesson.
-4. استبدال getLessonById في فرع lesson-view- بـ levelOfLesson.
-
-النتيجة المقاسة:
-
-· قبل: index-*.js = 911 KB (gzip 248).
-· بعد: index-*.js = 445 KB (gzip 135).
+· قبل: 911 KB (gzip 248).
+· بعد: 445 KB (gzip 135).
 · التوفير: 51%.
-· Chunks جديدة: LearnScreen (5.23 KB) · LessonScreen (29.49 KB) · IntroductionScreen (4.29 KB).
 
 ---
 
@@ -258,33 +188,29 @@ passedAnzanAudio.includes(`L${level.anzanNum}` as LevelId)
 
 · src/i18n/*
 · src/screens/Header.tsx
-· src/screens/LessonScreen.tsx
+· src/screens/LessonScreen.tsx ⚠️ (يحتاج موافقة صريحة لتعديل TTS — القسم 11)
 · src/store/numberStyleStore.ts
 · src/utils/numberStyle.ts
 · src/curriculum/types.ts
 · src/curriculum/lessons/types.ts
 · src/store/masteryBadgesStore.ts
 · src/components/flash/*
-· src/components/soroban2d5/* (تم لمسه لتحسين الأداء بموافقة).
-· src/components/games/* (تم لمسها لتوحيد الاسم وحل التوهج بموافقة).
+· src/components/soroban2d5/*
+· src/components/games/*
 · src/data/srb/*
-· src/engine/* (مفصول حالياً ويعمل بـ Stubs، لا تحذف الـ Stubs).
-· levelOfLesson في App.tsx (طبقة توافق دائمة، لا تحذفها).
+· src/engine/*
+· levelOfLesson في App.tsx (طبقة توافق دائمة).
 
 الأنماط الخطرة:
 
 · ❌ React.lazy بدون Suspense + ErrorBoundary.
-· ❌ الاعتماد على grep حرفي لـ setItem متعدد الأسطر.
-· ❌ تعديل ملفين محميين في commit واحد.
-· ❌ حذف ملف بلا grep ثلاثي.
-· ❌ تعديل progressStore v13+ بلا نسخة احتياطية + خطة ترحيل + موافقة.
-· ❌ split('-')[0] (يعطي S03 وليس L1).
-· ❌ توحيد L1-L3 (m13 مُلغاة نهائياً).
-· ❌ كتابة دروس L4-L7 بصيغة id: "S09" (يجب id: "L4-S09").
+· ❌ split('-')[0].
+· ❌ m13 (توحيد L1-L3).
+· ❌ كتابة دروس L4-L7 بصيغة id: "S09".
 
 ---
 
-📝 7) بروتوكول كل تعديل (لصق للمساعد)
+📝 7) بروتوكول كل تعديل
 
 ```text
 مشروع React 18 + TS 5.5 + Vite 5 + Zustand 4. أعمل من متصفح GitHub فقط.
@@ -296,11 +222,11 @@ passedAnzanAudio.includes(`L${level.anzanNum}` as LevelId)
 4. مصدر واحد للبيانات
 5. لا تخمين — اقرأ كل ملف أرسلته كاملاً قبل الاقتراح. إن لم تتأكد قل «لا أعرف».
 6. أعد فقط الملفات/الأجزاء المتغيرة، كاملة جاهزة للصق
-7. الملفات المحمية: i18n/ · Header.tsx · LessonScreen.tsx · numberStyleStore.ts · numberStyle.ts · curriculum/types.ts · curriculum/lessons/types.ts · masteryBadgesStore.ts · components/flash/* · components/soroban2d5/* · components/games/* · data/srb/* · engine/* · levelOfLesson (في App.tsx)
+7. الملفات المحمية: i18n/ · Header.tsx · LessonScreen.tsx · numberStyleStore.ts · numberStyle.ts · curriculum/types.ts · curriculum/lessons/types.ts · masteryBadgesStore.ts · components/flash/* · components/soroban2d5/* · components/games/* · data/srb/* · engine/* · levelOfLesson
 
 السياق:
 - HEAD: (أحدث commit)
-- الوثائق: HANDOFF rev.5 · AUDIT rev.3 · EXECUTION_PLAN rev.6
+- الوثائق: HANDOFF rev.5 · AUDIT rev.3 · EXECUTION_PLAN rev.7
 
 المهمة: [...]
 ```
@@ -311,7 +237,7 @@ passedAnzanAudio.includes(`L${level.anzanNum}` as LevelId)
 
 🔴 الأولوية القصوى
 
-1. كتابة دروس L4-L7 بصيغة L{level}-S{num} (حسب بروتوكول القسم 2).
+1. كتابة دروس L4-L7 بصيغة L{level}-S{num}:
    · L4: L4-S09, L4-S10
    · L5: L5-S11, L5-S12
    · L6: L6-S13, L6-S14
@@ -319,8 +245,8 @@ passedAnzanAudio.includes(`L${level.anzanNum}` as LevelId)
 
 🟠 الأولوية المتوسطة
 
-2. ربط engine بـ srb-adapter: استبدال Stubs في adaptiveEngine و problemGenerator.
-3. مراجعة الألعاب الأخرى (PirateRaceGame, Sorobania): لا تستخدم Soroban2D5، لا تحتاج تحسينات الأداء.
+2. ربط engine بـ srb-adapter: استبدال Stubs.
+3. مراجعة الألعاب الأخرى (PirateRaceGame, Sorobania).
 
 🟡 الأولوية المنخفضة
 
@@ -328,20 +254,20 @@ passedAnzanAudio.includes(`L${level.anzanNum}` as LevelId)
 
 ❌ ما لن يُنفّذ أبداً
 
-· m13 (توحيد L1-L3): مُلغاة نهائياً.
-· Migration v13: لن تحدث.
-· تعديل ملفات L1-L3: ممنوع.
-· حذف levelOfLesson: ممنوع.
+· m13 (توحيد L1-L3).
+· Migration v13.
+· تعديل ملفات L1-L3.
+· حذف levelOfLesson.
 
 ---
 
 🚀 9) التحسينات الإضافية (Performance & UI)
 
-1. تسريع فتح التطبيق (Lazy Loading): GamesListScreen في HeroDashboard → Lazy + Suspense.
-2. حل مشكلة البطء في "الصحن الطائر": عزل المؤقت، إصلاح تسريب الذاكرة، opacity بدل scale، Date.now().
-3. تحسين أداء المعداد: Soroban2D5 و Rod2D5 بـ React.memo، إزالة backdropFilter، transform: translateY.
+1. Lazy للألعاب: GamesListScreen → Lazy + Suspense.
+2. حل مشكلة الصحن الطائر: Timer isolation + memory leak fix + opacity + Date.now().
+3. تحسين أداء المعداد: React.memo + إزالة backdropFilter + transform: translateY.
 4. إصلاح التوهج: إزالة rodTint="white" من DetectiveGame و FlyingAbacusGame.
-5. تقليل الحزمة 51% (م5-ب): index-*.js من 911 KB → 445 KB.
+5. تقليل الحزمة 51%: 911 KB → 445 KB.
 
 ---
 
@@ -363,6 +289,7 @@ passedAnzanAudio.includes(`L${level.anzanNum}` as LevelId)
 ⬜ متبقي:
   - كتابة دروس L4-L7 بصيغة L{level}-S{num}.
   - ربط المحرك المفصول بـ SRB.
+  - تفعيل TTS للدروس (انظر القسم 11).
 
 🚫 لن ننفّذ:
   - m13 (توحيد L1-L3).
@@ -399,4 +326,291 @@ passedAnzanAudio.includes(`L${level.anzanNum}` as LevelId)
 
 المشروع جاهز للمرحلة التالية: كتابة دروس L4-L7.
 
+---
+
+🎙️ 11) [جديد — نهاية الجلسة] خطة تفعيل TTS في الدروس
+
+🎯 المشكلة الحالية
+
+LessonScreen.tsx (محمي) يستخدم MP3 فقط لزر "موجز القصة":
+
+```typescript
+const canPlayModuleStory =
+  isAr && moduleStoryAudioId !== null && moduleStoryAudioId !== undefined;
 ```
+
+النتيجة: دروس L4-L7 (بدون MP3) → زر "موجز القصة" لا يظهر.
+
+بينما الفلاش والألعاب تستخدم TTS عبر useCharacterVoice:
+
+```typescript
+const { speak, stop } = useCharacterVoice(heroId);
+speak('نص مشكّل');
+```
+
+🎯 الهدف
+
+تعديل LessonScreen.tsx ليستخدم TTS تلقائياً عند عدم وجود MP3 (storyAudioId === null).
+
+النتيجة: دروس L4-L7 (بـ storyAudioText فقط) → الزر يظهر ويقرأ بـ TTS.
+
+---
+
+📋 خطوات التنفيذ (نهاية الجلسة)
+
+⚠️ شرط مسبق: موافقة صريحة على تعديل LessonScreen.tsx (Red Zone)
+
+قبل البدء، تأكد من:
+
+1. ✅ دروس L4-L7 مكتوبة ومسجلة في index.ts.
+2. ✅ CI أخضر.
+3. ✅ نسخة احتياطية حديثة.
+4. ✅ موافقة صريحة على تعديل LessonScreen.tsx.
+
+---
+
+الخطوة 1: إضافة TTS Hook (أعلى الملف)
+
+في src/screens/LessonScreen.tsx، أضف:
+
+```typescript
+// أعلى الملف (بعد الاستيرادات):
+import { useCharacterVoice } from '@/hooks/useCharacterVoice';
+import type { CharacterType } from '@/types';
+```
+
+داخل المكون (بعد const sorobana = useSorobanaVoice();):
+
+```typescript
+// 🎙️ [TTS] الرفيق المختار للصوت التلقائي
+const heroId = (
+  typeof window !== 'undefined'
+    ? (localStorage.getItem('soroban_companion') as CharacterType)
+    : null
+) || 'sham';
+const { speak: speakTTS, stop: stopTTS } = useCharacterVoice(heroId);
+```
+
+---
+
+الخطوة 2: تعديل شروط الظهور
+
+استبدل:
+
+```typescript
+const canPlayLessonStory =
+  isAr && lesson.storyAudioId !== null && lesson.storyAudioId !== undefined;
+const moduleStoryAudioId = activeModule?.miniStory?.storyAudioId;
+const canPlayModuleStory =
+  isAr && moduleStoryAudioId !== null && moduleStoryAudioId !== undefined;
+```
+
+بـ:
+
+```typescript
+// 🎙️ [TTS] يمكن التشغيل إذا كان هناك mp3 أو نص
+const canPlayLessonStory =
+  isAr && (
+    (lesson.storyAudioId !== null && lesson.storyAudioId !== undefined) ||
+    !!storyText
+  );
+const moduleStoryAudioId = activeModule?.miniStory?.storyAudioId;
+const moduleStoryAudioText = activeModule?.miniStory?.storyAudioText;
+const canPlayModuleStory =
+  isAr && (
+    (moduleStoryAudioId !== null && moduleStoryAudioId !== undefined) ||
+    !!moduleStoryAudioText
+  );
+```
+
+---
+
+الخطوة 3: تعديل toggleStory
+
+استبدل الدالة كاملة بـ:
+
+```typescript
+const toggleStory = () => {
+  const audioSrc = lesson.storyAudioId;
+  const text = storyText;
+
+  if ((audioSrc === null || audioSrc === undefined) && !text) return;
+
+  if (isReadingStory) {
+    sorobana.stop();
+    stopTTS();
+    setIsReadingStory(false);
+    return;
+  }
+
+  sorobana.stop();
+  stopTTS();
+  playSound('click');
+  setIsReadingStory(true);
+
+  if (audioSrc === 'welcome') {
+    sorobana.speakFiles([
+      'https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3',
+    ]);
+    setIsReadingStory(false);
+  } else if (audioSrc !== null && audioSrc !== undefined) {
+    sorobana.speakStory(audioSrc, () => setIsReadingStory(false));
+  } else {
+    // 🎙️ [TTS] بديل صوتي عند عدم وجود mp3
+    speakTTS(text, () => setIsReadingStory(false));
+  }
+};
+```
+
+---
+
+الخطوة 4: تعديل toggleModuleStory
+
+استبدل الدالة كاملة بـ:
+
+```typescript
+const toggleModuleStory = () => {
+  const src = activeModule?.miniStory?.storyAudioId;
+  const text = activeModule?.miniStory?.storyAudioText;
+
+  if ((src === null || src === undefined) && !text) return;
+
+  if (isReadingModuleStory) {
+    sorobana.stop();
+    stopTTS();
+    setIsReadingModuleStory(false);
+    return;
+  }
+
+  sorobana.stop();
+  stopTTS();
+  playSound('click');
+  setIsReadingModuleStory(true);
+
+  if (src === 'welcome') {
+    sorobana.speakFiles([
+      'https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3',
+    ]);
+    setIsReadingModuleStory(false);
+  } else if (src !== null && src !== undefined) {
+    sorobana.speakStory(src, () => setIsReadingModuleStory(false));
+  } else if (text) {
+    // 🎙️ [TTS] بديل صوتي عند عدم وجود mp3
+    speakTTS(text, () => setIsReadingModuleStory(false));
+  }
+};
+```
+
+---
+
+الخطوة 5: تنظيف عند unmount
+
+تأكد أن useEffect التنظيف يستدعي stopTTS:
+
+```typescript
+useEffect(() => {
+  return () => {
+    sorobana.stop();
+    stopTTS();
+  };
+}, [stopTTS]);
+```
+
+---
+
+🛡️ ضمانات الأمان
+
+الضمان التفصيل
+دروس L0-L3 تعمل كما هي storyAudioId موجود → MP3 يُشغّل (لا تغيير).
+دروس L4-L7 تعمل بـ TTS storyAudioId: null + storyAudioText → TTS.
+الألعاب والفلاش لا تتأثر تعديل في LessonScreen فقط.
+صوت الرفيق (شام/ريان/بانة/جود) يُقرأ من soroban_companion (مثل الألعاب).
+Rollback سهل Revert لـ commit واحد.
+
+---
+
+🧪 اختبار ما بعد التنفيذ
+
+المسار 1: درس L0 (MP3 موجود)
+
+☐ افتح L0-S01 → زر "موجز القصة" يظهر.
+☐ اضغط → يقرأ MP3 (كالمعتاد).
+
+المسار 2: درس L4 (TTS فقط)
+
+☐ افتح L4-S09 → زر "موجز القصة" يظهر.
+☐ اضغط → يقرأ بـ TTS بصوت الرفيق.
+
+المسار 3: تغيير الرفيق
+
+☐ غيّر الرفيق إلى "ريان" (صوت ذكوري).
+☐ افتح L4-S09 → اضغط الزر → يقرأ بصوت "ريان".
+
+المسار 4: إيقاف التشغيل
+
+☐ اضغط الزر مرة أخرى أثناء القراءة → يتوقف.
+
+---
+
+⚠️ ملاحظات حرجة
+
+1. LessonScreen.tsx محمي: لا تُنفّذ التعديلات إلا بموافقة صريحة.
+2. types.ts لا يحتاج تعديلاً: storyAudioText موجود في MiniStoryBlock وLessonNode.
+3. دروس L0-L3 لا تُلمس: التعديل يحافظ على MP3 عند وجوده.
+4. TTS يستخدم useCharacterVoice: نفس hook الألعاب والفلاش.
+5. الاختبار الشامل إلزامي: مسارات 1-4 أعلاه.
+
+---
+
+📊 ملخص التعديلات
+
+# المكان الأسطر الأثر
+1 import +2 useCharacterVoice + CharacterType
+2 بداية المكون +6 heroId + speakTTS
+3 canPlayLessonStory 1 قبول storyText
+4 canPlayModuleStory 1 قبول storyAudioText
+5 toggleStory ~5 TTS fallback
+6 toggleModuleStory ~5 TTS fallback
+7 useEffect cleanup 1 stopTTS()
+
+المجموع: ~20 سطراً، صفر تغيير في المنطق (نفس السطور + بديل TTS).
+
+---
+
+🚦 ترتيب التنفيذ في نهاية الجلسة
+
+```
+1. [ ] كتابة دروس L4-L7 (7 ملفات) — المهمة الأساسية
+2. [ ] تسجيلها في index.ts
+3. [ ] Commit + CI أخضر
+4. [ ] Smoke Test لدروس L4-L7
+5. [ ] موافقة صريحة على تعديل LessonScreen.tsx
+6. [ ] تنفيذ الخطوات 1-5 أعلاه
+7. [ ] Commit + CI أخضر
+8. [ ] اختبار المسارات 1-4
+9. [ ] تحديث EXECUTION_LOG.md
+```
+
+⚠️ لا تُنفّذ الخطوات 5-9 دون إتمام 1-4 بنجاح.
+
+---
+
+هذه الخطة معتمدة — لا تُنفّذ إلا بموافقة صريحة على LessonScreen.tsx.
+
+```
+
+---
+
+## 📌 ملخص ما تم إضافته
+
+| # | القسم | المحتوى |
+|:-:|:---|:---|
+| 1 | الفهرس | إضافة البند 11 (TTS) |
+| 2 | القسم 11 (جديد) | خطة تفعيل TTS كاملة |
+| 3 | قائمة "لا تنفّذ" | إضافة تحذير على `LessonScreen.tsx` |
+| 4 | خارطة الطريق | إضافة TTS كمهمة نهاية الجلسة |
+| 5 | قائمة التتبع | إضافة TTS في "متبقي" |
+| 6 | العنوان | rev.6 → rev.7 |
+| 7 | بروتوكول المساعد | تحديث rev.6 → rev.7 |
+
+**كل المحتوى الأصلي محفوظ + خطة TTS مؤمنة في النهاية.**
