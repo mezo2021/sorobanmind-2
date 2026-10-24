@@ -20,14 +20,14 @@ export const S08_LESSON: LessonNode = {
     {
       id: "m1",
       ruleCategory: "direct",
-      title: "القسمة البسيطة | Direct Division",
+      title: "القسمة البسيطة",
       titleEn: "Direct Division",
       emoji: "✨",
       miniStory: {
         title: "مفتاح الأقفال المباشرة | The Direct Locks Key",
         emoji: "🧙",
         story: "في قلعة السوروبان العجيبة، يواجه الأبطال أبواب الأقفال المزدوجة. قال الحكيم معداد: لنقسم 484 على 22! نقسم أول رقمين 48 ÷ 2 = 2 في عشرات الخارج، ثم نخصم 44 على قضيبين مباشرة (4 من المئات و4 من العشرات) دون استعارة! | At Soroban Castle, heroes face double-lock doors. Master Abacus says: To divide 484 by 22, divide first two digits 48 ÷ 2 = 2 in tens quotient, then subtract 44 across two rods directly (4 from hundreds and 4 from tens) without borrowing!",
-        storyAudioText: "أهلاً بكم يا أبطال السوروبان الصغار! اليوم سنفتح الأقفال المزدوجة بذكاء وسهولة. لنقسم أربعمائة وأربعة وثمانين على اثنين وعشرين. نبدأ بالتقدير: أربعة وثمانون قسمة اثنين وعشرين تساوي اثنين في عشرات الخارج. نخصم أربعة من المئات وأربعة من العشرات، ثم نكرر مع الآحاد. الناتج هو اثنان وعشرون!",
+        storyAudioText: "أَهْلاً بِكُمْ يَا أَبْطَالَ السُّورُوبَانِ الصِّغَار! اليَوْمَ سَنَفْتَحُ الأَقْفَالَ المُزْدَوِجَةَ بِذَكَاءٍ وَسُهُولَة. لِنَقْسِمْ أَرْبَعَمِائَةٍ وَأَرْبَعَةً وَثَمَانِينَ عَلَى اثْنَيْنِ وَعِشْرِين. نَبْدَأُ بِالتَّقْدِير: أَرْبَعَةٌ وَثَمَانُونَ قِسْمَة اثْنَيْنِ وَعِشْرِين تُسَاوِي اثْنَيْنِ فِي عَشَرَاتِ الخَارِج. نَخْصِمُ أَرْبَعَةً مِنَ المِئَاتِ وَأَرْبَعَةً مِنَ العَشَرَات، ثُمَّ نُكَرِّرُ مَعَ الآحَاد. النَّاتِجُ هُوَ اثْنَانِ وَعِشْرُون!",
         storyAudioId: null,
       },
       rule: {
@@ -42,6 +42,7 @@ export const S08_LESSON: LessonNode = {
           {
             question: "هل الرقمان الأولان يكفيان للقسمة؟ | Are the first two digits enough to divide?",
             type: "yes-no",
+            actual: "48 ≥ 22 | 48 ≥ 22",
             answer: "نعم → قدّر بالقسمة على الرقم الأول | Yes → Estimate using first digit",
             hint: "48 يكفي للقسمة على 22 | 48 is enough to divide by 22",
           },
@@ -215,14 +216,14 @@ export const S08_LESSON: LessonNode = {
     {
       id: "m2",
       ruleCategory: "small_friends",
-      title: "القسمة بأصدقاء 5 | Friends of 5",
+      title: "القسمة بأصدقاء 5",
       titleEn: "Friends of 5",
       emoji: "🤝",
       miniStory: {
         title: "مفتاح الجدة 5 والرفع المزدوج | Grandma 5's Key & Double Lift",
         emoji: "👵",
         story: "عند الباب الثاني من قلعة السوروبان، أردنا قسمة 572 على 22. 57 ÷ 22 = 2، لكن خصم 44 يطلب طرح 4 من 5 مئات! ابتسمت الجدة 5 وقالت: استخدموا حركة «الرفع المزدوج» ⬆️⬆️ (ارفعوا 5 بالسبابة وارفعوا الصديق 1 بالإبهام معاً على المئات)! الناتج 26! | At the second door of Soroban Castle, we wanted to divide 572 by 22. 57 ÷ 22 = 2, but subtracting 44 needs removing 4 from 5 hundreds! Grandma 5 smiled: Use «Double Lift» ⬆️⬆️ (lift 5 with index and lift friend 1 with thumb together on hundreds)! Result is 26!",
-        storyAudioText: "يا لكم من ذكيين! في الباب الثاني، واجهنا مسألة خمسمائة واثنين وسبعين قسمة اثنين وعشرين. التقدير في العشرات هو اثنان. عند الخصم نحتاج طرح أربعة من خمسة في المئات. هنا تتدخل الجدة خمسة برفق: نرفع الخرزة الخماسية بالسبابة ونرفع الصديق واحداً بالإبهام بحركة رفع مزدوج لطيفة! الناتج النهائي هو ستة وعشرون!",
+        storyAudioText: "يَا لَكُمْ مِنْ ذَكِيِّين! فِي البَابِ الثَّانِي، وَاجَهْنَا مَسْأَلَةَ خَمْسِمِائَةٍ وَاثْنَيْنِ وَسَبْعِينَ قِسْمَة اثْنَيْنِ وَعِشْرِين. التَّقْدِيرُ فِي العَشَرَاتِ هُوَ اثْنَان. عِنْدَ الخَصْمِ نَحْتَاجُ طَرْحَ أَرْبَعَةٍ مِنْ خَمْسَةٍ فِي المِئَات. هُنَا تَتَدَخَّلُ الجَدَّةُ خَمْسَة بِرِفْق: نَرْفَعُ الخَرَزَةَ الخُمَاسِيَّةَ بِالسَّبَّابَةِ وَنَرْفَعُ الصَّدِيقَ وَاحِداً بِالإِبْهَامِ بِحَرَكَةِ رَفْعٍ مُزْدَوَجٍ لَطِيفَة! النَّاتِجُ النِّهَائِيُّ هُوَ سِتَّةٌ وَعِشْرُون!",
         storyAudioId: null,
       },
       rule: {
@@ -249,6 +250,7 @@ export const S08_LESSON: LessonNode = {
           {
             question: "هل الخرزة العلوية 5 مفعّلة؟ | Is Upper 5 active?",
             type: "yes-no",
+            actual: "5 مفعّلة | 5 active",
             answer: "نعم → نفّذ حركة «رفع مزدوج» ⬆️⬆️ | Yes → Perform «Double Lift» ⬆️⬆️",
           },
         ],
@@ -410,14 +412,14 @@ export const S08_LESSON: LessonNode = {
     {
       id: "m3",
       ruleCategory: "big_friends",
-      title: "القسمة بأصدقاء 10 | Friends of 10",
+      title: "القسمة بأصدقاء 10",
       titleEn: "Friends of 10",
       emoji: "🌟",
       miniStory: {
         title: "نداء العملاق 10 والاستعارة | Giant 10's Call & Borrowing",
         emoji: "🦶",
         story: "في الباب الثالث من القلعة، واجه الفرسان قسمة 350 على 14. 35 ÷ 14 = 2، لكن طرح 28 يتطلب طرح 2 من المئات وطرح 8 من العشرات مع استعارة! ينادي الفرسان العملاق 10: نطرح 2 من المئات، ثم نطرح 10 بسحبة سبابة من المئات ⬇️ ونضيف الصديق 2 للعشرات بالإبهام ⬆️! الناتج 25! | At the third castle door, knights faced dividing 350 by 14. 35 ÷ 14 = 2, but subtracting 28 requires subtracting 2 from hundreds and 8 from tens with borrowing! Knights call Giant 10: Subtract 2 from hundreds, then subtract 10 with index pull from hundreds ⬇️ and add friend 2 to tens with thumb ⬆️! Result is 25!",
-        storyAudioText: "يا أبطال القلعة الشجعان! في الباب الثالث، واجهنا مسألة ثلاثمائة وخمسين قسمة أربعة عشر. التقدير هو اثنان في عشرات الخارج. عند الخصم نطرح اثنين من المئات، ثم نحتاج طرح ثمانية من العشرات دون وجود خرزات كافية! ننادي العملاق عشرة بصوت دافئ: نطرح عشرة بسحبة سبابة من المئات، ونضيف الصديق اثنين للعشرات بالإبهام! الناتج النهائي هو خمسة وعشرون!",
+        storyAudioText: "يَا أَبْطَالَ القَلْعَةِ الشُّجْعَان! فِي البَابِ الثَّالِثِ، وَاجَهْنَا مَسْأَلَةَ ثَلَاثِمِائَةٍ وَخَمْسِينَ قِسْمَة أَرْبَعَةَ عَشَر. التَّقْدِيرُ هُوَ اثْنَانِ فِي عَشَرَاتِ الخَارِج. عِنْدَ الخَصْمِ نَطْرَحُ اثْنَيْنِ مِنَ المِئَات، ثُمَّ نَحْتَاجُ طَرْحَ ثَمَانِيَةٍ مِنَ العَشَرَاتِ دُونَ وُجُودِ خَرَزَاتٍ كَافِيَة! نُنَادِي العِمْلَاقَ عَشَرَة بِصَوْتٍ دَافِئ: نَطْرَحُ عَشَرَة بِسَحْبَةِ سَبَّابَةٍ مِنَ المِئَات، وَنُضِيفُ الصَّدِيقَ اثْنَيْنِ لِلْعَشَرَاتِ بِالإِبْهَام! النَّاتِجُ النِّهَائِيُّ هُوَ خَمْسَةٌ وَعِشْرُون!",
         storyAudioId: null,
       },
       rule: {
@@ -443,11 +445,13 @@ export const S08_LESSON: LessonNode = {
           {
             question: "هل الخرزات المتاحة أقل من المطلوب طرحه؟ | Are available column beads less than required?",
             type: "yes-no",
+            actual: "الخرزات < المطلوب | Beads < Subtrahend",
             answer: "نعم → استخدم أصدقاء 10 | Yes → Use Friends of 10",
           },
           {
             question: "هل العمود الأيسر يحتوي على خرزة للاستعارة؟ | Does the left column have a bead to borrow?",
             type: "yes-no",
+            actual: "العمود الأيسر > 0 | Left column > 0",
             answer: "نعم → اطرح 10 بسحبة سبابة وأضف صديق 10 بالإبهام | Yes → Subtract 10 with index pull & add Friend of 10 with thumb",
           },
         ],
@@ -609,14 +613,14 @@ export const S08_LESSON: LessonNode = {
     {
       id: "m4",
       ruleCategory: "combined",
-      title: "القسمة المركّبة | Compound Division",
+      title: "القسمة المركّبة",
       titleEn: "Compound Division",
       emoji: "🎯",
       miniStory: {
         title: "التحالف المزدوج - قوة أصدقاء 10 و5 | The Dual Alliance - Power of Friends of 10 & 5",
         emoji: "👑",
         story: "في الغرفة السرية الأخيرة، نقسم 234 على 18. 23 ÷ 18 = 1، لكن طرح 18 يطلب طرح 1 من المئات ثم استعارة 10 من المئات وأصدقاء 5 لإضافة المكمل في العشرات! يتحد الجدة 5 والعملاق 10 لفتح الباب: سحبة سبابة للاستعارة 10 من المئات ⬇️، ونزول مزدوج ⬇️⬇️ بالسبابة والإبهام على العشرات لتفعيل 5 وطرد الزائد! الناتج 13! | In the final secret room, divide 234 by 18. 23 ÷ 18 = 1, but subtracting 18 requires subtracting 1 from hundreds then borrowing 10 from hundreds and Friends of 5 to add complement in tens! Grandma 5 and Giant 10 unite: index pull to borrow 10 ⬇️ and Double Drop ⬇️⬇️ on tens to activate 5 and push excess down! Result is 13!",
-        storyAudioText: "وصلنا للغرفة السرية الكبرى يا فرسان! مئتان وأربعة وثلاثون قسمة ثمانية عشر. التقدير هو واحد في عشرات الخارج. عند طرح ثمانية عشر، نطرح واحداً من المئات، ثم نحتاج استعارة عشرة وصديق خمسة في نفس الوقت للعشرات! يتحد العملاق عشرة والجدة خمسة: نستعير عشرة بسحبة سبابة من المئات، وننزل خمسة بالسبابة ونطرد ثلاثة بالإبهام بنزول مزدوج على العشرات! الناتج النهائي هو ثلاثة عشر!",
+        storyAudioText: "وَصَلْنَا لِلْغُرْفَةِ السِّرِّيَّةِ الكُبْرَى يَا فُرْسَان! مِئَتَانِ وَأَرْبَعَةٌ وَثَلَاثُونَ قِسْمَة ثَمَانِيَةَ عَشَر. التَّقْدِيرُ هُوَ وَاحِدٌ فِي عَشَرَاتِ الخَارِج. عِنْدَ طَرْحِ ثَمَانِيَةَ عَشَر، نَطْرَحُ وَاحِداً مِنَ المِئَات، ثُمَّ نَحْتَاجُ اسْتِعَارَةَ عَشَرَة وَصَدِيقَ خَمْسَةٍ فِي نَفْسِ الوَقْتِ لِلْعَشَرَات! يَتَّحِدُ العِمْلَاقُ عَشَرَة وَالجَدَّةُ خَمْسَة: نَسْتَعِيرُ عَشَرَة بِسَحْبَةِ سَبَّابَةٍ مِنَ المِئَات، وَنُنْزِلُ خَمْسَةً بِالسَّبَّابَةِ وَنَطْرُدُ ثَلَاثَةً بِالإِبْهَامِ بِنُزُولٍ مُزْدَوَجٍ عَلَى العَشَرَات! النَّاتِجُ النِّهَائِيُّ هُوَ ثَلَاثَةَ عَشَر!",
         storyAudioId: null,
       },
       rule: {
@@ -637,11 +641,13 @@ export const S08_LESSON: LessonNode = {
           {
             question: "هل نحتاج استعارة 10 من عمود المئات؟ | Do we need to borrow 10 from hundreds column?",
             type: "yes-no",
+            actual: "نحتاج استعارة 10 | Need to borrow 10",
             answer: "نعم → نحتاج استعارة 10 | Yes → Need to borrow 10",
           },
           {
             question: "هل الخرزات السفلية غير كافية لإضافة المكمل المباشر؟ | Are lower beads insufficient to add direct complement?",
             type: "yes-no",
+            actual: "السفليات < المكمل | Lower beads < Complement",
             answer: "نعم → استخدم التحالف المزدوج: سحبة سبابة + نزول مزدوج | Yes → Use Dual Alliance: Index pull + Double Drop",
           },
         ],
