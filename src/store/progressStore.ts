@@ -1,6 +1,7 @@
 // src/store/progressStore.ts
 // [v10] — peakStreak + stats + 7 شارات أنزان (بصري + سمعي) — 2026-10-16
 // [v11] — إضافة dailyXP لتتبع نشاط الأسبوع — 2026-10-20
+// [v12] — توحيد LevelId من srb-adapter + تحويل passed* إلى LevelId[] — 2026-10-23
 // ✅ لا earnedBadges · لا QUESTS · لا BADGES
 
 import { create } from "zustand";
@@ -12,6 +13,9 @@ import type {
   SkillProgress as BaseSkillProgress,
 } from "../curriculum/types";
 
+// ✅ [m8] LevelId نظيف (L0-L7) من srb-adapter
+import type { LevelId } from "../data/srb-adapter";
+
 // ═══ امتداد محلي — لا يمس curriculum/types.ts ═══
 export interface SkillProgress extends BaseSkillProgress {
   peakStreak?: number;
@@ -21,14 +25,8 @@ export interface SkillProgress extends BaseSkillProgress {
 // الأنواع
 // ═══════════════════════════════════════════════════════════
 
-export type LevelId =
-  | "L0" | "L1" | "L2" | "L3"
-  | "L4" | "L5" | "L6" | "L7"
-  | "L00" | "L01" | "L02" | "L03"
-  | "L04" | "L05" | "L06" | "L07"
-  | "L08" | "L09" | "L10" | "L11"
-  | "L12" | "L13" | "L14" | "L15"
-  | "L16" | "L17" | "L18" | "L19" | "L20";
+// ✅ [m8] LevelId مُستورد من srb-adapter (L0-L7 فقط)
+export type { LevelId };
 
 // ✅ 7 شارات أنزان بصري
 export interface AnzanBadges {
@@ -103,9 +101,9 @@ export interface ProgressState {
   categoryChosenAt: string | null;
   completedLevels: LevelId[];
   completedLessons: string[];
-  passedPractice: number[];
-  passedAnzanVisual: number[];
-  passedAnzanAudio: number[];
+  passedPractice: LevelId[];
+  passedAnzanVisual: LevelId[];
+  passedAnzanAudio: LevelId[];
   grades: Record<string, LevelGrades>;
   pendingRemediation: PendingRemediation | null;
   remediationHistory: RemediationSession[];
@@ -134,9 +132,9 @@ export interface ProgressState {
   setCategory: (category: Category) => void;
   markLevelComplete: (levelId: LevelId) => void;
   markLessonCompleted: (lessonId: string) => void;
-  markPracticePassed: (num: number) => void;
-  markAnzanVisualPassed: (num: number) => void;
-  markAnzanAudioPassed: (num: number) => void;
+  markPracticePassed: (levelId: LevelId) => void;
+  markAnzanVisualPassed: (levelId: LevelId) => void;
+  markAnzanAudioPassed: (levelId: LevelId) => void;
 
   setGrade: (levelKey: string, phase: keyof LevelGrades, grade: number) => void;
   getGrades: (levelKey: string) => LevelGrades;
@@ -184,9 +182,9 @@ const initialState = {
   categoryChosenAt: null as string | null,
   completedLevels: [] as LevelId[],
   completedLessons: [] as string[],
-  passedPractice: [] as number[],
-  passedAnzanVisual: [] as number[],
-  passedAnzanAudio: [] as number[],
+  passedPractice: [] as LevelId[],
+  passedAnzanVisual: [] as LevelId[],
+  passedAnzanAudio: [] as LevelId[],
   grades: {} as Record<string, LevelGrades>,
   pendingRemediation: null as PendingRemediation | null,
   remediationHistory: [] as RemediationSession[],
@@ -224,10 +222,6 @@ function getYesterday(): string {
   const d = new Date();
   d.setDate(d.getDate() - 1);
   return d.toISOString().split("T")[0];
-}
-
-function uniqueNums(arr: number[]): number[] {
-  return Array.from(new Set(arr));
 }
 
 function uniqueLevels(arr: LevelId[]): LevelId[] {
@@ -268,22 +262,22 @@ export const useProgressStore = create<ProgressState>()(
           return { completedLessons: uniqueStrings([...state.completedLessons, lessonId]) };
         }),
 
-      markPracticePassed: (num) =>
+      markPracticePassed: (levelId) =>
         set((state) => {
-          if (state.passedPractice.includes(num)) return state;
-          return { passedPractice: uniqueNums([...state.passedPractice, num]) };
+          if (state.passedPractice.includes(levelId)) return state;
+          return { passedPractice: uniqueLevels([...state.passedPractice, levelId]) };
         }),
 
-      markAnzanVisualPassed: (num) =>
+      markAnzanVisualPassed: (levelId) =>
         set((state) => {
-          if (state.passedAnzanVisual.includes(num)) return state;
-          return { passedAnzanVisual: uniqueNums([...state.passedAnzanVisual, num]) };
+          if (state.passedAnzanVisual.includes(levelId)) return state;
+          return { passedAnzanVisual: uniqueLevels([...state.passedAnzanVisual, levelId]) };
         }),
 
-      markAnzanAudioPassed: (num) =>
+      markAnzanAudioPassed: (levelId) =>
         set((state) => {
-          if (state.passedAnzanAudio.includes(num)) return state;
-          return { passedAnzanAudio: uniqueNums([...state.passedAnzanAudio, num]) };
+          if (state.passedAnzanAudio.includes(levelId)) return state;
+          return { passedAnzanAudio: uniqueLevels([...state.passedAnzanAudio, levelId]) };
         }),
 
       setGrade: (levelKey, phase, grade) =>
@@ -482,94 +476,106 @@ export const useProgressStore = create<ProgressState>()(
     }),
     {
       name: "sorobanmind-v2-progress",
-      version: 11,
+      version: 12,
       migrate: (persistedState, version) => {
         const old = (persistedState as Record<string, unknown>) || {};
 
-        if (version < 3) {
+        // ✅ [m8] دالة تُغلّف كل مسار، وتُطبِّق v12 على أي نسخة < 12
+        const applyLevelIdMigration = (s: ProgressState): ProgressState => {
+          if (version >= 12) return s;
+
+          const toLevelId = (n: unknown): LevelId | null => {
+            if (typeof n === "string" && /^L[0-7]$/.test(n)) return n as LevelId;
+            if (typeof n === "number" && Number.isInteger(n) && n >= 0 && n <= 7)
+              return `L${n}` as LevelId;
+            return null;
+          };
+
+          const safeMap = (arr: unknown): LevelId[] =>
+            (Array.isArray(arr) ? arr : [])
+              .map(toLevelId)
+              .filter((x): x is LevelId => x !== null);
+
           return {
+            ...s,
+            passedPractice:    safeMap(s.passedPractice),
+            passedAnzanVisual: safeMap(s.passedAnzanVisual),
+            passedAnzanAudio:  safeMap(s.passedAnzanAudio),
+            completedLevels:   ((s.completedLevels as string[]) || []).filter(
+              (lv) => /^L[0-7]$/.test(lv),
+            ) as LevelId[],
+          };
+        };
+
+        if (version < 3) {
+          return applyLevelIdMigration({
             ...initialState,
             childName: (old.childName as string) || "",
-            skillProgress:
-              (old.skillProgress as Record<string, SkillProgress>) || {},
+            skillProgress: (old.skillProgress as Record<string, SkillProgress>) || {},
             levelExams: (old.levelExams as Record<string, ExamResult>) || {},
             totalXP: (old.xp as number) || (old.totalXP as number) || 0,
-            currentStreak:
-              (old.streak as number) || (old.currentStreak as number) || 0,
+            currentStreak: (old.streak as number) || (old.currentStreak as number) || 0,
             lastPlayedDate: (old.lastPlayedDate as string) || null,
             completedLevels: (old.completedLevels as LevelId[]) || [],
             completedLessons: [] as string[],
-          };
+          });
         }
 
         if (version < 4) {
-          return {
+          return applyLevelIdMigration({
             ...initialState,
             ...old,
             completedLessons: (old.completedLessons as string[]) || [],
-          } as ProgressState;
+          } as ProgressState);
         }
 
         if (version < 5) {
-          return {
+          return applyLevelIdMigration({
             ...initialState,
             ...old,
             grades: (old.grades as Record<string, LevelGrades>) || {},
-            pendingRemediation:
-              (old.pendingRemediation as PendingRemediation | null) || null,
-            remediationHistory:
-              (old.remediationHistory as RemediationSession[]) || [],
-          } as ProgressState;
+            pendingRemediation: (old.pendingRemediation as PendingRemediation | null) || null,
+            remediationHistory: (old.remediationHistory as RemediationSession[]) || [],
+          } as ProgressState);
         }
 
         if (version < 6 || version < 7 || version < 8 || version < 9) {
           const oldTotalXP = (old.totalXP as number) || 0;
           const existingTicketXP = (old.ticketXP as number) || 0;
           const existingTickets = (old.tickets as number) || 0;
-          return {
+          return applyLevelIdMigration({
             ...initialState,
             ...old,
-            ticketXP:
-              existingTicketXP > 0
-                ? existingTicketXP
-                : Math.min(TICKET_XP_CAP, oldTotalXP),
+            ticketXP: existingTicketXP > 0 ? existingTicketXP : Math.min(TICKET_XP_CAP, oldTotalXP),
             tickets: existingTickets,
-          } as ProgressState;
+          } as ProgressState);
         }
 
         if (version < 10) {
-          const oldSkillProgress =
-            (old.skillProgress as Record<string, SkillProgress>) || {};
+          const oldSkillProgress = (old.skillProgress as Record<string, SkillProgress>) || {};
           const upgraded: Record<string, SkillProgress> = {};
           for (const [k, v] of Object.entries(oldSkillProgress)) {
             const sp = v as SkillProgress;
-            upgraded[k] = {
-              ...sp,
-              peakStreak: sp.peakStreak ?? sp.consecutiveCorrect ?? 0,
-            };
+            upgraded[k] = { ...sp, peakStreak: sp.peakStreak ?? sp.consecutiveCorrect ?? 0 };
           }
-          return {
+          return applyLevelIdMigration({
             ...initialState,
             ...old,
             skillProgress: upgraded,
-            stats:
-              (old.stats as ProgressStats) || {
-                totalAttempts: 0,
-                totalCorrect: 0,
-              },
-          } as ProgressState;
+            stats: (old.stats as ProgressStats) || { totalAttempts: 0, totalCorrect: 0 },
+          } as ProgressState);
         }
 
-        // 🆕 v11: إضافة dailyXP للمستخدمين القدامى
         if (version < 11) {
-          return {
+          return applyLevelIdMigration({
             ...initialState,
             ...old,
             dailyXP: (old.dailyXP as Record<string, number>) || {},
-          } as ProgressState;
+          } as ProgressState);
         }
 
-        return persistedState as ProgressState;
+        // المسار الأخير: v11 → v12 (حالة مصطفى)
+        return applyLevelIdMigration(persistedState as ProgressState);
       },
     },
   ),
@@ -588,16 +594,16 @@ export const selectIsLessonCompleted =
     state.completedLessons.includes(lessonId);
 
 export const selectIsPracticePassed =
-  (num: number) => (state: ProgressState) =>
-    state.passedPractice.includes(num);
+  (levelId: LevelId) => (state: ProgressState) =>
+    state.passedPractice.includes(levelId);
 
 export const selectIsAnzanVisualPassed =
-  (num: number) => (state: ProgressState) =>
-    state.passedAnzanVisual.includes(num);
+  (levelId: LevelId) => (state: ProgressState) =>
+    state.passedAnzanVisual.includes(levelId);
 
 export const selectIsAnzanAudioPassed =
-  (num: number) => (state: ProgressState) =>
-    state.passedAnzanAudio.includes(num);
+  (levelId: LevelId) => (state: ProgressState) =>
+    state.passedAnzanAudio.includes(levelId);
 
 export const selectPendingRemediation = (state: ProgressState) =>
   state.pendingRemediation;
