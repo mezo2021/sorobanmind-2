@@ -55,7 +55,7 @@
 - 🚀 `9.` التحسينات الإضافية
 - 📊 `10.` قائمة التتبع النهائية
 - 💐 `11.` رسالة أخيرة
-- 🎙️ **`11.` [جديد] خطة تفعيل TTS**
+- 🎙️ **`12.` [جديد] خطة تفعيل TTS**
 
 </td>
 </tr>
@@ -67,8 +67,8 @@
 
 <div align="center">
 
-> ### 💎 «المشروع ليس في حالة فوضى، بل في وضع مستقر جداً»
-> **جلسة إصلاح عميقة — البناء أخضر، والحزمة مخفضة 51%**
+### 💎 «المشروع ليس في حالة فوضى، بل في وضع مستقر جداً»
+**جلسة إصلاح عميقة — البناء أخضر، والحزمة مخفضة 51%**
 
 </div>
 
@@ -113,7 +113,7 @@
 
 <div align="center">
 
-كل درس جديد من L4 فصاعداً يجب أن يتبع صيغة id: "L{level}-S{num}"
+كل درس جديد من L4 فصاعداً يجب أن يتبع صيغة id: "L{level}-S{num}".
 
 </div>
 
@@ -127,11 +127,11 @@ id: "L4-S09"
 
 🗺️ خريطة الدروس القادمة
 
-المستوى القسم ID الإلزامي  المستوى القسم ID الإلزامي
-L4 S09 L4-S09  L6 S13 L6-S13
-L4 S10 L4-S10  L6 S14 L6-S14
-L5 S11 L5-S11  L7 S15 L7-S15
-L5 S12 L5-S12    
+المستوى القسم ID الإلزامي المستوى القسم ID الإلزامي
+L4 S09 L4-S09 L6 S13 L6-S13
+L4 S10 L4-S10 L6 S14 L6-S14
+L5 S11 L5-S11 L7 S15 L7-S15
+L5 S12 L5-S12   
 
 <div align="center">
 
@@ -186,6 +186,7 @@ function levelOfLesson(lessonId: string): string {
 📌 قرار 4: منع split('-')[0] نهائياً
 
 ⚠️ "S03".split('-')[0] يعطي "S03" وليس "L1".
+
 ✅ استخدم levelOfLesson فقط.
 
 ---
@@ -283,20 +284,16 @@ m13 توحيد L1-L3 ❌ مُلغاة نهائياً
 2 PracticeScreen.tsx markPracticePassed(level)
 3 AnzanScreen.tsx markAnzanVisualPassed(level)
 4 AudioAnzanScreen.tsx markAnzanAudioPassed(level)
-5 CategoryScreen.tsx 3× \L${num}` as SRBLevel` + استيراد
-6 LevelScreen.tsx 3× \L${num}` as LevelId`
+5 CategoryScreen.tsx 3× "L${num}" as SRBLevel + استيراد
+6 LevelScreen.tsx 3× "L${num}" as LevelId
 
 ---
 
 📉 م5-ب — تفاصيل تقليل الحزمة
 
-<div align="center">
-
 📊 المؤشر قبل بعد التوفير
 الحجم 911 KB 445 KB ↓ 51%
 gzip 248 KB 135 KB ↓ 46%
-
-</div>
 
 ---
 
@@ -314,7 +311,7 @@ gzip 248 KB 135 KB ↓ 46%
 
 · 🛡️ src/i18n/*
 · 🛡️ src/screens/Header.tsx
-· ⚠️ src/screens/LessonScreen.tsx (يحتاج موافقة صريحة لتعديل TTS — القسم 11)
+· ⚠️ src/screens/LessonScreen.tsx (يحتاج موافقة صريحة لتعديل TTS — القسم 12)
 · 🛡️ src/store/numberStyleStore.ts
 · 🛡️ src/utils/numberStyle.ts
 · 🛡️ src/curriculum/types.ts
@@ -453,7 +450,7 @@ gzip 248 KB 135 KB ↓ 46%
 ║  ⬜ متبقي:                                                       ║
 ║    ├─ كتابة دروس L4-L7 بصيغة L{level}-S{num}                    ║
 ║    ├─ ربط المحرك المفصول بـ SRB                                  ║
-║    └─ تفعيل TTS للدروس (انظر القسم 11)                           ║
+║    └─ تفعيل TTS للدروس (انظر القسم 12)                           ║
 ║                                                                  ║
 ║  🚫 لن ننفّذ:                                                     ║
 ║    ├─ m13 (توحيد L1-L3)                                         ║
@@ -513,7 +510,7 @@ gzip 248 KB 135 KB ↓ 46%
 
 ---
 
-🎙️ 11) [جديد — نهاية الجلسة] خطة تفعيل TTS في الدروس
+🎙️ 12) [جديد — نهاية الجلسة] خطة تفعيل TTS في الدروس
 
 <div align="center">
 
@@ -718,12 +715,12 @@ useEffect(() => {
 
 🛡️ ضمانات الأمان
 
-الضمان التفصيل
-✅ دروس L0-L3 تعمل كما هي storyAudioId موجود → MP3 يُشغّل (لا تغيير)
-✅ دروس L4-L7 تعمل بـ TTS storyAudioId: null + storyAudioText → TTS
-✅ الألعاب والفلاش لا تتأثر تعديل في LessonScreen فقط
-✅ صوت الرفيق شام / ريان / بانة / جود — يُقرأ من soroban_companion (مثل الألعاب)
-✅ Rollback سهل Revert لـ commit واحد
+✅ الضمان 📝 التفصيل
+دروس L0-L3 تعمل كما هي storyAudioId موجود → MP3 يُشغّل (لا تغيير)
+دروس L4-L7 تعمل بـ TTS storyAudioId: null + storyAudioText → TTS
+الألعاب والفلاش لا تتأثر تعديل في LessonScreen فقط
+صوت الرفيق شام / ريان / بانة / جود — يُقرأ من soroban_companion (مثل الألعاب)
+Rollback سهل Revert لـ commit واحد
 
 ---
 
@@ -841,6 +838,7 @@ useEffect(() => {
 · LessonScreen.tsx (محمي) لا يشغل storyAudioText عندما يكون storyAudioId = null؛ لذلك لا يظهر زر "موجز القصة" في L4-L7.
 
 الحل المعتمد (بعد موافقة صريحة):
+
 تعديل LessonScreen.tsx في 3 نقاط:
 
 1. استيراد useCharacterVoice من @/hooks/useCharacterVoice، وقراءة الرفيق المختار من soroban_companion (مثل الألعاب).
@@ -892,7 +890,7 @@ const canPlayModuleStory =
 نلتزم في كل درس جديد بالآتي:
 
 1. كل حقل نصي قابل للترجمة يُكتب بالصيغة:
-   ```
+   ```text
    "نص عربي | English text"
    ```
    (أو {ar, en} إذا كان نوع الحقل يسمح).
@@ -917,6 +915,8 @@ const canPlayModuleStory =
 4. توثيق في EXECUTION_LOG.
 
 هذا الملحق يُضاف إلى نهاية الخطة، ويُعتبر مرجعًا لأي مساعد قادم.
+
+---
 
 ✅ ما تم إنجازه في هذه الجلسة
 
@@ -961,19 +961,13 @@ const canPlayModuleStory =
 5. Bank A هو المصدر الرسمي للدروس.
 6. LessonScreen.tsx محمي — يحتاج موافقة لتفعيل TTS.
 
-
-
-
-
-
-
-
+---
 
 📌 ملخص ما تم إضافته
 
 # القسم المحتوى
-1 الفهرس إضافة البند 11 (TTS)
-2 القسم 11 (جديد) خطة تفعيل TTS كاملة
+1 الفهرس إضافة البند 12 (TTS)
+2 القسم 12 (جديد) خطة تفعيل TTS كاملة
 3 قائمة "لا تنفّذ" إضافة تحذير على LessonScreen.tsx
 4 خارطة الطريق إضافة TTS كمهمة نهاية الجلسة
 5 قائمة التتبع إضافة TTS في "متبقي"
