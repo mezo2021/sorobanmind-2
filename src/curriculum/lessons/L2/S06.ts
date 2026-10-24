@@ -664,12 +664,11 @@ export const S06_LESSON: LessonNode = {
       rule: {
         description: "التحالف المزدوج 👑: عندما تكون 5 مفعّلة والسفليات لا تكفي لطرح المتمّم، نفّذ رفع مزدوج ⬆️⬆️ على العشرات (إلغاء 5 بالسبابة ⬆️ وإضافة المكمل بالإبهام ⬆️)، ثم أضف 1 لعمود المئات بالإبهام 👍⬆️! | Double Alliance 👑: When 5 is active and lower beads are insufficient to subtract complement, perform Double Lift ⬆️⬆️ on tens (cancel 5 with index ⬆️ & add remainder with thumb ⬆️), then add 1 to hundreds with thumb 👍⬆️!",
         cases: [
-          { from: 5, formula: "+5 = −5 + 10" },
-          { from: 6, formula: "+6 = −5 + 1 + 10" },
-          { from: 7, formula: "+7 = −5 + 2 + 10" },
-          { from: 8, formula: "+8 = −5 + 3 + 10" },
-          { from: 9, formula: "+9 = −5 + 4 + 10" },
-        ],
+  { from: 6, formula: "+6 = −5 + 1 + 10" },
+  { from: 7, formula: "+7 = −5 + 2 + 10" },
+  { from: 8, formula: "+8 = −5 + 3 + 10" },
+  { from: 9, formula: "+9 = −5 + 4 + 10" },
+],
       },
       condition: {
         formula: "مجموع العشرات ≥ 10 · 5 مفعّلة · السفليات < المتمّم | Tens sum ≥ 10 · 5 active · Lower beads < Complement",
