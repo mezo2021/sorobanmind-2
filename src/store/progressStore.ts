@@ -517,8 +517,8 @@ export const useProgressStore = create<ProgressState>()(
             currentStreak: (old.streak as number) || (old.currentStreak as number) || 0,
             lastPlayedDate: (old.lastPlayedDate as string) || null,
             completedLevels: (old.completedLevels as LevelId[]) || [],
-            completedLessons: [] as string[],
-          });
+              completedLessons: [] as string[],
+} as ProgressState);
         }
 
         if (version < 4) {
