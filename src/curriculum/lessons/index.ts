@@ -20,6 +20,10 @@ import { S06_LESSON } from "./L2/S06";
 import { S07_LESSON } from "./L3/S07";
 import { S08_LESSON } from "./L3/S08";
 
+// ─────── L4 ───────
+import { S09_LESSON } from "./L4/S09";
+import { S10_LESSON } from "./L4/S10";
+
 // ═══════════════════════════════════════════════════════════
 // 📚 Registry
 // ═══════════════════════════════════════════════════════════
@@ -29,6 +33,7 @@ export const LESSONS_BY_LEVEL: Record<string, LessonNode[]> = {
   L1: [S03_LESSON, S04_LESSON],
   L2: [S05_LESSON, S06_LESSON],
   L3: [S07_LESSON, S08_LESSON],
+  L4: [S09_LESSON, S10_LESSON],
 };
 
 export const ALL_LESSONS: LessonNode[] = Object.values(LESSONS_BY_LEVEL).flat();
@@ -91,3 +96,5 @@ export { S05_LESSON } from "./L2/S05";
 export { S06_LESSON } from "./L2/S06";
 export { S07_LESSON } from "./L3/S07";
 export { S08_LESSON } from "./L3/S08";
+export { S09_LESSON } from "./L4/S09";
+export { S10_LESSON } from "./L4/S10";
