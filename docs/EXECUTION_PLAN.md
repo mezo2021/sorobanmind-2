@@ -95,6 +95,172 @@
 - [x] **م7 — زر التصفير:** تصحيح النص ليكون صادقاً مع سلوك الكود.
 - [x] **م9أ — ESLint:** تثبيت الحزم، تحديث `lint.yml`، وإصلاح Lockfile.
 - [x] **م9ب — ترتيب Workflows:** حذف `p0` · `p1` · `p2` · `p3`.
+📋 توثيق م8 الكامل (6 ملفات · 13 تعديلاً)
+
+📄 الملف 1: src/store/progressStore.ts (10 تعديلات)
+
+# التعديل السبب
+1 استيراد LevelId من @/data/srb-adapter توحيد مصدر النوع في مكان واحد (srb-adapter يُصدّر LevelId = SRBLevel = L0-L7 فقط)
+2 حذف تعريف LevelId المحلي واستبداله بـ export type { LevelId }; إزالة التعريف المختلط (L0-L7 + L00-L20) الذي كان يسبب فوضى نوعية
+3 passedPractice: number[] → LevelId[] تخزين معرّفات نصية (L0) بدلاً من أرقام (0)
+4 passedAnzanVisual: number[] → LevelId[] نفس السبب
+5 passedAnzanAudio: number[] → LevelId[] نفس السبب
+6 تحديث تواقيع الدوال الثلاث (mark*Passed: (levelId: LevelId)) Type safety — منع تمرير أرقام
+7 تحديث initialState (مصفوفات as LevelId[]) تطابق النوع
+8 حذف دالة uniqueNums + استخدام uniqueLevels Dead code — لم يبق لها استخدام بعد التعديل
+9 تحديث تنفيذ الدوال الثلاث (includes(levelId) + uniqueLevels) العمل مع النص
+10 تحديث الـ Selectors الثلاثة ((levelId: LevelId)) الاتساق النوعي
+11 version: 11 → 12 + إضافة applyLevelIdMigration Migration ذكي يحوّل البيانات تلقائياً
+12 إصلاح فرع v3 بإضافة as ProgressState إرضاء TypeScript (كان الكائن ناقصاً للدوال)
+
+آلية Migration v12 (جوهر العمل):
+
+```typescript
+const applyLevelIdMigration = (s: ProgressState): ProgressState => {
+  if (version >= 12) return s;  // idempotent
+  
+  const toLevelId = (n: unknown): LevelId | null => {
+    if (typeof n === "string" && /^L[0-7]$/.test(n)) return n as LevelId;
+    if (typeof n === "number" && Number.isInteger(n) && n >= 0 && n <= 7)
+      return `L${n}` as LevelId;
+    return null;  // يرفض L15 و LL0 تلقائياً
+  };
+  
+  const safeMap = (arr) => (Array.isArray(arr) ? arr : [])
+    .map(toLevelId).filter((x): x is LevelId => x !== null);
+  
+  return {
+    ...s,
+    passedPractice: safeMap(s.passedPractice),
+    passedAnzanVisual: safeMap(s.passedAnzanVisual),
+    passedAnzanAudio: safeMap(s.passedAnzanAudio),
+    completedLevels: ((s.completedLevels as string[]) || [])
+      .filter((lv) => /^L[0-7]$/.test(lv)) as LevelId[],
+  };
+};
+```
+
+تطبيقها على كل مسار ترحيل (v3-v11) بدلاً من مسار واحد فقط — لحل ثغرة "v10 لن يمر عبر v12".
+
+---
+
+📄 الملف 2: src/screens/PracticeScreen.tsx (تعديل واحد)
+
+```typescript
+// قبل:
+markPracticePassed(levelNum);
+// بعد:
+markPracticePassed(level);
+```
+
+السبب: level هو SRBLevel (نصي) — متوافق مباشرة مع LevelId. لا حاجة لـ parseInt سابق.
+
+لا تغيير في منطق اللعبة.
+
+---
+
+📄 الملف 3: src/screens/AnzanScreen.tsx (تعديل واحد)
+
+```typescript
+// قبل:
+markAnzanVisualPassed(levelNum);
+// بعد:
+markAnzanVisualPassed(level);
+```
+
+---
+
+📄 الملف 4: src/screens/AudioAnzanScreen.tsx (تعديل واحد)
+
+```typescript
+// قبل:
+markAnzanAudioPassed(levelNum);
+// بعد:
+markAnzanAudioPassed(level);
+```
+
+---
+
+📄 الملف 5: src/screens/CategoryScreen.tsx (4 تعديلات)
+
+استيراد جديد:
+
+```typescript
+import type { SRBLevel } from '@/data/srb-adapter';
+```
+
+3 تعديلات في .includes():
+
+```typescript
+// قبل:
+passedPractice.includes(practiceNum)         // practiceNum = number
+passedAnzanVisual.includes(anzanNum)         // anzanNum = number
+passedAnzanAudio.includes(anzanNum)          // anzanNum = number
+
+// بعد:
+passedPractice.includes(`L${practiceNum}` as SRBLevel)
+passedAnzanVisual.includes(`L${anzanNum}` as SRBLevel)
+passedAnzanAudio.includes(`L${anzanNum}` as SRBLevel)
+```
+
+السبب: المتغيرات practiceNum و anzanNum محسوبة كأرقام (data.practiceRange[0] + levelIndex)، لكن المصفوفة تحتوي نصوصاً الآن. التحويل \L${num}`` يحوّل 0→'L0'، 1→'L1'.
+
+لا تغيير في شروط الفتح أو المنطق.
+
+---
+
+📄 الملف 6: src/screens/LevelScreen.tsx (3 تعديلات)
+
+```typescript
+// قبل:
+passedPractice.includes(level.practiceNum)        // number
+passedAnzanVisual.includes(level.anzanNum)        // number
+passedAnzanAudio.includes(level.anzanNum)         // number
+
+// بعد:
+passedPractice.includes(`L${level.practiceNum}` as LevelId)
+passedAnzanVisual.includes(`L${level.anzanNum}` as LevelId)
+passedAnzanAudio.includes(`L${level.anzanNum}` as LevelId)
+```
+
+السبب: نفس منطق CategoryScreen. LevelId مستورد بالفعل من progressStore.
+
+---
+
+🎯 ملخص الفوائد (للتوثيق)
+
+ما تم حله:
+
+المشكلة قبل بعد
+نوع LevelId مختلط (L0-L7 + L00-L20) نظيف (L0-L7 فقط)
+تخزين التقدم number[] ([0,1,3]) LevelId[] (['L0','L1','L3'])
+تحويلات يدوية parseInt في كل مكان صفر — نصي مباشر
+مصادر النوع تعريفان متضاربان مصدر واحد (srb-adapter)
+الـ Migration غير آمن (v10→v12 يفشل) آمن لكل النسخ (v3→v12)
+
+ما لم يتغير:
+
+· ❌ منطق فتح/قفل المستويات
+· ❌ ترتيب الشاشات
+· ❌ الإحصائيات
+· ❌ السلوك المرئي
+· ❌ أي ملف محمي
+
+الخطوة التالية (بعد التوثيق)
+
+1️⃣ فحص فوري (30 ثانية):
+
+· افتح التطبيق
+· DevTools → Application → Local Storage → sorobanmind-v2-progress
+· تحقق:
+  · version = 12 ✅
+  · passedPractice = ['L0','L1','L2'] (نصوص)
+  · passedAnzanVisual = ['L0','L1']
+  · passedAnzanAudio = ['L0','L1']
+
+إذا كل شيء صحيح → م8 مكتملة 100%.
+
+
 - [x] **م10 — إعدام البنوك وفصل المحرك:** حذف `bank.ts` و `bank-v2` و `bank-raw` و `bank-linked` و `bank-adapter`، وعزل `engine` (وضع Stubs).
 - [ ] **م5-ب — إزالة استيراد الدروس:** **ملغاة** بسبب U5.
 - [ ] **م8 — توحيد IDs:** مؤجلة (انظر خارطة الطريق).
