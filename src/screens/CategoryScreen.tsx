@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 
 import type { Screen, CategoryId, LevelId } from '@/types';
+import type { SRBLevel } from '@/data/srb-adapter';
 import Header from './Header';
 import { useGameStats } from '@/hooks/useGameStats';
 import { useProgressStore } from '@/store/progressStore';
@@ -254,7 +255,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   const isPracticePassed = (levelIndex: number): boolean => {
     if (inPreview) return false;
     const practiceNum = data.practiceRange[0] + levelIndex;
-    return passedPractice.includes(practiceNum);
+    return passedPractice.includes(`L${practiceNum}` as SRBLevel);
   };
 
   const isLevelBlocked = (levelId: string): boolean =>
@@ -268,7 +269,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   const isAnzanVisualPassed = (levelIndex: number): boolean => {
     if (inPreview) return false;
     const anzanNum = data.anzanRange[0] + levelIndex;
-    return passedAnzanVisual.includes(anzanNum);
+    return passedAnzanVisual.includes(`L${anzanNum}` as SRBLevel);
   };
 
   const isAnzanAudioUnlocked = (levelIndex: number): boolean => {
@@ -279,7 +280,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   const isAnzanAudioPassed = (levelIndex: number): boolean => {
     if (inPreview) return false;
     const anzanNum = data.anzanRange[0] + levelIndex;
-    return passedAnzanAudio.includes(anzanNum);
+    return passedAnzanAudio.includes(`L${anzanNum}` as SRBLevel);
   };
 
   // ✅ [SURGICAL FIX] — الامتحان النهائي يتطلب اجتياز اختبار كل مستوى (>= 80%)
