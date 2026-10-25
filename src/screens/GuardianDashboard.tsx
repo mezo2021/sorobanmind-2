@@ -906,7 +906,6 @@ export function GuardianDashboard({
           <p className="text-xs text-electric-300 font-body mt-1">{pickLang({ ar: 'من ', en: 'out of ' }, lang)}{toArabicNumber(totalLevelsCount)}</p>
         </motion.div>
 
-        {/* 🆕 بطاقة الأنزان السمعي */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.58 }} className="glass-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <Volume2 className="w-5 h-5 text-rose-400" />
