@@ -26,6 +26,11 @@ import { isPreviewMode } from '@/utils/previewMode';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
 
+// 🌍 i18n — الترجمة (عدّل مسار الاستيراد حسب مشروعك)
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
+
 // ═══════════════════════════════════════════════════════════
 // الأنواع
 // ═══════════════════════════════════════════════════════════
@@ -211,6 +216,7 @@ export function LevelScreen({
   onBack,
   playSound,
 }: LevelScreenProps) {
+  const { lang, dir } = useT();
   useNumberStyleStore((s) => s.style); // 🔢 إعادة الرسم عند تبديل نمط الأرقام
   const navigate = onNavigate || (() => {});
   const sound = playSound || (() => {});
@@ -240,10 +246,14 @@ export function LevelScreen({
 
   if (!level) {
     return (
-      <div dir="rtl" className="px-6 py-6 max-w-3xl mx-auto text-center">
+      <div dir={dir} className="px-6 py-6 max-w-3xl mx-auto text-center">
         <div className="glass-card p-8">
-          <p className="text-white/60 font-body mb-4">المستوى غير موجود</p>
-          <button type="button" onClick={back} className="btn-primary">رجوع</button>
+          <p className="text-white/60 font-body mb-4">
+            {pickLang({ ar: 'المستوى غير موجود', en: 'Level not found' }, lang)}
+          </p>
+          <button type="button" onClick={back} className="btn-primary">
+            {pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
+          </button>
         </div>
       </div>
     );
@@ -337,16 +347,18 @@ export function LevelScreen({
         onHome={goBack}
       />
 
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-3xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-3xl mx-auto">
         {/* Level Title */}
         <div className="mb-6">
           <div className="flex items-center gap-2 flex-wrap">
             <Star className="w-5 h-5 text-gold-300" />
             <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white truncate">
-              {toArabicNumber(level.number)} — {level.titleAr}
+              {toArabicNumber(level.number)} — {pickLang({ ar: level.titleAr, en: level.titleEn }, lang)}
             </h2>
           </div>
-          <p className="text-xs text-white/50 font-body mt-0.5">{level.titleEn}</p>
+          <p className="text-xs text-white/50 font-body mt-0.5">
+            {pickLang({ ar: level.titleEn, en: level.titleAr }, lang)}
+          </p>
         </div>
 
         {/* Hero Card */}
@@ -359,24 +371,49 @@ export function LevelScreen({
 
           <div className="relative">
             <p className="text-sm text-white/70 font-body leading-relaxed mb-4">
-              {level.desc}
+              {translateDynamic(level, lang, 'desc')}
             </p>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-gold-300" />
-                <span className="text-xs text-white/60 font-body">التقدم:</span>
+                <span className="text-xs text-white/60 font-body">
+                  {pickLang({ ar: 'التقدم:', en: 'Progress:' }, lang)}
+                </span>
                 <span className="text-sm font-bold text-gold-300 font-display">
-                  {toArabicNumber(Math.round(completionPct))}٪
+                  {pickLang({
+                    ar: `${toArabicNumber(Math.round(completionPct))}٪`,
+                    en: `${toArabicNumber(Math.round(completionPct))}%`,
+                  }, lang)}
                 </span>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
-                {isLessonCompleted && <span className="text-[10px] px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-200 font-bold">درس ✓</span>}
-                {isPracticePassed && <span className="text-[10px] px-2 py-1 rounded-lg bg-blue-500/20 text-blue-200 font-bold">تمرّن ✓</span>}
-                {isAnzanVisualPassed && <span className="text-[10px] px-2 py-1 rounded-lg bg-purple-500/20 text-purple-200 font-bold">بصري ✓</span>}
-                {isAnzanAudioPassed && <span className="text-[10px] px-2 py-1 rounded-lg bg-rose-500/20 text-rose-200 font-bold">سمعي ✓</span>}
-                {isLevelTestPassed && <span className="text-[10px] px-2 py-1 rounded-lg bg-gold-400/20 text-gold-200 font-bold">اختبار ✓</span>}
+                {isLessonCompleted && (
+                  <span className="text-[10px] px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-200 font-bold">
+                    {pickLang({ ar: 'درس ✓', en: 'Lesson ✓' }, lang)}
+                  </span>
+                )}
+                {isPracticePassed && (
+                  <span className="text-[10px] px-2 py-1 rounded-lg bg-blue-500/20 text-blue-200 font-bold">
+                    {pickLang({ ar: 'تمرّن ✓', en: 'Practice ✓' }, lang)}
+                  </span>
+                )}
+                {isAnzanVisualPassed && (
+                  <span className="text-[10px] px-2 py-1 rounded-lg bg-purple-500/20 text-purple-200 font-bold">
+                    {pickLang({ ar: 'بصري ✓', en: 'Visual ✓' }, lang)}
+                  </span>
+                )}
+                {isAnzanAudioPassed && (
+                  <span className="text-[10px] px-2 py-1 rounded-lg bg-rose-500/20 text-rose-200 font-bold">
+                    {pickLang({ ar: 'سمعي ✓', en: 'Audio ✓' }, lang)}
+                  </span>
+                )}
+                {isLevelTestPassed && (
+                  <span className="text-[10px] px-2 py-1 rounded-lg bg-gold-400/20 text-gold-200 font-bold">
+                    {pickLang({ ar: 'اختبار ✓', en: 'Test ✓' }, lang)}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -398,9 +435,15 @@ export function LevelScreen({
             className="mb-4 p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-400/50 text-center"
           >
             <p className="text-sm font-bold text-amber-200 mb-3">
-              ⚠️ يجب إتمام الجلسة العلاجية لفتح المسار التالي
+              {pickLang({
+                ar: '⚠️ يجب إتمام الجلسة العلاجية لفتح المسار التالي',
+                en: '⚠️ You must complete the remedial session to unlock the next path',
+              }, lang)}
               <span className="block text-xs text-amber-100/80 mt-1">
-                ({toArabicNumber(pendingRemediation.skills.length)} مهارة · ٥ أسئلة موزّعة)
+                {pickLang({
+                  ar: `(${toArabicNumber(pendingRemediation.skills.length)} مهارة · ${toArabicNumber(5)} أسئلة موزّعة)`,
+                  en: `(${toArabicNumber(pendingRemediation.skills.length)} skills · ${toArabicNumber(5)} distributed questions)`,
+                }, lang)}
               </span>
             </p>
             <button
@@ -408,7 +451,10 @@ export function LevelScreen({
               onClick={() => handleNav(`remediation-${levelId}` as Screen)}
               className="w-full py-3 rounded-2xl bg-gradient-to-l from-amber-400 to-orange-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/40 animate-pulse"
             >
-              🩺 ابدأ الجلسة العلاجية الإجبارية ({toArabicNumber(pendingRemediation.skills.length)} مهارة)
+              {pickLang({
+                ar: `🩺 ابدأ الجلسة العلاجية الإجبارية (${toArabicNumber(pendingRemediation.skills.length)} مهارة)`,
+                en: `🩺 Start the mandatory remedial session (${toArabicNumber(pendingRemediation.skills.length)} skills)`,
+              }, lang)}
             </button>
           </motion.div>
         )}
@@ -417,8 +463,8 @@ export function LevelScreen({
         <div className="space-y-3">
           {/* 1. تعلّم → قائمة الدروس */}
           <SectionCard
-            title="📖 تعلّم"
-            subtitle="القصة + المفهوم + الأمثلة المحلولة"
+            title={pickLang({ ar: '📖 تعلّم', en: '📖 Learn' }, lang)}
+            subtitle={pickLang({ ar: 'القصة + المفهوم + الأمثلة المحلولة', en: 'Story + concept + solved examples' }, lang)}
             icon={BookOpen}
             gradient={level.gradient}
             locked={false}
@@ -429,15 +475,21 @@ export function LevelScreen({
 
           {/* 2. تمرّن */}
           <SectionCard
-            title={`✏️ تمرّن ${toArabicNumber(level.practiceNum)}`}
+            title={pickLang({
+              ar: `✏️ تمرّن ${toArabicNumber(level.practiceNum)}`,
+              en: `✏️ Practice ${toArabicNumber(level.practiceNum)}`,
+            }, lang)}
             subtitle={
               hasPendingRemediation && remediationTarget === 'practice'
-                ? '🔒 مقفل — جلسة علاجية إجبارية'
+                ? pickLang({ ar: '🔒 مقفل — جلسة علاجية إجبارية', en: '🔒 Locked — mandatory remedial session' }, lang)
                 : practiceLocked
-                  ? '🔒 يُفتح بعد إنهاء الدروس'
+                  ? pickLang({ ar: '🔒 يُفتح بعد إنهاء الدروس', en: '🔒 Unlocks after finishing lessons' }, lang)
                   : isPracticePassed
-                    ? `✅ اجتزت بدرجة ${toArabicNumber(levelGrades.practice ?? 0)}٪`
-                    : 'أسئلة تكيفية من البنك'
+                    ? pickLang({
+                        ar: `✅ اجتزت بدرجة ${toArabicNumber(levelGrades.practice ?? 0)}٪`,
+                        en: `✅ Passed with grade ${toArabicNumber(levelGrades.practice ?? 0)}%`,
+                      }, lang)
+                    : pickLang({ ar: 'أسئلة تكيفية من البنك', en: 'Adaptive questions from the bank' }, lang)
             }
             icon={Dumbbell}
             gradient="from-blue-500 to-cyan-700"
@@ -449,28 +501,41 @@ export function LevelScreen({
 
           {/* 3. أنزان بصري */}
           <SectionCard
-            title="🧠 أنزان بصري"
+            title={pickLang({ ar: '🧠 أنزان بصري', en: '🧠 Visual Anzan' }, lang)}
             subtitle={
               hasPendingRemediation && (
                 remediationTarget === 'anzanVisualNormal' ||
                 remediationTarget === 'anzanVisualFlash'
               )
-                ? '🔒 مقفل — جلسة علاجية إجبارية'
+                ? pickLang({ ar: '🔒 مقفل — جلسة علاجية إجبارية', en: '🔒 Locked — mandatory remedial session' }, lang)
                 : anzanVisualLocked
-                  ? '🔒 يُفتح بعد النجاح في تمرّن'
+                  ? pickLang({ ar: '🔒 يُفتح بعد النجاح في تمرّن', en: '🔒 Unlocks after passing practice' }, lang)
                   : isAnzanVisualPassed
-                    ? `✅ اجتزت بدرجة ${
-                        levelGrades.anzanVisualNormal !== null && levelGrades.anzanVisualFlash !== null
-                          ? toArabicNumber(Math.round(
-                              (levelGrades.anzanVisualNormal + levelGrades.anzanVisualFlash) / 2,
-                            ))
-                          : toArabicNumber(
-                              levelGrades.anzanVisualNormal ??
-                              levelGrades.anzanVisualFlash ??
-                              0,
-                            )
-                      }٪`
-                    : 'أرقام تومض — احسب بذهنك'
+                    ? pickLang({
+                        ar: `✅ اجتزت بدرجة ${
+                          levelGrades.anzanVisualNormal !== null && levelGrades.anzanVisualFlash !== null
+                            ? toArabicNumber(Math.round(
+                                (levelGrades.anzanVisualNormal + levelGrades.anzanVisualFlash) / 2,
+                              ))
+                            : toArabicNumber(
+                                levelGrades.anzanVisualNormal ??
+                                levelGrades.anzanVisualFlash ??
+                                0,
+                              )
+                        }٪`,
+                        en: `✅ Passed with grade ${
+                          levelGrades.anzanVisualNormal !== null && levelGrades.anzanVisualFlash !== null
+                            ? toArabicNumber(Math.round(
+                                (levelGrades.anzanVisualNormal + levelGrades.anzanVisualFlash) / 2,
+                              ))
+                            : toArabicNumber(
+                                levelGrades.anzanVisualNormal ??
+                                levelGrades.anzanVisualFlash ??
+                                0,
+                              )
+                        }%`,
+                      }, lang)
+                    : pickLang({ ar: 'أرقام تومض — احسب بذهنك', en: 'Numbers flash — calculate mentally' }, lang)
             }
             icon={Eye}
             gradient="from-purple-500 to-violet-700"
@@ -482,15 +547,18 @@ export function LevelScreen({
 
           {/* 4. أنزان سمعي */}
           <SectionCard
-            title="🎧 أنزان سمعي"
+            title={pickLang({ ar: '🎧 أنزان سمعي', en: '🎧 Audio Anzan' }, lang)}
             subtitle={
               hasPendingRemediation && remediationTarget === 'anzanAudio'
-                ? '🔒 مقفل — جلسة علاجية إجبارية'
+                ? pickLang({ ar: '🔒 مقفل — جلسة علاجية إجبارية', en: '🔒 Locked — mandatory remedial session' }, lang)
                 : anzanAudioLocked
-                  ? '🔒 يُفتح بعد النجاح في الأنزان البصري'
+                  ? pickLang({ ar: '🔒 يُفتح بعد النجاح في الأنزان البصري', en: '🔒 Unlocks after passing visual Anzan' }, lang)
                   : isAnzanAudioPassed
-                    ? `✅ اجتزت بدرجة ${toArabicNumber(levelGrades.anzanAudio ?? 0)}٪`
-                    : 'اسمع الأرقام واحسب ذهنياً'
+                    ? pickLang({
+                        ar: `✅ اجتزت بدرجة ${toArabicNumber(levelGrades.anzanAudio ?? 0)}٪`,
+                        en: `✅ Passed with grade ${toArabicNumber(levelGrades.anzanAudio ?? 0)}%`,
+                      }, lang)
+                    : pickLang({ ar: 'اسمع الأرقام واحسب ذهنياً', en: 'Listen to numbers and calculate mentally' }, lang)
             }
             icon={Volume2}
             gradient="from-rose-500 to-pink-700"
@@ -502,15 +570,24 @@ export function LevelScreen({
 
           {/* 5. اختبار المستوى */}
           <SectionCard
-            title={`🎓 اختبار ${toArabicNumber(level.number)}`}
+            title={pickLang({
+              ar: `🎓 اختبار ${toArabicNumber(level.number)}`,
+              en: `🎓 Test ${toArabicNumber(level.number)}`,
+            }, lang)}
             subtitle={
               hasPendingRemediation
-                ? '🔒 مقفل — أتمّ الجلسة العلاجية أولًا'
+                ? pickLang({ ar: '🔒 مقفل — أتمّ الجلسة العلاجية أولًا', en: '🔒 Locked — complete the remedial session first' }, lang)
                 : levelTestLocked
-                  ? '🔒 يُفتح بعد إتمام كل المسارات'
+                  ? pickLang({ ar: '🔒 يُفتح بعد إتمام كل المسارات', en: '🔒 Unlocks after completing all tracks' }, lang)
                   : isLevelTestPassed
-                    ? `✅ اجتزت بدرجة ${toArabicNumber(levelGrades.levelTest ?? 0)}٪`
-                    : '10 أسئلة صعبة — 60 ثانية — 80%'
+                    ? pickLang({
+                        ar: `✅ اجتزت بدرجة ${toArabicNumber(levelGrades.levelTest ?? 0)}٪`,
+                        en: `✅ Passed with grade ${toArabicNumber(levelGrades.levelTest ?? 0)}%`,
+                      }, lang)
+                    : pickLang({
+                        ar: `${toArabicNumber(10)} أسئلة صعبة — ${toArabicNumber(60)} ثانية — ${toArabicNumber(80)}٪`,
+                        en: `${toArabicNumber(10)} hard questions — ${toArabicNumber(60)} seconds — ${toArabicNumber(80)}%`,
+                      }, lang)
             }
             icon={GraduationCap}
             gradient="from-gold-400 to-amber-600"
@@ -532,10 +609,16 @@ export function LevelScreen({
             <div className="relative">
               <Trophy className="w-12 h-12 text-gold-300 mx-auto mb-3" />
               <h3 className="text-lg font-extrabold font-display text-white mb-1">
-                🏅 اجتزت المستوى بدرجة تراكمية {toArabicNumber(finalScore ?? 0)}٪ ✓
+                {pickLang({
+                  ar: `🏅 اجتزت المستوى بدرجة تراكمية ${toArabicNumber(finalScore ?? 0)}٪ ✓`,
+                  en: `🏅 You passed the level with a cumulative grade of ${toArabicNumber(finalScore ?? 0)}% ✓`,
+                }, lang)}
               </h3>
               <p className="text-sm text-white/60 font-body mb-4">
-                {nextLevelId ? 'يمكنك الانتقال للمستوى التالي' : 'أتممت كل المستويات!'}
+                {nextLevelId
+                  ? pickLang({ ar: 'يمكنك الانتقال للمستوى التالي', en: 'You can move to the next level' }, lang)
+                  : pickLang({ ar: 'أتممت كل المستويات!', en: 'You completed all levels!' }, lang)
+                }
               </p>
               <button
                 type="button"
@@ -543,7 +626,10 @@ export function LevelScreen({
                 className="btn-primary w-full"
               >
                 <Play className="w-5 h-5" />
-                {nextLevelId ? 'تابع إلى المستوى التالي' : 'العودة إلى القسم'}
+                {nextLevelId
+                  ? pickLang({ ar: 'تابع إلى المستوى التالي', en: 'Continue to the next level' }, lang)
+                  : pickLang({ ar: 'العودة إلى القسم', en: 'Return to section' }, lang)
+                }
               </button>
             </div>
           </motion.div>
