@@ -94,8 +94,6 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "في مملكة الأصابع، تعيش عائلتان صديقتان: عائلة اليد اليمنى المسؤولة عن الآحاد، وعائلة اليد اليسرى المسؤولة عن العشرات. الإبهام هو الجدة الحنونة قيمتها 5، والأصابع الأربعة أطفال كل واحد قيمته 1. اجتمعوا معاً ليصنعوا كل الأعداد من 0 إلى 99!": "In the kingdom of fingers, two friendly families live: the right-hand family responsible for units, and the left-hand family responsible for tens. The thumb is the kind grandmother worth 5, and the four fingers are children, each worth 1. Together they create all numbers from 0 to 99!",
   "الإبهام = 5 (الجدة) · الأصابع الأخرى = 1 (طفل)": "Thumb = 5 (Grandma) · Other fingers = 1 (Child)",
   "اليد اليمنى = الآحاد · اليد اليسرى = العشرات": "Right hand = Units · Left hand = Tens",
-"اليد اليمنى (الآحاد)": "Right Hand (Units)",
-"اليد اليسرى (العشرات)": "Left Hand (Tens)",
   "مثل الرقم 1": "Like the number 1",
   "مثل الرقم 3": "Like the number 3",
   "مثل الرقم 5 (الجدة)": "Like the number 5 (Grandma)",
