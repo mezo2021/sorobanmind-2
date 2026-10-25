@@ -23,6 +23,8 @@ import { getLessonsByLevel } from '@/curriculum/lessons';
 
 // [FIX 7] — استخدام أداة المعاينة
 import { isPreviewMode } from '@/utils/previewMode';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { formatNumber } from '@/utils/numberStyle';
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -131,8 +133,9 @@ const LEVELS_DATA: Record<string, LevelInfo> = {
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
+// 🔢 يتبع زر تبديل الأرقام (عربي ٠١٢٣ ↔ لاتيني 0123) — الاسم محفوظ للتوافق
 function toArabicNumber(value: number | string): string {
-  return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+  return formatNumber(value, useNumberStyleStore.getState().style);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -208,6 +211,7 @@ export function LevelScreen({
   onBack,
   playSound,
 }: LevelScreenProps) {
+  useNumberStyleStore((s) => s.style); // 🔢 إعادة الرسم عند تبديل نمط الأرقام
   const navigate = onNavigate || (() => {});
   const sound = playSound || (() => {});
   const back = onBack || (() => navigate('hero-dashboard'));
