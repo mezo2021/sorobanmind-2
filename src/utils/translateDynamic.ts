@@ -15,8 +15,9 @@ function normalizeArabic(text: string): string {
     .trim();
 }
 
-// القاموس الثابت (تمت إضافة أوصاف المستويات لضمان مطابقة 100%)
+// القاموس الثابت (تمت إضافة أوصاف المستويات ونطاقات السوروبان لضمان مطابقة 100%)
 const RAW_AR_TO_EN: Record<string, string> = {
+  // ─── العمليات الحسابية والمهارات ───
   "ضرب باصدقاء 5": "Mul with Friends of 5", "ضرب بأصدقاء 5": "Mul with Friends of 5",
   "ضرب باصدقاء 10": "Mul with Friends of 10", "ضرب بأصدقاء 10": "Mul with Friends of 10",
   "ضرب مركب": "Compound Mul", "ضرب بسيط": "Direct Mul",
@@ -28,6 +29,8 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "جمع مركب": "Compound Add", "جمع بسيط": "Direct Add",
   "تمثيل 0-4": "Representing 0-4", "تمثيل 5-9": "Representing 5-9",
   "المئات والآلاف": "Hundreds & Thousands", "الاحاد والعشرات": "Units & Tens",
+  
+  // ─── الأوسمة والرتب ───
   "المستكشف": "Explorer", "الصاعد": "Rising Star", "السريع": "Fast",
   "المتفوق": "Top Achiever", "الدقيق": "Precise", "المثابر": "Persistent",
   "الرائد": "Pioneer", "القناص": "Sniper", "المتدفق": "Flow",
@@ -38,7 +41,7 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "دقة ٨٥٪ في مهارة مكتملة": "85% accuracy in skill",
   "دقة 85% في مهارة مكتملة": "85% accuracy in skill",
 
-  // 🎯 أوصاف المستويات (LevelScreen Descriptions) - من الكود
+  // ─── أوصاف المستويات (LevelScreen Descriptions) ───
   "التعرّف على السوروبان والأرقام من ٠ إلى ٩ والقيمة المكانية": "Discover the soroban, numbers 0-9, and place value",
   "جمع وطرح بسيط + أصدقاء ٥ + أصدقاء ١٠ + عمليات مركّبة": "Simple addition & subtraction + Friends of 5 + Friends of 10 + compound operations",
   "الضرب المتدرّج (١×٢ · ٢×٢) على السوروبان": "Gradual multiplication (1x2 · 2x2) on the soroban",
@@ -48,11 +51,17 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "العمليات على الأعداد العشرية (جمع · طرح · ضرب · قسمة)": "Operations on decimals (add · sub · mul · div)",
   "الجذور التربيعية الكاملة": "Complete square roots",
 
-  // 🎯 صيغ بديلة (كما تظهر في الصور المرفقة)
+  // ─── صيغ بديلة لأوصاف المستويات (كما تظهر في الصور) ───
   "الضرب على السوروبان بطريقة تاكاشي": "Multiplication on the soroban using Takashi method",
   "القسمة على السوروبان — التقدير والطرح المتتالي": "Division on the soroban — estimation and successive subtraction",
   "الضرب والقسمة بطرق متقدمة": "Advanced multiplication & division methods",
-  "العمليات على الأعداد العشرية": "Operations on decimals"
+  "العمليات على الأعداد العشرية": "Operations on decimals",
+
+  // ─── نطاقات الأعمدة في شاشة السوروبان (SorobanPlayground) ───
+  "0 — 999": "0 — 999",
+  "0 — 999999": "0 — 999,999",
+  "0 — 999999999": "0 — 999,999,999",
+  "حتى تريليونات": "Up to Trillions"
 };
 
 const AR_TO_EN: Record<string, string> = {};
