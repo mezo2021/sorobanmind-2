@@ -12,6 +12,7 @@ import { FingerMath } from '@/components/FingerMath';
 import { FloatingCompanion } from '@/components/FloatingCompanion';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
+import { useReadAloud } from '@/hooks/useReadAloud'; // 🆕 استيراد الهوك
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 
@@ -79,6 +80,7 @@ export function FingerMathScreen({
 }: FingerMathScreenProps) {
   const { lang, dir } = useT();
   const sorobana = useSorobanaVoice();
+  const { speak: speakTTS, stop: stopTTS, speakingKey } = useReadAloud(lang); // 🆕 استخدام الهوك
   const { style: numberStyle, toggleStyle } = useNumberStyleStore();
 
   const [tab, setTab] = useState<Tab>('watch');
@@ -88,7 +90,10 @@ export function FingerMathScreen({
   const [solved, setSolved] = useState<Set<number>>(new Set());
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong' | 'reveal'>('idle');
   const [choices, setChoices] = useState<number[]>([]);
+  
   const [isReadingStory, setIsReadingStory] = useState(false);
+  const isTTSReading = speakingKey === 'story';
+  const isCurrentlyReading = isReadingStory || isTTSReading; // 🆕 حالة موحدة للقراءة
 
   const totalTry = TRY_QUESTIONS.length;
   const solvedCount = solved.size;
@@ -101,16 +106,26 @@ export function FingerMathScreen({
     }
   }, [tab, tryIdx]);
 
+  // 🆕 تعديل دالة التشغيل لتدعم اللغتين
   const toggleStory = () => {
-    if (isReadingStory) {
+    if (isCurrentlyReading) {
       sorobana.stop();
+      stopTTS();
       setIsReadingStory(false);
       return;
     }
+    
     sorobana.stop();
+    stopTTS();
     playSound('click');
-    setIsReadingStory(true);
-    sorobana.speakStory(STORY_AUDIO_ID, () => setIsReadingStory(false));
+
+    if (lang === 'ar') {
+      setIsReadingStory(true);
+      sorobana.speakStory(STORY_AUDIO_ID, () => setIsReadingStory(false));
+    } else {
+      const localizedStory = translateDynamic({ text: STORY }, lang, 'text');
+      speakTTS(localizedStory, 'story');
+    }
   };
 
   const handleAnswer = (chosen: number) => {
@@ -146,6 +161,7 @@ export function FingerMathScreen({
   const handleComplete = () => {
     playSound('levelup');
     sorobana.stop();
+    stopTTS(); // 🆕 إيقاف الصوت عند الإكمال
     try {
       const raw = localStorage.getItem(COMPLETED_KEY);
       const arr: string[] = raw ? JSON.parse(raw) : [];
@@ -161,6 +177,7 @@ export function FingerMathScreen({
   const handleHome = () => {
     playSound('click');
     sorobana.stop();
+    stopTTS(); // 🆕 إيقاف الصوت عند الرجوع
     setIsReadingStory(false);
     onBack();
   };
@@ -246,12 +263,12 @@ export function FingerMathScreen({
                   <button
                     onClick={toggleStory}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
-                      isReadingStory
+                      isCurrentlyReading
                         ? 'bg-red-500/30 border border-red-400/50 text-red-200'
                         : 'bg-rose-500/20 border border-rose-400/40 text-rose-200 hover:bg-rose-500/30'
                     }`}
                   >
-                    {isReadingStory ? (
+                    {isCurrentlyReading ? (
                       <>{pickLang({ ar: 'إيقاف', en: 'Stop' }, lang)} <Square className="w-3.5 h-3.5" /></>
                     ) : (
                       <>{pickLang({ ar: 'موجز القصة', en: 'Story Summary' }, lang)} <Volume2 className="w-3.5 h-3.5" /></>
@@ -458,8 +475,8 @@ export function FingerMathScreen({
 
       <FloatingCompanion playSound={playSound} />
       <SorobanaCompanion
-        isSpeaking={sorobana.isSpeaking}
-        onClick={() => { if (!isReadingStory) sorobana.speakTeaching(); }}
+        isSpeaking={sorobana.isSpeaking || isTTSReading}
+        onClick={() => { if (!isCurrentlyReading) sorobana.speakTeaching(); }}
         mode={tab === 'try' ? 'try' : 'watch'}
       />
     </div>
