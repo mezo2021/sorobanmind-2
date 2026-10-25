@@ -38,7 +38,6 @@ import { translateDynamic } from '@/utils/translateDynamic';
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
-// 🔢 يتبع زر تبديل الأرقام (عربي ٠١٢٣ ↔ لاتيني 0123) — الاسم محفوظ للتوافق
 function toArabicNumber(value: number | string): string {
   return formatNumber(value, useNumberStyleStore.getState().style);
 }
@@ -65,11 +64,12 @@ function parseSkillId(skillId: string): ParsedSkillId | null {
   };
 }
 
+// ✅ تم تعديل الدالة لتشمل name لضمان الترجمة
 function getSkillLabel(skillId: string, lang: string): string {
   const parsed = parseSkillId(skillId);
   if (!parsed) return skillId;
   const arName = getModuleName(parsed.section, parsed.module);
-  return translateDynamic({ nameAr: arName }, lang, 'name');
+  return translateDynamic({ nameAr: arName, name: arName }, lang, 'name');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -172,7 +172,7 @@ function LevelNodeButton({
 }
 
 // ═══════════════════════════════════════════════════════════
-// الشاشة
+// الشاشة الرئيسية
 // ═══════════════════════════════════════════════════════════
 
 export function GuardianDashboard({
@@ -183,8 +183,8 @@ export function GuardianDashboard({
   onShowWelcome,
 }: GuardianDashboardProps) {
   const { lang, dir } = useT();
-  useNumberStyleStore((s) => s.style); // 🔢 إعادة الرسم عند تبديل نمط الأرقام
-  // ═══ progressStore (SRB) ═══
+  useNumberStyleStore((s) => s.style);
+  
   const storedName = useProgressStore((s) => s.childName);
   const totalXP = useProgressStore((s) => s.totalXP);
   const currentStreak = useProgressStore((s) => s.currentStreak);
@@ -195,33 +195,23 @@ export function GuardianDashboard({
   const anzanBadges = useProgressStore((s) => s.anzanBadges);
   const anzanAudioBadges = useProgressStore((s) => s.anzanAudioBadges);
   const remediationHistory = useProgressStore((s) => s.remediationHistory);
-  const dailyXP = useProgressStore((s) => s.dailyXP); // 🆕 قراءة سجل النقاط اليومية
+  const dailyXP = useProgressStore((s) => s.dailyXP);
 
-  // ═══ masteryBadgesStore ═══
   const masteryBadges = useMasteryBadgesStore((s) => s.badges);
-
-  // ═══ الإنجازات (v10 — 12 إنجازاً) ═══
   const quests = useQuests();
 
-  // ═══ الأزرار الإدارية ═══
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showAllRemediation, setShowAllRemediation] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inPreview = isPreviewMode();
 
-  // ═══ الجلسات العلاجية (آخر 7 أيام) ═══
   const recentRemediation = useMemo(() => {
     const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
     return remediationHistory.filter((s) => s.completedAt >= cutoff);
   }, [remediationHistory]);
 
   const remediationSummary = useMemo(() => {
-    const map = new Map<string, {
-      skillId: string;
-      count: number;
-      lastAt: number;
-    }>();
-
+    const map = new Map<string, { skillId: string; count: number; lastAt: number; }>();
     recentRemediation.forEach((s) => {
       s.skills.forEach((skillId) => {
         const existing = map.get(skillId);
@@ -233,17 +223,15 @@ export function GuardianDashboard({
         }
       });
     });
-
     return Array.from(map.values()).sort((a, b) => b.lastAt - a.lastAt);
   }, [recentRemediation]);
 
-  // ═══ اسم الطفل ═══
-  const savedName = storedName || childName || pickLang({ ar: 'البطل', en: 'Hero' }, lang);
+  // ✅ تعديل: تمرير الاسم عبر دالة الترجمة
+  const rawName = storedName || childName || 'البطل';
+  const savedName = translateDynamic({ name: rawName }, lang, 'name');
 
-  // ═══ مشتقات ═══
   const totalLevelsCount = SRB_LEVELS.length;
 
-  // ✅ [SURGICAL FIX] — المستويات المكتملة هي التي درجة اختبارها 80% أو أكثر
   const effectiveCompletedLevels = useMemo(() => {
     return SRB_LEVELS
       .filter((lv) => {
@@ -254,14 +242,9 @@ export function GuardianDashboard({
   }, [grades]);
 
   const effectiveCompletedCount = effectiveCompletedLevels.length;
-
-  // ✅ [SURGICAL FIX] — المستوى الحالي يعتمد على عدد المستويات المكتملة (بحد أقصى 7)
   const childLevel = Math.min(effectiveCompletedCount, 7);
+  const isLegend = effectiveCompletedCount === totalLevelsCount && totalLevelsCount > 0;
 
-  const isLegend =
-    effectiveCompletedCount === totalLevelsCount && totalLevelsCount > 0;
-
-  // ═══ شارات إنجاز المستوى ═══
   const levelBadges = useMemo(
     () =>
       SRB_LEVELS.map((lv, idx) => ({
@@ -278,13 +261,11 @@ export function GuardianDashboard({
 
   const earnedLevelBadges = levelBadges.filter((b) => b.earned).length;
 
-  // ═══ شارات إتقان المهارات ═══
   const masteryBadgesList = useMemo(
     () => Object.values(masteryBadges).sort((a, b) => b.masteredAt - a.masteredAt),
     [masteryBadges],
   );
 
-  // ═══ شارات الأنزان البصري — 7 شارات ═══
   const anzanBadgeList = useMemo(
     () => [
       { id: 'master_addition', label: pickLang({ ar: 'خبير جمع وطرح', en: 'Addition Expert' }, lang), icon: '🧠', color: 'from-cyan-500 to-blue-700', earned: !!anzanBadges.master_addition },
@@ -300,7 +281,6 @@ export function GuardianDashboard({
 
   const earnedAnzanCount = anzanBadgeList.filter((b) => b.earned).length;
 
-  // ═══ شارات الأنزان السمعي — 7 شارات ═══
   const audioAnzanBadgeList = useMemo(
     () => [
       { id: 'master_addition_audio', label: pickLang({ ar: 'خبير جمع وطرح سماعي', en: 'Audio Addition Expert' }, lang), icon: '🎤', color: 'from-cyan-500 to-blue-700', earned: !!anzanAudioBadges.master_addition_audio },
@@ -315,8 +295,6 @@ export function GuardianDashboard({
   );
 
   const earnedAudioCount = audioAnzanBadgeList.filter((b) => b.earned).length;
-
-  // ═══ المهارات الأربع ═══
   const observation = useProgressStore(selectObservationAccuracy);
 
   const skills = useMemo(() => {
@@ -325,76 +303,34 @@ export function GuardianDashboard({
     const listening = Math.min(100, Math.round((passedAnzanAudio.length / totalLevelsCount) * 100));
 
     return [
-      { 
-        id: 'concentration', 
-        name: pickLang({ ar: 'التركيز والانتباه', en: 'Concentration & Focus' }, lang), 
-        description: pickLang({ ar: 'قدرة الطفل على البقاء مركّزاً خلال الجلسات', en: 'Child ability to stay focused during sessions' }, lang), 
-        percentage: concentration, 
-        available: true 
-      },
-      { 
-        id: 'visualization', 
-        name: pickLang({ ar: 'التخيل والتصور', en: 'Visualization & Soroban' }, lang), 
-        description: pickLang({ ar: 'قدرة الطفل على تخيل المعداد في عقله (الأنزان)', en: 'Child ability to visualize the abacus in mind' }, lang), 
-        percentage: visualization, 
-        available: true 
-      },
-      { 
-        id: 'observation', 
-        name: pickLang({ ar: 'دقة الملاحظة', en: 'Observation Accuracy' }, lang), 
-        description: pickLang({ ar: 'قدرة الطفل على حل المسائل من المحاولة الأولى', en: 'Child ability to solve problems on first try' }, lang), 
-        percentage: observation, 
-        available: true 
-      },
-      { 
-        id: 'listening', 
-        name: pickLang({ ar: 'الاستماع والانتباه السمعي', en: 'Listening & Auditory Focus' }, lang), 
-        description: pickLang({ ar: 'قدرة الطفل على الحساب من خلال السماع', en: 'Child ability to calculate through listening' }, lang), 
-        percentage: listening, 
-        available: true 
-      },
+      { id: 'concentration', name: pickLang({ ar: 'التركيز والانتباه', en: 'Concentration & Focus' }, lang), description: pickLang({ ar: 'قدرة الطفل على البقاء مركّزاً خلال الجلسات', en: 'Child ability to stay focused during sessions' }, lang), percentage: concentration, available: true },
+      { id: 'visualization', name: pickLang({ ar: 'التخيل والتصور', en: 'Visualization & Soroban' }, lang), description: pickLang({ ar: 'قدرة الطفل على تخيل المعداد في عقله (الأنزان)', en: 'Child ability to visualize the abacus in mind' }, lang), percentage: visualization, available: true },
+      { id: 'observation', name: pickLang({ ar: 'دقة الملاحظة', en: 'Observation Accuracy' }, lang), description: pickLang({ ar: 'قدرة الطفل على حل المسائل من المحاولة الأولى', en: 'Child ability to solve problems on first try' }, lang), percentage: observation, available: true },
+      { id: 'listening', name: pickLang({ ar: 'الاستماع والانتباه السمعي', en: 'Listening & Auditory Focus' }, lang), description: pickLang({ ar: 'قدرة الطفل على الحساب من خلال السماع', en: 'Child ability to calculate through listening' }, lang), percentage: listening, available: true },
     ];
   }, [passedPractice, passedAnzanVisual, passedAnzanAudio, totalLevelsCount, observation, lang]);
 
-  // ═══ خارطة المستويات ═══
   const levelNodes: LevelNodeData[] = useMemo(
     () =>
       SRB_LEVELS.map((lv, idx) => {
         const isCompleted = effectiveCompletedLevels.includes(lv.id);
-        const prevCompleted =
-          idx === 0 || effectiveCompletedLevels.includes(SRB_LEVELS[idx - 1].id);
-
-        const status: LevelStatus = isCompleted
-          ? 'completed'
-          : prevCompleted ? 'available' : 'locked';
-
-        return {
-          id: lv.order,
-          nameAr: lv.name,
-          nameEn: lv.nameEn,
-          status,
-          xpRequired: (lv.order + 1) * 100,
-        };
+        const prevCompleted = idx === 0 || effectiveCompletedLevels.includes(SRB_LEVELS[idx - 1].id);
+        const status: LevelStatus = isCompleted ? 'completed' : prevCompleted ? 'available' : 'locked';
+        return { id: lv.order, nameAr: lv.name, nameEn: lv.nameEn, status, xpRequired: (lv.order + 1) * 100 };
       }),
     [effectiveCompletedLevels],
   );
 
-  // ═══ نشاط الأسبوع ═══
-  // ✅ [SURGICAL FIX] — جلب بيانات السجل اليومي الحقيقية ومطابقتها مع أيام الأسبوع
   const weeklyXP = useMemo(() => {
     const days = [
-      pickLang({ ar: 'السبت', en: 'Sat' }, lang),
-      pickLang({ ar: 'الأحد', en: 'Sun' }, lang),
-      pickLang({ ar: 'الاثنين', en: 'Mon' }, lang),
-      pickLang({ ar: 'الثلاثاء', en: 'Tue' }, lang),
-      pickLang({ ar: 'الأربعاء', en: 'Wed' }, lang),
-      pickLang({ ar: 'الخميس', en: 'Thu' }, lang),
+      pickLang({ ar: 'السبت', en: 'Sat' }, lang), pickLang({ ar: 'الأحد', en: 'Sun' }, lang),
+      pickLang({ ar: 'الاثنين', en: 'Mon' }, lang), pickLang({ ar: 'الثلاثاء', en: 'Tue' }, lang),
+      pickLang({ ar: 'الأربعاء', en: 'Wed' }, lang), pickLang({ ar: 'الخميس', en: 'Thu' }, lang),
       pickLang({ ar: 'الجمعة', en: 'Fri' }, lang),
     ];
     const today = new Date();
-    const jsDay = today.getDay(); // 0 = الأحد، 6 = السبت
+    const jsDay = today.getDay();
     const daysSinceSat = (jsDay + 1) % 7; 
-    
     const lastSaturday = new Date(today);
     lastSaturday.setDate(today.getDate() - daysSinceSat);
 
@@ -402,16 +338,12 @@ export function GuardianDashboard({
       const d = new Date(lastSaturday);
       d.setDate(lastSaturday.getDate() + idx);
       const dateStr = d.toISOString().split('T')[0];
-      return {
-        day: dayName,
-        xp: dailyXP[dateStr] || 0
-      };
+      return { day: dayName, xp: dailyXP[dateStr] || 0 };
     });
   }, [dailyXP, lang]);
 
   const maxWeeklyXP = Math.max(...weeklyXP.map((d) => d.xp), 1);
 
-  // ═══ الإحصائيات العلوية ═══
   const stats = [
     { label: pickLang({ ar: 'نقاط الخبرة', en: 'XP Points' }, lang), labelEn: 'XP Points', value: toArabicNumber(totalXP), icon: Zap, gradient: 'from-gold-400 to-gold-600', glow: 'shadow-gold-500/30' },
     { label: pickLang({ ar: 'المستوى', en: 'Level' }, lang), labelEn: 'Level', value: `L${childLevel}`, icon: Award, gradient: 'from-purple-500 to-purple-700', glow: 'shadow-purple-500/30' },
@@ -419,83 +351,37 @@ export function GuardianDashboard({
     { label: pickLang({ ar: 'المهارات المتقنة', en: 'Mastered' }, lang), labelEn: 'Mastered', value: toArabicNumber(masteryBadgesList.length), icon: Target, gradient: 'from-emerald2-500 to-emerald2-700', glow: 'shadow-emerald2-500/30' },
   ];
 
-  // ═══ Refresh ═══
-  const handleRefresh = () => {
-    playSound('click');
-    window.location.reload();
-  };
-
-  // ═══ الأزرار الإدارية ═══
-  const handlePreviewToggle = () => {
-    togglePreviewMode();
-    playSound('click');
-    setTimeout(() => window.location.reload(), 300);
-  };
-
+  const handleRefresh = () => { playSound('click'); window.location.reload(); };
+  const handlePreviewToggle = () => { togglePreviewMode(); playSound('click'); setTimeout(() => window.location.reload(), 300); };
   const handleReset = () => {
-    const keysToKeep = [
-      'soroban_companion',
-      'soroban_child_name',
-      'soroban_child_full_name',
-      'soroban_high_scores_v1',
-      'soroban_high_scores_month',
-      'sorobanmind-v2-progress',
-      'soroban_mastery_badges',
-      'sorobanmind-v2-lang',
-      'srb_progress',
-      'soroban_number_style',
-      'sorobania_progress_v2',
-    ];
-    Object.keys(localStorage).forEach((key) => {
-      if (!keysToKeep.includes(key)) localStorage.removeItem(key);
-    });
-    playSound('whoosh');
-    setShowResetConfirm(false);
-    window.location.reload();
+    const keysToKeep = ['soroban_companion', 'soroban_child_name', 'soroban_child_full_name', 'soroban_high_scores_v1', 'soroban_high_scores_month', 'sorobanmind-v2-progress', 'soroban_mastery_badges', 'sorobanmind-v2-lang', 'srb_progress', 'soroban_number_style', 'sorobania_progress_v2'];
+    Object.keys(localStorage).forEach((key) => { if (!keysToKeep.includes(key)) localStorage.removeItem(key); });
+    playSound('whoosh'); setShowResetConfirm(false); window.location.reload();
   };
-
   const handleBackup = () => {
     try {
       const data: Record<string, string> = {};
-      Object.keys(localStorage).forEach((key) => {
-        data[key] = localStorage.getItem(key) || '';
-      });
+      Object.keys(localStorage).forEach((key) => { data[key] = localStorage.getItem(key) || ''; });
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `sorobanmind-backup-${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      playSound('click');
-    } catch (err) {
-      window.alert(pickLang({ ar: 'خطأ: ', en: 'Error: ' }, lang) + String(err));
-    }
+      const a = document.createElement('a'); a.href = url; a.download = `sorobanmind-backup-${new Date().toISOString().split('T')[0]}.json`; a.click();
+      URL.revokeObjectURL(url); playSound('click');
+    } catch (err) { window.alert(pickLang({ ar: 'خطأ: ', en: 'Error: ' }, lang) + String(err)); }
   };
-
   const handleRestore = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const file = event.target.files?.[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const data = JSON.parse(e.target?.result as string);
         Object.keys(localStorage).forEach((key) => localStorage.removeItem(key));
-        Object.entries(data).forEach(([key, value]) => {
-          localStorage.setItem(key, value as string);
-        });
-        playSound('click');
-        setTimeout(() => window.location.reload(), 300);
-      } catch (err) {
-        window.alert(pickLang({ ar: 'ملف غير صالح: ', en: 'Invalid file: ' }, lang) + String(err));
-      }
+        Object.entries(data).forEach(([key, value]) => { localStorage.setItem(key, value as string); });
+        playSound('click'); setTimeout(() => window.location.reload(), 300);
+      } catch (err) { window.alert(pickLang({ ar: 'ملف غير صالح: ', en: 'Invalid file: ' }, lang) + String(err)); }
     };
     reader.readAsText(file);
   };
 
-  // ═══════════════════════════════════════════════════════════
-  // JSX
-  // ═══════════════════════════════════════════════════════════
   return (
     <div className="px-3 sm:px-6 py-6 max-w-5xl mx-auto" dir={dir}>
       {/* ═══ رأس الصفحة ═══ */}
@@ -504,48 +390,39 @@ export function GuardianDashboard({
           <ArrowRight className="w-5 h-5" />
           <span className="hidden sm:inline">{pickLang({ ar: 'تبديل الدور', en: 'Switch Role' }, lang)}</span>
         </button>
-
         <button onClick={handleRefresh} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-500/15 border border-blue-400/30 text-blue-200 hover:bg-blue-500/25 transition-all text-sm font-body">
           <RefreshCw className="w-4 h-4" />
           <span>{pickLang({ ar: 'تحديث الصفحة', en: 'Refresh Page' }, lang)}</span>
         </button>
-
         {onShowWelcome && (
           <button onClick={() => { playSound('click'); onShowWelcome(); }} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-200 hover:bg-amber-500/25 transition-all text-sm font-body">
             <PlayCircle className="w-4 h-4" />
             <span>{pickLang({ ar: 'شاشة الترحيب', en: 'Welcome Screen' }, lang)}</span>
           </button>
         )}
-
         {onSwitchToHero && (
           <button onClick={() => { playSound('click'); onSwitchToHero(); }} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-purple-500/15 border border-purple-400/30 text-purple-200 hover:bg-purple-500/25 transition-all text-sm font-body">
             <Home className="w-4 h-4" />
             <span>{pickLang({ ar: 'وضع البطل', en: 'Hero Mode' }, lang)}</span>
           </button>
         )}
-
         <button type="button" onClick={handleBackup} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-500/20 border border-blue-400/40 text-blue-100 hover:bg-blue-500/30 transition-all text-xs font-body">
           <Download className="w-4 h-4" />
           <span>{pickLang({ ar: 'حفظ نسخة', en: 'Backup' }, lang)}</span>
         </button>
-
         <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-body">
           <Upload className="w-4 h-4" />
           <span>{pickLang({ ar: 'استعادة', en: 'Restore' }, lang)}</span>
         </button>
-
         <input type="file" accept=".json" ref={fileInputRef} onChange={handleRestore} style={{ display: 'none' }} />
-
         <button type="button" onClick={handlePreviewToggle} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-bold font-body">
           <Unlock className="w-4 h-4" />
           <span>{inPreview ? pickLang({ ar: '🚪 خروج من المعاينة', en: '🚪 Exit Preview' }, lang) : pickLang({ ar: '👁️ وضع المعاينة', en: '👁️ Preview Mode' }, lang)}</span>
         </button>
-
         <button type="button" onClick={() => { playSound('click'); setShowResetConfirm(true); }} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-red-500/10 border border-red-400/30 text-red-300 hover:bg-red-500/20 transition-all text-xs font-body">
           <Trash2 className="w-4 h-4" />
           <span>{pickLang({ ar: 'تصفير', en: 'Reset' }, lang)}</span>
         </button>
-
         <div className="flex-1" />
         <span className="text-[10px] text-white/40 font-body">{pickLang({ ar: 'SRB · محدّث آنياً', en: 'SRB · Real-time updated' }, lang)}</span>
       </div>
@@ -564,7 +441,6 @@ export function GuardianDashboard({
               <p className="text-xs text-gold-300 font-body font-bold">{pickLang({ ar: 'تقدم الطفل', en: "Child's Progress" }, lang)}</p>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white truncate">{savedName}</h2>
-            {/* ✅ [SURGICAL FIX] — عرض L1 بدلاً من 1 */}
             <p className="text-sm text-emerald2-300 font-body mt-0.5">
               {pickLang({ ar: 'مستوى ', en: 'Level ' }, lang)}{`L${childLevel}`} ·{' '}
               {toArabicNumber(effectiveCompletedCount)}/{toArabicNumber(totalLevelsCount)} {pickLang({ ar: 'مستويات مكتملة', en: 'Levels completed' }, lang)}
@@ -580,18 +456,11 @@ export function GuardianDashboard({
           <div className="relative rounded-3xl border-2 border-gold-400/70 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-gold-500/40 via-amber-500/25 to-yellow-600/15" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_25%,rgba(250,204,21,0.45),transparent_65%)]" />
-            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 2.5, repeat: Infinity }} className="absolute top-4 right-6 text-gold-200 text-xl">✨</motion.div>
-            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 3, repeat: Infinity, delay: 0.7 }} className="absolute top-8 left-8 text-gold-200 text-lg">⭐</motion.div>
-            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 2.8, repeat: Infinity, delay: 1.4 }} className="absolute bottom-6 right-10 text-gold-200 text-lg">✨</motion.div>
             <div className="relative p-6 sm:p-8">
               <div className="text-center">
                 <motion.div animate={{ y: [0, -10, 0], rotate: [0, 4, -4, 0] }} transition={{ duration: 4, repeat: Infinity }} className="inline-block text-6xl sm:text-7xl mb-4 drop-shadow-[0_0_25px_rgba(250,204,21,0.8)]">👑</motion.div>
                 <motion.h2 initial={{ opacity: 0, letterSpacing: '0.5em' }} animate={{ opacity: 1, letterSpacing: '0.15em' }} transition={{ delay: 0.4, duration: 0.8 }} className="text-3xl sm:text-4xl font-extrabold font-display text-gold-50 mb-3" style={{ textShadow: '0 0 30px rgba(250,204,21,0.6), 0 2px 10px rgba(0,0,0,0.5)' }}>{pickLang({ ar: 'أسطورة السوروبان', en: 'Soroban Legend' }, lang)}</motion.h2>
                 <p className="text-sm sm:text-base text-gold-100 font-body mb-5 leading-relaxed">{pickLang({ ar: '🎉 يا ', en: '🎉 Hey ' }, lang)}<strong>{savedName}</strong>{pickLang({ ar: '! أتممت جميع مستويات أكاديمية السوروبان', en: '! You have completed all levels of Soroban Academy' }, lang)}</p>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <span className="px-4 py-2 rounded-2xl bg-gold-400/40 border border-gold-300/60 text-gold-50 text-sm font-bold flex items-center gap-2">🏆 {toArabicNumber(totalLevelsCount)}/{toArabicNumber(totalLevelsCount)}</span>
-                  <span className="px-4 py-2 rounded-2xl bg-gold-400/40 border border-gold-300/60 text-gold-50 text-sm font-bold flex items-center gap-2">⭐ {toArabicNumber(totalXP)} XP</span>
-                </div>
               </div>
             </div>
           </div>
@@ -639,7 +508,7 @@ export function GuardianDashboard({
         </div>
       </motion.div>
 
-      {/* ═══ شارات إنجاز المستوى (8) ═══ */}
+      {/* ═══ شارات إنجاز المستوى ═══ */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -666,7 +535,7 @@ export function GuardianDashboard({
         </div>
       </motion.div>
 
-      {/* ═══ شارات إتقان المهارات — شبكة 3×N ═══ */}
+      {/* ═══ شارات إتقان المهارات ═══ */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.23 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -677,7 +546,6 @@ export function GuardianDashboard({
             {toArabicNumber(masteryBadgesList.length)}
           </span>
         </div>
-
         {masteryBadgesList.length === 0 ? (
           <p className="text-center text-white/40 font-body text-sm py-6">
             {pickLang({ ar: '🏅 لم يتقن الطفل أي مهارة بعد — أكمل بزمن قياسي للحصول على شارة!', en: '🏅 The child has not mastered any skill yet — complete in record time to get a badge!' }, lang)}
@@ -688,24 +556,14 @@ export function GuardianDashboard({
               const label = getSkillLabel(badge.skillId, lang);
               const timeSec = Math.round(badge.bestTimeMs / 1000);
               return (
-                <motion.div
-                  key={badge.skillId}
-                  initial={{ opacity: 0, scale: 0.85 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-gradient-to-br from-gold-400/20 to-amber-500/10 border border-gold-400/40"
-                >
+                <motion.div key={badge.skillId} initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-gradient-to-br from-gold-400/20 to-amber-500/10 border border-gold-400/40">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-md">
                     <Trophy className="w-5 h-5 text-white" />
                   </div>
-                  <p className="text-[9px] font-bold text-white text-center leading-tight" dir="ltr">
-                    {badge.skillId}
-                  </p>
-                  <p className="text-[9px] text-gold-200 text-center leading-tight truncate w-full">
-                    {label}
-                  </p>
+                  <p className="text-[9px] font-bold text-white text-center leading-tight" dir="ltr">{badge.skillId}</p>
+                  <p className="text-[9px] text-gold-200 text-center leading-tight truncate w-full">{label}</p>
                   <p className="text-[9px] text-white/50 flex items-center gap-0.5">
-                    <Timer className="w-2.5 h-2.5" />
-                    {toArabicNumber(timeSec)}s
+                    <Timer className="w-2.5 h-2.5" /> {toArabicNumber(timeSec)}s
                   </p>
                 </motion.div>
               );
@@ -714,53 +572,32 @@ export function GuardianDashboard({
         )}
       </motion.div>
 
-      {/* ═══ شارات الأنزان البصري (7) ═══ */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }} className="glass-card p-5 sm:p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">{pickLang({ ar: 'شارات الأنزان البصري', en: 'Visual Anzan Badges' }, lang)}</h3>
+      {/* ═══ شارات الأنزان البصري والسماعي ═══ */}
+      {[anzanBadgeList, audioAnzanBadgeList].map((list, idx) => (
+        <motion.div key={idx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 + idx * 0.01 }} className="glass-card p-5 sm:p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              {idx === 0 ? <Brain className="w-5 h-5 text-purple-300" /> : <Volume2 className="w-5 h-5 text-purple-300" />}
+              <h3 className="text-xl font-extrabold font-display text-white">{idx === 0 ? pickLang({ ar: 'شارات الأنزان البصري', en: 'Visual Anzan Badges' }, lang) : pickLang({ ar: 'شارات الأنزان السماعي', en: 'Auditory Anzan Badges' }, lang)}</h3>
+            </div>
+            <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-200 text-xs">
+              {toArabicNumber(list.filter((b) => b.earned).length)}/{toArabicNumber(list.length)}
+            </span>
           </div>
-          <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-200 text-xs">
-            {toArabicNumber(earnedAnzanCount)}/{toArabicNumber(anzanBadgeList.length)}
-          </span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {anzanBadgeList.map((badge, i) => (
-            <motion.div key={badge.id} initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.06 }} className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${badge.earned ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5'}`}>
-              <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${badge.earned ? `bg-gradient-to-br ${badge.color}` : 'bg-white/5'}`}>
-                {badge.earned ? <span className="text-2xl">{badge.icon}</span> : <LockBadge className="w-6 h-6 text-white/25" />}
-              </div>
-              <p className={`text-[10px] font-bold font-body text-center leading-tight ${badge.earned ? 'text-white/80' : 'text-white/30'}`}>{badge.label}</p>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* ═══ شارات الأنزان السمعي (7) ═══ */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card p-5 sm:p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Volume2 className="w-5 h-5 text-purple-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">{pickLang({ ar: 'شارات الأنزان السماعي', en: 'Auditory Anzan Badges' }, lang)}</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {list.map((badge, i) => (
+              <motion.div key={badge.id} initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.06 }} className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${badge.earned ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5'}`}>
+                <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${badge.earned ? `bg-gradient-to-br ${badge.color}` : 'bg-white/5'}`}>
+                  {badge.earned ? <span className="text-2xl">{badge.icon}</span> : <LockBadge className="w-6 h-6 text-white/25" />}
+                </div>
+                <p className={`text-[10px] font-bold font-body text-center leading-tight ${badge.earned ? 'text-white/80' : 'text-white/30'}`}>{badge.label}</p>
+              </motion.div>
+            ))}
           </div>
-          <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-200 text-xs">
-            {toArabicNumber(earnedAudioCount)}/{toArabicNumber(audioAnzanBadgeList.length)}
-          </span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {audioAnzanBadgeList.map((badge, i) => (
-            <motion.div key={badge.id} initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.06 }} className={`flex flex-col items-center gap-2 p-3 rounded-2xl border ${badge.earned ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5'}`}>
-              <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${badge.earned ? `bg-gradient-to-br ${badge.color}` : 'bg-white/5'}`}>
-                {badge.earned ? <span className="text-2xl">{badge.icon}</span> : <LockBadge className="w-6 h-6 text-white/25" />}
-              </div>
-              <p className={`text-[10px] font-bold font-body text-center leading-tight ${badge.earned ? 'text-white/80' : 'text-white/30'}`}>{badge.label}</p>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
+        </motion.div>
+      ))}
 
-      {/* ═══ الجلسات العلاجية — شبكة 2×N ═══ */}
+      {/* ═══ الجلسات العلاجية ═══ */}
       {remediationSummary.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }} className="glass-card p-5 sm:p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
@@ -772,41 +609,24 @@ export function GuardianDashboard({
               {toArabicNumber(remediationSummary.length)} {pickLang({ ar: 'مهارة', en: 'skills' }, lang)}
             </span>
           </div>
-
           <p className="text-xs text-white/50 font-body mb-4 leading-relaxed">
             {pickLang({ ar: 'آخر ٧ أيام — المهارات التي خضع لها الطفل لجلسات علاجية', en: 'Last 7 days — Skills the child took remedial sessions for' }, lang)}
           </p>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {(showAllRemediation ? remediationSummary : remediationSummary.slice(0, 5)).map((item) => {
               const parsed = parseSkillId(item.skillId);
-              const rawLabel = parsed
-                ? getModuleName(parsed.section, parsed.module)
-                : item.skillId;
-              const label = translateDynamic({ nameAr: rawLabel }, lang, 'name');
-              const daysAgo = Math.floor(
-                (Date.now() - item.lastAt) / (24 * 60 * 60 * 1000),
-              );
-              const daysLabel =
-                daysAgo === 0 ? pickLang({ ar: 'اليوم', en: 'Today' }, lang)
-                : daysAgo === 1 ? pickLang({ ar: 'أمس', en: 'Yesterday' }, lang)
-                : pickLang({ ar: `منذ ${toArabicNumber(daysAgo)} أيام`, en: `${toArabicNumber(daysAgo)} days ago` }, lang);
-
-              // 🎨 تلوين حسب التكرار
+              const rawLabel = parsed ? getModuleName(parsed.section, parsed.module) : item.skillId;
+              const label = translateDynamic({ nameAr: rawLabel, name: rawLabel }, lang, 'name');
+              const daysAgo = Math.floor((Date.now() - item.lastAt) / (24 * 60 * 60 * 1000));
+              const daysLabel = daysAgo === 0 ? pickLang({ ar: 'اليوم', en: 'Today' }, lang) : daysAgo === 1 ? pickLang({ ar: 'أمس', en: 'Yesterday' }, lang) : pickLang({ ar: `منذ ${toArabicNumber(daysAgo)} أيام`, en: `${toArabicNumber(daysAgo)} days ago` }, lang);
               const intensity = item.count >= 5 ? 'high' : item.count >= 3 ? 'mid' : 'low';
               const colors = {
                 high: { gradient: 'from-red-500 to-red-700', bg: 'bg-red-500/10', border: 'border-red-400/40' },
                 mid:  { gradient: 'from-orange-500 to-orange-700', bg: 'bg-orange-500/10', border: 'border-orange-400/40' },
                 low:  { gradient: 'from-yellow-500 to-yellow-700', bg: 'bg-yellow-500/10', border: 'border-yellow-400/40' },
               }[intensity];
-
               return (
-                <motion.div
-                  key={item.skillId}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={`flex items-center gap-3 p-3 rounded-xl ${colors.bg} border ${colors.border}`}
-                >
+                <motion.div key={item.skillId} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className={`flex items-center gap-3 p-3 rounded-xl ${colors.bg} border ${colors.border}`}>
                   <div className={`shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br ${colors.gradient} flex items-center justify-center shadow-lg`}>
                     <Lightbulb className="w-5 h-5 text-white" />
                   </div>
@@ -821,16 +641,9 @@ export function GuardianDashboard({
               );
             })}
           </div>
-
           {remediationSummary.length > 5 && (
-            <button
-              type="button"
-              onClick={() => { playSound('click'); setShowAllRemediation((v) => !v); }}
-              className="mt-3 w-full py-2 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-200 text-xs font-bold hover:bg-amber-500/25 transition"
-            >
-              {showAllRemediation
-                ? pickLang({ ar: 'عرض أقل', en: 'Show Less' }, lang)
-                : pickLang({ ar: `عرض ${toArabicNumber(remediationSummary.length - 5)} أخرى`, en: `Show ${toArabicNumber(remediationSummary.length - 5)} more` }, lang)}
+            <button type="button" onClick={() => { playSound('click'); setShowAllRemediation((v) => !v); }} className="mt-3 w-full py-2 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-200 text-xs font-bold hover:bg-amber-500/25 transition">
+              {showAllRemediation ? pickLang({ ar: 'عرض أقل', en: 'Show Less' }, lang) : pickLang({ ar: `عرض ${toArabicNumber(remediationSummary.length - 5)} أخرى`, en: `Show ${toArabicNumber(remediationSummary.length - 5)} more` }, lang)}
             </button>
           )}
         </motion.div>
@@ -850,9 +663,7 @@ export function GuardianDashboard({
         <div className="relative overflow-x-auto scrollbar-hide pb-4">
           <div className="flex items-start gap-3 sm:gap-5 min-w-max pr-2 pl-8">
             <div className="absolute top-8 right-0 left-0 h-1 bg-gradient-to-r from-purple-500/30 via-electric-500/30 to-white/5 rounded-full" />
-            {levelNodes.map((node, i) => (
-              <LevelNodeButton key={node.id} level={node} index={i} />
-            ))}
+            {levelNodes.map((node, i) => (<LevelNodeButton key={node.id} level={node} index={i} />))}
           </div>
         </div>
       </motion.div>
@@ -868,15 +679,8 @@ export function GuardianDashboard({
             const heightPct = maxWeeklyXP > 0 ? (day.xp / maxWeeklyXP) * 100 : 0;
             return (
               <div key={day.day} className="flex flex-col items-center justify-end gap-2 flex-1 h-full">
-                <motion.div 
-                  initial={{ height: 0 }} 
-                  animate={{ height: `${Math.max(2, heightPct)}%` }} 
-                  transition={{ delay: 0.5 + i * 0.06, type: 'spring', stiffness: 100, damping: 15 }} 
-                  className="w-full rounded-t-xl bg-gradient-to-t from-purple-600 to-electric-400 min-h-[4px] relative group"
-                >
-                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-white/0 group-hover:text-white/80 transition-colors whitespace-nowrap">
-                    {toArabicNumber(day.xp)}
-                  </span>
+                <motion.div initial={{ height: 0 }} animate={{ height: `${Math.max(2, heightPct)}%` }} transition={{ delay: 0.5 + i * 0.06, type: 'spring', stiffness: 100, damping: 15 }} className="w-full rounded-t-xl bg-gradient-to-t from-purple-600 to-electric-400 min-h-[4px] relative group">
+                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-white/0 group-hover:text-white/80 transition-colors whitespace-nowrap">{toArabicNumber(day.xp)}</span>
                 </motion.div>
                 <span className="text-[10px] sm:text-xs text-white/50 font-body whitespace-nowrap">{day.day}</span>
               </div>
@@ -887,44 +691,24 @@ export function GuardianDashboard({
 
       {/* ═══ إحصائيات مفصلة ═══ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }} className="glass-card p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald2-400" />
-            <p className="text-sm text-white/60 font-body">{pickLang({ ar: 'تمارين ناجحة', en: 'Passed Exercises' }, lang)}</p>
-          </div>
-          <p className="text-3xl font-extrabold font-display text-white">{toArabicNumber(passedPractice.length)}</p>
-          <p className="text-xs text-emerald2-300 font-body mt-1">{pickLang({ ar: 'من ', en: 'out of ' }, lang)}{toArabicNumber(totalLevelsCount)}</p>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.55 }} className="glass-card p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <Eye className="w-5 h-5 text-electric-400" />
-            <p className="text-sm text-white/60 font-body">{pickLang({ ar: 'أنزان بصري ناجح', en: 'Passed Visual Anzan' }, lang)}</p>
-          </div>
-          <p className="text-3xl font-extrabold font-display text-white">{toArabicNumber(passedAnzanVisual.length)}</p>
-          <p className="text-xs text-electric-300 font-body mt-1">{pickLang({ ar: 'من ', en: 'out of ' }, lang)}{toArabicNumber(totalLevelsCount)}</p>
-        </motion.div>
-
-        {/* 🆕 بطاقة الأنزان السمعي */}
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.58 }} className="glass-card p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <Volume2 className="w-5 h-5 text-rose-400" />
-            <p className="text-sm text-white/60 font-body">{pickLang({ ar: 'أنزان سمعي ناجح', en: 'Passed Auditory Anzan' }, lang)}</p>
-          </div>
-          <p className="text-3xl font-extrabold font-display text-white">{toArabicNumber(passedAnzanAudio.length)}</p>
-          <p className="text-xs text-rose-300 font-body mt-1">{pickLang({ ar: 'من ', en: 'out of ' }, lang)}{toArabicNumber(totalLevelsCount)}</p>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.62 }} className="glass-card p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <Award className="w-5 h-5 text-gold-400" />
-            <p className="text-sm text-white/60 font-body">{pickLang({ ar: 'إجمالي الشارات', en: 'Total Badges' }, lang)}</p>
-          </div>
-          <p className="text-3xl font-extrabold font-display text-white">
-            {toArabicNumber(earnedLevelBadges + masteryBadgesList.length + earnedAnzanCount + earnedAudioCount)}
-          </p>
-          <p className="text-xs text-gold-300 font-body mt-1">{pickLang({ ar: 'جميع الأنواع', en: 'All Types' }, lang)}</p>
-        </motion.div>
+        {[
+          { label: pickLang({ ar: 'تمارين ناجحة', en: 'Passed Exercises' }, lang), value: passedPractice.length, icon: CheckCircle2, color: 'text-emerald2-400' },
+          { label: pickLang({ ar: 'أنزان بصري ناجح', en: 'Passed Visual Anzan' }, lang), value: passedAnzanVisual.length, icon: Eye, color: 'text-electric-400' },
+          { label: pickLang({ ar: 'أنزان سمعي ناجح', en: 'Passed Auditory Anzan' }, lang), value: passedAnzanAudio.length, icon: Volume2, color: 'text-rose-400' },
+          { label: pickLang({ ar: 'إجمالي الشارات', en: 'Total Badges' }, lang), value: earnedLevelBadges + masteryBadgesList.length + earnedAnzanCount + earnedAudioCount, icon: Award, color: 'text-gold-400' },
+        ].map((stat, i) => {
+          const Icon = stat.icon;
+          return (
+            <motion.div key={stat.label} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.05 }} className="glass-card p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon className={`w-5 h-5 ${stat.color}`} />
+                <p className="text-sm text-white/60 font-body">{stat.label}</p>
+              </div>
+              <p className="text-3xl font-extrabold font-display text-white">{toArabicNumber(stat.value)}</p>
+              <p className="text-xs text-white/40 font-body mt-1">{pickLang({ ar: 'من ', en: 'out of ' }, lang)}{toArabicNumber(totalLevelsCount)}</p>
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* ═══ تقدم المستويات ═══ */}
@@ -950,7 +734,7 @@ export function GuardianDashboard({
         </div>
       </motion.div>
 
-      {/* ═══ ⚔️ مغامرات [اسم الطفل] — 12 إنجازاً ═══ */}
+      {/* ═══ ⚔️ مغامرات [اسم الطفل] ═══ */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -968,37 +752,23 @@ export function GuardianDashboard({
           {quests.map((quest, i) => {
             const pct = Math.min(100, (quest.progress / quest.target) * 100);
             return (
-              <motion.div
-                key={quest.id}
-                initial={{ opacity: 0, scale: 0.85 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.35 + i * 0.04 }}
-                className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border ${
-                  quest.earned
-                    ? 'bg-gradient-to-br from-gold-400/20 to-amber-500/10 border-gold-400/50 shadow-lg shadow-gold-500/20'
-                    : 'bg-white/[0.02] border-white/10'
-                }`}
-              >
+              <motion.div key={quest.id} initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.35 + i * 0.04 }} className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border ${quest.earned ? 'bg-gradient-to-br from-gold-400/20 to-amber-500/10 border-gold-400/50 shadow-lg shadow-gold-500/20' : 'bg-white/[0.02] border-white/10'}`}>
                 <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${quest.earned ? 'bg-gradient-to-br from-gold-400 to-gold-600' : 'bg-white/5'}`}>
                   <span className={`text-lg ${quest.earned ? '' : 'opacity-30 grayscale'}`}>{quest.icon}</span>
                 </div>
                 <p className={`text-[10px] font-bold font-body text-center leading-tight ${quest.earned ? 'text-gold-100' : 'text-white/60'}`}>
-                  {translateDynamic(quest, lang, 'title')}
+                  {translateDynamic(quest, lang, 'title') || translateDynamic(quest, lang, 'name')}
                 </p>
-                <p className="text-[9px] text-white/40 font-body text-center leading-tight line-clamp-2">{translateDynamic(quest, lang, 'description')}</p>
+                {/* ✅ احتياطي: يبحث عن description أو desc */}
+                <p className="text-[9px] text-white/40 font-body text-center leading-tight line-clamp-2">
+                  {translateDynamic(quest, lang, 'description') || translateDynamic(quest, lang, 'desc')}
+                </p>
                 <div className="w-full mt-0.5">
                   <div className="h-1 rounded-full bg-white/10 overflow-hidden">
-                    <motion.div
-                      className={`h-full rounded-full ${quest.earned ? 'bg-gradient-to-r from-gold-300 to-gold-500' : 'bg-gradient-to-r from-purple-400 to-electric-500'}`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ delay: 0.4 + i * 0.04, duration: 0.6 }}
-                    />
+                    <motion.div className={`h-full rounded-full ${quest.earned ? 'bg-gradient-to-r from-gold-300 to-gold-500' : 'bg-gradient-to-r from-purple-400 to-electric-500'}`} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.4 + i * 0.04, duration: 0.6 }} />
                   </div>
                   <p className={`text-[9px] font-body text-center mt-0.5 ${quest.earned ? 'text-gold-200' : 'text-white/50'}`}>
-                    {quest.earned
-                      ? '✅'
-                      : `${toArabicNumber(Math.min(quest.progress, quest.target))}/${toArabicNumber(quest.target)}`}
+                    {quest.earned ? '✅' : `${toArabicNumber(Math.min(quest.progress, quest.target))}/${toArabicNumber(quest.target)}`}
                   </p>
                 </div>
               </motion.div>
