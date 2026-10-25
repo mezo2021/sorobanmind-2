@@ -164,6 +164,10 @@ Object.entries(RAW_AR_TO_EN).forEach(([key, val]) => {
 function translatePattern(text: string): string | null {
   let match;
 
+  // 🆕 ترجمة أكواد المستويات (L0, L1... إلخ)
+  match = text.match(/^L(\d+)$/);
+  if (match) return `Level ${match[1]}`;
+
   match = text.match(/جرب.*?(\d+).*?مهاره/);
   if (match) return `Tried ${match[1]} skills`;
 
