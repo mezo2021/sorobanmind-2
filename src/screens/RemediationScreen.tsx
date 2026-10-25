@@ -233,7 +233,10 @@ export function RemediationScreen({
           </button>
           <div className="flex-1">
             <h2 className="text-2xl font-extrabold font-display text-white">
-              {translateDynamic({ value: getRemediationTitle() }, lang, 'value')}
+              {pickLang(
+                { ar: 'الجلسة العلاجية المستهدفة', en: 'Targeted Remediation Session' },
+                lang,
+              )}
             </h2>
             <p className="text-sm text-white/50 font-body">
               {level} · {section}
@@ -272,7 +275,13 @@ export function RemediationScreen({
             {pickLang({ ar: 'جلسة علاجية مخصصة', en: 'Targeted Remediation Session' }, lang)}
           </h3>
           <p className="text-sm text-white/80 font-body text-center mb-6">
-            {translateDynamic({ value: getRemediationDescription() }, lang, 'value')}
+            {pickLang(
+              {
+                ar: 'جلسة مخصصة بدون درجات — تُظهر لك الحل بعد كل سؤال.',
+                en: 'Customized session without grades — shows you the solution after each question.',
+              },
+              lang,
+            )}
           </p>
 
           {plan.shouldStart ? (
@@ -316,7 +325,13 @@ export function RemediationScreen({
             <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 text-center">
               <CheckCircle2 className="w-8 h-8 text-emerald-300 mx-auto mb-2" />
               <p className="text-sm text-emerald-200 font-body">
-                {translateDynamic({ value: plan.message }, lang, 'value')}
+                {pickLang(
+                  {
+                    ar: 'التوصية: أعد جلسة على المهارات أعلاه. سيقترح عليك النظام أسئلة علاجية مخصصة تلقائياً.',
+                    en: 'Recommendation: Retake a session on the skills above. The system will automatically suggest customized remedial questions.',
+                  },
+                  lang,
+                )}
               </p>
             </div>
           )}
