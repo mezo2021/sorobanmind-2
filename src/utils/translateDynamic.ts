@@ -15,7 +15,7 @@ function normalizeArabic(text: string): string {
     .trim();
 }
 
-// القاموس الثابت
+// القاموس الثابت (تمت إضافة عبارة الصاعد مباشرة لضمان مطابقة 100%)
 const RAW_AR_TO_EN: Record<string, string> = {
   "ضرب باصدقاء 5": "Mul with Friends of 5", "ضرب بأصدقاء 5": "Mul with Friends of 5",
   "ضرب باصدقاء 10": "Mul with Friends of 10", "ضرب بأصدقاء 10": "Mul with Friends of 10",
@@ -34,7 +34,9 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "الحارس": "Guardian", "الفاتح": "Conqueror", "الصامد": "Resilient",
   "تعافى من جلسة علاجية": "Recovered from session",
   "أتم قسم كامل": "Completed a section", 
-  "ميمو": "Mimo", "البطل": "Hero"
+  "ميمو": "Mimo", "البطل": "Hero",
+  "دقة ٨٥٪ في مهارة مكتملة": "85% accuracy in skill",
+  "دقة 85% في مهارة مكتملة": "85% accuracy in skill"
 };
 
 const AR_TO_EN: Record<string, string> = {};
@@ -42,7 +44,7 @@ Object.entries(RAW_AR_TO_EN).forEach(([key, val]) => {
   AR_TO_EN[normalizeArabic(key)] = val;
 });
 
-// 🆕 دالة الأنماط المتسامحة جداً (تتجاهل المسافات والترتيب)
+// دالة الأنماط المتسامحة جداً
 function translatePattern(text: string): string | null {
   let match;
 
@@ -76,11 +78,14 @@ function translatePattern(text: string): string | null {
   match = text.match(/(\d+).*?متتاليه.*?في.*?السلاسل/);
   if (match) return `${match[1]} streak in chains`;
 
-  // 🆕 معالجة الصاعد (دقة X% في مهارة مكتملة) بمرونة تامة
-  match = text.match(/دقه.*?(\d+).*?مكتمله/);
-  if (match) return `${match[1]}% accuracy in skill`;
-  match = text.match(/(\d+).*?دقه.*?مكتمله/);
-  if (match) return `${match[1]}% accuracy in skill`;
+  // 🆕 معالجة مرنة وشاملة لأي نص يحتوي على نسبة دقة ومكتملة (مثل الصاعد)
+  match = text.match(/(\d+)\s*[٪%].*?مهاره.*?مكتمله/) || text.match(/دقه.*?(\d+)/);
+  if (match) {
+    // استخراج الرقم بغض النظر عن مكانه في النمط
+    const digitsMatch = text.match(/(\d+)/);
+    const num = digitsMatch ? digitsMatch[1] : "85";
+    return `${num}% accuracy in skill`;
+  }
 
   return null;
 }
