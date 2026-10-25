@@ -49,8 +49,10 @@ export function sanitizeForSpeech(raw: string, lang: ReadLang): string {
     .replace(/\+/g, w.plus)
     .replace(/[×✖xX](?=\s*\d)/g, (m, off: number, s: string) => (/\d\s*$/.test(s.slice(0, off)) ? w.times : m))
     .replace(/[÷]/g, w.div)
-    .replace(/[−–—]/g, w.minus)
-    .replace(/(\d)\s*-\s*(?=\d)/g, `$1${w.minus}`)
+    // إصلاح: نطق "ناقص" فقط إذا كانت الشرطة بين رقمين (عملية حسابية)
+    .replace(/(\d)\s*[−–—\-]\s*(\d)/g, `$1${w.minus}$2`)
+    // إصلاح: استبدال الشرطات بين الكلمات بفاصلة للوقفة
+    .replace(/\s+[−–—\-]\s+/g, ' ، ')
     .replace(/=/g, w.eq);
 
   // رموز مزعجة أخرى تُحذف
