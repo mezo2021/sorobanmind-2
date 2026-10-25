@@ -22,6 +22,7 @@ import { Play, Pause, SkipBack, SkipForward, RotateCcw, Check } from 'lucide-rea
 import MultiRodAbacus, { type RodChip, type AbacusTone } from './MultiRodAbacus';
 import { rodsFromNumber } from './mulEngine';
 import { carriesFor, type QuizProblem, type QuizStep, type ReviewInfo } from './quizTypes';
+import { Num } from '@/components/Num';
 
 const AUTO_FIRST_MS = 700;
 const AUTO_STEP_MS = 1500;
@@ -156,11 +157,11 @@ export function SolutionPlayer({ problem, info, onContinue }: Props) {
         {/* المسألة + اختيار الطفل */}
         <div className="flex items-center justify-between">
           <div className="text-3xl font-black text-amber-300 font-mono tabular-nums" dir="ltr">
-            {problem.a} {problem.symbol} {problem.b}
+            <Num>{problem.a}</Num> {problem.symbol} <Num>{problem.b}</Num>
           </div>
           {info.wrongValue !== null && (
             <div className="text-xs text-rose-300 bg-rose-950/60 border border-rose-500/30 rounded-full px-3 py-1">
-              اخْتَرْتَ <span className="font-black tabular-nums">{info.wrongValue}</span>
+              اخْتَرْتَ <span className="font-black tabular-nums"><Num>{info.wrongValue}</Num></span>
             </div>
           )}
         </div>
@@ -234,7 +235,7 @@ export function SolutionPlayer({ problem, info, onContinue }: Props) {
         {/* التحكم */}
         <div className="flex items-center justify-between gap-2">
           <div className="text-xs text-slate-400 tabular-nums shrink-0">
-            الخُطْوَة <span className="text-sky-300 font-black">{idx + 2}</span> / {totalCards}
+            الخُطْوَة <span className="text-sky-300 font-black"><Num>{idx + 2}</Num></span> / <Num>{totalCards}</Num>
           </div>
           <div className="flex items-center gap-1.5" dir="ltr">
             <CtrlBtn label="إعادة من البداية" onClick={restart}><RotateCcw className="w-4 h-4" /></CtrlBtn>
@@ -328,7 +329,7 @@ function Chain({
               style={{ touchAction: 'manipulation' }}
               aria-label={`الانتقال إلى ${it.v}`}
             >
-              {it.v}
+              <Num>{it.v}</Num>
             </button>
           </div>
         );
@@ -344,7 +345,7 @@ function Panel({ title, value, tone, children }: { title: string; value: number;
     <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-1.5 min-w-0">
       <div className="flex items-center justify-between px-1 pb-1" dir="rtl">
         <span className={`text-[11px] font-black ${C.label}`}>{title}</span>
-        <span className="text-sm font-black text-amber-200 font-mono tabular-nums">{value}</span>
+        <span className="text-sm font-black text-amber-200 font-mono tabular-nums"><Num>{value}</Num></span>
       </div>
       {children}
     </div>
@@ -387,7 +388,7 @@ function StepCard({
           {state === 'done' ? <Check className="w-3.5 h-3.5" /> : label}
         </span>
         <span className="text-sm shrink-0">{icon}</span>
-        <span className="flex-1 text-sm font-black text-amber-200 font-mono text-right" dir="ltr">{mono}</span>
+        <span className="flex-1 text-sm font-black text-amber-200 font-mono text-right" dir="ltr"><Num>{mono}</Num></span>
         {right && <span className={`text-[11px] font-black tabular-nums shrink-0 ${C.label}`}>{right}</span>}
       </div>
       {error && <div className="mt-1 text-[11px] font-black text-rose-300">🔴 {error}</div>}
