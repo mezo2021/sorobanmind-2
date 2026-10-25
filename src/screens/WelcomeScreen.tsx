@@ -5,8 +5,7 @@ import logoImg from '@/assets/logo-header.png';
 import sorobanaImg from '@/assets/sorobana/sorobana-teaching-pointing.webp';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { useSpeech } from '@/hooks/useSpeech';
-import { useT } from '@/i18n/useTranslation';
-import { useLangStore } from '@/i18n/useTranslation';
+import { useT, useLangStore } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
 
 interface WelcomeScreenProps {
@@ -16,8 +15,10 @@ interface WelcomeScreenProps {
 export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   const { lang, dir } = useT();
   const setLang = useLangStore((s) => s.setLang);
+  
   const sorobana = useSorobanaVoice();
-  const { speak } = useSpeech();
+  // 🆕 استخراج دالة الإيقاف stopSpeech
+  const { speak, stop: stopSpeech } = useSpeech();
 
   const FEATURES = [
     { icon: Brain, text: pickLang({ ar: 'أنزان بصري وسماعي', en: 'Visual and Audio Anzan' }, lang) },
@@ -34,6 +35,10 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   };
 
   const handleCompanionTap = () => {
+    // 🛑 أوقف أي صوت يعمل حالياً (عربي أو إنجليزي) قبل تشغيل الصوت الجديد لمنع التداخل
+    sorobana.stop();
+    stopSpeech();
+
     if (lang === 'ar') {
       sorobana.speakFiles([
         'https://mezo2021.github.io/sorobanmind-2/audio/welcome-sorobana.mp3',
@@ -48,7 +53,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
       dir={dir}
       className="min-h-screen flex flex-col items-center justify-center px-4 py-8 relative"
     >
-      {/* 🆕 زر تبديل اللغة */}
+      {/* زر تبديل اللغة */}
       <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-50">
         <button
           type="button"
