@@ -28,13 +28,16 @@ import { useMasteryBadgesStore } from '../store/masteryBadgesStore';
 import { SRB_LEVELS } from '../data/srb/curriculum';
 import { getModuleName } from '../data/srb/modules';
 import type { SRBLevel, SRBSection, SRBModule } from '../data/srb/types';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { formatNumber } from '@/utils/numberStyle';
 
 // ═══════════════════════════════════════════════════════════
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
+// 🔢 يتبع زر تبديل الأرقام (عربي ٠١٢٣ ↔ لاتيني 0123) — الاسم محفوظ للتوافق
 function toArabicNumber(value: number | string): string {
-  return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+  return formatNumber(value, useNumberStyleStore.getState().style);
 }
 
 interface ParsedSkillId {
@@ -174,6 +177,7 @@ export function GuardianDashboard({
   onSwitchToHero,
   onShowWelcome,
 }: GuardianDashboardProps) {
+  useNumberStyleStore((s) => s.style); // 🔢 إعادة الرسم عند تبديل نمط الأرقام
   // ═══ progressStore (SRB) ═══
   const storedName = useProgressStore((s) => s.childName);
   const totalXP = useProgressStore((s) => s.totalXP);
