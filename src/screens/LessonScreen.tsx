@@ -14,7 +14,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, Volume2, Square, Eye, Hand, ChevronRight, ChevronLeft,
-  CheckCircle2, Lightbulb, Sparkles, RotateCcw, Type, Info, HelpCircle,
+  CheckCircle2, Lightbulb, Sparkles, RotateCcw, Type, Info, HelpCircle, Headphones,
 } from 'lucide-react';
 
 import {
@@ -37,6 +37,7 @@ import { useProgressStore } from '@/store/progressStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 import { useT } from '@/i18n/useTranslation';
 import { pickLang, type Localized } from '@/i18n/pickLang';
+import { useReadAloud, isSpeakableIn } from '@/hooks/useReadAloud';
 
 // ═══════════════════════════════════════════════════════════
 // الثوابت
@@ -100,7 +101,38 @@ const UI = {
   nextLesson: { ar: 'الدرس التالي:', en: 'Next lesson:' },
   watch: { ar: 'شاهد', en: 'Watch' },
   tryTab: { ar: 'جرّب', en: 'Try' },
+  readToMe: { ar: 'اقرأ لي', en: 'Read to me' },
 } as const;
+
+// ═══════════════════════════════════════════════════════════
+// 📄 عرض نص صفحة المقدمة (سطرًا بسطر — يمنع تداخل الاتجاهات BiDi)
+// ═══════════════════════════════════════════════════════════
+
+const BULLET_RE = /^[•·▪●]\s*/;
+
+function IntroText({ text, dir }: { text: string; dir: 'rtl' | 'ltr' }) {
+  return (
+    <div
+      dir={dir}
+      style={{ textAlign: 'start' }}
+      className="flex-1 flex flex-col justify-center gap-2 text-base text-white/85 font-body leading-loose"
+    >
+      {text.split('\n').map((line, i) => {
+        const t = line.trim();
+        if (!t) return <div key={i} className="h-2" />;
+        if (BULLET_RE.test(t)) {
+          return (
+            <div key={i} className="flex items-start gap-2">
+              <span aria-hidden="true" className="mt-3 w-1.5 h-1.5 rounded-full bg-gold-400 shrink-0" />
+              <span className="flex-1">{t.replace(BULLET_RE, '')}</span>
+            </div>
+          );
+        }
+        return <p key={i}>{t}</p>;
+      })}
+    </div>
+  );
+}
 
 // ═══════════════════════════════════════════════════════════
 // أدوات مساعدة
@@ -226,11 +258,35 @@ export function LessonScreen({
 
   // 🌐 اللغة
   const { lang, dir, isAr } = useT();
+  const reader = useReadAloud(lang); // 🎙️ TTS بصوت نسائي
   const p = (v: Localized): string => pickLang(v, lang);
   const PrevIcon = isAr ? ChevronRight : ChevronLeft;
   const NextIcon = isAr ? ChevronLeft : ChevronRight;
   // نص المحتوى مع تنسيق الأرقام
   const pf = (v: Localized): string => formatText(p(v), numberStyle);
+  // 🎧 زر "اقرأ لي" — يقرأ النص المعروض حاليًا فقط (ضغطة ثانية = إيقاف فوري)
+  const renderReadButton = (text: string) => {
+    if (!reader.isSupported || !isSpeakableIn(text, lang)) return null;
+    const active = reader.speakingKey === 'read';
+    return (
+      <button
+        onClick={() => {
+          playSound('click');
+          sorobana.stop();
+          reader.toggle(text, 'read');
+        }}
+        aria-label={p(UI.readToMe)}
+        className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-bold transition border ${
+          active
+            ? 'bg-red-500/30 border-red-400/50 text-red-200'
+            : 'bg-sky-500/20 border-sky-400/40 text-sky-100 hover:bg-sky-500/30'
+        }`}
+      >
+        {active ? <Square className="w-4 h-4" /> : <Headphones className="w-4 h-4" />}
+        <span>{active ? p(UI.stop) : p(UI.readToMe)}</span>
+      </button>
+    );
+  };
   // اسم الوحدة حسب اللغة
   const moduleTitle = (m: LessonModule): string =>
     lang === 'en' ? (m.titleEn || m.title) : m.title;
@@ -298,10 +354,17 @@ export function LessonScreen({
   // ═══ إيقاف الصوت عند تبديل اللغة ═══
   useEffect(() => {
     sorobana.stop();
+    reader.stop();
     setIsReadingStory(false);
     setIsReadingModuleStory(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang]);
+
+  // ═══ إيقاف القراءة (TTS) عند الانتقال لصفحة/تبويب/مثال/سؤال/درس جديد ═══
+  useEffect(() => {
+    reader.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessonId, introPageIdx, tab, activeModuleId, exampleIdx, tryIdx]);
 
   // ═══ حفظ الجلسة عند كل تغيير ═══
   useEffect(() => {
@@ -358,6 +421,7 @@ export function LessonScreen({
     const isLast = introPageIdx === pages.length - 1;
     const isFirst = introPageIdx === 0;
     const lessonTitleText = p(lesson.title);
+    const introReadText = `${p(currentPage.title)}.\n${p(currentPage.content)}`;
 
     const handleFinishIntro = () => {
       playSound('levelup');
@@ -389,6 +453,7 @@ export function LessonScreen({
               </h1>
               <p className="text-[10px] text-white/50">{p(UI.introTag)} · {lesson.levelId}</p>
             </div>
+            {renderReadButton(introReadText)}
             <button
               onClick={() => { playSound('click'); toggleStyle(); }}
               className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
@@ -415,7 +480,7 @@ export function LessonScreen({
               </div>
 
               <h2 className="text-2xl font-extrabold text-white mb-4 text-center">
-                {p(currentPage.title)}
+                {pf(currentPage.title)}
               </h2>
 
               {currentPage.imageSvg && currentPage.imageSvg !== 'soroban-interactive' && (
@@ -429,9 +494,7 @@ export function LessonScreen({
                 </div>
               )}
 
-              <p className="text-base text-white/85 font-body leading-loose text-center flex-1 flex items-center justify-center">
-                {p(currentPage.content)}
-              </p>
+              <IntroText text={pf(currentPage.content)} dir={dir} />
 
               {/* Dots */}
               <div className="flex justify-center gap-1.5 my-4">
@@ -522,12 +585,28 @@ export function LessonScreen({
   const currentTryAttempts = currentTry ? (attempts[currentTry.id] ?? 1) : 1;
 
   // 🎙️ القصص الصوتية mp3 عربية فقط
+  // • يوجد MP3 (وواجهة عربية) → الصوت البشري  • غير ذلك → TTS بصوت نسائي
   const storyText = p(lesson.story);
-  const canPlayLessonStory =
-    isAr && lesson.storyAudioId !== null && lesson.storyAudioId !== undefined;
+  const lessonHasMp3 = lesson.storyAudioId !== null && lesson.storyAudioId !== undefined;
+  const lessonStoryUsesMp3 = isAr && lessonHasMp3;
+  const lessonTtsText =
+    !lessonStoryUsesMp3 && reader.isSupported && isSpeakableIn(storyText, lang) ? storyText : '';
+  const canPlayLessonStory = lessonStoryUsesMp3 || lessonTtsText !== '';
+  const lessonStoryPlaying = lessonStoryUsesMp3 ? isReadingStory : reader.speakingKey === 'story';
+
   const moduleStoryAudioId = activeModule?.miniStory?.storyAudioId;
-  const canPlayModuleStory =
-    isAr && moduleStoryAudioId !== null && moduleStoryAudioId !== undefined;
+  const moduleHasMp3 = moduleStoryAudioId !== null && moduleStoryAudioId !== undefined;
+  const moduleStoryUsesMp3 = isAr && moduleHasMp3;
+  const moduleStoryRaw = activeModule?.miniStory
+    ? isAr
+      ? activeModule.miniStory.storyAudioText || activeModule.miniStory.story
+      : activeModule.miniStory.story
+    : '';
+  const moduleTtsText = !moduleStoryUsesMp3 && reader.isSupported && isSpeakableIn(p(moduleStoryRaw), lang)
+    ? p(moduleStoryRaw)
+    : '';
+  const canPlayModuleStory = moduleStoryUsesMp3 || moduleTtsText !== '';
+  const moduleStoryPlaying = moduleStoryUsesMp3 ? isReadingModuleStory : reader.speakingKey === 'module-story';
 
   const switchModule = (mId: string) => {
     playSound('click');
@@ -552,6 +631,13 @@ export function LessonScreen({
   };
 
   const toggleStory = () => {
+    if (!lessonStoryUsesMp3) {
+      sorobana.stop();
+      playSound('click');
+      reader.toggle(lessonTtsText, 'story');
+      return;
+    }
+    reader.stop();
     const audioSrc = lesson.storyAudioId;
     if (audioSrc === null || audioSrc === undefined) return;
 
@@ -576,6 +662,13 @@ export function LessonScreen({
   };
 
   const toggleModuleStory = () => {
+    if (!moduleStoryUsesMp3) {
+      sorobana.stop();
+      playSound('click');
+      reader.toggle(moduleTtsText, 'module-story');
+      return;
+    }
+    reader.stop();
     const src = activeModule?.miniStory?.storyAudioId;
     if (src === null || src === undefined) return;
 
@@ -699,6 +792,46 @@ export function LessonScreen({
   const lessonTitleText = p(lesson.title);
   const nextLessonTitleText = nextLesson ? p(nextLesson.title) : '';
 
+  // 🎧 النص المعروض حاليًا على الشاشة فقط (لا يقرأ الدرس كله)
+  const buildVisibleReadText = (): string => {
+    const parts: string[] = [];
+    if (tab === 'watch') {
+      if (lesson.story && storyText) parts.push(storyText);
+      if (hasMod && activeModule) {
+        if (activeModule.miniStory) {
+          parts.push(p(activeModule.miniStory.title), p(activeModule.miniStory.story));
+        }
+        parts.push(p(activeModule.rule.description), p(activeModule.condition.explanation));
+        if (showDiscrimination) {
+          activeModule.discrimination.steps.forEach((st) => {
+            parts.push(p(st.question), p(st.answer), p(st.hint));
+          });
+          parts.push(p(activeModule.discrimination.decision));
+        }
+      } else {
+        if (lesson.concept) parts.push(p(lesson.concept));
+        if (lesson.rule) parts.push(p(lesson.rule));
+      }
+      if (currentExample) {
+        parts.push(p(getExampleText(currentExample)));
+        if (showSteps) {
+          parts.push(p(currentExample.discrimination), p(currentExample.rule), p(currentExample.fingerMovement));
+          currentExample.steps.forEach((st) => parts.push(p(getStepText(st))));
+          parts.push(p(getExampleExplanation(currentExample)), p(currentExample.beadVisual));
+        }
+      }
+    } else if (currentTry) {
+      parts.push(p(getExerciseText(currentTry)));
+      if (feedback === 'reveal') {
+        parts.push(`${p(UI.correctAnswer)} ${currentTryExpected}`);
+        (currentTry.steps ?? []).forEach((st) => parts.push(p(getStepText(st))));
+        parts.push(p(currentTry.explanation));
+      }
+    }
+    return parts.filter((x) => x && x.trim()).join('\n');
+  };
+  const visibleReadText = buildVisibleReadText();
+
   // 🔤 نصوص ذات معاملات
   const exampleLabel = isAr
     ? `مثال ${formatNumber(exampleIdx + 1, numberStyle)} من ${formatNumber(examples.length, numberStyle)}`
@@ -740,6 +873,7 @@ export function LessonScreen({
               {lesson.skillId ?? p(UI.intro)} · {lesson.levelId}
             </p>
           </div>
+          {renderReadButton(visibleReadText)}
           <button
             onClick={() => { playSound('click'); toggleStyle(); }}
             className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
@@ -801,7 +935,7 @@ export function LessonScreen({
               <Hand className="w-4 h-4" /> {p(UI.tryTab)}
               {currentModuleSolved > 0 && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/30">
-                  {currentModuleSolved}/{totalTry}
+                  {formatNumber(currentModuleSolved, numberStyle)}/{formatNumber(totalTry, numberStyle)}
                 </span>
               )}
             </button>
@@ -833,12 +967,12 @@ export function LessonScreen({
                       <button
                         onClick={toggleStory}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
-                          isReadingStory
+                          lessonStoryPlaying
                             ? 'bg-red-500/30 border border-red-400/50 text-red-200'
                             : 'bg-rose-500/20 border border-rose-400/40 text-rose-200 hover:bg-rose-500/30'
                         }`}
                       >
-                        {isReadingStory ? (
+                        {lessonStoryPlaying ? (
                           <><Square className="w-3.5 h-3.5" /> {p(UI.stop)}</>
                         ) : (
                           <><Volume2 className="w-3.5 h-3.5" /> {p(UI.storyBrief)}</>
@@ -868,12 +1002,12 @@ export function LessonScreen({
                       <button
                         onClick={toggleModuleStory}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
-                          isReadingModuleStory
+                          moduleStoryPlaying
                             ? 'bg-red-500/30 border border-red-400/50 text-red-200'
                             : 'bg-rose-500/20 border border-rose-400/40 text-rose-200 hover:bg-rose-500/30'
                         }`}
                       >
-                        {isReadingModuleStory ? (
+                        {moduleStoryPlaying ? (
                           <><Square className="w-3.5 h-3.5" /> {p(UI.stop)}</>
                         ) : (
                           <><Volume2 className="w-3.5 h-3.5" /> {p(UI.storyBrief)}</>
@@ -1388,7 +1522,7 @@ export function LessonScreen({
       <FloatingCompanion playSound={playSound} />
       <SorobanaCompanion
         isSpeaking={sorobana.isSpeaking}
-        onClick={() => { if (!isReadingStory && !isReadingModuleStory) sorobana.speakTeaching(); }}
+        onClick={() => { if (!isReadingStory && !isReadingModuleStory && !reader.isSpeaking) sorobana.speakTeaching(); }}
         mode={tab === 'try' ? 'try' : 'watch'}
       />
     </div>
