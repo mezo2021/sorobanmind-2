@@ -543,7 +543,7 @@ export function LessonScreen({
         <FloatingCompanion playSound={playSound} />
         <SorobanaCompanion
           isSpeaking={sorobana.isSpeaking}
-          onClick={() => sorobana.speakTeaching()}
+          onClick={() => { if (lang === 'ar') sorobana.speakTeaching(); }}
           mode="watch"
         />
       </div>
@@ -711,12 +711,12 @@ export function LessonScreen({
   const reactToAnswer = (isCorrect: boolean, attempt: number) => {
     if (isCorrect) {
       playSound('success');
-      sorobana.speakCorrect();
+      if (lang === 'ar') sorobana.speakCorrect();
       showCompanionMsg(p(UI.cheer));
       setFeedback('correct');
     } else {
       playSound('error');
-      sorobana.speakWrong();
+      if (lang === 'ar') sorobana.speakWrong();
       setFeedback(attempt >= MAX_TRIES ? 'reveal' : 'wrong');
     }
   };
@@ -1522,7 +1522,7 @@ export function LessonScreen({
       <FloatingCompanion playSound={playSound} />
       <SorobanaCompanion
         isSpeaking={sorobana.isSpeaking}
-        onClick={() => { if (!isReadingStory && !isReadingModuleStory && !reader.isSpeaking) sorobana.speakTeaching(); }}
+        onClick={() => { if (lang === 'ar' && !isReadingStory && !isReadingModuleStory && !reader.isSpeaking) sorobana.speakTeaching(); }}
         mode={tab === 'try' ? 'try' : 'watch'}
       />
     </div>
