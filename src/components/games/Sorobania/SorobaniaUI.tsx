@@ -26,6 +26,7 @@ import {
 import type {
   LessonId,
 } from './sorobaniaData';
+import { Num } from '@/components/Num';
 
 // ═══════════════════════════════════════════════════════════════════
 // مكوّنات الواجهة
@@ -120,7 +121,7 @@ export const FuseTimer: React.FC<{ total: number; frozen: boolean; onExpire: () 
         <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color, transition: 'width 100ms linear' }} />
       </div>
       <span className="w-6 text-center text-sm font-black" style={{ color }}>
-        {Math.ceil(remaining)}
+        <Num>{Math.ceil(remaining)}</Num>
       </span>
     </div>
   );
