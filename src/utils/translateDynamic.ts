@@ -128,7 +128,7 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "الضرب والقسمة بطرق متقدمة": "Advanced multiplication and division methods",
   "العمليات على الأعداد العشرية": "Operations on decimal numbers",
 
-  // 🆕 --- إضافات الامتحانات (Exam & PlacementTest) ---
+  // --- إضافات الامتحانات (Exam & PlacementTest) ---
   // أسماء المستويات
   "التمهيدي": "Foundation",
   "الجمع والطرح": "Addition & Subtraction",
@@ -154,7 +154,7 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "أصدقاء 10 (طرح)": "Friends of 10 (Sub)",
   "قسمة بسيطة": "Direct Div",
 
-  // 🆕 --- إضافات شاشة الأنزان (AnzanScreen) ---
+  // --- إضافات شاشة الأنزان (AnzanScreen) ---
   "تلميح": "Hint",
   "تلميح:": "Hint:",
   "يساوي": "equals",
@@ -168,7 +168,19 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "master_addition": "Addition & Subtraction Master",
   "master_multiplication": "Multiplication Master",
   "master_division": "Division Master",
-  "master_mixed": "Mixed Master"
+  "master_mixed": "Mixed Master",
+
+  // 🆕 --- إضافات الجلسة العلاجية (RemediationScreen) ---
+  "الحل": "Solution",
+  "الخطوات": "Steps",
+  "حرّك الخرزة": "Move the bead",
+  "استخدم صديق 5": "Use friend of 5",
+  "استخدم صديق 10": "Use friend of 10",
+  "حرّك للأسفل": "Move down",
+  "حرّك للأعلى": "Move up",
+  "جلسة علاجية": "Remediation Session",
+  "لا توجد مهارات ضعيفة": "No weak skills",
+  "لا توجد أسئلة كافية": "Not enough questions"
 };
 
 const AR_TO_EN: Record<string, string> = {};
@@ -180,12 +192,18 @@ Object.entries(RAW_AR_TO_EN).forEach(([key, val]) => {
 function translatePattern(text: string): string | null {
   let match;
 
-  // 🆕 ترجمة بادئة التلميح
+  // 🆕 ترجمة بادئات التلميح والحل والخطوات
   if (text.startsWith("تلميح:")) {
     return text.replace(/^تلميح\s*:\s*/, "Hint: ");
   }
+  if (text.startsWith("الحل:")) {
+    return text.replace(/^الحل\s*:\s*/, "Solution: ");
+  }
+  if (text.startsWith("الخطوات:")) {
+    return text.replace(/^الخطوات\s*:\s*/, "Steps: ");
+  }
 
-  // 🆕 ترجمة بادئات المعادلات والنصوص (كما اقترح جيميني)
+  // 🆕 ترجمة بادئات المعادلات والنصوص
   match = text.match(/^احسب\s*السلسلة\s*:\s*(.*)/);
   if (match) return `Calculate the chain: ${match[1]}`;
 
