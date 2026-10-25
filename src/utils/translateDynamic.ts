@@ -15,7 +15,7 @@ function normalizeArabic(text: string): string {
     .trim();
 }
 
-// القاموس الثابت (مدمج فيه كل النصوص التي طلبها جيميني)
+// القاموس الثابت (مدمج فيه كل النصوص)
 const RAW_AR_TO_EN: Record<string, string> = {
   // --- الكلمات السابقة ---
   "ضرب باصدقاء 5": "Mul with Friends of 5", "ضرب بأصدقاء 5": "Mul with Friends of 5",
@@ -88,7 +88,20 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "٢) الجزء الأول: 50 + مجموع البُعدين | ٣) الجزء الثاني: حاصل ضرب البُعدين | ٤) (الجزء الأول × 100) ÷ 2 + الجزء الثاني": "2) First part: 50 + sum of distances | 3) Second part: product of distances | 4) (First part × 100) ÷ 2 + Second part",
   "١) احسب بُعد كل رقم عن 500 (الرقم − 500)": "1) Calculate distance of each number from 500 (number − 500)",
   "٢) الجزء الأول: 500 + مجموع البُعدين | ٣) الجزء الثاني: حاصل ضرب البُعدين | ٤) (الجزء الأول × 1000) ÷ 2 + الجزء الثاني": "2) First part: 500 + sum of distances | 3) Second part: product of distances | 4) (First part × 1000) ÷ 2 + Second part",
-  "مع الأعداد الفردية استخدم طريقة أخرى!": "With odd numbers, use another method!"
+  "مع الأعداد الفردية استخدم طريقة أخرى!": "With odd numbers, use another method!",
+
+  // --- رياضيات الأصابع (FingerMathScreen) ---
+  "في مملكة الأصابع، تعيش عائلتان صديقتان: عائلة اليد اليمنى المسؤولة عن الآحاد، وعائلة اليد اليسرى المسؤولة عن العشرات. الإبهام هو الجدة الحنونة قيمتها 5، والأصابع الأربعة أطفال كل واحد قيمته 1. اجتمعوا معاً ليصنعوا كل الأعداد من 0 إلى 99!": "In the kingdom of fingers, two friendly families live: the right-hand family responsible for units, and the left-hand family responsible for tens. The thumb is the kind grandmother worth 5, and the four fingers are children, each worth 1. Together they create all numbers from 0 to 99!",
+  "الإبهام = 5 (الجدة) · الأصابع الأخرى = 1 (طفل)": "Thumb = 5 (Grandma) · Other fingers = 1 (Child)",
+  "اليد اليمنى = الآحاد · اليد اليسرى = العشرات": "Right hand = Units · Left hand = Tens",
+  "مثل الرقم 1": "Like the number 1",
+  "مثل الرقم 3": "Like the number 3",
+  "مثل الرقم 5 (الجدة)": "Like the number 5 (Grandma)",
+  "مثل الرقم 7": "Like the number 7",
+  "مثل الرقم 9": "Like the number 9",
+  "مثل الرقم 10": "Like the number 10",
+  "مثل الرقم 27": "Like the number 27",
+  "مثل الرقم 99": "Like the number 99"
 };
 
 const AR_TO_EN: Record<string, string> = {};
