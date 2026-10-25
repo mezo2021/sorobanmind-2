@@ -6,7 +6,6 @@ interface UseSpeechOptions {
   rate?: number;
   pitch?: number;
   volume?: number;
-  lang?: string;
 }
 
 export function useSpeech({
@@ -14,7 +13,6 @@ export function useSpeech({
   rate = 1.0,
   pitch = 1.1,
   volume = 1,
-  lang = 'ar-SA',
 }: UseSpeechOptions = {}) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
@@ -60,13 +58,17 @@ export function useSpeech({
       window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = options?.lang || lang;
+      const targetLang = options?.lang || 'ar-SA';
+      
+      utterance.lang = targetLang;
       utterance.rate = options?.rate ?? rate;
       utterance.pitch = options?.pitch ?? pitch;
       utterance.volume = volume;
 
-      const arabicVoice = voices.find((v) => v.lang.startsWith('ar'));
-      if (arabicVoice) utterance.voice = arabicVoice;
+      // اختيار الصوت المناسب حسب اللغة المطلوبة
+      const code = targetLang.substring(0, 2).toLowerCase();
+      const voice = voices.find((v) => v.lang.toLowerCase().startsWith(code));
+      if (voice) utterance.voice = voice;
 
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => {
@@ -81,7 +83,7 @@ export function useSpeech({
       utteranceRef.current = utterance;
       window.speechSynthesis.speak(utterance);
     },
-    [enabled, isSupported, lang, rate, pitch, volume, voices],
+    [enabled, isSupported, rate, pitch, volume, voices],
   );
 
   const stop = useCallback(() => {
