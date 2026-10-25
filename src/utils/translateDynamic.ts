@@ -9,7 +9,7 @@ function normalizeArabic(text: string): string {
     .replace(/[أإآ]/g, "ا")         // توحيد الألف
     .replace(/ة/g, "ه")            // توحيد التاء المربوطة
     .replace(/ى/g, "ي")            // توحيد الألف المقصورة
-    .replace(/٪/g, "%")            // 🆕 تحويل علامة النسبة العربية (٪) إلى إنجليزية (%)
+    .replace(/٪/g, "%")            // تحويل علامة النسبة العربية
     .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))) // تحويل الأرقام العربية
     .replace(/\s+/g, " ")          // إزالة المسافات الزائدة
     .trim();
@@ -17,7 +17,6 @@ function normalizeArabic(text: string): string {
 
 // القاموس الثابت
 const RAW_AR_TO_EN: Record<string, string> = {
-  // المهارات
   "ضرب باصدقاء 5": "Mul with Friends of 5", "ضرب بأصدقاء 5": "Mul with Friends of 5",
   "ضرب باصدقاء 10": "Mul with Friends of 10", "ضرب بأصدقاء 10": "Mul with Friends of 10",
   "ضرب مركب": "Compound Mul", "ضرب بسيط": "Direct Mul",
@@ -29,18 +28,12 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "جمع مركب": "Compound Add", "جمع بسيط": "Direct Add",
   "تمثيل 0-4": "Representing 0-4", "تمثيل 5-9": "Representing 5-9",
   "المئات والآلاف": "Hundreds & Thousands", "الاحاد والعشرات": "Units & Tens",
-
-  // أسماء الأوسمة
   "المستكشف": "Explorer", "الصاعد": "Rising Star", "السريع": "Fast",
   "المتفوق": "Top Achiever", "الدقيق": "Precise", "المثابر": "Persistent",
   "الرائد": "Pioneer", "القناص": "Sniper", "المتدفق": "Flow",
   "الحارس": "Guardian", "الفاتح": "Conqueror", "الصامد": "Resilient",
-  
-  // أوصاف ثابتة
   "تعافى من جلسة علاجية": "Recovered from session",
   "أتم قسم كامل": "Completed a section", 
-
-  // أسماء
   "ميمو": "Mimo", "البطل": "Hero"
 };
 
@@ -49,44 +42,44 @@ Object.entries(RAW_AR_TO_EN).forEach(([key, val]) => {
   AR_TO_EN[normalizeArabic(key)] = val;
 });
 
-// دالة الأنماط الذكية (تستخدم \s* لتجاهل أي مسافات زائدة)
+// 🆕 دالة الأنماط المتسامحة جداً (تتجاهل المسافات والترتيب)
 function translatePattern(text: string): string | null {
   let match;
 
-  match = text.match(/جرب\s*(\d+)\s*مهاره/);
+  match = text.match(/جرب.*?(\d+).*?مهاره/);
   if (match) return `Tried ${match[1]} skills`;
 
-  match = text.match(/(\d+)\s*مهارات\s*بزمن\s*قياسي/);
+  match = text.match(/(\d+).*?مهارات.*?بزمن.*?قياسي/);
   if (match) return `${match[1]} skills in record time`;
 
-  match = text.match(/(\d+)\s*شارات\s*اتقان/);
+  match = text.match(/(\d+).*?شارات.*?اتقان/);
   if (match) return `${match[1]} mastery badges`;
 
-  match = text.match(/(\d+)\s*مهارات\s*بلا\s*خطا/);
+  match = text.match(/(\d+).*?مهارات.*?بلا.*?خطا/);
   if (match) return `${match[1]} skills without mistakes`;
 
-  match = text.match(/(\d+)\s*محاول[ه|ات]\s*اجماليه/);
+  match = text.match(/(\d+).*?محاول.*?اجماليه/);
   if (match) return `${match[1]} total attempts`;
 
-  match = text.match(/(\d+)\s*اجاب[ه|ات]\s*صحيحه/);
+  match = text.match(/(\d+).*?اجاب.*?صحيحه/);
   if (match) return `${match[1]} correct answers`;
 
-  match = text.match(/(\d+)\s*اجاب[ه|ات]\s*متتاليه/);
+  match = text.match(/(\d+).*?اجاب.*?متتاليه/);
   if (match) return `${match[1]} consecutive correct`;
 
-  // 🆕 دعم كلا الترتيبين لكلمة "مهارة بدقة"
-  match = text.match(/مهاره\s*بدقه\s*(\d+)%/);
+  // مهارة بدقة X%
+  match = text.match(/مهاره.*?بدقه.*?(\d+)/);
   if (match) return `Skill with ${match[1]}% accuracy`;
-  match = text.match(/(\d+)%\s*مهاره\s*بدقه/);
+  match = text.match(/(\d+).*?مهاره.*?بدقه/);
   if (match) return `Skill with ${match[1]}% accuracy`;
 
-  match = text.match(/(\d+)\s*متتاليه\s*في\s*السلاسل/);
+  match = text.match(/(\d+).*?متتاليه.*?في.*?السلاسل/);
   if (match) return `${match[1]} streak in chains`;
 
-  // 🆕 دعم كلا الترتيبين لكلمة "دقة في مهارة مكتملة"
-  match = text.match(/دقه\s*(\d+)%\s*في\s*مهاره\s*مكتمله/);
+  // 🆕 معالجة الصاعد (دقة X% في مهارة مكتملة) بمرونة تامة
+  match = text.match(/دقه.*?(\d+).*?مكتمله/);
   if (match) return `${match[1]}% accuracy in skill`;
-  match = text.match(/(\d+)%\s*دقه\s*في\s*مهاره\s*مكتمله/);
+  match = text.match(/(\d+).*?دقه.*?مكتمله/);
   if (match) return `${match[1]}% accuracy in skill`;
 
   return null;
