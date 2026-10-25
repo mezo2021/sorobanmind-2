@@ -20,6 +20,11 @@ import {
   type SRBSection,
 } from '@/data/srb-adapter';
 
+// 🌍 i18n
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
+
 // ═══════════════════════════════════════════════════════════
 // ثوابت
 // ═══════════════════════════════════════════════════════════
@@ -52,12 +57,15 @@ function formatTime(sec: number): string {
   return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
 }
 
-function formatTimeLeft(ms: number): string {
+function formatTimeLeft(ms: number, lang: string): string {
   const totalSec = Math.ceil(ms / 1000);
   const mins = Math.floor(totalSec / 60);
   const secs = totalSec % 60;
-  if (mins < 1) return `${secs} ثانية`;
-  return `${mins} دقيقة و ${secs} ثانية`;
+  
+  if (mins < 1) {
+    return pickLang({ ar: `${secs} ثانية`, en: `${secs} second(s)` }, lang as any);
+  }
+  return pickLang({ ar: `${mins} دقيقة و ${secs} ثانية`, en: `${mins} minute(s) and ${secs} second(s)` }, lang as any);
 }
 
 // ✅ دالة الوقت الجديدة: مجموع الوقت الفعلي للأسئلة × 1.5، مقرباً لأقرب دقيقة
@@ -97,6 +105,7 @@ export function LevelTestScreen({
   onPass,
   playSound,
 }: LevelTestScreenProps) {
+  const { lang, dir } = useT();
   const { style: numberStyle } = useNumberStyleStore();
   
   const [phase, setPhase] = useState<Phase>('intro');
@@ -254,7 +263,7 @@ export function LevelTestScreen({
   // ═══ Cooldown ═══
   if (phase === 'cooldown') {
     return (
-      <div dir="rtl" className="min-h-screen px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="min-h-screen px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => { playSound('click'); onBack(); }}
@@ -262,7 +271,9 @@ export function LevelTestScreen({
           >
             <Home className="w-6 h-6 text-white" />
           </button>
-          <h2 className="text-xl font-extrabold text-white">اختبار {levelId}</h2>
+          <h2 className="text-xl font-extrabold text-white">
+            {pickLang({ ar: 'اختبار', en: 'Test' }, lang)} {levelId}
+          </h2>
         </div>
 
         <motion.div
@@ -273,13 +284,19 @@ export function LevelTestScreen({
           <div className="w-20 h-20 mx-auto mb-4 rounded-3xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center">
             <Clock className="w-10 h-10 text-amber-300" />
           </div>
-          <h3 className="text-xl font-extrabold text-white text-center mb-3">انتظر قليلًا</h3>
+          <h3 className="text-xl font-extrabold text-white text-center mb-3">
+            {pickLang({ ar: 'انتظر قليلًا', en: 'Please wait a moment' }, lang)}
+          </h3>
           <p className="text-sm text-white/70 text-center leading-relaxed mb-4">
-            يمكنك إعادة الاختبار بعد ٣٠ دقيقة من المحاولة الأخيرة.
+            {pickLang({ ar: 'يمكنك إعادة الاختبار بعد ٣٠ دقيقة من المحاولة الأخيرة.', en: 'You can retake the test after 30 minutes from the last attempt.' }, lang)}
           </p>
           <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30 text-center">
-            <p className="text-xs text-amber-200 mb-1">الوقت المتبقي</p>
-            <p className="text-2xl font-black text-amber-100">{formatTimeLeft(cooldownMs)}</p>
+            <p className="text-xs text-amber-200 mb-1">
+              {pickLang({ ar: 'الوقت المتبقي', en: 'Time remaining' }, lang)}
+            </p>
+            <p className="text-2xl font-black text-amber-100">
+              {formatTimeLeft(cooldownMs, lang)}
+            </p>
           </div>
         </motion.div>
       </div>
@@ -289,7 +306,7 @@ export function LevelTestScreen({
   // ═══ Intro ═══
   if (phase === 'intro') {
     return (
-      <div dir="rtl" className="min-h-screen px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="min-h-screen px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => { playSound('click'); onBack(); }}
@@ -298,8 +315,12 @@ export function LevelTestScreen({
             <Home className="w-6 h-6 text-white" />
           </button>
           <div className="flex-1">
-            <h2 className="text-2xl font-extrabold text-white">اختبار {levelId}</h2>
-            <p className="text-sm text-white/50">تحدي نهاية المستوى</p>
+            <h2 className="text-2xl font-extrabold text-white">
+              {pickLang({ ar: 'اختبار', en: 'Test' }, lang)} {levelId}
+            </h2>
+            <p className="text-sm text-white/50">
+              {pickLang({ ar: 'تحدي نهاية المستوى', en: 'Level Final Challenge' }, lang)}
+            </p>
           </div>
           <Trophy className="w-6 h-6 text-gold-300" />
         </div>
@@ -312,33 +333,45 @@ export function LevelTestScreen({
           <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-gold-400 to-amber-600 flex items-center justify-center shadow-xl mx-auto mb-4">
             <Trophy className="w-10 h-10 text-white" />
           </div>
-          <h3 className="text-xl font-extrabold text-white text-center mb-4">تحدي نهاية المستوى</h3>
+          <h3 className="text-xl font-extrabold text-white text-center mb-4">
+            {pickLang({ ar: 'تحدي نهاية المستوى', en: 'Level Final Challenge' }, lang)}
+          </h3>
           <div className="space-y-3 text-sm text-white/80">
             <div className="flex items-start gap-3">
-              <span className="text-gold-300 font-bold shrink-0">١.</span>
-              <p><strong>١٠ أسئلة</strong> من بنك {levelId}</p>
+              <span className="text-gold-300 font-bold shrink-0">{formatNumber(1, numberStyle)}.</span>
+              <p>
+                {pickLang({
+                  ar: `١٠ أسئلة من بنك ${levelId}`,
+                  en: `10 questions from ${levelId} bank`
+                }, lang)}
+              </p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-gold-300 font-bold shrink-0">٢.</span>
-              <p>الزمن محسوب بناءً على صعوبة الأسئلة</p>
+              <span className="text-gold-300 font-bold shrink-0">{formatNumber(2, numberStyle)}.</span>
+              <p>{pickLang({ ar: 'الزمن محسوب بناءً على صعوبة الأسئلة', en: 'Time is calculated based on question difficulty' }, lang)}</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-gold-300 font-bold shrink-0">٣.</span>
-              <p><strong>محاولة واحدة</strong> لكل سؤال</p>
+              <span className="text-gold-300 font-bold shrink-0">{formatNumber(3, numberStyle)}.</span>
+              <p>{pickLang({ ar: 'محاولة واحدة لكل سؤال', en: 'One attempt per question' }, lang)}</p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-gold-300 font-bold shrink-0">٤.</span>
-              <p>عتبة النجاح: <strong>{formatNumber(PASS_THRESHOLD, numberStyle)}٪</strong></p>
+              <span className="text-gold-300 font-bold shrink-0">{formatNumber(4, numberStyle)}.</span>
+              <p>
+                {pickLang({
+                  ar: `عتبة النجاح: ${formatNumber(PASS_THRESHOLD, numberStyle)}٪`,
+                  en: `Passing threshold: ${formatNumber(PASS_THRESHOLD, numberStyle)}%`
+                }, lang)}
+              </p>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-gold-300 font-bold shrink-0">٥.</span>
-              <p>بعد الفشل: انتظر <strong>٣٠ دقيقة</strong></p>
+              <span className="text-gold-300 font-bold shrink-0">{formatNumber(5, numberStyle)}.</span>
+              <p>{pickLang({ ar: 'بعد الفشل: انتظر ٣٠ دقيقة', en: 'After failing: wait 30 minutes' }, lang)}</p>
             </div>
           </div>
 
           <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30">
             <p className="text-xs text-amber-200 leading-relaxed">
-              💡 تحدي حقيقي: لا يوجد كشف للحل. ركّز جيدًا!
+              {pickLang({ ar: '💡 تحدي حقيقي: لا يوجد كشف للحل. ركّز جيدًا!', en: '💡 Real challenge: no solution reveal. Focus well!' }, lang)}
             </p>
           </div>
         </motion.div>
@@ -348,7 +381,7 @@ export function LevelTestScreen({
           className="btn-primary w-full !py-4 !text-lg"
         >
           <Play className="w-6 h-6" />
-          ابدأ الاختبار
+          {pickLang({ ar: 'ابدأ الاختبار', en: 'Start Test' }, lang)}
         </button>
       </div>
     );
@@ -360,15 +393,18 @@ export function LevelTestScreen({
     const timeWarning = timeLeft <= 15;
 
     return (
-      <div dir="rtl" className="min-h-screen px-3 sm:px-6 py-4 max-w-2xl mx-auto flex flex-col">
+      <div dir={dir} className="min-h-screen px-3 sm:px-6 py-4 max-w-2xl mx-auto flex flex-col">
         {/* رأس */}
         <div className="flex items-center gap-2 mb-3">
           <div className="flex-1">
             <h2 className="text-base font-bold text-white">
-              سؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
+              {pickLang({
+                ar: `سؤال ${formatNumber(currentIdx + 1, numberStyle)} / ${formatNumber(questions.length, numberStyle)}`,
+                en: `Question ${formatNumber(currentIdx + 1, numberStyle)} / ${formatNumber(questions.length, numberStyle)}`
+              }, lang)}
             </h2>
             <p className="text-[10px] text-white/50">
-              {currentQ.section}-{currentQ.module} · مثّل الإجابة
+              {translateDynamic({ text: currentQ.section }, lang, 'text')}-{translateDynamic({ text: currentQ.module }, lang, 'text')} · {pickLang({ ar: 'مثّل الإجابة', en: 'Represent the answer' }, lang)}
             </p>
           </div>
           <div className={'flex items-center gap-1.5 px-3 py-2 rounded-xl border ' + (timeWarning ? 'bg-red-500/20 border-red-500/50 animate-pulse' : 'bg-white/5 border-white/10')}>
@@ -401,7 +437,7 @@ export function LevelTestScreen({
             <p className="text-lg font-extrabold text-white mb-4">{currentQ.question}</p>
 
             {/* ✅ واجهة الإجابة الوحيدة: المعداد التفاعلي لجميع الأسئلة */}
-            <div className="flex justify-center mb-3" dir="rtl">
+            <div className="flex justify-center mb-3" dir={dir}>
               <Soroban2D5
                 key={'build-' + currentQ.id}
                 columns={getColumnsForQuestion(currentQ)}
@@ -418,13 +454,13 @@ export function LevelTestScreen({
                 onClick={handleCheckBuild}
                 className="btn-primary !py-2.5 !px-6 !text-sm"
               >
-                <CheckCircle2 className="w-4 h-4" /> تحقق
+                <CheckCircle2 className="w-4 h-4" /> {pickLang({ ar: 'تحقق', en: 'Check' }, lang)}
               </button>
               <button
                 onClick={() => { playSound('click'); setAbacusValue(0); }}
                 className="btn-ghost !py-2.5 !px-4 !text-sm"
               >
-                <RotateCcw className="w-4 h-4" /> مسح
+                <RotateCcw className="w-4 h-4" /> {pickLang({ ar: 'مسح', en: 'Clear' }, lang)}
               </button>
             </div>
           </motion.div>
@@ -435,7 +471,7 @@ export function LevelTestScreen({
           onClick={() => { playSound('click'); setShowEndConfirm(true); }}
           className="w-full py-2.5 rounded-2xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 font-bold text-xs transition"
         >
-          إنهاء الاختبار الآن
+          {pickLang({ ar: 'إنهاء الاختبار الآن', en: 'End Test Now' }, lang)}
         </button>
 
         {/* Modal تأكيد الإنهاء */}
@@ -454,21 +490,26 @@ export function LevelTestScreen({
                 exit={{ scale: 0.85, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
                 className="bg-slate-900 rounded-3xl p-6 max-w-md w-full border border-amber-500/30 text-center"
+                dir={dir}
               >
-                <h3 className="text-xl font-extrabold text-white mb-2">إنهاء الاختبار؟</h3>
-                <p className="text-sm text-white/60 mb-6">الأسئلة غير المجابة تحتسب صفرًا.</p>
+                <h3 className="text-xl font-extrabold text-white mb-2">
+                  {pickLang({ ar: 'إنهاء الاختبار؟', en: 'End Test?' }, lang)}
+                </h3>
+                <p className="text-sm text-white/60 mb-6">
+                  {pickLang({ ar: 'الأسئلة غير المجابة تحتسب صفرًا.', en: 'Unanswered questions count as zero.' }, lang)}
+                </p>
                 <div className="flex gap-3">
                   <button
                     onClick={confirmEnd}
                     className="flex-1 py-3 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white font-bold"
                   >
-                    نعم، أنهِ
+                    {pickLang({ ar: 'نعم، أنهِ', en: 'Yes, end it' }, lang)}
                   </button>
                   <button
                     onClick={() => setShowEndConfirm(false)}
                     className="flex-1 py-3 rounded-2xl bg-white/10 text-white font-bold"
                   >
-                    متابعة
+                    {pickLang({ ar: 'متابعة', en: 'Continue' }, lang)}
                   </button>
                 </div>
               </motion.div>
@@ -483,7 +524,7 @@ export function LevelTestScreen({
   if (phase === 'result') {
     const passed = finalPassed;
     return (
-      <div dir="rtl" className="min-h-screen px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="min-h-screen px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -502,31 +543,41 @@ export function LevelTestScreen({
             </motion.div>
 
             <h2 className="text-2xl font-extrabold text-white mb-2">
-              {passed ? '🎉 اجتزت الاختبار!' : '💪 حاول مرة أخرى'}
+              {passed
+                ? pickLang({ ar: '🎉 اجتزت الاختبار!', en: '🎉 You passed the test!' }, lang)
+                : pickLang({ ar: '💪 حاول مرة أخرى', en: '💪 Try again' }, lang)}
             </h2>
 
             {passed && (
               <p className="text-lg font-bold text-emerald-300 font-display mb-4">
-                بدرجة {formatNumber(finalScore, numberStyle)}٪
+                {pickLang({
+                  ar: `بدرجة ${formatNumber(finalScore, numberStyle)}٪`,
+                  en: `With a score of ${formatNumber(finalScore, numberStyle)}%`
+                }, lang)}
               </p>
             )}
 
             <div className="my-6 p-4 rounded-2xl bg-white/5 border border-white/10">
-              <p className="text-sm text-white/60 mb-1">النتيجة</p>
+              <p className="text-sm text-white/60 mb-1">
+                {pickLang({ ar: 'النتيجة', en: 'Score' }, lang)}
+              </p>
               <p className="text-5xl font-black text-white">
-                {formatNumber(finalScore, numberStyle)}٪
+                {formatNumber(finalScore, numberStyle)}%
               </p>
               <p className={'text-sm font-bold mt-2 ' + (passed ? 'text-emerald-300' : 'text-amber-300')}>
                 {passed
-                  ? '🎓 المستوى التالي مفتوح!'
-                  : `تحتاج ${formatNumber(PASS_THRESHOLD, numberStyle)}٪ للنجاح`}
+                  ? pickLang({ ar: '🎓 المستوى التالي مفتوح!', en: '🎓 Next level unlocked!' }, lang)
+                  : pickLang({
+                      ar: `تحتاج ${formatNumber(PASS_THRESHOLD, numberStyle)}٪ للنجاح`,
+                      en: `You need ${formatNumber(PASS_THRESHOLD, numberStyle)}% to pass`
+                    }, lang)}
               </p>
             </div>
 
             {!passed && (
               <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/30">
                 <p className="text-xs text-amber-200">
-                  ⏰ يمكنك إعادة الاختبار بعد ٣٠ دقيقة
+                  {pickLang({ ar: '⏰ يمكنك إعادة الاختبار بعد ٣٠ دقيقة', en: '⏰ You can retake the test after 30 minutes' }, lang)}
                 </p>
               </div>
             )}
@@ -537,7 +588,9 @@ export function LevelTestScreen({
           onClick={() => { playSound('click'); if (passed) onPass(); else onBack(); }}
           className="btn-primary w-full !py-4 !text-lg"
         >
-          {passed ? '🎓 تابع الرحلة' : 'العودة'}
+          {passed
+            ? pickLang({ ar: '🎓 تابع الرحلة', en: '🎓 Continue the journey' }, lang)
+            : pickLang({ ar: 'العودة', en: 'Back' }, lang)}
         </button>
       </div>
     );
