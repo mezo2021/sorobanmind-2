@@ -142,17 +142,16 @@ const RAW_AR_TO_EN: Record<string, string> = {
   // أقسام الأسئلة
   "جمع": "Addition",
   "طرح": "Subtraction",
+  "ضرب": "Multiplication",
   "قسمة": "Division",
   "مختلط": "Mixed",
   "جمع وطرح": "Add & Subtract",
 
-  // المهارات الضعيفة
-  "طرح بسيط": "Direct Sub",
+  // المهارات الضعيفة (بدون المكرر)
   "أصدقاء 5 (جمع)": "Friends of 5 (Add)",
   "أصدقاء 5 (طرح)": "Friends of 5 (Sub)",
   "أصدقاء 10 (جمع)": "Friends of 10 (Add)",
   "أصدقاء 10 (طرح)": "Friends of 10 (Sub)",
-  "ضرب بسيط": "Direct Mul",
   "قسمة بسيطة": "Direct Div"
 };
 
