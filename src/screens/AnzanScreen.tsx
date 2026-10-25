@@ -1,17 +1,17 @@
 // src/screens/AnzanScreen.tsx
-// ✅ SRB: wrongSkillsRef يحفظ skillId كامل ("L2-S07-m1") بدل "m1"
-// ✅ SRB: weakSkills = union(أخطاء + بطيئات من performances)
-// ✅ SRB: يمنح شارة الأنزان البصري عند اجتياز الجلسة (≥ 70%)
-// ✅ عرض المعادلة في سطر واحد (مع تصغير تلقائي)
-// ✅ الشارات تُمنح فقط عند نجاح الجلسة (pendingBadgesRef)
-// ✅ زر "إنهاء" يخرج بلا تقييم
-// 🩺 جلسة علاجية إجبارية داخلية (RemediationScreen)
-// 📅 آخر تحديث: SRB Migration — Phase 3 + Remediation + Fix 2 + Fix 3
-// [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
-// [FIX N68] — قفل الوضع بعد النجاح بـ 70%+ + رسالة ذكية لكلا الوضعين
-// [FIX 2] — getAnzanBadgeKey: S11/S12 → null (إلغاء master_mixed)
-// [FIX 3] — تمرير levelNum الحقيقي (0-7) إلى AdaptiveFeedback بدل 0
-// [FIX 4] — حذف master_mixed من ANZAN_BADGE_LABELS
+// ✅ SRB: wrongSkillsRef stores full skillId ("L2-S07-m1") instead of "m1"
+// ✅ SRB: weakSkills = union(errors + slow ones from performances)
+// ✅ SRB: awards the Visual Anzan badge when passing the session (≥ 70%)
+// ✅ Display the equation on one line (with auto-shrink)
+// ✅ Badges are awarded only on session success (pendingBadgesRef)
+// ✅ "End" button exits without evaluation
+// 🩺 Internal mandatory remedial session (RemediationScreen)
+// 📅 Last update: SRB Migration — Phase 3 + Remediation + Fix 2 + Fix 3
+// [FIX B5] — explicit LevelId check (no fragile slice)
+// [FIX N68] — lock the mode after passing with 70%+ + smart message for both modes
+// [FIX 2] — getAnzanBadgeKey: S11/S12 → null (remove master_mixed)
+// [FIX 3] — pass real levelNum (0-7) to AdaptiveFeedback instead of 0
+// [FIX 4] — remove master_mixed from ANZAN_BADGE_LABELS
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,6 +20,10 @@ import {
   Trophy, RotateCcw, Play, Brain, Zap, Eye, AlertCircle, Square,
   Lightbulb,
 } from 'lucide-react';
+
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { RemediationScreen } from './RemediationScreen';
@@ -80,9 +84,11 @@ function getDecimalFactor(q: SRBQuestion): number {
   return Math.pow(10, Math.max(...decimals, 0));
 }
 
-function extractHint(q: SRBQuestion | undefined): string | null {
-  if (!q?.solution) return null;
-  const m = q.solution.match(/^تلميح:\s*(.+?)(?:\.\s|$)/);
+// Extracts the hint from a (possibly translated) solution string.
+// Matches both Arabic ("تلميح:") and English ("Hint:") prefixes.
+function extractHint(solution: string | undefined): string | null {
+  if (!solution) return null;
+  const m = solution.match(/^(?:تلميح|Hint):\s*(.+?)(?:\.\s|$)/);
   return m ? m[1].trim() : null;
 }
 
@@ -97,7 +103,7 @@ function displayTextSize(len: number, isBuildOrRead: boolean): string {
   return 'text-5xl sm:text-7xl';
 }
 
-// [v10] — 7 شارات: S11·S12 · S13·S14 · S15 مضافة
+// [v10] — 7 badges: S11·S12 · S13·S14 · S15 added
 function getAnzanBadgeKey(section: SRBSection): keyof AnzanBadges | null {
   switch (section) {
     case 'S03':
@@ -189,27 +195,37 @@ function buildFullQuestionText(q: SRBQuestion): string {
   return text;
 }
 
-function buildFullQuestionSpeech(q: SRBQuestion): string {
+// Builds the spoken version of the question. Connector words are language-aware
+// via pickLang, while numeric words still go through numberToArabicWordsDecimal
+// (see Missing Translations Report at the end of the response).
+function buildFullQuestionSpeech(q: SRBQuestion, lang: 'ar' | 'en'): string {
   const { operands, operation, question } = q;
 
   if (operation === 'build' || operation === 'read') {
     return question;
   }
 
+  const equals = pickLang({ ar: 'يساوي', en: 'equals' }, lang);
+  const plus = pickLang({ ar: 'زائد', en: 'plus' }, lang);
+  const minus = pickLang({ ar: 'ناقص', en: 'minus' }, lang);
+  const times = pickLang({ ar: 'في', en: 'times' }, lang);
+  const dividedBy = pickLang({ ar: 'على', en: 'divided by' }, lang);
+  const sep = lang === 'ar' ? '، ' : ', ';
+
   if (operation === 'multiplication') {
-    return `${numberToArabicWordsDecimal(operands[0])} في ${numberToArabicWordsDecimal(Math.abs(operands[1]))}، يساوي`;
+    return `${numberToArabicWordsDecimal(operands[0])} ${times} ${numberToArabicWordsDecimal(Math.abs(operands[1]))}${sep}${equals}`;
   }
   if (operation === 'division') {
-    return `${numberToArabicWordsDecimal(operands[0])} على ${numberToArabicWordsDecimal(Math.abs(operands[1]))}، يساوي`;
+    return `${numberToArabicWordsDecimal(operands[0])} ${dividedBy} ${numberToArabicWordsDecimal(Math.abs(operands[1]))}${sep}${equals}`;
   }
 
   const parts: string[] = [numberToArabicWordsDecimal(operands[0])];
   for (let i = 1; i < operands.length; i++) {
     const op = operands[i];
-    if (op >= 0) parts.push(`زائد ${numberToArabicWordsDecimal(op)}`);
-    else parts.push(`ناقص ${numberToArabicWordsDecimal(Math.abs(op))}`);
+    if (op >= 0) parts.push(`${plus} ${numberToArabicWordsDecimal(op)}`);
+    else parts.push(`${minus} ${numberToArabicWordsDecimal(Math.abs(op))}`);
   }
-  return parts.join('، ') + '، يساوي';
+  return parts.join(sep) + `${sep}${equals}`;
 }
 
 export function AnzanScreen({
@@ -221,6 +237,8 @@ export function AnzanScreen({
   onXP,
   burst,
 }: AnzanScreenProps) {
+  const { lang, dir } = useT();
+
   const [phase, setPhase] = useState<Phase>('intro');
   const [mode, setMode] = useState<Mode>(initialMode);
   const [questions, setQuestions] = useState<SRBQuestion[]>([]);
@@ -267,7 +285,7 @@ export function AnzanScreen({
     [level],
   );
 
-  // [FIX 3] — رقم المستوى الحقيقي (0-7)
+  // [FIX 3] — Real level number (0-7)
   const levelNum = useMemo(() => {
     const n = parseInt(level.replace('L', ''), 10);
     return !isNaN(n) && n >= 0 && n <= 7 ? n : 0;
@@ -314,7 +332,7 @@ export function AnzanScreen({
 
     if (mode === 'normal') {
       if (isSupported) {
-        const speech = buildFullQuestionSpeech(currentQ);
+        const speech = buildFullQuestionSpeech(currentQ, lang);
         speak(speech, { rate: 0.9 });
       }
       const t = setTimeout(() => {
@@ -340,7 +358,7 @@ export function AnzanScreen({
       if (displayTimerRef.current) clearTimeout(displayTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, currentTermIdx, displayTerms.length, mode, isSupported, currentQ]);
+  }, [phase, currentTermIdx, displayTerms.length, mode, isSupported, currentQ, lang]);
 
   useEffect(() => {
     if (phase !== 'answering') return;
@@ -520,7 +538,6 @@ export function AnzanScreen({
     ],
   );
 
-  // ⏸️ الجزء 2 يبدأ من هنا — أرسل "تابع"
   const nextQuestion = useCallback(() => {
     sorobana.stop();
     stopSpeech();
@@ -553,7 +570,7 @@ export function AnzanScreen({
     onBack();
   }, [sorobana, stopSpeech, playSound, onBack]);
 
-  // ═══ 🩺 جلسة علاجية داخلية ═══
+  // ═══ 🩺 Internal remedial session ═══
   if (showRemediation) {
     return (
       <RemediationScreen
@@ -569,22 +586,28 @@ export function AnzanScreen({
   // ═══ 🚧 empty ═══
   if (phase === 'empty') {
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
         <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-xl mb-6">
           <span className="text-4xl">🚧</span>
         </div>
         <h2 className="text-2xl font-extrabold font-display text-white mb-3 text-center">
-          هذا المستوى قيد البناء
+          {pickLang({ ar: 'هذا المستوى قيد البناء', en: 'This level is under construction' }, lang)}
         </h2>
         <p className="text-white/60 font-body text-center mb-8 leading-relaxed max-w-md">
-          لم نُكمل أسئلة {level} بعد. جرّب L0 الآن — إنه جاهز!
+          {pickLang(
+            {
+              ar: `لم نُكمل أسئلة ${level} بعد. جرّب L0 الآن — إنه جاهز!`,
+              en: `We haven't completed questions for ${level} yet. Try L0 now — it's ready!`,
+            },
+            lang,
+          )}
         </p>
         <button
           type="button"
           onClick={() => { playSound('click'); onBack(); }}
           className="btn-primary"
         >
-          رجوع
+          {pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
         </button>
       </div>
     );
@@ -601,7 +624,7 @@ export function AnzanScreen({
       currentGrade >= 70;
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button type="button" onClick={() => { playSound('click'); onBack(); }}
             className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
@@ -609,10 +632,11 @@ export function AnzanScreen({
           </button>
           <div className="flex-1 min-w-0">
             <h2 className="text-2xl font-extrabold font-display text-white truncate">
-              الأنزان البصري
+              {pickLang({ ar: 'الأنزان البصري', en: 'Visual Anzan' }, lang)}
             </h2>
             <p className="text-sm text-white/50 font-body">
-              {level} — {formatNumber(expectedQuestionCount, numberStyle)} أسئلة
+              {level} — {formatNumber(expectedQuestionCount, numberStyle)}{' '}
+              {pickLang({ ar: 'أسئلة', en: 'questions' }, lang)}
             </p>
           </div>
           <Brain className="w-6 h-6 text-purple-300" />
@@ -624,14 +648,14 @@ export function AnzanScreen({
               mode === 'flash' ? 'bg-purple-600 shadow-lg text-white' : 'text-white/60'
             }`}>
             <Zap className="w-4 h-4" />
-            Flash (تحدٍّ)
+            {pickLang({ ar: 'Flash (تحدٍّ)', en: 'Flash (Challenge)' }, lang)}
           </button>
           <button type="button" onClick={() => { playSound('click'); setMode('normal'); }}
             className={`flex-1 py-3 rounded-xl font-bold transition text-sm flex items-center justify-center gap-2 ${
               mode === 'normal' ? 'bg-purple-600 shadow-lg text-white' : 'text-white/60'
             }`}>
             <Eye className="w-4 h-4" />
-            عادي
+            {pickLang({ ar: 'عادي', en: 'Normal' }, lang)}
           </button>
         </div>
 
@@ -640,30 +664,63 @@ export function AnzanScreen({
             {mode === 'flash' ? <Zap className="w-10 h-10 text-white" /> : <Eye className="w-10 h-10 text-white" />}
           </div>
           <h3 className="text-xl font-extrabold font-display text-white text-center mb-4">
-            {mode === 'flash' ? 'الوضع السريع (Flash)' : 'الوضع العادي'}
+            {mode === 'flash'
+              ? pickLang({ ar: 'الوضع السريع (Flash)', en: 'Fast Mode (Flash)' }, lang)
+              : pickLang({ ar: 'الوضع العادي', en: 'Normal Mode' }, lang)}
           </h3>
           <div className="space-y-3 text-sm text-white/80 font-body">
             {mode === 'flash' ? (
               <>
-                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">1.</span><p>الأرقام تظهر <strong>واحداً واحداً</strong></p></div>
-                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">2.</span><p>الرقم الأول بلا إشارة، والباقي مع إشاراته</p></div>
-                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">3.</span><p>بعد آخر رقم → عدّاد الإجابة</p></div>
+                <div className="flex items-start gap-3">
+                  <span className="text-purple-300 font-bold shrink-0">1.</span>
+                  <p>{pickLang({ ar: 'الأرقام تظهر واحداً واحداً', en: 'Numbers appear one by one' }, lang)}</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-purple-300 font-bold shrink-0">2.</span>
+                  <p>{pickLang({ ar: 'الرقم الأول بلا إشارة، والباقي مع إشاراته', en: 'First number has no sign, the rest keep their signs' }, lang)}</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-purple-300 font-bold shrink-0">3.</span>
+                  <p>{pickLang({ ar: 'بعد آخر رقم → عدّاد الإجابة', en: 'After the last number → the answer timer' }, lang)}</p>
+                </div>
               </>
             ) : (
               <>
-                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">1.</span><p>السؤال يظهر <strong>كاملاً</strong> مع صوت</p></div>
-                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">2.</span><p>يختفي بعد 2-3 ثوان</p></div>
-                <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">3.</span><p>ثم تبني الناتج</p></div>
+                <div className="flex items-start gap-3">
+                  <span className="text-purple-300 font-bold shrink-0">1.</span>
+                  <p>{pickLang({ ar: 'السؤال يظهر كاملاً مع صوت', en: 'The question appears fully with audio' }, lang)}</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-purple-300 font-bold shrink-0">2.</span>
+                  <p>{pickLang({ ar: 'يختفي بعد 2-3 ثوان', en: 'Disappears after 2-3 seconds' }, lang)}</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-purple-300 font-bold shrink-0">3.</span>
+                  <p>{pickLang({ ar: 'ثم تبني الناتج', en: 'Then you build the result' }, lang)}</p>
+                </div>
               </>
             )}
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">4.</span><p>زر "تحقق" متاح، والانتقال يدوي بزر "التالي"</p></div>
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">5.</span><p>يمكنك إنهاء التدريب في أي لحظة</p></div>
+            <div className="flex items-start gap-3">
+              <span className="text-purple-300 font-bold shrink-0">4.</span>
+              <p>{pickLang({ ar: 'زر "تحقق" متاح، والانتقال يدوي بزر "التالي"', en: 'The "Check" button is available; move forward manually with "Next"' }, lang)}</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-purple-300 font-bold shrink-0">5.</span>
+              <p>{pickLang({ ar: 'يمكنك إنهاء التدريب في أي لحظة', en: 'You can end the training at any moment' }, lang)}</p>
+            </div>
           </div>
           <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30">
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-200 font-body leading-relaxed">
-                💡 <strong>تحذير:</strong> سيُنبّهك العدّاد عند {formatNumber(70, numberStyle)}٪ من الوقت.
+                💡 <strong>{pickLang({ ar: 'تحذير:', en: 'Warning:' }, lang)}</strong>{' '}
+                {pickLang(
+                  {
+                    ar: `سيُنبّهك العدّاد عند ${formatNumber(70, numberStyle)}٪ من الوقت.`,
+                    en: `The timer will alert you at ${formatNumber(70, numberStyle)}% of the time.`,
+                  },
+                  lang,
+                )}
               </p>
             </div>
           </div>
@@ -673,7 +730,13 @@ export function AnzanScreen({
           <div className="p-5 rounded-2xl bg-emerald-500/10 border-2 border-emerald-400/40 text-center">
             <CheckCircle2 className="w-12 h-12 text-emerald-300 mx-auto mb-3" />
             <p className="text-base font-bold text-emerald-200 font-display">
-              ✅ أنهيت هذا الوضع بدرجة {formatNumber(currentGrade ?? 0, numberStyle)}٪
+              {pickLang(
+                {
+                  ar: `✅ أنهيت هذا الوضع بدرجة ${formatNumber(currentGrade ?? 0, numberStyle)}٪`,
+                  en: `✅ You finished this mode with a score of ${formatNumber(currentGrade ?? 0, numberStyle)}%`,
+                },
+                lang,
+              )}
             </p>
             {(() => {
               const normalDone =
@@ -687,10 +750,10 @@ export function AnzanScreen({
               return (
                 <p className="text-xs text-emerald-300/70 font-body mt-2">
                   {bothDone
-                    ? '✅ أكملت كلا الوضعين — الأنزان البصري مكتمل'
+                    ? pickLang({ ar: '✅ أكملت كلا الوضعين — الأنزان البصري مكتمل', en: '✅ You completed both modes — Visual Anzan is complete' }, lang)
                     : mode === 'flash'
-                      ? 'بدّل إلى "عادي" لإتمام الأنزان البصري'
-                      : 'بدّل إلى "Flash" لإتمام الأنزان البصري'}
+                      ? pickLang({ ar: 'بدّل إلى "عادي" لإتمام الأنزان البصري', en: 'Switch to "Normal" to complete Visual Anzan' }, lang)
+                      : pickLang({ ar: 'بدّل إلى "Flash" لإتمام الأنزان البصري', en: 'Switch to "Flash" to complete Visual Anzan' }, lang)}
                 </p>
               );
             })()}
@@ -698,7 +761,7 @@ export function AnzanScreen({
         ) : (
           <button type="button" onClick={startSession} className="btn-primary w-full !py-4 !text-lg">
             <Play className="w-6 h-6" />
-            ابدأ الجلسة
+            {pickLang({ ar: 'ابدأ الجلسة', en: 'Start session' }, lang)}
           </button>
         )}
       </div>
@@ -711,24 +774,27 @@ export function AnzanScreen({
 
     const displayText = isBuildOrRead
       ? formatText(currentQ.question, numberStyle)
-      : `${formatText(buildFullQuestionText(currentQ), numberStyle)} = ؟`;
+      : `${formatText(buildFullQuestionText(currentQ), numberStyle)} = ${pickLang({ ar: '؟', en: '?' }, lang)}`;
     const sizeClass = displayTextSize(displayText.length, isBuildOrRead);
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto min-h-screen flex flex-col">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto min-h-screen flex flex-col">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-bold text-white truncate">
-              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
+              {pickLang({ ar: 'السؤال', en: 'Question' }, lang)}{' '}
+              {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-xs text-white/50 font-body">
-              {mode === 'flash' ? 'Flash' : 'عادي'}
+              {mode === 'flash'
+                ? pickLang({ ar: 'Flash', en: 'Flash' }, lang)
+                : pickLang({ ar: 'عادي', en: 'Normal' }, lang)}
             </p>
           </div>
           <button type="button" onClick={handleEnd}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition">
             <Square className="w-3.5 h-3.5" />
-            إنهاء
+            {pickLang({ ar: 'إنهاء', en: 'End' }, lang)}
           </button>
         </div>
 
@@ -765,7 +831,9 @@ export function AnzanScreen({
           ) : (
             <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
               className="text-center w-full">
-              <p className="text-sm text-white/50 font-body mb-4">اقرأ السؤال</p>
+              <p className="text-sm text-white/50 font-body mb-4">
+                {pickLang({ ar: 'اقرأ السؤال', en: 'Read the question' }, lang)}
+              </p>
               <p
                 dir={isBuildOrRead ? (isArabic ? 'rtl' : 'ltr') : 'ltr'}
                 className={`font-black font-display text-white ${sizeClass} whitespace-nowrap`}
@@ -777,7 +845,9 @@ export function AnzanScreen({
         </div>
 
         <p className="text-xs text-white/40 font-body text-center mt-6">
-          {mode === 'flash' ? '💡 جهّز أصابعك — طبّق كل رقم فوراً' : '🎧 اسمع السؤال بتركيز'}
+          {mode === 'flash'
+            ? pickLang({ ar: '💡 جهّز أصابعك — طبّق كل رقم فوراً', en: '💡 Get your fingers ready — apply each number instantly' }, lang)
+            : pickLang({ ar: '🎧 اسمع السؤال بتركيز', en: '🎧 Listen to the question carefully' }, lang)}
         </p>
       </div>
     );
@@ -786,20 +856,24 @@ export function AnzanScreen({
   // ═══ ✍️ answering ═══
   if (phase === 'answering' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
-    const hint = extractHint(currentQ);
+    const translatedSolution = translateDynamic(currentQ, lang, 'solution') ?? currentQ.solution;
+    const hint = extractHint(translatedSolution);
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-bold text-white truncate">
-              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
+              {pickLang({ ar: 'السؤال', en: 'Question' }, lang)}{' '}
+              {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
-            <p className="text-xs text-white/50 font-body">مثّل الناتج على العداد</p>
+            <p className="text-xs text-white/50 font-body">
+              {pickLang({ ar: 'مثّل الناتج على العداد', en: 'Represent the result on the abacus' }, lang)}
+            </p>
           </div>
           <button type="button" onClick={handleEnd}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition">
             <Square className="w-3.5 h-3.5" />
-            إنهاء
+            {pickLang({ ar: 'إنهاء', en: 'End' }, lang)}
           </button>
           <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
             isWarning ? 'bg-red-500/30 border-red-500/70 shadow-lg shadow-red-500/50 animate-pulse' : 'bg-white/5 border-white/10'
@@ -830,7 +904,7 @@ export function AnzanScreen({
           {hint && (
             <div className="mb-3 p-2 rounded-lg bg-purple-500/10 border border-purple-400/30">
               <p className="text-xs text-purple-200 font-body text-center">
-                💡 <strong>تلميح:</strong> {hint}
+                💡 <strong>{pickLang({ ar: 'تلميح:', en: 'Hint:' }, lang)}</strong> {hint}
               </p>
             </div>
           )}
@@ -841,7 +915,7 @@ export function AnzanScreen({
               onValueChange={setAbacusValue} />
             <button type="button" onClick={handleCheck} className="btn-primary !py-3 !px-8">
               <CheckCircle2 className="w-5 h-5" />
-              تحقق
+              {pickLang({ ar: 'تحقق', en: 'Check' }, lang)}
             </button>
           </div>
         </div>
@@ -857,8 +931,9 @@ export function AnzanScreen({
   if (phase === 'reveal' && currentQ) {
     const isCorrect = feedback === 'correct';
     const formattedAnswer = formatNumber(currentQ.result, numberStyle);
+    const translatedSolution = translateDynamic(currentQ, lang, 'solution') ?? currentQ.solution;
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
           className="glass-card p-6 mb-6 overflow-hidden relative">
           <div className={`absolute -top-20 -right-20 w-48 h-48 blur-3xl ${
@@ -871,17 +946,23 @@ export function AnzanScreen({
               {isCorrect ? <CheckCircle2 className="w-10 h-10 text-white" /> : <XCircle className="w-10 h-10 text-white" />}
             </div>
             <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-              {isCorrect ? 'أحسنت! 🎉' : 'ليس بعد'}
+              {isCorrect
+                ? pickLang({ ar: 'أحسنت! 🎉', en: 'Well done! 🎉' }, lang)
+                : pickLang({ ar: 'ليس بعد', en: 'Not yet' }, lang)}
             </h2>
             <div className="my-6">
-              <p className="text-sm text-white/60 font-body mb-1">الإجابة الصحيحة</p>
+              <p className="text-sm text-white/60 font-body mb-1">
+                {pickLang({ ar: 'الإجابة الصحيحة', en: 'The correct answer' }, lang)}
+              </p>
               <p className="text-5xl font-black font-display text-white" dir={isArabic ? 'rtl' : 'ltr'}>
                 {formattedAnswer}
               </p>
             </div>
             {savedTimeMs !== null && (
               <div className="p-3 rounded-2xl bg-white/5 border border-white/10 inline-block">
-                <p className="text-xs text-white/60 font-body">وقتك</p>
+                <p className="text-xs text-white/60 font-body">
+                  {pickLang({ ar: 'وقتك', en: 'Your time' }, lang)}
+                </p>
                 <p className={`text-xl font-bold font-mono ${
                   isCorrect ? 'text-emerald-300' : 'text-red-300'
                 }`}>
@@ -889,10 +970,10 @@ export function AnzanScreen({
                 </p>
               </div>
             )}
-            {currentQ.solution && (
+            {translatedSolution && (
               <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-400/30 text-right">
                 <p className="text-xs text-blue-200 font-body leading-relaxed">
-                  💡 {formatText(currentQ.solution, numberStyle)}
+                  💡 {formatText(translatedSolution, numberStyle)}
                 </p>
               </div>
             )}
@@ -900,7 +981,9 @@ export function AnzanScreen({
         </motion.div>
 
         <button type="button" onClick={nextQuestion} className="btn-primary w-full !py-4 !text-lg">
-          {currentIdx + 1 < questions.length ? 'التالي' : 'إنهاء الجلسة'}
+          {currentIdx + 1 < questions.length
+            ? pickLang({ ar: 'التالي', en: 'Next' }, lang)
+            : pickLang({ ar: 'إنهاء الجلسة', en: 'End session' }, lang)}
           <ArrowLeft className="w-5 h-5" />
         </button>
       </div>
@@ -913,19 +996,19 @@ export function AnzanScreen({
     const passed = percentage >= PASS_THRESHOLD;
     const xpEarned = score * XP_PER_CORRECT;
 
-    // [v10] — 7 شارات (إضافة S11·S12 · S13·S14 · S15)
+    // [v10] — 7 badges (added S11·S12 · S13·S14 · S15)
     const ANZAN_BADGE_LABELS: Record<string, string> = {
-      master_addition: '🧠 خبير جمع وطرح',
-      master_multiplication: '✖️ خبير ضرب',
-      master_division: '➗ خبير قسمة',
-      master_chains: '🔗 خبير سلاسل',
-      master_advanced: '🎯 خبير المتقدم',
-      master_decimals: '🔢 خبير العشريات',
-      master_roots: '√ خبير الجذور',
+      master_addition: pickLang({ ar: '🧠 خبير جمع وطرح', en: '🧠 Addition & Subtraction Master' }, lang),
+      master_multiplication: pickLang({ ar: '✖️ خبير ضرب', en: '✖️ Multiplication Master' }, lang),
+      master_division: pickLang({ ar: '➗ خبير قسمة', en: '➗ Division Master' }, lang),
+      master_chains: pickLang({ ar: '🔗 خبير سلاسل', en: '🔗 Chains Master' }, lang),
+      master_advanced: pickLang({ ar: '🎯 خبير المتقدم', en: '🎯 Advanced Master' }, lang),
+      master_decimals: pickLang({ ar: '🔢 خبير العشريات', en: '🔢 Decimals Master' }, lang),
+      master_roots: pickLang({ ar: '√ خبير الجذور', en: '√ Roots Master' }, lang),
     };
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto space-y-5">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto space-y-5">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
           className="glass-card p-6 overflow-hidden relative">
           <div className={`absolute -top-24 -right-24 w-64 h-64 blur-3xl ${
@@ -940,21 +1023,33 @@ export function AnzanScreen({
               <Trophy className="w-12 h-12 text-white" />
             </motion.div>
             <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-              {passed ? '🎉 اجتزت الأنزان البصري!' : '💪 حاول مرة أخرى'}
+              {passed
+                ? pickLang({ ar: '🎉 اجتزت الأنزان البصري!', en: '🎉 You passed Visual Anzan!' }, lang)
+                : pickLang({ ar: '💪 حاول مرة أخرى', en: '💪 Try again' }, lang)}
             </h2>
             {passed && (
               <p className="text-lg font-bold text-emerald-300 font-display mb-2">
-                بدرجة {formatNumber(percentage, numberStyle)}٪
+                {pickLang(
+                  {
+                    ar: `بدرجة ${formatNumber(percentage, numberStyle)}٪`,
+                    en: `With a score of ${formatNumber(percentage, numberStyle)}%`,
+                  },
+                  lang,
+                )}
               </p>
             )}
             <p className="text-sm text-white/60 font-body mb-6">
-              {mode === 'flash' ? 'الوضع السريع (Flash)' : 'الوضع العادي'}
+              {mode === 'flash'
+                ? pickLang({ ar: 'الوضع السريع (Flash)', en: 'Fast Mode (Flash)' }, lang)
+                : pickLang({ ar: 'الوضع العادي', en: 'Normal Mode' }, lang)}
               {passed && performances.some((p) => p.speedClass === 'slow' || p.correct < p.attempts) && (
-                <> — 🔒 جلسة علاجية إجبارية</>
+                <> — {pickLang({ ar: '🔒 جلسة علاجية إجبارية', en: '🔒 Mandatory remedial session' }, lang)}</>
               )}
             </p>
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
-              <p className="text-sm text-white/60 font-body">النتيجة</p>
+              <p className="text-sm text-white/60 font-body">
+                {pickLang({ ar: 'النتيجة', en: 'Result' }, lang)}
+              </p>
               <p className="text-5xl font-black font-display text-white mt-1" dir={isArabic ? 'rtl' : 'ltr'}>
                 {formatNumber(score, numberStyle)} / {formatNumber(questions.length, numberStyle)}
               </p>
@@ -965,7 +1060,9 @@ export function AnzanScreen({
               </p>
             </div>
             <div className="p-3 rounded-2xl bg-gold-500/10 border border-gold-400/30">
-              <p className="text-xs text-white/60 font-body">نقاط الخبرة</p>
+              <p className="text-xs text-white/60 font-body">
+                {pickLang({ ar: 'نقاط الخبرة', en: 'Experience points' }, lang)}
+              </p>
               <p className="text-2xl font-black text-gold-300 font-display">
                 +{formatNumber(xpEarned, numberStyle)} XP
               </p>
@@ -979,7 +1076,7 @@ export function AnzanScreen({
                 className="mt-4 p-4 rounded-2xl bg-gradient-to-l from-gold-400/20 to-transparent border-2 border-gold-400/50"
               >
                 <p className="text-sm font-bold text-gold-200 font-display mb-2">
-                  🎉 حصلت على شارة جديدة!
+                  {pickLang({ ar: '🎉 حصلت على شارة جديدة!', en: '🎉 You earned a new badge!' }, lang)}
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {justEarnedBadges.map((key) => (
@@ -997,7 +1094,11 @@ export function AnzanScreen({
         </motion.div>
 
         {performances.length > 0 && (
-          <AdaptiveFeedback performances={performances} sectionLabel="أنزان بصري" levelNum={levelNum} />
+          <AdaptiveFeedback
+            performances={performances}
+            sectionLabel={pickLang({ ar: 'أنزان بصري', en: 'Visual Anzan' }, lang)}
+            levelNum={levelNum}
+          />
         )}
 
         {pendingRemediation && (
@@ -1014,7 +1115,7 @@ export function AnzanScreen({
             className="w-full py-4 rounded-2xl bg-gradient-to-l from-amber-400 to-orange-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/40 animate-pulse"
           >
             <Lightbulb className="w-5 h-5" />
-            🩺 جلسة علاجية إجبارية
+            {pickLang({ ar: '🩺 جلسة علاجية إجبارية', en: '🩺 Mandatory remedial session' }, lang)}
           </motion.button>
         )}
 
@@ -1023,11 +1124,11 @@ export function AnzanScreen({
             <button type="button" onClick={() => { playSound('click'); startSession(); }}
               className="btn-primary w-full !py-3">
               <RotateCcw className="w-5 h-5" />
-              جلسة جديدة
+              {pickLang({ ar: 'جلسة جديدة', en: 'New session' }, lang)}
             </button>
           )}
           <button type="button" onClick={() => { playSound('click'); onBack(); }} className="btn-ghost w-full">
-            رجوع
+            {pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
           </button>
         </div>
       </div>
