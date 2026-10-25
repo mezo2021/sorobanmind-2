@@ -80,6 +80,7 @@ import {
   FuseTimer,
   LessonScreen,
 } from './SorobaniaUI';
+import { Num } from '@/components/Num';
 
 interface SorobaniaGameProps {
   onBack: () => void;
@@ -602,7 +603,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                   />
                 </div>
                 <span dir="ltr">
-                  {Math.min(progress.squaresCorrect, ROOTS_UNLOCK_AT)}/{ROOTS_UNLOCK_AT}
+                  <Num>{Math.min(progress.squaresCorrect, ROOTS_UNLOCK_AT)}/{ROOTS_UNLOCK_AT}</Num>
                 </span>
               </div>
 
@@ -660,7 +661,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
               right={
                 <div className="flex h-11 items-center gap-1 rounded-xl bg-purple-500/20 px-2.5 text-lg font-black text-purple-200">
                   <Flame className="h-5 w-5 fill-purple-300" />
-                  <span dir="ltr">{streak}</span>
+                  <span dir="ltr"><Num>{streak}</Num></span>
                 </div>
               }
             />
@@ -687,7 +688,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                         {run.feedback === 'right' ? (
                           <span className="text-emerald-700">صحيح!</span>
                         ) : run.feedback ? (
-                          <span className="text-rose-700">الجواب: {q.ans}</span>
+                          <span className="text-rose-700">الجواب: <Num>{q.ans}</Num></span>
                         ) : (
                           <span className="text-[#6b4a26]">
                             {q.kind === 'squares' ? 'ما مربّع هذا العدد؟' : 'ما جذر هذا العدد؟'}
@@ -699,9 +700,9 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                       </div>
                       {q.kind === 'roots' && (
                         <div dir="ltr" className="mt-0.5 flex items-center justify-center gap-2 text-xl font-black">
-                          <span className="rounded-lg bg-[#3a2410]/15 px-2.5">{q.pair1}</span>
+                          <span className="rounded-lg bg-[#3a2410]/15 px-2.5"><Num>{q.pair1}</Num></span>
                           <span className="text-[#6b4a26]">|</span>
-                          <span className="rounded-lg bg-[#3a2410]/15 px-2.5">{q.pair2}</span>
+                          <span className="rounded-lg bg-[#3a2410]/15 px-2.5"><Num>{q.pair2}</Num></span>
                         </div>
                       )}
                       <div className="mt-1.5">
@@ -810,7 +811,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                         dir="ltr"
                         className={`h-28 rounded-2xl border-b-8 text-3xl font-black shadow-lg ${cls}`}
                       >
-                        {opt}
+                        <Num>{opt}</Num>
                       </motion.button>
                     );
                   })}
@@ -850,7 +851,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                         onClick={() => pressDigit(d)}
                         className="min-h-[2.6rem] rounded-2xl border-b-4 border-[#2c2160] bg-gradient-to-b from-[#6c58c9] to-[#4a3a9a] text-2xl font-black"
                       >
-                        {d}
+                        <Num>{d}</Num>
                       </motion.button>
                     ))}
                     <motion.button
@@ -889,7 +890,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                 <div className="flex flex-col gap-2.5">
                   <div className="grid grid-cols-2 gap-2 text-center text-sm font-extrabold">
                     <div className="rounded-xl bg-white/10 px-2 py-2">
-                      صحيحة <span className="text-lg text-emerald-300" dir="ltr">{result.correct}/{result.total}</span>
+                      صحيحة <span className="text-lg text-emerald-300" dir="ltr"><Num>{result.correct}/{result.total}</Num></span>
                     </div>
                     <div className="rounded-xl bg-white/10 px-2 py-2">
                       متوسط الزمن{' '}
@@ -958,7 +959,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
               {screen === 'lose' && result && (
                 <div className="flex flex-col gap-3">
                   <div className="rounded-xl bg-white/10 px-3 py-2 text-center text-base font-extrabold">
-                    أطول سلسلة لك في هذه الجولة <span className="text-amber-300" dir="ltr">{result.streakBest}</span>
+                    أطول سلسلة لك في هذه الجولة <span className="text-amber-300" dir="ltr"><Num>{result.streakBest}</Num></span>
                   </div>
                   {result.newStreak && (
                     <div className="rounded-xl border-2 border-amber-300 bg-amber-400/20 px-3 py-1.5 text-center text-sm font-black text-amber-200">
