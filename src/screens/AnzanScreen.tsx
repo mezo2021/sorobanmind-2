@@ -12,6 +12,7 @@
 // [FIX 2] — getAnzanBadgeKey: S11/S12 → null (remove master_mixed)
 // [FIX 3] — pass real levelNum (0-7) to AdaptiveFeedback instead of 0
 // [FIX 4] — remove master_mixed from ANZAN_BADGE_LABELS
+// [FIX AUDIO] — Fix speech cut-off & pass lang to numberToArabicWordsDecimal
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -195,9 +196,8 @@ function buildFullQuestionText(q: SRBQuestion): string {
   return text;
 }
 
-// Builds the spoken version of the question. Connector words are language-aware
-// via pickLang, while numeric words still go through numberToArabicWordsDecimal
-// (see Missing Translations Report at the end of the response).
+// Builds the spoken version of the question.
+// Now properly uses lang to pass to numberToArabicWordsDecimal.
 function buildFullQuestionSpeech(q: SRBQuestion, lang: 'ar' | 'en'): string {
   const { operands, operation, question } = q;
 
@@ -213,17 +213,17 @@ function buildFullQuestionSpeech(q: SRBQuestion, lang: 'ar' | 'en'): string {
   const sep = lang === 'ar' ? '، ' : ', ';
 
   if (operation === 'multiplication') {
-    return `${numberToArabicWordsDecimal(operands[0])} ${times} ${numberToArabicWordsDecimal(Math.abs(operands[1]))}${sep}${equals}`;
+    return `${numberToArabicWordsDecimal(operands[0], lang)} ${times} ${numberToArabicWordsDecimal(Math.abs(operands[1]), lang)}${sep}${equals}`;
   }
   if (operation === 'division') {
-    return `${numberToArabicWordsDecimal(operands[0])} ${dividedBy} ${numberToArabicWordsDecimal(Math.abs(operands[1]))}${sep}${equals}`;
+    return `${numberToArabicWordsDecimal(operands[0], lang)} ${dividedBy} ${numberToArabicWordsDecimal(Math.abs(operands[1]), lang)}${sep}${equals}`;
   }
 
-  const parts: string[] = [numberToArabicWordsDecimal(operands[0])];
+  const parts: string[] = [numberToArabicWordsDecimal(operands[0], lang)];
   for (let i = 1; i < operands.length; i++) {
     const op = operands[i];
-    if (op >= 0) parts.push(`${plus} ${numberToArabicWordsDecimal(op)}`);
-    else parts.push(`${minus} ${numberToArabicWordsDecimal(Math.abs(op))}`);
+    if (op >= 0) parts.push(`${plus} ${numberToArabicWordsDecimal(op, lang)}`);
+    else parts.push(`${minus} ${numberToArabicWordsDecimal(Math.abs(op), lang)}`);
   }
   return parts.join(sep) + `${sep}${equals}`;
 }
@@ -335,13 +335,15 @@ export function AnzanScreen({
         const speech = buildFullQuestionSpeech(currentQ, lang);
         speak(speech, { rate: 0.9 });
       }
+      
+      // [FIX AUDIO] - Give it a minimum of 4 seconds so the audio has time to finish
       const t = setTimeout(() => {
-        stopSpeech();
         setPhase('answering');
-      }, displayMs);
+      }, Math.max(displayMs, 4000));
+      
       return () => {
         clearTimeout(t);
-        stopSpeech();
+        // [FIX AUDIO] - Do NOT call stopSpeech() here to avoid cutting the audio when transitioning
       };
     }
 
