@@ -1,6 +1,7 @@
 // src/utils/arabicNumbers.ts
 // تحويل الأرقام إلى كلمات عربية — للأنزان السمعي
 // يدعم حتى 999 تريليون + الأعداد العشرية
+// 🆕 إضافة دعم اللغة الإنجليزية (lang) لإرجاع الرقم كنص ليقرأه TTS بلكنة إنجليزية.
 
 const UNITS = [
   '', 'واحد', 'اثنان', 'ثلاثة', 'أربعة',
@@ -76,17 +77,9 @@ function trillions(n: number): string {
 }
 
 // ═══════════════════════════════════════════════════════════
-// الدالة الرئيسية (لم تتغيّر — للأعداد الصحيحة)
+// الدالة الرئيسية (للأعداد الصحيحة)
 // ═══════════════════════════════════════════════════════════
 
-/**
- * تحويل رقم صحيح إلى كلمات عربية.
- * @example
- * numberToArabicWords(234)      // "مئتان وأربعة وثلاثون"
- * numberToArabicWords(5000)     // "خمسة آلاف"
- * numberToArabicWords(15000)    // "خمسة عشر ألفاً"
- * numberToArabicWords(1234567)  // "مليون ومئتان وأربعة وثلاثون ألفاً وخمسمئة وسبعة وستون"
- */
 export function numberToArabicWords(value: number): string {
   if (!Number.isFinite(value)) return '';
   const n = Math.trunc(Math.abs(value));
@@ -109,31 +102,28 @@ export function numberToArabicWords(value: number): string {
   return parts.join(' و');
 }
 
-/**
- * للاستخدام في السياق الرياضي — يعالج السالب.
- */
 export function numberToArabicWordsSigned(value: number): string {
   if (value < 0) return `ناقص ${numberToArabicWords(Math.abs(value))}`;
   return numberToArabicWords(value);
 }
 
 // ═══════════════════════════════════════════════════════════
-// ✅ جديد: دعم الأعداد العشرية
+// دعم الأعداد العشرية + دعم اللغة الإنجليزية (🆕)
 // ═══════════════════════════════════════════════════════════
 
 /**
- * يحوّل عددًا (صحيحًا أو عشريًا) إلى كلمات عربية.
- *
- * - 6      → "ستة"
- * - 6.3    → "ستة فاصلة ثلاثة"
- * - 0.5    → "صفر فاصلة خمسة"
- * - 12.75  → "اثنا عشر فاصلة خمسة وسبعون"
- * - -1.5   → "ناقص واحد فاصلة خمسة"
- *
- * ⚠️ ملاحظة: يستخدم "فاصلة" كنطق معياري للفاصلة العشرية.
+ * يحوّل عددًا (صحيحًا أو عشريًا) إلى كلمات عربية أو إنجليزية.
+ * 
+ * @param value الرقم
+ * @param lang اللغة (افتراضياً 'ar' لضمان التوافق العكسي)
  */
-export function numberToArabicWordsDecimal(value: number): string {
+export function numberToArabicWordsDecimal(value: number, lang: 'ar' | 'en' = 'ar'): string {
   if (!Number.isFinite(value)) return '';
+
+  // 🆕 في الوضع الإنجليزي، نرجع الرقم كنص (محرك TTS الإنجليزي يقرأه ببراعة)
+  if (lang === 'en') {
+    return String(value);
+  }
 
   // رقم صحيح → الدالة القديمة
   if (Number.isInteger(value)) {
@@ -153,12 +143,19 @@ export function numberToArabicWordsDecimal(value: number): string {
 
 /**
  * للاستخدام في السياق الرياضي — يعالج السالب + العشري.
+ * 
+ * @param value الرقم
+ * @param lang اللغة (افتراضياً 'ar')
  */
-export function numberToArabicWordsDecimalSigned(value: number): string {
-  if (value < 0) {
-    return `ناقص ${numberToArabicWordsDecimal(Math.abs(value))}`;
+export function numberToArabicWordsDecimalSigned(value: number, lang: 'ar' | 'en' = 'ar'): string {
+  if (lang === 'en') {
+    return String(value);
   }
-  return numberToArabicWordsDecimal(value);
+
+  if (value < 0) {
+    return `ناقص ${numberToArabicWordsDecimal(Math.abs(value), lang)}`;
+  }
+  return numberToArabicWordsDecimal(value, lang);
 }
 
 export default numberToArabicWords;
