@@ -16,6 +16,8 @@ import { Companion } from '@/components/Companion';
 import { CharacterSelector } from '@/components/CharacterSelector';
 const GamesListScreen = lazy(() => import('@/components/games/GamesListScreen').then(m => ({ default: m.GamesListScreen })));
 import { useProgressStore } from '@/store/progressStore';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { formatNumber } from '@/utils/numberStyle';
 
 interface HeroDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -24,8 +26,9 @@ interface HeroDashboardProps {
   streak: number;
 }
 
+// 🔢 يتبع زر تبديل الأرقام (عربي ٠١٢٣ ↔ لاتيني 0123) — الاسم محفوظ للتوافق
 function toArabicNumber(value: number | string): string {
-  return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+  return formatNumber(value, useNumberStyleStore.getState().style);
 }
 
 const CHARACTER_INFO: Record<
@@ -112,6 +115,7 @@ export function HeroDashboard({
   xp,
   streak,
 }: HeroDashboardProps) {
+  useNumberStyleStore((s) => s.style); // 🔢 إعادة الرسم عند تبديل نمط الأرقام
   const [showGames, setShowGames] = useState(false);
 
   // 🆕 [PLACE] — عدد محاولات امتحان تحديد المستوى
