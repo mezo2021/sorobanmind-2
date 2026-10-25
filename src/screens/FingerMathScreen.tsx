@@ -15,6 +15,11 @@ import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 
+// 🌍 i18n
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
+
 const STORY_AUDIO_ID = 0;
 const MAX_TRIES = 2;
 const COMPLETED_KEY = 'soroban_completed_enrichment';
@@ -72,6 +77,7 @@ export function FingerMathScreen({
   playSound,
   onXP,
 }: FingerMathScreenProps) {
+  const { lang, dir } = useT();
   const sorobana = useSorobanaVoice();
   const { style: numberStyle, toggleStyle } = useNumberStyleStore();
 
@@ -163,26 +169,28 @@ export function FingerMathScreen({
   const currentTry = TRY_QUESTIONS[tryIdx];
 
   return (
-    <div dir="rtl" className="min-h-screen pb-36">
+    <div dir={dir} className="min-h-screen pb-36">
       <div className="sticky top-0 z-30 backdrop-blur-lg bg-slate-900/70 border-b border-white/10 px-3 sm:px-6 py-3">
         <div className="max-w-3xl mx-auto flex items-center gap-2">
           <button
             onClick={handleHome}
             className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
-            aria-label="رجوع"
+            aria-label={pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
           >
             <Home className="w-5 h-5 text-white" />
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-sm font-bold text-white truncate">
-              🖐️ رياضيات الأصابع
+              {pickLang({ ar: '🖐️ رياضيات الأصابع', en: '🖐️ Finger Math' }, lang)}
             </h1>
-            <p className="text-[10px] text-white/50">إثراء · الفئة 5-12</p>
+            <p className="text-[10px] text-white/50">
+              {pickLang({ ar: 'إثراء · الفئة 5-12', en: 'Enrichment · Age 5-12' }, lang)}
+            </p>
           </div>
           <button
             onClick={() => { playSound('click'); toggleStyle(); }}
             className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
-            aria-label="تبديل نمط الأرقام"
+            aria-label={pickLang({ ar: 'تبديل نمط الأرقام', en: 'Toggle number style' }, lang)}
           >
             <Type className="w-5 h-5 text-white" />
           </button>
@@ -197,7 +205,7 @@ export function FingerMathScreen({
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            <Eye className="w-4 h-4" /> شاهد
+            <Eye className="w-4 h-4" /> {pickLang({ ar: 'شاهد', en: 'Watch' }, lang)}
           </button>
           <button
             onClick={() => { playSound('click'); setTab('try'); setFeedback('idle'); }}
@@ -207,7 +215,7 @@ export function FingerMathScreen({
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            <Hand className="w-4 h-4" /> جرّب
+            <Hand className="w-4 h-4" /> {pickLang({ ar: 'جرّب', en: 'Try' }, lang)}
             {solvedCount > 0 && (
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/30">
                 {solvedCount}/{totalTry}
@@ -231,7 +239,9 @@ export function FingerMathScreen({
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-pink-300" />
-                    <h3 className="text-sm font-bold text-pink-300">📖 القصة</h3>
+                    <h3 className="text-sm font-bold text-pink-300">
+                      {pickLang({ ar: '📖 القصة', en: '📖 Story' }, lang)}
+                    </h3>
                   </div>
                   <button
                     onClick={toggleStory}
@@ -242,33 +252,39 @@ export function FingerMathScreen({
                     }`}
                   >
                     {isReadingStory ? (
-                      <><Square className="w-3.5 h-3.5" /> إيقاف</>
+                      <>{pickLang({ ar: 'إيقاف', en: 'Stop' }, lang)} <Square className="w-3.5 h-3.5" /></>
                     ) : (
-                      <><Volume2 className="w-3.5 h-3.5" /> موجز القصة</>
+                      <>{pickLang({ ar: 'موجز القصة', en: 'Story Summary' }, lang)} <Volume2 className="w-3.5 h-3.5" /></>
                     )}
                   </button>
                 </div>
                 <p className="text-sm text-white/85 font-body leading-relaxed">
-                  {formatText(STORY, numberStyle)}
+                  {formatText(translateDynamic({ text: STORY }, lang, 'text'), numberStyle)}
                 </p>
               </div>
 
               <div className="glass-card p-4 sm:p-5 bg-gradient-to-br from-gold-400/10 to-gold-600/10 border border-gold-400/30">
-                <h3 className="text-sm font-bold text-gold-300 mb-2">💡 المفهوم</h3>
+                <h3 className="text-sm font-bold text-gold-300 mb-2">
+                  {pickLang({ ar: '💡 المفهوم', en: '💡 Concept' }, lang)}
+                </h3>
                 <p className="text-sm text-white/85 font-body mb-3">
-                  {formatText(CONCEPT, numberStyle)}
+                  {formatText(translateDynamic({ text: CONCEPT }, lang, 'text'), numberStyle)}
                 </p>
-                <h3 className="text-sm font-bold text-gold-300 mb-1">📏 القاعدة</h3>
+                <h3 className="text-sm font-bold text-gold-300 mb-1">
+                  {pickLang({ ar: '📏 القاعدة', en: '📏 Rule' }, lang)}
+                </h3>
                 <p className="text-sm text-white/85 font-body">
-                  {formatText(RULE, numberStyle)}
+                  {formatText(translateDynamic({ text: RULE }, lang, 'text'), numberStyle)}
                 </p>
               </div>
 
               <div className="glass-card p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-bold text-white/70">
-                    مثال {formatNumber(exampleIdx + 1, numberStyle)} من{' '}
-                    {formatNumber(EXAMPLES.length, numberStyle)}
+                    {pickLang({
+                      ar: `مثال ${formatNumber(exampleIdx + 1, numberStyle)} من ${formatNumber(EXAMPLES.length, numberStyle)}`,
+                      en: `Example ${formatNumber(exampleIdx + 1, numberStyle)} of ${formatNumber(EXAMPLES.length, numberStyle)}`
+                    }, lang)}
                   </h3>
                   <div className="flex gap-1">
                     {EXAMPLES.map((_, i) => (
@@ -283,7 +299,7 @@ export function FingerMathScreen({
                 </div>
 
                 <p className="text-center text-xl font-extrabold font-display text-white mb-4">
-                  {formatText(currentExample.text, numberStyle)}
+                  {formatText(translateDynamic(currentExample, lang, 'text'), numberStyle)}
                 </p>
 
                 <div className="flex justify-center mb-4 overflow-x-auto">
@@ -296,14 +312,14 @@ export function FingerMathScreen({
                     disabled={exampleIdx === 0}
                     className="flex-1 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm disabled:opacity-30 transition flex items-center justify-center gap-1"
                   >
-                    <ChevronRight className="w-4 h-4" /> السابق
+                    <ChevronRight className="w-4 h-4" /> {pickLang({ ar: 'السابق', en: 'Previous' }, lang)}
                   </button>
                   <button
                     onClick={() => { playSound('click'); if (exampleIdx + 1 < EXAMPLES.length) setExampleIdx((i) => i + 1); }}
                     disabled={exampleIdx === EXAMPLES.length - 1}
                     className="flex-1 py-2.5 rounded-2xl bg-gradient-to-l from-purple-500 to-electric-500 text-white font-bold text-sm disabled:opacity-30 transition flex items-center justify-center gap-1"
                   >
-                    التالي <ChevronLeft className="w-4 h-4" />
+                    {pickLang({ ar: 'التالي', en: 'Next' }, lang)} <ChevronLeft className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -320,18 +336,22 @@ export function FingerMathScreen({
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-white/70">
-                  سؤال {formatNumber(tryIdx + 1, numberStyle)} من{' '}
-                  {formatNumber(totalTry, numberStyle)}
+                  {pickLang({
+                    ar: `سؤال ${formatNumber(tryIdx + 1, numberStyle)} من ${formatNumber(totalTry, numberStyle)}`,
+                    en: `Question ${formatNumber(tryIdx + 1, numberStyle)} of ${formatNumber(totalTry, numberStyle)}`
+                  }, lang)}
                 </h3>
                 <span className="text-xs text-white/50">
-                  محاولة {formatNumber(attempts[tryIdx] ?? 1, numberStyle)} /{' '}
-                  {formatNumber(MAX_TRIES, numberStyle)}
+                  {pickLang({
+                    ar: `محاولة ${formatNumber(attempts[tryIdx] ?? 1, numberStyle)} / ${formatNumber(MAX_TRIES, numberStyle)}`,
+                    en: `Attempt ${formatNumber(attempts[tryIdx] ?? 1, numberStyle)} / ${formatNumber(MAX_TRIES, numberStyle)}`
+                  }, lang)}
                 </span>
               </div>
 
               <div className="glass-card p-4 sm:p-5 text-center">
                 <p className="text-lg font-extrabold font-display text-white mb-4">
-                  كم يساوي هذا العدد؟
+                  {pickLang({ ar: 'كم يساوي هذا العدد؟', en: 'What is this number?' }, lang)}
                 </p>
 
                 <div className="flex justify-center mb-4 overflow-x-auto">
@@ -356,26 +376,33 @@ export function FingerMathScreen({
 
               {feedback === 'correct' && (
                 <div className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 text-center">
-                  <p className="text-sm font-bold text-emerald-200">✅ أحسنت! إجابة صحيحة</p>
+                  <p className="text-sm font-bold text-emerald-200">
+                    {pickLang({ ar: '✅ أحسنت! إجابة صحيحة', en: '✅ Well done! Correct answer' }, lang)}
+                  </p>
                 </div>
               )}
 
               {feedback === 'wrong' && (
                 <div className="p-3 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-center">
-                  <p className="text-sm font-bold text-amber-200">❌ حاول مرة أخرى</p>
+                  <p className="text-sm font-bold text-amber-200">
+                    {pickLang({ ar: '❌ حاول مرة أخرى', en: '❌ Try again' }, lang)}
+                  </p>
                 </div>
               )}
 
               {feedback === 'reveal' && (
                 <div className="p-4 rounded-2xl bg-gold-500/15 border border-gold-400/40">
                   <p className="text-sm font-bold text-gold-300 text-center mb-2">
-                    💡 الإجابة: {formatNumber(currentTry.value, numberStyle)}
+                    {pickLang({
+                      ar: `💡 الإجابة: ${formatNumber(currentTry.value, numberStyle)}`,
+                      en: `💡 Answer: ${formatNumber(currentTry.value, numberStyle)}`
+                    }, lang)}
                   </p>
                   <button
                     onClick={handleReveal}
                     className="w-full mt-3 btn-primary !py-2.5 !text-sm"
                   >
-                    فهمت، التالي
+                    {pickLang({ ar: 'فهمت، التالي', en: 'Got it, next' }, lang)}
                   </button>
                 </div>
               )}
@@ -403,7 +430,10 @@ export function FingerMathScreen({
         <div className="mt-6">
           {!allSolved && (
             <p className="text-center text-xs text-white/50 mb-2">
-              أكمل {formatNumber(totalTry - solvedCount, numberStyle)} سؤالاً إضافياً
+              {pickLang({
+                ar: `أكمل ${formatNumber(totalTry - solvedCount, numberStyle)} سؤالاً إضافياً`,
+                en: `Complete ${formatNumber(totalTry - solvedCount, numberStyle)} more question(s)`
+              }, lang)}
             </p>
           )}
           <button
@@ -417,8 +447,11 @@ export function FingerMathScreen({
           >
             <CheckCircle2 className="w-5 h-5" />
             {allSolved
-              ? 'أكملت الدرس +20 XP'
-              : 'أكمل الأسئلة (' + formatNumber(solvedCount, numberStyle) + '/' + formatNumber(totalTry, numberStyle) + ')'}
+              ? pickLang({ ar: 'أكملت الدرس +20 XP', en: 'Lesson Completed +20 XP' }, lang)
+              : pickLang({
+                  ar: `أكمل الأسئلة (${formatNumber(solvedCount, numberStyle)}/${formatNumber(totalTry, numberStyle)})`,
+                  en: `Complete the questions (${formatNumber(solvedCount, numberStyle)}/${formatNumber(totalTry, numberStyle)})`
+                }, lang)}
           </button>
         </div>
       </div>
