@@ -162,6 +162,9 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "ناقص": "minus",
   "في": "times",
   "على": "divided by",
+  "ماذا": "What",
+  "ضع": "Place",
+  "ارفع": "Raise",
   "master_addition": "Addition & Subtraction Master",
   "master_multiplication": "Multiplication Master",
   "master_division": "Division Master",
@@ -177,10 +180,26 @@ Object.entries(RAW_AR_TO_EN).forEach(([key, val]) => {
 function translatePattern(text: string): string | null {
   let match;
 
-  // 🆕 ترجمة بادئة التلميح (مثال: "تلميح: استخدم...")
+  // 🆕 ترجمة بادئة التلميح
   if (text.startsWith("تلميح:")) {
-    return text.replace("تلميح:", "Hint:");
+    return text.replace(/^تلميح\s*:\s*/, "Hint: ");
   }
+
+  // 🆕 ترجمة بادئات المعادلات والنصوص (كما اقترح جيميني)
+  match = text.match(/^احسب\s*السلسلة\s*:\s*(.*)/);
+  if (match) return `Calculate the chain: ${match[1]}`;
+
+  match = text.match(/^احسب\s*:\s*(.*)/);
+  if (match) return `Calculate: ${match[1]}`;
+
+  match = text.match(/^ماذا\s*:\s*(.*)/);
+  if (match) return `What: ${match[1]}`;
+
+  match = text.match(/^ضع\s*:\s*(.*)/);
+  if (match) return `Place: ${match[1]}`;
+
+  match = text.match(/^ارفع\s*:\s*(.*)/);
+  if (match) return `Raise: ${match[1]}`;
 
   // 🆕 ترجمة أكواد المستويات (L0, L1... إلخ)
   match = text.match(/^L(\d+)$/);
