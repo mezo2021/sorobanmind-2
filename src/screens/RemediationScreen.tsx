@@ -1,17 +1,17 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🩺 src/screens/RemediationScreen.tsx — الجلسة العلاجية
-// [FIX N62] — فصل الإتمام عن الخروج + شرط 70% + outcome
+// 🩺 src/screens/RemediationScreen.tsx — Remediation Session
+// [FIX N62] — separation of completion vs exit + 70% threshold + outcome
 // ═══════════════════════════════════════════════════════════════════
 //
-// الوظيفة:
-//   - جلسة علاجية مخصصة (بلا درجات)
-//   - تُبنى من المواضيع الضعيفة
-//   - عند الإنهاء: تُسجَّل في progressStore + تُزيل الإجبار
+// Purpose:
+//   - Targeted remediation session (no grades)
+//   - Built from weak topics
+//   - On completion: logged in progressStore + clears the mandatory flag
 //
-// 📊 الفرق عن الجلسات العادية:
-//   - لا تُسجَّل درجات
-//   - تُظهر الحل بعد كل سؤال
-//   - زر "إنهاء" يظهر في النهاية
+// 📊 Difference from regular sessions:
+//   - Grades are NOT recorded
+//   - The solution is shown after every question
+//   - "End" button appears at the end
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -21,6 +21,10 @@ import {
   ArrowRight, ArrowLeft, CheckCircle2, XCircle,
   Lightbulb, Play, RotateCcw, Square, BookOpen,
 } from 'lucide-react';
+
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
@@ -39,7 +43,7 @@ import {
 } from '@/data/srb-adapter';
 
 // ═══════════════════════════════════════════════════════════
-// الأنواع
+// Types
 // ═══════════════════════════════════════════════════════════
 
 type Phase = 'intro' | 'running' | 'reveal' | 'done';
@@ -49,12 +53,12 @@ interface RemediationScreenProps {
   section: SRBSection;
   onBack: () => void;
   playSound: (type: 'click' | 'success' | 'error' | 'whoosh') => void;
-  /** حالة الإجبار — إن وُجدت، يُسجَّل في progressStore عند الإنهاء */
+  /** Mandatory state — if present, logged to progressStore upon completion */
   isMandatory?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════
-// أدوات
+// Helpers
 // ═══════════════════════════════════════════════════════════
 
 function getColumnsForQuestion(q: SRBQuestion): number {
@@ -69,11 +73,12 @@ function getColumnsForQuestion(q: SRBQuestion): number {
   return 13;
 }
 
+// Strips equation prefixes (AR + EN) and trailing question marks (؟ + ?)
 function extractEquation(question: string): string {
   return question
-    .replace(/^احسب\s+السلسلة\s*:\s*/u, '')
-    .replace(/^احسب\s*:\s*/u, '')
-    .replace(/\s*=\s*؟\s*$/u, '')
+    .replace(/^(?:احسب\s+السلسلة|Calculate\s+the\s+chain)\s*:\s*/iu, '')
+    .replace(/^(?:احسب|Calculate)\s*:\s*/iu, '')
+    .replace(/\s*=\s*[؟?]\s*$/u, '')
     .trim();
 }
 
@@ -85,7 +90,7 @@ function equationTextSize(eq: string): string {
 }
 
 // ═══════════════════════════════════════════════════════════
-// الشاشة الرئيسية
+// Main Screen
 // ═══════════════════════════════════════════════════════════
 
 export function RemediationScreen({
@@ -95,6 +100,8 @@ export function RemediationScreen({
   playSound,
   isMandatory = false,
 }: RemediationScreenProps) {
+  const { lang, dir } = useT();
+
   const [phase, setPhase] = useState<Phase>('intro');
   const [questions, setQuestions] = useState<SRBQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -109,12 +116,12 @@ export function RemediationScreen({
 
   const addRemediationSession = useProgressStore((s) => s.addRemediationSession);
   const clearPendingRemediation = useProgressStore((s) => s.clearPendingRemediation);
-  // [FIX N62] — لاستخدام phase الحقيقي
+  // [FIX N62] — to use the real phase
   const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
 
   const currentQ = questions[currentIdx];
 
-  // ═══ بناء الجلسة ═══
+  // ═══ Build the session ═══
   const startSession = useCallback(() => {
     const plan = buildRemediationPlan(level, section, 5);
 
@@ -133,7 +140,7 @@ export function RemediationScreen({
     playSound('click');
   }, [level, section, playSound]);
 
-  // ═══ التحقق ═══
+  // ═══ Check answer ═══
   const handleCheck = useCallback(() => {
     if (!currentQ || feedback !== 'idle') return;
 
@@ -143,18 +150,18 @@ export function RemediationScreen({
       setFeedback('correct');
       setCorrectCount((c) => c + 1);
       playSound('success');
-      sorobana.speakCorrect();
+      if (lang === 'ar') sorobana.speakCorrect();
     } else {
       setFeedback('wrong');
       playSound('error');
-      sorobana.speakWrong();
+      if (lang === 'ar') sorobana.speakWrong();
       setShowHint(true);
     }
 
     setPhase('reveal');
-  }, [currentQ, abacusValue, feedback, playSound, sorobana]);
+  }, [currentQ, abacusValue, feedback, playSound, sorobana, lang]);
 
-  // ═══ [FIX N62] إتمام الجلسة — عند إكمال كل الأسئلة فقط ═══
+  // ═══ [FIX N62] Complete session — only when all questions are done ═══
   const completeSession = useCallback(() => {
     if (isMandatory) {
       const total = questions.length;
@@ -163,20 +170,20 @@ export function RemediationScreen({
 
       addRemediationSession({
         level,
-        // [FIX N62] — phase الحقيقي
+        // [FIX N62] — real phase
         phase: pendingRemediation?.phase ?? 'practice',
         skills: questions.map((q) => `${level}-${q.section}-${q.module}`),
         correct: correctCount,
         total,
-        // [FIX N62] — outcome في السجل
+        // [FIX N62] — outcome in the record
         outcome: passed ? 'passed' : 'failed',
       });
 
-      // [FIX N62] — لا نُزيل الإجبار إلا عند تحقيق 70%
+      // [FIX N62] — only clear the mandatory flag at 70%+
       if (passed) {
         clearPendingRemediation();
       }
-      // إذا فشل → يبقى الإجبار → جلسة أخرى
+      // If failed → the mandatory flag remains → another session
     }
 
     sorobana.stop();
@@ -188,7 +195,7 @@ export function RemediationScreen({
     clearPendingRemediation, sorobana, playSound,
   ]);
 
-  // ═══ السؤال التالي ═══
+  // ═══ Next question ═══
   const nextQuestion = useCallback(() => {
     sorobana.stop();
     setAbacusValue(0);
@@ -203,11 +210,11 @@ export function RemediationScreen({
     }
   }, [currentIdx, questions.length, sorobana, completeSession]);
 
-  // ═══ [FIX N62] إنهاء مبكر — خروج فقط (لا يُحتسب كإتمام) ═══
+  // ═══ [FIX N62] Early exit — exit only (does not count as completion) ═══
   const handleEnd = useCallback(() => {
     sorobana.stop();
     playSound('whoosh');
-    onBack();  // ← رجوع مباشر، لا finalize
+    onBack();  // ← direct return, no finalize
   }, [sorobana, playSound, onBack]);
 
   // ═══ intro ═══
@@ -215,7 +222,7 @@ export function RemediationScreen({
     const plan = buildRemediationPlan(level, section, 5);
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button
             type="button"
@@ -226,7 +233,7 @@ export function RemediationScreen({
           </button>
           <div className="flex-1">
             <h2 className="text-2xl font-extrabold font-display text-white">
-              {getRemediationTitle()}
+              {translateDynamic({ value: getRemediationTitle() }, lang, 'value')}
             </h2>
             <p className="text-sm text-white/50 font-body">
               {level} · {section}
@@ -242,7 +249,13 @@ export function RemediationScreen({
             className="mb-4 p-3 rounded-2xl bg-amber-500/15 border-2 border-amber-400/50 text-center"
           >
             <p className="text-sm font-bold text-amber-200">
-              ⚠️ جلسة إجبارية — يجب إتمامها لفتح المسار التالي
+              {pickLang(
+                {
+                  ar: '⚠️ جلسة إجبارية — يجب إتمامها لفتح المسار التالي',
+                  en: '⚠️ Mandatory session — must be completed to unlock the next path',
+                },
+                lang,
+              )}
             </p>
           </motion.div>
         )}
@@ -256,36 +269,54 @@ export function RemediationScreen({
             <Lightbulb className="w-10 h-10 text-white" />
           </div>
           <h3 className="text-xl font-extrabold font-display text-white text-center mb-4">
-            جلسة علاجية مخصصة
+            {pickLang({ ar: 'جلسة علاجية مخصصة', en: 'Targeted Remediation Session' }, lang)}
           </h3>
           <p className="text-sm text-white/80 font-body text-center mb-6">
-            {getRemediationDescription()}
+            {translateDynamic({ value: getRemediationDescription() }, lang, 'value')}
           </p>
 
           {plan.shouldStart ? (
             <div className="space-y-3 text-sm text-white/80 font-body">
               <div className="flex items-start gap-3">
                 <span className="text-amber-300 font-bold shrink-0">1.</span>
-                <p>عدد الأسئلة: {formatNumber(plan.questions.length, numberStyle)}</p>
+                <p>
+                  {pickLang({ ar: 'عدد الأسئلة:', en: 'Number of questions:' }, lang)}{' '}
+                  {formatNumber(plan.questions.length, numberStyle)}
+                </p>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-amber-300 font-bold shrink-0">2.</span>
-                <p>المواضيع: {plan.weakModules.join(' · ')}</p>
+                <p>
+                  {pickLang({ ar: 'المواضيع:', en: 'Topics:' }, lang)}{' '}
+                  {plan.weakModules
+                    .map((m) => translateDynamic({ value: m }, lang, 'value'))
+                    .join(' · ')}
+                </p>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-amber-300 font-bold shrink-0">3.</span>
-                <p>بلا درجات — فقط تعلّم 🎯</p>
+                <p>
+                  {pickLang({ ar: 'بلا درجات — فقط تعلّم 🎯', en: 'No grades — just learning 🎯' }, lang)}
+                </p>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-amber-300 font-bold shrink-0">4.</span>
-                <p>تُظهر الحل والشرح بعد كل سؤال</p>
+                <p>
+                  {pickLang(
+                    {
+                      ar: 'تُظهر الحل والشرح بعد كل سؤال',
+                      en: 'The solution and explanation are shown after every question',
+                    },
+                    lang,
+                  )}
+                </p>
               </div>
             </div>
           ) : (
             <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 text-center">
               <CheckCircle2 className="w-8 h-8 text-emerald-300 mx-auto mb-2" />
               <p className="text-sm text-emerald-200 font-body">
-                {plan.message}
+                {translateDynamic({ value: plan.message }, lang, 'value')}
               </p>
             </div>
           )}
@@ -298,7 +329,7 @@ export function RemediationScreen({
             className="btn-primary w-full !py-4 !text-lg"
           >
             <Play className="w-6 h-6" />
-            ابدأ الجلسة العلاجية
+            {pickLang({ ar: 'ابدأ الجلسة العلاجية', en: 'Start the remediation session' }, lang)}
           </button>
         ) : (
           <button
@@ -306,7 +337,7 @@ export function RemediationScreen({
             onClick={() => { playSound('click'); onBack(); }}
             className="btn-ghost w-full"
           >
-            رجوع
+            {pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
           </button>
         )}
       </div>
@@ -316,27 +347,35 @@ export function RemediationScreen({
   // ═══ running ═══
   if (phase === 'running' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
+
+    const translatedQuestion = translateDynamic(currentQ, lang, 'question') ?? currentQ.question;
+
     const isTextual =
       currentQ.operation === 'read' ||
       currentQ.operation === 'build' ||
-      currentQ.question.includes('؟') ||
-      currentQ.question.includes('ماذا') ||
-      currentQ.question.includes('ضع') ||
-      currentQ.question.includes('ارفع');
+      translatedQuestion.includes('؟') ||
+      translatedQuestion.includes('?') ||
+      translatedQuestion.includes('ماذا') ||
+      translatedQuestion.includes('What') ||
+      translatedQuestion.includes('ضع') ||
+      translatedQuestion.includes('Place') ||
+      translatedQuestion.includes('ارفع') ||
+      translatedQuestion.includes('Raise');
     const equation = isTextual
-      ? currentQ.question
-      : extractEquation(currentQ.question);
+      ? translatedQuestion
+      : extractEquation(translatedQuestion);
     const formattedPrompt = formatText(equation, numberStyle);
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-bold text-white truncate">
-              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
+              {pickLang({ ar: 'السؤال', en: 'Question' }, lang)}{' '}
+              {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-xs text-white/50 font-body">
-              🩺 جلسة علاجية — {currentQ.module}
+              {pickLang({ ar: '🩺 جلسة علاجية —', en: '🩺 Remediation session —' }, lang)} {currentQ.module}
             </p>
           </div>
           <button
@@ -345,7 +384,7 @@ export function RemediationScreen({
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition"
           >
             <Square className="w-3.5 h-3.5" />
-            إنهاء
+            {pickLang({ ar: 'إنهاء', en: 'End' }, lang)}
           </button>
         </div>
 
@@ -360,17 +399,19 @@ export function RemediationScreen({
 
         <div className="glass-card p-5 sm:p-6 mb-5">
           <p className="text-center text-white/40 font-body text-sm mb-3">
-            مثّل الناتج على السوروبان
+            {pickLang({ ar: 'مثّل الناتج على السوروبان', en: 'Represent the result on the soroban' }, lang)}
           </p>
           <p
-            dir={isTextual ? 'rtl' : 'ltr'}
+            dir={isTextual ? dir : 'ltr'}
             className={`text-center font-display text-white mb-6 ${
               isTextual
                 ? 'text-sm sm:text-base leading-relaxed font-semibold px-2'
                 : `${equationTextSize(equation)} font-black`
             }`}
           >
-            {isTextual ? formattedPrompt : `${formattedPrompt} = ؟`}
+            {isTextual
+              ? formattedPrompt
+              : `${formattedPrompt} = ${pickLang({ ar: '؟', en: '?' }, lang)}`}
           </p>
 
           <div className="flex flex-col items-center gap-3">
@@ -390,12 +431,12 @@ export function RemediationScreen({
                 animate={{ opacity: 1, y: 0 }}
                 onClick={() => {
                   playSound('click');
-                  sorobana.speakTeaching();
+                  if (lang === 'ar') sorobana.speakTeaching();
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-200 text-xs font-bold"
               >
                 <Lightbulb className="w-4 h-4" />
-                اشرح لي
+                {pickLang({ ar: 'اشرح لي', en: 'Explain to me' }, lang)}
               </motion.button>
             )}
 
@@ -405,14 +446,14 @@ export function RemediationScreen({
               className="btn-primary !py-3 !px-8"
             >
               <CheckCircle2 className="w-5 h-5" />
-              تحقق
+              {pickLang({ ar: 'تحقق', en: 'Check' }, lang)}
             </button>
           </div>
         </div>
 
         <SorobanaCompanion
           isSpeaking={sorobana.isSpeaking}
-          onClick={() => sorobana.speakTeaching()}
+          onClick={() => { if (lang === 'ar') sorobana.speakTeaching(); }}
           variant="pointing"
           sizeOverride={150}
           offsetBottom="8rem"
@@ -426,9 +467,11 @@ export function RemediationScreen({
   if (phase === 'reveal' && currentQ) {
     const isCorrect = feedback === 'correct';
     const formattedAnswer = formatNumber(currentQ.result, numberStyle);
+    const translatedSolution = translateDynamic(currentQ, lang, 'solution') ?? currentQ.solution;
+    const translatedMovement = translateDynamic(currentQ, lang, 'movement') ?? currentQ.movement;
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -450,11 +493,15 @@ export function RemediationScreen({
               )}
             </div>
             <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-              {isCorrect ? 'أحسنت! 🎉' : 'لا بأس — لنتعلّم 💡'}
+              {isCorrect
+                ? pickLang({ ar: 'أحسنت! 🎉', en: 'Well done! 🎉' }, lang)
+                : pickLang({ ar: 'لا بأس — لنتعلّم 💡', en: 'No worries — let\'s learn 💡' }, lang)}
             </h2>
 
             <div className="my-6">
-              <p className="text-sm text-white/60 font-body mb-1">الإجابة الصحيحة</p>
+              <p className="text-sm text-white/60 font-body mb-1">
+                {pickLang({ ar: 'الإجابة الصحيحة', en: 'The correct answer' }, lang)}
+              </p>
               <p
                 className="text-5xl font-black font-display text-white"
                 dir={isArabic ? 'rtl' : 'ltr'}
@@ -463,18 +510,20 @@ export function RemediationScreen({
               </p>
             </div>
 
-            {currentQ.solution && (
+            {translatedSolution && (
               <div className="mt-4 p-4 rounded-2xl bg-blue-500/10 border border-blue-400/30 text-right">
                 <p className="text-xs text-blue-200 font-body leading-relaxed">
-                  💡 <strong>الشرح:</strong> {formatText(currentQ.solution, numberStyle)}
+                  💡 <strong>{pickLang({ ar: 'الشرح:', en: 'Explanation:' }, lang)}</strong>{' '}
+                  {formatText(translatedSolution, numberStyle)}
                 </p>
               </div>
             )}
 
-            {currentQ.movement && (
+            {translatedMovement && (
               <div className="mt-3 p-3 rounded-xl bg-purple-500/10 border border-purple-400/30 text-right">
                 <p className="text-xs text-purple-200 font-body">
-                  🎯 <strong>الحركة:</strong> {currentQ.movement}
+                  🎯 <strong>{pickLang({ ar: 'الحركة:', en: 'Movement:' }, lang)}</strong>{' '}
+                  {translatedMovement}
                 </p>
               </div>
             )}
@@ -486,7 +535,9 @@ export function RemediationScreen({
           onClick={nextQuestion}
           className="btn-primary w-full !py-4 !text-lg"
         >
-          {currentIdx + 1 < questions.length ? 'التالي' : 'إنهاء الجلسة'}
+          {currentIdx + 1 < questions.length
+            ? pickLang({ ar: 'التالي', en: 'Next' }, lang)
+            : pickLang({ ar: 'إنهاء الجلسة', en: 'End session' }, lang)}
           <ArrowLeft className="w-5 h-5" />
         </button>
       </div>
@@ -500,7 +551,7 @@ export function RemediationScreen({
     const passed = accuracy >= 70;
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -512,33 +563,48 @@ export function RemediationScreen({
               <CheckCircle2 className="w-12 h-12 text-white" />
             </div>
             <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-              أحسنت! 🎉
+              {pickLang({ ar: 'أحسنت! 🎉', en: 'Well done! 🎉' }, lang)}
             </h2>
             <p className="text-sm text-white/60 font-body mb-6">
-              أكملت الجلسة العلاجية
+              {pickLang({ ar: 'أكملت الجلسة العلاجية', en: 'You completed the remediation session' }, lang)}
             </p>
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
-              <p className="text-sm text-white/60 font-body">تم التدريب على</p>
+              <p className="text-sm text-white/60 font-body">
+                {pickLang({ ar: 'تم التدريب على', en: 'Trained on' }, lang)}
+              </p>
               <p className="text-2xl font-black font-display text-amber-300 mt-1">
                 {level} · {section}
               </p>
               <p className="text-xs text-white/50 mt-2">
-                {formatNumber(correctCount, numberStyle)} / {formatNumber(questions.length, numberStyle)} إجابة صحيحة
+                {formatNumber(correctCount, numberStyle)} / {formatNumber(questions.length, numberStyle)}{' '}
+                {pickLang({ ar: 'إجابة صحيحة', en: 'correct answers' }, lang)}
               </p>
             </div>
 
-            {/* [FIX N62] — رسالة الإجبار تتبع النتيجة الفعلية */}
+            {/* [FIX N62] — mandatory message follows the actual outcome */}
             {isMandatory && passed && (
               <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-400/30">
                 <p className="text-xs text-emerald-200 font-body">
-                  ✅ تم إتمام الجلسة الإجبارية — يمكنك المتابعة
+                  {pickLang(
+                    {
+                      ar: '✅ تم إتمام الجلسة الإجبارية — يمكنك المتابعة',
+                      en: '✅ Mandatory session completed — you may continue',
+                    },
+                    lang,
+                  )}
                 </p>
               </div>
             )}
             {isMandatory && !passed && (
               <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/30">
                 <p className="text-xs text-amber-200 font-body">
-                  ⚠️ دقة أقل من 70% — لا تزال الجلسة الإجبارية قائمة، حاول مرة أخرى
+                  {pickLang(
+                    {
+                      ar: '⚠️ دقة أقل من 70% — لا تزال الجلسة الإجبارية قائمة، حاول مرة أخرى',
+                      en: '⚠️ Accuracy below 70% — the mandatory session is still pending, please try again',
+                    },
+                    lang,
+                  )}
                 </p>
               </div>
             )}
@@ -552,14 +618,14 @@ export function RemediationScreen({
             className="btn-primary w-full !py-3"
           >
             <RotateCcw className="w-5 h-5" />
-            جلسة علاجية جديدة
+            {pickLang({ ar: 'جلسة علاجية جديدة', en: 'New remediation session' }, lang)}
           </button>
           <button
             type="button"
             onClick={() => { playSound('click'); onBack(); }}
             className="btn-ghost w-full"
           >
-            رجوع
+            {pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
           </button>
         </div>
       </div>
