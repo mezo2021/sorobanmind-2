@@ -32,6 +32,7 @@ import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
 import { useT } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
 
 // ═══════════════════════════════════════════════════════════
 // أدوات
@@ -303,7 +304,7 @@ export function GuardianDashboard({
     () => [
       { id: 'master_addition_audio', label: pickLang({ ar: 'خبير جمع وطرح سماعي', en: 'Audio Addition Expert' }, lang), icon: '🎤', color: 'from-cyan-500 to-blue-700', earned: !!anzanAudioBadges.master_addition_audio },
       { id: 'master_multiplication_audio', label: pickLang({ ar: 'خبير ضرب سماعي', en: 'Audio Multiplication Expert' }, lang), icon: '🎤', color: 'from-indigo-500 to-purple-700', earned: !!anzanAudioBadges.master_multiplication_audio },
-      { id: 'master_division_audio', label: 'خبير قسمة سماعية', icon: '🎤', color: 'from-blue-500 to-cyan-700', earned: !!anzanAudioBadges.master_division_audio },
+      { id: 'master_division_audio', label: pickLang({ ar: 'خبير قسمة سماعية', en: 'Audio Division Expert' }, lang), icon: '🎤', color: 'from-blue-500 to-cyan-700', earned: !!anzanAudioBadges.master_division_audio },
       { id: 'master_chains_audio', label: pickLang({ ar: 'خبير سلاسل سماعي', en: 'Audio Chains Expert' }, lang), icon: '🎤', color: 'from-teal-500 to-cyan-700', earned: !!anzanAudioBadges.master_chains_audio },
       { id: 'master_advanced_audio', label: pickLang({ ar: 'خبير المتقدم سماعي', en: 'Audio Advanced Expert' }, lang), icon: '🎤', color: 'from-fuchsia-500 to-purple-700', earned: !!anzanAudioBadges.master_advanced_audio },
       { id: 'master_decimals_audio', label: pickLang({ ar: 'خبير العشريات سماعي', en: 'Audio Decimals Expert' }, lang), icon: '🎤', color: 'from-rose-500 to-pink-700', earned: !!anzanAudioBadges.master_decimals_audio },
@@ -980,9 +981,9 @@ export function GuardianDashboard({
                   <span className={`text-lg ${quest.earned ? '' : 'opacity-30 grayscale'}`}>{quest.icon}</span>
                 </div>
                 <p className={`text-[10px] font-bold font-body text-center leading-tight ${quest.earned ? 'text-gold-100' : 'text-white/60'}`}>
-                  {pickLang({ ar: quest.titleAr, en: quest.titleEn }, lang)}
+                  {translateDynamic(quest, lang, 'title')}
                 </p>
-                <p className="text-[9px] text-white/40 font-body text-center leading-tight line-clamp-2">{pickLang({ ar: quest.descriptionAr, en: quest.descriptionEn }, lang)}</p>
+                <p className="text-[9px] text-white/40 font-body text-center leading-tight line-clamp-2">{translateDynamic(quest, lang, 'description')}</p>
                 <div className="w-full mt-0.5">
                   <div className="h-1 rounded-full bg-white/10 overflow-hidden">
                     <motion.div
