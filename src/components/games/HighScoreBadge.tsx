@@ -21,6 +21,7 @@ import {
   type HighScoreEntry,
 } from './highScoreStore';
 import { useEffect, useState } from 'react';
+import { Num } from '@/components/Num';
 
 // ═══ الأنواع ═══
 interface HighScoreBadgeProps {
@@ -41,7 +42,7 @@ function CompactBadge({ gameId }: { gameId: string }) {
   return (
     <span className="inline-flex items-center gap-1 text-[10px] text-amber-300 font-bold">
       <Trophy className="w-3 h-3" />
-      <span className="tabular-nums">{high.value}</span>
+      <span className="tabular-nums"><Num>{high.value}</Num></span>
     </span>
   );
 }
@@ -117,7 +118,7 @@ function FullBadge({ gameId }: { gameId: string }) {
           <Crown className="w-6 h-6 text-amber-400" />
         </motion.div>
         <span className="text-4xl font-black font-display text-amber-300 tabular-nums">
-          {top.value}
+          <Num>{top.value}</Num>
         </span>
       </div>
 
@@ -126,7 +127,7 @@ function FullBadge({ gameId }: { gameId: string }) {
           {top.name}
         </p>
         <p className="text-[10px] text-white/40">
-          {formatRecordAge(top.date)}
+          <Num>{formatRecordAge(top.date)}</Num>
         </p>
       </div>
 
@@ -147,7 +148,7 @@ function FullBadge({ gameId }: { gameId: string }) {
                   </span>
                 </div>
                 <span className="font-bold text-white/60 tabular-nums shrink-0">
-                  {entry.value}
+                  <Num>{entry.value}</Num>
                 </span>
               </div>
             ))}
