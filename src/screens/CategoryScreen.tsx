@@ -22,6 +22,11 @@ import { isPreviewMode } from '@/utils/previewMode';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
 
+// 🌍 i18n
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
+
 // ═══════════════════════════════════════════════════════════
 // الأنواع
 // ═══════════════════════════════════════════════════════════
@@ -201,6 +206,7 @@ function loadPlacementData() {
 // ═══════════════════════════════════════════════════════════
 
 export function CategoryScreen({ category, onNavigate, playSound }: CategoryScreenProps) {
+  const { lang, dir } = useT();
   useNumberStyleStore((s) => s.style); // 🔢 إعادة الرسم عند تبديل نمط الأرقام
   const data = CATEGORY_DATA[category];
   const { stats, toggleSound } = useGameStats();
@@ -347,20 +353,20 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h4 className="text-base sm:text-lg font-extrabold font-display text-white">
-                {toArabicNumber(level.number)} — {level.titleAr}
+                {toArabicNumber(level.number)} — {pickLang({ ar: level.titleAr, en: level.titleEn }, lang)}
               </h4>
               {completed && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
               {isRecommended && (
                 <span className="px-2 py-0.5 rounded-lg bg-gold-400/30 text-gold-100 text-[10px] font-bold whitespace-nowrap">
-                  🎯 ابدأ هنا
+                  {pickLang({ ar: '🎯 ابدأ هنا', en: '🎯 Start here' }, lang)}
                 </span>
               )}
             </div>
             <p className="text-[10px] text-white/40 font-body">
-              {level.titleEn}
+              {pickLang({ ar: level.titleEn, en: level.titleAr }, lang)}
             </p>
             <p className="text-xs text-white/60 font-body mt-1 leading-snug">
-              {level.desc}
+              {translateDynamic(level, lang, 'desc')}
             </p>
           </div>
         </div>
@@ -377,7 +383,9 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
-              {completed ? 'مراجعة' : 'الدرس'}
+              {completed
+                ? pickLang({ ar: 'مراجعة', en: 'Review' }, lang)
+                : pickLang({ ar: 'الدرس', en: 'Lesson' }, lang)}
             </button>
 
             <button
@@ -394,8 +402,14 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
             >
               {!practiceUnlocked ? <Lock className="w-3.5 h-3.5" /> : <Dumbbell className="w-3.5 h-3.5" />}
               {practicePassed && grades[level.id]?.practice !== null && grades[level.id]?.practice !== undefined
-                ? `تمرّن ✓ ${toArabicNumber(grades[level.id]!.practice!)}٪`
-                : `تمرّن ${toArabicNumber(practiceNum)}`}
+                ? pickLang({
+                    ar: `تمرّن ✓ ${toArabicNumber(grades[level.id]!.practice!)}٪`,
+                    en: `Practice ✓ ${toArabicNumber(grades[level.id]!.practice!)}%`
+                  }, lang)
+                : pickLang({
+                    ar: `تمرّن ${toArabicNumber(practiceNum)}`,
+                    en: `Practice ${toArabicNumber(practiceNum)}`
+                  }, lang)}
             </button>
 
             <button
@@ -416,8 +430,11 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
                grades[level.id]?.anzanVisualNormal !== undefined &&
                grades[level.id]?.anzanVisualFlash !== null &&
                grades[level.id]?.anzanVisualFlash !== undefined
-                ? `بصري ✓ ${toArabicNumber(Math.round((grades[level.id]!.anzanVisualNormal! + grades[level.id]!.anzanVisualFlash!) / 2))}٪`
-                : 'أنزان بصري'}
+                ? pickLang({
+                    ar: `بصري ✓ ${toArabicNumber(Math.round((grades[level.id]!.anzanVisualNormal! + grades[level.id]!.anzanVisualFlash!) / 2))}٪`,
+                    en: `Visual ✓ ${toArabicNumber(Math.round((grades[level.id]!.anzanVisualNormal! + grades[level.id]!.anzanVisualFlash!) / 2))}%`
+                  }, lang)
+                : pickLang({ ar: 'أنزان بصري', en: 'Visual Anzan' }, lang)}
             </button>
 
             <button
@@ -436,8 +453,11 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               {anzanAPassed &&
                grades[level.id]?.anzanAudio !== null &&
                grades[level.id]?.anzanAudio !== undefined
-                ? `سمعي ✓ ${toArabicNumber(grades[level.id]!.anzanAudio!)}٪`
-                : 'أنزان سمعي'}
+                ? pickLang({
+                    ar: `سمعي ✓ ${toArabicNumber(grades[level.id]!.anzanAudio!)}٪`,
+                    en: `Audio ✓ ${toArabicNumber(grades[level.id]!.anzanAudio!)}%`
+                  }, lang)
+                : pickLang({ ar: 'أنزان سمعي', en: 'Audio Anzan' }, lang)}
             </button>
           </div>
         )}
@@ -456,13 +476,13 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
         onHome={goHome}
       />
 
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-4xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-4xl mx-auto">
         <div className="mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white">
-            {data.titleAr}
+            {pickLang({ ar: data.titleAr, en: data.titleEn }, lang)}
           </h2>
           <p className="text-sm text-white/50 font-body">
-            {data.ageRange} · {data.titleEn}
+            {translateDynamic(data, lang, 'ageRange')} · {pickLang({ ar: data.titleEn, en: data.titleAr }, lang)}
           </p>
         </div>
 
@@ -475,9 +495,11 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="w-5 h-5 text-gold-300" />
               <h3 className="text-lg font-bold text-white/80 font-display">
-                إثراء ممتع
+                {pickLang({ ar: 'إثراء ممتع', en: 'Fun Enrichment' }, lang)}
               </h3>
-              <span className="text-[10px] text-white/40 font-body">(مفتوح دائماً)</span>
+              <span className="text-[10px] text-white/40 font-body">
+                {pickLang({ ar: '(مفتوح دائماً)', en: '(Always open)' }, lang)}
+              </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -498,10 +520,10 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
                     </div>
                     <div className="flex-1 min-w-0 relative">
                       <h4 className="text-sm font-bold font-display text-white">
-                        {item.title}
+                        {translateDynamic(item, lang, 'title')}
                       </h4>
                       <p className="text-[11px] text-white/50 font-body mt-0.5">
-                        {item.desc}
+                        {translateDynamic(item, lang, 'desc')}
                       </p>
                     </div>
                   </motion.button>
@@ -520,10 +542,10 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-5 h-5 text-white/60" />
             <h3 className="text-lg font-bold text-white/80 font-display">
-              المستويات
+              {pickLang({ ar: 'المستويات', en: 'Levels' }, lang)}
             </h3>
             <span className="text-[10px] text-white/40 font-body">
-              (متسلسلة — كل مستوى يُفتح بعد السابق)
+              {pickLang({ ar: '(متسلسلة — كل مستوى يُفتح بعد السابق)', en: '(Sequential — each level unlocks after the previous)' }, lang)}
             </span>
           </div>
 
@@ -547,14 +569,14 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
 
             <div className="flex-1">
               <h3 className="text-lg font-extrabold font-display text-white">
-                {data.examTitle}
+                {translateDynamic(data, lang, 'examTitle')}
               </h3>
               <p className="text-xs text-white/60 font-body mt-0.5">
                 {isExamUnlocked()
                   ? isExamPassed
-                    ? '✅ نجحت في هذا الامتحان'
-                    : '🎯 جاهز للامتحان! بدرجة نجاح ٨٠٪'
-                  : '🔒 يُفتح بعد إتمام كل المستويات + تمرّن + أنزان'}
+                    ? pickLang({ ar: '✅ نجحت في هذا الامتحان', en: '✅ You passed this exam' }, lang)
+                    : pickLang({ ar: '🎯 جاهز للامتحان! بدرجة نجاح ٨٠٪', en: '🎯 Ready for the exam! Passing grade 80%' }, lang)
+                  : pickLang({ ar: '🔒 يُفتح بعد إتمام كل المستويات + تمرّن + أنزان', en: '🔒 Unlocks after completing all levels + practice + anzan' }, lang)}
               </p>
             </div>
           </div>
@@ -566,7 +588,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
               className="relative mt-4 w-full py-3 rounded-2xl bg-gradient-to-l from-gold-400 to-amber-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-gold-500/30 hover:shadow-gold-500/50 transition-shadow"
             >
               <Play className="w-5 h-5" />
-              ابدأ الامتحان
+              {pickLang({ ar: 'ابدأ الامتحان', en: 'Start Exam' }, lang)}
             </button>
           )}
         </motion.div>
