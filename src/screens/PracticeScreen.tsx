@@ -1,14 +1,14 @@
 // src/screens/PracticeScreen.tsx
-// ✅ SRB: wrongSkillsRef يحفظ skillId كامل ("L2-S07-m1") بدل "m1"
-// ✅ SRB: weakSkills = union(أخطاء + بطيئات من performances)
-// ✅ SRB: زر الجلسة العلاجية عند وجود مهارات ضعيفة
-// ✅ عرض المعادلة في سطر واحد (بدون "احسب السلسلة:" + منع الكسر)
-// ✅ كشف الأسئلة النصية بشكل شامل (؟ / ماذا / ضع / ارفع) + عرض يلتف
-// ✅ زر العلاجية يعتمد على pendingRemediation + إخفاء "جلسة جديدة" عند النجاح/العلاجية
-// ✅ الشارات تُمنح فقط عند نجاح الجلسة (pendingBadgesRef)
-// ✅ زر "إنهاء" يخرج بلا تقييم
-// 📅 آخر تحديث: SRB Migration — Phase 1.5
-// [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
+// ✅ SRB: wrongSkillsRef stores full skillId ("L2-S07-m1") instead of "m1"
+// ✅ SRB: weakSkills = union(errors + slow ones from performances)
+// ✅ SRB: remedial session button when weak skills exist
+// ✅ Display the equation on one line (without "Calculate the chain:" + wrap prevention)
+// ✅ Comprehensive textual question detection (؟ / ماذا / ضع / ارفع) + wrapping display
+// ✅ Remedial button depends on pendingRemediation + hide "New session" on pass/remediation
+// ✅ Badges are awarded only on session success (pendingBadgesRef)
+// ✅ "End" button exits without evaluation
+// 📅 Last update: SRB Migration — Phase 1.5
+// [FIX B5] — explicit LevelId check (no fragile slice)
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -17,6 +17,10 @@ import {
   Clock, BookOpen, AlertCircle, Play, ArrowLeft, Square,
   Lightbulb,
 } from 'lucide-react';
+
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { SorobanaCompanion } from '@/components/SorobanaCompanion';
@@ -42,7 +46,7 @@ type Phase = 'intro' | 'running' | 'reveal' | 'result';
 
 interface PracticeScreenProps {
   level: SRBLevel;
-  /** ⚠️ للتوافق — يُتجاهل، يُستخرج من currentQ.section */
+  /** ⚠️ Backward-compat — ignored, extracted from currentQ.section */
   section?: SRBSection;
   onBack: () => void;
   onComplete?: (passed: boolean, score: number) => void;
@@ -62,7 +66,7 @@ const XP_PER_CORRECT = 5;
 const PASS_THRESHOLD = 70;
 const WARNING_RATIO = 0.7;
 
-// 1) helper (مرة واحدة أعلى الملف)
+// 1) helper (once at the top of the file)
 function getDecimalFactor(q: SRBQuestion): number {
   const decimals = [q.result, ...q.operands].map((n) => {
     const str = Math.abs(n).toString();
@@ -72,23 +76,23 @@ function getDecimalFactor(q: SRBQuestion): number {
   return Math.pow(10, Math.max(...decimals, 0));
 }
 
-// 🆕 استخراج التلميح من بداية solution إن وُجد
-function extractHint(q: SRBQuestion | undefined): string | null {
-  if (!q?.solution) return null;
-  const m = q.solution.match(/^تلميح:\s*(.+?)(?:\.\s|$)/);
+// 🆕 Extracts the hint from the beginning of solution if present (AR or EN).
+function extractHint(solution: string | undefined): string | null {
+  if (!solution) return null;
+  const m = solution.match(/^(?:تلميح|Hint):\s*(.+?)(?:\.\s|$)/);
   return m ? m[1].trim() : null;
 }
 
-// 🆕 استخراج المعادلة فقط (بدون "احسب السلسلة:")
+// 🆕 Extracts only the equation (without "Calculate the chain:" prefix). Handles AR + EN.
 function extractEquation(question: string): string {
   return question
-    .replace(/^احسب\s+السلسلة\s*:\s*/u, '')
-    .replace(/^احسب\s*:\s*/u, '')
-    .replace(/\s*=\s*؟\s*$/u, '')
+    .replace(/^(?:احسب\s+السلسلة|Calculate\s+the\s+chain)\s*:\s*/iu, '')
+    .replace(/^(?:احسب|Calculate)\s*:\s*/iu, '')
+    .replace(/\s*=\s*[؟?]\s*$/u, '')
     .trim();
 }
 
-// 🆕 حجم الخط حسب طول المعادلة
+// 🆕 Font size based on equation length
 function equationTextSize(eq: string): string {
   const len = eq.length;
   if (len > 22) return 'text-2xl sm:text-3xl';
@@ -96,7 +100,7 @@ function equationTextSize(eq: string): string {
   return 'text-4xl sm:text-5xl';
 }
 
-// 🆕 استخراج section من skillId ("L2-S07-m1" → "S07")
+// 🆕 Extracts section from skillId ("L2-S07-m1" → "S07")
 function getSectionFromSkillId(skillId: string): SRBSection | null {
   const parts = skillId.split('-');
   if (parts.length !== 3) return null;
@@ -131,6 +135,8 @@ function buildSkillId(level: SRBLevel, section: SRBSection, module: SRBModule): 
 export function PracticeScreen({
   level, onBack, onComplete, playSound, onXP, burst,
 }: PracticeScreenProps) {
+  const { lang, dir } = useT();
+
   const [phase, setPhase] = useState<Phase>('intro');
   const [questions, setQuestions] = useState<SRBQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -141,7 +147,7 @@ export function PracticeScreen({
   const [savedTimeMs, setSavedTimeMs] = useState<number | null>(null);
   const [performances, setPerformances] = useState<SkillPerformance[]>([]);
 
-  // 🆕 حالة عرض RemediationScreen
+  // 🆕 State for showing RemediationScreen
   const [showRemediation, setShowRemediation] = useState(false);
   const [remediationSection, setRemediationSection] = useState<SRBSection>('S01');
 
@@ -163,7 +169,7 @@ export function PracticeScreen({
   const setPendingRemediation = useProgressStore((s) => s.setPendingRemediation);
   const markPracticePassed = useProgressStore((s) => s.markPracticePassed);
 
-  // 🎯 عدد الأسئلة الفعلي: max(عدد مهارات المستوى، 5)
+  // 🎯 Actual question count: max(number of level skills, 5)
   const expectedQuestionCount = useMemo(
     () => Math.max(countModulesInLevel(level), 5),
     [level],
@@ -171,11 +177,11 @@ export function PracticeScreen({
 
   const currentQ = questions[currentIdx];
 
-  // 🎯 نستخرج section الحقيقي من السؤال الحالي
+  // 🎯 Extract the real section from the current question
   const currentSection: SRBSection | undefined = currentQ?.section;
 
-  // 🎯 رقم المستوى (0-7) لتمريره إلى AdaptiveFeedback
-  // [FIX B5] — فحص صريح (بدل slice الهشّ)
+  // 🎯 Level number (0-7) to pass to AdaptiveFeedback
+  // [FIX B5] — explicit check (instead of the fragile slice)
   const levelNum = useMemo(() => {
     const n = parseInt(level.replace('L', ''), 10);
     return !isNaN(n) && n >= 0 && n <= 7 ? n : 0;
@@ -186,7 +192,7 @@ export function PracticeScreen({
   const isWarning = elapsedMs >= warningAtMs;
   const progressPct = Math.min(100, (elapsedMs / maxMs) * 100);
 
-  // 🆕 هل لدينا مهارات ضعيفة؟
+  // 🆕 Do we have weak skills?
   const weakPerformances = useMemo(
     () => performances.filter(
       (p) => p.speedClass === 'slow' || p.correct < p.attempts,
@@ -196,7 +202,7 @@ export function PracticeScreen({
 
   const hasWeakSkills = weakPerformances.length > 0;
 
-  // 🆕 أكثر section تكرارًا بين المهارات الضعيفة
+  // 🆕 Most frequent section among weak skills
   const bestWeakSection = useMemo<SRBSection | null>(() => {
     if (weakPerformances.length === 0) return null;
 
@@ -219,7 +225,7 @@ export function PracticeScreen({
   }, [weakPerformances]);
 
   const startSession = useCallback(() => {
-    // ✅ تمرير بدون section
+    // ✅ Call without section
     const qs = getPracticeQuestions(level, Date.now(), []);
     if (qs.length === 0) { playSound('error'); return; }
     perfRef.current = new Map();
@@ -271,7 +277,7 @@ export function PracticeScreen({
           pendingBadgesRef.current.push({ skillId, timeMs, answerMs });
         }
       } else {
-        // ✅ SRB: احفظ skillId كامل ("L2-S07-m1")
+        // ✅ SRB: store full skillId ("L2-S07-m1")
         wrongSkillsRef.current.add(skillId);
       }
     },
@@ -293,22 +299,22 @@ export function PracticeScreen({
     if (!currentQ || feedback !== 'idle') return;
     if (timerRef.current) clearInterval(timerRef.current);
 
-    // 2) في handleCheck
+    // 2) Inside handleCheck
     const factor = getDecimalFactor(currentQ);
     const targetValue = Math.round(currentQ.result * factor);
     const isCorrect = abacusValue === targetValue;
 
-// ✅ Attempt Record
-const attempt = {
-  skillId: `${currentQ.level}-${currentQ.section}-${currentQ.module}`,
-  correct: isCorrect,
-  timeMs: elapsedMs,
-  timestamp: Date.now(),
-};
-useProgressStore.getState().recordAttempt(attempt);
+    // ✅ Attempt Record
+    const attempt = {
+      skillId: `${currentQ.level}-${currentQ.section}-${currentQ.module}`,
+      correct: isCorrect,
+      timeMs: elapsedMs,
+      timestamp: Date.now(),
+    };
+    useProgressStore.getState().recordAttempt(attempt);
 
-const timeMs = elapsedMs;
-trackPerformance(isCorrect, timeMs);
+    const timeMs = elapsedMs;
+    trackPerformance(isCorrect, timeMs);
     if (isCorrect) {
       setScore((s) => s + 1);
       setFeedback('correct');
@@ -355,25 +361,25 @@ trackPerformance(isCorrect, timeMs);
         .map((p) => p.skillId),
     ]);
 
-    // حفظ الدرجة في srb_progress (للـ AdaptiveFeedback)
+    // Save grade in srb_progress (for AdaptiveFeedback)
     saveSectionGrade(
       level, firstSection, 'practice', percentage,
       Array.from(weakSkillIds),
     );
 
-    // ✅ حفظ الدرجة في progressStore
+    // ✅ Save grade in progressStore
     setGrade(level, 'practice', percentage);
 
-    // ✅ تسجيل نجاح التمرّن
+    // ✅ Record practice pass
     if (passed) {
-      // [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
+      // [FIX B5] — explicit LevelId check (no fragile slice)
       const levelNum = parseInt(level.replace('L', ''), 10);
       if (!isNaN(levelNum) && levelNum >= 0 && levelNum <= 7) {
         markPracticePassed(level);
       }
     }
 
-    // ✅ إذا نجح + توجد مهارات ضعيفة → جلسة علاجية إجبارية
+    // ✅ If passed + weak skills exist → mandatory remedial session
     if (passed && weakSkillIds.size > 0) {
       setPendingRemediation({
         level,
@@ -382,7 +388,7 @@ trackPerformance(isCorrect, timeMs);
       });
     }
 
-    // ✅ إذا رسب → جلسة علاجية إجبارية (outcome: failed)
+    // ✅ If failed → mandatory remedial session (outcome: failed)
     if (!passed && weakSkillIds.size > 0) {
       setPendingRemediation({
         level,
@@ -391,7 +397,7 @@ trackPerformance(isCorrect, timeMs);
       });
     }
 
-    // ✅ منح الشارات فقط عند نجاح الجلسة
+    // ✅ Award badges only on session success
     if (passed) {
       pendingBadgesRef.current.forEach((b) => {
         awardBadge(b.skillId, b.timeMs, b.answerMs);
@@ -423,7 +429,7 @@ trackPerformance(isCorrect, timeMs);
     }
   }, [currentIdx, questions.length, score, sorobana, finalizeSession]);
 
-  // ✅ "إنهاء" — خروج بلا تقييم (لا حفظ درجة، لا شارات، لا علاجية)
+  // ✅ "End" — exit without evaluation (no grade save, no badges, no remediation)
   const handleEnd = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     sorobana.stop();
@@ -432,7 +438,7 @@ trackPerformance(isCorrect, timeMs);
     onBack();
   }, [sorobana, playSound, onBack]);
 
-  // 🆕 بدء الجلسة العلاجية
+  // 🆕 Start remedial session
   const handleStartRemediation = useCallback(() => {
     const section = bestWeakSection ?? currentSection ?? 'S01';
     setRemediationSection(section);
@@ -440,35 +446,35 @@ trackPerformance(isCorrect, timeMs);
     playSound('click');
   }, [bestWeakSection, currentSection, playSound]);
 
-  // 🆕 إنهاء الجلسة العلاجية
+  // 🆕 End remedial session
   const handleRemediationBack = useCallback(() => {
     setShowRemediation(false);
     playSound('click');
   }, [playSound]);
 
   // ═══════════════════════════════════════════════════════════
-  // 🩺 عرض الجلسة العلاجية (قبل أي شيء آخر)
+  // 🩺 Render remedial session (before anything else)
   // ═══════════════════════════════════════════════════════════
 
   if (showRemediation) {
     return (
       <RemediationScreen
-  level={level}
-  section={remediationSection}
-  onBack={handleRemediationBack}
-  playSound={playSound}
-  isMandatory={true}
-/>
+        level={level}
+        section={remediationSection}
+        onBack={handleRemediationBack}
+        playSound={playSound}
+        isMandatory={true}
+      />
     );
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 🎬 العرض (نفسه مع تعديلات صغيرة)
+  // 🎬 Render (same, with minor adjustments)
   // ═══════════════════════════════════════════════════════════
 
   if (phase === 'intro') {
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button type="button" onClick={() => { playSound('click'); onBack(); }}
             className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
@@ -476,10 +482,11 @@ trackPerformance(isCorrect, timeMs);
           </button>
           <div className="flex-1 min-w-0">
             <h2 className="text-2xl font-extrabold font-display text-white truncate">
-              تمرّن
+              {pickLang({ ar: 'تمرّن', en: 'Practice' }, lang)}
             </h2>
             <p className="text-sm text-white/50 font-body">
-              {level} — {formatNumber(expectedQuestionCount, numberStyle)} أسئلة
+              {level} — {formatNumber(expectedQuestionCount, numberStyle)}{' '}
+              {pickLang({ ar: 'أسئلة', en: 'questions' }, lang)}
             </p>
           </div>
           <BookOpen className="w-6 h-6 text-purple-300" />
@@ -489,19 +496,78 @@ trackPerformance(isCorrect, timeMs);
           <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-electric-500 flex items-center justify-center shadow-xl shadow-purple-500/40 mx-auto mb-4">
             <BookOpen className="w-10 h-10 text-white" />
           </div>
-          <h3 className="text-xl font-extrabold font-display text-white text-center mb-4">قبل أن تبدأ</h3>
+          <h3 className="text-xl font-extrabold font-display text-white text-center mb-4">
+            {pickLang({ ar: 'قبل أن تبدأ', en: 'Before you start' }, lang)}
+          </h3>
           <div className="space-y-3 text-sm text-white/80 font-body">
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">1.</span><p>{formatNumber(expectedQuestionCount, numberStyle)} أسئلة من دروس المستوى</p></div>
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">2.</span><p>محاولة واحدة فقط لكل سؤال</p></div>
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">3.</span><p>زر "تحقق" متاح دائماً، والانتقال يدوي بزر "التالي"</p></div>
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">4.</span><p>{formatNumber(PASS_THRESHOLD, numberStyle)}٪ للنّجاح</p></div>
-            <div className="flex items-start gap-3"><span className="text-purple-300 font-bold shrink-0">5.</span><p>يمكنك إنهاء التدريب في أي لحظة</p></div>
+            <div className="flex items-start gap-3">
+              <span className="text-purple-300 font-bold shrink-0">1.</span>
+              <p>
+                {pickLang(
+                  {
+                    ar: `${formatNumber(expectedQuestionCount, numberStyle)} أسئلة من دروس المستوى`,
+                    en: `${formatNumber(expectedQuestionCount, numberStyle)} questions from the level lessons`,
+                  },
+                  lang,
+                )}
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-purple-300 font-bold shrink-0">2.</span>
+              <p>
+                {pickLang(
+                  { ar: 'محاولة واحدة فقط لكل سؤال', en: 'Only one attempt per question' },
+                  lang,
+                )}
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-purple-300 font-bold shrink-0">3.</span>
+              <p>
+                {pickLang(
+                  {
+                    ar: 'زر "تحقق" متاح دائماً، والانتقال يدوي بزر "التالي"',
+                    en: 'The "Check" button is always available; move forward manually with "Next"',
+                  },
+                  lang,
+                )}
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-purple-300 font-bold shrink-0">4.</span>
+              <p>
+                {pickLang(
+                  {
+                    ar: `${formatNumber(PASS_THRESHOLD, numberStyle)}٪ للنّجاح`,
+                    en: `${formatNumber(PASS_THRESHOLD, numberStyle)}% to pass`,
+                  },
+                  lang,
+                )}
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-purple-300 font-bold shrink-0">5.</span>
+              <p>
+                {pickLang(
+                  { ar: 'يمكنك إنهاء التدريب في أي لحظة', en: 'You can end the training at any moment' },
+                  lang,
+                )}
+              </p>
+            </div>
           </div>
           <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30">
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-200 font-body leading-relaxed">
-                💡 الإجابة بزمن قياسي (أسرع من ٤٠٪) تمنحك <strong>شارة المهارة</strong> 🏅
+                💡{' '}
+                {pickLang(
+                  {
+                    ar: 'الإجابة بزمن قياسي (أسرع من ٤٠٪) تمنحك',
+                    en: 'Answering in record time (faster than 40%) grants you',
+                  },
+                  lang,
+                )}{' '}
+                <strong>{pickLang({ ar: 'شارة المهارة', en: 'a Skill Badge' }, lang)}</strong> 🏅
               </p>
             </div>
           </div>
@@ -509,7 +575,7 @@ trackPerformance(isCorrect, timeMs);
 
         <button type="button" onClick={startSession} className="btn-primary w-full !py-4 !text-lg">
           <Play className="w-6 h-6" />
-          ابدأ الجلسة
+          {pickLang({ ar: 'ابدأ الجلسة', en: 'Start session' }, lang)}
         </button>
       </div>
     );
@@ -517,36 +583,46 @@ trackPerformance(isCorrect, timeMs);
 
   if (phase === 'running' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
-    // 🆕 كشف شامل للأسئلة النصية
+
+    // 🆕 Translate dynamic content
+    const translatedQuestion = translateDynamic(currentQ, lang, 'question') ?? currentQ.question;
+    const translatedSolution = translateDynamic(currentQ, lang, 'solution') ?? currentQ.solution;
+
+    // 🆕 Comprehensive textual question detection (AR + EN)
     const isTextual =
       currentQ.operation === 'read' ||
       currentQ.operation === 'build' ||
-      currentQ.question.includes('؟') ||
-      currentQ.question.includes('ماذا') ||
-      currentQ.question.includes('ضع') ||
-      currentQ.question.includes('ارفع');
+      translatedQuestion.includes('؟') ||
+      translatedQuestion.includes('?') ||
+      translatedQuestion.includes('ماذا') ||
+      translatedQuestion.includes('what') ||
+      translatedQuestion.includes('ضع') ||
+      translatedQuestion.includes('place') ||
+      translatedQuestion.includes('ارفع') ||
+      translatedQuestion.includes('raise');
     const equation = isTextual
-      ? currentQ.question
-      : extractEquation(currentQ.question);
+      ? translatedQuestion
+      : extractEquation(translatedQuestion);
     const formattedPrompt = formatText(equation, numberStyle);
-    const hint = extractHint(currentQ);
+    const hint = extractHint(translatedSolution);
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-bold text-white truncate">
-              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
+              {pickLang({ ar: 'السؤال', en: 'Question' }, lang)}{' '}
+              {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
             <p className="text-xs text-white/50 font-body">
-              {/* ✅ يستخدم section الحقيقي */}
+              {/* ✅ Uses the real section */}
               {currentSection} · {currentQ.module}
             </p>
           </div>
           <button type="button" onClick={handleEnd}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition">
             <Square className="w-3.5 h-3.5" />
-            إنهاء
+            {pickLang({ ar: 'إنهاء', en: 'End' }, lang)}
           </button>
           <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
             isWarning ? 'bg-red-500/30 border-red-500/70 shadow-lg shadow-red-500/50 animate-pulse' : 'bg-white/5 border-white/10'
@@ -571,24 +647,28 @@ trackPerformance(isCorrect, timeMs);
           </span>
         </div>
         <div className="glass-card p-5 sm:p-6 mb-5">
-          <p className="text-center text-white/40 font-body text-sm mb-3">مثّل الناتج على السوروبان</p>
-          {/* 🆕 عرض المعادلة: النصي يلتف بحجم صغير، الرقمي يبقى كبيرًا */}
+          <p className="text-center text-white/40 font-body text-sm mb-3">
+            {pickLang({ ar: 'مثّل الناتج على السوروبان', en: 'Represent the result on the soroban' }, lang)}
+          </p>
+          {/* 🆕 Equation display: textual wraps in small size, numeric stays large */}
           <p
-            dir="rtl"
+            dir={dir}
             className={`text-center font-display text-white mb-6 ${
               isTextual
                 ? 'text-sm sm:text-base leading-relaxed font-semibold px-2'
                 : `${equationTextSize(equation)} font-black`
             }`}
           >
-            {isTextual ? formattedPrompt : `${formattedPrompt} = ؟`}
+            {isTextual
+              ? formattedPrompt
+              : `${formattedPrompt} = ${pickLang({ ar: '؟', en: '?' }, lang)}`}
           </p>
 
-          {/* 🆕 التلميح قبل المعداد */}
+          {/* 🆕 Hint before the abacus */}
           {hint && (
             <div className="mb-3 p-2 rounded-lg bg-purple-500/10 border border-purple-400/30">
               <p className="text-xs text-purple-200 font-body text-center">
-                💡 <strong>تلميح:</strong> {hint}
+                💡 <strong>{pickLang({ ar: 'تلميح:', en: 'Hint:' }, lang)}</strong> {hint}
               </p>
             </div>
           )}
@@ -598,11 +678,17 @@ trackPerformance(isCorrect, timeMs);
               autoBeadSize={true} interactive={true} showValue={true}
               onValueChange={setAbacusValue} />
             <p className="text-xs text-white/50 font-body text-center">
-              💡 حرّك الخرزات لتمثيل الإجابة، ثم اضغط "تحقق"
+              {pickLang(
+                {
+                  ar: '💡 حرّك الخرزات لتمثيل الإجابة، ثم اضغط "تحقق"',
+                  en: '💡 Move the beads to represent the answer, then press "Check"',
+                },
+                lang,
+              )}
             </p>
             <button type="button" onClick={handleCheck} className="btn-primary !py-3 !px-8">
               <CheckCircle2 className="w-5 h-5" />
-              تحقق
+              {pickLang({ ar: 'تحقق', en: 'Check' }, lang)}
             </button>
           </div>
         </div>
@@ -616,8 +702,9 @@ trackPerformance(isCorrect, timeMs);
   if (phase === 'reveal' && currentQ) {
     const isCorrect = feedback === 'correct';
     const formattedAnswer = formatNumber(currentQ.result, numberStyle);
+    const translatedSolution = translateDynamic(currentQ, lang, 'solution') ?? currentQ.solution;
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
           className="glass-card p-6 mb-6 overflow-hidden relative">
           <div className={`absolute -top-20 -right-20 w-48 h-48 blur-3xl ${
@@ -630,17 +717,23 @@ trackPerformance(isCorrect, timeMs);
               {isCorrect ? <CheckCircle2 className="w-10 h-10 text-white" /> : <XCircle className="w-10 h-10 text-white" />}
             </div>
             <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-              {isCorrect ? 'أحسنت! 🎉' : 'ليس بعد'}
+              {isCorrect
+                ? pickLang({ ar: 'أحسنت! 🎉', en: 'Well done! 🎉' }, lang)
+                : pickLang({ ar: 'ليس بعد', en: 'Not yet' }, lang)}
             </h2>
             <div className="my-6">
-              <p className="text-sm text-white/60 font-body mb-1">الإجابة الصحيحة</p>
+              <p className="text-sm text-white/60 font-body mb-1">
+                {pickLang({ ar: 'الإجابة الصحيحة', en: 'The correct answer' }, lang)}
+              </p>
               <p className="text-5xl font-black font-display text-white" dir={isArabic ? 'rtl' : 'ltr'}>
                 {formattedAnswer}
               </p>
             </div>
             {savedTimeMs !== null && (
               <div className="p-3 rounded-2xl bg-white/5 border border-white/10 inline-block">
-                <p className="text-xs text-white/60 font-body">وقتك</p>
+                <p className="text-xs text-white/60 font-body">
+                  {pickLang({ ar: 'وقتك', en: 'Your time' }, lang)}
+                </p>
                 <p className={`text-xl font-bold font-mono ${
                   isCorrect ? 'text-emerald-300' : 'text-red-300'
                 }`}>
@@ -648,17 +741,19 @@ trackPerformance(isCorrect, timeMs);
                 </p>
               </div>
             )}
-            {currentQ.solution && (
+            {translatedSolution && (
               <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-400/30 text-right">
                 <p className="text-xs text-blue-200 font-body leading-relaxed">
-                  💡 {formatText(currentQ.solution, numberStyle)}
+                  💡 {formatText(translatedSolution, numberStyle)}
                 </p>
               </div>
             )}
           </div>
         </motion.div>
         <button type="button" onClick={nextQuestion} className="btn-primary w-full !py-4 !text-lg">
-          {currentIdx + 1 < questions.length ? 'التالي' : 'إنهاء الجلسة'}
+          {currentIdx + 1 < questions.length
+            ? pickLang({ ar: 'التالي', en: 'Next' }, lang)
+            : pickLang({ ar: 'إنهاء الجلسة', en: 'End session' }, lang)}
           <ArrowLeft className="w-5 h-5" />
         </button>
       </div>
@@ -670,7 +765,7 @@ trackPerformance(isCorrect, timeMs);
     const passed = percentage >= PASS_THRESHOLD;
     const xpEarned = score * XP_PER_CORRECT;
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto space-y-5">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto space-y-5">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
           className="glass-card p-6 overflow-hidden relative">
           <div className={`absolute -top-24 -right-24 w-64 h-64 blur-3xl ${
@@ -685,33 +780,46 @@ trackPerformance(isCorrect, timeMs);
               <Trophy className="w-12 h-12 text-white" />
             </motion.div>
             <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-              {passed ? '🎉 اجتزت التمرّن!' : '💪 حاول مرة أخرى'}
+              {passed
+                ? pickLang({ ar: '🎉 اجتزت التمرّن!', en: '🎉 You passed the practice!' }, lang)
+                : pickLang({ ar: '💪 حاول مرة أخرى', en: '💪 Try again' }, lang)}
             </h2>
             {passed && (
               <p className="text-lg font-bold text-emerald-300 font-display mb-2">
-                بدرجة {formatNumber(percentage, numberStyle)}٪
+                {pickLang(
+                  {
+                    ar: `بدرجة ${formatNumber(percentage, numberStyle)}٪`,
+                    en: `With a score of ${formatNumber(percentage, numberStyle)}%`,
+                  },
+                  lang,
+                )}
               </p>
             )}
             <p className="text-sm text-white/60 font-body mb-6">
               {passed
                 ? (weakPerformances.length > 0
-                  ? '🔒 تمرّن مقفل — جلسة علاجية إجبارية'
-                  : '✅ جاهز للأنزان البصري')
-                : 'ستُعاد الأسئلة البطيئة قريباً'}
+                  ? pickLang({ ar: '🔒 تمرّن مقفل — جلسة علاجية إجبارية', en: '🔒 Practice locked — mandatory remedial session' }, lang)
+                  : pickLang({ ar: '✅ جاهز للأنزان البصري', en: '✅ Ready for Visual Anzan' }, lang))
+                : pickLang({ ar: 'ستُعاد الأسئلة البطيئة قريباً', en: 'Slow questions will be replayed soon' }, lang)}
             </p>
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
-              <p className="text-sm text-white/60 font-body">النتيجة</p>
+              <p className="text-sm text-white/60 font-body">
+                {pickLang({ ar: 'النتيجة', en: 'Result' }, lang)}
+              </p>
               <p className="text-5xl font-black font-display text-white mt-1" dir={isArabic ? 'rtl' : 'ltr'}>
                 {formatNumber(score, numberStyle)} / {formatNumber(questions.length, numberStyle)}
               </p>
               <p className={`text-lg font-bold font-body mt-1 ${
                 passed ? 'text-emerald-300' : 'text-amber-300'
               }`}>
-                {formatNumber(percentage, numberStyle)}٪
+                {formatNumber(percentage, numberStyle)}
+                {pickLang({ ar: '٪', en: '%' }, lang)}
               </p>
             </div>
             <div className="p-3 rounded-2xl bg-gold-500/10 border border-gold-400/30">
-              <p className="text-xs text-white/60 font-body">نقاط الخبرة</p>
+              <p className="text-xs text-white/60 font-body">
+                {pickLang({ ar: 'نقاط الخبرة', en: 'Experience points' }, lang)}
+              </p>
               <p className="text-2xl font-black text-gold-300 font-display">
                 +{formatNumber(xpEarned, numberStyle)} XP
               </p>
@@ -719,7 +827,7 @@ trackPerformance(isCorrect, timeMs);
           </div>
         </motion.div>
 
-        {/* 🩺 زر الجلسة العلاجية الإجبارية */}
+        {/* 🩺 Mandatory remedial session button */}
         {pendingRemediation && hasWeakSkills && bestWeakSection && (
           <motion.button
             type="button"
@@ -730,29 +838,35 @@ trackPerformance(isCorrect, timeMs);
             className="w-full py-4 rounded-2xl bg-gradient-to-l from-amber-400 to-orange-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/40 hover:shadow-amber-500/60 transition-shadow animate-pulse"
           >
             <Lightbulb className="w-5 h-5" />
-            🩺 جلسة علاجية إجبارية ({formatNumber(weakPerformances.length, numberStyle)} مهارة)
+            {pickLang(
+              {
+                ar: `🩺 جلسة علاجية إجبارية (${formatNumber(weakPerformances.length, numberStyle)} مهارة)`,
+                en: `🩺 Mandatory remedial session (${formatNumber(weakPerformances.length, numberStyle)} skills)`,
+              },
+              lang,
+            )}
           </motion.button>
         )}
 
         {performances.length > 0 && (
           <AdaptiveFeedback
             performances={performances}
-            sectionLabel={`تمرّن — ${level}`}
+            sectionLabel={pickLang({ ar: `تمرّن — ${level}`, en: `Practice — ${level}` }, lang)}
             levelNum={levelNum}
           />
         )}
 
         <div className="space-y-3">
-          {/* ✅ زر "جلسة جديدة" يظهر فقط عند الرسوب بدون جلسة علاجية */}
+          {/* ✅ "New session" button appears only on failure without remediation */}
           {!passed && !pendingRemediation && (
             <button type="button" onClick={() => { playSound('click'); startSession(); }}
               className="btn-primary w-full !py-3">
               <RotateCcw className="w-5 h-5" />
-              جلسة جديدة
+              {pickLang({ ar: 'جلسة جديدة', en: 'New session' }, lang)}
             </button>
           )}
           <button type="button" onClick={() => { playSound('click'); onBack(); }} className="btn-ghost w-full">
-            رجوع
+            {pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
           </button>
         </div>
       </div>
