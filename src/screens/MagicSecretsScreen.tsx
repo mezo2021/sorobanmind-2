@@ -4,6 +4,11 @@ import { ArrowRight, Sparkles, X, Check, Grid3X3, Lock, Star, Timer, Trophy, Vol
 import { useSpeech } from '@/hooks/useSpeech';
 import { FloatingCompanion } from '@/components/FloatingCompanion';
 
+// 🌍 i18n
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
+
 // ===== النص الصوتي (قصة الدرس) =====
 const LESSON_STORY =
   'في غرفة الحكيم معداد، صندوق ذهبي قديم يحوي أسراراً لجدول الضرب. كل سر منها يفتح باباً لعالم من السرعة والذكاء. سيخبرنا الحكيم كيف نضرب في ٥ بخفة، وفي ٩ بلعبة الأصابع، وفي ١١ بقاعدة الجيران. هل أنتم مستعدون لفتح الصندوق؟';
@@ -216,6 +221,7 @@ interface Props {
 }
 
 const MagicSecretsScreen: React.FC<Props> = ({ onBack, onComplete, onXP, playSound }) => {
+  const { lang, dir } = useT();
   const [tab, setTab] = useState<'table'|'secrets'>('table');
   const [openSecret, setOpenSecret] = useState<number|null>(null);
   const [doneSecrets, setDoneSecrets] = useState<number[]>([]);
@@ -249,14 +255,19 @@ const MagicSecretsScreen: React.FC<Props> = ({ onBack, onComplete, onXP, playSou
     }
   };
 
+  const translatedStory = pickLang({
+    ar: LESSON_STORY,
+    en: 'In the room of the wise Midad, an ancient golden box holds secrets of the multiplication table. Each secret opens a door to a world of speed and intelligence. The wise man will tell us how to multiply by 5 with ease, by 9 with a finger game, and by 11 with the neighbor rule. Are you ready to open the box?'
+  }, lang);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 text-white p-4 pb-32" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 text-white p-4 pb-32" dir={dir}>
       <div className="flex items-center justify-between mb-4 gap-2">
         <button onClick={() => { stop(); onBack(); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0">
           <ArrowRight className="w-6 h-6" />
         </button>
         <h1 className="flex-1 text-center text-sm sm:text-lg font-bold bg-gradient-to-r from-amber-300 to-purple-400 bg-clip-text text-transparent">
-          الأسرار السحرية
+          {pickLang({ ar: 'الأسرار السحرية', en: 'Magic Secrets' }, lang)}
         </h1>
         <Sparkles className="w-5 h-5 text-amber-300 shrink-0" />
       </div>
@@ -269,13 +280,15 @@ const MagicSecretsScreen: React.FC<Props> = ({ onBack, onComplete, onXP, playSou
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
             <span className="text-lg">📖</span>
-            <span className="text-xs font-bold text-pink-300">القصة:</span>
+            <span className="text-xs font-bold text-pink-300">
+              {pickLang({ ar: 'القصة:', en: 'Story:' }, lang)}
+            </span>
           </div>
           {isSupported && (
             <button
               onClick={() => {
                 if (isSpeaking) { stop(); }
-                else { speak(LESSON_STORY); }
+                else { speak(translatedStory); }
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                 isSpeaking
@@ -284,35 +297,39 @@ const MagicSecretsScreen: React.FC<Props> = ({ onBack, onComplete, onXP, playSou
               }`}
             >
               {isSpeaking ? (
-                <><Square className="w-3.5 h-3.5" /> إيقاف</>
+                <>{pickLang({ ar: 'إيقاف', en: 'Stop' }, lang)} <Square className="w-3.5 h-3.5" /></>
               ) : (
-                <><Volume2 className="w-3.5 h-3.5" /> اسمع قصتي</>
+                <>{pickLang({ ar: 'اسمع قصتي', en: 'Listen to my story' }, lang)} <Volume2 className="w-3.5 h-3.5" /></>
               )}
             </button>
           )}
         </div>
         <p className="text-sm text-pink-100 font-body leading-relaxed">
-          {LESSON_STORY}
+          {translatedStory}
         </p>
       </motion.div>
 
       <div className="flex gap-2 mb-6 bg-white/5 p-1 rounded-2xl">
         <button onClick={()=>{stop(); setTab('table');}} className={`flex-1 py-3 rounded-xl font-bold transition text-sm ${tab==='table'?'bg-purple-600 shadow-lg':'text-white/60'}`}>
-          <Grid3X3 className="w-4 h-4 inline ml-1" /> الجدول المختصر
+          <Grid3X3 className="w-4 h-4 inline ml-1" /> {pickLang({ ar: 'الجدول المختصر', en: 'Short Table' }, lang)}
         </button>
         <button onClick={()=>{stop(); setTab('secrets');}} className={`flex-1 py-3 rounded-xl font-bold transition text-sm ${tab==='secrets'?'bg-purple-600 shadow-lg':'text-white/60'}`}>
-          <Sparkles className="w-4 h-4 inline ml-1" /> الأسرار
+          <Sparkles className="w-4 h-4 inline ml-1" /> {pickLang({ ar: 'الأسرار', en: 'Secrets' }, lang)}
         </button>
       </div>
 
       {tab==='table' && (
         <div className="space-y-4">
-          <p className="text-center text-white/70 text-sm mb-2">الجدول بدون تكرار — تعلّم نصف الجدول فقط! 🎉</p>
+          <p className="text-center text-white/70 text-sm mb-2">
+            {pickLang({ ar: 'الجدول بدون تكرار — تعلّم نصف الجدول فقط! 🎉', en: 'Table without repetition — learn only half the table! 🎉' }, lang)}
+          </p>
           {[1,2,3,4,5,6,7,8,9].map(col => (
             <motion.div key={col} initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:col*0.05}}
               className="bg-gradient-to-l from-emerald-900/40 to-slate-800/60 rounded-2xl p-4 border border-emerald-500/20">
               <h3 className="font-bold text-emerald-300 mb-3">
-                <span className="bg-emerald-500 text-black rounded-lg px-3 py-1 text-sm">الضرب في {col}</span>
+                <span className="bg-emerald-500 text-black rounded-lg px-3 py-1 text-sm">
+                  {pickLang({ ar: `الضرب في ${col}`, en: `Multiplication by ${col}` }, lang)}
+                </span>
               </h3>
               <div className="grid grid-cols-2 gap-2">
                 {SHORT_TABLE[col].map(({a,b,r}) => (
@@ -335,9 +352,13 @@ const MagicSecretsScreen: React.FC<Props> = ({ onBack, onComplete, onXP, playSou
                 className={`w-full p-4 rounded-2xl bg-gradient-to-l ${s.color} text-right shadow-lg flex items-center gap-3`}>
                 <span className="text-3xl">{s.icon}</span>
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg">{s.title}</h3>
-                  <p className="text-xs opacity-90">{s.rule}</p>
-                  {best>0 && <p className="text-[10px] mt-1 opacity-90">🏆 أفضل نتيجة: {best}/{QUESTIONS_PER_EXAM}</p>}
+                  <h3 className="font-bold text-lg">{translateDynamic(s, lang, 'title')}</h3>
+                  <p className="text-xs opacity-90">{translateDynamic(s, lang, 'rule')}</p>
+                  {best>0 && (
+                    <p className="text-[10px] mt-1 opacity-90">
+                      {pickLang({ ar: `🏆 أفضل نتيجة: ${best}/${QUESTIONS_PER_EXAM}`, en: `🏆 Best score: ${best}/${QUESTIONS_PER_EXAM}` }, lang)}
+                    </p>
+                  )}
                 </div>
                 {doneSecrets.includes(s.id) ? <Check className="w-6 h-6 text-white" /> : <Lock className="w-5 h-5 opacity-70" />}
               </motion.button>
@@ -360,37 +381,43 @@ const MagicSecretsScreen: React.FC<Props> = ({ onBack, onComplete, onXP, playSou
                 return (
                   <>
                     <div className="flex justify-between items-start mb-4">
-                      <div><span className="text-4xl">{s.icon}</span><h2 className="text-2xl font-bold mt-2">{s.title}</h2></div>
+                      <div><span className="text-4xl">{s.icon}</span><h2 className="text-2xl font-bold mt-2">{translateDynamic(s, lang, 'title')}</h2></div>
                       <button onClick={()=>{stop(); setOpenSecret(null);}} className="p-2 rounded-full bg-white/10"><X className="w-5 h-5" /></button>
                     </div>
                     <div className={`rounded-2xl p-4 bg-gradient-to-l ${s.color} mb-4`}>
-                      <p className="font-bold mb-1">🔑 القاعدة:</p>
-                      <p className="text-sm mb-1">{s.rule}</p>
-                      <p className="text-sm">{s.rule2}</p>
+                      <p className="font-bold mb-1">{pickLang({ ar: '🔑 القاعدة:', en: '🔑 Rule:' }, lang)}</p>
+                      <p className="text-sm mb-1">{translateDynamic(s, lang, 'rule')}</p>
+                      <p className="text-sm">{translateDynamic(s, lang, 'rule2')}</p>
                     </div>
-                    <h3 className="font-bold mb-3 text-amber-300">أمثلة محلولة:</h3>
+                    <h3 className="font-bold mb-3 text-amber-300">{pickLang({ ar: 'أمثلة محلولة:', en: 'Solved examples:' }, lang)}</h3>
                     <div className="space-y-3">
                       {s.examples.map((ex, i) => (
                         <div key={i} className="bg-white/5 rounded-xl p-3">
                           <div className="flex justify-between mb-1"><span className="font-bold text-lg">{ex.q} = {ex.a}</span></div>
-                          <p className="text-xs text-white/60">{ex.steps}</p>
+                          <p className="text-xs text-white/60">{translateDynamic(ex, lang, 'steps')}</p>
                         </div>
                       ))}
                     </div>
-                    {s.note && <div className="mt-4 p-3 bg-amber-500/20 border border-amber-500/40 rounded-xl text-sm">⚠️ {s.note}</div>}
+                    {s.note && <div className="mt-4 p-3 bg-amber-500/20 border border-amber-500/40 rounded-xl text-sm">⚠️ {translateDynamic(s, lang, 'note')}</div>}
                     <div className="mt-4 p-3 bg-white/5 border border-white/10 rounded-xl text-sm text-center flex items-center justify-center gap-2">
                       <Timer className="w-4 h-4 text-amber-300" />
-                      <span className="text-white/70">{QUESTIONS_PER_EXAM} أسئلة — {getTimeForSecret(s.id)} ثوان لكل سؤال</span>
+                      <span className="text-white/70">
+                        {pickLang({ ar: `${QUESTIONS_PER_EXAM} أسئلة — ${getTimeForSecret(s.id)} ثوان لكل سؤال`, en: `${QUESTIONS_PER_EXAM} questions — ${getTimeForSecret(s.id)} seconds per question` }, lang)}
+                      </span>
                     </div>
-                    {best>0 && <div className="mt-3 p-3 bg-gold-400/10 border border-gold-400/30 rounded-xl text-sm text-center">🏆 أفضل نتيجة لك: {best}/{QUESTIONS_PER_EXAM}</div>}
+                    {best>0 && (
+                      <div className="mt-3 p-3 bg-gold-400/10 border border-gold-400/30 rounded-xl text-sm text-center">
+                        {pickLang({ ar: `🏆 أفضل نتيجة لك: ${best}/${QUESTIONS_PER_EXAM}`, en: `🏆 Your best score: ${best}/${QUESTIONS_PER_EXAM}` }, lang)}
+                      </div>
+                    )}
                     <div className="mt-6 flex gap-2">
                       <button onClick={()=>{handleLearnSecret(s.id); stop(); setOpenSecret(null); setPracticeSecretId(s.id);}}
                         className="flex-1 py-3 bg-gradient-to-l from-emerald-500 to-teal-600 rounded-2xl font-bold flex items-center justify-center gap-2">
-                        <Timer className="w-5 h-5" /> تمرّن
+                        <Timer className="w-5 h-5" /> {pickLang({ ar: 'تمرّن', en: 'Practice' }, lang)}
                       </button>
                       <button onClick={()=>{handleLearnSecret(s.id); stop(); setOpenSecret(null);}}
                         className="flex-1 py-3 bg-gradient-to-l from-purple-600 to-amber-500 rounded-2xl font-bold flex items-center justify-center gap-2">
-                        <Star className="w-5 h-5" /> فهمت
+                        <Star className="w-5 h-5" /> {pickLang({ ar: 'فهمت', en: 'Got it' }, lang)}
                       </button>
                     </div>
                   </>
@@ -416,6 +443,7 @@ const MagicSecretsScreen: React.FC<Props> = ({ onBack, onComplete, onXP, playSou
 interface PracticeModalProps { secretId: number; onClose: () => void; onFinish: (score: number) => void; }
 
 const PracticeModal: React.FC<PracticeModalProps> = ({ secretId, onClose, onFinish }) => {
+  const { lang, dir } = useT();
   const secret = SECRETS.find(s => s.id === secretId)!;
   const timePerQuestion = getTimeForSecret(secretId);
   const [questions] = useState<Question[]>(() => generateQuestions(secretId));
@@ -463,12 +491,12 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ secretId, onClose, onFini
 
   return (
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-      className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+      className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" dir={dir}>
       <motion.div initial={{scale:0.9,y:30}} animate={{scale:1,y:0}} className="bg-slate-900 rounded-3xl p-5 max-w-md w-full border border-white/10">
         {!finished ? (
           <>
             <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2"><span className="text-2xl">{secret.icon}</span><span className="text-sm font-bold">{secret.title}</span></div>
+              <div className="flex items-center gap-2"><span className="text-2xl">{secret.icon}</span><span className="text-sm font-bold">{translateDynamic(secret, lang, 'title')}</span></div>
               <button onClick={onClose} className="p-2 rounded-full bg-white/10"><X className="w-5 h-5" /></button>
             </div>
             <div className="flex items-center gap-3 mb-4">
@@ -479,10 +507,12 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ secretId, onClose, onFini
             </div>
             <div className={`mb-4 p-2 rounded-xl text-center flex items-center justify-center gap-2 ${timeLeft <= 3 ? 'bg-red-500/20 border border-red-500/50' : 'bg-white/5 border border-white/10'}`}>
               <Timer className={`w-4 h-4 ${timeLeft <= 3 ? 'text-red-400' : 'text-amber-300'}`} />
-              <span className={`font-bold ${timeLeft <= 3 ? 'text-red-300' : 'text-white'}`}>{timeLeft} ثانية</span>
+              <span className={`font-bold ${timeLeft <= 3 ? 'text-red-300' : 'text-white'}`}>
+                {pickLang({ ar: `${timeLeft} ثانية`, en: `${timeLeft} sec` }, lang)}
+              </span>
             </div>
             <div className="bg-white/5 rounded-2xl p-6 text-center mb-4">
-              <p className="text-xs text-white/50 mb-3">السؤال {idx+1}</p>
+              <p className="text-xs text-white/50 mb-3">{pickLang({ ar: `السؤال ${idx+1}`, en: `Question ${idx+1}` }, lang)}</p>
               <p className="text-4xl font-black" dir="ltr">{currentQ.q} = <span className="text-amber-300">؟</span></p>
             </div>
             <input ref={inputRef} type="text" inputMode="numeric" value={input} onChange={handleChange}
@@ -492,24 +522,30 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ secretId, onClose, onFini
                 : feedback === 'no' ? 'border-red-500'
                 : feedback === 'timeout' ? 'border-red-500 text-red-300'
                 : 'border-purple-500/50 focus:border-amber-400 text-white'}`}
-              placeholder="اكتب الإجابة" dir="ltr" />
+              placeholder={pickLang({ ar: 'اكتب الإجابة', en: 'Enter answer' }, lang)} dir="ltr" />
             <div className="mt-3 h-6 text-center">
-              {feedback === 'ok' && <p className="text-emerald-400 font-bold text-sm">✅ إجابة صحيحة!</p>}
-              {feedback === 'no' && attempts === 1 && <p className="text-amber-400 font-bold text-sm">⚠️ حاول مرة أخرى!</p>}
-              {feedback === 'no' && attempts >= MAX_ATTEMPTS && <p className="text-red-400 font-bold text-sm">❌ الإجابة: {currentQ.a}</p>}
-              {feedback === 'timeout' && <p className="text-red-400 font-bold text-sm">⏱️ انتهى الوقت! الإجابة: {currentQ.a}</p>}
+              {feedback === 'ok' && <p className="text-emerald-400 font-bold text-sm">{pickLang({ ar: '✅ إجابة صحيحة!', en: '✅ Correct answer!' }, lang)}</p>}
+              {feedback === 'no' && attempts === 1 && <p className="text-amber-400 font-bold text-sm">{pickLang({ ar: '⚠️ حاول مرة أخرى!', en: '⚠️ Try again!' }, lang)}</p>}
+              {feedback === 'no' && attempts >= MAX_ATTEMPTS && <p className="text-red-400 font-bold text-sm">{pickLang({ ar: `❌ الإجابة: ${currentQ.a}`, en: `❌ Answer: ${currentQ.a}` }, lang)}</p>}
+              {feedback === 'timeout' && <p className="text-red-400 font-bold text-sm">{pickLang({ ar: `⏱️ انتهى الوقت! الإجابة: ${currentQ.a}`, en: `⏱️ Time's up! Answer: ${currentQ.a}` }, lang)}</p>}
             </div>
-            <p className="text-center text-xs text-white/50 mt-4">النقاط: {score}/{total}</p>
+            <p className="text-center text-xs text-white/50 mt-4">{pickLang({ ar: `النقاط: ${score}/${total}`, en: `Score: ${score}/${total}` }, lang)}</p>
           </>
         ) : (
           <div className="text-center py-6">
             <Trophy className="w-16 h-16 text-gold-300 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">انتهى التمرين!</h2>
+            <h2 className="text-2xl font-bold mb-2">{pickLang({ ar: 'انتهى التمرين!', en: 'Practice finished!' }, lang)}</h2>
             <p className="text-5xl font-black text-amber-300 mb-4">{score}/{total}</p>
             <p className="text-sm text-white/60 mb-6">
-              {score === total ? '🏆 ممتاز! أنت بطل!' : score >= total*0.6 ? '👏 جيد جداً! استمر!' : '💪 حاول مرة أخرى!'}
+              {score === total
+                ? pickLang({ ar: '🏆 ممتاز! أنت بطل!', en: '🏆 Excellent! You are a hero!' }, lang)
+                : score >= total*0.6
+                  ? pickLang({ ar: '👏 جيد جداً! استمر!', en: '👏 Very good! Keep going!' }, lang)
+                  : pickLang({ ar: '💪 حاول مرة أخرى!', en: '💪 Try again!' }, lang)}
             </p>
-            <button onClick={onClose} className="w-full py-3 bg-gradient-to-l from-purple-600 to-amber-500 rounded-2xl font-bold">إغلاق</button>
+            <button onClick={onClose} className="w-full py-3 bg-gradient-to-l from-purple-600 to-amber-500 rounded-2xl font-bold">
+              {pickLang({ ar: 'إغلاق', en: 'Close' }, lang)}
+            </button>
           </div>
         )}
       </motion.div>
