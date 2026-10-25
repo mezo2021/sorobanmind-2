@@ -65,13 +65,11 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
   const [certLang, setCertLang] = useState<Lang>('ar');
 
   useEffect(() => {
-    // [FIX 7] — في وضع المعاينة: درجات افتراضية لرؤية شكل الشهادة
     const inPreview = isPreviewMode();
 
     if (inPreview) {
       setFinalScore(92);
       const savedName = localStorage.getItem('soroban_child_full_name');
-      // ✅ استخدام pickLang للاسم الافتراضي ليتغير حسب لغة الشهادة
       setStudentName(savedName || pickLang({ ar: 'اسم الطالب التجريبي', en: 'Experimental Student Name' }, certLang as any));
       return;
     }
@@ -87,7 +85,7 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
     } else {
       setEditingName(true);
     }
-  }, [certLang]); // ✅ إعادة التقييم عند تغيير اللغة لتحديث الاسم الافتراضي
+  }, [certLang]);
 
   const handleSaveName = () => {
     if (!tempName.trim()) return;
@@ -114,9 +112,6 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
   
-  // ✅ إصلاح التاريخ: 
-  // عربي: YYYY / MM / DD م
-  // إنجليزي: DD / MM / YYYY CE
   const issueDateAr = `${now.getFullYear()} / ${pad(now.getMonth() + 1)} / ${pad(now.getDate())} م`;
   const issueDateEn = `${pad(now.getDate())} / ${pad(now.getMonth() + 1)} / ${now.getFullYear()} CE`;
   
@@ -125,7 +120,6 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
       className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white p-2 sm:p-6 pb-24 cert-root"
       dir={dir}
     >
-      {/* أنماط الطباعة — متوافقة مع أندرويد */}
       <style>{`
         @media print {
           @page { size: A4 portrait; margin: 8mm; }
@@ -304,11 +298,9 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
                 </>
               ) : (
                 <>
+                  {/* ✅ تم حذف النص العربي هنا ليظهر الإنجليزي فقط */}
                   <p className="font-serif font-black text-xs sm:text-sm" style={{ color: SILVER.text }}>
                     INTERNATIONAL SOROBAN ACADEMY
-                  </p>
-                  <p className="font-serif font-bold text-[9px] sm:text-[10px] tracking-widest mt-0.5" style={{ color: SILVER.textTitle }} dir="rtl">
-                    أكاديمية السوروبان الدولية
                   </p>
                 </>
               )}
@@ -352,7 +344,6 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
                 {info.hasMedal && <CertificateMedal level={info.level} size={26} />}
                 <div className="flex flex-col items-start">
                   <span className="font-black leading-tight" style={{ color: SILVER.text, fontSize: '11px' }}>
-                    {/* ✅ إصلاح: هنا يظهر النص الأساسي فقط بلغة واحدة */}
                     {pickLang({ ar: `المستوى ${info.levelAr}`, en: `${info.levelEn} Level` }, certLang as any)}
                   </span>
                 </div>
