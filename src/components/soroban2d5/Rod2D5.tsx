@@ -191,8 +191,8 @@ function Rod2D5Base({
   const { lang } = useT();
 
   const ts: ThemeStyles = themeStyles ?? {
-    icon: '', name: '',
-    frameBg: '', frameGlow: '#C9A227',
+  icon: '', name: '', nameEn: '',
+  frameBg: '', frameGlow: '#C9A227',
     innerBg: '', innerBorder: '',
     rodGradient: 'linear-gradient(90deg, #5a5a5a 0%, #999 50%, #5a5a5a 100%)',
     rodGlow: '#999',
