@@ -19,6 +19,8 @@ import { getLessonsByLevel } from '@/curriculum/lessons';
 
 // [FIX 7] — أداة المعاينة
 import { isPreviewMode } from '@/utils/previewMode';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { formatNumber } from '@/utils/numberStyle';
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -170,8 +172,9 @@ const CATEGORY_DATA: Record<CategoryId, CategoryData> = {
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
+// 🔢 يتبع زر تبديل الأرقام (عربي ٠١٢٣ ↔ لاتيني 0123) — الاسم محفوظ للتوافق
 function toArabicNumber(value: number | string): string {
-  return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+  return formatNumber(value, useNumberStyleStore.getState().style);
 }
 
 function loadPlacementData() {
@@ -198,6 +201,7 @@ function loadPlacementData() {
 // ═══════════════════════════════════════════════════════════
 
 export function CategoryScreen({ category, onNavigate, playSound }: CategoryScreenProps) {
+  useNumberStyleStore((s) => s.style); // 🔢 إعادة الرسم عند تبديل نمط الأرقام
   const data = CATEGORY_DATA[category];
   const { stats, toggleSound } = useGameStats();
 
