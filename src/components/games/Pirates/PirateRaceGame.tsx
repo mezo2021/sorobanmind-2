@@ -42,6 +42,7 @@ import { seaSfx } from './seaSfx';
 import { adaptiveTime, type MulLevel } from './mulEngine';
 import type { QuizProblem, QuizOption, ReviewInfo } from './quizTypes';
 import { generateQuiz, pickOp } from './quizFactory';
+import { Num } from '@/components/Num';
 
 const Scene = React.memo(PirateScene);
 
@@ -673,21 +674,21 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
                 </motion.div>
               ))}
             </div>
-            <p className="text-amber-200 text-xs font-bold">🪙 × {finalStars} قِطْعَةٌ ذَهَبِيَّة</p>
+            <p className="text-amber-200 text-xs font-bold">🪙 × <Num>{finalStars}</Num> قِطْعَةٌ ذَهَبِيَّة</p>
           </div>
 
           <div className="w-full bg-slate-900/80 rounded-2xl border border-slate-700/50 p-3 flex flex-col gap-1.5 text-sm">
             <div className="flex justify-between">
               <span className="text-slate-400">الإِجَابَاتُ الصَّحِيحَة:</span>
-              <span className="text-rose-300 font-bold tabular-nums">{scoreCount}</span>
+              <span className="text-rose-300 font-bold tabular-nums"><Num>{scoreCount}</Num></span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">الأَخْطَاء:</span>
-              <span className="text-slate-300 font-bold tabular-nums">{finalWrong}</span>
+              <span className="text-slate-300 font-bold tabular-nums"><Num>{finalWrong}</Num></span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">النِّقَاط:</span>
-              <span className="text-amber-300 font-bold tabular-nums">{points}</span>
+              <span className="text-amber-300 font-bold tabular-nums"><Num>{points}</Num></span>
             </div>
             {previousHigh && (
               <div className="flex justify-between">
@@ -695,7 +696,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
                   {isNewRecord ? <Crown className="w-3.5 h-3.5" /> : <Trophy className="w-3.5 h-3.5 text-amber-300" />}
                   {isNewRecord ? 'كُنْتَ:' : 'الرَّقَم:'}
                 </span>
-                <span className="text-amber-300 font-bold tabular-nums">{previousHigh.value} ({previousHigh.name})</span>
+                <span className="text-amber-300 font-bold tabular-nums"><Num>{previousHigh.value}</Num> ({previousHigh.name})</span>
               </div>
             )}
           </div>
@@ -744,11 +745,11 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
           <div className="w-full bg-slate-900/80 rounded-2xl border border-slate-700/50 p-3 flex flex-col gap-1.5 text-sm">
             <div className="flex justify-between">
               <span className="text-slate-400">الإِجَابَاتُ الصَّحِيحَة:</span>
-              <span className="text-rose-300 font-bold tabular-nums">{scoreCount}</span>
+              <span className="text-rose-300 font-bold tabular-nums"><Num>{scoreCount}</Num></span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">النِّقَاط:</span>
-              <span className="text-amber-300 font-bold tabular-nums">{points}</span>
+              <span className="text-amber-300 font-bold tabular-nums"><Num>{points}</Num></span>
             </div>
             {previousHigh && (
               <div className="flex justify-between">
@@ -756,7 +757,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
                   <Trophy className="w-3.5 h-3.5 text-amber-300" />
                   الرَّقَم:
                 </span>
-                <span className="text-amber-300 font-bold tabular-nums">{previousHigh.value} ({previousHigh.name})</span>
+                <span className="text-amber-300 font-bold tabular-nums"><Num>{previousHigh.value}</Num> ({previousHigh.name})</span>
               </div>
             )}
             <div className="flex justify-between">
@@ -826,10 +827,10 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
               {soundOn ? <Volume2 className="w-4 h-4 text-sky-300" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
             </button>
             <div className="bg-slate-950/80 px-2 py-1.5 rounded-lg border border-rose-500/30 text-rose-300 font-bold text-xs flex items-center gap-1">
-              🎯 <span className="tabular-nums">{scoreCount}</span>
+              🎯 <span className="tabular-nums"><Num>{scoreCount}</Num></span>
             </div>
             <div className="bg-slate-950/80 px-2 py-1.5 rounded-lg border border-sky-500/30 text-sky-300 font-bold text-xs flex items-center gap-1">
-              ⏳ <span className="tabular-nums">{raceLeft}</span>
+              ⏳ <span className="tabular-nums"><Num>{raceLeft}</Num></span>
             </div>
           </div>
         </div>
@@ -955,7 +956,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
               animate={{ scale: 1, opacity: 1 }}
               className="absolute top-2 left-3 text-2xl font-black text-rose-400 tabular-nums"
             >
-              {secLeft}
+              <Num>{secLeft}</Num>
             </motion.div>
           )}
         </div>
@@ -989,7 +990,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
                   touchAction: 'manipulation',
                 }}
               >
-                {opt.value}
+                <Num>{opt.value}</Num>
               </motion.button>
             );
           })}
