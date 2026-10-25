@@ -1,20 +1,21 @@
 type DynamicText = Record<string, any>;
 
-// دالة لتوحيد النصوص (تحذف المسافات الخفية، التشكيل، توحد الهمزات، وتحول الأرقام العربية لإنجليزية)
+// دالة ذكية لتوحيد النصوص
 function normalizeArabic(text: string): string {
   if (!text) return "";
   return String(text)
     .replace(/[\u200B-\u200D\uFEFF]/g, "") // إزالة المسافات الخفية
     .replace(/[\u064B-\u065F]/g, "") // إزالة التشكيل
     .replace(/[أإآ]/g, "ا")         // توحيد الألف
-    .replace(/ة/g, "ه")            // توحيد التاء المربوطة (مهارة -> مهاره)
+    .replace(/ة/g, "ه")            // توحيد التاء المربوطة
     .replace(/ى/g, "ي")            // توحيد الألف المقصورة
-    .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))) // تحويل الأرقام العربية إلى إنجليزية
+    .replace(/٪/g, "%")            // 🆕 تحويل علامة النسبة العربية (٪) إلى إنجليزية (%)
+    .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))) // تحويل الأرقام العربية
     .replace(/\s+/g, " ")          // إزالة المسافات الزائدة
     .trim();
 }
 
-// 1. القاموس الثابت (للكلمات التي لا تحتوي على أرقام تتغير)
+// القاموس الثابت
 const RAW_AR_TO_EN: Record<string, string> = {
   // المهارات
   "ضرب باصدقاء 5": "Mul with Friends of 5", "ضرب بأصدقاء 5": "Mul with Friends of 5",
@@ -35,7 +36,7 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "الرائد": "Pioneer", "القناص": "Sniper", "المتدفق": "Flow",
   "الحارس": "Guardian", "الفاتح": "Conqueror", "الصامد": "Resilient",
   
-  // أوصاف ثابتة (بدون أرقام متغيرة)
+  // أوصاف ثابتة
   "تعافى من جلسة علاجية": "Recovered from session",
   "أتم قسم كامل": "Completed a section", 
 
@@ -43,65 +44,52 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "ميمو": "Mimo", "البطل": "Hero"
 };
 
-// بناء القاموس المطبع مسبقاً
 const AR_TO_EN: Record<string, string> = {};
 Object.entries(RAW_AR_TO_EN).forEach(([key, val]) => {
   AR_TO_EN[normalizeArabic(key)] = val;
 });
 
-// 2. دالة الأنماط الذكية (للكلمات التي تحتوي على أرقام تتغير ديناميكياً)
+// دالة الأنماط الذكية (تستخدم \s* لتجاهل أي مسافات زائدة)
 function translatePattern(text: string): string | null {
   let match;
 
-  // جرب X مهارة
-  match = text.match(/^جرب (\d+) مهاره$/);
+  match = text.match(/جرب\s*(\d+)\s*مهاره/);
   if (match) return `Tried ${match[1]} skills`;
 
-  // X مهارات بزمن قياسي
-  match = text.match(/^(\d+) مهارات بزمن قياسي$/);
+  match = text.match(/(\d+)\s*مهارات\s*بزمن\s*قياسي/);
   if (match) return `${match[1]} skills in record time`;
 
-  // X شارات إتقان
-  match = text.match(/^(\d+) شارات اتقان$/);
+  match = text.match(/(\d+)\s*شارات\s*اتقان/);
   if (match) return `${match[1]} mastery badges`;
 
-  // X مهارات بلا خطأ
-  match = text.match(/^(\d+) مهارات بلا خطا$/);
+  match = text.match(/(\d+)\s*مهارات\s*بلا\s*خطا/);
   if (match) return `${match[1]} skills without mistakes`;
 
-  // X محاولة إجمالية (أو محاولات)
-  match = text.match(/^(\d+) محاول[ه|ات] اجماليه$/);
+  match = text.match(/(\d+)\s*محاول[ه|ات]\s*اجماليه/);
   if (match) return `${match[1]} total attempts`;
 
-  // X إجابة صحيحة (أو إجابات)
-  match = text.match(/^(\d+) اجاب[ه|ات] صحيحه$/);
+  match = text.match(/(\d+)\s*اجاب[ه|ات]\s*صحيحه/);
   if (match) return `${match[1]} correct answers`;
 
-  // X إجابة متتالية (أو إجابات)
-  match = text.match(/^(\d+) اجاب[ه|ات] متتاليه$/);
+  match = text.match(/(\d+)\s*اجاب[ه|ات]\s*متتاليه/);
   if (match) return `${match[1]} consecutive correct`;
 
-  // مهارة بدقة X%
-  match = text.match(/^مهاره بدقه (\d+)%$/);
+  // 🆕 دعم كلا الترتيبين لكلمة "مهارة بدقة"
+  match = text.match(/مهاره\s*بدقه\s*(\d+)%/);
+  if (match) return `Skill with ${match[1]}% accuracy`;
+  match = text.match(/(\d+)%\s*مهاره\s*بدقه/);
   if (match) return `Skill with ${match[1]}% accuracy`;
 
-  // X% مهارة بدقة (هذه هي التي تظهر في صورتك)
-  match = text.match(/^(\d+)% مهاره بدقه$/);
-  if (match) return `Skill with ${match[1]}% accuracy`;
-
-  // X متتالية في السلاسل
-  match = text.match(/^(\d+) متتاليه في السلاسل$/);
+  match = text.match(/(\d+)\s*متتاليه\s*في\s*السلاسل/);
   if (match) return `${match[1]} streak in chains`;
 
-  // دقة X% في مهارة مكتملة
-  match = text.match(/^دقه (\d+)% في مهاره مكتمله$/);
+  // 🆕 دعم كلا الترتيبين لكلمة "دقة في مهارة مكتملة"
+  match = text.match(/دقه\s*(\d+)%\s*في\s*مهاره\s*مكتمله/);
+  if (match) return `${match[1]}% accuracy in skill`;
+  match = text.match(/(\d+)%\s*دقه\s*في\s*مهاره\s*مكتمله/);
   if (match) return `${match[1]}% accuracy in skill`;
 
-  // X% دقة في مهارة مكتملة
-  match = text.match(/^(\d+)% دقه في مهاره مكتمله$/);
-  if (match) return `${match[1]}% accuracy in skill`;
-
-  return null; // إذا لم يجد أي نمط
+  return null;
 }
 
 export function translateDynamic(
@@ -120,12 +108,10 @@ export function translateDynamic(
     if (ar) {
       const normalizedKey = normalizeArabic(String(ar));
       
-      // أولاً: البحث في القاموس الثابت (للكلمات العادية)
       if (AR_TO_EN[normalizedKey]) {
         return AR_TO_EN[normalizedKey];
       }
       
-      // ثانياً: إذا لم يجدها، يبحث في الأنماط (للكلمات التي تحتوي أرقاماً)
       const patternTranslation = translatePattern(normalizedKey);
       if (patternTranslation) {
         return patternTranslation;
