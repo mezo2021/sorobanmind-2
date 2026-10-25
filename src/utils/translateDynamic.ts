@@ -1,5 +1,4 @@
-
-type DynamicText = Record<string, unknown>;
+type DynamicText = Record<string, any>;
 
 export function translateDynamic(
   item: DynamicText | null | undefined,
@@ -8,7 +7,6 @@ export function translateDynamic(
 ): string {
   if (!item) return "";
 
-  const suffix = field.charAt(0).toUpperCase() + field.slice(1);
   const ar = item[`${field}Ar`] ?? item[`${field}AR`];
   const en = item[`${field}En`] ?? item[`${field}EN`];
 
