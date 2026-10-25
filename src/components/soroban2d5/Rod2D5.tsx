@@ -5,6 +5,9 @@ import type { BeadState } from './useSorobanLogic';
 import type { RodTint } from '@/components/flash/types';
 import type { ThemeStyles } from './Soroban2D5';
 
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+
 interface Rod2D5Props {
   state: BeadState;
   columnIndex: number;
@@ -24,12 +27,20 @@ interface Rod2D5Props {
   beadGap?: number;
 }
 
-const COLUMN_LABELS: string[] = [
-  'آحاد', 'عشرات', 'مئات', 'آلاف',
-  'عشرات الآلاف', 'مئات الآلاف',
-  'ملايين', 'عشرات الملايين', 'مئات الملايين',
-  'مليارات', 'عشرات المليارات', 'مئات الملايين',
-  'تريليونات',
+const COLUMN_LABELS: Array<{ ar: string; en: string }> = [
+  { ar: 'آحاد', en: 'Units' },
+  { ar: 'عشرات', en: 'Tens' },
+  { ar: 'مئات', en: 'Hundreds' },
+  { ar: 'آلاف', en: 'Thousands' },
+  { ar: 'عشرات الآلاف', en: 'Ten Thousands' },
+  { ar: 'مئات الآلاف', en: 'Hundred Thousands' },
+  { ar: 'ملايين', en: 'Millions' },
+  { ar: 'عشرات الملايين', en: 'Ten Millions' },
+  { ar: 'مئات الملايين', en: 'Hundred Millions' },
+  { ar: 'مليارات', en: 'Billions' },
+  { ar: 'عشرات المليارات', en: 'Ten Billions' },
+  { ar: 'مئات المليارات', en: 'Hundred Billions' },
+  { ar: 'تريليونات', en: 'Trillions' },
 ];
 
 function getBeadFilter(tint?: RodTint): string | undefined {
@@ -122,7 +133,7 @@ function BeadGlass({
           border: '1px solid rgba(255,255,255,0.45)',
           boxShadow:
             'inset 0 1px 3px rgba(255,255,255,0.85), inset 0 -1px 3px rgba(0,0,0,0.12)',
-          // 🚀 [PERF] تم إزالة backdropFilter لحل مشكلة البطء على الأجهزة المحمولة
+          // 🚀 [PERF] backdropFilter was removed to fix slowness on mobile devices
           pointerEvents: 'none',
         }}
       />
@@ -177,6 +188,8 @@ function Rod2D5Base({
   themeStyles,
   beadGap,
 }: Rod2D5Props) {
+  const { lang } = useT();
+
   const ts: ThemeStyles = themeStyles ?? {
     icon: '', name: '',
     frameBg: '', frameGlow: '#C9A227',
@@ -215,7 +228,12 @@ function Rod2D5Base({
   const lowerAreaBottom = rodHeight - beadHeight - 2;
 
   const isVertical = (totalColumns ?? 0) >= 6;
-  const labelText = COLUMN_LABELS[displayOrder] ?? `عمود ${displayOrder + 1}`;
+  const labelText = COLUMN_LABELS[displayOrder]
+    ? pickLang(COLUMN_LABELS[displayOrder], lang)
+    : pickLang(
+        { ar: `عمود ${displayOrder + 1}`, en: `Column ${displayOrder + 1}` },
+        lang,
+      );
   const labelFontSize = getLabelFontSize(labelText, isVertical);
 
   const isWhiteHighlight = tint === 'white';
@@ -318,7 +336,7 @@ function Rod2D5Base({
         }}
       />
 
-      {/* 🚀 [PERF] استخدام translateY بدلاً من top لتحسين الأداء */}
+      {/* 🚀 [PERF] using translateY instead of top for better performance */}
       <div
         style={{
           position: 'absolute',
@@ -415,7 +433,7 @@ function Rod2D5Base({
               position: 'absolute',
               top: 0,
               left: '50%',
-              // 🚀 [PERF] استخدام translateY بدلاً من top لتحسين الأداء
+              // 🚀 [PERF] using translateY instead of top for better performance
               transform: `translate(-50%, ${isBeadActive ? topActive : topInactive}px)`,
               transition: 'transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
               filter: beadFilter,
@@ -470,6 +488,6 @@ function Rod2D5Base({
   );
 }
 
-// 🚀 [PERF] تغليف المكون بـ memo لمنع إعادة الرسم غير الضرورية
+// 🚀 [PERF] wrapping the component with memo to prevent unnecessary re-renders
 export const Rod2D5 = memo(Rod2D5Base);
 export default Rod2D5;
