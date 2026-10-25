@@ -9,9 +9,10 @@
 // ✅ "End" button exits without evaluation
 // 📅 Last update: SRB Migration — Phase 1.5
 // [FIX B5] — explicit LevelId check (no fragile slice)
+// [FIX AUDIO] — mute sorobana in EN mode + add missing motion import
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'framer-motion'; // 🆕 إضافة الاستيراد المفقود
 import {
   ArrowRight, CheckCircle2, Trophy, RotateCcw, XCircle,
   Clock, BookOpen, AlertCircle, Play, ArrowLeft, Square,
@@ -291,9 +292,9 @@ export function PracticeScreen({
     playSound('error');
     setFeedback('wrong');
     setSavedTimeMs(maxMs);
-    sorobana.speakWrong();
+    if (lang === 'ar') sorobana.speakWrong(); // 🆕 إسكات الرفيق في EN
     setPhase('reveal');
-  }, [currentQ, feedback, maxMs, playSound, sorobana, trackPerformance]);
+  }, [currentQ, feedback, maxMs, playSound, sorobana, trackPerformance, lang]);
 
   const handleCheck = useCallback(() => {
     if (!currentQ || feedback !== 'idle') return;
@@ -319,7 +320,7 @@ export function PracticeScreen({
       setScore((s) => s + 1);
       setFeedback('correct');
       playSound('success');
-      sorobana.speakCorrect();
+      if (lang === 'ar') sorobana.speakCorrect(); // 🆕 إسكات الرفيق في EN
       onXP?.(XP_PER_CORRECT);
       addXP(XP_PER_CORRECT);
       updateStreak();
@@ -327,13 +328,13 @@ export function PracticeScreen({
     } else {
       setFeedback('wrong');
       playSound('error');
-      sorobana.speakWrong();
+      if (lang === 'ar') sorobana.speakWrong(); // 🆕 إسكات الرفيق في EN
     }
     setSavedTimeMs(timeMs);
     setPhase('reveal');
   }, [
     currentQ, abacusValue, elapsedMs, feedback, playSound, sorobana,
-    onXP, burst, addXP, updateStreak, trackPerformance,
+    onXP, burst, addXP, updateStreak, trackPerformance, lang,
   ]);
 
   const buildPerformances = useCallback((): SkillPerformance[] => {
@@ -693,7 +694,7 @@ export function PracticeScreen({
           </div>
         </div>
         <SorobanaCompanion isSpeaking={sorobana.isSpeaking}
-          onClick={() => sorobana.speakTeaching()} variant="pointing"
+          onClick={() => { if (lang === 'ar') sorobana.speakTeaching(); }} variant="pointing" // 🆕 إسكات الرفيق في EN
           sizeOverride={150} offsetBottom="8rem" clickThrough={true} />
       </div>
     );
