@@ -25,6 +25,7 @@ import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useCharacterVoice } from '@/hooks/useCharacterVoice';
 import { useProgressStore } from '@/store/progressStore';
 import type { CharacterType } from '@/types';
+import { Num } from '@/components/Num';
 
 // ═══ ثوابت ═══
 const SESSION_SECONDS = 60;
@@ -298,7 +299,7 @@ function GameTimer({ isPlaying, isGameOver, onTimeOut }: { isPlaying: boolean, i
 
   return (
     <div className="bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-rose-500/30 text-rose-300 font-bold text-sm flex items-center gap-1">
-      ⏳ <span className="tabular-nums">{timeLeft}</span>
+      ⏳ <span className="tabular-nums"><Num>{timeLeft}</Num></span>
     </div>
   );
 }
@@ -578,7 +579,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
           <GameTimer isPlaying={isPlaying} isGameOver={isGameOver} onTimeOut={endGame} />
           
           <div className="bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-emerald-500/30 text-emerald-300 font-bold text-sm flex items-center gap-1">
-            🎯 <span className="tabular-nums">{correctCount}</span>
+            🎯 <span className="tabular-nums"><Num>{correctCount}</Num></span>
           </div>
         </div>
       </div>
@@ -693,7 +694,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                         className={cls}
                         style={{ touchAction: 'manipulation' }}
                       >
-                        {opt}
+                        <Num>{opt}</Num>
                       </button>
                     );
                   })}
@@ -810,7 +811,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-400">الإِجَابَاتُ الصَّحِيحَةُ:</span>
                       <span className="text-emerald-400 font-bold text-base tabular-nums">
-                        {correctCount}
+                        <Num>{correctCount}</Num>
                       </span>
                     </div>
                     {previousHigh && (
