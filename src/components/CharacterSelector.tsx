@@ -2,6 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import { Check, Sparkles } from 'lucide-react';
 import { ImageAvatar } from './avatars/ImageAvatar';
+
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+
 import shamImg from '../assets/avatars/sham.png';
 import rayanImg from '../assets/avatars/rayan.png';
 import banaImg from '../assets/avatars/bana.png';
@@ -17,14 +21,20 @@ import {
 interface CharacterOption extends CharacterInfo {
   image: string;
   motionType: 'float' | 'breathe' | 'sway';
+  nameEn: string;
+  titleEn: string;
+  descriptionEn: string;
 }
 
 const CHARACTERS: CharacterOption[] = [
   {
     id: 'sham',
     name: 'شام',
+    nameEn: 'Sham',
     title: 'البطلة الذكية',
+    titleEn: 'The Smart Heroine',
     description: 'تحب التعلّم واكتشاف طرق الحساب الجديدة.',
+    descriptionEn: 'Loves learning and discovering new calculation methods.',
     bgColor: 'bg-violet-50',
     borderColor: 'border-violet-500',
     accentColor: 'text-violet-700',
@@ -34,8 +44,11 @@ const CHARACTERS: CharacterOption[] = [
   {
     id: 'rayan',
     name: 'ريان',
+    nameEn: 'Rayan',
     title: 'البطل السريع',
+    titleEn: 'The Fast Hero',
     description: 'يحب التحديات ويتميز بسرعة التركيز.',
+    descriptionEn: 'Loves challenges and stands out for quick focus.',
     bgColor: 'bg-blue-50',
     borderColor: 'border-blue-500',
     accentColor: 'text-blue-700',
@@ -45,8 +58,11 @@ const CHARACTERS: CharacterOption[] = [
   {
     id: 'bana',
     name: 'بانة',
+    nameEn: 'Bana',
     title: 'البطلة الهادئة',
+    titleEn: 'The Calm Heroine',
     description: 'تتقدم بخطوات ثابتة وتركيز رائع.',
+    descriptionEn: 'Progresses with steady steps and amazing focus.',
     bgColor: 'bg-teal-50',
     borderColor: 'border-teal-500',
     accentColor: 'text-teal-700',
@@ -56,8 +72,11 @@ const CHARACTERS: CharacterOption[] = [
   {
     id: 'joud',
     name: 'جود',
+    nameEn: 'Joud',
     title: 'البطل الذكي',
+    titleEn: 'The Smart Hero',
     description: 'يحب التفكير والتحليل ويتميز بحل المسائل.',
+    descriptionEn: 'Loves thinking and analysis, and excels at solving problems.',
     bgColor: 'bg-indigo-50',
     borderColor: 'border-indigo-500',
     accentColor: 'text-indigo-700',
@@ -73,6 +92,8 @@ interface CharacterSelectorProps {
 export const CharacterSelector: React.FC<CharacterSelectorProps> = ({
   onSelectCharacter,
 }) => {
+  const { lang, dir } = useT();
+
   const [selected, setSelected] = useState<CharacterType>('sham');
 
   useEffect(() => {
@@ -106,19 +127,28 @@ export const CharacterSelector: React.FC<CharacterSelectorProps> = ({
   };
 
   return (
-    <div dir="rtl" className="w-full max-w-4xl mx-auto p-2 sm:p-4 select-none">
+    <div dir={dir} className="w-full max-w-4xl mx-auto p-2 sm:p-4 select-none">
       <div className="text-center mb-7">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-100 text-violet-700 text-xs font-black mb-3">
           <Sparkles className="w-4 h-4" />
-          أبطال SorobanMind
+          {pickLang({ ar: 'أبطال SorobanMind', en: 'SorobanMind Heroes' }, lang)}
         </div>
 
         <h2 className="text-2xl sm:text-3xl font-black text-slate-800 mb-2">
-          اختر بطلك المرافق 🌟
+          {pickLang(
+            { ar: 'اختر بطلك المرافق 🌟', en: 'Choose your companion hero 🌟' },
+            lang,
+          )}
         </h2>
 
         <p className="text-slate-600 text-sm sm:text-base font-semibold">
-          سيشاركك بطلُك رحلة تعلّم السوروبان والحساب الذهني
+          {pickLang(
+            {
+              ar: 'سيشاركك بطلُك رحلة تعلّم السوروبان والحساب الذهني',
+              en: 'Your hero will accompany you on the soroban and mental math learning journey',
+            },
+            lang,
+          )}
         </p>
       </div>
 
@@ -126,13 +156,29 @@ export const CharacterSelector: React.FC<CharacterSelectorProps> = ({
         {CHARACTERS.map((char) => {
           const isSelected = selected === char.id;
 
+          const localizedName = pickLang(
+            { ar: char.name, en: char.nameEn },
+            lang,
+          );
+          const localizedTitle = pickLang(
+            { ar: char.title, en: char.titleEn },
+            lang,
+          );
+          const localizedDescription = pickLang(
+            { ar: char.description, en: char.descriptionEn },
+            lang,
+          );
+
           return (
             <button
               key={char.id}
               type="button"
               onClick={() => handleSelect(char.id)}
               aria-pressed={isSelected}
-              aria-label={`اختر ${char.name} - ${char.title}`}
+              aria-label={`${pickLang(
+                { ar: 'اختر', en: 'Choose' },
+                lang,
+              )} ${localizedName} - ${localizedTitle}`}
               className={`group relative flex flex-col items-center p-4 sm:p-5 rounded-[2rem] transition-all duration-300 border-4 outline-none ${
                 char.bgColor
               } ${
@@ -150,22 +196,22 @@ export const CharacterSelector: React.FC<CharacterSelectorProps> = ({
               <div className="mb-3 transition-transform duration-300 group-hover:-translate-y-2">
                 <ImageAvatar
                   src={char.image}
-                  alt={char.name}
+                  alt={localizedName}
                   className="w-28 h-28 sm:w-32 sm:h-32 drop-shadow-xl"
                   motionType={char.motionType}
                 />
               </div>
 
               <h3 className="text-xl font-black text-slate-800 mb-1">
-                {char.name}
+                {localizedName}
               </h3>
 
               <span className={`text-sm font-black ${char.accentColor}`}>
-                {char.title}
+                {localizedTitle}
               </span>
 
               <p className="mt-2 text-[11px] leading-relaxed text-slate-500 font-semibold text-center">
-                {char.description}
+                {localizedDescription}
               </p>
             </button>
           );
