@@ -6,10 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ChevronLeft, RotateCcw, Lightbulb, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import type { DivisionProblem } from './sorobanDivisionData';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { formatNumber } from '@/utils/numberStyle';
 
-const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+// 🔢 يتبع زر تبديل الأرقام
 function toAr(v: number): string {
-  return String(v).replace(/\d/g, (d) => ARABIC_DIGITS[Number(d)]);
+  return formatNumber(v, useNumberStyleStore.getState().style);
 }
 
 interface TwoAbacusSolverProps {
