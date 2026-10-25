@@ -7,13 +7,8 @@ import { getLessonById } from '@/curriculum/lessons';
 import { FloatingCompanion } from '@/components/FloatingCompanion';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
-
-// ─── مساعد: تحويل نص ثنائي إلى نص مفرد ───
-function localize(v: string | { ar: string; en: string } | undefined): string {
-  if (v === undefined) return '';
-  if (typeof v === 'string') return v;
-  return v.ar || v.en || '';
-}
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
 
 interface IntroductionScreenProps {
   lessonId: string;
@@ -28,16 +23,21 @@ export function IntroductionScreen({
   onComplete,
   playSound,
 }: IntroductionScreenProps) {
+  const { lang, dir } = useT();
   const lesson = getLessonById(lessonId);
   const [currentPage, setCurrentPage] = useState(0);
   const sorobana = useSorobanaVoice();
 
   if (!lesson || !lesson.introPages || lesson.introPages.length === 0) {
     return (
-      <div dir="rtl" className="min-h-screen flex items-center justify-center p-4">
+      <div dir={dir} className="min-h-screen flex items-center justify-center p-4">
         <div className="glass-card p-6 text-center max-w-md">
-          <p className="text-white/60 mb-4">الدرس غير موجود</p>
-          <button onClick={onBack} className="btn-primary w-full">رجوع</button>
+          <p className="text-white/60 mb-4">
+            {pickLang({ ar: 'الدرس غير موجود', en: 'Lesson not found' }, lang)}
+          </p>
+          <button onClick={onBack} className="btn-primary w-full">
+            {pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
+          </button>
         </div>
       </div>
     );
@@ -74,7 +74,7 @@ export function IntroductionScreen({
   const isInteractive = page.imageSvg === 'soroban-interactive';
 
   return (
-    <div dir="rtl" className="min-h-screen pb-36">
+    <div dir={dir} className="min-h-screen pb-36">
       {/* Header ثابت */}
       <div className="sticky top-0 z-20 backdrop-blur-lg bg-slate-900/70 border-b border-white/10 px-3 sm:px-6 py-3">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
@@ -87,10 +87,10 @@ export function IntroductionScreen({
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-sm font-bold text-white truncate">
-              {lesson.title.ar}
+              {pickLang(lesson.title, lang)}
             </h1>
             <p className="text-[10px] text-white/50">
-              المقدمة · صفحة {currentPage + 1} من {pages.length}
+              {pickLang({ ar: 'المقدمة · صفحة', en: 'Introduction · Page' }, lang)} {currentPage + 1} {pickLang({ ar: 'من', en: 'of' }, lang)} {pages.length}
             </p>
           </div>
         </div>
@@ -102,10 +102,10 @@ export function IntroductionScreen({
           /* صفحة تفاعلية — بلا motion wrapper */
           <div className="glass-card p-5 sm:p-7 mb-6">
             <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white mb-4">
-              {localize(page.title)}
+              {pickLang(page.title, lang)}
             </h2>
             <div className="text-sm sm:text-base text-white/80 font-body leading-relaxed whitespace-pre-line">
-              {localize(page.content)}
+              {pickLang(page.content, lang)}
             </div>
 
             <div
@@ -144,17 +144,17 @@ export function IntroductionScreen({
               className="glass-card p-5 sm:p-7 mb-6"
             >
               <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white mb-4">
-                {localize(page.title)}
+                {pickLang(page.title, lang)}
               </h2>
               <div className="text-sm sm:text-base text-white/80 font-body leading-relaxed whitespace-pre-line">
-                {localize(page.content)}
+                {pickLang(page.content, lang)}
               </div>
 
               {page.imageSvg && (
                 <div className="mt-6 p-3 rounded-2xl bg-black/20 border border-white/10 overflow-hidden">
                   <img
                     src={`${import.meta.env.BASE_URL}images/${page.imageSvg}.svg`}
-                    alt={localize(page.imageAlt)}
+                    alt={pickLang(page.imageAlt, lang)}
                     className="w-full h-auto"
                     loading="lazy"
                   />
@@ -188,7 +188,7 @@ export function IntroductionScreen({
             className="flex-1 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold disabled:opacity-30 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
           >
             <ChevronRight className="w-4 h-4" />
-            السابق
+            {pickLang({ ar: 'السابق', en: 'Previous' }, lang)}
           </button>
 
           {!isLast ? (
@@ -196,7 +196,7 @@ export function IntroductionScreen({
               onClick={handleNext}
               className="flex-1 py-3 rounded-2xl bg-gradient-to-l from-purple-500 to-electric-500 text-white font-bold flex items-center justify-center gap-2 shadow-lg"
             >
-              التالي
+              {pickLang({ ar: 'التالي', en: 'Next' }, lang)}
               <ChevronLeft className="w-4 h-4" />
             </button>
           ) : (
@@ -205,7 +205,7 @@ export function IntroductionScreen({
               className="flex-1 py-3 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg"
             >
               <CheckCircle2 className="w-5 h-5" />
-              أكملت المقدمة
+              {pickLang({ ar: 'أكملت المقدمة', en: 'Completed Intro' }, lang)}
             </button>
           )}
         </div>
