@@ -7,12 +7,15 @@ import { useBeadSound } from './useBeadSound';
 import { useBeadHaptics } from './useBeadHaptics';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import type { RodTint } from '@/components/flash/types';
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
 
 export type SorobanTheme = 'classic' | 'ocean' | 'barbie';
 
 export interface ThemeStyles {
   icon: string;
   name: string;
+  nameEn: string;
   frameBg: string;
   frameGlow: string;
   innerBg: string;
@@ -39,7 +42,7 @@ export interface ThemeStyles {
 
 export const THEMES: Record<SorobanTheme, ThemeStyles> = {
   classic: {
-    icon: '🟤', name: 'الخشبي',
+    icon: '🟤', name: 'الخشبي', nameEn: 'Wooden',
     frameBg: 'linear-gradient(135deg, #8b6f47 0%, #6b4423 50%, #4a2e15 100%)',
     frameGlow: '#C9A227',
     innerBg: 'linear-gradient(180deg, rgba(254,249,240,0.95) 0%, rgba(245,230,200,0.92) 100%)',
@@ -64,7 +67,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     valueColor: '#C9A227',
   },
   ocean: {
-    icon: '🌊', name: 'البحري',
+    icon: '🌊', name: 'البحري', nameEn: 'Ocean',
     frameBg: 'linear-gradient(135deg, #0a2540 0%, #1a4d7a 50%, #0d3b66 100%)',
     frameGlow: '#7FDBFF',
     innerBg: 'linear-gradient(180deg, rgba(10,37,64,0.95) 0%, rgba(13,59,102,0.90) 100%)',
@@ -89,7 +92,7 @@ export const THEMES: Record<SorobanTheme, ThemeStyles> = {
     valueColor: '#FFFFFF',
   },
   barbie: {
-    icon: '❤️', name: 'باربي',
+    icon: '❤️', name: 'باربي', nameEn: 'Barbie',
     frameBg: 'linear-gradient(135deg, #4a1942 0%, #c71585 50%, #ff69b4 100%)',
     frameGlow: '#FFFFFF',
     innerBg: 'linear-gradient(180deg, rgba(74,25,66,0.95) 0%, rgba(199,21,133,0.85) 100%)',
@@ -206,6 +209,7 @@ function Soroban2D5Base({
   hideColumnLabels = false,
   theme: initialTheme = 'classic',
 }: Soroban2D5Props) {
+  const { lang } = useT();
   const { columns: colStates, totalValue, toggleUpper, setLower, resetColumn, resetAll, setValue } = useSorobanLogic(columns);
   const playSound = useBeadSound();
   const vibrate = useBeadHaptics();
@@ -344,7 +348,7 @@ function Soroban2D5Base({
                   key={t}
                   type="button"
                   onClick={() => setCurrentTheme(t)}
-                  aria-label={THEMES[t].name}
+                  aria-label={pickLang({ ar: THEMES[t].name, en: THEMES[t].nameEn }, lang)}
                   style={{
                     width: 30,
                     height: 30,
@@ -371,9 +375,9 @@ function Soroban2D5Base({
               className={`${cfg.titleSize} font-bold`}
               style={{ color: ts.titleColor, transition: 'color 0.15s' }}
             >
-              {currentTheme === 'classic' && '🟤 السوروبان الخشبي'}
-              {currentTheme === 'ocean' && '🏄 السوروبان الليزري'}
-              {currentTheme === 'barbie' && '❤️ سوروبان باربي'}
+              {currentTheme === 'classic' && pickLang({ ar: '🟤 السوروبان الخشبي', en: '🟤 Wooden Soroban' }, lang)}
+              {currentTheme === 'ocean' && pickLang({ ar: '🏄 السوروبان الليزري', en: '🏄 Laser Soroban' }, lang)}
+              {currentTheme === 'barbie' && pickLang({ ar: '❤️ سوروبان باربي', en: '❤️ Barbie Soroban' }, lang)}
             </h3>
           )}
         </div>
@@ -458,7 +462,7 @@ function Soroban2D5Base({
 
             {displayOffset > 0 && (
               <p className="text-center text-[10px] mt-1" style={{ color: ts.labelColor }}>
-                ✨ {formatByStyle(visibleColumns, numberStyle)} أعمدة
+                ✨ {formatByStyle(visibleColumns, numberStyle)} {pickLang({ ar: 'أعمدة', en: 'columns' }, lang)}
               </p>
             )}
           </div>
@@ -475,7 +479,7 @@ function Soroban2D5Base({
                   border: '1px solid rgba(255,255,255,0.25)',
                 }}
               >
-                ↺ إعادة الكل
+                ↺ {pickLang({ ar: 'إعادة الكل', en: 'Reset All' }, lang)}
               </button>
             </div>
           )}
