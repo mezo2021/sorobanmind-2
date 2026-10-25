@@ -196,7 +196,18 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "دقة منخفضة": "Low accuracy",
   "أعد جلسة على المهارات أعلاه. سيقترح عليك النظام أسئلة علاجية مخصصة تلقائياً.": "Retake a session on the skills above. The system will automatically suggest customized remedial questions.",
   "جلسة مخصصة بدون درجات — تُظهر لك الحل بعد كل سؤال.": "Customized session without grades — shows you the solution after each question.",
-  "جلسة قصيرة مخصصة لبناء الثقة — بدون درجات، وتُظهر لك الحل بعد كل سؤال.": "Customized short session to build confidence — no grades, shows the solution after each question."
+  "جلسة قصيرة مخصصة لبناء الثقة — بدون درجات، وتُظهر لك الحل بعد كل سؤال.": "Customized short session to build confidence — no grades, shows the solution after each question.",
+
+  // 🆕 --- إضافات شاشة التعلم (LearnScreen) ---
+  "مقدمة": "Introduction",
+  "درس تمهيدي": "Introductory Lesson",
+  "مقدمة في السوروبان": "Introduction to the Soroban",
+  "مراجعة": "Review",
+  "التعرف على المعداد": "Getting to Know the Abacus",
+  "الأرقام من 0 إلى 4": "Numbers from 0 to 4",
+  "الأرقام من 5 إلى 9": "Numbers from 5 to 9",
+  "أصدقاء 5": "Friends of 5",
+  "أصدقاء 10": "Friends of 10"
 };
 
 const AR_TO_EN: Record<string, string> = {};
