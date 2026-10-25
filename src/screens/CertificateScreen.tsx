@@ -42,20 +42,16 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
   const [certLang, setCertLang] = useState<Lang>('ar');
 
   useEffect(() => {
-    // [FIX 7] — في وضع المعاينة: درجات افتراضية لرؤية شكل الشهادة
     const inPreview = isPreviewMode();
 
     if (inPreview) {
-      // درجات افتراضية عالية (لعرض شهادة ذهبية)
       setExam1Score(95);
       setExam2Score(95);
       const savedName = localStorage.getItem('soroban_child_full_name');
-      // ✅ استخدام pickLang للاسم الافتراضي ليتغير حسب لغة الشهادة
       setStudentName(savedName || pickLang({ ar: 'اسم الطالب التجريبي', en: 'Experimental Student Name' }, certLang as any));
       return;
     }
 
-    // الحالة الحقيقية — قراءة عادية
     try {
       const score1 = localStorage.getItem('soroban_exam1_score');
       if (score1) setExam1Score(parseFloat(score1));
@@ -72,7 +68,7 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
     } else {
       setEditingName(true);
     }
-  }, [certLang]); // ✅ إعادة التقييم عند تغيير اللغة لتحديث الاسم الافتراضي
+  }, [certLang]);
 
   const handleSaveName = () => {
     if (!tempName.trim()) return;
@@ -97,7 +93,6 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
     setTimeout(() => window.print(), 300);
   };
 
-  // ✅ إصلاح صيغة التاريخ للوضع الإنجليزي (تحويل م إلى CE، وهـ إلى AH)
   const displayIssueDate = isAr ? data.issueDate : data.issueDate.replace(/م/g, 'CE');
   const displayIssueDateHijri = isAr ? data.issueDateHijri : data.issueDateHijri.replace(/هـ/g, 'AH');
 
@@ -106,7 +101,6 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
       className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 text-white p-2 sm:p-6 pb-24 cert-root"
       dir={dir}
     >
-      {/* أنماط الطباعة — متوافقة مع أندرويد */}
       <style>{`
         @media print {
           @page { size: A4 portrait; margin: 8mm; }
@@ -283,11 +277,9 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
                 </>
               ) : (
                 <>
+                  {/* ✅ تم حذف النص العربي هنا ليظهر الإنجليزي فقط */}
                   <p className="font-serif font-black text-xs sm:text-sm" style={{ color: '#5D3A1A' }}>
                     INTERNATIONAL SOROBAN ACADEMY
-                  </p>
-                  <p className="font-serif font-bold text-[9px] sm:text-[10px] tracking-widest mt-0.5" style={{ color: '#7B5D0A' }} dir="rtl">
-                    أكاديمية السوروبان الدولية
                   </p>
                 </>
               )}
@@ -331,7 +323,6 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
                 <CertificateMedal level={data.level} size={26} />
                 <div className="flex flex-col items-start">
                   <span className="font-black leading-tight" style={{ color: colors.text, fontSize: '11px' }}>
-                    {/* ✅ إصلاح: هنا يظهر النص الأساسي فقط بلغة واحدة */}
                     {pickLang({ ar: `المستوى ${data.levelAr}`, en: `${data.levelEn} Level` }, certLang as any)}
                   </span>
                 </div>
