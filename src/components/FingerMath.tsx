@@ -15,7 +15,8 @@ interface HandProps {
   digit: number;
   labelAr: string;
   labelEn: string;
-  lang: string;
+  // ✅ الحل: استخدام النوع المستخرج من useT بدلاً من string
+  lang: ReturnType<typeof useT>['lang'];
   mirrored?: boolean;
   hideDigit?: boolean;
 }
