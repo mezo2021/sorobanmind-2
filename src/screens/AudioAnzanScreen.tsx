@@ -1,16 +1,16 @@
 // src/screens/AudioAnzanScreen.tsx
-// ✅ SRB: wrongSkillsRef يحفظ skillId كامل ("L2-S07-m1") بدل "m1"
-// ✅ SRB: weakSkills = union(أخطاء + بطيئات من performances)
-// ✅ SRB: يمنح شارة الأنزان السماعي عند اجتياز الجلسة (≥ 70%)
-// ✅ الشارات تُمنح فقط عند نجاح الجلسة (pendingBadgesRef)
-// ✅ زر "إنهاء" يخرج بلا تقييم
-// 🩺 جلسة علاجية إجبارية داخلية (RemediationScreen) — أولوية عرض عليا
-// 📅 آخر تحديث: SRB Migration — Phase 2 + Remediation + Fix 1 + Fix 2 + Fix 3
-// [FIX B5] — فحص صريح للـLevelId (لا slice هشّ)
-// ✅ [Phase A1] — Attempt Record مُفعَّل في handleCheck
-// [FIX 1] — getAudioAnzanBadgeKey: خريطة صحيحة (S03/S04 جمع · S05/S06 ضرب · S07/S08 قسمة · S09/S10 سلاسل)
-// [FIX 2] — إضافة master_chains_audio (L4)
-// [FIX 3] — تمرير levelNum الحقيقي (0-7) إلى AdaptiveFeedback بدل 0
+// ✅ SRB: wrongSkillsRef stores full skillId ("L2-S07-m1") instead of "m1"
+// ✅ SRB: weakSkills = union(errors + slow ones from performances)
+// ✅ SRB: awards the Audio Anzan badge when passing the session (≥ 70%)
+// ✅ Badges are awarded only on session success (pendingBadgesRef)
+// ✅ "End" button exits without evaluation
+// 🩺 Internal mandatory remedial session (RemediationScreen) — top display priority
+// 📅 Last update: SRB Migration — Phase 2 + Remediation + Fix 1 + Fix 2 + Fix 3
+// [FIX B5] — explicit LevelId check (no fragile slice)
+// ✅ [Phase A1] — Attempt Record enabled in handleCheck
+// [FIX 1] — getAudioAnzanBadgeKey: correct map (S03/S04 addition · S05/S06 multiplication · S07/S08 division · S09/S10 chains)
+// [FIX 2] — added master_chains_audio (L4)
+// [FIX 3] — pass real levelNum (0-7) to AdaptiveFeedback instead of 0
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -19,6 +19,10 @@ import {
   Trophy, RotateCcw, Play, Volume2, AlertCircle, Square,
   Lightbulb,
 } from 'lucide-react';
+
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { RemediationScreen } from './RemediationScreen';
@@ -78,13 +82,15 @@ function getDecimalFactor(q: SRBQuestion): number {
   return Math.pow(10, Math.max(...decimals, 0));
 }
 
-function extractHint(q: SRBQuestion | undefined): string | null {
-  if (!q?.solution) return null;
-  const m = q.solution.match(/^تلميح:\s*(.+?)(?:\.\s|$)/);
+// Extracts the hint from a (possibly translated) solution string.
+// Matches both Arabic ("تلميح:") and English ("Hint:") prefixes.
+function extractHint(solution: string | undefined): string | null {
+  if (!solution) return null;
+  const m = solution.match(/^(?:تلميح|Hint):\s*(.+?)(?:\.\s|$)/);
   return m ? m[1].trim() : null;
 }
 
-// [v10] — 7 شارات سمعي: S11·S12 · S13·S14 · S15 مضافة
+// [v10] — 7 audio badges: S11·S12 · S13·S14 · S15 added
 function getAudioAnzanBadgeKey(
   section: SRBSection,
 ): keyof AnzanAudioBadges | null {
@@ -138,7 +144,10 @@ function buildSkillId(level: SRBLevel, section: SRBSection, module: SRBModule): 
   return `${level}-${section}-${module}`;
 }
 
-function buildSpeechSequence(q: SRBQuestion): string[] {
+// Builds the speech sequence for audio playback. Connector words (times, divided by,
+// minus) are language-aware via pickLang; numeric words still flow through
+// numberToArabicWordsDecimal (see Missing Translations Report at the end).
+function buildSpeechSequence(q: SRBQuestion, lang: 'ar' | 'en'): string[] {
   const { operands, operation, question } = q;
 
   if (operation === 'build' || operation === 'read') {
@@ -146,16 +155,19 @@ function buildSpeechSequence(q: SRBQuestion): string[] {
   }
 
   const parts: string[] = [];
+  const times = pickLang({ ar: 'في', en: 'times' }, lang);
+  const dividedBy = pickLang({ ar: 'على', en: 'divided by' }, lang);
+  const minus = pickLang({ ar: 'ناقص', en: 'minus' }, lang);
 
   if (operation === 'multiplication') {
     parts.push(numberToArabicWordsDecimal(operands[0]));
-    parts.push(`في ${numberToArabicWordsDecimal(Math.abs(operands[1]))}`);
+    parts.push(`${times} ${numberToArabicWordsDecimal(Math.abs(operands[1]))}`);
     return parts;
   }
 
   if (operation === 'division') {
     parts.push(numberToArabicWordsDecimal(operands[0]));
-    parts.push(`على ${numberToArabicWordsDecimal(Math.abs(operands[1]))}`);
+    parts.push(`${dividedBy} ${numberToArabicWordsDecimal(Math.abs(operands[1]))}`);
     return parts;
   }
 
@@ -165,7 +177,7 @@ function buildSpeechSequence(q: SRBQuestion): string[] {
     } else if (op >= 0) {
       parts.push(numberToArabicWordsDecimal(op));
     } else {
-      parts.push(`ناقص ${numberToArabicWordsDecimal(Math.abs(op))}`);
+      parts.push(`${minus} ${numberToArabicWordsDecimal(Math.abs(op))}`);
     }
   });
 
@@ -175,6 +187,8 @@ function buildSpeechSequence(q: SRBQuestion): string[] {
 export function AudioAnzanScreen({
   level, onBack, onComplete, playSound, onXP, burst,
 }: AudioAnzanScreenProps) {
+  const { lang, dir } = useT();
+
   const [phase, setPhase] = useState<Phase>('intro');
   const [questions, setQuestions] = useState<SRBQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -218,7 +232,7 @@ export function AudioAnzanScreen({
     [level],
   );
 
-  // [FIX 3] — رقم المستوى الحقيقي (0-7)
+  // [FIX 3] — Real level number (0-7)
   const levelNum = useMemo(() => {
     const n = parseInt(level.replace('L', ''), 10);
     return !isNaN(n) && n >= 0 && n <= 7 ? n : 0;
@@ -259,7 +273,7 @@ export function AudioAnzanScreen({
     if (!currentQ) return;
     if (!isSupported) { setPhase('answering'); return; }
 
-    const seq = buildSpeechSequence(currentQ);
+    const seq = buildSpeechSequence(currentQ, lang);
     const myGeneration = ++audioSequenceRef.current;
     let cancelled = false;
 
@@ -279,7 +293,7 @@ export function AudioAnzanScreen({
     playAll();
     return () => { cancelled = true; stopSpeech(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, currentQ, isSupported]);
+  }, [phase, currentQ, isSupported, lang]);
 
   useEffect(() => {
     if (phase !== 'answering') return;
@@ -459,7 +473,6 @@ export function AudioAnzanScreen({
     ],
   );
 
-  // ⏸️ الجزء 2 يبدأ من هنا — أرسل "تابع"
   const nextQuestion = useCallback(() => {
     sorobana.stop();
     stopSpeech();
@@ -492,7 +505,7 @@ export function AudioAnzanScreen({
     onBack();
   }, [sorobana, stopSpeech, playSound, onBack]);
 
-  // ═══ 🩺 جلسة علاجية داخلية — أولوية عرض عليا ═══
+  // ═══ 🩺 Internal remedial session — top display priority ═══
   if (showRemediation) {
     return (
       <RemediationScreen
@@ -505,14 +518,20 @@ export function AudioAnzanScreen({
     );
   }
 
-  // ═══ إذا المتصفح لا يدعم الصوت ═══
+  // ═══ If the browser does not support audio ═══
   if (!isSupported) {
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
         <Volume2 className="w-16 h-16 text-red-300 mb-4" />
-        <h2 className="text-2xl font-bold text-white mb-2">المتصفح لا يدعم الصوت</h2>
-        <p className="text-white/60 text-center mb-6">جرّب متصفحاً آخر</p>
-        <button onClick={() => { playSound('click'); onBack(); }} className="btn-primary">رجوع</button>
+        <h2 className="text-2xl font-bold text-white mb-2">
+          {pickLang({ ar: 'المتصفح لا يدعم الصوت', en: 'The browser does not support audio' }, lang)}
+        </h2>
+        <p className="text-white/60 text-center mb-6">
+          {pickLang({ ar: 'جرّب متصفحاً آخر', en: 'Try another browser' }, lang)}
+        </p>
+        <button onClick={() => { playSound('click'); onBack(); }} className="btn-primary">
+          {pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
+        </button>
       </div>
     );
   }
@@ -520,22 +539,28 @@ export function AudioAnzanScreen({
   // ═══ 🚧 empty ═══
   if (phase === 'empty') {
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
         <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-xl mb-6">
           <span className="text-4xl">🚧</span>
         </div>
         <h2 className="text-2xl font-extrabold font-display text-white mb-3 text-center">
-          هذا المستوى قيد البناء
+          {pickLang({ ar: 'هذا المستوى قيد البناء', en: 'This level is under construction' }, lang)}
         </h2>
         <p className="text-white/60 font-body text-center mb-8 leading-relaxed max-w-md">
-          لم نُكمل أسئلة {level} بعد. جرّب L0 الآن — إنه جاهز!
+          {pickLang(
+            {
+              ar: `لم نُكمل أسئلة ${level} بعد. جرّب L0 الآن — إنه جاهز!`,
+              en: `We haven't completed questions for ${level} yet. Try L0 now — it's ready!`,
+            },
+            lang,
+          )}
         </p>
         <button
           type="button"
           onClick={() => { playSound('click'); onBack(); }}
           className="btn-primary"
         >
-          رجوع
+          {pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
         </button>
       </div>
     );
@@ -544,16 +569,19 @@ export function AudioAnzanScreen({
   // ═══ intro ═══
   if (phase === 'intro') {
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button type="button" onClick={() => { playSound('click'); onBack(); }}
             className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
             <ArrowRight className="w-6 h-6" />
           </button>
           <div className="flex-1 min-w-0">
-            <h2 className="text-2xl font-extrabold font-display text-white truncate">الأنزان السمعي</h2>
+            <h2 className="text-2xl font-extrabold font-display text-white truncate">
+              {pickLang({ ar: 'الأنزان السمعي', en: 'Audio Anzan' }, lang)}
+            </h2>
             <p className="text-sm text-white/50 font-body">
-              {level} — {formatNumber(expectedQuestionCount, numberStyle)} أسئلة
+              {level} — {formatNumber(expectedQuestionCount, numberStyle)}{' '}
+              {pickLang({ ar: 'أسئلة', en: 'questions' }, lang)}
             </p>
           </div>
           <Volume2 className="w-6 h-6 text-purple-300" />
@@ -563,34 +591,82 @@ export function AudioAnzanScreen({
           <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-electric-500 flex items-center justify-center shadow-xl mx-auto mb-4">
             <Volume2 className="w-10 h-10 text-white" />
           </div>
-          <h3 className="text-xl font-extrabold font-display text-white text-center mb-4">🎧 كيف يعمل؟</h3>
+          <h3 className="text-xl font-extrabold font-display text-white text-center mb-4">
+            {pickLang({ ar: '🎧 كيف يعمل؟', en: '🎧 How does it work?' }, lang)}
+          </h3>
           <div className="space-y-3 text-sm text-white/80 font-body">
             <div className="flex items-start gap-3">
               <span className="text-purple-300 font-bold shrink-0">1.</span>
-              <p>ستسمع الأرقام <strong>واحداً واحداً</strong> بالعربية</p>
+              <p>
+                {pickLang(
+                  {
+                    ar: 'ستسمع الأرقام واحداً واحداً بالعربية',
+                    en: 'You will hear the numbers one by one',
+                  },
+                  lang,
+                )}
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-purple-300 font-bold shrink-0">2.</span>
-              <p>الرقم الأول بلا إشارة، والباقي مع إشاراته</p>
+              <p>
+                {pickLang(
+                  {
+                    ar: 'الرقم الأول بلا إشارة، والباقي مع إشاراته',
+                    en: 'The first number has no sign, the rest keep their signs',
+                  },
+                  lang,
+                )}
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-purple-300 font-bold shrink-0">3.</span>
-              <p>بعد آخر رقم → عدّاد الإجابة يبدأ</p>
+              <p>
+                {pickLang(
+                  {
+                    ar: 'بعد آخر رقم → عدّاد الإجابة يبدأ',
+                    en: 'After the last number → the answer timer starts',
+                  },
+                  lang,
+                )}
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-purple-300 font-bold shrink-0">4.</span>
-              <p>يمكنك إعادة السمع <strong>مرة واحدة</strong>، وإنهاء التدريب في أي لحظة</p>
+              <p>
+                {pickLang(
+                  {
+                    ar: 'يمكنك إعادة السمع مرة واحدة، وإنهاء التدريب في أي لحظة',
+                    en: 'You can replay once, and end the training at any moment',
+                  },
+                  lang,
+                )}
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-purple-300 font-bold shrink-0">5.</span>
-              <p>{formatNumber(XP_PER_CORRECT, numberStyle)} نقاط خبرة لكل إجابة صحيحة</p>
+              <p>
+                {pickLang(
+                  {
+                    ar: `${formatNumber(XP_PER_CORRECT, numberStyle)} نقاط خبرة لكل إجابة صحيحة`,
+                    en: `${formatNumber(XP_PER_CORRECT, numberStyle)} XP per correct answer`,
+                  },
+                  lang,
+                )}
+              </p>
             </div>
           </div>
           <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30">
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-200 font-body">
-                💡 العدّاد يتوهج عند {formatNumber(70, numberStyle)}٪ من الوقت.
+                {pickLang(
+                  {
+                    ar: `💡 العدّاد يتوهج عند ${formatNumber(70, numberStyle)}٪ من الوقت.`,
+                    en: `💡 The timer glows at ${formatNumber(70, numberStyle)}% of the time.`,
+                  },
+                  lang,
+                )}
               </p>
             </div>
           </div>
@@ -598,7 +674,7 @@ export function AudioAnzanScreen({
 
         <button type="button" onClick={startSession} className="btn-primary w-full !py-4 !text-lg">
           <Play className="w-6 h-6" />
-          ابدأ الجلسة
+          {pickLang({ ar: 'ابدأ الجلسة', en: 'Start session' }, lang)}
         </button>
       </div>
     );
@@ -607,18 +683,21 @@ export function AudioAnzanScreen({
   // ═══ 🎧 listening ═══
   if (phase === 'listening' && currentQ) {
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto min-h-screen flex flex-col">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto min-h-screen flex flex-col">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-bold text-white truncate">
-              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
+              {pickLang({ ar: 'السؤال', en: 'Question' }, lang)}{' '}
+              {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
-            <p className="text-xs text-white/50 font-body">أنزان سمعي</p>
+            <p className="text-xs text-white/50 font-body">
+              {pickLang({ ar: 'أنزان سمعي', en: 'Audio Anzan' }, lang)}
+            </p>
           </div>
           <button type="button" onClick={handleEnd}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition">
             <Square className="w-3.5 h-3.5" />
-            إنهاء
+            {pickLang({ ar: 'إنهاء', en: 'End' }, lang)}
           </button>
         </div>
 
@@ -640,7 +719,13 @@ export function AudioAnzanScreen({
         </div>
 
         <p className="text-xs text-white/40 font-body text-center mt-6">
-          🎧 اسمع الأرقام وجهّز أصابعك...
+          {pickLang(
+            {
+              ar: '🎧 اسمع الأرقام وجهّز أصابعك...',
+              en: '🎧 Listen to the numbers and get your fingers ready...',
+            },
+            lang,
+          )}
         </p>
       </div>
     );
@@ -649,20 +734,24 @@ export function AudioAnzanScreen({
   // ═══ ✍️ answering ═══
   if (phase === 'answering' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
-    const hint = extractHint(currentQ);
+    const translatedSolution = translateDynamic(currentQ, lang, 'solution') ?? currentQ.solution;
+    const hint = extractHint(translatedSolution);
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-bold text-white truncate">
-              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
+              {pickLang({ ar: 'السؤال', en: 'Question' }, lang)}{' '}
+              {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
             </h2>
-            <p className="text-xs text-white/50 font-body">مثّل الناتج على العداد</p>
+            <p className="text-xs text-white/50 font-body">
+              {pickLang({ ar: 'مثّل الناتج على العداد', en: 'Represent the result on the abacus' }, lang)}
+            </p>
           </div>
           <button type="button" onClick={handleEnd}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 text-xs font-bold transition">
             <Square className="w-3.5 h-3.5" />
-            إنهاء
+            {pickLang({ ar: 'إنهاء', en: 'End' }, lang)}
           </button>
           <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
             isWarning ? 'bg-red-500/30 border-red-500/70 shadow-lg shadow-red-500/50 animate-pulse' : 'bg-white/5 border-white/10'
@@ -692,7 +781,9 @@ export function AudioAnzanScreen({
           <button type="button" onClick={handleReplay} disabled={replayUsed}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-500/20 border border-purple-400/40 text-purple-200 text-xs font-bold hover:bg-purple-500/30 disabled:opacity-40">
             <Volume2 className="w-3.5 h-3.5" />
-            {replayUsed ? 'لا يمكن الإعادة' : 'إعادة السمع'}
+            {replayUsed
+              ? pickLang({ ar: 'لا يمكن الإعادة', en: 'Cannot replay' }, lang)
+              : pickLang({ ar: 'إعادة السمع', en: 'Replay' }, lang)}
           </button>
         </div>
 
@@ -700,7 +791,7 @@ export function AudioAnzanScreen({
           {hint && (
             <div className="mb-3 p-2 rounded-lg bg-purple-500/10 border border-purple-400/30">
               <p className="text-xs text-purple-200 font-body text-center">
-                💡 <strong>تلميح:</strong> {hint}
+                💡 <strong>{pickLang({ ar: 'تلميح:', en: 'Hint:' }, lang)}</strong> {hint}
               </p>
             </div>
           )}
@@ -716,7 +807,7 @@ export function AudioAnzanScreen({
             />
             <button type="button" onClick={handleCheck} className="btn-primary !py-3 !px-8">
               <CheckCircle2 className="w-5 h-5" />
-              تحقق
+              {pickLang({ ar: 'تحقق', en: 'Check' }, lang)}
             </button>
           </div>
         </div>
@@ -737,8 +828,9 @@ export function AudioAnzanScreen({
   if (phase === 'reveal' && currentQ) {
     const isCorrect = feedback === 'correct';
     const formattedAnswer = formatNumber(currentQ.result, numberStyle);
+    const translatedSolution = translateDynamic(currentQ, lang, 'solution') ?? currentQ.solution;
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
           className="glass-card p-6 mb-6 overflow-hidden relative">
           <div className={`absolute -top-20 -right-20 w-48 h-48 blur-3xl ${isCorrect ? 'bg-emerald-500/30' : 'bg-red-500/30'}`} />
@@ -749,26 +841,32 @@ export function AudioAnzanScreen({
               {isCorrect ? <CheckCircle2 className="w-10 h-10 text-white" /> : <XCircle className="w-10 h-10 text-white" />}
             </div>
             <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-              {isCorrect ? 'أحسنت! 🎉' : 'ليس بعد'}
+              {isCorrect
+                ? pickLang({ ar: 'أحسنت! 🎉', en: 'Well done! 🎉' }, lang)
+                : pickLang({ ar: 'ليس بعد', en: 'Not yet' }, lang)}
             </h2>
             <div className="my-6">
-              <p className="text-sm text-white/60 font-body mb-1">الإجابة الصحيحة</p>
+              <p className="text-sm text-white/60 font-body mb-1">
+                {pickLang({ ar: 'الإجابة الصحيحة', en: 'The correct answer' }, lang)}
+              </p>
               <p className="text-5xl font-black font-display text-white" dir={isArabic ? 'rtl' : 'ltr'}>
                 {formattedAnswer}
               </p>
             </div>
             {savedTimeMs !== null && (
               <div className="p-3 rounded-2xl bg-white/5 border border-white/10 inline-block">
-                <p className="text-xs text-white/60 font-body">وقتك</p>
+                <p className="text-xs text-white/60 font-body">
+                  {pickLang({ ar: 'وقتك', en: 'Your time' }, lang)}
+                </p>
                 <p className={`text-xl font-bold font-mono ${isCorrect ? 'text-emerald-300' : 'text-red-300'}`}>
                   {formatNumber((savedTimeMs / 1000).toFixed(1), numberStyle)}s
                 </p>
               </div>
             )}
-            {currentQ.solution && (
+            {translatedSolution && (
               <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-400/30 text-right">
                 <p className="text-xs text-blue-200 font-body leading-relaxed">
-                  💡 {formatText(currentQ.solution, numberStyle)}
+                  💡 {formatText(translatedSolution, numberStyle)}
                 </p>
               </div>
             )}
@@ -776,7 +874,9 @@ export function AudioAnzanScreen({
         </motion.div>
 
         <button type="button" onClick={nextQuestion} className="btn-primary w-full !py-4 !text-lg">
-          {currentIdx + 1 < questions.length ? 'التالي' : 'إنهاء الجلسة'}
+          {currentIdx + 1 < questions.length
+            ? pickLang({ ar: 'التالي', en: 'Next' }, lang)
+            : pickLang({ ar: 'إنهاء الجلسة', en: 'End session' }, lang)}
           <ArrowLeft className="w-5 h-5" />
         </button>
       </div>
@@ -789,19 +889,19 @@ export function AudioAnzanScreen({
     const passed = percentage >= PASS_THRESHOLD;
     const xpEarned = score * XP_PER_CORRECT;
 
-    // [v10] — 7 شارات سمعي
+    // [v10] — 7 audio badges
     const AUDIO_BADGE_LABELS: Record<string, string> = {
-      master_addition_audio: '🎤 خبير جمع وطرح سماعي',
-      master_multiplication_audio: '🎤 خبير ضرب سماعي',
-      master_division_audio: '🎤 خبير قسمة سماعية',
-      master_chains_audio: '🎤 خبير سلاسل سماعي',
-      master_advanced_audio: '🎤 خبير المتقدم سماعي',
-      master_decimals_audio: '🎤 خبير العشريات سماعي',
-      master_roots_audio: '🎤 خبير الجذور سماعي',
+      master_addition_audio: pickLang({ ar: '🎤 خبير جمع وطرح سماعي', en: '🎤 Audio Addition & Subtraction Master' }, lang),
+      master_multiplication_audio: pickLang({ ar: '🎤 خبير ضرب سماعي', en: '🎤 Audio Multiplication Master' }, lang),
+      master_division_audio: pickLang({ ar: '🎤 خبير قسمة سماعية', en: '🎤 Audio Division Master' }, lang),
+      master_chains_audio: pickLang({ ar: '🎤 خبير سلاسل سماعي', en: '🎤 Audio Chains Master' }, lang),
+      master_advanced_audio: pickLang({ ar: '🎤 خبير المتقدم سماعي', en: '🎤 Audio Advanced Master' }, lang),
+      master_decimals_audio: pickLang({ ar: '🎤 خبير العشريات سماعي', en: '🎤 Audio Decimals Master' }, lang),
+      master_roots_audio: pickLang({ ar: '🎤 خبير الجذور سماعي', en: '🎤 Audio Roots Master' }, lang),
     };
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto space-y-5">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto space-y-5">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
           className="glass-card p-6 overflow-hidden relative">
           <div className={`absolute -top-24 -right-24 w-64 h-64 blur-3xl ${passed ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`} />
@@ -814,21 +914,31 @@ export function AudioAnzanScreen({
               <Trophy className="w-12 h-12 text-white" />
             </motion.div>
             <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-              {passed ? '🎉 اجتزت الأنزان السمعي!' : '💪 حاول مرة أخرى'}
+              {passed
+                ? pickLang({ ar: '🎉 اجتزت الأنزان السمعي!', en: '🎉 You passed Audio Anzan!' }, lang)
+                : pickLang({ ar: '💪 حاول مرة أخرى', en: '💪 Try again' }, lang)}
             </h2>
             {passed && (
               <p className="text-lg font-bold text-emerald-300 font-display mb-2">
-                بدرجة {formatNumber(percentage, numberStyle)}٪
+                {pickLang(
+                  {
+                    ar: `بدرجة ${formatNumber(percentage, numberStyle)}٪`,
+                    en: `With a score of ${formatNumber(percentage, numberStyle)}%`,
+                  },
+                  lang,
+                )}
               </p>
             )}
             <p className="text-sm text-white/60 font-body mb-6">
-              الأنزان السمعي
+              {pickLang({ ar: 'الأنزان السمعي', en: 'Audio Anzan' }, lang)}
               {passed && performances.some((p) => p.speedClass === 'slow' || p.correct < p.attempts) && (
-                <> — 🔒 جلسة علاجية إجبارية</>
+                <> — {pickLang({ ar: '🔒 جلسة علاجية إجبارية', en: '🔒 Mandatory remedial session' }, lang)}</>
               )}
             </p>
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
-              <p className="text-sm text-white/60 font-body">النتيجة</p>
+              <p className="text-sm text-white/60 font-body">
+                {pickLang({ ar: 'النتيجة', en: 'Result' }, lang)}
+              </p>
               <p className="text-5xl font-black font-display text-white mt-1" dir={isArabic ? 'rtl' : 'ltr'}>
                 {formatNumber(score, numberStyle)} / {formatNumber(questions.length, numberStyle)}
               </p>
@@ -837,7 +947,9 @@ export function AudioAnzanScreen({
               </p>
             </div>
             <div className="p-3 rounded-2xl bg-gold-500/10 border border-gold-400/30">
-              <p className="text-xs text-white/60 font-body">نقاط الخبرة</p>
+              <p className="text-xs text-white/60 font-body">
+                {pickLang({ ar: 'نقاط الخبرة', en: 'Experience points' }, lang)}
+              </p>
               <p className="text-2xl font-black text-gold-300 font-display">
                 +{formatNumber(xpEarned, numberStyle)} XP
               </p>
@@ -851,7 +963,7 @@ export function AudioAnzanScreen({
                 className="mt-4 p-4 rounded-2xl bg-gradient-to-l from-gold-400/20 to-transparent border-2 border-gold-400/50"
               >
                 <p className="text-sm font-bold text-gold-200 font-display mb-2">
-                  🎉 حصلت على شارة جديدة!
+                  {pickLang({ ar: '🎉 حصلت على شارة جديدة!', en: '🎉 You earned a new badge!' }, lang)}
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {justEarnedBadges.map((key) => (
@@ -869,7 +981,11 @@ export function AudioAnzanScreen({
         </motion.div>
 
         {performances.length > 0 && (
-          <AdaptiveFeedback performances={performances} sectionLabel="أنزان سمعي" levelNum={levelNum} />
+          <AdaptiveFeedback
+            performances={performances}
+            sectionLabel={pickLang({ ar: 'أنزان سمعي', en: 'Audio Anzan' }, lang)}
+            levelNum={levelNum}
+          />
         )}
 
         {pendingRemediation && (
@@ -886,7 +1002,7 @@ export function AudioAnzanScreen({
             className="w-full py-4 rounded-2xl bg-gradient-to-l from-amber-400 to-orange-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/40 animate-pulse"
           >
             <Lightbulb className="w-5 h-5" />
-            🩺 جلسة علاجية إجبارية
+            {pickLang({ ar: '🩺 جلسة علاجية إجبارية', en: '🩺 Mandatory remedial session' }, lang)}
           </motion.button>
         )}
 
@@ -894,11 +1010,11 @@ export function AudioAnzanScreen({
           {!passed && !pendingRemediation && (
             <button type="button" onClick={() => { playSound('click'); startSession(); }} className="btn-primary w-full !py-3">
               <RotateCcw className="w-5 h-5" />
-              جلسة جديدة
+              {pickLang({ ar: 'جلسة جديدة', en: 'New session' }, lang)}
             </button>
           )}
           <button type="button" onClick={() => { playSound('click'); onBack(); }} className="btn-ghost w-full">
-            رجوع
+            {pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
           </button>
         </div>
       </div>
