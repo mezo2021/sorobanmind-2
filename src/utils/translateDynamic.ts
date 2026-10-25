@@ -1,335 +1,264 @@
-type DynamicText = Record<string, any>;
+// src/screens/LearnScreen.tsx
+// 📖 Level lessons list (Level → Lessons)
+// Displays the level lessons (Introduction, S1, S2…) with sequential locking
 
-// دالة ذكية لتوحيد النصوص
-function normalizeArabic(text: string): string {
-  if (!text) return "";
-  return String(text)
-    .replace(/[\u200B-\u200D\uFEFF]/g, "") // إزالة المسافات الخفية
-    .replace(/[\u064B-\u065F]/g, "") // إزالة التشكيل
-    .replace(/[أإآ]/g, "ا")         // توحيد الألف
-    .replace(/ة/g, "ه")            // توحيد التاء المربوطة
-    .replace(/ى/g, "ي")            // توحيد الألف المقصورة
-    .replace(/٪/g, "%")            // تحويل علامة النسبة العربية
-    .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))) // تحويل الأرقام العربية
-    .replace(/\s+/g, " ")          // إزالة المسافات الزائدة
-    .trim();
+import { motion } from 'framer-motion';
+import {
+  Home, BookOpen, CheckCircle2, Lock, Star, Type, ChevronRight,
+} from 'lucide-react';
+
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
+
+import { getLessonsByLevel } from '@/curriculum/lessons';
+import { FloatingCompanion } from '@/components/FloatingCompanion';
+import { useGameStats } from '@/hooks/useGameStats';
+import { useProgressStore } from '@/store/progressStore';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { formatText, formatNumber } from '@/utils/numberStyle';
+
+// ═══════════════════════════════════════════════════════════
+// Types
+// ═══════════════════════════════════════════════════════════
+
+interface LearnScreenProps {
+  levelId: string;
+  onBack: () => void;
+  onOpenLesson: (lessonId: string) => void;
+  playSound: (type: 'click' | 'success' | 'error' | 'bead' | 'whoosh' | 'levelup') => void;
 }
 
-// القاموس الثابت (مدمج فيه كل النصوص)
-const RAW_AR_TO_EN: Record<string, string> = {
-  // --- الكلمات السابقة ---
-  "ضرب باصدقاء 5": "Mul with Friends of 5", "ضرب بأصدقاء 5": "Mul with Friends of 5",
-  "ضرب باصدقاء 10": "Mul with Friends of 10", "ضرب بأصدقاء 10": "Mul with Friends of 10",
-  "ضرب مركب": "Compound Mul", "ضرب بسيط": "Direct Mul",
-  "طرح باصدقاء 5": "Sub with Friends of 5", "طرح بأصدقاء 5": "Sub with Friends of 5",
-  "طرح باصدقاء 10": "Sub with Friends of 10", "طرح بأصدقاء 10": "Sub with Friends of 10",
-  "طرح مركب": "Compound Sub", "طرح بسيط": "Direct Sub",
-  "جمع باصدقاء 5": "Add with Friends of 5", "جمع بأصدقاء 5": "Add with Friends of 5",
-  "جمع باصدقاء 10": "Add with Friends of 10", "جمع بأصدقاء 10": "Add with Friends of 10",
-  "جمع مركب": "Compound Add", "جمع بسيط": "Direct Add",
-  "قسمة مركبة": "Compound Div", "قسمة بسيطة": "Direct Div",
-  "قسمة باصدقاء 5": "Div with Friends of 5", "قسمة بأصدقاء 5": "Div with Friends of 5",
-  "قسمة باصدقاء 10": "Div with Friends of 10", "قسمة بأصدقاء 10": "Div with Friends of 10",
-  "تمثيل 0-4": "Representing 0-4", "تمثيل 5-9": "Representing 5-9",
-  "المئات والآلاف": "Hundreds & Thousands", "الاحاد والعشرات": "Units & Tens",
-  "المستكشف": "Explorer", "الصاعد": "Rising Star", "السريع": "Fast",
-  "المتفوق": "Top Achiever", "الدقيق": "Precise", "المثابر": "Persistent",
-  "الرائد": "Pioneer", "القناص": "Sniper", "المتدفق": "Flow",
-  "الحارس": "Guardian", "الفاتح": "Conqueror", "الصامد": "Resilient",
-  "تعافى من جلسة علاجية": "Recovered from session",
-  "أتم قسم كامل": "Completed a section", 
-  "ميمو": "Mimo", "البطل": "Hero",
+// ═══════════════════════════════════════════════════════════
+// Level display data
+// ═══════════════════════════════════════════════════════════
 
-  // --- أوصاف المستويات (LevelScreen) ---
-  "التعرّف على السوروبان والأرقام من ٠ إلى ٩ والقيمة المكانية": "Discover the soroban, numbers 0-9, and place value",
-  "جمع وطرح بسيط + أصدقاء ٥ + أصدقاء ١٠ + عمليات مركّبة": "Simple addition & subtraction + Friends of 5 + Friends of 10 + compound operations",
-  "الضرب المتدرّج (١×٢ · ٢×٢) على السوروبان": "Gradual multiplication (1x2 · 2x2) on the soroban",
-  "القسمة المتدرّجة (÷١ · ÷٢) — التقدير والطرح المتتالي": "Gradual division (÷1 · ÷2) — estimation and successive subtraction",
-  "سلاسل الجمع والطرح المتعددة الحدود": "Multi-term addition & subtraction chains",
-  "الضرب (٢×٣) والقسمة المتقدمة بطرق تاكاشي": "Multiplication (2x3) and advanced division using Takashi methods",
-  "العمليات على الأعداد العشرية (جمع · طرح · ضرب · قسمة)": "Operations on decimals (add · sub · mul · div)",
-  "الجذور التربيعية الكاملة": "Complete square roots",
-
-  // --- الأسرار السحرية (العناوين والقواعد) ---
-  "سر جدول الـ 5": "Secret of the 5 Table", "سر جدول الـ 6": "Secret of the 6 Table",
-  "لغز الرقم 7": "The Mystery of 7", "سر جدول الـ 8": "Secret of the 8 Table",
-  "سر جدول الـ 9": "Secret of the 9 Table", "سر المضاعفة": "The Doubling Secret",
-  "سر أصابع الضرب": "Finger Multiplication Secret", "الضرب في 11": "Multiplication by 11",
-  "الضرب في 99": "Multiplication by 99", "الضرب في 999": "Multiplication by 999",
-  "أصدقاء المئة (تحت 100)": "Friends of 100 (Under 100)", "الأعداد فوق 100": "Numbers Above 100",
-  "الأعداد تحت 1000": "Numbers Under 1000", "الأعداد فوق 1000": "Numbers Above 1000",
-  "الأعداد القريبة من 50": "Numbers Near 50", "الأعداد القريبة من 500": "Numbers Near 500",
-  "الآحاد: زوجي = 0، فردي = 5": "Units: Even = 0, Odd = 5",
-  "العشرات: نصف الرقم (بدون كسور)": "Tens: Half the number (no fractions)",
-  "للأعداد الزوجية فقط": "For even numbers only",
-  "الآحاد: نفس الرقم | العشرات: نصفه": "Units: Same number | Tens: Half of it",
-  "الآحاد: اطرح 3 في كل مرة (مع الدوران عند 10)": "Units: Subtract 3 each time (wrap at 10)",
-  "العشرات: تتصاعد وتتوقف عند 2 و 4 مرتين": "Tens: Ascends and stops at 2 and 4 twice",
-  "الآحاد: اطرح 2 في كل مرة (مع الدوران عند 10)": "Units: Subtract 2 each time (wrap at 10)",
-  "العشرات: تتصاعد، وتتوقف عند 4 مرتين": "Tens: Ascends, stops at 4 twice",
-  "الآحاد: صديق العدد الكبير (مكمّله إلى 10)": "Units: Friend of the large number (complement to 10)",
-  "العشرات: أكمل العدّ إلى 9 | المجموع = 9": "Tens: Complete count to 9 | Sum = 9",
-  "للضرب في 4: ضاعف الرقم مرتين": "For ×4: Double the number twice",
-  "للضرب في 8: ضاعف الرقم ثلاث مرات": "For ×8: Double the number three times",
-  "الأصابع بالترتيب: الخنصر = 6، البنصر = 7، الوسطى = 8، السبابة = 9، الإبهام = 10": "Fingers in order: Pinky = 6, Ring = 7, Middle = 8, Index = 9, Thumb = 10",
-  "نُلمس إصبَعي العددين: الأصابع المتلامسة والأسفل منها = العشرات (جمع × 10) | الأصابع الأعلى = الآحاد (ضرب ببعض)": "Touch the two fingers: Touching and below = Tens (sum × 10) | Above = Units (multiply)",
-  "الطرفان كما هما، والوسط حاصل جمع الجيران": "Ends as they are, middle is the sum of neighbors",
-  "مع الحمل: إذا كان الجمع > 9 → نحمل للرقم التالي": "With carry: If sum > 9 → carry to next digit",
-  "اطرح 1 من الرقم → ثم اطرح الناتج من 99": "Subtract 1 from number → then subtract result from 99",
-  "ينفع فقط للأعداد ≤ 99": "Only works for numbers ≤ 99",
-  "اطرح 1 من الرقم → ثم اطرح الناتج من 999": "Subtract 1 from number → then subtract result from 999",
-  "نفس فكرة 99 لكن مع 3 منازل": "Same idea as 99 but with 3 digits",
-  "١) احسب بُعد كل رقم عن 100 (100 − الرقم)": "1) Calculate distance of each number from 100 (100 − number)",
-  "٢) اضرب البُعدين → الجزء الأيمن | ٣) اجمع البُعدين، ثم اطرح مجموعهما من 100 → الجزء الأيسر": "2) Multiply distances → right part | 3) Add distances, subtract sum from 100 → left part",
-  "١) اضرب آحاد الرقمين → الجزء الأيمن (منزلتين)": "1) Multiply units → right part (2 digits)",
-  "٢) اجمع الآحادين + 100 → الجزء الأيسر | ٣) ادمج الجزئين": "2) Add units + 100 → left part | 3) Combine parts",
-  "١) احسب بُعد كل رقم عن 1000 (1000 − الرقم)": "1) Calculate distance of each number from 1000 (1000 − number)",
-  "٢) اضرب البُعدين → الجزء الأيمن (3 منازل) | ٣) 1000 − مجموع البُعدين → الجزء الأيسر": "2) Multiply distances → right part (3 digits) | 3) 1000 − sum of distances → left part",
-  "١) احسب آحاد الرقمين (الرقم − 1000)": "1) Calculate units of both numbers (number − 1000)",
-  "٢) اضرب الآحادين → الجزء الأيمن (3 منازل) | ٣) اجمع الآحادين + 1000 → الجزء الأيسر": "2) Multiply units → right part (3 digits) | 3) Add units + 1000 → left part",
-  "١) احسب بُعد كل رقم عن 50 (الرقم − 50)": "1) Calculate distance of each number from 50 (number − 50)",
-  "٢) الجزء الأول: 50 + مجموع البُعدين | ٣) الجزء الثاني: حاصل ضرب البُعدين | ٤) (الجزء الأول × 100) ÷ 2 + الجزء الثاني": "2) First part: 50 + sum of distances | 3) Second part: product of distances | 4) (First part × 100) ÷ 2 + Second part",
-  "١) احسب بُعد كل رقم عن 500 (الرقم − 500)": "1) Calculate distance of each number from 500 (number − 500)",
-  "٢) الجزء الأول: 500 + مجموع البُعدين | ٣) الجزء الثاني: حاصل ضرب البُعدين | ٤) (الجزء الأول × 1000) ÷ 2 + الجزء الثاني": "2) First part: 500 + sum of distances | 3) Second part: product of distances | 4) (First part × 1000) ÷ 2 + Second part",
-  "مع الأعداد الفردية استخدم طريقة أخرى!": "With odd numbers, use another method!",
-
-  // --- رياضيات الأصابع (FingerMathScreen) ---
-  "في مملكة الأصابع، تعيش عائلتان صديقتان: عائلة اليد اليمنى المسؤولة عن الآحاد، وعائلة اليد اليسرى المسؤولة عن العشرات. الإبهام هو الجدة الحنونة قيمتها 5، والأصابع الأربعة أطفال كل واحد قيمته 1. اجتمعوا معاً ليصنعوا كل الأعداد من 0 إلى 99!": "In the kingdom of fingers, two friendly families live: the right-hand family responsible for units, and the left-hand family responsible for tens. The thumb is the kind grandmother worth 5, and the four fingers are children, each worth 1. Together they create all numbers from 0 to 99!",
-  "الإبهام = 5 (الجدة) · الأصابع الأخرى = 1 (طفل)": "Thumb = 5 (Grandma) · Other fingers = 1 (Child)",
-  "اليد اليمنى = الآحاد · اليد اليسرى = العشرات": "Right hand = Units · Left hand = Tens",
-  "اليد اليمنى (الآحاد)": "Right Hand (Units)",
-  "اليد اليسرى (العشرات)": "Left Hand (Tens)",
-  "مثل الرقم 1": "Like the number 1",
-  "مثل الرقم 3": "Like the number 3",
-  "مثل الرقم 5 (الجدة)": "Like the number 5 (Grandma)",
-  "مثل الرقم 7": "Like the number 7",
-  "مثل الرقم 9": "Like the number 9",
-  "مثل الرقم 10": "Like the number 10",
-  "مثل الرقم 27": "Like the number 27",
-  "مثل الرقم 99": "Like the number 99",
-
-  // --- شاشة الأقسام (CategoryScreen) ---
-  "٥ - ١٢ سنة": "Ages 5 - 12",
-  "١٣+ سنة": "Ages 13+",
-  "الامتحان النهائي — القسم الأول": "Final Exam — Section One",
-  "الامتحان النهائي — القسم الثاني": "Final Exam — Section Two",
-  
-  // الإثراء (Enrichment)
-  "أسرار الضرب": "Multiplication Secrets",
-  "٢٠ سراً لجدول الضرب": "20 secrets for the multiplication table",
-  "رياضيات الأصابع": "Finger Math",
-  "تعلّم الأعداد بأصابعك": "Learn numbers with your fingers",
-  "الضرب التقاطعي": "Cross Multiplication",
-  "الضرب الفيدي المتقدم": "Advanced Vedic multiplication",
-
-  // أوصاف المستويات المصغرة (CategoryScreen Levels Desc)
-  "التعرّف على السوروبان + الأرقام + القيمة المكانية": "Discover the soroban + numbers + place value",
-  "جمع وطرح بسيط + أصدقاء 5 + أصدقاء 10": "Simple add & subtract + Friends of 5 + Friends of 10",
-  "الضرب على السوروبان بطريقة تاكاشي": "Multiplication on the soroban using Takashi method",
-  "القسمة على السوروبان — التقدير والطرح المتتالي": "Division on the soroban — estimation and successive subtraction",
-  "سلاسل الجمع والطرح المتعددة": "Multiple addition and subtraction chains",
-  "الضرب والقسمة بطرق متقدمة": "Advanced multiplication and division methods",
-  "العمليات على الأعداد العشرية": "Operations on decimal numbers",
-
-  // --- إضافات الامتحانات (Exam & PlacementTest) ---
-  // أسماء المستويات
-  "التمهيدي": "Foundation",
-  "الجمع والطرح": "Addition & Subtraction",
-  "الضرب": "Multiplication",
-  "القسمة": "Division",
-  "سلاسل الجمع والطرح": "Add & Sub Chains",
-  "ضرب وقسمة متقدم": "Advanced Mul & Div",
-  "الكسور العشرية": "Decimals",
-  "الجذور": "Roots",
-
-  // أقسام الأسئلة
-  "جمع": "Addition",
-  "طرح": "Subtraction",
-  "ضرب": "Multiplication",
-  "قسمة": "Division",
-  "مختلط": "Mixed",
-  "جمع وطرح": "Add & Subtract",
-
-  // المهارات الضعيفة (بدون المكرر)
-  "أصدقاء 5 (جمع)": "Friends of 5 (Add)",
-  "أصدقاء 5 (طرح)": "Friends of 5 (Sub)",
-  "أصدقاء 10 (جمع)": "Friends of 10 (Add)",
-  "أصدقاء 10 (طرح)": "Friends of 10 (Sub)",
-
-  // --- إضافات شاشة الأنزان (AnzanScreen) ---
-  "تلميح": "Hint",
-  "تلميح:": "Hint:",
-  "يساوي": "equals",
-  "زائد": "plus",
-  "ناقص": "minus",
-  "في": "times",
-  "على": "divided by",
-  "ماذا": "What",
-  "ضع": "Place",
-  "ارفع": "Raise",
-  "master_addition": "Addition & Subtraction Master",
-  "master_multiplication": "Multiplication Master",
-  "master_division": "Division Master",
-  "master_mixed": "Mixed Master",
-
-  // 🆕 --- إضافات الجلسة العلاجية والتقارير (Remediation & Adaptive Feedback) ---
-  "الحل": "Solution",
-  "الخطوات": "Steps",
-  "حرّك الخرزة": "Move the bead",
-  "استخدم صديق 5": "Use friend of 5",
-  "استخدم صديق 10": "Use friend of 10",
-  "حرّك للأسفل": "Move down",
-  "حرّك للأعلى": "Move up",
-  "جلسة علاجية": "Remediation Session",
-  "لا توجد مهارات ضعيفة": "No weak skills",
-  "لا توجد أسئلة كافية": "Not enough questions",
-  
-  // 🆕 إضافات من صورك الأخيرة
-  "ملاحظات التعليم التكيفي": "Adaptive Learning Notes",
-  "تحليل الأداء": "Performance Analysis",
-  "مهارات تحتاج تقوية": "Skills needing reinforcement",
-  "مهارات المستوى تحتاج مراجعة": "Level skills needing review",
-  "مهارات من مستويات أخرى تحتاج مراجعة": "Skills from other levels needing review",
-  "مراجعة عامة": "General Review",
-  "إجمالي الشارات": "Total Badges",
-  "التوصية": "Recommendation",
-  "دقة منخفضة": "Low accuracy",
-  "أعد جلسة على المهارات أعلاه. سيقترح عليك النظام أسئلة علاجية مخصصة تلقائياً.": "Retake a session on the skills above. The system will automatically suggest customized remedial questions.",
-  "جلسة مخصصة بدون درجات — تُظهر لك الحل بعد كل سؤال.": "Customized session without grades — shows you the solution after each question.",
-  "جلسة قصيرة مخصصة لبناء الثقة — بدون درجات، وتُظهر لك الحل بعد كل سؤال.": "Customized short session to build confidence — no grades, shows the solution after each question.",
-
-  // 🆕 --- إضافات شاشة التعلم (LearnScreen) ---
-  "مقدمة": "Introduction",
-  "درس تمهيدي": "Introductory Lesson",
-  "مقدمة في السوروبان": "Introduction to the Soroban",
-  "مراجعة": "Review",
-  "التعرف على المعداد": "Getting to Know the Abacus",
-  "الأرقام من 0 إلى 4": "Numbers from 0 to 4",
-  "الأرقام من 5 إلى 9": "Numbers from 5 to 9",
-  "أصدقاء 5": "Friends of 5",
-  "أصدقاء 10": "Friends of 10"
+const LEVEL_META: Record<string, {
+  number: number;
+  title: string;
+  titleEn: string;
+  gradient: string;
+}> = {
+  L0: { number: 0, title: 'التمهيدي', titleEn: 'Foundation', gradient: 'from-emerald-500 to-teal-700' },
+  L1: { number: 1, title: 'الجمع والطرح', titleEn: 'Add & Subtract', gradient: 'from-blue-500 to-cyan-700' },
+  L2: { number: 2, title: 'الضرب', titleEn: 'Multiplication', gradient: 'from-amber-500 to-orange-700' },
+  L3: { number: 3, title: 'القسمة', titleEn: 'Division', gradient: 'from-blue-500 to-indigo-700' },
+  L4: { number: 4, title: 'سلاسل الجمع والطرح', titleEn: 'Add & Sub Chains', gradient: 'from-purple-500 to-violet-700' },
+  L5: { number: 5, title: 'ضرب وقسمة متقدم', titleEn: 'Advanced Mul & Div', gradient: 'from-purple-500 to-fuchsia-700' },
+  L6: { number: 6, title: 'الكسور العشرية', titleEn: 'Decimals', gradient: 'from-amber-500 to-rose-700' },
+  L7: { number: 7, title: 'الجذور', titleEn: 'Roots', gradient: 'from-rose-500 to-purple-700' },
 };
 
-const AR_TO_EN: Record<string, string> = {};
-Object.entries(RAW_AR_TO_EN).forEach(([key, val]) => {
-  AR_TO_EN[normalizeArabic(key)] = val;
-});
+// ═══════════════════════════════════════════════════════════
+// Screen
+// ═══════════════════════════════════════════════════════════
 
-// دالة الأنماط المتسامحة جداً
-function translatePattern(text: string): string | null {
-  let match;
+export function LearnScreen({
+  levelId,
+  onBack,
+  onOpenLesson,
+  playSound,
+}: LearnScreenProps) {
+  const { lang, dir } = useT();
 
-  // 🆕 ترجمة بادئات التلميح والحل والخطوات
-  if (text.startsWith("تلميح:")) {
-    return text.replace(/^تلميح\s*:\s*/, "Hint: ");
-  }
-  if (text.startsWith("الحل:")) {
-    return text.replace(/^الحل\s*:\s*/, "Solution: ");
-  }
-  if (text.startsWith("الخطوات:")) {
-    return text.replace(/^الخطوات\s*:\s*/, "Steps: ");
-  }
+  const meta = LEVEL_META[levelId];
+  const lessons = getLessonsByLevel(levelId);
+  const completedLessons = useProgressStore((s) => s.completedLessons);
+  const { stats } = useGameStats();
+  const { style: numberStyle, toggleStyle } = useNumberStyleStore();
 
-  // 🆕 ترجمة بادئات المعادلات والنصوص
-  match = text.match(/^احسب\s*السلسلة\s*:\s*(.*)/);
-  if (match) return `Calculate the chain: ${match[1]}`;
-
-  match = text.match(/^احسب\s*:\s*(.*)/);
-  if (match) return `Calculate: ${match[1]}`;
-
-  match = text.match(/^ماذا\s*:\s*(.*)/);
-  if (match) return `What: ${match[1]}`;
-
-  match = text.match(/^ضع\s*:\s*(.*)/);
-  if (match) return `Place: ${match[1]}`;
-
-  match = text.match(/^ارفع\s*:\s*(.*)/);
-  if (match) return `Raise: ${match[1]}`;
-
-  // 🆕 ترجمة أكواد المستويات (L0, L1... إلخ)
-  match = text.match(/^L(\d+)$/);
-  if (match) return `Level ${match[1]}`;
-
-  match = text.match(/جرب.*?(\d+).*?مهاره/);
-  if (match) return `Tried ${match[1]} skills`;
-
-  match = text.match(/(\d+).*?مهارات.*?بزمن.*?قياسي/);
-  if (match) return `${match[1]} skills in record time`;
-
-  match = text.match(/(\d+).*?شارات.*?اتقان/);
-  if (match) return `${match[1]} mastery badges`;
-
-  match = text.match(/(\d+).*?مهارات.*?بلا.*?خطا/);
-  if (match) return `${match[1]} skills without mistakes`;
-
-  match = text.match(/(\d+).*?محاول.*?اجماليه/);
-  if (match) return `${match[1]} total attempts`;
-
-  match = text.match(/(\d+).*?اجاب.*?صحيحه/);
-  if (match) return `${match[1]} correct answers`;
-
-  match = text.match(/(\d+).*?اجاب.*?متتاليه/);
-  if (match) return `${match[1]} consecutive correct`;
-
-  match = text.match(/مهاره.*?بدقه.*?(\d+)/);
-  if (match) return `Skill with ${match[1]}% accuracy`;
-  match = text.match(/(\d+).*?مهاره.*?بدقه/);
-  if (match) return `Skill with ${match[1]}% accuracy`;
-
-  match = text.match(/(\d+).*?متتاليه.*?في.*?السلاسل/);
-  if (match) return `${match[1]} streak in chains`;
-
-  match = text.match(/(\d+)\s*[٪%].*?مهاره.*?مكتمله/) || text.match(/دقه.*?(\d+)/);
-  if (match) {
-    const digitsMatch = text.match(/(\d+)/);
-    const num = digitsMatch ? digitsMatch[1] : "85";
-    return `${num}% accuracy in skill`;
+  // ─── Guard ───
+  if (!meta) {
+    return (
+      <div dir={dir} className="min-h-screen flex items-center justify-center p-4">
+        <div className="glass-card p-6 text-center max-w-md">
+          <p className="text-white/60 mb-4">
+            {pickLang({ ar: 'المستوى غير موجود', en: 'Level not found' }, lang)}
+          </p>
+          <button onClick={onBack} className="btn-primary w-full">
+            {pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
+          </button>
+        </div>
+      </div>
+    );
   }
 
-  return null;
+  // ⚠️ TEMP-DEV-PREVIEW: remove when development is complete
+  // Reason: bypasses the lesson lock in developer mode
+  // Removal: search for "TEMP-DEV-PREVIEW" in the project
+  const isPreviewMode =
+    typeof window !== 'undefined' &&
+    localStorage.getItem('soroban_dev_preview') === 'true';
+
+  const isLessonDone = (id: string) => completedLessons.includes(id);
+  const isLessonUnlocked = (idx: number) =>
+    isPreviewMode || idx === 0 || isLessonDone(lessons[idx - 1].id);
+
+  const doneCount = lessons.filter((l) => isLessonDone(l.id)).length;
+  const progressPct = lessons.length > 0 ? Math.round((doneCount / lessons.length) * 100) : 0;
+
+  const goHome = () => {
+    playSound('click');
+    onBack();
+  };
+
+  return (
+    <div dir={dir} className="min-h-screen pb-32">
+      {/* ───── Header ───── */}
+      <div className="sticky top-0 z-30 backdrop-blur-lg bg-slate-900/70 border-b border-white/10 px-3 sm:px-6 py-3">
+        <div className="max-w-3xl mx-auto flex items-center gap-2">
+          <button
+            onClick={goHome}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
+            aria-label={pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
+          >
+            <Home className="w-5 h-5 text-white" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-bold text-white truncate">
+              📖 {pickLang({ ar: 'دروس', en: 'Lessons' }, lang)}{' '}
+              {formatNumber(meta.number, numberStyle)} —{' '}
+              {pickLang({ ar: meta.title, en: meta.titleEn }, lang)}
+            </h1>
+            <p className="text-[10px] text-white/50 truncate">
+              {meta.titleEn} · {formatNumber(doneCount, numberStyle)}/
+              {formatNumber(lessons.length, numberStyle)}{' '}
+              {pickLang({ ar: 'مكتمل', en: 'completed' }, lang)}
+            </p>
+          </div>
+          <button
+            onClick={() => { playSound('click'); toggleStyle(); }}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
+            aria-label={pickLang({ ar: 'تبديل نمط الأرقام', en: 'Toggle number style' }, lang)}
+          >
+            <Type className="w-5 h-5 text-white" />
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-3xl mx-auto px-3 sm:px-6 py-5">
+        {/* ───── Hero Card ───── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-5 mb-5 overflow-hidden relative"
+        >
+          <div className={`absolute -top-20 -right-20 w-48 h-48 bg-gradient-to-br ${meta.gradient} opacity-20 blur-3xl`} />
+          <div className="relative">
+            <h2 className="text-lg font-extrabold text-white mb-2">
+              {formatText(
+                pickLang({ ar: meta.title, en: meta.titleEn }, lang),
+                numberStyle,
+              )}
+            </h2>
+            <p className="text-xs text-white/60 mb-3">
+              {pickLang(
+                {
+                  ar: 'أكمل الدروس بالترتيب لفتح التمرّن والأنزان',
+                  en: 'Complete the lessons in order to unlock Practice and Anzan',
+                },
+                lang,
+              )}
+            </p>
+
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-white/60">
+                {pickLang({ ar: 'التقدم:', en: 'Progress:' }, lang)}
+              </span>
+              <span className="text-sm font-bold text-gold-300">
+                {formatNumber(progressPct, numberStyle)}٪
+              </span>
+            </div>
+
+            <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+              <motion.div
+                className={`h-full rounded-full bg-gradient-to-r ${meta.gradient}`}
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ───── Lessons list ───── */}
+        <div className="space-y-3">
+          {lessons.map((lesson, idx) => {
+            const unlocked = isLessonUnlocked(idx);
+            const done = isLessonDone(lesson.id);
+
+            return (
+              <motion.button
+                key={lesson.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                whileHover={unlocked ? { scale: 1.02 } : {}}
+                whileTap={unlocked ? { scale: 0.98 } : {}}
+                onClick={() => {
+                  if (!unlocked) { playSound('whoosh'); return; }
+                  playSound('click');
+                  onOpenLesson(lesson.id);
+                }}
+                disabled={!unlocked}
+                className={`glass-card p-4 w-full text-start flex items-center gap-3 ${
+                  !unlocked ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${meta.gradient} flex items-center justify-center shrink-0 ${!unlocked ? 'grayscale' : ''}`}>
+                  {!unlocked ? (
+                    <Lock className="w-5 h-5 text-white" />
+                  ) : done ? (
+                    <CheckCircle2 className="w-6 h-6 text-white" />
+                  ) : (
+                    <Star className="w-6 h-6 text-white" />
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-bold text-white truncate">
+                    {lesson.isTheoretical ? '🎬 ' : '📝 '}
+                    {formatText(
+                      translateDynamic({ value: lesson.title.ar }, lang, 'value'),
+                      numberStyle,
+                    )}
+                  </h3>
+                  <p className="text-[10px] text-white/40 truncate mt-0.5">
+                    {lesson.skillId ?? pickLang({ ar: 'مقدمة', en: 'Intro' }, lang)} ·{' '}
+                    {formatNumber(lesson.estimatedMinutes, numberStyle)}{' '}
+                    {pickLang({ ar: 'دقيقة', en: 'min' }, lang)}
+                  </p>
+                </div>
+
+                {done ? (
+                  <span className="text-xs px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-200 font-bold shrink-0">
+                    ✓
+                  </span>
+                ) : unlocked ? (
+                  <ChevronRight className="w-5 h-5 text-white/40 shrink-0" />
+                ) : null}
+              </motion.button>
+            );
+          })}
+        </div>
+
+        {/* ───── No lessons ───── */}
+        {lessons.length === 0 && (
+          <div className="glass-card p-6 text-center">
+            <BookOpen className="w-12 h-12 text-white/30 mx-auto mb-3" />
+            <p className="text-white/60 text-sm">
+              {pickLang(
+                { ar: 'دروس هذا المستوى قيد الإعداد', en: 'Lessons for this level are being prepared' },
+                lang,
+              )}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* ───── Companion ───── */}
+      <FloatingCompanion playSound={playSound} />
+    </div>
+  );
 }
 
-export function translateDynamic(
-  item: DynamicText | null | undefined,
-  lang: string,
-  field: string
-): string {
-  if (!item) return "";
-
-  const ar = item[`${field}Ar`] ?? item[`${field}AR`] ?? item[field];
-  const en = item[`${field}En`] ?? item[`${field}EN`];
-
-  if (lang === "en") {
-    if (en) return String(en);
-    
-    if (ar) {
-      const normalizedKey = normalizeArabic(String(ar));
-      
-      if (AR_TO_EN[normalizedKey]) {
-        return AR_TO_EN[normalizedKey];
-      }
-      
-      const patternTranslation = translatePattern(normalizedKey);
-      if (patternTranslation) {
-        return patternTranslation;
-      }
-
-      // 🆕 ترجمة الخطوات الرياضية التي تحتوي على أرقام ورموز
-      if (field === "steps" || normalizedKey.includes("←") || normalizedKey.includes("→")) {
-        return normalizedKey
-          .replace(/فردي/g, "odd")
-          .replace(/زوجي/g, "even")
-          .replace(/نصف/g, "half of")
-          .replace(/الرقم/g, "number")
-          .replace(/عشرات/g, "Tens")
-          .replace(/آحاد/g, "Units")
-          .replace(/جزء/g, "part")
-          .replace(/الايمن/g, "right")
-          .replace(/الايسر/g, "left");
-      }
-    }
-    return ar ? String(ar) : "";
-  }
-
-  return ar ?? en ?? "";
-}
+export default LearnScreen;
