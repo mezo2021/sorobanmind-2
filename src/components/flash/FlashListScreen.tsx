@@ -11,6 +11,7 @@ import { MultSolver } from './MultSolver';
 import { ChainSolver } from './ChainSolver';
 import { TwoAbacusSolver } from './TwoAbacusSolver';
 import type { FlashCategory, FlashLesson } from './types';
+import { Num } from '@/components/Num';
 
 interface FlashListScreenProps {
   onBack: () => void;
@@ -138,7 +139,7 @@ function CategorySection({
         </div>
         {!isEmpty && (
           <span className="text-xs text-amber-300 font-bold px-2.5 py-1 rounded-full bg-amber-400/15 border border-amber-400/30">
-            {category.lessons.length}
+            <Num>{category.lessons.length}</Num>
           </span>
         )}
       </div>
