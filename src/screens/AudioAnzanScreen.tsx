@@ -11,6 +11,7 @@
 // [FIX 1] — getAudioAnzanBadgeKey: correct map (S03/S04 addition · S05/S06 multiplication · S07/S08 division · S09/S10 chains)
 // [FIX 2] — added master_chains_audio (L4)
 // [FIX 3] — pass real levelNum (0-7) to AdaptiveFeedback instead of 0
+// [FIX AUDIO] — Fix speech cut-off & pass lang to numberToArabicWordsDecimal + mute sorobana in EN
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -145,8 +146,7 @@ function buildSkillId(level: SRBLevel, section: SRBSection, module: SRBModule): 
 }
 
 // Builds the speech sequence for audio playback. Connector words (times, divided by,
-// minus) are language-aware via pickLang; numeric words still flow through
-// numberToArabicWordsDecimal (see Missing Translations Report at the end).
+// minus) are language-aware via pickLang; numeric words now pass lang to numberToArabicWordsDecimal.
 function buildSpeechSequence(q: SRBQuestion, lang: 'ar' | 'en'): string[] {
   const { operands, operation, question } = q;
 
@@ -160,24 +160,24 @@ function buildSpeechSequence(q: SRBQuestion, lang: 'ar' | 'en'): string[] {
   const minus = pickLang({ ar: 'ناقص', en: 'minus' }, lang);
 
   if (operation === 'multiplication') {
-    parts.push(numberToArabicWordsDecimal(operands[0]));
-    parts.push(`${times} ${numberToArabicWordsDecimal(Math.abs(operands[1]))}`);
+    parts.push(numberToArabicWordsDecimal(operands[0], lang));
+    parts.push(`${times} ${numberToArabicWordsDecimal(Math.abs(operands[1]), lang)}`);
     return parts;
   }
 
   if (operation === 'division') {
-    parts.push(numberToArabicWordsDecimal(operands[0]));
-    parts.push(`${dividedBy} ${numberToArabicWordsDecimal(Math.abs(operands[1]))}`);
+    parts.push(numberToArabicWordsDecimal(operands[0], lang));
+    parts.push(`${dividedBy} ${numberToArabicWordsDecimal(Math.abs(operands[1]), lang)}`);
     return parts;
   }
 
   operands.forEach((op, i) => {
     if (i === 0) {
-      parts.push(numberToArabicWordsDecimal(op));
+      parts.push(numberToArabicWordsDecimal(op, lang));
     } else if (op >= 0) {
-      parts.push(numberToArabicWordsDecimal(op));
+      parts.push(numberToArabicWordsDecimal(op, lang));
     } else {
-      parts.push(`${minus} ${numberToArabicWordsDecimal(Math.abs(op))}`);
+      parts.push(`${minus} ${numberToArabicWordsDecimal(Math.abs(op), lang)}`);
     }
   });
 
@@ -281,7 +281,7 @@ export function AudioAnzanScreen({
       for (const term of seq) {
         if (cancelled || myGeneration !== audioSequenceRef.current) return;
         await new Promise<void>((resolve) => {
-          speak(term, { rate: 0.9, onEnd: () => resolve() });
+          speak(term, { rate: 0.9, lang: lang === 'ar' ? 'ar-SA' : 'en-US', onEnd: () => resolve() });
         });
         await new Promise((r) => setTimeout(r, DELAY_BETWEEN_TERMS_MS));
       }
@@ -340,9 +340,9 @@ export function AudioAnzanScreen({
     playSound('error');
     setFeedback('wrong');
     setSavedTimeMs(maxMs);
-    sorobana.speakWrong();
+    if (lang === 'ar') sorobana.speakWrong();
     setPhase('reveal');
-  }, [currentQ, feedback, maxMs, playSound, sorobana, trackPerformance]);
+  }, [currentQ, feedback, maxMs, playSound, sorobana, trackPerformance, lang]);
 
   const handleReplay = useCallback(() => {
     if (replayUsed || !currentQ) return;
@@ -374,7 +374,7 @@ export function AudioAnzanScreen({
       setScore((s) => s + 1);
       setFeedback('correct');
       playSound('success');
-      sorobana.speakCorrect();
+      if (lang === 'ar') sorobana.speakCorrect();
       onXP?.(XP_PER_CORRECT);
       addXP(XP_PER_CORRECT);
       updateStreak();
@@ -382,13 +382,13 @@ export function AudioAnzanScreen({
     } else {
       setFeedback('wrong');
       playSound('error');
-      sorobana.speakWrong();
+      if (lang === 'ar') sorobana.speakWrong();
     }
     setSavedTimeMs(timeMs);
     setPhase('reveal');
   }, [
     currentQ, abacusValue, elapsedMs, feedback, playSound, sorobana,
-    onXP, burst, addXP, updateStreak, trackPerformance,
+    onXP, burst, addXP, updateStreak, trackPerformance, lang,
   ]);
 
   const buildPerformances = useCallback((): SkillPerformance[] => {
@@ -600,7 +600,7 @@ export function AudioAnzanScreen({
               <p>
                 {pickLang(
                   {
-                    ar: 'ستسمع الأرقام واحداً واحداً بالعربية',
+                    ar: 'ستسمع الأرقام واحداً واحداً',
                     en: 'You will hear the numbers one by one',
                   },
                   lang,
@@ -814,7 +814,7 @@ export function AudioAnzanScreen({
 
         <SorobanaCompanion
           isSpeaking={sorobana.isSpeaking}
-          onClick={() => sorobana.speakTeaching()}
+          onClick={() => { if (lang === 'ar') sorobana.speakTeaching(); }}
           variant="pointing"
           sizeOverride={150}
           offsetBottom="8rem"
