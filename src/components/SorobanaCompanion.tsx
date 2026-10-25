@@ -1,6 +1,8 @@
 // src/components/SorobanaCompanion.tsx
 import mainImg from '@/assets/sorobana/sorobana-main.webp';
 import pointingImg from '@/assets/sorobana/sorobana-teaching-pointing.webp';
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
 
 type LessonMode = 'watch' | 'try';
 type SorobanaVariant = 'main' | 'pointing';
@@ -24,6 +26,8 @@ export function SorobanaCompanion({
   offsetBottom = '12rem',
   clickThrough = false,
 }: SorobanaCompanionProps) {
+  const { lang, dir } = useT();
+
   let size: number;
   if (sizeOverride) {
     size = sizeOverride;
@@ -40,7 +44,8 @@ export function SorobanaCompanion({
     <button
       type="button"
       onClick={clickThrough ? undefined : onClick}
-      aria-label="سوروبانا — المعلمة"
+      aria-label={pickLang({ ar: 'سوروبانا — المعلمة', en: 'Sorobana — The Teacher' }, lang)}
+      dir={dir}
       className="fixed z-[55] select-none focus:outline-none"
       style={{
         bottom: offsetBottom,
@@ -55,7 +60,7 @@ export function SorobanaCompanion({
     >
       <img
         src={img}
-        alt="سوروبانا"
+        alt={pickLang({ ar: 'سوروبانا', en: 'Sorobana' }, lang)}
         className="w-full pointer-events-none"
         style={{
           objectFit: 'contain',
