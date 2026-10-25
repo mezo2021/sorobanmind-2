@@ -1,33 +1,36 @@
 // src/components/FloatingCompanion.tsx
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { CharacterType } from '@/types';
+
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
 
 import shamImg from '../assets/avatars/sham.png';
 import rayanImg from '../assets/avatars/rayan.png';
 import banaImg from '../assets/avatars/bana.png';
 import joudImg from '../assets/avatars/joud2.png';
 
-const CHARACTER_DATA: Record<CharacterType, { name: string; image: string }> = {
-  sham: { name: 'شام', image: shamImg },
-  rayan: { name: 'ريان', image: rayanImg },
-  bana: { name: 'بانة', image: banaImg },
-  joud: { name: 'جود', image: joudImg },
+const CHARACTER_DATA: Record<CharacterType, { name: string; nameEn: string; image: string }> = {
+  sham: { name: 'شام', nameEn: 'Sham', image: shamImg },
+  rayan: { name: 'ريان', nameEn: 'Rayan', image: rayanImg },
+  bana: { name: 'بانة', nameEn: 'Bana', image: banaImg },
+  joud: { name: 'جود', nameEn: 'Joud', image: joudImg },
 };
 
-const PHRASES: string[] = [
-  'كيف حالك اليوم؟',
-  'هل أنت مستعد لنتعلم أشياء جديدة؟',
-  'أنا فخور بك يا بطل!',
-  'استمر، أنت رائع!',
-  'كل خطوة تقربك من الإتقان!',
-  'هيا نحقق إنجازاً جديداً اليوم!',
-  'أحب رؤيتك تتعلم!',
-  'التركيز هو سر النجاح!',
-  'أنت بطل حقيقي!',
-  'رحلة الألف ميل تبدأ بخطوة!',
-  'تعلّم شيئاً جديداً كل يوم!',
-  'أنت ذكي ومجتهد!',
+const PHRASES: Array<{ ar: string; en: string }> = [
+  { ar: 'كيف حالك اليوم؟', en: 'How are you today?' },
+  { ar: 'هل أنت مستعد لنتعلم أشياء جديدة؟', en: 'Are you ready to learn new things?' },
+  { ar: 'أنا فخور بك يا بطل!', en: "I'm proud of you, hero!" },
+  { ar: 'استمر، أنت رائع!', en: "Keep going, you're amazing!" },
+  { ar: 'كل خطوة تقربك من الإتقان!', en: 'Every step brings you closer to mastery!' },
+  { ar: 'هيا نحقق إنجازاً جديداً اليوم!', en: "Let's achieve something new today!" },
+  { ar: 'أحب رؤيتك تتعلم!', en: 'I love seeing you learn!' },
+  { ar: 'التركيز هو سر النجاح!', en: 'Focus is the secret of success!' },
+  { ar: 'أنت بطل حقيقي!', en: "You're a real hero!" },
+  { ar: 'رحلة الألف ميل تبدأ بخطوة!', en: 'A journey of a thousand miles begins with a single step!' },
+  { ar: 'تعلّم شيئاً جديداً كل يوم!', en: 'Learn something new every day!' },
+  { ar: 'أنت ذكي ومجتهد!', en: "You're smart and hardworking!" },
 ];
 
 const CHARACTER_GRADIENTS: Record<CharacterType, string> = {
@@ -60,14 +63,18 @@ export function FloatingCompanion({
   size = 100,
   offsetBottom = '1.5rem',
 }: FloatingCompanionProps) {
+  const { lang, dir } = useT();
+
   const [character] = useState<CharacterType>(() => getStoredCharacter());
-  const [currentPhrase, setCurrentPhrase] = useState<string | null>(null);
+  const [currentPhrase, setCurrentPhrase] = useState<{ ar: string; en: string } | null>(null);
   const [usedIndices, setUsedIndices] = useState<number[]>([]);
 
   const data = CHARACTER_DATA[character] ?? CHARACTER_DATA.sham;
   const gradient = CHARACTER_GRADIENTS[character] ?? CHARACTER_GRADIENTS.sham;
 
-  const pickPhrase = useCallback((): string => {
+  const localizedName = pickLang({ ar: data.name, en: data.nameEn }, lang);
+
+  const pickPhrase = useCallback((): { ar: string; en: string } => {
     let available = PHRASES.map((_, i) => i).filter((i) => !usedIndices.includes(i));
     if (available.length === 0) {
       setUsedIndices([]);
@@ -95,6 +102,7 @@ export function FloatingCompanion({
             exit={{ opacity: 0, scale: 0.8, y: 10 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             className="fixed z-[70] pointer-events-none"
+            dir={dir}
             style={{
               bottom: `calc(${offsetBottom} + ${size + 14}px)`,
               right: '1rem',
@@ -109,8 +117,8 @@ export function FloatingCompanion({
                 color: '#5D3A1A',
               }}
             >
-              <p className="text-xs sm:text-sm font-bold font-body leading-snug text-right" dir="rtl">
-                {currentPhrase}
+              <p className="text-xs sm:text-sm font-bold font-body leading-snug text-start" dir={dir}>
+                {pickLang(currentPhrase, lang)}
               </p>
               <div
                 className="absolute"
@@ -133,7 +141,10 @@ export function FloatingCompanion({
       <motion.button
         type="button"
         onClick={handleClick}
-        aria-label={`رفيقك ${data.name}`}
+        aria-label={pickLang(
+          { ar: `رفيقك ${localizedName}`, en: `Your companion ${localizedName}` },
+          lang,
+        )}
         className="fixed z-[65] rounded-full shadow-2xl border-2 border-white/40 overflow-hidden select-none"
         style={{
           bottom: offsetBottom,
@@ -152,7 +163,7 @@ export function FloatingCompanion({
         >
           <img
             src={data.image}
-            alt={data.name}
+            alt={localizedName}
             className="w-full h-full select-none pointer-events-none"
             style={{
               objectFit: 'cover',
