@@ -94,6 +94,8 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "في مملكة الأصابع، تعيش عائلتان صديقتان: عائلة اليد اليمنى المسؤولة عن الآحاد، وعائلة اليد اليسرى المسؤولة عن العشرات. الإبهام هو الجدة الحنونة قيمتها 5، والأصابع الأربعة أطفال كل واحد قيمته 1. اجتمعوا معاً ليصنعوا كل الأعداد من 0 إلى 99!": "In the kingdom of fingers, two friendly families live: the right-hand family responsible for units, and the left-hand family responsible for tens. The thumb is the kind grandmother worth 5, and the four fingers are children, each worth 1. Together they create all numbers from 0 to 99!",
   "الإبهام = 5 (الجدة) · الأصابع الأخرى = 1 (طفل)": "Thumb = 5 (Grandma) · Other fingers = 1 (Child)",
   "اليد اليمنى = الآحاد · اليد اليسرى = العشرات": "Right hand = Units · Left hand = Tens",
+  "اليد اليمنى (الآحاد)": "Right Hand (Units)",
+  "اليد اليسرى (العشرات)": "Left Hand (Tens)",
   "مثل الرقم 1": "Like the number 1",
   "مثل الرقم 3": "Like the number 3",
   "مثل الرقم 5 (الجدة)": "Like the number 5 (Grandma)",
@@ -124,7 +126,34 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "القسمة على السوروبان — التقدير والطرح المتتالي": "Division on the soroban — estimation and successive subtraction",
   "سلاسل الجمع والطرح المتعددة": "Multiple addition and subtraction chains",
   "الضرب والقسمة بطرق متقدمة": "Advanced multiplication and division methods",
-  "العمليات على الأعداد العشرية": "Operations on decimal numbers"
+  "العمليات على الأعداد العشرية": "Operations on decimal numbers",
+
+  // 🆕 --- إضافات الامتحانات (Exam & PlacementTest) ---
+  // أسماء المستويات
+  "التمهيدي": "Foundation",
+  "الجمع والطرح": "Addition & Subtraction",
+  "الضرب": "Multiplication",
+  "القسمة": "Division",
+  "سلاسل الجمع والطرح": "Add & Sub Chains",
+  "ضرب وقسمة متقدم": "Advanced Mul & Div",
+  "الكسور العشرية": "Decimals",
+  "الجذور": "Roots",
+
+  // أقسام الأسئلة
+  "جمع": "Addition",
+  "طرح": "Subtraction",
+  "قسمة": "Division",
+  "مختلط": "Mixed",
+  "جمع وطرح": "Add & Subtract",
+
+  // المهارات الضعيفة
+  "طرح بسيط": "Direct Sub",
+  "أصدقاء 5 (جمع)": "Friends of 5 (Add)",
+  "أصدقاء 5 (طرح)": "Friends of 5 (Sub)",
+  "أصدقاء 10 (جمع)": "Friends of 10 (Add)",
+  "أصدقاء 10 (طرح)": "Friends of 10 (Sub)",
+  "ضرب بسيط": "Direct Mul",
+  "قسمة بسيطة": "Direct Div"
 };
 
 const AR_TO_EN: Record<string, string> = {};
