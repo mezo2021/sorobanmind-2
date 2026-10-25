@@ -71,7 +71,7 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
     if (inPreview) {
       setFinalScore(92);
       const savedName = localStorage.getItem('soroban_child_full_name');
-      // ✅ إصلاح: استخدام pickLang للاسم الافتراضي ليتغير حسب لغة الشهادة
+      // ✅ استخدام pickLang للاسم الافتراضي ليتغير حسب لغة الشهادة
       setStudentName(savedName || pickLang({ ar: 'اسم الطالب التجريبي', en: 'Experimental Student Name' }, certLang as any));
       return;
     }
@@ -350,12 +350,10 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
                 }}
               >
                 {info.hasMedal && <CertificateMedal level={info.level} size={26} />}
-                <div className={`flex flex-col ${isAr ? 'items-start' : 'items-start'}`}>
+                <div className="flex flex-col items-start">
                   <span className="font-black leading-tight" style={{ color: SILVER.text, fontSize: '11px' }}>
+                    {/* ✅ إصلاح: هنا يظهر النص الأساسي فقط بلغة واحدة */}
                     {pickLang({ ar: `المستوى ${info.levelAr}`, en: `${info.levelEn} Level` }, certLang as any)}
-                  </span>
-                  <span className="font-bold leading-tight" style={{ color: SILVER.accent, fontSize: '7px', letterSpacing: '0.8px' }}>
-                    {pickLang({ ar: `${info.levelEn.toUpperCase()} LEVEL`, en: info.levelAr }, certLang as any)}
                   </span>
                 </div>
               </div>
