@@ -13,6 +13,7 @@
 // [FIX 3] — pass real levelNum (0-7) to AdaptiveFeedback instead of 0
 // [FIX 4] — remove master_mixed from ANZAN_BADGE_LABELS
 // [FIX AUDIO] — Fix speech cut-off & pass lang to numberToArabicWordsDecimal
+// [FIX AUDIO LANG] — pass lang to speak() + mute companion reactions in English mode
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -333,7 +334,7 @@ export function AnzanScreen({
     if (mode === 'normal') {
       if (isSupported) {
         const speech = buildFullQuestionSpeech(currentQ, lang);
-        speak(speech, { rate: 0.9 });
+        speak(speech, { rate: 0.9, lang: lang === 'ar' ? 'ar-SA' : 'en-US' });
       }
       
       // [FIX AUDIO] - Give it a minimum of 4 seconds so the audio has time to finish
@@ -407,9 +408,9 @@ export function AnzanScreen({
     playSound('error');
     setFeedback('wrong');
     setSavedTimeMs(maxMs);
-    sorobana.speakWrong();
+    if (lang === 'ar') sorobana.speakWrong();
     setPhase('reveal');
-  }, [currentQ, feedback, maxMs, playSound, sorobana, trackPerformance]);
+  }, [currentQ, feedback, maxMs, playSound, sorobana, trackPerformance, lang]);
 
   const handleCheck = useCallback(() => {
     if (!currentQ || feedback !== 'idle') return;
@@ -433,7 +434,7 @@ export function AnzanScreen({
       setScore((s) => s + 1);
       setFeedback('correct');
       playSound('success');
-      sorobana.speakCorrect();
+      if (lang === 'ar') sorobana.speakCorrect();
       onXP?.(XP_PER_CORRECT);
       addXP(XP_PER_CORRECT);
       updateStreak();
@@ -441,13 +442,13 @@ export function AnzanScreen({
     } else {
       setFeedback('wrong');
       playSound('error');
-      sorobana.speakWrong();
+      if (lang === 'ar') sorobana.speakWrong();
     }
     setSavedTimeMs(timeMs);
     setPhase('reveal');
   }, [
     currentQ, abacusValue, elapsedMs, feedback, playSound, sorobana,
-    onXP, burst, addXP, updateStreak, trackPerformance,
+    onXP, burst, addXP, updateStreak, trackPerformance, lang,
   ]);
 
   const buildPerformances = useCallback((): SkillPerformance[] => {
