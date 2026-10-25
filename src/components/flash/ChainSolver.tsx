@@ -7,11 +7,13 @@ import { ArrowRight, ChevronLeft, RotateCcw, Lightbulb, CheckCircle2, AlertTrian
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useSpeech } from '@/hooks/useSpeech';
 import type { FlashLesson } from './types';
+import { useNumberStyleStore } from '@/store/numberStyleStore';
+import { formatNumber } from '@/utils/numberStyle';
 
 const TTS_RATE = 0.7;
-const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+// 🔢 يتبع زر تبديل الأرقام
 function toAr(v: number): string {
-  return String(v).replace(/\d/g, (d) => ARABIC_DIGITS[Number(d)]);
+  return formatNumber(v, useNumberStyleStore.getState().style);
 }
 
 interface ChainSolverProps {
