@@ -21,11 +21,13 @@ const WORDS = {
 let EMOJI_RE: RegExp | null = null;
 try {
   // يمنع خطأ البناء على أهداف TS القديمة (لا property escapes ثابتة)
+  // eslint-disable-next-line no-misleading-character-class
   EMOJI_RE = new RegExp(
     '[\\p{Extended_Pictographic}\\p{Emoji_Presentation}\\u200D\\uFE0E\\uFE0F\\u20E3\\u{1F1E6}-\\u{1F1FF}\\u{1F3FB}-\\u{1F3FF}]',
     'gu',
   );
 } catch {
+  // eslint-disable-next-line no-misleading-character-class
   EMOJI_RE = /[\u2190-\u21FF\u2300-\u23FF\u2600-\u27BF\u2900-\u29FF\u2B00-\u2BFF\uFE0E\uFE0F\u200D\u20E3]|[\uD83C-\uD83E][\uDC00-\uDFFF]/g;
 }
 
@@ -52,6 +54,7 @@ export function sanitizeForSpeech(raw: string, lang: ReadLang): string {
     .replace(/=/g, w.eq);
 
   // رموز مزعجة أخرى تُحذف
+  // eslint-disable-next-line no-useless-escape
   t = t.replace(/[≤≥≠≈<>|~^*#_`\\/{}\[\]()«»"“”]/g, ' ');
 
   // أسطر جديدة → وقفة، ثم ضغط المسافات
