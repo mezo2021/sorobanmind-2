@@ -3,12 +3,17 @@ import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { User, Check } from 'lucide-react';
 
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+
 interface NameInputModalProps {
   onSave: (name: string) => void;
   onSkip?: () => void;
 }
 
 export function NameInputModal({ onSave, onSkip }: NameInputModalProps) {
+  const { lang, dir } = useT();
+
   const inputRef = useRef<HTMLInputElement>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
 
@@ -17,13 +22,25 @@ export function NameInputModal({ onSave, onSkip }: NameInputModalProps) {
 
     if (value.length < 2) {
       if (errorRef.current) {
-        errorRef.current.textContent = 'الرجاء إدخال اسم لا يقل عن حرفين';
+        errorRef.current.textContent = pickLang(
+          {
+            ar: 'الرجاء إدخال اسم لا يقل عن حرفين',
+            en: 'Please enter a name with at least 2 characters',
+          },
+          lang,
+        );
       }
       return;
     }
     if (value.length > 20) {
       if (errorRef.current) {
-        errorRef.current.textContent = 'الاسم طويل جداً (20 حرفاً كحد أقصى)';
+        errorRef.current.textContent = pickLang(
+          {
+            ar: 'الاسم طويل جداً (20 حرفاً كحد أقصى)',
+            en: 'Name is too long (maximum 20 characters)',
+          },
+          lang,
+        );
       }
       return;
     }
@@ -36,14 +53,14 @@ export function NameInputModal({ onSave, onSkip }: NameInputModalProps) {
     if (onSkip) {
       onSkip();
     } else {
-      onSave('البطل');
+      onSave(pickLang({ ar: 'البطل', en: 'Hero' }, lang));
     }
   };
 
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
-      dir="rtl"
+      dir={dir}
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -58,10 +75,22 @@ export function NameInputModal({ onSave, onSkip }: NameInputModalProps) {
 
         {/* Title */}
         <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white text-center mb-2">
-          ما اسمك أيها البطل؟
+          {pickLang(
+            {
+              ar: 'ما اسمك أيها البطل؟',
+              en: "What's your name, hero?",
+            },
+            lang,
+          )}
         </h2>
         <p className="text-sm text-white/50 font-body text-center mb-6">
-          سنستخدم اسمك لتخصيص تجربتك في الأكاديمية
+          {pickLang(
+            {
+              ar: 'سنستخدم اسمك لتخصيص تجربتك في الأكاديمية',
+              en: 'We will use your name to personalize your experience in the academy',
+            },
+            lang,
+          )}
         </p>
 
         {/* Input — uncontrolled */}
@@ -69,13 +98,19 @@ export function NameInputModal({ onSave, onSkip }: NameInputModalProps) {
           <input
             ref={inputRef}
             type="text"
-            placeholder="اكتب اسمك هنا..."
+            placeholder={pickLang(
+              {
+                ar: 'اكتب اسمك هنا...',
+                en: 'Type your name here...',
+              },
+              lang,
+            )}
             maxLength={20}
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
-            dir="rtl"
+            dir={dir}
             inputMode="text"
             className="w-full px-4 py-4 rounded-2xl bg-white/10 border-2 border-white/20 text-white text-lg font-bold font-body text-center placeholder:text-white/30 placeholder:font-normal focus:outline-none focus:border-purple-400/60 transition-colors"
           />
@@ -92,7 +127,7 @@ export function NameInputModal({ onSave, onSkip }: NameInputModalProps) {
           className="btn-primary w-full !py-4"
         >
           <Check className="w-5 h-5" />
-          ابدأ المغامرة!
+          {pickLang({ ar: 'ابدأ المغامرة!', en: 'Start the adventure!' }, lang)}
         </button>
 
         {/* Skip button */}
@@ -101,7 +136,13 @@ export function NameInputModal({ onSave, onSkip }: NameInputModalProps) {
           onClick={handleSkip}
           className="w-full mt-3 text-sm text-white/40 font-body hover:text-white/60 transition-colors py-2"
         >
-          تخطّي (استخدم "البطل" كاسم)
+          {pickLang(
+            {
+              ar: 'تخطّي (استخدم "البطل" كاسم)',
+              en: 'Skip (use "Hero" as the name)',
+            },
+            lang,
+          )}
         </button>
       </motion.div>
     </div>
