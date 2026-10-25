@@ -2,6 +2,10 @@
 import React, { useId } from 'react';
 import { motion } from 'framer-motion';
 
+// 🌍 i18n
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+
 interface FingerMathProps {
   value: number;
   hideValue?: boolean;
@@ -9,7 +13,9 @@ interface FingerMathProps {
 
 interface HandProps {
   digit: number;
-  label: string;
+  labelAr: string;
+  labelEn: string;
+  lang: string;
   mirrored?: boolean;
   hideDigit?: boolean;
 }
@@ -21,7 +27,7 @@ const FINGER_SPECS = [
   { id: 'pinky',  x: 146, height: 78,  rx: 10, width: 20, name: 'الخنصر' },
 ] as const;
 
-function Hand({ digit, label, mirrored = false, hideDigit = false }: HandProps) {
+function Hand({ digit, labelAr, labelEn, lang, mirrored = false, hideDigit = false }: HandProps) {
   const uid = useId().replace(/:/g, '');
   const skinId = 'skinGradient-' + uid;
   const goldId = 'goldGradient-' + uid;
@@ -39,7 +45,7 @@ function Hand({ digit, label, mirrored = false, hideDigit = false }: HandProps) 
         xmlns="http://www.w3.org/2000/svg"
         className="overflow-visible"
         style={{ transform: mirrored ? 'scaleX(-1)' : 'none' }}
-        aria-label={label + ': ' + safeDigit}
+        aria-label={labelAr + ': ' + safeDigit}
         role="img"
       >
         <defs>
@@ -165,11 +171,17 @@ function Hand({ digit, label, mirrored = false, hideDigit = false }: HandProps) 
         />
       </svg>
 
-      <p className="text-xs text-white/60 font-body text-center font-bold">
-        {label}
-      </p>
+      <div className="flex flex-col items-center justify-center -mt-1">
+        <p className="text-sm text-white/90 font-body text-center font-bold">
+          {pickLang({ ar: labelAr, en: labelEn }, lang)}
+        </p>
+        <p className="text-[10px] text-white/50 font-body text-center mt-0.5">
+          {pickLang({ ar: labelEn, en: labelAr }, lang)}
+        </p>
+      </div>
+
       {!hideDigit && (
-        <p className="text-3xl font-black text-electric-300 font-display">
+        <p className="text-3xl font-black text-electric-300 font-display mt-1">
           {safeDigit}
         </p>
       )}
@@ -178,16 +190,30 @@ function Hand({ digit, label, mirrored = false, hideDigit = false }: HandProps) 
 }
 
 export function FingerMath({ value, hideValue = false }: FingerMathProps) {
+  const { lang, dir } = useT();
   const safeValue = Math.max(0, Math.min(99, Math.floor(value)));
   const units = safeValue % 10;
   const tens = Math.floor(safeValue / 10);
 
   return (
-    <div className="flex items-center justify-center gap-6 p-4" dir="rtl">
-      <Hand digit={units} label="اليد اليمنى (الآحاد)" hideDigit={hideValue} />
+    <div className="flex items-center justify-center gap-6 p-4" dir={dir}>
+      <Hand 
+        digit={units} 
+        labelAr="اليد اليمنى (الآحاد)" 
+        labelEn="Right Hand (Units)" 
+        lang={lang} 
+        hideDigit={hideValue} 
+      />
 
       {tens > 0 && (
-        <Hand digit={tens} label="اليد اليسرى (العشرات)" mirrored hideDigit={hideValue} />
+        <Hand 
+          digit={tens} 
+          labelAr="اليد اليسرى (العشرات)" 
+          labelEn="Left Hand (Tens)" 
+          lang={lang} 
+          mirrored 
+          hideDigit={hideValue} 
+        />
       )}
     </div>
   );
