@@ -36,6 +36,7 @@ import {
   type AbacusState,
 } from './bank';
 import { LaserAbacus, mismatch, diffBeadKeys, rodValue, type LaserTheme } from './LaserAbacus';
+import { Num } from '@/components/Num';
 
 // ═══ ثوابت ═══
 const SESSION_SECONDS = 90;
@@ -604,10 +605,10 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
               <BookOpen className="w-4 h-4 text-sky-300" />
             </button>
             <div className="bg-slate-950/80 px-2 py-1.5 rounded-lg border border-rose-500/30 text-rose-300 font-bold text-sm">
-              ⏳ <span className="tabular-nums">{sessionTimeLeft}</span>
+              ⏳ <span className="tabular-nums"><Num>{sessionTimeLeft}</Num></span>
             </div>
             <div className="bg-slate-950/80 px-2 py-1.5 rounded-lg border border-sky-500/30 text-sky-300 font-bold text-sm">
-              🤝 <span className="tabular-nums">{correctCount}</span>
+              🤝 <span className="tabular-nums"><Num>{correctCount}</Num></span>
             </div>
           </div>
         </div>
@@ -682,7 +683,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
                 {streak >= 2 && (
                   <div className="px-2 py-1 rounded-full border border-orange-400/50 bg-orange-950/70 text-orange-300 text-[11px] font-extrabold flex items-center gap-1">
                     <Flame className="w-3.5 h-3.5" />
-                    <span className="tabular-nums">{streak}</span>
+                    <span className="tabular-nums"><Num>{streak}</Num></span>
                   </div>
                 )}
                 <div className="px-2.5 py-1 rounded-full border border-sky-500/40 bg-sky-950/80 text-sky-300 text-[11px] font-extrabold">
@@ -692,7 +693,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
             </div>
 
             <div className="text-3xl sm:text-4xl font-black text-amber-300 font-mono" dir="ltr">
-              {currentProblem.expression}
+              <Num>{currentProblem.expression}</Num>
             </div>
 
             <div className="flex items-center gap-2 w-full justify-center">
@@ -731,7 +732,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
             />
             <div className="mt-2 flex items-center justify-center gap-2 text-xs text-slate-400" dir="rtl">
               <span>القِيمَةُ:</span>
-              <span className="text-sky-300 text-base font-black tabular-nums font-mono">{calcAbacusValue(abacusState)}</span>
+              <span className="text-sky-300 text-base font-black tabular-nums font-mono"><Num>{calcAbacusValue(abacusState)}</Num></span>
             </div>
 
             {/* نجوم المسألة */}
@@ -831,15 +832,15 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
 
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-400">العَمَلِيَّاتُ النَّاجِحَة:</span>
-                  <span className="text-sky-300 font-bold text-base tabular-nums">{correctCount}</span>
+                  <span className="text-sky-300 font-bold text-base tabular-nums"><Num>{correctCount}</Num></span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-400">بِلا أَخْطَاء (⭐⭐⭐):</span>
-                  <span className="text-emerald-300 font-bold tabular-nums">{perfectCount} · {accuracy}%</span>
+                  <span className="text-emerald-300 font-bold tabular-nums"><Num>{perfectCount} · {accuracy}</Num>%</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-400">عَدَدُ الأَخْطَاء:</span>
-                  <span className="text-rose-300 font-bold tabular-nums">{totalErrors}</span>
+                  <span className="text-rose-300 font-bold tabular-nums"><Num>{totalErrors}</Num></span>
                 </div>
                 {weakest && totalErrors > 0 && (
                   <div className="flex justify-between items-center text-sm">
@@ -862,7 +863,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
                 )}
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-400">طَاقَةُ XP:</span>
-                  <span className="text-amber-400 font-bold text-base tabular-nums">+{xpEarned} XP</span>
+                  <span className="text-amber-400 font-bold text-base tabular-nums">+<Num>{xpEarned}</Num> XP</span>
                 </div>
               </div>
 
