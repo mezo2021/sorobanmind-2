@@ -30,6 +30,11 @@ import {
   type PlacementResult,
 } from '@/data/srb/exam';
 
+// 🌍 i18n
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
+
 // ═══════════════════════════════════════════════════════════
 // الأنواع
 // ═══════════════════════════════════════════════════════════
@@ -78,7 +83,7 @@ function getColumnsForQuestion(question: PlacementQuestion): number {
 }
 
 /** ✅ اسم وصفي لعدد الأعمدة */
-function getColumnsLabel(columns: number, isArabic: boolean): string {
+function getColumnsLabel(columns: number, lang: string): string {
   const map: Record<number, { ar: string; en: string }> = {
     3: { ar: '٣ أعمدة', en: '3 Columns' },
     6: { ar: '٦ أعمدة', en: '6 Columns' },
@@ -87,7 +92,7 @@ function getColumnsLabel(columns: number, isArabic: boolean): string {
   };
   const entry = map[columns];
   if (!entry) return `${columns}`;
-  return isArabic ? entry.ar : entry.en;
+  return pickLang(entry, lang as any);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -99,6 +104,7 @@ export function PlacementTestScreen({
   onComplete,
   playSound,
 }: PlacementTestScreenProps) {
+  const { lang, dir } = useT();
   const [phase, setPhase] = useState<Phase>('intro');
   const [questions, setQuestions] = useState<PlacementQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -231,7 +237,7 @@ export function PlacementTestScreen({
   // ═══════════════════════════════════════════════════════
   if (phase === 'intro') {
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button
             type="button"
@@ -242,10 +248,13 @@ export function PlacementTestScreen({
           </button>
           <div className="flex-1">
             <h2 className="text-2xl font-extrabold font-display text-white">
-              امتحان تحديد المستوى
+              {pickLang({ ar: 'امتحان تحديد المستوى', en: 'Placement Test' }, lang)}
             </h2>
             <p className="text-sm text-white/50 font-body">
-              اختبار شامل من {formatNumber(40, numberStyle)} سؤالاً
+              {pickLang({
+                ar: `اختبار شامل من ${formatNumber(40, numberStyle)} سؤالاً`,
+                en: `Comprehensive test of ${formatNumber(40, numberStyle)} questions`
+              }, lang)}
             </p>
           </div>
           <Target className="w-6 h-6 text-gold-300" />
@@ -253,7 +262,7 @@ export function PlacementTestScreen({
 
         <div className="glass-card p-4 mb-6">
           <p className="text-xs text-white/60 font-body mb-3 text-center">
-            اختر نمط الأرقام
+            {pickLang({ ar: 'اختر نمط الأرقام', en: 'Choose number style' }, lang)}
           </p>
           <div className="flex gap-2 bg-white/5 p-1 rounded-2xl">
             <button
@@ -291,7 +300,7 @@ export function PlacementTestScreen({
           </div>
 
           <h3 className="text-xl font-extrabold font-display text-white text-center mb-4">
-            كيف يعمل الامتحان؟
+            {pickLang({ ar: 'كيف يعمل الامتحان؟', en: 'How does the exam work?' }, lang)}
           </h3>
 
           <div className="space-y-3 text-sm text-white/80 font-body">
@@ -299,39 +308,57 @@ export function PlacementTestScreen({
               <span className="text-gold-300 font-bold shrink-0">
                 {formatNumber(1, numberStyle)}.
               </span>
-              <p>{formatNumber(40, numberStyle)} سؤالاً من كل المستويات (L0 → L7)</p>
+              <p>
+                {pickLang({
+                  ar: `${formatNumber(40, numberStyle)} سؤالاً من كل المستويات (L0 → L7)`,
+                  en: `${formatNumber(40, numberStyle)} questions from all levels (L0 → L7)`
+                }, lang)}
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">
                 {formatNumber(2, numberStyle)}.
               </span>
               {/* 🆕 [FIX TIME] — 10 دقائق */}
-              <p>الزمن الإجمالي: {formatNumber(10, numberStyle)} دقائق فقط</p>
+              <p>
+                {pickLang({
+                  ar: `الزمن الإجمالي: ${formatNumber(10, numberStyle)} دقائق فقط`,
+                  en: `Total time: ${formatNumber(10, numberStyle)} minutes only`
+                }, lang)}
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">
                 {formatNumber(3, numberStyle)}.
               </span>
-              <p>الإجابة على السوروبان — مثّل الناتج على العداد</p>
+              <p>
+                {pickLang({ ar: 'الإجابة على السوروبان — مثّل الناتج على العداد', en: 'Answer on the soroban — represent the result on the abacus' }, lang)}
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">
                 {formatNumber(4, numberStyle)}.
               </span>
-              <p>يمكنك التنقل (السابق/التالي) في أي وقت</p>
+              <p>
+                {pickLang({ ar: 'يمكنك التنقل (السابق/التالي) في أي وقت', en: 'You can navigate (Previous/Next) at any time' }, lang)}
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">
                 {formatNumber(5, numberStyle)}.
               </span>
-              <p>لا يوجد تقييم فوري — ينتقل مباشرة للسؤال التالي</p>
+              <p>
+                {pickLang({ ar: 'لا يوجد تقييم فوري — ينتقل مباشرة للسؤال التالي', en: 'No instant feedback — it moves directly to the next question' }, lang)}
+              </p>
             </div>
           </div>
 
           <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30">
             <p className="text-xs text-amber-200 font-body leading-relaxed">
-              💡 <strong>ملاحظة:</strong> الأسئلة غير المُجابة تُحتسب صفراً.
-              يمكنك إنهاء الامتحان في أي وقت بزر "إنهاء الاختبار".
+              {pickLang({
+                ar: '💡 ملاحظة: الأسئلة غير المُجابة تُحتسب صفراً. يمكنك إنهاء الامتحان في أي وقت بزر "إنهاء الاختبار".',
+                en: '💡 Note: Unanswered questions count as zero. You can end the exam at any time with the "End Exam" button.'
+              }, lang)}
             </p>
           </div>
         </motion.div>
@@ -342,7 +369,7 @@ export function PlacementTestScreen({
           className="btn-primary w-full !py-4 !text-lg"
         >
           <Play className="w-6 h-6" />
-          ابدأ الامتحان
+          {pickLang({ ar: 'ابدأ الامتحان', en: 'Start Exam' }, lang)}
         </button>
       </div>
     );
@@ -364,15 +391,18 @@ export function PlacementTestScreen({
     );
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-4 max-w-2xl mx-auto min-h-screen flex flex-col">
+      <div dir={dir} className="px-3 sm:px-6 py-4 max-w-2xl mx-auto min-h-screen flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <div className="flex-1 min-w-0">
             <h2 className="text-base font-bold text-white truncate">
-              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
+              {pickLang({
+                ar: `السؤال ${formatNumber(currentIdx + 1, numberStyle)} / ${formatNumber(questions.length, numberStyle)}`,
+                en: `Question ${formatNumber(currentIdx + 1, numberStyle)} / ${formatNumber(questions.length, numberStyle)}`
+              }, lang)}
             </h2>
             <p className="text-[10px] text-white/50 font-body truncate">
-              {getLevelName(currentQ.level)} · {currentQ.section}
+              {translateDynamic({ text: getLevelName(currentQ.level) }, lang, 'text')} · {translateDynamic({ text: currentQ.section }, lang, 'text')}
             </p>
           </div>
 
@@ -380,7 +410,7 @@ export function PlacementTestScreen({
             type="button"
             onClick={() => { playSound('click'); toggleStyle(); }}
             className="p-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 transition"
-            title="تبديل نمط الأرقام"
+            title={pickLang({ ar: 'تبديل نمط الأرقام', en: 'Toggle number style' }, lang)}
           >
             <Type className="w-4 h-4 text-white/70" />
           </button>
@@ -419,7 +449,7 @@ export function PlacementTestScreen({
             <div className="flex items-center justify-center gap-2 mb-4">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-400/30 text-purple-200 text-xs font-bold">
                 <Grid3X3 className="w-3.5 h-3.5" />
-                {getColumnsLabel(columns, isArabic)}
+                {getColumnsLabel(columns, lang)}
               </span>
             </div>
 
@@ -454,7 +484,7 @@ export function PlacementTestScreen({
               className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
               <ArrowRight className="w-4 h-4" />
-              السابق
+              {pickLang({ ar: 'السابق', en: 'Previous' }, lang)}
             </button>
 
             <button
@@ -463,7 +493,7 @@ export function PlacementTestScreen({
               className="py-3 rounded-2xl bg-gradient-to-l from-gold-400 to-amber-600 text-white font-bold text-sm flex items-center justify-center gap-1.5 shadow-lg shadow-gold-500/30 hover:shadow-gold-500/50 transition"
             >
               <CheckCircle2 className="w-4 h-4" />
-              تحقق
+              {pickLang({ ar: 'تحقق', en: 'Check' }, lang)}
             </button>
 
             <button
@@ -472,7 +502,7 @@ export function PlacementTestScreen({
               disabled={isLastQuestion}
               className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
-              التالي
+              {pickLang({ ar: 'التالي', en: 'Next' }, lang)}
               <ArrowLeft className="w-4 h-4" />
             </button>
           </div>
@@ -483,7 +513,7 @@ export function PlacementTestScreen({
             className="w-full py-2.5 rounded-2xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 font-bold text-xs flex items-center justify-center gap-2 transition"
           >
             <LogOut className="w-3.5 h-3.5" />
-            إنهاء الاختبار
+            {pickLang({ ar: 'إنهاء الاختبار', en: 'End Exam' }, lang)}
           </button>
         </div>
 
@@ -504,20 +534,21 @@ export function PlacementTestScreen({
                 transition={{ type: 'spring', stiffness: 250, damping: 25 }}
                 onClick={(e) => e.stopPropagation()}
                 className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-amber-500/30 text-center"
-                dir="rtl"
+                dir={dir}
               >
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center">
                   <LogOut className="w-8 h-8 text-amber-300" />
                 </div>
 
                 <h3 className="text-xl font-extrabold font-display text-white mb-2">
-                  إنهاء الاختبار؟
+                  {pickLang({ ar: 'إنهاء الاختبار؟', en: 'End Exam?' }, lang)}
                 </h3>
 
                 <p className="text-sm text-white/60 font-body mb-6 leading-relaxed">
-                  ستُحتسب الأسئلة غير المُجابة <span className="text-red-300 font-bold">صفراً</span>.
-                  <br />
-                  النتيجة النهائية = مجموع الإجابات الصحيحة فقط.
+                  {pickLang({
+                    ar: 'ستُحتسب الأسئلة غير المُجابة صفراً. النتيجة النهائية = مجموع الإجابات الصحيحة فقط.',
+                    en: 'Unanswered questions will be counted as zero. Final score = sum of correct answers only.'
+                  }, lang)}
                 </p>
 
                 <div className="flex gap-3">
@@ -526,14 +557,14 @@ export function PlacementTestScreen({
                     onClick={confirmEndExam}
                     className="flex-1 py-3 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white font-bold"
                   >
-                    نعم، أنهِ الامتحان
+                    {pickLang({ ar: 'نعم، أنهِ الامتحان', en: 'Yes, end the exam' }, lang)}
                   </button>
                   <button
                     type="button"
                     onClick={() => { playSound('click'); setShowEndConfirm(false); }}
                     className="flex-1 py-3 rounded-2xl bg-white/10 text-white/80 font-bold"
                   >
-                    متابعة
+                    {pickLang({ ar: 'متابعة', en: 'Continue' }, lang)}
                   </button>
                 </div>
               </motion.div>
@@ -553,7 +584,7 @@ export function PlacementTestScreen({
     const isNewL0 = isLowScore && result.recommendedLevel !== 'L0';
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -572,36 +603,42 @@ export function PlacementTestScreen({
             </motion.div>
 
             <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-              نتيجة تحديد المستوى
+              {pickLang({ ar: 'نتيجة تحديد المستوى', en: 'Placement Test Result' }, lang)}
             </h2>
 
             <div className="my-6">
-              <p className="text-sm text-white/60 font-body mb-1">المستوى المُوصى به</p>
+              <p className="text-sm text-white/60 font-body mb-1">
+                {pickLang({ ar: 'المستوى المُوصى به', en: 'Recommended Level' }, lang)}
+              </p>
               <p className="text-5xl font-black font-display shimmer-text">
                 {recommendedLevel}
               </p>
               <p className="text-lg font-bold text-gold-300 font-body mt-1">
-                {getLevelName(recommendedLevel)}
+                {translateDynamic({ text: getLevelName(recommendedLevel) }, lang, 'text')}
               </p>
 
               {isNewL0 && (
                 <p className="text-xs text-amber-300 font-body mt-2 bg-amber-500/10 border border-amber-400/30 rounded-xl px-3 py-2 inline-block">
-                  📌 نوصي بالبدء من المستوى التمهيدي الجديد (L0)
+                  {pickLang({ ar: '📌 نوصي بالبدء من المستوى التمهيدي الجديد (L0)', en: '📌 We recommend starting from the new foundation level (L0)' }, lang)}
                 </p>
               )}
             </div>
 
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
-              <p className="text-sm text-white/60 font-body">النتيجة الكلية</p>
+              <p className="text-sm text-white/60 font-body">
+                {pickLang({ ar: 'النتيجة الكلية', en: 'Total Score' }, lang)}
+              </p>
               <p className="text-4xl font-black text-white font-display mt-1">
-                {formatNumber(result.totalScore, numberStyle)}٪
+                {formatNumber(result.totalScore, numberStyle)}%
               </p>
             </div>
           </div>
         </motion.div>
 
         <div className="glass-card p-5 mb-6">
-          <h3 className="text-sm font-bold text-amber-300 mb-4">📊 تفصيل المستويات</h3>
+          <h3 className="text-sm font-bold text-amber-300 mb-4">
+            {pickLang({ ar: '📊 تفصيل المستويات', en: '📊 Levels Breakdown' }, lang)}
+          </h3>
 
           <div className="space-y-2">
             {result.levels.map((lvl) => (
@@ -621,13 +658,13 @@ export function PlacementTestScreen({
                       <XCircle className="w-4 h-4 text-red-400" />
                     )}
                     <span className="font-bold text-white text-sm">
-                      {lvl.levelId} — {getLevelName(lvl.levelId)}
+                      {lvl.levelId} — {translateDynamic({ text: getLevelName(lvl.levelId) }, lang, 'text')}
                     </span>
                   </div>
                   <span className={`text-xs font-bold ${
                     lvl.passed ? 'text-emerald-300' : 'text-red-300'
                   }`}>
-                    {formatNumber(lvl.correct, numberStyle)}/{formatNumber(lvl.total, numberStyle)} · {formatNumber(lvl.percentage, numberStyle)}٪
+                    {formatNumber(lvl.correct, numberStyle)}/{formatNumber(lvl.total, numberStyle)} · {formatNumber(lvl.percentage, numberStyle)}%
                   </span>
                 </div>
                 <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
@@ -649,7 +686,7 @@ export function PlacementTestScreen({
         {result.weakSkills.length > 0 && (
           <div className="glass-card p-5 mb-6">
             <h3 className="text-sm font-bold text-amber-300 mb-3">
-              📌 مهارات تحتاج مراجعة
+              {pickLang({ ar: '📌 مهارات تحتاج مراجعة', en: '📌 Skills to Review' }, lang)}
             </h3>
             <div className="flex flex-wrap gap-2">
               {result.weakSkills.map((skill) => (
@@ -657,12 +694,12 @@ export function PlacementTestScreen({
                   key={skill}
                   className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-200 text-xs font-bold"
                 >
-                  {skill}
+                  {translateDynamic({ text: skill }, lang, 'text')}
                 </span>
               ))}
             </div>
             <p className="text-xs text-white/60 font-body mt-3">
-              💡 سيُركّز التدريب على هذه المهارات أولاً
+              {pickLang({ ar: '💡 سيُركّز التدريب على هذه المهارات أولاً', en: '💡 Training will focus on these skills first' }, lang)}
             </p>
           </div>
         )}
@@ -677,7 +714,10 @@ export function PlacementTestScreen({
             className="btn-primary w-full !py-4 !text-lg"
           >
             <Sparkles className="w-6 h-6" />
-            ابدأ من {recommendedLevel} — {getLevelName(recommendedLevel)}
+            {pickLang({
+              ar: `ابدأ من ${recommendedLevel} — ${translateDynamic({ text: getLevelName(recommendedLevel) }, lang, 'text')}`,
+              en: `Start from ${recommendedLevel} — ${translateDynamic({ text: getLevelName(recommendedLevel) }, lang, 'text')}`
+            }, lang)}
           </button>
 
           <button
@@ -685,7 +725,7 @@ export function PlacementTestScreen({
             onClick={() => { playSound('click'); onBack(); }}
             className="btn-ghost w-full"
           >
-            العودة للرئيسية
+            {pickLang({ ar: 'العودة للرئيسية', en: 'Back to Home' }, lang)}
           </button>
         </div>
       </div>
