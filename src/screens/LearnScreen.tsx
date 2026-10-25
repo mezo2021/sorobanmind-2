@@ -1,11 +1,15 @@
 // src/screens/LearnScreen.tsx
-// 📖 قائمة دروس المستوى (Level → Lessons)
-// يعرض دروس المستوى (مقدمة، S1، S2...) مع القفل المتسلسل
+// 📖 Level lessons list (Level → Lessons)
+// Displays the level lessons (Introduction, S1, S2…) with sequential locking
 
 import { motion } from 'framer-motion';
 import {
   Home, BookOpen, CheckCircle2, Lock, Star, Type, ChevronRight,
 } from 'lucide-react';
+
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
 
 import { getLessonsByLevel } from '@/curriculum/lessons';
 import { FloatingCompanion } from '@/components/FloatingCompanion';
@@ -15,7 +19,7 @@ import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 
 // ═══════════════════════════════════════════════════════════
-// الأنواع
+// Types
 // ═══════════════════════════════════════════════════════════
 
 interface LearnScreenProps {
@@ -26,7 +30,7 @@ interface LearnScreenProps {
 }
 
 // ═══════════════════════════════════════════════════════════
-// بيانات المستوى للعرض
+// Level display data
 // ═══════════════════════════════════════════════════════════
 
 const LEVEL_META: Record<string, {
@@ -46,7 +50,7 @@ const LEVEL_META: Record<string, {
 };
 
 // ═══════════════════════════════════════════════════════════
-// الشاشة
+// Screen
 // ═══════════════════════════════════════════════════════════
 
 export function LearnScreen({
@@ -55,27 +59,33 @@ export function LearnScreen({
   onOpenLesson,
   playSound,
 }: LearnScreenProps) {
+  const { lang, dir } = useT();
+
   const meta = LEVEL_META[levelId];
   const lessons = getLessonsByLevel(levelId);
   const completedLessons = useProgressStore((s) => s.completedLessons);
   const { stats } = useGameStats();
   const { style: numberStyle, toggleStyle } = useNumberStyleStore();
 
-  // ─── الحماية ───
+  // ─── Guard ───
   if (!meta) {
     return (
-      <div dir="rtl" className="min-h-screen flex items-center justify-center p-4">
+      <div dir={dir} className="min-h-screen flex items-center justify-center p-4">
         <div className="glass-card p-6 text-center max-w-md">
-          <p className="text-white/60 mb-4">المستوى غير موجود</p>
-          <button onClick={onBack} className="btn-primary w-full">رجوع</button>
+          <p className="text-white/60 mb-4">
+            {pickLang({ ar: 'المستوى غير موجود', en: 'Level not found' }, lang)}
+          </p>
+          <button onClick={onBack} className="btn-primary w-full">
+            {pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
+          </button>
         </div>
       </div>
     );
   }
 
-  // ⚠️ TEMP-DEV-PREVIEW: يُحذف عند انتهاء التطوير
-  // السبب: يتجاهل قفل الدروس في وضع المطور
-  // الحذف: ابحث عن "TEMP-DEV-PREVIEW" في المشروع
+  // ⚠️ TEMP-DEV-PREVIEW: remove when development is complete
+  // Reason: bypasses the lesson lock in developer mode
+  // Removal: search for "TEMP-DEV-PREVIEW" in the project
   const isPreviewMode =
     typeof window !== 'undefined' &&
     localStorage.getItem('soroban_dev_preview') === 'true';
@@ -93,29 +103,33 @@ export function LearnScreen({
   };
 
   return (
-    <div dir="rtl" className="min-h-screen pb-32">
+    <div dir={dir} className="min-h-screen pb-32">
       {/* ───── Header ───── */}
       <div className="sticky top-0 z-30 backdrop-blur-lg bg-slate-900/70 border-b border-white/10 px-3 sm:px-6 py-3">
         <div className="max-w-3xl mx-auto flex items-center gap-2">
           <button
             onClick={goHome}
             className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
-            aria-label="رجوع"
+            aria-label={pickLang({ ar: 'رجوع', en: 'Back' }, lang)}
           >
             <Home className="w-5 h-5 text-white" />
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-base font-bold text-white truncate">
-              📖 دروس {formatNumber(meta.number, numberStyle)} — {meta.title}
+              📖 {pickLang({ ar: 'دروس', en: 'Lessons' }, lang)}{' '}
+              {formatNumber(meta.number, numberStyle)} —{' '}
+              {pickLang({ ar: meta.title, en: meta.titleEn }, lang)}
             </h1>
             <p className="text-[10px] text-white/50 truncate">
-              {meta.titleEn} · {formatNumber(doneCount, numberStyle)}/{formatNumber(lessons.length, numberStyle)} مكتمل
+              {meta.titleEn} · {formatNumber(doneCount, numberStyle)}/
+              {formatNumber(lessons.length, numberStyle)}{' '}
+              {pickLang({ ar: 'مكتمل', en: 'completed' }, lang)}
             </p>
           </div>
           <button
             onClick={() => { playSound('click'); toggleStyle(); }}
             className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
-            aria-label="تبديل نمط الأرقام"
+            aria-label={pickLang({ ar: 'تبديل نمط الأرقام', en: 'Toggle number style' }, lang)}
           >
             <Type className="w-5 h-5 text-white" />
           </button>
@@ -132,14 +146,25 @@ export function LearnScreen({
           <div className={`absolute -top-20 -right-20 w-48 h-48 bg-gradient-to-br ${meta.gradient} opacity-20 blur-3xl`} />
           <div className="relative">
             <h2 className="text-lg font-extrabold text-white mb-2">
-              {formatText(meta.title, numberStyle)}
+              {formatText(
+                pickLang({ ar: meta.title, en: meta.titleEn }, lang),
+                numberStyle,
+              )}
             </h2>
             <p className="text-xs text-white/60 mb-3">
-              أكمل الدروس بالترتيب لفتح التمرّن والأنزان
+              {pickLang(
+                {
+                  ar: 'أكمل الدروس بالترتيب لفتح التمرّن والأنزان',
+                  en: 'Complete the lessons in order to unlock Practice and Anzan',
+                },
+                lang,
+              )}
             </p>
 
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-white/60">التقدم:</span>
+              <span className="text-xs text-white/60">
+                {pickLang({ ar: 'التقدم:', en: 'Progress:' }, lang)}
+              </span>
               <span className="text-sm font-bold text-gold-300">
                 {formatNumber(progressPct, numberStyle)}٪
               </span>
@@ -155,7 +180,7 @@ export function LearnScreen({
           </div>
         </motion.div>
 
-        {/* ───── قائمة الدروس ───── */}
+        {/* ───── Lessons list ───── */}
         <div className="space-y-3">
           {lessons.map((lesson, idx) => {
             const unlocked = isLessonUnlocked(idx);
@@ -175,7 +200,7 @@ export function LearnScreen({
                   onOpenLesson(lesson.id);
                 }}
                 disabled={!unlocked}
-                className={`glass-card p-4 w-full text-right flex items-center gap-3 ${
+                className={`glass-card p-4 w-full text-start flex items-center gap-3 ${
                   !unlocked ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
@@ -192,11 +217,15 @@ export function LearnScreen({
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base font-bold text-white truncate">
                     {lesson.isTheoretical ? '🎬 ' : '📝 '}
-                    {formatText(lesson.title.ar, numberStyle)}
+                    {formatText(
+                      translateDynamic({ value: lesson.title.ar }, lang, 'value'),
+                      numberStyle,
+                    )}
                   </h3>
                   <p className="text-[10px] text-white/40 truncate mt-0.5">
-                    {lesson.skillId ?? 'مقدمة'} ·{' '}
-                    {formatNumber(lesson.estimatedMinutes, numberStyle)} دقيقة
+                    {lesson.skillId ?? pickLang({ ar: 'مقدمة', en: 'Intro' }, lang)} ·{' '}
+                    {formatNumber(lesson.estimatedMinutes, numberStyle)}{' '}
+                    {pickLang({ ar: 'دقيقة', en: 'min' }, lang)}
                   </p>
                 </div>
 
@@ -212,18 +241,21 @@ export function LearnScreen({
           })}
         </div>
 
-        {/* ───── لا دروس ───── */}
+        {/* ───── No lessons ───── */}
         {lessons.length === 0 && (
           <div className="glass-card p-6 text-center">
             <BookOpen className="w-12 h-12 text-white/30 mx-auto mb-3" />
             <p className="text-white/60 text-sm">
-              دروس هذا المستوى قيد الإعداد
+              {pickLang(
+                { ar: 'دروس هذا المستوى قيد الإعداد', en: 'Lessons for this level are being prepared' },
+                lang,
+              )}
             </p>
           </div>
         )}
       </div>
 
-      {/* ───── البطل ───── */}
+      {/* ───── Companion ───── */}
       <FloatingCompanion playSound={playSound} />
     </div>
   );
