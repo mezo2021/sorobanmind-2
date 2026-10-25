@@ -14,6 +14,7 @@ import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useCharacterVoice } from '@/hooks/useCharacterVoice';
 import { useProgressStore } from '@/store/progressStore';
 import type { CharacterType } from '@/types';
+import { Num } from '@/components/Num';
 
 const SESSION_SECONDS = 45;
 const GAME_ID = 'detective-game';
@@ -400,10 +401,10 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
 
         <div className="flex items-center gap-2 shrink-0">
           <div className="bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-rose-500/30 text-rose-300 font-bold text-sm flex items-center gap-1">
-            ⏳ <span className="tabular-nums">{sessionTimeLeft}</span>
+            ⏳ <span className="tabular-nums"><Num>{sessionTimeLeft}</Num></span>
           </div>
           <div className="bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-sky-500/30 text-sky-300 font-bold text-sm flex items-center gap-1">
-            🔍 <span className="tabular-nums">{solvedCasesCount}</span>
+            🔍 <span className="tabular-nums"><Num>{solvedCasesCount}</Num></span>
           </div>
         </div>
       </div>
@@ -461,7 +462,7 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
             </div>
 
             <div className="text-3xl sm:text-4xl font-black text-amber-400 tracking-wider font-mono my-1">
-              {currentProblem.expression}
+              <Num>{currentProblem.expression}</Num>
             </div>
 
             {activeHint && (
@@ -593,7 +594,7 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-400">القَضَايَا المُغْلَقَةُ:</span>
                       <span className="text-emerald-400 font-bold text-base tabular-nums">
-                        {solvedCasesCount}
+                        <Num>{solvedCasesCount}</Num>
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
