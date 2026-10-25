@@ -27,6 +27,9 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "جمع باصدقاء 5": "Add with Friends of 5", "جمع بأصدقاء 5": "Add with Friends of 5",
   "جمع باصدقاء 10": "Add with Friends of 10", "جمع بأصدقاء 10": "Add with Friends of 10",
   "جمع مركب": "Compound Add", "جمع بسيط": "Direct Add",
+  "قسمة مركبة": "Compound Div", "قسمة بسيطة": "Direct Div",
+  "قسمة باصدقاء 5": "Div with Friends of 5", "قسمة بأصدقاء 5": "Div with Friends of 5",
+  "قسمة باصدقاء 10": "Div with Friends of 10", "قسمة بأصدقاء 10": "Div with Friends of 10",
   "تمثيل 0-4": "Representing 0-4", "تمثيل 5-9": "Representing 5-9",
   "المئات والآلاف": "Hundreds & Thousands", "الاحاد والعشرات": "Units & Tens",
   "المستكشف": "Explorer", "الصاعد": "Rising Star", "السريع": "Fast",
@@ -152,7 +155,6 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "أصدقاء 5 (طرح)": "Friends of 5 (Sub)",
   "أصدقاء 10 (جمع)": "Friends of 10 (Add)",
   "أصدقاء 10 (طرح)": "Friends of 10 (Sub)",
-  "قسمة بسيطة": "Direct Div",
 
   // --- إضافات شاشة الأنزان (AnzanScreen) ---
   "تلميح": "Hint",
@@ -170,7 +172,7 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "master_division": "Division Master",
   "master_mixed": "Mixed Master",
 
-  // 🆕 --- إضافات الجلسة العلاجية (RemediationScreen) ---
+  // 🆕 --- إضافات الجلسة العلاجية والتقارير (Remediation & Adaptive Feedback) ---
   "الحل": "Solution",
   "الخطوات": "Steps",
   "حرّك الخرزة": "Move the bead",
@@ -180,7 +182,21 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "حرّك للأعلى": "Move up",
   "جلسة علاجية": "Remediation Session",
   "لا توجد مهارات ضعيفة": "No weak skills",
-  "لا توجد أسئلة كافية": "Not enough questions"
+  "لا توجد أسئلة كافية": "Not enough questions",
+  
+  // 🆕 إضافات من صورك الأخيرة
+  "ملاحظات التعليم التكيفي": "Adaptive Learning Notes",
+  "تحليل الأداء": "Performance Analysis",
+  "مهارات تحتاج تقوية": "Skills needing reinforcement",
+  "مهارات المستوى تحتاج مراجعة": "Level skills needing review",
+  "مهارات من مستويات أخرى تحتاج مراجعة": "Skills from other levels needing review",
+  "مراجعة عامة": "General Review",
+  "إجمالي الشارات": "Total Badges",
+  "التوصية": "Recommendation",
+  "دقة منخفضة": "Low accuracy",
+  "أعد جلسة على المهارات أعلاه. سيقترح عليك النظام أسئلة علاجية مخصصة تلقائياً.": "Retake a session on the skills above. The system will automatically suggest customized remedial questions.",
+  "جلسة مخصصة بدون درجات — تُظهر لك الحل بعد كل سؤال.": "Customized session without grades — shows you the solution after each question.",
+  "جلسة قصيرة مخصصة لبناء الثقة — بدون درجات، وتُظهر لك الحل بعد كل سؤال.": "Customized short session to build confidence — no grades, shows the solution after each question."
 };
 
 const AR_TO_EN: Record<string, string> = {};
