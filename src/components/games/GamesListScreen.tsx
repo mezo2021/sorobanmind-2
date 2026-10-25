@@ -14,6 +14,7 @@ import SorobaniaGame from './Sorobania/SorobaniaGame';
 import { HighScoreBadge } from './HighScoreBadge';
 import { useProgressStore, TICKET_COST } from '../../store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
+import { Num } from '@/components/Num';
 
 interface GamesListScreenProps {
   onBack: () => void;
@@ -180,7 +181,7 @@ function TicketMachine({
           <span className="text-sm font-bold text-white">تَذَاكِرُك</span>
         </div>
         <span className="text-xs text-white/50">
-          🪙 مَحْفَظَةُ النِّقَاط: <span className="tabular-nums" dir="ltr">{ticketXP}</span>
+          🪙 مَحْفَظَةُ النِّقَاط: <span className="tabular-nums" dir="ltr"><Num>{ticketXP}</Num></span>
         </span>
       </div>
 
@@ -225,7 +226,7 @@ function TicketMachine({
           <div className="flex items-center justify-between text-xs text-white/60">
             <span>التَّقَدُّمُ نَحْوَ التَّذْكِرَة</span>
             <span className="font-bold text-amber-300 tabular-nums" dir="ltr">
-              {ticketXP} / {TICKET_COST}
+              <Num>{ticketXP} / {TICKET_COST}</Num>
             </span>
           </div>
           <div className="relative h-2 rounded-full bg-white/10 overflow-hidden">
