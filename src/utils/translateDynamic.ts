@@ -152,7 +152,20 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "أصدقاء 5 (طرح)": "Friends of 5 (Sub)",
   "أصدقاء 10 (جمع)": "Friends of 10 (Add)",
   "أصدقاء 10 (طرح)": "Friends of 10 (Sub)",
-  "قسمة بسيطة": "Direct Div"
+  "قسمة بسيطة": "Direct Div",
+
+  // 🆕 --- إضافات شاشة الأنزان (AnzanScreen) ---
+  "تلميح": "Hint",
+  "تلميح:": "Hint:",
+  "يساوي": "equals",
+  "زائد": "plus",
+  "ناقص": "minus",
+  "في": "times",
+  "على": "divided by",
+  "master_addition": "Addition & Subtraction Master",
+  "master_multiplication": "Multiplication Master",
+  "master_division": "Division Master",
+  "master_mixed": "Mixed Master"
 };
 
 const AR_TO_EN: Record<string, string> = {};
@@ -163,6 +176,11 @@ Object.entries(RAW_AR_TO_EN).forEach(([key, val]) => {
 // دالة الأنماط المتسامحة جداً
 function translatePattern(text: string): string | null {
   let match;
+
+  // 🆕 ترجمة بادئة التلميح (مثال: "تلميح: استخدم...")
+  if (text.startsWith("تلميح:")) {
+    return text.replace("تلميح:", "Hint:");
+  }
 
   // 🆕 ترجمة أكواد المستويات (L0, L1... إلخ)
   match = text.match(/^L(\d+)$/);
