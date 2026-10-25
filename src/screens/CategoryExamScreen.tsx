@@ -37,6 +37,11 @@ import {
 } from '@/data/srb/exam';
 import type { SRBQuestion } from '@/data/srb/types';
 
+// 🌍 i18n
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
+
 type Phase = 'intro' | 'cooldown' | 'running' | 'result';
 
 interface CategoryExamScreenProps {
@@ -91,7 +96,7 @@ function getColumnsForQuestion(q: SRBQuestion): number {
   return 13;
 }
 
-function getColumnsLabel(columns: number, isArabic: boolean): string {
+function getColumnsLabel(columns: number, lang: string): string {
   const map: Record<number, { ar: string; en: string }> = {
     3: { ar: '٣ أعمدة', en: '3 Columns' },
     6: { ar: '٦ أعمدة', en: '6 Columns' },
@@ -100,14 +105,17 @@ function getColumnsLabel(columns: number, isArabic: boolean): string {
   };
   const entry = map[columns];
   if (!entry) return `${columns}`;
-  return isArabic ? entry.ar : entry.en;
+  return pickLang(entry, lang as any);
 }
 
-function formatTimeLeft(ms: number): string {
+function formatTimeLeft(ms: number, lang: string): string {
   const totalSec = Math.ceil(ms / 1000);
   const hrs = Math.floor(totalSec / 3600);
   const mins = Math.floor((totalSec % 3600) / 60);
-  return `${hrs} ساعة و ${mins} دقيقة`;
+  return pickLang({
+    ar: `${hrs} ساعة و ${mins} دقيقة`,
+    en: `${hrs} hour(s) and ${mins} minute(s)`
+  }, lang as any);
 }
 
 export function CategoryExamScreen({
@@ -116,6 +124,7 @@ export function CategoryExamScreen({
   onComplete,
   playSound,
 }: CategoryExamScreenProps) {
+  const { lang, dir } = useT();
   const cfg = EXAM_CONFIG[category];
   const { style: numberStyle, toggleStyle } = useNumberStyleStore();
   const isArabic = numberStyle === 'arabic';
@@ -189,7 +198,7 @@ export function CategoryExamScreen({
 
   // ─── بدء الامتحان ───
   const startTest = useCallback((forceReal = false) => {
-if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase('result'); playSound('levelup'); return; }
+    if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase('result'); playSound('levelup'); return; }
     const qs = category === 'kids' ? buildExam1Category() : buildExam2Category();
     if (qs.length === 0) { playSound('error'); return; }
 
@@ -379,7 +388,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
   // ═══════════════════════════════════════════════════════
   if (phase === 'cooldown') {
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button
             type="button"
@@ -390,7 +399,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
           </button>
           <div className="flex-1">
             <h2 className="text-2xl font-extrabold font-display text-white">
-              {cfg.title}
+              {pickLang({ ar: cfg.title, en: category === 'kids' ? 'Section 1 Exam' : 'Section 2 Exam' }, lang)}
             </h2>
           </div>
         </div>
@@ -405,19 +414,22 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
           </div>
 
           <h3 className="text-xl font-extrabold font-display text-white text-center mb-3">
-            انتظر قليلاً
+            {pickLang({ ar: 'انتظر قليلاً', en: 'Please wait a moment' }, lang)}
           </h3>
 
           <p className="text-sm text-white/70 font-body text-center leading-relaxed mb-4">
-            يمكنك إعادة الامتحان بعد مرور <strong>٤٨ ساعة</strong> من المحاولة الأخيرة.
+            {pickLang({
+              ar: 'يمكنك إعادة الامتحان بعد مرور ٤٨ ساعة من المحاولة الأخيرة.',
+              en: 'You can retake the exam after 48 hours from the last attempt.'
+            }, lang)}
           </p>
 
           <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30 text-center">
             <p className="text-xs text-amber-200 font-body mb-1">
-              الوقت المتبقي
+              {pickLang({ ar: 'الوقت المتبقي', en: 'Time remaining' }, lang)}
             </p>
             <p className="text-2xl font-black text-amber-100 font-display">
-              {formatTimeLeft(cooldownMs)}
+              {formatTimeLeft(cooldownMs, lang)}
             </p>
           </div>
         </motion.div>
@@ -430,7 +442,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
   // ═══════════════════════════════════════════════════════
   if (phase === 'intro') {
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button
             type="button"
@@ -441,16 +453,18 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
           </button>
           <div className="flex-1">
             <h2 className="text-2xl font-extrabold font-display text-white">
-              {cfg.title}
+              {pickLang({ ar: cfg.title, en: category === 'kids' ? 'Section 1 Exam' : 'Section 2 Exam' }, lang)}
             </h2>
-            <p className="text-sm text-white/50 font-body">{cfg.subtitle}</p>
+            <p className="text-sm text-white/50 font-body">
+              {pickLang({ ar: cfg.subtitle, en: category === 'kids' ? 'Young Heroes (5-12)' : 'Champion Heroes (13+)' }, lang)}
+            </p>
           </div>
           <Trophy className="w-6 h-6 text-gold-300" />
         </div>
 
         <div className="glass-card p-4 mb-6">
           <p className="text-xs text-white/60 font-body mb-3 text-center">
-            اختر نمط الأرقام
+            {pickLang({ ar: 'اختر نمط الأرقام', en: 'Choose number style' }, lang)}
           </p>
           <div className="flex gap-2 bg-white/5 p-1 rounded-2xl">
             <button
@@ -488,29 +502,29 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
           </div>
 
           <h3 className="text-xl font-extrabold font-display text-white text-center mb-4">
-            كيف يعمل الامتحان؟
+            {pickLang({ ar: 'كيف يعمل الامتحان؟', en: 'How does the exam work?' }, lang)}
           </h3>
 
           <div className="space-y-3 text-sm text-white/80 font-body">
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">{formatNumber(1, numberStyle)}.</span>
-              <p><strong>{formatNumber(cfg.questionCount, numberStyle)} سؤالاً</strong> من مستويات القسم</p>
+              <p>{pickLang({ ar: `${formatNumber(cfg.questionCount, numberStyle)} سؤالاً من مستويات القسم`, en: `${formatNumber(cfg.questionCount, numberStyle)} questions from the section levels` }, lang)}</p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">{formatNumber(2, numberStyle)}.</span>
-              <p>الزمن الإجمالي: <strong>{formatNumber(cfg.totalTimeSec / 60, numberStyle)} دقيقة</strong></p>
+              <p>{pickLang({ ar: `الزمن الإجمالي: ${formatNumber(cfg.totalTimeSec / 60, numberStyle)} دقيقة`, en: `Total time: ${formatNumber(cfg.totalTimeSec / 60, numberStyle)} minutes` }, lang)}</p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">{formatNumber(3, numberStyle)}.</span>
-              <p><strong>محاولتان لكل سؤال</strong> — محاولة أولى = نقطة كاملة، ثانية = نصف نقطة</p>
+              <p>{pickLang({ ar: 'محاولتان لكل سؤال — محاولة أولى = نقطة كاملة، ثانية = نصف نقطة', en: 'Two attempts per question — 1st attempt = full point, 2nd = half point' }, lang)}</p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">{formatNumber(4, numberStyle)}.</span>
-              <p>عتبة النجاح: <strong>{formatNumber(EXAM_PASS_THRESHOLD, numberStyle)}٪</strong></p>
+              <p>{pickLang({ ar: `عتبة النجاح: ${formatNumber(EXAM_PASS_THRESHOLD, numberStyle)}٪`, en: `Passing threshold: ${formatNumber(EXAM_PASS_THRESHOLD, numberStyle)}%` }, lang)}</p>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-gold-300 font-bold shrink-0">{formatNumber(5, numberStyle)}.</span>
-              <p>يمكنك التنقل بين الأسئلة وإنهاء الاختبار في أي وقت</p>
+              <p>{pickLang({ ar: 'يمكنك التنقل بين الأسئلة وإنهاء الاختبار في أي وقت', en: 'You can navigate between questions and end the exam at any time' }, lang)}</p>
             </div>
           </div>
 
@@ -518,7 +532,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
             <div className="flex items-start gap-2">
               <AlertTriangle className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-200 font-body leading-relaxed">
-                💡 بعد الفشل، يُعاد الامتحان بعد <strong>٤٨ ساعة</strong>.
+                {pickLang({ ar: '💡 بعد الفشل، يُعاد الامتحان بعد ٤٨ ساعة.', en: '💡 After failing, the exam can be retaken after 48 hours.' }, lang)}
               </p>
             </div>
           </div>
@@ -530,7 +544,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
           className="btn-primary w-full !py-4 !text-lg"
         >
           <Play className="w-6 h-6" />
-          ابدأ الامتحان
+          {pickLang({ ar: 'ابدأ الامتحان', en: 'Start Exam' }, lang)}
         </button>
 
         {inPreview && (
@@ -539,7 +553,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
             onClick={() => startTest(true)}
             className="w-full mt-3 py-3 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-100 font-bold text-sm flex items-center justify-center gap-2 transition"
           >
-            🎯 اختبار حقيقي (بدون اختصار)
+            {pickLang({ ar: '🎯 اختبار حقيقي (بدون اختصار)', en: '🎯 Real test (no shortcuts)' }, lang)}
           </button>
         )}
       </div>
@@ -562,14 +576,20 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
     );
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-4 max-w-2xl mx-auto min-h-screen flex flex-col">
+      <div dir={dir} className="px-3 sm:px-6 py-4 max-w-2xl mx-auto min-h-screen flex flex-col">
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <div className="flex-1 min-w-0">
             <h2 className="text-base font-bold text-white truncate">
-              السؤال {formatNumber(currentIdx + 1, numberStyle)} / {formatNumber(questions.length, numberStyle)}
+              {pickLang({
+                ar: `السؤال ${formatNumber(currentIdx + 1, numberStyle)} / ${formatNumber(questions.length, numberStyle)}`,
+                en: `Question ${formatNumber(currentIdx + 1, numberStyle)} / ${formatNumber(questions.length, numberStyle)}`
+              }, lang)}
             </h2>
             <p className="text-[10px] text-white/50 font-body truncate">
-              {currentQ.level} · {currentQ.section} · محاولة {formatNumber(currentAttempt, numberStyle)}/{formatNumber(EXAM_MAX_ATTEMPTS, numberStyle)}
+              {translateDynamic({ text: currentQ.level }, lang, 'text')} · {translateDynamic({ text: currentQ.section }, lang, 'text')} · {pickLang({
+                ar: `محاولة ${formatNumber(currentAttempt, numberStyle)}/${formatNumber(EXAM_MAX_ATTEMPTS, numberStyle)}`,
+                en: `Attempt ${formatNumber(currentAttempt, numberStyle)}/${formatNumber(EXAM_MAX_ATTEMPTS, numberStyle)}`
+              }, lang)}
             </p>
           </div>
 
@@ -613,7 +633,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
             <div className="flex items-center justify-center gap-2 mb-4">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-400/30 text-purple-200 text-xs font-bold">
                 <Grid3X3 className="w-3.5 h-3.5" />
-                {getColumnsLabel(columns, isArabic)}
+                {getColumnsLabel(columns, lang)}
               </span>
             </div>
 
@@ -631,10 +651,10 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
                 className="mb-3 p-3 rounded-xl bg-amber-500/15 border border-amber-400/40"
               >
                 <p className="text-sm text-amber-200 font-bold">
-                  ❌ إجابة خاطئة — حاول مرة أخرى
+                  {pickLang({ ar: '❌ إجابة خاطئة — حاول مرة أخرى', en: '❌ Wrong answer — try again' }, lang)}
                 </p>
                 <p className="text-[10px] text-amber-200/70 font-body mt-1">
-                  محاولتك الأخيرة — إجابة صحيحة = ½ نقطة
+                  {pickLang({ ar: 'محاولتك الأخيرة — إجابة صحيحة = ½ نقطة', en: 'Your last attempt — correct answer = ½ point' }, lang)}
                 </p>
               </motion.div>
             )}
@@ -646,7 +666,10 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
                 className="mb-3 p-3 rounded-xl bg-emerald-500/15 border border-emerald-400/40"
               >
                 <p className="text-sm text-emerald-200 font-bold">
-                  ✅ أحسنت! {currentAttempt === 1 ? '(نقطة كاملة)' : '(½ نقطة)'}
+                  {pickLang({
+                    ar: `✅ أحسنت! ${currentAttempt === 1 ? '(نقطة كاملة)' : '(½ نقطة)'}`,
+                    en: `✅ Well done! ${currentAttempt === 1 ? '(Full point)' : '(½ point)'}`
+                  }, lang)}
                 </p>
               </motion.div>
             )}
@@ -658,7 +681,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
                 className="mb-3 p-3 rounded-xl bg-red-500/15 border border-red-400/40"
               >
                 <p className="text-sm text-red-200 font-bold mb-1">
-                  ❌ الإجابة الصحيحة:
+                  {pickLang({ ar: '❌ الإجابة الصحيحة:', en: '❌ Correct answer:' }, lang)}
                 </p>
                 <p className="text-2xl font-black text-red-300" dir={isArabic ? 'rtl' : 'ltr'}>
                   {formatNumber(currentQ.result, numberStyle)}
@@ -691,7 +714,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
               className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
               <ArrowRight className="w-4 h-4" />
-              السابق
+              {pickLang({ ar: 'السابق', en: 'Previous' }, lang)}
             </button>
 
             <button
@@ -701,7 +724,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
               className={`py-3 rounded-2xl bg-gradient-to-l ${cfg.gradient} text-white font-bold text-sm flex items-center justify-center gap-1.5 shadow-lg transition disabled:opacity-40`}
             >
               <CheckCircle2 className="w-4 h-4" />
-              تحقق
+              {pickLang({ ar: 'تحقق', en: 'Check' }, lang)}
             </button>
 
             <button
@@ -710,7 +733,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
               disabled={isLastQuestion}
               className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
-              التالي
+              {pickLang({ ar: 'التالي', en: 'Next' }, lang)}
               <ArrowLeft className="w-4 h-4" />
             </button>
           </div>
@@ -721,7 +744,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
             className="w-full py-2.5 rounded-2xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 font-bold text-xs flex items-center justify-center gap-2 transition"
           >
             <LogOut className="w-3.5 h-3.5" />
-            إنهاء الاختبار
+            {pickLang({ ar: 'إنهاء الاختبار', en: 'End Exam' }, lang)}
           </button>
         </div>
 
@@ -741,18 +764,18 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
                 transition={{ type: 'spring', stiffness: 250, damping: 25 }}
                 onClick={(e) => e.stopPropagation()}
                 className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-amber-500/30 text-center"
-                dir="rtl"
+                dir={dir}
               >
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center">
                   <LogOut className="w-8 h-8 text-amber-300" />
                 </div>
 
                 <h3 className="text-xl font-extrabold font-display text-white mb-2">
-                  إنهاء الاختبار؟
+                  {pickLang({ ar: 'إنهاء الاختبار؟', en: 'End Exam?' }, lang)}
                 </h3>
 
                 <p className="text-sm text-white/60 font-body mb-6 leading-relaxed">
-                  ستُحتسب الأسئلة غير المُجابة <span className="text-red-300 font-bold">صفراً</span>.
+                  {pickLang({ ar: 'ستُحتسب الأسئلة غير المُجابة صفراً.', en: 'Unanswered questions will be counted as zero.' }, lang)}
                 </p>
 
                 <div className="flex gap-3">
@@ -761,14 +784,14 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
                     onClick={confirmEndExam}
                     className="flex-1 py-3 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white font-bold"
                   >
-                    نعم، أنهِ
+                    {pickLang({ ar: 'نعم، أنهِ', en: 'Yes, end it' }, lang)}
                   </button>
                   <button
                     type="button"
                     onClick={() => { playSound('click'); setShowEndConfirm(false); }}
                     className="flex-1 py-3 rounded-2xl bg-white/10 text-white/80 font-bold"
                   >
-                    متابعة
+                    {pickLang({ ar: 'متابعة', en: 'Continue' }, lang)}
                   </button>
                 </div>
               </motion.div>
@@ -786,7 +809,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
     const passed = finalPassed;
 
     return (
-      <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
+      <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -811,23 +834,30 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
             </motion.div>
 
             <h2 className="text-2xl font-extrabold font-display text-white mb-2">
-              {passed ? 'مبروك! نجحت 🎉' : 'حاول مرة أخرى 💪'}
+              {pickLang({ ar: passed ? 'مبروك! نجحت 🎉' : 'حاول مرة أخرى 💪', en: passed ? 'Congratulations! You passed 🎉' : 'Try again 💪' }, lang)}
             </h2>
 
-            <p className="text-sm text-white/60 font-body mb-6">{cfg.subtitle}</p>
+            <p className="text-sm text-white/60 font-body mb-6">
+              {pickLang({ ar: cfg.subtitle, en: category === 'kids' ? 'Young Heroes (5-12)' : 'Champion Heroes (13+)' }, lang)}
+            </p>
 
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
-              <p className="text-sm text-white/60 font-body">النتيجة</p>
+              <p className="text-sm text-white/60 font-body">
+                {pickLang({ ar: 'النتيجة', en: 'Score' }, lang)}
+              </p>
               <p className="text-5xl font-black font-display text-white mt-1"
                 dir={isArabic ? 'rtl' : 'ltr'}>
-                {formatNumber(finalScore, numberStyle)}٪
+                {formatNumber(finalScore, numberStyle)}%
               </p>
               <p className={`text-sm font-bold font-body mt-2 ${
                 passed ? 'text-emerald-300' : 'text-amber-300'
               }`}>
                 {passed
-                  ? '🎓 انتقلت إلى القسم التالي!'
-                  : `تحتاج ${formatNumber(EXAM_PASS_THRESHOLD, numberStyle)}٪ للنجاح`
+                  ? pickLang({ ar: '🎓 انتقلت إلى القسم التالي!', en: '🎓 You moved to the next section!' }, lang)
+                  : pickLang({
+                      ar: `تحتاج ${formatNumber(EXAM_PASS_THRESHOLD, numberStyle)}٪ للنجاح`,
+                      en: `You need ${formatNumber(EXAM_PASS_THRESHOLD, numberStyle)}% to pass`
+                    }, lang)
                 }
               </p>
             </div>
@@ -835,7 +865,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
             {!passed && (
               <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/30">
                 <p className="text-xs text-amber-200 font-body">
-                  ⏰ يمكنك إعادة الامتحان بعد <strong>٤٨ ساعة</strong>
+                  {pickLang({ ar: '⏰ يمكنك إعادة الامتحان بعد ٤٨ ساعة', en: '⏰ You can retake the exam after 48 hours' }, lang)}
                 </p>
               </div>
             )}
@@ -852,7 +882,7 @@ if (inPreview && !forceReal) { setFinalScore(95); setFinalPassed(true); setPhase
             className="btn-primary w-full !py-4 !text-lg"
           >
             <Sparkles className="w-6 h-6" />
-            {passed ? 'متابعة الرحلة' : 'العودة'}
+            {pickLang({ ar: passed ? 'متابعة الرحلة' : 'العودة', en: passed ? 'Continue the journey' : 'Back' }, lang)}
           </button>
         </div>
       </div>
