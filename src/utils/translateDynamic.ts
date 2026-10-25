@@ -37,7 +37,7 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "أتم قسم كامل": "Completed a section", 
   "ميمو": "Mimo", "البطل": "Hero",
 
-  // --- أوصاف المستويات ---
+  // --- أوصاف المستويات (LevelScreen) ---
   "التعرّف على السوروبان والأرقام من ٠ إلى ٩ والقيمة المكانية": "Discover the soroban, numbers 0-9, and place value",
   "جمع وطرح بسيط + أصدقاء ٥ + أصدقاء ١٠ + عمليات مركّبة": "Simple addition & subtraction + Friends of 5 + Friends of 10 + compound operations",
   "الضرب المتدرّج (١×٢ · ٢×٢) على السوروبان": "Gradual multiplication (1x2 · 2x2) on the soroban",
@@ -101,7 +101,30 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "مثل الرقم 9": "Like the number 9",
   "مثل الرقم 10": "Like the number 10",
   "مثل الرقم 27": "Like the number 27",
-  "مثل الرقم 99": "Like the number 99"
+  "مثل الرقم 99": "Like the number 99",
+
+  // --- شاشة الأقسام (CategoryScreen) ---
+  "٥ - ١٢ سنة": "Ages 5 - 12",
+  "١٣+ سنة": "Ages 13+",
+  "الامتحان النهائي — القسم الأول": "Final Exam — Section One",
+  "الامتحان النهائي — القسم الثاني": "Final Exam — Section Two",
+  
+  // الإثراء (Enrichment)
+  "أسرار الضرب": "Multiplication Secrets",
+  "٢٠ سراً لجدول الضرب": "20 secrets for the multiplication table",
+  "رياضيات الأصابع": "Finger Math",
+  "تعلّم الأعداد بأصابعك": "Learn numbers with your fingers",
+  "الضرب التقاطعي": "Cross Multiplication",
+  "الضرب الفيدي المتقدم": "Advanced Vedic multiplication",
+
+  // أوصاف المستويات المصغرة (CategoryScreen Levels Desc)
+  "التعرّف على السوروبان + الأرقام + القيمة المكانية": "Discover the soroban + numbers + place value",
+  "جمع وطرح بسيط + أصدقاء 5 + أصدقاء 10": "Simple add & subtract + Friends of 5 + Friends of 10",
+  "الضرب على السوروبان بطريقة تاكاشي": "Multiplication on the soroban using Takashi method",
+  "القسمة على السوروبان — التقدير والطرح المتتالي": "Division on the soroban — estimation and successive subtraction",
+  "سلاسل الجمع والطرح المتعددة": "Multiple addition and subtraction chains",
+  "الضرب والقسمة بطرق متقدمة": "Advanced multiplication and division methods",
+  "العمليات على الأعداد العشرية": "Operations on decimal numbers"
 };
 
 const AR_TO_EN: Record<string, string> = {};
