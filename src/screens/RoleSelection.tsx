@@ -1,9 +1,9 @@
 // src/screens/RoleSelection.tsx
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight } from 'lucide-react';
+import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages } from 'lucide-react';
 
-import { useT } from '@/i18n/useTranslation';
+import { useT, useLangStore } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
 
 import type { Role, CharacterType } from '@/types';
@@ -23,6 +23,7 @@ type Step = 'idle' | 'name' | 'companion';
 
 export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   const { lang, dir } = useT();
+  const setLang = useLangStore((s) => s.setLang);
 
   const [step, setStep] = useState<Step>('idle');
   const [pendingRole, setPendingRole] = useState<Role>(null);
@@ -81,14 +82,31 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   return (
     <div
       dir={dir}
-      className="min-h-screen flex flex-col items-center justify-center px-3 sm:px-6 py-8 sm:py-12"
+      className="relative min-h-screen flex flex-col items-center justify-center px-3 sm:px-6 py-8 sm:py-12"
     >
+      {/* 🆕 زر تبديل اللغة */}
+      <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-50">
+        <button
+          type="button"
+          onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 transition text-white shadow-lg backdrop-blur-md"
+          aria-label={pickLang({ ar: 'تبديل اللغة', en: 'Switch language' }, lang)}
+        >
+          <Languages className="w-4 h-4 text-white/80" />
+          <span className="text-xs font-bold" dir="ltr">
+            <span className={lang === 'ar' ? 'text-emerald-300' : 'text-white/40'}>AR</span>
+            <span className="text-white/30"> | </span>
+            <span className={lang === 'en' ? 'text-blue-300' : 'text-white/40'}>EN</span>
+          </span>
+        </button>
+      </div>
+
       {/* Title */}
       <motion.div
         initial={{ y: -30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-        className="text-center mb-8 sm:mb-14"
+        className="text-center mb-8 sm:mb-14 mt-8"
       >
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
