@@ -10,6 +10,11 @@ import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
 
+// 🌍 i18n
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
+
 interface SorobanPlaygroundProps {
   onBack: () => void;
   playSound: (type: 'click' | 'success' | 'error' | 'whoosh' | 'levelup') => void;
@@ -33,6 +38,7 @@ export function SorobanPlayground({
   onBack,
   playSound,
 }: SorobanPlaygroundProps) {
+  const { lang, dir } = useT();
   const [selectedColumns, setSelectedColumns] = useState<number>(3);
   const [refreshKey, setRefreshKey] = useState<number>(0);
 
@@ -61,14 +67,14 @@ export function SorobanPlayground({
   };
 
   return (
-    <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-3xl mx-auto">
+    <div dir={dir} className="px-3 sm:px-6 py-6 max-w-3xl mx-auto">
       {/* ═══ الشريط العلوي ═══ */}
       <div className="flex items-center gap-3 mb-6">
         {/* ✅ زر الرئيسية 🏠 */}
         <button
           type="button"
           onClick={handleHome}
-          title="الرئيسية"
+          title={pickLang({ ar: 'الرئيسية', en: 'Home' }, lang)}
           className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
         >
           <Home className="w-6 h-6 text-white" />
@@ -76,10 +82,10 @@ export function SorobanPlayground({
 
         <div className="flex-1">
           <h2 className="text-2xl font-extrabold font-display text-white">
-            السوروبان التفاعلي
+            {pickLang({ ar: 'السوروبان التفاعلي', en: 'Interactive Soroban' }, lang)}
           </h2>
           <p className="text-xs text-white/50 font-body">
-            Soroban Playground
+            {pickLang({ ar: 'Soroban Playground', en: 'السوروبان التفاعلي' }, lang)}
           </p>
         </div>
 
@@ -87,7 +93,7 @@ export function SorobanPlayground({
         <button
           type="button"
           onClick={handleRefresh}
-          title="تحديث الصفحة"
+          title={pickLang({ ar: 'تحديث الصفحة', en: 'Refresh Page' }, lang)}
           className="p-2 rounded-full bg-blue-500/15 hover:bg-blue-500/25 border border-blue-400/30 transition"
         >
           <RefreshCw className="w-5 h-5 text-blue-300" />
@@ -104,13 +110,16 @@ export function SorobanPlayground({
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-extrabold font-display text-white">
-              العب و استكشف
+              {pickLang({ ar: 'العب و استكشف', en: 'Play & Explore' }, lang)}
             </h3>
             <p className="text-xs text-white/50 font-body">
-              Explore & Play
+              {pickLang({ ar: 'Explore & Play', en: 'العب و استكشف' }, lang)}
             </p>
             <p className="text-[11px] text-white/60 font-body mt-1 leading-relaxed">
-              💡 حرّك الخرزات بحرية، وجرّب أي رقم — لا يوجد سؤال أو مؤقت.
+              {pickLang({
+                ar: '💡 حرّك الخرزات بحرية، وجرّب أي رقم — لا يوجد سؤال أو مؤقت.',
+                en: '💡 Move the beads freely and try any number — no questions or timers.'
+              }, lang)}
             </p>
           </div>
         </div>
@@ -122,10 +131,10 @@ export function SorobanPlayground({
           <Grid3X3 className="w-5 h-5 text-gold-300" />
           <div>
             <h4 className="text-base font-extrabold font-display text-white">
-              اختر عدد الأعمدة
+              {pickLang({ ar: 'اختر عدد الأعمدة', en: 'Choose Columns Count' }, lang)}
             </h4>
             <p className="text-[10px] text-white/40 font-body">
-              Choose Columns Count
+              {pickLang({ ar: 'Choose Columns Count', en: 'اختر عدد الأعمدة' }, lang)}
             </p>
           </div>
         </div>
@@ -158,11 +167,11 @@ export function SorobanPlayground({
                     isSelected ? 'text-purple-200' : 'text-white/50'
                   }`}
                 >
-                  {opt.labelAr}
+                  {pickLang({ ar: opt.labelAr, en: opt.labelEn }, lang)}
                 </span>
 
                 <span className="text-[9px] text-white/40 font-body">
-                  {opt.labelEn}
+                  {pickLang({ ar: opt.labelEn, en: opt.labelAr }, lang)}
                 </span>
 
                 <span
@@ -171,7 +180,7 @@ export function SorobanPlayground({
                   }`}
                   dir={isArabic ? 'rtl' : 'ltr'}
                 >
-                  {formatNumber(opt.rangeAr, numberStyle)}
+                  {formatNumber(translateDynamic(opt, lang, 'range'), numberStyle)}
                 </span>
 
                 {isSelected && (
@@ -201,12 +210,19 @@ export function SorobanPlayground({
       {/* ═══ ملاحظة سفلية ═══ */}
       <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/30">
         <p className="text-[11px] text-amber-200 font-body leading-relaxed text-center">
-          💡 الخرزة العلوية = <strong>{formatNumber(5, numberStyle)}</strong>،
-          السفلية = <strong>{formatNumber(1, numberStyle)}</strong>.
-          استخدم زر <strong>↺ إعادة الكل</strong> للتصفير.
+          {pickLang({ ar: '💡 الخرزة العلوية = ', en: '💡 Top bead = ' }, lang)}
+          <strong>{formatNumber(5, numberStyle)}</strong>
+          {pickLang({ ar: '، السفلية = ', en: ' · Bottom bead = ' }, lang)}
+          <strong>{formatNumber(1, numberStyle)}</strong>
+          {pickLang({ ar: '. استخدم زر ', en: '. Use the ' }, lang)}
+          <strong>{pickLang({ ar: '↺ إعادة الكل', en: '↺ Reset All' }, lang)}</strong>
+          {pickLang({ ar: ' للتصفير.', en: ' button to clear.' }, lang)}
         </p>
         <p className="text-[9px] text-amber-200/60 font-body text-center mt-1">
-          Top bead = 5 · Bottom bead = 1 · Reset button clears all
+          {pickLang({
+            ar: 'Top bead = 5 · Bottom bead = 1 · Reset button clears all',
+            en: 'الخرزة العلوية = 5 · السفلية = 1 · زر الإعادة يمسح الكل'
+          }, lang)}
         </p>
       </div>
     </div>
