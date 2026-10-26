@@ -6,6 +6,8 @@ export interface DivisionStep {
   stepIndex: number;
   instructionTitle: string;
   instructionDetail: string;
+  instructionTitleEn?: string; // 🌐
+  instructionDetailEn?: string; // 🌐
   expectedDividend: number;
   expectedResult: number;
   activeDividendRods: number[];
@@ -30,8 +32,8 @@ export const divisionProblems: DivisionProblem[] = [
     steps: [
       {
         stepIndex: 0,
-        instructionTitle: 'قسمة المئات (8 ÷ 3)',
-        instructionDetail: '8 أكبر من 3 — نضع 2 في مئات الناتج، ونطرح 6 من مئات المقسوم.',
+        instructionTitle: 'قسمة المئات (8 ÷ 3)', instructionTitleEn: 'Divide the hundreds (8 ÷ 3)',
+        instructionDetail: '8 أكبر من 3 — نضع 2 في مئات الناتج، ونطرح 6 من مئات المقسوم.', instructionDetailEn: '8 is greater than 3 — put 2 in the hundreds of the result, and subtract 6 from the hundreds of the dividend.',
         expectedDividend: 237,
         expectedResult: 200,
         activeDividendRods: [0],
@@ -39,8 +41,8 @@ export const divisionProblems: DivisionProblem[] = [
       },
       {
         stepIndex: 1,
-        instructionTitle: 'قسمة العشرات (23 ÷ 3)',
-        instructionDetail: 'نأخذ رقمين (23) — نضع 7 في عشرات الناتج، ونطرح 21.',
+        instructionTitle: 'قسمة العشرات (23 ÷ 3)', instructionTitleEn: 'Divide the tens (23 ÷ 3)',
+        instructionDetail: 'نأخذ رقمين (23) — نضع 7 في عشرات الناتج، ونطرح 21.', instructionDetailEn: 'Take two digits (23) — put 7 in the tens of the result, and subtract 21.',
         expectedDividend: 27,
         expectedResult: 270,
         activeDividendRods: [0, 1],
@@ -48,8 +50,8 @@ export const divisionProblems: DivisionProblem[] = [
       },
       {
         stepIndex: 2,
-        instructionTitle: 'قسمة الآحاد (27 ÷ 3)',
-        instructionDetail: 'نأخذ (27) — نضع 9 في آحاد الناتج، ونطرح 27.',
+        instructionTitle: 'قسمة الآحاد (27 ÷ 3)', instructionTitleEn: 'Divide the units (27 ÷ 3)',
+        instructionDetail: 'نأخذ (27) — نضع 9 في آحاد الناتج، ونطرح 27.', instructionDetailEn: 'Take (27) — put 9 in the units of the result, and subtract 27.',
         expectedDividend: 0,
         expectedResult: 279,
         activeDividendRods: [1, 2],
@@ -68,8 +70,8 @@ export const divisionProblems: DivisionProblem[] = [
     steps: [
       {
         stepIndex: 0,
-        instructionTitle: 'قسمة العشرات (5 ÷ 3)',
-        instructionDetail: '5 ÷ 3 = 1 — نضع 1 في عشرات الناتج، ونطرح 3. المقسوم يصبح 24.',
+        instructionTitle: 'قسمة العشرات (5 ÷ 3)', instructionTitleEn: 'Divide the tens (5 ÷ 3)',
+        instructionDetail: '5 ÷ 3 = 1 — نضع 1 في عشرات الناتج، ونطرح 3. المقسوم يصبح 24.', instructionDetailEn: '5 ÷ 3 = 1 — put 1 in the tens of the result, and subtract 3. The dividend becomes 24.',
         expectedDividend: 24,
         expectedResult: 10,
         activeDividendRods: [1],
@@ -77,8 +79,8 @@ export const divisionProblems: DivisionProblem[] = [
       },
       {
         stepIndex: 1,
-        instructionTitle: 'قسمة الآحاد (24 ÷ 3)',
-        instructionDetail: '24 ÷ 3 = 8 — نضع 8 في آحاد الناتج، ونطرح 24.',
+        instructionTitle: 'قسمة الآحاد (24 ÷ 3)', instructionTitleEn: 'Divide the units (24 ÷ 3)',
+        instructionDetail: '24 ÷ 3 = 8 — نضع 8 في آحاد الناتج، ونطرح 24.', instructionDetailEn: '24 ÷ 3 = 8 — put 8 in the units of the result, and subtract 24.',
         expectedDividend: 0,
         expectedResult: 18,
         activeDividendRods: [1, 2],
@@ -97,8 +99,8 @@ export const divisionProblems: DivisionProblem[] = [
     steps: [
       {
         stepIndex: 0,
-        instructionTitle: 'قسمة المئات (15 ÷ 8)',
-        instructionDetail: '1 أصغر من 8 — نأخذ رقمين (15) · 15 ÷ 8 = 1 — نضع 1 في عشرات الناتج، ونطرح 8. المقسوم يصبح 72.',
+        instructionTitle: 'قسمة المئات (15 ÷ 8)', instructionTitleEn: 'Divide the hundreds (15 ÷ 8)',
+        instructionDetail: '1 أصغر من 8 — نأخذ رقمين (15) · 15 ÷ 8 = 1 — نضع 1 في عشرات الناتج، ونطرح 8. المقسوم يصبح 72.', instructionDetailEn: '1 is smaller than 8 — Take two digits (15) · 15 ÷ 8 = 1 — put 1 in the tens of the result, and subtract 8. The dividend becomes 72.',
         expectedDividend: 72,
         expectedResult: 10,
         activeDividendRods: [0, 1],
@@ -106,8 +108,8 @@ export const divisionProblems: DivisionProblem[] = [
       },
       {
         stepIndex: 1,
-        instructionTitle: 'قسمة العشرات والآحاد (72 ÷ 8)',
-        instructionDetail: '72 ÷ 8 = 9 — نضع 9 في آحاد الناتج، ونطرح 72.',
+        instructionTitle: 'قسمة العشرات والآحاد (72 ÷ 8)', instructionTitleEn: 'Divide the tens and units (72 ÷ 8)',
+        instructionDetail: '72 ÷ 8 = 9 — نضع 9 في آحاد الناتج، ونطرح 72.', instructionDetailEn: '72 ÷ 8 = 9 — put 9 in the units of the result, and subtract 72.',
         expectedDividend: 0,
         expectedResult: 19,
         activeDividendRods: [1, 2],
@@ -126,8 +128,8 @@ export const divisionProblems: DivisionProblem[] = [
     steps: [
       {
         stepIndex: 0,
-        instructionTitle: 'قسمة المئات (21 ÷ 8)',
-        instructionDetail: '2 أصغر من 8 — نأخذ رقمين (21) · 21 ÷ 8 = 2 — نضع 2 في عشرات الناتج، ونطرح 16. المقسوم يصبح 56.',
+        instructionTitle: 'قسمة المئات (21 ÷ 8)', instructionTitleEn: 'Divide the hundreds (21 ÷ 8)',
+        instructionDetail: '2 أصغر من 8 — نأخذ رقمين (21) · 21 ÷ 8 = 2 — نضع 2 في عشرات الناتج، ونطرح 16. المقسوم يصبح 56.', instructionDetailEn: '2 is smaller than 8 — Take two digits (21) · 21 ÷ 8 = 2 — put 2 in the tens of the result, and subtract 16. The dividend becomes 56.',
         expectedDividend: 56,
         expectedResult: 20,
         activeDividendRods: [0, 1],
@@ -135,8 +137,8 @@ export const divisionProblems: DivisionProblem[] = [
       },
       {
         stepIndex: 1,
-        instructionTitle: 'قسمة العشرات والآحاد (56 ÷ 8)',
-        instructionDetail: '56 ÷ 8 = 7 — نضع 7 في آحاد الناتج، ونطرح 56.',
+        instructionTitle: 'قسمة العشرات والآحاد (56 ÷ 8)', instructionTitleEn: 'Divide the tens and units (56 ÷ 8)',
+        instructionDetail: '56 ÷ 8 = 7 — نضع 7 في آحاد الناتج، ونطرح 56.', instructionDetailEn: '56 ÷ 8 = 7 — put 7 in the units of the result, and subtract 56.',
         expectedDividend: 0,
         expectedResult: 27,
         activeDividendRods: [1, 2],
@@ -155,8 +157,8 @@ export const divisionProblems: DivisionProblem[] = [
     steps: [
       {
         stepIndex: 0,
-        instructionTitle: 'قسمة المئات (48 ÷ 22)',
-        instructionDetail: '48 ÷ 22 = 2 — نضع 2 في عشرات الناتج، ونطرح 20×22 = 440.',
+        instructionTitle: 'قسمة المئات (48 ÷ 22)', instructionTitleEn: 'Divide the hundreds (48 ÷ 22)',
+        instructionDetail: '48 ÷ 22 = 2 — نضع 2 في عشرات الناتج، ونطرح 20×22 = 440.', instructionDetailEn: '48 ÷ 22 = 2 — put 2 in the tens of the result, and subtract 20×22 = 440.',
         expectedDividend: 44,
         expectedResult: 20,
         activeDividendRods: [0, 1],
@@ -164,8 +166,8 @@ export const divisionProblems: DivisionProblem[] = [
       },
       {
         stepIndex: 1,
-        instructionTitle: 'قسمة العشرات والآحاد (44 ÷ 22)',
-        instructionDetail: '44 ÷ 22 = 2 — نضع 2 في آحاد الناتج، ونطرح 2×22 = 44.',
+        instructionTitle: 'قسمة العشرات والآحاد (44 ÷ 22)', instructionTitleEn: 'Divide the tens and units (44 ÷ 22)',
+        instructionDetail: '44 ÷ 22 = 2 — نضع 2 في آحاد الناتج، ونطرح 2×22 = 44.', instructionDetailEn: '44 ÷ 22 = 2 — put 2 in the units of the result, and subtract 2×22 = 44.',
         expectedDividend: 0,
         expectedResult: 22,
         activeDividendRods: [1, 2],
@@ -184,8 +186,8 @@ export const divisionProblems: DivisionProblem[] = [
     steps: [
       {
         stepIndex: 0,
-        instructionTitle: 'قسمة المئات (57 ÷ 22)',
-        instructionDetail: '57 ÷ 22 = 2 — نضع 2 في عشرات الناتج، ونطرح 20×22 = 440.',
+        instructionTitle: 'قسمة المئات (57 ÷ 22)', instructionTitleEn: 'Divide the hundreds (57 ÷ 22)',
+        instructionDetail: '57 ÷ 22 = 2 — نضع 2 في عشرات الناتج، ونطرح 20×22 = 440.', instructionDetailEn: '57 ÷ 22 = 2 — put 2 in the tens of the result, and subtract 20×22 = 440.',
         expectedDividend: 132,
         expectedResult: 20,
         activeDividendRods: [0, 1],
@@ -193,8 +195,8 @@ export const divisionProblems: DivisionProblem[] = [
       },
       {
         stepIndex: 1,
-        instructionTitle: 'قسمة العشرات والآحاد (132 ÷ 22)',
-        instructionDetail: '132 ÷ 22 = 6 — نضع 6 في آحاد الناتج، ونطرح 6×22 = 132.',
+        instructionTitle: 'قسمة العشرات والآحاد (132 ÷ 22)', instructionTitleEn: 'Divide the tens and units (132 ÷ 22)',
+        instructionDetail: '132 ÷ 22 = 6 — نضع 6 في آحاد الناتج، ونطرح 6×22 = 132.', instructionDetailEn: '132 ÷ 22 = 6 — put 6 in the units of the result, and subtract 6×22 = 132.',
         expectedDividend: 0,
         expectedResult: 26,
         activeDividendRods: [1, 2],
@@ -213,8 +215,8 @@ export const divisionProblems: DivisionProblem[] = [
     steps: [
       {
         stepIndex: 0,
-        instructionTitle: 'قسمة المئات (35 ÷ 14)',
-        instructionDetail: '35 ÷ 14 = 2 — نضع 2 في عشرات الناتج، ونطرح 20×14 = 280.',
+        instructionTitle: 'قسمة المئات (35 ÷ 14)', instructionTitleEn: 'Divide the hundreds (35 ÷ 14)',
+        instructionDetail: '35 ÷ 14 = 2 — نضع 2 في عشرات الناتج، ونطرح 20×14 = 280.', instructionDetailEn: '35 ÷ 14 = 2 — put 2 in the tens of the result, and subtract 20×14 = 280.',
         expectedDividend: 70,
         expectedResult: 20,
         activeDividendRods: [0, 1],
@@ -222,8 +224,8 @@ export const divisionProblems: DivisionProblem[] = [
       },
       {
         stepIndex: 1,
-        instructionTitle: 'قسمة العشرات والآحاد (70 ÷ 14)',
-        instructionDetail: '70 ÷ 14 = 5 — نضع 5 في آحاد الناتج، ونطرح 5×14 = 70.',
+        instructionTitle: 'قسمة العشرات والآحاد (70 ÷ 14)', instructionTitleEn: 'Divide the tens and units (70 ÷ 14)',
+        instructionDetail: '70 ÷ 14 = 5 — نضع 5 في آحاد الناتج، ونطرح 5×14 = 70.', instructionDetailEn: '70 ÷ 14 = 5 — put 5 in the units of the result, and subtract 5×14 = 70.',
         expectedDividend: 0,
         expectedResult: 25,
         activeDividendRods: [1, 2],
@@ -242,8 +244,8 @@ export const divisionProblems: DivisionProblem[] = [
     steps: [
       {
         stepIndex: 0,
-        instructionTitle: 'قسمة المئات (23 ÷ 18)',
-        instructionDetail: '23 ÷ 18 = 1 — نضع 1 في عشرات الناتج، ونطرح 10×18 = 180.',
+        instructionTitle: 'قسمة المئات (23 ÷ 18)', instructionTitleEn: 'Divide the hundreds (23 ÷ 18)',
+        instructionDetail: '23 ÷ 18 = 1 — نضع 1 في عشرات الناتج، ونطرح 10×18 = 180.', instructionDetailEn: '23 ÷ 18 = 1 — put 1 in the tens of the result, and subtract 10×18 = 180.',
         expectedDividend: 54,
         expectedResult: 10,
         activeDividendRods: [0, 1],
@@ -251,8 +253,8 @@ export const divisionProblems: DivisionProblem[] = [
       },
       {
         stepIndex: 1,
-        instructionTitle: 'قسمة العشرات والآحاد (54 ÷ 18)',
-        instructionDetail: '54 ÷ 18 = 3 — نضع 3 في آحاد الناتج، ونطرح 3×18 = 54.',
+        instructionTitle: 'قسمة العشرات والآحاد (54 ÷ 18)', instructionTitleEn: 'Divide the tens and units (54 ÷ 18)',
+        instructionDetail: '54 ÷ 18 = 3 — نضع 3 في آحاد الناتج، ونطرح 3×18 = 54.', instructionDetailEn: '54 ÷ 18 = 3 — put 3 in the units of the result, and subtract 3×18 = 54.',
         expectedDividend: 0,
         expectedResult: 13,
         activeDividendRods: [1, 2],
