@@ -1,7 +1,7 @@
 // src/screens/CategoryScreen.tsx
-// [FIX 7] — فحص المعاينة موحّد عبر الأداة
-// [FIX N69] — عرض درجات الأنزان البصري (متوسط) والسمعي في الأزرار
-// [SURGICAL FIX] — الاعتماد على درجات الاختبار (>=80%) لفتح المستويات وإظهار علامة الاكتمال
+// [FIX 7] — unified preview check via utility
+// [FIX N69] — display Visual Anzan (average) and Audio grades on the buttons
+// [SURGICAL FIX] — rely on exam grades (>=80%) to unlock levels and show the completion mark
 
 import { motion } from 'framer-motion';
 import {
@@ -17,7 +17,7 @@ import { useGameStats } from '@/hooks/useGameStats';
 import { useProgressStore } from '@/store/progressStore';
 import { getLessonsByLevel } from '@/curriculum/lessons';
 
-// [FIX 7] — أداة المعاينة
+// [FIX 7] — preview tool
 import { isPreviewMode } from '@/utils/previewMode';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
@@ -28,7 +28,7 @@ import { pickLang } from '@/i18n/pickLang';
 import { translateDynamic } from '@/utils/translateDynamic';
 
 // ═══════════════════════════════════════════════════════════
-// الأنواع
+// Types
 // ═══════════════════════════════════════════════════════════
 
 interface CategoryScreenProps {
@@ -69,7 +69,7 @@ interface CategoryData {
 }
 
 // ═══════════════════════════════════════════════════════════
-// بيانات القسمين
+// Category data
 // ═══════════════════════════════════════════════════════════
 
 const CATEGORY_DATA: Record<CategoryId, CategoryData> = {
@@ -174,10 +174,10 @@ const CATEGORY_DATA: Record<CategoryId, CategoryData> = {
 };
 
 // ═══════════════════════════════════════════════════════════
-// أدوات
+// Helpers
 // ═══════════════════════════════════════════════════════════
 
-// 🔢 يتبع زر تبديل الأرقام (عربي ٠١٢٣ ↔ لاتيني 0123) — الاسم محفوظ للتوافق
+// 🔢 Follows the number-style toggle (Arabic ٠١٢٣ ↔ Latin 0123) — name preserved for compatibility
 function toArabicNumber(value: number | string): string {
   return formatNumber(value, useNumberStyleStore.getState().style);
 }
@@ -187,7 +187,7 @@ function loadPlacementData() {
     const weakSkillsRaw = localStorage.getItem('soroban_placement_weak_skills');
     const recommendedRaw = localStorage.getItem('soroban_placement_recommended');
     
-    // قراءة حالة النجاح من المتجر (المصدر الوحيد)
+    // Read pass state from the store (single source of truth)
     const store = useProgressStore.getState();
 
     return {
@@ -202,12 +202,13 @@ function loadPlacementData() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// الشاشة الرئيسية
+// Main Screen
 // ═══════════════════════════════════════════════════════════
 
 export function CategoryScreen({ category, onNavigate, playSound }: CategoryScreenProps) {
   const { lang, dir } = useT();
-  useNumberStyleStore((s) => s.style); // 🔢 إعادة الرسم عند تبديل نمط الأرقام
+
+  useNumberStyleStore((s) => s.style); // 🔢 re-render on number-style toggle
   const data = CATEGORY_DATA[category];
   const { stats, toggleSound } = useGameStats();
 
@@ -220,7 +221,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   const grades = useProgressStore((s) => s.grades);
   const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
 
-  // ─── placement / exams (localStorage مؤقتًا) ───
+  // ─── placement / exams (localStorage temporarily) ───
   const placement = loadPlacementData();
 
   const handleNav = (screen: Screen) => {
@@ -233,10 +234,10 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     onNavigate('hero-dashboard');
   };
 
-  // [FIX 7] — استخدام أداة المعاينة
+  // [FIX 7] — use the preview tool
   const inPreview = isPreviewMode();
 
-  // ✅ [SURGICAL FIX] — المستوى يُفتح فقط إذا كانت درجة اختبار المستوى السابق >= 80%
+  // ✅ [SURGICAL FIX] — a level unlocks only if the previous level's test grade is >= 80%
   const isLevelUnlocked = (levelId: LevelId, index: number): boolean => {
     if (inPreview) return true;
     if (placement.recommendedLevel === levelId) return true;
@@ -245,10 +246,10 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     const prevLevel = data.levels[index - 1];
     const prevGrade = grades[prevLevel.id];
     
-    return prevGrade && prevGrade.levelTest !== null && prevGrade.levelTest >= 80;
+    return prevGrade && prevLevel && grades[prevLevel.id]?.levelTest !== null && grades[prevLevel.id]!.levelTest! >= 80;
   };
 
-  // ✅ المستوى "مكتمل" (لأغراض فتح التمرين) = كل دروسه مكتملة
+  // ✅ A level is "completed" (for unlocking Practice) = all its lessons are complete
   const isLevelCompleted = (levelId: LevelId): boolean => {
     if (inPreview) return true;
     const lessons = getLessonsByLevel(levelId as string);
@@ -293,7 +294,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     return passedAnzanAudio.includes(`L${anzanNum}` as SRBLevel);
   };
 
-  // ✅ [SURGICAL FIX] — الامتحان النهائي يتطلب اجتياز اختبار كل مستوى (>= 80%)
+  // ✅ [SURGICAL FIX] — the final exam requires passing each level's test (>= 80%)
   const isExamUnlocked = (): boolean => {
     if (inPreview) return true;
     return data.levels.every((_, idx) => {
@@ -317,7 +318,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
     const Icon = level.icon;
     const unlocked = isLevelUnlocked(level.id, idx);
     
-    // ✅ [SURGICAL FIX] — علامة "مكتمل" تظهر فقط إذا اجتاز الاختبار
+    // ✅ [SURGICAL FIX] — the "completed" mark appears only if the test is passed
     const grade = grades[level.id];
     const isTestPassed = grade && grade.levelTest !== null && grade.levelTest >= 80;
     const completed = isLevelCompleted(level.id) && isTestPassed;
@@ -512,7 +513,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleNav(item.screen)}
-                    className="group relative glass-card p-4 text-right overflow-hidden flex items-center gap-3"
+                    className="group relative glass-card p-4 text-start overflow-hidden flex items-center gap-3"
                   >
                     <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-15 transition-opacity duration-500`} />
                     <div className={`shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg`}>
