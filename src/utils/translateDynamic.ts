@@ -220,7 +220,13 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "القيمة المكانية وبناء الأعداد": "Place value and building numbers",
 
   // 🆕 --- إضافات المستويات الفرعية (CategoryScreen Subtitles) ---
-  "الأبطال الصغار": "Young Heroes"
+  "الأبطال الصغار": "Young Heroes",
+
+  // 🆕 --- إضافات المستوى الرابع (Level 4 - Add & Sub Chains) ---
+  "سلسل الجمع": "Addition Chains",
+  "سلسل الطرح": "Subtraction Chains",
+  "سلاسل الجمع": "Addition Chains",
+  "سلاسل الطرح": "Subtraction Chains"
 };
 
 const AR_TO_EN: Record<string, string> = {};
