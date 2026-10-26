@@ -9,6 +9,7 @@ interface MentalBadgeProps {
   visible: boolean;
   lineDelayMs?: number;
   variant?: BadgeVariant;
+  dir?: 'rtl' | 'ltr'; // 🌐 اتجاه العرض (افتراضي rtl)
 }
 
 const BORDER_STYLE: Record<BadgeVariant, string> = {
@@ -22,6 +23,7 @@ export function MentalBadge({
   visible,
   lineDelayMs = 800,
   variant = 'amber',
+  dir = 'rtl',
 }: MentalBadgeProps) {
   const [visibleCount, setVisibleCount] = useState(0);
 
@@ -49,7 +51,7 @@ export function MentalBadge({
         exit={{ opacity: 0, y: -10, scale: 0.9 }}
         transition={{ duration: 0.25 }}
         className={`mx-auto w-fit max-w-[90%] flex flex-col items-center bg-slate-900/95 border-2 ${BORDER_STYLE[variant]} px-4 py-2 rounded-xl shadow-2xl backdrop-blur-md min-w-[180px]`}
-        dir="rtl"
+        dir={dir}
       >
         {lines.slice(0, visibleCount).map((line, i) => (
           <motion.span
