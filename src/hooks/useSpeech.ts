@@ -10,7 +10,7 @@ interface UseSpeechOptions {
 
 export function useSpeech({
   enabled = true,
-  rate = 1.0,
+  rate = 0.85,
   pitch = 1.1,
   volume = 1,
 }: UseSpeechOptions = {}) {
