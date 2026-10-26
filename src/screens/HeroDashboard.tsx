@@ -1,6 +1,6 @@
 // src/screens/HeroDashboard.tsx
-// [GAMES]  — إضافة زر مدينة الألعاب
-// [PLACE]  — قفل امتحان تحديد المستوى بعد أول محاولة
+// [GAMES]  — added the Games City button
+// [PLACE]  — locked the placement test after the first attempt
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, lazy, Suspense } from 'react';
@@ -19,6 +19,9 @@ import { useProgressStore } from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
 
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+
 interface HeroDashboardProps {
   onNavigate: (screen: Screen) => void;
   playSound: (type: 'click' | 'whoosh') => void;
@@ -26,40 +29,52 @@ interface HeroDashboardProps {
   streak: number;
 }
 
-// 🔢 يتبع زر تبديل الأرقام (عربي ٠١٢٣ ↔ لاتيني 0123) — الاسم محفوظ للتوافق
+// 🔢 Follows the number-style toggle (Arabic ٠١٢٣ ↔ Latin 0123) — name preserved for compatibility
 function toArabicNumber(value: number | string): string {
   return formatNumber(value, useNumberStyleStore.getState().style);
 }
 
 const CHARACTER_INFO: Record<
   CharacterType,
-  { name: string; title: string; message: string; color: string; lightColor: string }
+  { name: string; nameEn: string; title: string; titleEn: string; message: string; messageEn: string; color: string; lightColor: string }
 > = {
   sham: {
     name: 'شام',
+    nameEn: 'Sham',
     title: 'البطلة الذكية',
+    titleEn: 'The Smart Heroine',
     message: 'لنكتشف اليوم طريقة جديدة للحساب!',
+    messageEn: "Let's discover a new calculation method today!",
     color: 'from-violet-500 to-purple-700',
     lightColor: 'text-violet-300',
   },
   rayan: {
     name: 'ريان',
+    nameEn: 'Rayan',
     title: 'البطل السريع',
+    titleEn: 'The Fast Hero',
     message: 'هل أنت مستعد لتحدٍ جديد؟ هيا نبدأ!',
+    messageEn: 'Are you ready for a new challenge? Let\'s start!',
     color: 'from-blue-500 to-indigo-700',
     lightColor: 'text-blue-300',
   },
   bana: {
     name: 'بانة',
+    nameEn: 'Bana',
     title: 'البطلة الهادئة',
+    titleEn: 'The Calm Heroine',
     message: 'التركيز الهادئ يصنع نتائج رائعة.',
+    messageEn: 'Calm focus produces amazing results.',
     color: 'from-teal-400 to-emerald-700',
     lightColor: 'text-teal-300',
   },
   joud: {
     name: 'جود',
+    nameEn: 'Joud',
     title: 'البطل الذكي',
+    titleEn: 'The Smart Hero',
     message: 'أحب التفكير والتحليل — هيا نحل معًا!',
+    messageEn: 'I love thinking and analysis — let\'s solve together!',
     color: 'from-indigo-500 to-purple-700',
     lightColor: 'text-indigo-300',
   },
@@ -70,7 +85,9 @@ interface CategoryCard {
   title: string;
   titleEn: string;
   ageRange: string;
+  ageRangeEn: string;
   desc: string;
+  descEn: string;
   icon: LucideIcon;
   gradient: string;
   glow: string;
@@ -83,7 +100,9 @@ const CATEGORY_CARDS: CategoryCard[] = [
     title: 'الأبطال الصغار',
     titleEn: 'Young Heroes',
     ageRange: '٥ - ١٢ سنة',
+    ageRangeEn: 'Ages 5 - 12',
     desc: 'التأسيس: التعرّف على السوروبان، الأرقام، الجمع والطرح، الضرب والقسمة',
+    descEn: 'Foundation: Discover the soroban, numbers, addition & subtraction, multiplication & division',
     icon: Users,
     gradient: 'from-emerald-500 to-teal-700',
     glow: 'shadow-emerald-500/40',
@@ -94,7 +113,9 @@ const CATEGORY_CARDS: CategoryCard[] = [
     title: 'الأبطال الكبار',
     titleEn: 'Champion Heroes',
     ageRange: '١٣+ سنة',
+    ageRangeEn: 'Ages 13+',
     desc: 'المتقدم: العمليات المركبة، الضرب والقسمة المتقدمة، الأعداد العشرية والجذور',
+    descEn: 'Advanced: Compound operations, advanced multiplication & division, decimals and roots',
     icon: Trophy,
     gradient: 'from-purple-500 to-indigo-700',
     glow: 'shadow-purple-500/40',
@@ -115,10 +136,11 @@ export function HeroDashboard({
   xp,
   streak,
 }: HeroDashboardProps) {
-  useNumberStyleStore((s) => s.style); // 🔢 إعادة الرسم عند تبديل نمط الأرقام
+  const { lang, dir } = useT();
+  useNumberStyleStore((s) => s.style); // 🔢 re-render on number-style toggle
   const [showGames, setShowGames] = useState(false);
 
-  // 🆕 [PLACE] — عدد محاولات امتحان تحديد المستوى
+  // 🆕 [PLACE] — placement test attempt count
   const placementAttempts = useProgressStore((s) => s.placementAttempts);
   const [recommendedLevel, setRecommendedLevel] = useState<string | null>(null);
 
@@ -168,7 +190,7 @@ export function HeroDashboard({
     return (
       <Suspense fallback={
         <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white/70 text-lg font-bold">
-          جارٍ تحميل مدينة الألعاب... 🎮
+          {pickLang({ ar: 'جارٍ تحميل مدينة الألعاب... 🎮', en: 'Loading Games City... 🎮' }, lang)}
         </div>
       }>
         <GamesListScreen
@@ -184,7 +206,7 @@ export function HeroDashboard({
   const characterInfo = CHARACTER_INFO[companion];
 
   return (
-    <div dir="rtl" className="px-3 sm:px-6 py-6 max-w-6xl mx-auto">
+    <div dir={dir} className="px-3 sm:px-6 py-6 max-w-6xl mx-auto">
       {/* WELCOME HEADER */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -199,14 +221,14 @@ export function HeroDashboard({
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="w-5 h-5 text-gold-300" />
               <span className="text-xs text-gold-300 font-bold font-body">
-                أكاديمية الأبطال الصغار
+                {pickLang({ ar: 'أكاديمية الأبطال الصغار', en: 'Young Heroes Academy' }, lang)}
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white">
-              مرحباً يا {childName || 'أيها البطل'}!
+              {pickLang({ ar: 'مرحباً يا', en: 'Welcome,' }, lang)} {childName || pickLang({ ar: 'أيها البطل', en: 'Hero' }, lang)}!
             </h2>
             <p className="text-white/60 font-body text-sm mt-1">
-              واصل رحلتك في إتقان الحساب الذهني بالسوروبان
+              {pickLang({ ar: 'واصل رحلتك في إتقان الحساب الذهني بالسوروبان', en: 'Continue your journey to master mental math with the soroban' }, lang)}
             </p>
           </div>
 
@@ -215,7 +237,9 @@ export function HeroDashboard({
               <p className="text-2xl font-extrabold text-purple-300 font-display">
                 {toArabicNumber(xp)}
               </p>
-              <p className="text-[10px] text-white/50 font-body">نقطة خبرة</p>
+              <p className="text-[10px] text-white/50 font-body">
+                {pickLang({ ar: 'نقطة خبرة', en: 'XP' }, lang)}
+              </p>
             </div>
 
             <div className="text-center px-4 py-2 rounded-2xl bg-orange-500/15 border border-orange-400/20">
@@ -225,7 +249,9 @@ export function HeroDashboard({
                   {toArabicNumber(streak)}
                 </p>
               </div>
-              <p className="text-[10px] text-white/50 font-body">أيام متتالية</p>
+              <p className="text-[10px] text-white/50 font-body">
+                {pickLang({ ar: 'أيام متتالية', en: 'Streak Days' }, lang)}
+              </p>
             </div>
           </div>
         </div>
@@ -237,7 +263,7 @@ export function HeroDashboard({
             className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br from-purple-500/20 to-electric-500/20 border border-purple-400/30 text-purple-200 hover:from-purple-500/30 hover:to-electric-500/30 transition-all text-xs font-body"
           >
             <Palette className="w-4 h-4" />
-            <span>تغيير الرفيق</span>
+            <span>{pickLang({ ar: 'تغيير الرفيق', en: 'Change Companion' }, lang)}</span>
           </button>
         </div>
       </motion.div>
@@ -274,23 +300,35 @@ export function HeroDashboard({
             </motion.div>
           </div>
 
-          <div className="text-center md:text-right">
+          <div className="text-center md:text-start">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/15 border border-violet-400/20 mb-2">
               <Sparkles className="w-4 h-4 text-violet-300" />
-              <span className="text-xs font-bold text-violet-200 font-body">رفيق رحلتك</span>
+              <span className="text-xs font-bold text-violet-200 font-body">
+                {pickLang({ ar: 'رفيق رحلتك', en: 'Your Journey Companion' }, lang)}
+              </span>
             </div>
-            <h3 className="text-3xl sm:text-4xl font-black font-display text-white">{characterInfo.name}</h3>
-            <p className={`text-sm font-bold font-body mt-1 ${characterInfo.lightColor}`}>{characterInfo.title}</p>
-            <p className="text-sm text-white/60 font-body mt-3 leading-relaxed">{characterInfo.message}</p>
+            <h3 className="text-3xl sm:text-4xl font-black font-display text-white">
+              {pickLang({ ar: characterInfo.name, en: characterInfo.nameEn }, lang)}
+            </h3>
+            <p className={`text-sm font-bold font-body mt-1 ${characterInfo.lightColor}`}>
+              {pickLang({ ar: characterInfo.title, en: characterInfo.titleEn }, lang)}
+            </p>
+            <p className="text-sm text-white/60 font-body mt-3 leading-relaxed">
+              {pickLang({ ar: characterInfo.message, en: characterInfo.messageEn }, lang)}
+            </p>
 
             <div className="flex items-center justify-center md:justify-start gap-2 mt-4 flex-wrap">
               <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
                 <Brain className="w-4 h-4 text-purple-300" />
-                <span className="text-xs text-white/60 font-body">تدريب العقل</span>
+                <span className="text-xs text-white/60 font-body">
+                  {pickLang({ ar: 'تدريب العقل', en: 'Mind Training' }, lang)}
+                </span>
               </div>
               <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
                 <Zap className="w-4 h-4 text-gold-300" />
-                <span className="text-xs text-white/60 font-body">تطوير السرعة</span>
+                <span className="text-xs text-white/60 font-body">
+                  {pickLang({ ar: 'تطوير السرعة', en: 'Speed Development' }, lang)}
+                </span>
               </div>
             </div>
           </div>
@@ -301,11 +339,13 @@ export function HeroDashboard({
               onClick={() => { playSound('click'); setShowSelector(true); }}
               className="flex-1 md:flex-none px-4 py-3 rounded-2xl bg-violet-500/15 border border-violet-400/20 text-violet-200 hover:bg-violet-500/25 transition-all text-xs font-bold font-body"
             >
-              تغيير الرفيق
+              {pickLang({ ar: 'تغيير الرفيق', en: 'Change Companion' }, lang)}
             </button>
             <div className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-center">
               <p className="text-lg font-black text-gold-300 font-display">{toArabicNumber(xp)}</p>
-              <p className="text-[10px] text-white/40 font-body">خبرة البطل</p>
+              <p className="text-[10px] text-white/40 font-body">
+                {pickLang({ ar: 'خبرة البطل', en: 'Hero XP' }, lang)}
+              </p>
             </div>
           </div>
         </div>
@@ -327,7 +367,7 @@ export function HeroDashboard({
             handleNav('placement-test' as Screen);
           }}
           disabled={hasTakenPlacement}
-          className={`group relative glass-card p-5 sm:p-6 text-right overflow-hidden w-full border-2 transition-all ${
+          className={`group relative glass-card p-5 sm:p-6 text-start overflow-hidden w-full border-2 transition-all ${
             hasTakenPlacement
               ? 'border-emerald-400/40 opacity-80 cursor-not-allowed'
               : 'border-gold-400/40'
@@ -365,8 +405,8 @@ export function HeroDashboard({
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <h4 className="text-xl font-black font-display text-white">
                   {hasTakenPlacement
-                    ? 'تم تحديد مستواك'
-                    : 'امتحان تحديد المستوى'}
+                    ? pickLang({ ar: 'تم تحديد مستواك', en: 'Your level has been determined' }, lang)
+                    : pickLang({ ar: 'امتحان تحديد المستوى', en: 'Placement Test' }, lang)}
                 </h4>
                 <span
                   className={`px-2 py-0.5 rounded-lg text-[10px] font-bold whitespace-nowrap ${
@@ -375,13 +415,18 @@ export function HeroDashboard({
                       : 'bg-gold-400/30 text-gold-100'
                   }`}
                 >
-                  {hasTakenPlacement ? '✅ مكتمل' : 'جديد'}
+                  {hasTakenPlacement 
+                    ? pickLang({ ar: '✅ مكتمل', en: '✅ Completed' }, lang) 
+                    : pickLang({ ar: 'جديد', en: 'New' }, lang)}
                 </span>
               </div>
               <p className="text-xs text-white/60 font-body leading-relaxed">
                 {hasTakenPlacement
-                  ? `المستوى الموصى به: ${recommendedLevel ?? 'L0'} — تحدّث مع وليّ الأمر للتغيير`
-                  : '٤٠ سؤالاً — ١٠ دقيقة — يحدد نقطة البداية المثالية'}
+                  ? pickLang({
+                      ar: `المستوى الموصى به: ${recommendedLevel ?? 'L0'} — تحدّث مع وليّ الأمر للتغيير`,
+                      en: `Recommended level: ${recommendedLevel ?? 'L0'} — talk to the guardian to change`
+                    }, lang)
+                  : pickLang({ ar: '٤٠ سؤالاً — ١٠ دقيقة — يحدد نقطة البداية المثالية', en: '40 questions — 10 minutes — determines your ideal starting point' }, lang)}
               </p>
               <p
                 className={`text-xs font-body mt-1 ${
@@ -389,8 +434,8 @@ export function HeroDashboard({
                 }`}
               >
                 {hasTakenPlacement
-                  ? '🔒 لا يمكن إعادة الامتحان'
-                  : '🎯 مفتوح دائماً'}
+                  ? pickLang({ ar: '🔒 لا يمكن إعادة الامتحان', en: '🔒 The test cannot be retaken' }, lang)
+                  : pickLang({ ar: '🎯 مفتوح دائماً', en: '🎯 Always open' }, lang)}
               </p>
             </div>
 
@@ -402,7 +447,7 @@ export function HeroDashboard({
               }`}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                <path d={dir === 'rtl' ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"} strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </div>
@@ -421,7 +466,7 @@ export function HeroDashboard({
           whileHover={{ scale: 1.01, y: -3 }}
           whileTap={{ scale: 0.99 }}
           onClick={() => handleNav('soroban' as Screen)}
-          className="group relative glass-card p-5 sm:p-6 text-right overflow-hidden w-full border-2 border-purple-400/40"
+          className="group relative glass-card p-5 sm:p-6 text-start overflow-hidden w-full border-2 border-purple-400/40"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-electric-500 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
           <div className="absolute -top-20 -right-20 w-48 h-48 bg-purple-500/30 blur-3xl" />
@@ -434,26 +479,26 @@ export function HeroDashboard({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <h4 className="text-xl font-black font-display text-white">
-                  السوروبان التفاعلي
+                  {pickLang({ ar: 'السوروبان التفاعلي', en: 'Interactive Soroban' }, lang)}
                 </h4>
                 <span className="px-2 py-0.5 rounded-lg bg-purple-400/30 text-purple-100 text-[10px] font-bold">
-                  جديد
+                  {pickLang({ ar: 'جديد', en: 'New' }, lang)}
                 </span>
               </div>
               <p className="text-[10px] text-white/40 font-body">
                 Soroban Playground
               </p>
               <p className="text-xs text-white/60 font-body leading-relaxed mt-1">
-                العب بالمعداد بحرية — اختر عدد الأعمدة (٣ / ٦ / ٩ / ١٣)
+                {pickLang({ ar: 'العب بالمعداد بحرية — اختر عدد الأعمدة (٣ / ٦ / ٩ / ١٣)', en: 'Play with the abacus freely — choose the number of columns (3 / 6 / 9 / 13)' }, lang)}
               </p>
               <p className="text-xs text-purple-300 font-body mt-1">
-                🎮 وضع حر — بلا أسئلة ولا مؤقت
+                {pickLang({ ar: '🎮 وضع حر — بلا أسئلة ولا مؤقت', en: '🎮 Free mode — no questions, no timer' }, lang)}
               </p>
             </div>
 
             <div className="shrink-0 self-center text-purple-300 group-hover:text-purple-100 transition-colors">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                <path d={dir === 'rtl' ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"} strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </div>
@@ -472,7 +517,7 @@ export function HeroDashboard({
           whileHover={{ scale: 1.01, y: -3 }}
           whileTap={{ scale: 0.99 }}
           onClick={() => handleNav('flash-list' as Screen)}
-          className="group relative glass-card p-5 sm:p-6 text-right overflow-hidden w-full border-2 border-amber-400/40"
+          className="group relative glass-card p-5 sm:p-6 text-start overflow-hidden w-full border-2 border-amber-400/40"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-rose-500 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
           <div className="absolute -top-20 -right-20 w-48 h-48 bg-amber-500/30 blur-3xl" />
@@ -485,26 +530,26 @@ export function HeroDashboard({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <h4 className="text-xl font-black font-display text-white">
-                  الفلاشات التعليمية
+                  {pickLang({ ar: 'الفلاشات التعليمية', en: 'Flash Lessons' }, lang)}
                 </h4>
                 <span className="px-2 py-0.5 rounded-lg bg-amber-400/30 text-amber-100 text-[10px] font-bold">
-                  جديد
+                  {pickLang({ ar: 'جديد', en: 'New' }, lang)}
                 </span>
               </div>
               <p className="text-[10px] text-white/40 font-body">
                 Flash Lessons
               </p>
               <p className="text-xs text-white/60 font-body leading-relaxed mt-1">
-                شروحات قصيرة — خطوة بخطوة مع الصوت والصورة
+                {pickLang({ ar: 'شروحات قصيرة — خطوة بخطوة مع الصوت والصورة', en: 'Short explanations — step by step with audio and visuals' }, lang)}
               </p>
               <p className="text-xs text-amber-300 font-body mt-1">
-                🎬 أساسيات · ضرب · قسمة
+                {pickLang({ ar: '🎬 أساسيات · ضرب · قسمة', en: '🎬 Basics · Multiplication · Division' }, lang)}
               </p>
             </div>
 
             <div className="shrink-0 self-center text-amber-300 group-hover:text-amber-100 transition-colors">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                <path d={dir === 'rtl' ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"} strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </div>
@@ -523,7 +568,7 @@ export function HeroDashboard({
           whileHover={{ scale: 1.01, y: -3 }}
           whileTap={{ scale: 0.99 }}
           onClick={() => { playSound('click'); setShowGames(true); }}
-          className="group relative glass-card p-5 sm:p-6 text-right overflow-hidden w-full border-2 border-sky-400/40"
+          className="group relative glass-card p-5 sm:p-6 text-start overflow-hidden w-full border-2 border-sky-400/40"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-sky-500 to-fuchsia-500 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
           <div className="absolute -top-20 -right-20 w-48 h-48 bg-sky-500/30 blur-3xl" />
@@ -536,26 +581,26 @@ export function HeroDashboard({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <h4 className="text-xl font-black font-display text-white">
-                  مدينة الألعاب
+                  {pickLang({ ar: 'مدينة الألعاب', en: 'Games City' }, lang)}
                 </h4>
                 <span className="px-2 py-0.5 rounded-lg bg-sky-400/30 text-sky-100 text-[10px] font-bold">
-                  جديد
+                  {pickLang({ ar: 'جديد', en: 'New' }, lang)}
                 </span>
               </div>
               <p className="text-[10px] text-white/40 font-body">
                 Games City
               </p>
               <p className="text-xs text-white/60 font-body leading-relaxed mt-1">
-                اجمع XP من الدروس → اشترِ تذكرة → العب
+                {pickLang({ ar: 'اجمع XP من الدروس → اشترِ تذكرة → العب', en: 'Collect XP from lessons → Buy a ticket → Play' }, lang)}
               </p>
               <p className="text-xs text-sky-300 font-body mt-1">
-                🎟️ 10 XP = تذكرة
+                {pickLang({ ar: '🎟️ 10 XP = تذكرة', en: '🎟️ 10 XP = Ticket' }, lang)}
               </p>
             </div>
 
             <div className="shrink-0 self-center text-sky-300 group-hover:text-sky-100 transition-colors">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                <path d={dir === 'rtl' ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"} strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </div>
@@ -565,7 +610,7 @@ export function HeroDashboard({
       {/* CATEGORY CARDS */}
       <div className="mb-6">
         <h3 className="text-lg font-bold text-white/80 font-display mb-3 text-center">
-          اختر قسمك
+          {pickLang({ ar: 'اختر قسمك', en: 'Choose your category' }, lang)}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -582,7 +627,7 @@ export function HeroDashboard({
                 whileHover={{ scale: 1.02, y: -4 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleNav(card.screen)}
-                className="group relative glass-card p-5 sm:p-6 text-right overflow-hidden"
+                className="group relative glass-card p-5 sm:p-6 text-start overflow-hidden"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-15 transition-opacity duration-500`} />
 
@@ -593,20 +638,22 @@ export function HeroDashboard({
 
                   <div className="flex-1 min-w-0">
                     <h4 className="text-xl font-black font-display text-white">
-                      {card.title}
+                      {pickLang({ ar: card.title, en: card.titleEn }, lang)}
                     </h4>
                     <p className="text-xs text-white/40 font-body">
-                      {card.titleEn}
+                      {pickLang({ ar: card.titleEn, en: card.title }, lang)}
                     </p>
                     <p className={`text-sm font-bold font-body mt-2 bg-gradient-to-l ${card.gradient} bg-clip-text text-transparent`}>
-                      {card.ageRange}
+                      {pickLang({ ar: card.ageRange, en: card.ageRangeEn }, lang)}
                     </p>
                     <p className="text-xs sm:text-sm text-white/60 font-body mt-2 leading-relaxed">
-                      {card.desc}
+                      {pickLang({ ar: card.desc, en: card.descEn }, lang)}
                     </p>
 
                     <div className="flex items-center gap-2 mt-3 flex-wrap">
-                      <span className="text-xs text-white/40 font-body">المستويات:</span>
+                      <span className="text-xs text-white/40 font-body">
+                        {pickLang({ ar: 'المستويات:', en: 'Levels:' }, lang)}
+                      </span>
                       <span className="text-sm font-bold text-white/80 font-display">
                         {card.levelsAr}
                       </span>
@@ -615,7 +662,7 @@ export function HeroDashboard({
 
                   <div className="shrink-0 self-center text-white/40 group-hover:text-white/80 transition-colors">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d={dir === 'rtl' ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"} strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                 </div>
@@ -645,7 +692,7 @@ export function HeroDashboard({
                 type="button"
                 onClick={() => { playSound('click'); setShowSelector(false); }}
                 className="absolute top-4 left-4 w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
-                aria-label="إغلاق"
+                aria-label={pickLang({ ar: 'إغلاق', en: 'Close' }, lang)}
               >
                 <X className="w-5 h-5 text-white/70" />
               </button>
