@@ -89,7 +89,7 @@ interface CategoryCard {
   icon: LucideIcon;
   gradient: string;
   glow: string;
-  levels: number[]; // 🆕 Changed from levelsAr (string) to numbers array
+  levels: number[];
 }
 
 const CATEGORY_CARDS: CategoryCard[] = [
@@ -104,7 +104,7 @@ const CATEGORY_CARDS: CategoryCard[] = [
     icon: Users,
     gradient: 'from-emerald-500 to-teal-700',
     glow: 'shadow-emerald-500/40',
-    levels: [0, 1, 2, 3], // 🆕
+    levels: [0, 1, 2, 3],
   },
   {
     screen: 'category-teens',
@@ -117,7 +117,7 @@ const CATEGORY_CARDS: CategoryCard[] = [
     icon: Trophy,
     gradient: 'from-purple-500 to-indigo-700',
     glow: 'shadow-purple-500/40',
-    levels: [4, 5, 6, 7], // 🆕
+    levels: [4, 5, 6, 7],
   },
 ];
 
@@ -135,10 +135,10 @@ export function HeroDashboard({
   streak,
 }: HeroDashboardProps) {
   const { lang, dir } = useT();
-  const numberStyle = useNumberStyleStore((s) => s.style); // 🆕 Extracting style
+  const numberStyle = useNumberStyleStore((s) => s.style);
+  const isArabic = numberStyle === 'arabic'; // 🆕 Added here to fix the error
   const [showGames, setShowGames] = useState(false);
 
-  // 🆕 [PLACE] — placement test attempt count
   const placementAttempts = useProgressStore((s) => s.placementAttempts);
   const [recommendedLevel, setRecommendedLevel] = useState<string | null>(null);
 
@@ -224,7 +224,6 @@ export function HeroDashboard({
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white">
               {pickLang({ ar: 'مرحباً يا', en: 'Welcome,' }, lang)}{' '}
-              {/* 🆕 Passing childName through translateDynamic */}
               {childName 
                 ? translateDynamic({ value: childName }, lang, 'value') 
                 : pickLang({ ar: 'أيها البطل', en: 'Hero' }, lang)}!
@@ -353,7 +352,7 @@ export function HeroDashboard({
         </div>
       </motion.div>
 
-      {/* 🆕 [PLACE] PLACEMENT TEST CARD */}
+      {/* PLACEMENT TEST CARD */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -507,7 +506,7 @@ export function HeroDashboard({
         </motion.button>
       </motion.div>
 
-      {/* 🎬 FLASH LESSONS CARD */}
+      {/* FLASH LESSONS CARD */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -558,7 +557,7 @@ export function HeroDashboard({
         </motion.button>
       </motion.div>
 
-      {/* 🆕 🎮 GAMES CITY CARD */}
+      {/* GAMES CITY CARD */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -642,7 +641,6 @@ export function HeroDashboard({
                     <h4 className="text-xl font-black font-display text-white">
                       {pickLang({ ar: card.title, en: card.titleEn }, lang)}
                     </h4>
-                    {/* 🆕 Subtitle is only shown in Arabic mode to avoid redundancy in English */}
                     {lang === 'ar' && (
                       <p className="text-xs text-white/40 font-body">
                         {card.titleEn}
@@ -660,7 +658,6 @@ export function HeroDashboard({
                         {pickLang({ ar: 'المستويات:', en: 'Levels:' }, lang)}
                       </span>
                       <span className="text-sm font-bold text-white/80 font-display" dir={isArabic ? 'rtl' : 'ltr'}>
-                        {/* 🆕 Formats the levels array according to numberStyle */}
                         {card.levels.map((lvl) => formatNumber(lvl, numberStyle)).join(' · ')}
                       </span>
                     </div>
