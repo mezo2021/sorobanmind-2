@@ -434,7 +434,9 @@ export function LevelTestScreen({
             animate={{ opacity: 1, scale: 1 }}
             className="glass-card p-4 sm:p-6 w-full text-center mb-4"
           >
-            <p className="text-lg font-extrabold text-white mb-4">{currentQ.question}</p>
+            <p className="text-lg font-extrabold text-white mb-4">
+              {translateDynamic(currentQ, lang, 'question') || currentQ.question}
+            </p>
 
             {/* ✅ واجهة الإجابة الوحيدة: المعداد التفاعلي لجميع الأسئلة */}
             <div className="flex justify-center mb-3" dir={dir}>
@@ -589,7 +591,7 @@ export function LevelTestScreen({
           className="btn-primary w-full !py-4 !text-lg"
         >
           {passed
-            ? pickLang({ ar: '🎓 تابع الرحلة', en: '🎓 Continue the journey' }, lang)
+            ? pickLang({ ar: '🎓 تابع الرحلة', en: 'Continue the journey' }, lang)
             : pickLang({ ar: 'العودة', en: 'Back' }, lang)}
         </button>
       </div>
