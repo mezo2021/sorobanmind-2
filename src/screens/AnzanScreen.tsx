@@ -14,6 +14,7 @@
 // [FIX 4] — remove master_mixed from ANZAN_BADGE_LABELS
 // [FIX AUDIO] — Fix speech cut-off & pass lang to numberToArabicWordsDecimal
 // [FIX AUDIO LANG] — pass lang to speak() + mute companion reactions in English mode
+// [FIX RTL] — use `dir` from language (not `isArabic` number style) for text direction
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -266,7 +267,6 @@ export function AnzanScreen({
   const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
 
   const numberStyle = useNumberStyleStore((s) => s.style);
-  const isArabic = numberStyle === 'arabic';
 
   const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
   const setGrade = useProgressStore((s) => s.setGrade);
@@ -819,7 +819,7 @@ export function AnzanScreen({
                   transition={{ duration: 0.3 }}
                   className="text-center">
                   <p className={`font-black font-display text-white ${isBuildOrRead ? 'text-3xl sm:text-5xl' : 'text-7xl sm:text-9xl'}`}
-                    dir={isArabic ? 'rtl' : 'ltr'}>
+                    dir={dir}>
                     {formatText(displayTerms[currentTermIdx], numberStyle)}
                   </p>
                   <p className="text-sm text-white/40 font-body mt-4">
@@ -838,7 +838,7 @@ export function AnzanScreen({
                 {pickLang({ ar: 'اقرأ السؤال', en: 'Read the question' }, lang)}
               </p>
               <p
-                dir={isBuildOrRead ? (isArabic ? 'rtl' : 'ltr') : 'ltr'}
+                dir={dir}
                 className={`font-black font-display text-white ${sizeClass} whitespace-nowrap`}
               >
                 {displayText}
@@ -957,7 +957,7 @@ export function AnzanScreen({
               <p className="text-sm text-white/60 font-body mb-1">
                 {pickLang({ ar: 'الإجابة الصحيحة', en: 'The correct answer' }, lang)}
               </p>
-              <p className="text-5xl font-black font-display text-white" dir={isArabic ? 'rtl' : 'ltr'}>
+              <p className="text-5xl font-black font-display text-white" dir={dir}>
                 {formattedAnswer}
               </p>
             </div>
@@ -1053,7 +1053,7 @@ export function AnzanScreen({
               <p className="text-sm text-white/60 font-body">
                 {pickLang({ ar: 'النتيجة', en: 'Result' }, lang)}
               </p>
-              <p className="text-5xl font-black font-display text-white mt-1" dir={isArabic ? 'rtl' : 'ltr'}>
+              <p className="text-5xl font-black font-display text-white mt-1" dir={dir}>
                 {formatNumber(score, numberStyle)} / {formatNumber(questions.length, numberStyle)}
               </p>
               <p className={`text-lg font-bold font-body mt-1 ${
