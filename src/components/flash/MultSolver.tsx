@@ -9,8 +9,11 @@ import { useSpeech } from '@/hooks/useSpeech';
 import type { FlashLesson } from './types';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
+import { tBadgeLines, buildFlashSpeech } from './flashI18n';
 
-const TTS_RATE = 0.7;
 // 🔢 يتبع زر تبديل الأرقام
 function toAr(v: number): string {
   return formatNumber(v, useNumberStyleStore.getState().style);
@@ -30,6 +33,7 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
   const [resultVal, setResultVal] = useState(0);
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const { lang, dir, isAr } = useT();
   const [showHint, setShowHint] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
@@ -41,14 +45,17 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
   const tts = useSpeech();
   const ttsRef = useRef(tts);
   useEffect(() => { ttsRef.current = tts; }, [tts]);
+  useEffect(() => { ttsRef.current.stop(); }, [lang]); // 🌐
 
   const step = lesson.steps[stepIdx];
   const isLastStep = stepIdx === lesson.steps.length - 1;
 
   const speakStep = useCallback((s: typeof step) => {
-    if (!s?.ttsText) return;
-    ttsRef.current.speak(s.ttsText, { rate: TTS_RATE });
-  }, []);
+    if (!s) return;
+    const sp = buildFlashSpeech(s, lang); // 🌐 عربي: ttsText · إنجليزي: badgeLines
+    if (!sp.text) return;
+    ttsRef.current.speak(sp.text, { rate: sp.rate, lang: sp.lang });
+  }, [lang]);
 
   useEffect(() => { multRef.current = multVal; }, [multVal]);
   useEffect(() => { resultRef.current = resultVal; }, [resultVal]);
@@ -98,9 +105,9 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
       setErrorMsg('');
     } else {
       setStatus('error');
-      if (!okM && !okR) setErrorMsg('المعدادان يحتاجان تعديلاً');
-      else if (!okR) setErrorMsg('معداد الناتج 🟢 يحتاج تصحيح');
-      else setErrorMsg('معداد المضروب 🔴 يحتاج تصحيح');
+      if (!okM && !okR) setErrorMsg(pickLang({ ar: 'المعدادان يحتاجان تعديلاً', en: 'Both abacuses need adjusting' }, lang));
+      else if (!okR) setErrorMsg(pickLang({ ar: 'معداد الناتج 🟢 يحتاج تصحيح', en: 'The result abacus 🟢 needs fixing' }, lang));
+      else setErrorMsg(pickLang({ ar: 'معداد المضروب 🔴 يحتاج تصحيح', en: 'The multiplicand abacus 🔴 needs fixing' }, lang));
     }
   };
 
@@ -130,18 +137,18 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
   const wrongR = status === 'error' && resultVal !== (step.resultValue ?? 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white flex flex-col select-none" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white flex flex-col select-none" dir={dir}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 gap-2 border-b border-white/10 bg-slate-900/50 backdrop-blur-md">
         <button onClick={onBack} className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 transition shrink-0">
-          <ArrowRight className="w-5 h-5 text-amber-300" />
+          <ArrowRight className={`w-5 h-5 text-amber-300 ${isAr ? '' : 'rotate-180'}`} />
         </button>
         <div className="flex-1 text-center">
           <div className="text-lg sm:text-xl font-black text-amber-300 tabular-nums tracking-wider">
             {toAr(lesson.multiplicand ?? 0)} × {toAr(lesson.multiplier ?? 0)}
           </div>
           <div className="text-xs text-white/60 mt-0.5">
-            المرحلة {toAr(stepIdx + 1)} من {toAr(lesson.steps.length)}
+            {isAr ? (<>المرحلة {toAr(stepIdx + 1)} من {toAr(lesson.steps.length)}</>) : (<>Step {toAr(stepIdx + 1)} of {toAr(lesson.steps.length)}</>)}
           </div>
         </div>
         <button onClick={handleReset} className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 transition shrink-0">
@@ -172,18 +179,18 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
             transition={{ duration: 0.2 }}
             className="bg-slate-900/90 border-2 border-amber-500/40 rounded-2xl p-4 text-center shadow-xl">
             <div className="flex flex-wrap justify-center gap-1.5 mb-2">
-              {step.badgeLines.map((line, i) => (
+              {tBadgeLines(step.badgeLines, lang).map((line, i) => (
                 <span key={i} className="bg-amber-500/20 text-amber-300 text-xs font-black px-2.5 py-1 rounded-lg border border-amber-500/30">
                   {line}
                 </span>
               ))}
             </div>
-            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">{step.caption}</p>
+            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">{translateDynamic(step, lang, 'caption')}</p>
             {showHint && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
                 className="mt-3 pt-3 border-t border-slate-700 text-xs text-amber-300 font-bold flex items-center justify-center gap-1.5 bg-amber-950/40 p-2 rounded-xl">
                 <Lightbulb className="w-4 h-4 shrink-0 text-amber-400" />
-                <span>القيمة المطلوبة على الناتج: {toAr(step.resultValue ?? 0)}</span>
+                <span>{pickLang({ ar: 'القيمة المطلوبة على الناتج:', en: 'Required value on the result:' }, lang)} {toAr(step.resultValue ?? 0)}</span>
               </motion.div>
             )}
           </motion.div>
@@ -191,12 +198,12 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
       </div>
 
       {/* Two Abacuses */}
-      <div className="flex-1 px-3 flex items-center justify-center my-1">
+      <div dir="rtl" className="flex-1 px-3 flex items-center justify-center my-1">
         <div className="flex items-start justify-center gap-2 w-full max-w-md">
           {/* 🟢 الناتج (يمين) */}
           <div className="flex-1 min-w-0 flex flex-col items-center">
             <div className="flex items-center gap-1.5 text-[11px] text-emerald-300 font-bold mb-0.5">
-              <span>🟢</span><span>الناتج</span>
+              <span>🟢</span><span>{pickLang({ ar: 'الناتج', en: 'Result' }, lang)}</span>
             </div>
             <div className={`px-3 py-0.5 rounded-lg font-mono font-black text-lg tabular-nums mb-1.5 min-w-[62px] text-center transition-all ${
               wrongR ? 'bg-red-500/30 border-2 border-red-400 text-red-50 animate-pulse'
@@ -222,7 +229,7 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
           {/* 🔴 المضروب (يسار) */}
           <div className="flex-1 min-w-0 flex flex-col items-center">
             <div className="flex items-center gap-1.5 text-[11px] text-rose-300 font-bold mb-0.5">
-              <span>🔴</span><span>المضروب</span>
+              <span>🔴</span><span>{pickLang({ ar: 'المضروب', en: 'Multiplicand' }, lang)}</span>
             </div>
             <div className={`px-3 py-0.5 rounded-lg font-mono font-black text-lg tabular-nums mb-1.5 min-w-[62px] text-center transition-all ${
               wrongM ? 'bg-red-500/30 border-2 border-red-400 text-red-50 animate-pulse'
@@ -258,7 +265,7 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
           {status === 'success' && (
             <motion.div key="s" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
               className="bg-emerald-950/90 border-2 border-emerald-500/60 rounded-2xl p-3 text-center text-xs sm:text-sm font-bold text-emerald-200 flex items-center justify-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" /><span>أحسنت! القيمتان صحيحتان</span>
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" /><span>{pickLang({ ar: 'أحسنت! القيمتان صحيحتان', en: 'Well done! Both values are correct' }, lang)}</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -269,7 +276,7 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
         {!hasStarted ? (
           <button onClick={handleStart}
             className="mx-auto px-8 py-4 rounded-full font-bold flex items-center gap-2 transition bg-gradient-to-l from-purple-600 to-amber-500 text-white text-lg shadow-lg shadow-amber-500/30">
-            ▶️ ابدأ
+            ▶️ {pickLang({ ar: 'ابدأ', en: 'Start' }, lang)}
           </button>
         ) : (
           <>
@@ -282,13 +289,13 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
                     : 'bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10'
                 }`}>
                 <Lightbulb className="w-4 h-4 text-amber-400" />
-                <span className="hidden sm:inline">تلميح</span>
+                <span className="hidden sm:inline">{pickLang({ ar: 'تلميح', en: 'Hint' }, lang)}</span>
               </button>
 
               <button onClick={handleReplay}
                 className="px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/50 text-emerald-200 hover:bg-emerald-500/30 transition shrink-0">
                 <Volume2 className="w-4 h-4" />
-                <span className="hidden sm:inline">إعادة الصوت</span>
+                <span className="hidden sm:inline">{pickLang({ ar: 'إعادة الصوت', en: 'Replay audio' }, lang)}</span>
               </button>
             </div>
 
@@ -296,13 +303,13 @@ export function MultSolver({ lesson, onBack, onComplete }: MultSolverProps) {
             {status !== 'success' ? (
               <button onClick={handleVerify}
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-amber-500 to-orange-600 text-white font-black shadow-lg text-sm sm:text-base tracking-wide active:scale-[0.98] transition flex items-center justify-center gap-2 border border-amber-400/30">
-                🔍 تحقق من الإجابة
+                🔍 {pickLang({ ar: 'تحقق من الإجابة', en: 'Check answer' }, lang)}
               </button>
             ) : (
               <button onClick={handleNext}
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-black shadow-lg text-sm sm:text-base tracking-wide active:scale-[0.98] transition flex items-center justify-center gap-2 border border-emerald-400/30">
-                <span>{isLastStep ? '🏆 إنهاء' : 'المرحلة التالية'}</span>
-                {!isLastStep && <ChevronLeft className="w-5 h-5" />}
+                <span>{isLastStep ? pickLang({ ar: '🏆 إنهاء', en: '🏆 Finish' }, lang) : pickLang({ ar: 'المرحلة التالية', en: 'Next step' }, lang)}</span>
+                {!isLastStep && <ChevronLeft className={`w-5 h-5 ${isAr ? '' : 'rotate-180'}`} />}
               </button>
             )}
           </>
