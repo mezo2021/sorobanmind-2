@@ -1,7 +1,4 @@
 // src/screens/HeroDashboard.tsx
-// [GAMES]  — added the Games City button
-// [PLACE]  — locked the placement test after the first attempt
-
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, lazy, Suspense } from 'react';
 import {
@@ -21,6 +18,7 @@ import { formatNumber } from '@/utils/numberStyle';
 
 import { useT } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
 
 interface HeroDashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -91,7 +89,7 @@ interface CategoryCard {
   icon: LucideIcon;
   gradient: string;
   glow: string;
-  levelsAr: string;
+  levels: number[]; // 🆕 Changed from levelsAr (string) to numbers array
 }
 
 const CATEGORY_CARDS: CategoryCard[] = [
@@ -106,7 +104,7 @@ const CATEGORY_CARDS: CategoryCard[] = [
     icon: Users,
     gradient: 'from-emerald-500 to-teal-700',
     glow: 'shadow-emerald-500/40',
-    levelsAr: '٠ · ١ · ٢ · ٣',
+    levels: [0, 1, 2, 3], // 🆕
   },
   {
     screen: 'category-teens',
@@ -119,7 +117,7 @@ const CATEGORY_CARDS: CategoryCard[] = [
     icon: Trophy,
     gradient: 'from-purple-500 to-indigo-700',
     glow: 'shadow-purple-500/40',
-    levelsAr: '٤ · ٥ · ٦ · ٧',
+    levels: [4, 5, 6, 7], // 🆕
   },
 ];
 
@@ -137,7 +135,7 @@ export function HeroDashboard({
   streak,
 }: HeroDashboardProps) {
   const { lang, dir } = useT();
-  useNumberStyleStore((s) => s.style); // 🔢 re-render on number-style toggle
+  const numberStyle = useNumberStyleStore((s) => s.style); // 🆕 Extracting style
   const [showGames, setShowGames] = useState(false);
 
   // 🆕 [PLACE] — placement test attempt count
@@ -225,7 +223,11 @@ export function HeroDashboard({
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white">
-              {pickLang({ ar: 'مرحباً يا', en: 'Welcome,' }, lang)} {childName || pickLang({ ar: 'أيها البطل', en: 'Hero' }, lang)}!
+              {pickLang({ ar: 'مرحباً يا', en: 'Welcome,' }, lang)}{' '}
+              {/* 🆕 Passing childName through translateDynamic */}
+              {childName 
+                ? translateDynamic({ value: childName }, lang, 'value') 
+                : pickLang({ ar: 'أيها البطل', en: 'Hero' }, lang)}!
             </h2>
             <p className="text-white/60 font-body text-sm mt-1">
               {pickLang({ ar: 'واصل رحلتك في إتقان الحساب الذهني بالسوروبان', en: 'Continue your journey to master mental math with the soroban' }, lang)}
@@ -640,9 +642,12 @@ export function HeroDashboard({
                     <h4 className="text-xl font-black font-display text-white">
                       {pickLang({ ar: card.title, en: card.titleEn }, lang)}
                     </h4>
-                    <p className="text-xs text-white/40 font-body">
-                      {pickLang({ ar: card.titleEn, en: card.title }, lang)}
-                    </p>
+                    {/* 🆕 Subtitle is only shown in Arabic mode to avoid redundancy in English */}
+                    {lang === 'ar' && (
+                      <p className="text-xs text-white/40 font-body">
+                        {card.titleEn}
+                      </p>
+                    )}
                     <p className={`text-sm font-bold font-body mt-2 bg-gradient-to-l ${card.gradient} bg-clip-text text-transparent`}>
                       {pickLang({ ar: card.ageRange, en: card.ageRangeEn }, lang)}
                     </p>
@@ -654,8 +659,9 @@ export function HeroDashboard({
                       <span className="text-xs text-white/40 font-body">
                         {pickLang({ ar: 'المستويات:', en: 'Levels:' }, lang)}
                       </span>
-                      <span className="text-sm font-bold text-white/80 font-display">
-                        {card.levelsAr}
+                      <span className="text-sm font-bold text-white/80 font-display" dir={isArabic ? 'rtl' : 'ltr'}>
+                        {/* 🆕 Formats the levels array according to numberStyle */}
+                        {card.levels.map((lvl) => formatNumber(lvl, numberStyle)).join(' · ')}
                       </span>
                     </div>
                   </div>
