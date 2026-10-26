@@ -148,10 +148,16 @@ function buildSkillId(level: SRBLevel, section: SRBSection, module: SRBModule): 
 // Builds the speech sequence for audio playback. Connector words (times, divided by,
 // minus) are language-aware via pickLang; numeric words now pass lang to numberToArabicWordsDecimal.
 function buildSpeechSequence(q: SRBQuestion, lang: 'ar' | 'en'): string[] {
-  const { operands, operation, question } = q;
+  const { operands, operation } = q;
 
-  if (operation === 'build' || operation === 'read') {
-    return [question];
+  if (operation === 'build') {
+    const intro = pickLang({ ar: 'ابنِ', en: 'Build' }, lang);
+    return [`${intro} ${numberToArabicWordsDecimal(q.result, lang)}`];
+  }
+
+  if (operation === 'read') {
+    const intro = pickLang({ ar: 'اقرأ', en: 'Read' }, lang);
+    return [`${intro} ${numberToArabicWordsDecimal(q.result, lang)}`];
   }
 
   const parts: string[] = [];
@@ -214,7 +220,6 @@ export function AudioAnzanScreen({
   const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
 
   const numberStyle = useNumberStyleStore((s) => s.style);
-  const isArabic = numberStyle === 'arabic';
 
   const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
   const setGrade = useProgressStore((s) => s.setGrade);
@@ -849,7 +854,7 @@ export function AudioAnzanScreen({
               <p className="text-sm text-white/60 font-body mb-1">
                 {pickLang({ ar: 'الإجابة الصحيحة', en: 'The correct answer' }, lang)}
               </p>
-              <p className="text-5xl font-black font-display text-white" dir={isArabic ? 'rtl' : 'ltr'}>
+              <p className="text-5xl font-black font-display text-white" dir={dir}>
                 {formattedAnswer}
               </p>
             </div>
@@ -939,7 +944,7 @@ export function AudioAnzanScreen({
               <p className="text-sm text-white/60 font-body">
                 {pickLang({ ar: 'النتيجة', en: 'Result' }, lang)}
               </p>
-              <p className="text-5xl font-black font-display text-white mt-1" dir={isArabic ? 'rtl' : 'ltr'}>
+              <p className="text-5xl font-black font-display text-white mt-1" dir={dir}>
                 {formatNumber(score, numberStyle)} / {formatNumber(questions.length, numberStyle)}
               </p>
               <p className={`text-lg font-bold font-body mt-1 ${passed ? 'text-emerald-300' : 'text-amber-300'}`}>
