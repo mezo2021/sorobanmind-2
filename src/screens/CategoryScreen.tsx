@@ -2,6 +2,7 @@
 // [FIX 7] — unified preview check via utility
 // [FIX N69] — display Visual Anzan (average) and Audio grades on the buttons
 // [SURGICAL FIX] — rely on exam grades (>=80%) to unlock levels and show the completion mark
+// [FIX I18N] — removed inverted subtitles to prevent Arabic leaking into English UI
 
 import { motion } from 'framer-motion';
 import {
@@ -363,9 +364,6 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
                 </span>
               )}
             </div>
-            <p className="text-[10px] text-white/40 font-body">
-              {pickLang({ ar: level.titleEn, en: level.titleAr }, lang)}
-            </p>
             <p className="text-xs text-white/60 font-body mt-1 leading-snug">
               {translateDynamic(level, lang, 'desc')}
             </p>
@@ -483,7 +481,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
             {pickLang({ ar: data.titleAr, en: data.titleEn }, lang)}
           </h2>
           <p className="text-sm text-white/50 font-body">
-            {translateDynamic(data, lang, 'ageRange')} · {pickLang({ ar: data.titleEn, en: data.titleAr }, lang)}
+            {translateDynamic(data, lang, 'ageRange')}
           </p>
         </div>
 
