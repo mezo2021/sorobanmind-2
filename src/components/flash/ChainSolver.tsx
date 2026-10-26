@@ -9,8 +9,11 @@ import { useSpeech } from '@/hooks/useSpeech';
 import type { FlashLesson } from './types';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
+import { tBadgeLines, buildFlashSpeech } from './flashI18n';
 
-const TTS_RATE = 0.7;
 // 🔢 يتبع زر تبديل الأرقام
 function toAr(v: number): string {
   return formatNumber(v, useNumberStyleStore.getState().style);
@@ -29,6 +32,7 @@ export function ChainSolver({ lesson, onBack, onComplete }: ChainSolverProps) {
   const [userVal, setUserVal] = useState(0);
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const { lang, dir, isAr } = useT();
   const [showHint, setShowHint] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
@@ -41,11 +45,14 @@ export function ChainSolver({ lesson, onBack, onComplete }: ChainSolverProps) {
   const tts = useSpeech();
   const ttsRef = useRef(tts);
   useEffect(() => { ttsRef.current = tts; }, [tts]);
+  useEffect(() => { ttsRef.current.stop(); }, [lang]); // 🌐
 
   const speakStep = useCallback((s: typeof step) => {
-    if (!s?.ttsText) return;
-    ttsRef.current.speak(s.ttsText, { rate: TTS_RATE });
-  }, []);
+    if (!s) return;
+    const sp = buildFlashSpeech(s, lang); // 🌐 عربي: ttsText · إنجليزي: badgeLines
+    if (!sp.text) return;
+    ttsRef.current.speak(sp.text, { rate: sp.rate, lang: sp.lang });
+  }, [lang]);
 
   useEffect(() => { userRef.current = userVal; }, [userVal]);
 
@@ -70,7 +77,9 @@ export function ChainSolver({ lesson, onBack, onComplete }: ChainSolverProps) {
       setErrorMsg('');
     } else {
       setStatus('error');
-      setErrorMsg(`القيمة الحالية (${toAr(userRef.current)}) · المطلوب: ${toAr(expected)}`);
+      setErrorMsg(isAr
+        ? `القيمة الحالية (${toAr(userRef.current)}) · المطلوب: ${toAr(expected)}`
+        : `Current value (${toAr(userRef.current)}) · Required: ${toAr(expected)}`);
     }
   };
 
@@ -105,18 +114,18 @@ export function ChainSolver({ lesson, onBack, onComplete }: ChainSolverProps) {
   const isWrong = status === 'error' && userVal !== (step.sorobanValue ?? 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white flex flex-col select-none" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white flex flex-col select-none" dir={dir}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 gap-2 border-b border-white/10 bg-slate-900/50 backdrop-blur-md">
         <button onClick={onBack} className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 transition shrink-0">
-          <ArrowRight className="w-5 h-5 text-amber-300" />
+          <ArrowRight className={`w-5 h-5 text-amber-300 ${isAr ? '' : 'rotate-180'}`} />
         </button>
         <div className="flex-1 text-center">
           <div className="text-base sm:text-lg font-black text-amber-300 tabular-nums tracking-wider">
-            {lesson.subtitle}
+            {translateDynamic(lesson, lang, 'subtitle')}
           </div>
           <div className="text-xs text-white/60 mt-0.5">
-            المرحلة {toAr(stepIdx + 1)} من {toAr(lesson.steps.length)}
+            {isAr ? (<>المرحلة {toAr(stepIdx + 1)} من {toAr(lesson.steps.length)}</>) : (<>Step {toAr(stepIdx + 1)} of {toAr(lesson.steps.length)}</>)}
           </div>
         </div>
         <button onClick={handleReset} className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 transition shrink-0">
@@ -149,19 +158,19 @@ export function ChainSolver({ lesson, onBack, onComplete }: ChainSolverProps) {
               isFinal ? 'border-emerald-500/60' : 'border-amber-500/40'
             }`}>
             <div className="flex flex-wrap justify-center gap-1.5 mb-2">
-              {step.badgeLines.map((line, i) => (
+              {tBadgeLines(step.badgeLines, lang).map((line, i) => (
                 <span key={i} className={`text-xs font-black px-2.5 py-1 rounded-lg border ${
                   isFinal ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                   : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
                 }`}>{line}</span>
               ))}
             </div>
-            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">{step.caption}</p>
+            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">{translateDynamic(step, lang, 'caption')}</p>
             {showHint && !isFinal && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
                 className="mt-3 pt-3 border-t border-slate-700 text-xs text-amber-300 font-bold flex items-center justify-center gap-1.5 bg-amber-950/40 p-2 rounded-xl">
                 <Lightbulb className="w-4 h-4 shrink-0 text-amber-400" />
-                <span>القيمة المطلوبة: {toAr(step.sorobanValue ?? 0)}</span>
+                <span>{pickLang({ ar: 'القيمة المطلوبة:', en: 'Required value:' }, lang)} {toAr(step.sorobanValue ?? 0)}</span>
               </motion.div>
             )}
           </motion.div>
@@ -169,12 +178,12 @@ export function ChainSolver({ lesson, onBack, onComplete }: ChainSolverProps) {
       </div>
 
       {/* Abacus */}
-      <div className="flex-1 px-4 flex items-center justify-center my-1">
+      <div dir="rtl" className="flex-1 px-4 flex items-center justify-center my-1">
         <div className="w-full max-w-sm bg-slate-900/50 p-4 rounded-3xl border border-white/10 flex flex-col items-center">
           <div className="flex items-center gap-2 mb-2">
             <span className={`w-2.5 h-2.5 rounded-full animate-pulse ${isFinal ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
             <span className={`text-xs font-bold ${isFinal ? 'text-emerald-300' : 'text-amber-300'}`}>
-              {isFinal ? '✅ الناتج النهائي' : 'القيمة الحالية'}
+              {isFinal ? pickLang({ ar: '✅ الناتج النهائي', en: '✅ Final result' }, lang) : pickLang({ ar: 'القيمة الحالية', en: 'Current value' }, lang)}
             </span>
           </div>
           <div className={`px-6 py-1.5 rounded-2xl font-mono font-black text-2xl tabular-nums mb-3 min-w-[110px] text-center transition-all shadow-inner ${
@@ -212,7 +221,7 @@ export function ChainSolver({ lesson, onBack, onComplete }: ChainSolverProps) {
           {status === 'success' && !isFinal && (
             <motion.div key="s" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
               className="bg-emerald-950/90 border-2 border-emerald-500/60 rounded-2xl p-3 text-center text-xs sm:text-sm font-bold text-emerald-200 flex items-center justify-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" /><span>أحسنت! القيمة صحيحة</span>
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" /><span>{pickLang({ ar: 'أحسنت! القيمة صحيحة', en: 'Well done! The value is correct' }, lang)}</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -223,7 +232,7 @@ export function ChainSolver({ lesson, onBack, onComplete }: ChainSolverProps) {
         {!hasStarted ? (
           <button onClick={handleStart}
             className="mx-auto px-8 py-4 rounded-full font-bold flex items-center gap-2 transition bg-gradient-to-l from-purple-600 to-amber-500 text-white text-lg shadow-lg shadow-amber-500/30">
-            ▶️ ابدأ
+            ▶️ {pickLang({ ar: 'ابدأ', en: 'Start' }, lang)}
           </button>
         ) : (
           <>
@@ -235,25 +244,25 @@ export function ChainSolver({ lesson, onBack, onComplete }: ChainSolverProps) {
                   : 'bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10'
                 }`}>
                 <Lightbulb className="w-4 h-4 text-amber-400" />
-                <span className="hidden sm:inline">تلميح</span>
+                <span className="hidden sm:inline">{pickLang({ ar: 'تلميح', en: 'Hint' }, lang)}</span>
               </button>
               <button onClick={handleReplay}
                 className="px-5 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/50 text-emerald-200 hover:bg-emerald-500/30 transition shrink-0">
                 <Volume2 className="w-4 h-4" />
-                <span className="hidden sm:inline">إعادة الصوت</span>
+                <span className="hidden sm:inline">{pickLang({ ar: 'إعادة الصوت', en: 'Replay audio' }, lang)}</span>
               </button>
             </div>
 
             {!isFinal && status !== 'success' ? (
               <button onClick={handleVerify}
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-amber-500 to-orange-600 text-white font-black shadow-lg text-sm sm:text-base tracking-wide active:scale-[0.98] transition flex items-center justify-center gap-2 border border-amber-400/30">
-                🔍 تحقق من الإجابة
+                🔍 {pickLang({ ar: 'تحقق من الإجابة', en: 'Check answer' }, lang)}
               </button>
             ) : (
               <button onClick={handleNext}
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-black shadow-lg text-sm sm:text-base tracking-wide active:scale-[0.98] transition flex items-center justify-center gap-2 border border-emerald-400/30">
-                <span>{isLastStep ? '🏆 إنهاء' : 'المرحلة التالية'}</span>
-                {!isLastStep && <ChevronLeft className="w-5 h-5" />}
+                <span>{isLastStep ? pickLang({ ar: '🏆 إنهاء', en: '🏆 Finish' }, lang) : pickLang({ ar: 'المرحلة التالية', en: 'Next step' }, lang)}</span>
+                {!isLastStep && <ChevronLeft className={`w-5 h-5 ${isAr ? '' : 'rotate-180'}`} />}
               </button>
             )}
           </>
