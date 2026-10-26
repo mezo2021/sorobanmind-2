@@ -8,6 +8,9 @@ import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import type { DivisionProblem } from './sorobanDivisionData';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
 
 // 🔢 يتبع زر تبديل الأرقام
 function toAr(v: number): string {
@@ -32,6 +35,7 @@ export function TwoAbacusSolver({
   const [resultVal, setResultVal] = useState(0);
   const [status, setStatus] = useState<Status>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const { lang, dir, isAr } = useT();
   const [showHint, setShowHint] = useState(false);
   const [resetKey, setResetKey] = useState(0);
 
@@ -68,11 +72,11 @@ export function TwoAbacusSolver({
     } else {
       setStatus('error');
       if (!okDividend && !okResult) {
-        setErrorMessage('المعدادان بحاجة تعديل — راجع ناتج القسمة وباقي المقسوم بدقة');
+        setErrorMessage(pickLang({ ar: 'المعدادان بحاجة تعديل — راجع ناتج القسمة وباقي المقسوم بدقة', en: 'Both abacuses need adjusting — check the quotient and the remaining dividend carefully' }, lang));
       } else if (!okResult) {
-        setErrorMessage('معداد الناتج الأخضر (🟢) يحتاج إلى تصحيح');
+        setErrorMessage(pickLang({ ar: 'معداد الناتج الأخضر (🟢) يحتاج إلى تصحيح', en: 'The green result abacus (🟢) needs fixing' }, lang));
       } else {
-        setErrorMessage('معداد المقسوم الأحمر (🔴) يحتاج إلى إتمام عملية الطرح');
+        setErrorMessage(pickLang({ ar: 'معداد المقسوم الأحمر (🔴) يحتاج إلى إتمام عملية الطرح', en: 'The red dividend abacus (🔴) needs the subtraction completed' }, lang));
       }
     }
   };
@@ -114,16 +118,16 @@ export function TwoAbacusSolver({
   return (
     <div
       className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white flex flex-col select-none"
-      dir="rtl"
+      dir={dir}
     >
       {/* ═══ Header ═══ */}
       <div className="flex items-center justify-between p-4 gap-2 border-b border-white/10 bg-slate-900/50 backdrop-blur-md">
         <button
           onClick={onBack}
           className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 transition shrink-0 flex items-center justify-center"
-          title="العودة"
+          title={pickLang({ ar: 'العودة', en: 'Back' }, lang)}
         >
-          <ArrowRight className="w-5 h-5 text-amber-300" />
+          <ArrowRight className={`w-5 h-5 text-amber-300 ${isAr ? '' : 'rotate-180'}`} />
         </button>
         
         <div className="flex-1 text-center">
@@ -131,14 +135,14 @@ export function TwoAbacusSolver({
             {toAr(problem.dividend)} ÷ {toAr(problem.divisor)}
           </div>
           <div className="text-xs text-white/60 mt-0.5 font-medium">
-            المرحلة {toAr(stepIdx + 1)} من {toAr(problem.steps.length)}
+            {isAr ? (<>المرحلة {toAr(stepIdx + 1)} من {toAr(problem.steps.length)}</>) : (<>Step {toAr(stepIdx + 1)} of {toAr(problem.steps.length)}</>)}
           </div>
         </div>
 
         <button
           onClick={handleReset}
           className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 transition shrink-0 flex items-center justify-center"
-          title="إعادة المسألة من البداية"
+          title={pickLang({ ar: 'إعادة المسألة من البداية', en: 'Restart the problem' }, lang)}
         >
           <RotateCcw className="w-5 h-5 text-slate-300" />
         </button>
@@ -174,10 +178,10 @@ export function TwoAbacusSolver({
             className="bg-slate-900/90 border-2 border-sky-500/40 rounded-2xl p-4 text-center shadow-xl backdrop-blur-sm"
           >
             <h3 className="text-base sm:text-lg font-black text-sky-300 mb-1">
-              {step.instructionTitle}
+              {translateDynamic(step, lang, 'instructionTitle')}
             </h3>
             <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
-              {step.instructionDetail}
+              {translateDynamic(step, lang, 'instructionDetail')}
             </p>
             {showHint && (
               <motion.div
@@ -187,7 +191,9 @@ export function TwoAbacusSolver({
               >
                 <Lightbulb className="w-4 h-4 shrink-0 text-amber-400" />
                 <span>
-                  ضع {toAr(step.expectedResult)} في الناتج · واطرح حتى يصل المقسوم إلى {toAr(step.expectedDividend)}
+                  {isAr
+                    ? <>ضع {toAr(step.expectedResult)} في الناتج · واطرح حتى يصل المقسوم إلى {toAr(step.expectedDividend)}</>
+                    : <>Put {toAr(step.expectedResult)} in the result · and subtract until the dividend reaches {toAr(step.expectedDividend)}</>}
                 </span>
               </motion.div>
             )}
@@ -196,14 +202,14 @@ export function TwoAbacusSolver({
       </div>
 
       {/* ═══ Two Abacuses Side-by-Side ═══ */}
-      <div className="flex-1 px-2 flex items-center justify-center my-1">
+      <div dir="rtl" className="flex-1 px-2 flex items-center justify-center my-1">
         <div className="flex items-start justify-center gap-2 w-full max-w-lg">
           
           {/* 🟢 معداد الناتج (يمين بصرياً في RTL) */}
           <div className="flex-1 min-w-0 flex flex-col items-center bg-slate-900/40 p-2.5 rounded-2xl border border-emerald-500/20">
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-300 mb-1">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>الناتج التراكمي</span>
+              <span>{pickLang({ ar: 'الناتج التراكمي', en: 'Running result' }, lang)}</span>
             </div>
             <div
               className={`px-4 py-1 rounded-xl font-mono font-black text-xl tabular-nums mb-2 min-w-[75px] text-center transition-all shadow-inner ${
@@ -239,7 +245,7 @@ export function TwoAbacusSolver({
           <div className="flex-1 min-w-0 flex flex-col items-center bg-slate-900/40 p-2.5 rounded-2xl border border-rose-500/20">
             <div className="flex items-center gap-1.5 text-xs font-bold text-rose-300 mb-1">
               <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
-              <span>المقسوم المتبقي</span>
+              <span>{pickLang({ ar: 'المقسوم المتبقي', en: 'Remaining dividend' }, lang)}</span>
             </div>
             <div
               className={`px-4 py-1 rounded-xl font-mono font-black text-xl tabular-nums mb-2 min-w-[75px] text-center transition-all shadow-inner ${
@@ -295,7 +301,7 @@ export function TwoAbacusSolver({
               className="bg-emerald-950/90 border-2 border-emerald-500/60 rounded-2xl p-3 text-center text-xs sm:text-sm font-bold text-emerald-200 flex items-center justify-center gap-2 shadow-lg"
             >
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-              <span>أحسنت! إجابة صحيحة وموفقة</span>
+              <span>{pickLang({ ar: 'أحسنت! إجابة صحيحة وموفقة', en: 'Well done! Correct answer' }, lang)}</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -306,10 +312,10 @@ export function TwoAbacusSolver({
         <button
           onClick={() => setShowHint((s) => !s)}
           className="px-4 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-slate-200 text-sm font-bold transition shrink-0 flex items-center justify-center gap-1.5 border border-white/10"
-          title="تلميح"
+          title={pickLang({ ar: 'تلميح', en: 'Hint' }, lang)}
         >
           <Lightbulb className="w-5 h-5 text-amber-400" />
-          <span className="hidden sm:inline">تلميح</span>
+          <span className="hidden sm:inline">{pickLang({ ar: 'تلميح', en: 'Hint' }, lang)}</span>
         </button>
 
         {status !== 'success' ? (
@@ -317,15 +323,15 @@ export function TwoAbacusSolver({
             onClick={handleVerify}
             className="flex-1 py-3.5 rounded-2xl bg-gradient-to-l from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-black shadow-lg shadow-sky-900/40 text-sm sm:text-base tracking-wide active:scale-[0.98] transition flex items-center justify-center gap-2 border border-sky-400/30"
           >
-            🔍 تحقق من الإجابة
+            🔍 {pickLang({ ar: 'تحقق من الإجابة', en: 'Check answer' }, lang)}
           </button>
         ) : (
           <button
             onClick={handleNext}
             className="flex-1 py-3.5 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black shadow-lg shadow-emerald-900/40 text-sm sm:text-base tracking-wide active:scale-[0.98] transition flex items-center justify-center gap-2 border border-emerald-400/30"
           >
-            <span>{isLastStep ? '🏆 إنهاء المسألة بنجاح' : 'المرحلة التالية'}</span>
-            {!isLastStep && <ChevronLeft className="w-5 h-5" />}
+            <span>{isLastStep ? pickLang({ ar: '🏆 إنهاء المسألة بنجاح', en: '🏆 Problem completed!' }, lang) : pickLang({ ar: 'المرحلة التالية', en: 'Next step' }, lang)}</span>
+            {!isLastStep && <ChevronLeft className={`w-5 h-5 ${isAr ? '' : 'rotate-180'}`} />}
           </button>
         )}
       </div>
