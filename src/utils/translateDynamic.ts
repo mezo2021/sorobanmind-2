@@ -343,7 +343,7 @@ function translatePattern(text: string): string | null {
   if (match) return `Nothing raised = ?`;
 
   // كم خرزة سفلية تحتاج لتمثيل 3؟
-  match = text.match(/^كم\s*خرزه\s*سفليه\s*تحتاج\s*لتمثيل\s*(\d+)\؟$/);
+  match = text.match(/^كم\s*خرزه\s*سفليه\s*تحتاج\s*لتمثيل\s*(\d+)؟$/);
   if (match) return `How many lower beads do you need to represent ${match[1]}?`;
 
   // قيمة الخرزة في منزلة الآحاد = ؟
@@ -358,18 +358,18 @@ function translatePattern(text: string): string | null {
   if (match) return `${match[1]} in tens + ${match[2]} in units = ?`;
 
   // ما الرقم الذي يمثله: 3 عشرات + 0 آحاد؟
-  match = text.match(/^ما\s*الرقم\s*الذي\s*يمثله:\s*(\d+)\s*عشرات\s*\+\s*(\d+)\s*احاد\؟$/);
+  match = text.match(/^ما\s*الرقم\s*الذي\s*يمثله:\s*(\d+)\s*عشرات\s*\+\s*(\d+)\s*احاد؟$/);
   if (match) return `What number does this represent: ${match[1]} tens + ${match[2]} units?`;
 
   // أين يقع الآحاد على العداد؟ (رقم العمود من اليمين)
-  match = text.match(/^اين\s*يقع\s*(الاحاد|العشرات|المئات|الالاف)\s*علي\s*العداد\؟\s*\(رقم\s*العمود\s*من\s*اليمين\)$/);
+  match = text.match(/^اين\s*يقع\s*(الاحاد|العشرات|المئات|الالاف)\s*علي\s*العداد؟\s*\(رقم\s*العمود\s*من\s*اليمين\)$/);
   if (match) {
     const placeMap: Record<string, string> = { "الاحاد": "units", "العشرات": "tens", "المئات": "hundreds", "الالاف": "thousands" };
     return `Where is the ${placeMap[match[1]]} located on the abacus? (column number from the right)`;
   }
 
   // 50 = 5 في أي منزلة؟ (1=آحاد, 2=عشرات, 3=مئات)
-  match = text.match(/^(\d+)\s*=\s*(\d+)\s*في\s*اي\s*منزله\؟\s*\(1=احاد,\s*2=عشرات,\s*3=مئات\)$/);
+  match = text.match(/^(\d+)\s*=\s*(\d+)\s*في\s*اي\s*منزله؟\s*\(1=احاد,\s*2=عشرات,\s*3=مئات\)$/);
   if (match) return `${match[1]} = ${match[2]} in which place? (1=units, 2=tens, 3=hundreds)`;
 
   // 1 في المئات + 3 في العشرات + 4 في الآحاد = ؟
@@ -377,7 +377,7 @@ function translatePattern(text: string): string | null {
   if (match) return `${match[1]} in hundreds + ${match[2]} in tens + ${match[3]} in units = ?`;
 
   // كم يساوي 1 في العشرات + 1 في المئات؟
-  match = text.match(/^كم\s*يساوي\s*(\d+)\s*في\s*العشرات\s*\+\s*(\d+)\s*في\s*المئات\؟$/);
+  match = text.match(/^كم\s*يساوي\s*(\d+)\s*في\s*العشرات\s*\+\s*(\d+)\s*في\s*المئات؟$/);
   if (match) return `How much is ${match[1]} in tens + ${match[2]} in hundreds?`;
 
 
