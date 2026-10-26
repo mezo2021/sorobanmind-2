@@ -772,12 +772,17 @@ export function AnzanScreen({
   }
 
   // ═══ 👁️ showing ═══
-  if (phase === 'showing' && currentQ) {
-    const isBuildOrRead = currentQ.operation === 'build' || currentQ.operation === 'read';
+if (phase === 'showing' && currentQ) {
+  const isBuildOrRead = currentQ.operation === 'build' || currentQ.operation === 'read';
 
-    const displayText = isBuildOrRead
-      ? formatText(currentQ.question, numberStyle)
-      : `${formatText(buildFullQuestionText(currentQ), numberStyle)} = ${pickLang({ ar: '؟', en: '?' }, lang)}`;
+  // [FIX RTL & Dynamic Translation] - نترجم السؤال أولاً إن كان build أو read
+  const translatedQuestion = isBuildOrRead
+    ? (translateDynamic(currentQ, lang, 'question') ?? currentQ.question)
+    : buildFullQuestionText(currentQ);
+
+  const displayText = isBuildOrRead
+    ? formatText(translatedQuestion, numberStyle)
+    : `${formatText(translatedQuestion, numberStyle)} = ${pickLang({ ar: '؟', en: '?' }, lang)}`;
     const sizeClass = displayTextSize(displayText.length, isBuildOrRead);
 
     return (
