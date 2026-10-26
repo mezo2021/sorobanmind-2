@@ -25,6 +25,7 @@ export interface FlashStep {
   // مشترك
   badgeLines: string[];
   caption: string;
+  captionEn?: string; // 🌐 ترجمة الشرح
   ttsText: string;
   durationMs: number;
 }
@@ -33,6 +34,8 @@ export interface FlashLesson {
   id: string;
   title: string;
   subtitle: string;
+  titleEn?: string; // 🌐
+  subtitleEn?: string; // 🌐
   operation: FlashOperation;
   category: FlashCategoryId;
   columns: number;
@@ -49,5 +52,7 @@ export interface FlashCategory {
   title: string;
   emoji: string;
   description: string;
+  titleEn?: string; // 🌐
+  descriptionEn?: string; // 🌐
   lessons: FlashLesson[];
 }
