@@ -250,11 +250,8 @@ const RAW_AR_TO_EN: Record<string, string> = {
 
   // 🆕 --- إضافات L0 (بنك A: التدريب والأنزان) ---
   "العداد": "abacus",
-  "الخرزة العلوية": "upper bead",
-  "الخرزات السفلية": "lower beads",
   "سفليات": "lower beads",
   "سفلية": "lower bead",
-  "العارضة": "bar",
   "العارضة الفاصلة": "bar",
   "الإبهام": "thumb",
   "السبابة": "index finger",
