@@ -1,6 +1,6 @@
 
 // src/components/flash/FlashScreen.tsx
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight, RotateCcw, Volume2 } from 'lucide-react';
 import { useSpeech } from '@/hooks/useSpeech';
@@ -10,8 +10,11 @@ import type { FlashLesson } from './types';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
 import { Num } from '@/components/Num';
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
+import { tBadgeLines, buildFlashSpeech } from './flashI18n';
 
-const TTS_RATE = 0.7;
 const BADGE_LINE_MS = 800;
 // 🔢 يتبع زر تبديل الأرقام
 function toAr(v: number): string {
@@ -25,6 +28,7 @@ interface FlashScreenProps {
 }
 
 export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
+  const { lang, dir, isAr } = useT();
   const [stepIndex, setStepIndex] = useState(0);
   const [badgeVisible, setBadgeVisible] = useState(true);
   const [hasStarted, setHasStarted] = useState(false);
@@ -41,9 +45,11 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
   const isFirstStep = stepIndex === 0;
 
   const speakStep = useCallback((s: typeof step) => {
-    if (!s?.ttsText) return;
-    ttsRef.current.speak(s.ttsText, { rate: TTS_RATE });
-  }, []);
+    if (!s) return;
+    const sp = buildFlashSpeech(s, lang); // 🌐 عربي: ttsText · إنجليزي: badgeLines
+    if (!sp.text) return;
+    ttsRef.current.speak(sp.text, { rate: sp.rate, lang: sp.lang });
+  }, [lang]);
 
   useEffect(() => {
     if (!step) return;
@@ -55,6 +61,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
   }, [stepIndex, step, isSplit]);
 
   useEffect(() => { return () => { ttsRef.current.stop(); }; }, []);
+  useEffect(() => { ttsRef.current.stop(); }, [lang]); // 🌐 إيقاف النطق عند تبديل اللغة
 
   const handleStart = () => {
     setHasStarted(true);
@@ -89,10 +96,15 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
     }
   };
 
+  const badgeLines = useMemo(
+    () => (step ? tBadgeLines(step.badgeLines, lang) : []),
+    [step, lang],
+  );
+
   if (!step) {
     return (
       <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
-        <p>لا توجد خطوات</p>
+        <p>{pickLang({ ar: 'لا توجد خطوات', en: 'No steps' }, lang)}</p>
       </div>
     );
   }
@@ -104,14 +116,14 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
     : 'amber';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col" dir={dir}>
       <div className="flex items-center justify-between p-4 gap-2">
         <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0">
-          <ArrowRight className="w-6 h-6" />
+          <ArrowRight className={`w-6 h-6 ${isAr ? '' : 'rotate-180'}`} />
         </button>
         <div className="flex-1 text-center">
-          <h1 className="text-sm sm:text-lg font-bold text-amber-300">{lesson.title}</h1>
-          <p className="text-xs text-white/60">{lesson.subtitle}</p>
+          <h1 className="text-sm sm:text-lg font-bold text-amber-300">{translateDynamic(lesson, lang, 'title')}</h1>
+          <p className="text-xs text-white/60">{translateDynamic(lesson, lang, 'subtitle')}</p>
         </div>
         <div className="w-10 shrink-0" />
       </div>
@@ -124,14 +136,14 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
             }`} />
           ))}
         </div>
-        <p className="text-center text-xs text-white/40 mt-2">الخطوة <Num>{stepIndex + 1}</Num> من <Num>{lesson.steps.length}</Num></p>
+        <p className="text-center text-xs text-white/40 mt-2">{isAr ? (<>الخطوة <Num>{stepIndex + 1}</Num> من <Num>{lesson.steps.length}</Num></>) : (<>Step <Num>{stepIndex + 1}</Num> of <Num>{lesson.steps.length}</Num></>)}</p>
       </div>
 
       <div className="px-4 mb-3">
-        <MentalBadge lines={step.badgeLines} visible={badgeVisible} lineDelayMs={BADGE_LINE_MS} variant={badgeVariant} />
+        <MentalBadge lines={badgeLines} dir={dir} visible={badgeVisible} lineDelayMs={BADGE_LINE_MS} variant={badgeVariant} />
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-3">
+      <div dir="rtl" className="flex-1 flex items-center justify-center px-3">
         {isSplit ? (
           <SplitView
             lesson={lesson}
@@ -154,7 +166,7 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
             transition={{ duration: 0.25 }}
             className="bg-slate-800/90 border border-slate-700 px-4 py-3 rounded-xl text-slate-200 text-sm text-center shadow-lg max-w-md mx-auto"
           >
-            {step.caption}
+            {translateDynamic(step, lang, 'caption')}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -163,28 +175,28 @@ export function FlashScreen({ lesson, onBack, onComplete }: FlashScreenProps) {
         {!hasStarted ? (
           <button onClick={handleStart}
             className="mx-auto px-8 py-4 rounded-full font-bold flex items-center gap-2 transition bg-gradient-to-l from-purple-600 to-amber-500 text-white text-lg shadow-lg shadow-amber-500/30">
-            ▶️ ابدأ
+            ▶️ {pickLang({ ar: 'ابدأ', en: 'Start' }, lang)}
           </button>
         ) : (
           <>
             <div className="flex items-center justify-center gap-3">
               <button onClick={handlePrev} disabled={isFirstStep}
                 className={`p-3 rounded-full transition ${isFirstStep ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 text-white'}`}>
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className={`w-6 h-6 ${isAr ? '' : 'rotate-180'}`} />
               </button>
               <button onClick={handleReplay}
                 className="px-5 py-3 rounded-full font-bold flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/50 text-emerald-200 hover:bg-emerald-500/30 transition">
-                <Volume2 className="w-5 h-5" /> إعادة الصوت
+                <Volume2 className="w-5 h-5" /> {pickLang({ ar: 'إعادة الصوت', en: 'Replay audio' }, lang)}
               </button>
               <button onClick={handleNext} disabled={isLastStep}
                 className={`p-3 rounded-full transition ${isLastStep ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 text-white'}`}>
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className={`w-6 h-6 ${isAr ? '' : 'rotate-180'}`} />
               </button>
             </div>
             {isEnded && (
               <motion.button initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} onClick={handleRestart}
                 className="mx-auto px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-bold flex items-center gap-2">
-                <RotateCcw className="w-4 h-4" /> إعادة من البداية
+                <RotateCcw className="w-4 h-4" /> {pickLang({ ar: 'إعادة من البداية', en: 'Restart' }, lang)}
               </motion.button>
             )}
           </>
@@ -201,16 +213,19 @@ function SplitView({
   highlightResult: number[]; highlightDividend: number[]; blurDividend: number[];
   isEnded: boolean;
 }) {
+  const { lang } = useT();
   const resultColumns = lesson.resultColumns ?? 3;
   const dividendColumns = lesson.dividendColumns ?? 3;
   const finalPulse = isEnded;
-  const leftLabel = lesson.operation === 'multiplication' ? 'المضروب' : 'المقسوم';
+  const leftLabel = lesson.operation === 'multiplication'
+    ? pickLang({ ar: 'المضروب', en: 'Multiplicand' }, lang)
+    : pickLang({ ar: 'المقسوم', en: 'Dividend' }, lang);
 
   return (
     <div className="flex items-start justify-center gap-2 w-full max-w-md">
       <div className="flex-1 min-w-0 flex flex-col items-center">
         <div className="flex items-center gap-1.5 text-[11px] text-emerald-300 font-bold mb-0.5">
-          <span>🟢</span><span>الناتج</span>
+          <span>🟢</span><span>{pickLang({ ar: 'الناتج', en: 'Result' }, lang)}</span>
         </div>
         <div className="px-4 py-1 rounded-lg bg-emerald-500/25 border border-emerald-400/50 text-emerald-50 font-mono font-black text-lg tabular-nums mb-1.5 min-w-[70px] text-center">
           {toAr(resultValue)}
