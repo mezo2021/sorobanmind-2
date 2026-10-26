@@ -190,7 +190,7 @@ export function useReadAloud(lang: ReadLang) {
         const u = new SpeechSynthesisUtterance(chunks[i]);
         u.lang = lang === 'ar' ? 'ar-SA' : 'en-US';
         if (voice) u.voice = voice;
-        u.rate = lang === 'ar' ? 0.9 : 0.95;
+        u.rate = lang === 'ar' ? 0.9 : 0.85;
         u.pitch = 1.05;
         u.onend = () => playAt(i + 1);
         u.onerror = () => {
