@@ -334,7 +334,7 @@ export function AnzanScreen({
     if (mode === 'normal') {
       if (isSupported) {
         const speech = buildFullQuestionSpeech(currentQ, lang);
-        speak(speech, { rate: 0.9, lang: lang === 'ar' ? 'ar-SA' : 'en-US' });
+        speak(speech, { rate: lang === 'ar' ? 0.9 : 0.8, lang: lang === 'ar' ? 'ar-SA' : 'en-US' });
       }
       
       // [FIX AUDIO] - Give it a minimum of 4 seconds so the audio has time to finish
