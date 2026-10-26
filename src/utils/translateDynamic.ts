@@ -15,7 +15,7 @@ function normalizeArabic(text: string): string {
     .trim();
 }
 
-// القاموس الثابت (مدمج فيه كل النصوص)
+// القاموس الثابت
 const RAW_AR_TO_EN: Record<string, string> = {
   // --- الكلمات السابقة ---
   "ضرب باصدقاء 5": "Mul with Friends of 5", "ضرب بأصدقاء 5": "Mul with Friends of 5",
@@ -295,88 +295,72 @@ function translatePattern(text: string): string | null {
   // ==========================================
   // 🆕 أنماط L0 (البنك A: أسئلة التدريب والأنزان)
   // ==========================================
-  // ملاحظة: هذه الأنماط مصممة لتتوافق مع دالة normalizeArabic
-  // "مثّل" تصبح "مثل" | "على" تصبح "علي" | "العلوية" تصبح "العلويه"
-
-  // مثل العدد 63 على العداد
   match = text.match(/^مثل\s*العدد\s*(\d+)\s*علي\s*العداد$/);
   if (match) return `Represent the number ${match[1]} on the abacus`;
 
-  // ارفع 3 خرزات سفلية
   match = text.match(/^ارفع\s*(\d+)\s*خرزات\s*سفليه$/);
   if (match) return `Raise ${match[1]} lower beads`;
 
-  // أنزل العلوية وارفع 4 سفليات
   match = text.match(/^انزل\s*العلويه\s*وارفع\s*(\d+)\s*سفليات$/);
   if (match) return `Lower the upper bead and raise ${match[1]} lower beads`;
 
-  // أنزل العلوية وارفع خرزتين
   match = text.match(/^انزل\s*العلويه\s*وارفع\s*خرزتين$/);
   if (match) return `Lower the upper bead and raise 2 lower beads`;
 
-  // ارفع خرزة سفلية واحدة
   match = text.match(/^ارفع\s*خرزه\s*سفليه\s*واحده$/);
   if (match) return `Raise 1 lower bead`;
 
-  // أنزل الخرزة العلوية
   match = text.match(/^انزل\s*الخرزه\s*العلويه$/);
   if (match) return `Lower the upper bead`;
 
   // ==========================================
   // 🆕 أنماط L0 (البنك B: أسئلة الامتحان)
   // ==========================================
-  
-  // مثل الرقم 10 على العداد
   match = text.match(/^مثل\s*الرقم\s*(\d+)\s*علي\s*العداد$/);
   if (match) return `Represent the number ${match[1]} on the abacus`;
 
-  // 1 سفلية فقط = ؟
   match = text.match(/^(\d+)\s*سفليه\s*فقط\s*=\s*؟$/);
   if (match) return `Only ${match[1]} lower bead(s) = ?`;
 
-  // العلوية + 3 سفلية = ؟
   match = text.match(/^العلويه\s*\+\s*(\d+)\s*سفليه\s*=\s*؟$/);
   if (match) return `Upper bead + ${match[1]} lower bead(s) = ?`;
 
-  // لا شيء مرفوع = ؟
   match = text.match(/^لا\s*شيء\s*مرفوع\s*=\s*؟$/);
   if (match) return `Nothing raised = ?`;
 
-  // كم خرزة سفلية تحتاج لتمثيل 3؟
+  match = text.match(/^ادني\s*قيمه\s*في\s*عمود\s*واحد\s*=\s*؟$/);
+  if (match) return `Minimum value in one column = ?`;
+
+  match = text.match(/^اقصي\s*قيمه\s*في\s*عمود\s*واحد\s*=\s*؟$/);
+  if (match) return `Maximum value in one column = ?`;
+
   match = text.match(/^كم\s*خرزه\s*سفليه\s*تحتاج\s*لتمثيل\s*(\d+)؟$/);
   if (match) return `How many lower beads do you need to represent ${match[1]}?`;
 
-  // قيمة الخرزة في منزلة الآحاد = ؟
   match = text.match(/^قيمه\s*الخرزه\s*في\s*منزله\s*(الاحاد|العشرات|المئات|الالاف)\s*=\s*؟$/);
   if (match) {
     const placeMap: Record<string, string> = { "الاحاد": "units", "العشرات": "tens", "المئات": "hundreds", "الالاف": "thousands" };
     return `Value of the bead in the ${placeMap[match[1]]} place = ?`;
   }
 
-  // 2 في العشرات + 5 في الآحاد = ؟
   match = text.match(/^(\d+)\s*في\s*العشرات\s*\+\s*(\d+)\s*في\s*الاحاد\s*=\s*؟$/);
   if (match) return `${match[1]} in tens + ${match[2]} in units = ?`;
 
-  // ما الرقم الذي يمثله: 3 عشرات + 0 آحاد؟
   match = text.match(/^ما\s*الرقم\s*الذي\s*يمثله:\s*(\d+)\s*عشرات\s*\+\s*(\d+)\s*احاد؟$/);
   if (match) return `What number does this represent: ${match[1]} tens + ${match[2]} units?`;
 
-  // أين يقع الآحاد على العداد؟ (رقم العمود من اليمين)
   match = text.match(/^اين\s*يقع\s*(الاحاد|العشرات|المئات|الالاف)\s*علي\s*العداد؟\s*\(رقم\s*العمود\s*من\s*اليمين\)$/);
   if (match) {
     const placeMap: Record<string, string> = { "الاحاد": "units", "العشرات": "tens", "المئات": "hundreds", "الالاف": "thousands" };
     return `Where is the ${placeMap[match[1]]} located on the abacus? (column number from the right)`;
   }
 
-  // 50 = 5 في أي منزلة؟ (1=آحاد, 2=عشرات, 3=مئات)
   match = text.match(/^(\d+)\s*=\s*(\d+)\s*في\s*اي\s*منزله؟\s*\(1=احاد,\s*2=عشرات,\s*3=مئات\)$/);
   if (match) return `${match[1]} = ${match[2]} in which place? (1=units, 2=tens, 3=hundreds)`;
 
-  // 1 في المئات + 3 في العشرات + 4 في الآحاد = ؟
   match = text.match(/^(\d+)\s*في\s*المئات\s*\+\s*(\d+)\s*في\s*العشرات\s*\+\s*(\d+)\s*في\s*الاحاد\s*=\s*؟$/);
   if (match) return `${match[1]} in hundreds + ${match[2]} in tens + ${match[3]} in units = ?`;
 
-  // كم يساوي 1 في العشرات + 1 في المئات؟
   match = text.match(/^كم\s*يساوي\s*(\d+)\s*في\s*العشرات\s*\+\s*(\d+)\s*في\s*المئات؟$/);
   if (match) return `How much is ${match[1]} in tens + ${match[2]} in hundreds?`;
 
@@ -403,11 +387,20 @@ function translatePattern(text: string): string | null {
   match = text.match(/^سبب\s*الاختيار:\s*حركه\s*العلويه\s*من\s*الصفر\.\s*انزل\s*الخرزه\s*العلويه\s*بالسبابه\s*نحو\s*العارضه\.\s*الخرزه\s*العلويه\s*تمثل\s*5\.$/);
   if (match) return `Reason: Upper bead movement from zero. Lower the upper bead with the index finger towards the bar. Upper bead represents 5.`;
 
-  match = text.match(/^سبب\s*الاختيار:\s*عدد\s*مركب\s*\(5\+(\d+)\)\.\s*حركه\s*القرص:\s*انزل\s*الخرزه\s*العلويه\s*\(5\)\s*وارفع\s*(\d+)\s*خرزه\s*سفليه\s*\((\d+)\)\s*معا\s*نحو\s*العارضه\.$/);
-  if (match) return `Reason: Compound number (5+${match[1]}). Pinch movement: Lower the upper bead (5) and raise ${match[2]} lower bead(s) (${match[3]}) together towards the bar.`;
+  match = text.match(/^سبب\s*الاختيار:\s*عدد\s*مركب\s*\((\d+)\+(\d+)\)\.\s*حركه\s*القرص:\s*انزل\s*الخرزه\s*العلويه\s*\(5\)\s*وارفع\s*(\d+)\s*خرزه\s*سفليه\s*واحده\s*\((\d+)\)\s*معا\s*نحو\s*العارضه\.$/);
+  if (match) return `Reason: Compound number (${match[1]}+${match[2]}). Pinch movement: Lower the upper bead (5) and raise 1 lower bead (${match[4]}) together towards the bar.`;
+
+  match = text.match(/^سبب\s*الاختيار:\s*حركه\s*القرص\s*من\s*الصفر\.\s*انزل\s*الخرزه\s*العلويه\s*\(5\)\s*وارفع\s*خرزتين\s*سفليتين\s*\(2\)\s*معا\.\s*النتيجه\s*5\+2\s*=\s*7\.$/);
+  if (match) return `Reason: Pinch movement from zero. Lower the upper bead (5) and raise 2 lower beads (2) together. Result: 5+2 = 7.`;
+
+  match = text.match(/^سبب\s*الاختيار:\s*عدد\s*مركب\s*\((\d+)\+(\d+)\)\.\s*حركه\s*القرص:\s*انزل\s*الخرزه\s*العلويه\s*\(5\)\s*وارفع\s*(\d+)\s*خرزات\s*سفليه\s*\((\d+)\)\s*معا\.$/);
+  if (match) return `Reason: Compound number (${match[1]}+${match[2]}). Pinch movement: Lower the upper bead (5) and raise ${match[3]} lower beads (${match[4]}) together.`;
 
   match = text.match(/^سبب\s*الاختيار:\s*حركه\s*القرص\s*من\s*الصفر\.\s*انزل\s*الخرزه\s*العلويه\s*\(5\)\s*وارفع\s*(\d+)\s*خرزات\s*سفليه\s*\((\d+)\)\s*معا\.\s*النتيجه\s*5\+(\d+)\s*=\s*(\d+)\.$/);
   if (match) return `Reason: Pinch movement from zero. Lower the upper bead (5) and raise ${match[1]} lower beads (${match[2]}) together. Result: 5+${match[3]} = ${match[4]}.`;
+
+  match = text.match(/^سبب\s*الاختيار:\s*عشرات\s*نظيفه\s*\(احاد\s*=\s*0\)\.\s*في\s*عمود\s*العشرات:\s*ارفع\s*(\d+)\s*خرزات\s*سفليه\s*بالابهام\s*=\s*(\d+)\.\s*اترك\s*عمود\s*الاحاد\s*فارغا\.$/);
+  if (match) return `Reason: Clean tens (units = 0). In tens column: Raise ${match[1]} lower beads with the thumb = ${match[2]}. Leave the units column empty.`;
 
   match = text.match(/^سبب\s*الاختيار:\s*عشرات\s*\+\s*احاد\s*بخمسه\.\s*في\s*العشرات:\s*ارفع\s*خرزتين\s*سفليتين\s*=\s*(\d+)\.\s*في\s*الاحاد:\s*انزل\s*الخرزه\s*العلويه\s*=\s*5\.$/);
   if (match) return `Reason: Tens + units with five. In tens: Raise 2 lower beads = ${match[1]}. In units: Lower the upper bead = 5.`;
@@ -522,7 +515,6 @@ export function translateDynamic(
         return patternTranslation;
       }
 
-      // 🆕 ترجمة الخطوات الرياضية التي تحتوي على أرقام ورموز
       if (field === "steps" || normalizedKey.includes("←") || normalizedKey.includes("→")) {
         return normalizedKey
           .replace(/فردي/g, "odd")
