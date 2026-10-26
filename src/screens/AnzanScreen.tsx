@@ -201,10 +201,16 @@ function buildFullQuestionText(q: SRBQuestion): string {
 // Builds the spoken version of the question.
 // Now properly uses lang to pass to numberToArabicWordsDecimal.
 function buildFullQuestionSpeech(q: SRBQuestion, lang: 'ar' | 'en'): string {
-  const { operands, operation, question } = q;
+  const { operands, operation } = q;
 
-  if (operation === 'build' || operation === 'read') {
-    return question;
+  if (operation === 'build') {
+    const intro = pickLang({ ar: 'ابنِ', en: 'Build' }, lang);
+    return `${intro} ${numberToArabicWordsDecimal(q.result, lang)}`;
+  }
+
+  if (operation === 'read') {
+    const intro = pickLang({ ar: 'اقرأ', en: 'Read' }, lang);
+    return `${intro} ${numberToArabicWordsDecimal(q.result, lang)}`;
   }
 
   const equals = pickLang({ ar: 'يساوي', en: 'equals' }, lang);
