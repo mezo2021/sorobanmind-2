@@ -162,7 +162,6 @@ export function PracticeScreen({
   const updateStreak = useProgressStore((s) => s.updateStreak);
 
   const numberStyle = useNumberStyleStore((s) => s.style);
-  const isArabic = numberStyle === 'arabic';
 
   const awardBadge = useMasteryBadgesStore((s) => s.awardBadge);
   const setGrade = useProgressStore((s) => s.setGrade);
@@ -585,8 +584,15 @@ export function PracticeScreen({
   if (phase === 'running' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
 
-    // 🆕 Translate dynamic content
-    const translatedQuestion = translateDynamic(currentQ, lang, 'question') ?? currentQ.question;
+    // 🆕 Translate dynamic content + add Intro (Build / Read)
+    const baseQuestion = translateDynamic(currentQ, lang, 'question') ?? currentQ.question;
+    const intro = currentQ.operation === 'build'
+      ? pickLang({ ar: 'ابنِ', en: 'Build' }, lang)
+      : currentQ.operation === 'read'
+        ? pickLang({ ar: 'اقرأ', en: 'Read' }, lang)
+        : null;
+    const translatedQuestion = intro ? `${intro} ${baseQuestion}` : baseQuestion;
+    
     const translatedSolution = translateDynamic(currentQ, lang, 'solution') ?? currentQ.solution;
 
     // 🆕 Comprehensive textual question detection (AR + EN)
@@ -726,7 +732,7 @@ export function PracticeScreen({
               <p className="text-sm text-white/60 font-body mb-1">
                 {pickLang({ ar: 'الإجابة الصحيحة', en: 'The correct answer' }, lang)}
               </p>
-              <p className="text-5xl font-black font-display text-white" dir={isArabic ? 'rtl' : 'ltr'}>
+              <p className="text-5xl font-black font-display text-white" dir={dir}>
                 {formattedAnswer}
               </p>
             </div>
@@ -807,7 +813,7 @@ export function PracticeScreen({
               <p className="text-sm text-white/60 font-body">
                 {pickLang({ ar: 'النتيجة', en: 'Result' }, lang)}
               </p>
-              <p className="text-5xl font-black font-display text-white mt-1" dir={isArabic ? 'rtl' : 'ltr'}>
+              <p className="text-5xl font-black font-display text-white mt-1" dir={dir}>
                 {formatNumber(score, numberStyle)} / {formatNumber(questions.length, numberStyle)}
               </p>
               <p className={`text-lg font-bold font-body mt-1 ${
