@@ -281,7 +281,7 @@ export function AudioAnzanScreen({
       for (const term of seq) {
         if (cancelled || myGeneration !== audioSequenceRef.current) return;
         await new Promise<void>((resolve) => {
-          speak(term, { rate: 0.9, lang: lang === 'ar' ? 'ar-SA' : 'en-US', onEnd: () => resolve() });
+          speak(term, { rate: lang === 'ar' ? 0.9 : 0.8, lang: lang === 'ar' ? 'ar-SA' : 'en-US', onEnd: () => resolve() });
         });
         await new Promise((r) => setTimeout(r, DELAY_BETWEEN_TERMS_MS));
       }
