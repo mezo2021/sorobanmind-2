@@ -121,7 +121,6 @@ export function PlacementTestScreen({
 
   // ✅ نمط الأرقام
   const { style: numberStyle, toggleStyle } = useNumberStyleStore();
-  const isArabic = numberStyle === 'arabic';
 
   const currentQ = questions[currentIdx];
 
@@ -267,9 +266,9 @@ export function PlacementTestScreen({
           <div className="flex gap-2 bg-white/5 p-1 rounded-2xl">
             <button
               type="button"
-              onClick={() => { playSound('click'); if (!isArabic) toggleStyle(); }}
+              onClick={() => { playSound('click'); if (numberStyle !== 'arabic') toggleStyle(); }}
               className={`flex-1 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
-                isArabic
+                numberStyle === 'arabic'
                   ? 'bg-gradient-to-l from-emerald-500 to-teal-600 text-white shadow-lg'
                   : 'text-white/60 hover:text-white'
               }`}
@@ -278,9 +277,9 @@ export function PlacementTestScreen({
             </button>
             <button
               type="button"
-              onClick={() => { playSound('click'); if (isArabic) toggleStyle(); }}
+              onClick={() => { playSound('click'); if (numberStyle === 'arabic') toggleStyle(); }}
               className={`flex-1 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 ${
-                !isArabic
+                numberStyle !== 'arabic'
                   ? 'bg-gradient-to-l from-blue-500 to-indigo-600 text-white shadow-lg'
                   : 'text-white/60 hover:text-white'
               }`}
@@ -385,8 +384,16 @@ export function PlacementTestScreen({
     const isLastQuestion = currentIdx === questions.length - 1;
     const isFirstQuestion = currentIdx === 0;
 
+    const baseQuestion = translateDynamic(currentQ, lang, 'question') ?? currentQ.question;
+    const intro = (currentQ as any).operation === 'build'
+      ? pickLang({ ar: 'ابنِ', en: 'Build' }, lang)
+      : (currentQ as any).operation === 'read'
+        ? pickLang({ ar: 'اقرأ', en: 'Read' }, lang)
+        : null;
+    const translatedQuestion = intro ? `${intro} ${baseQuestion}` : baseQuestion;
+
     const formattedPrompt = formatText(
-      currentQ.question.replace(/ = ؟$/, ''),
+      translatedQuestion.replace(/\s*=\s*[؟?]\s*$/u, ''),
       numberStyle,
     );
 
@@ -455,9 +462,9 @@ export function PlacementTestScreen({
 
             <p
               className="text-3xl sm:text-4xl font-black font-display text-white mb-5"
-              dir={isArabic ? 'rtl' : 'ltr'}
+              dir={dir}
             >
-              {formattedPrompt} = ؟
+              {formattedPrompt} = {pickLang({ ar: '؟', en: '?' }, lang)}
             </p>
 
             <div className="flex justify-center mb-3">
