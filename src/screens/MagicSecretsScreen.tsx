@@ -1,3 +1,4 @@
+// src/screens/MagicSecretsScreen.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Sparkles, X, Check, Grid3X3, Lock, Star, Timer, Trophy, Volume2, Square } from 'lucide-react';
@@ -29,6 +30,18 @@ const SECRET_TIMES: Record<number, number> = {
 function getTimeForSecret(id: number): number { return SECRET_TIMES[id] || 10; }
 
 const QUESTIONS_PER_EXAM = 7;
+
+// ===== دالة التنظيف الصوتي (حل مشكلة نطق الأرقام في الوضع الإنجليزي) =====
+function sanitizeForSpeech(text: string, lang: string): string {
+  if (!text) return '';
+  if (lang === 'ar') return text;
+  // في الوضع الإنجليزي: نحول الأرقام العربية إلى لاتينية، ونحذف أي حروف عربية متبقية
+  return text
+    .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
+    .replace(/[\u0600-\u06FF]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 // ===== توليد الأسئلة =====
 type Question = { q: string; a: number };
@@ -260,6 +273,16 @@ const MagicSecretsScreen: React.FC<Props> = ({ onBack, onComplete, onXP, playSou
     en: 'In the room of the wise Midad, an ancient golden box holds secrets of the multiplication table. Each secret opens a door to a world of speed and intelligence. The wise man will tell us how to multiply by 5 with ease, by 9 with a finger game, and by 11 with the neighbor rule. Are you ready to open the box?'
   }, lang);
 
+  // دالة النطق الآمن للقصة
+  const handleSpeakStory = () => {
+    if (isSpeaking) {
+      stop();
+    } else {
+      const cleanText = sanitizeForSpeech(translatedStory, lang);
+      speak(cleanText, { lang: lang === 'ar' ? 'ar-SA' : 'en-US' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 text-white p-4 pb-32" dir={dir}>
       <div className="flex items-center justify-between mb-4 gap-2">
@@ -286,10 +309,7 @@ const MagicSecretsScreen: React.FC<Props> = ({ onBack, onComplete, onXP, playSou
           </div>
           {isSupported && (
             <button
-              onClick={() => {
-                if (isSpeaking) { stop(); }
-                else { speak(translatedStory); }
-              }}
+              onClick={handleSpeakStory}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                 isSpeaking
                   ? 'bg-red-500/30 border border-red-400/50 text-red-200'
