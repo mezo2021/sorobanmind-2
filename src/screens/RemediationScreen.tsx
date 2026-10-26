@@ -112,7 +112,6 @@ export function RemediationScreen({
 
   const sorobana = useSorobanaVoice();
   const numberStyle = useNumberStyleStore((s) => s.style);
-  const isArabic = numberStyle === 'arabic';
 
   const addRemediationSession = useProgressStore((s) => s.addRemediationSession);
   const clearPendingRemediation = useProgressStore((s) => s.clearPendingRemediation);
@@ -363,7 +362,14 @@ export function RemediationScreen({
   if (phase === 'running' && currentQ) {
     const columns = getColumnsForQuestion(currentQ);
 
-    const translatedQuestion = translateDynamic(currentQ, lang, 'question') ?? currentQ.question;
+    // 👇 التعديل 1: إضافة التمهيدية (ابنِ / اقرأ) وترجمة السؤال
+    const baseQuestion = translateDynamic(currentQ, lang, 'question') ?? currentQ.question;
+    const intro = currentQ.operation === 'build'
+      ? pickLang({ ar: 'ابنِ', en: 'Build' }, lang)
+      : currentQ.operation === 'read'
+        ? pickLang({ ar: 'اقرأ', en: 'Read' }, lang)
+        : null;
+    const translatedQuestion = intro ? `${intro} ${baseQuestion}` : baseQuestion;
 
     const isTextual =
       currentQ.operation === 'read' ||
@@ -517,16 +523,18 @@ export function RemediationScreen({
               <p className="text-sm text-white/60 font-body mb-1">
                 {pickLang({ ar: 'الإجابة الصحيحة', en: 'The correct answer' }, lang)}
               </p>
+              {/* 👇 التعديل 2: استبدال isArabic بـ dir */}
               <p
                 className="text-5xl font-black font-display text-white"
-                dir={isArabic ? 'rtl' : 'ltr'}
+                dir={dir}
               >
                 {formattedAnswer}
               </p>
             </div>
 
             {translatedSolution && (
-              <div className="mt-4 p-4 rounded-2xl bg-blue-500/10 border border-blue-400/30 text-right">
+              // 👇 التعديل 3: تغيير text-right إلى text-start
+              <div className="mt-4 p-4 rounded-2xl bg-blue-500/10 border border-blue-400/30 text-start">
                 <p className="text-xs text-blue-200 font-body leading-relaxed">
                   💡 <strong>{pickLang({ ar: 'الشرح:', en: 'Explanation:' }, lang)}</strong>{' '}
                   {formatText(translatedSolution, numberStyle)}
@@ -535,7 +543,8 @@ export function RemediationScreen({
             )}
 
             {translatedMovement && (
-              <div className="mt-3 p-3 rounded-xl bg-purple-500/10 border border-purple-400/30 text-right">
+              // 👇 تعديل إضافي لضمان تناسق الحركة أيضاً
+              <div className="mt-3 p-3 rounded-xl bg-purple-500/10 border border-purple-400/30 text-start">
                 <p className="text-xs text-purple-200 font-body">
                   🎯 <strong>{pickLang({ ar: 'الحركة:', en: 'Movement:' }, lang)}</strong>{' '}
                   {translatedMovement}
