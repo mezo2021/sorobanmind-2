@@ -207,7 +207,20 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "الأرقام من 0 إلى 4": "Numbers from 0 to 4",
   "الأرقام من 5 إلى 9": "Numbers from 5 to 9",
   "أصدقاء 5": "Friends of 5",
-  "أصدقاء 10": "Friends of 10"
+  "أصدقاء 10": "Friends of 10",
+
+  // 🆕 --- إضافات عناوين الدروس (LearnScreen) ---
+  "القسمة على رقم واحد": "Division by one digit",
+  "القسمة على رقمين": "Division by two digits",
+  "الضرب (2 × 2)": "Multiplication (2 × 2)",
+  "الجمع": "Addition",
+  "الطرح": "Subtraction",
+  "التعرف على السوروبان": "Introduction to the Soroban",
+  "تمثيل الأرقام من 0 إلى 9": "Representing numbers 0 to 9",
+  "القيمة المكانية وبناء الأعداد": "Place value and building numbers",
+
+  // 🆕 --- إضافات المستويات الفرعية (CategoryScreen Subtitles) ---
+  "الأبطال الصغار": "Young Heroes"
 };
 
 const AR_TO_EN: Record<string, string> = {};
