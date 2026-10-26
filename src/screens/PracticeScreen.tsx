@@ -12,7 +12,7 @@
 // [FIX AUDIO] — mute sorobana in EN mode + add missing motion import
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { motion } from 'framer-motion'; // 🆕 إضافة الاستيراد المفقود
+import { motion } from 'framer-motion';
 import {
   ArrowRight, CheckCircle2, Trophy, RotateCcw, XCircle,
   Clock, BookOpen, AlertCircle, Play, ArrowLeft, Square,
@@ -585,6 +585,7 @@ export function PracticeScreen({
     const columns = getColumnsForQuestion(currentQ);
 
     // 🆕 Translate dynamic content + add Intro (Build / Read)
+    // 👇 هذه هي الخطوة 1 (تمرير النص للترجمة)
     const baseQuestion = translateDynamic(currentQ, lang, 'question') ?? currentQ.question;
     const intro = currentQ.operation === 'build'
       ? pickLang({ ar: 'ابنِ', en: 'Build' }, lang)
@@ -593,6 +594,7 @@ export function PracticeScreen({
         : null;
     const translatedQuestion = intro ? `${intro} ${baseQuestion}` : baseQuestion;
     
+    // 👇 وهنا نمرر الترجمة لخطوات الحل
     const translatedSolution = translateDynamic(currentQ, lang, 'solution') ?? currentQ.solution;
 
     // 🆕 Comprehensive textual question detection (AR + EN)
@@ -709,7 +711,10 @@ export function PracticeScreen({
   if (phase === 'reveal' && currentQ) {
     const isCorrect = feedback === 'correct';
     const formattedAnswer = formatNumber(currentQ.result, numberStyle);
+    
+    // 👇 الخطوة 1: ترجمة الحل
     const translatedSolution = translateDynamic(currentQ, lang, 'solution') ?? currentQ.solution;
+    
     return (
       <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
@@ -749,7 +754,7 @@ export function PracticeScreen({
               </div>
             )}
             {translatedSolution && (
-              <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-400/30 text-right">
+              <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-400/30 text-start">
                 <p className="text-xs text-blue-200 font-body leading-relaxed">
                   💡 {formatText(translatedSolution, numberStyle)}
                 </p>
