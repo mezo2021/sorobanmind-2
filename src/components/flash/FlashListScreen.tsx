@@ -12,6 +12,9 @@ import { ChainSolver } from './ChainSolver';
 import { TwoAbacusSolver } from './TwoAbacusSolver';
 import type { FlashCategory, FlashLesson } from './types';
 import { Num } from '@/components/Num';
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { translateDynamic } from '@/utils/translateDynamic';
 
 interface FlashListScreenProps {
   onBack: () => void;
@@ -44,6 +47,7 @@ const ALL_CATEGORIES: FlashCategory[] = [
 
 export function FlashListScreen({ onBack }: FlashListScreenProps) {
   const [active, setActive] = useState<ActiveView>(null);
+  const { lang, dir, isAr } = useT();
 
   // 🎬 شاهد
   if (active?.kind === 'flash') {
@@ -77,16 +81,16 @@ export function FlashListScreen({ onBack }: FlashListScreenProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white pb-10" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white pb-10" dir={dir}>
       <div className="flex items-center gap-3 p-4 sticky top-0 z-20 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
         <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0">
-          <ArrowRight className="w-6 h-6" />
+          <ArrowRight className={`w-6 h-6 ${isAr ? '' : 'rotate-180'}`} />
         </button>
         <div className="flex-1">
           <h1 className="text-lg sm:text-2xl font-bold text-amber-300 flex items-center gap-2">
-            <Film className="w-5 h-5 sm:w-6 sm:h-6" /> الفلاشات التعليمية
+            <Film className="w-5 h-5 sm:w-6 sm:h-6" /> {pickLang({ ar: 'الفلاشات التعليمية', en: 'Learning Flashes' }, lang)}
           </h1>
-          <p className="text-xs text-white/60 mt-0.5">شروحات قصيرة · تطبيق عملي</p>
+          <p className="text-xs text-white/60 mt-0.5">{pickLang({ ar: 'شروحات قصيرة · تطبيق عملي', en: 'Short explainers · hands-on practice' }, lang)}</p>
         </div>
         <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
       </div>
@@ -117,6 +121,7 @@ function CategorySection({
   onOpenChain: (id: string) => void;
   onOpenPractice: (id: string) => void;
 }) {
+  const { lang } = useT();
   const gradient = CATEGORY_GRADIENTS[category.id] ?? 'from-purple-500 to-violet-700';
   const isEmpty = category.lessons.length === 0;
   const isMult = category.id === 'mult-1' || category.id === 'mult-2';
@@ -134,8 +139,8 @@ function CategorySection({
           <span className="text-xl">{category.emoji}</span>
         </div>
         <div className="flex-1">
-          <h2 className="text-lg font-bold text-white">{category.title}</h2>
-          <p className="text-xs text-white/50">{category.description}</p>
+          <h2 className="text-lg font-bold text-white">{translateDynamic(category, lang, 'title')}</h2>
+          <p className="text-xs text-white/50">{translateDynamic(category, lang, 'description')}</p>
         </div>
         {!isEmpty && (
           <span className="text-xs text-amber-300 font-bold px-2.5 py-1 rounded-full bg-amber-400/15 border border-amber-400/30">
@@ -146,7 +151,7 @@ function CategorySection({
 
       {isEmpty ? (
         <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-6 text-center">
-          <p className="text-sm text-white/40">🚧 قيد الإعداد — قريباً</p>
+          <p className="text-sm text-white/40">🚧 {pickLang({ ar: 'قيد الإعداد — قريباً', en: 'Under construction — coming soon' }, lang)}</p>
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -185,6 +190,7 @@ function LessonCard({
   onOpenChain: () => void;
   onOpenPractice?: () => void;
 }) {
+  const { lang } = useT();
   const isBasics = lesson.operation === 'basics';
   const icon = isMult ? '✖️' : isChain ? '🧮' : isBasics ? '📖' : '➗';
 
@@ -203,10 +209,12 @@ function LessonCard({
           <span className="text-xl sm:text-2xl">{icon}</span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm sm:text-base font-bold text-white truncate">{lesson.title}</p>
-          <p className="text-xs sm:text-sm text-amber-300 font-mono truncate mt-0.5">{lesson.subtitle}</p>
+          <p className="text-sm sm:text-base font-bold text-white truncate">{translateDynamic(lesson, lang, 'title')}</p>
+          <p className="text-xs sm:text-sm text-amber-300 font-mono truncate mt-0.5">{translateDynamic(lesson, lang, 'subtitle')}</p>
           <p className="text-[10px] sm:text-xs text-white/40 mt-1">
-            {lesson.steps.length} خطوة · {lesson.columns} أعمدة
+            {lang === 'en'
+              ? (<><Num>{lesson.steps.length}</Num> steps · <Num>{lesson.columns}</Num> columns</>)
+              : (<><Num>{lesson.steps.length}</Num> خطوة · <Num>{lesson.columns}</Num> أعمدة</>)}
           </p>
         </div>
       </div>
@@ -217,7 +225,7 @@ function LessonCard({
           onClick={onOpenFlash}
           className={`flex-1 py-2.5 rounded-xl bg-gradient-to-l ${gradient} text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg`}
         >
-          <Play className="w-4 h-4 fill-white" /> شاهد
+          <Play className="w-4 h-4 fill-white" /> {pickLang({ ar: 'شاهد', en: 'Watch' }, lang)}
         </motion.button>
 
         {!isBasics && (
@@ -231,7 +239,7 @@ function LessonCard({
                 : 'bg-emerald-500/25 border-2 border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/35'
             }`}
           >
-            <Hand className="w-4 h-4" /> جرّب بنفسك
+            <Hand className="w-4 h-4" /> {pickLang({ ar: 'جرّب بنفسك', en: 'Try it yourself' }, lang)}
           </motion.button>
         )}
       </div>
