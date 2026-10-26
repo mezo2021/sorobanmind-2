@@ -772,17 +772,18 @@ export function AnzanScreen({
   }
 
   // ═══ 👁️ showing ═══
-if (phase === 'showing' && currentQ) {
-  const isBuildOrRead = currentQ.operation === 'build' || currentQ.operation === 'read';
+  if (phase === 'showing' && currentQ) {
+    const isBuildOrRead = currentQ.operation === 'build' || currentQ.operation === 'read';
 
-  // [FIX RTL & Dynamic Translation] - نترجم السؤال أولاً إن كان build أو read
-  const translatedQuestion = isBuildOrRead
-    ? (translateDynamic(currentQ, lang, 'question') ?? currentQ.question)
-    : buildFullQuestionText(currentQ);
+    // [FIX] - ترجمة السؤال لوضع Normal
+    const translatedQuestion = isBuildOrRead
+      ? (translateDynamic(currentQ, lang, 'question') ?? currentQ.question)
+      : buildFullQuestionText(currentQ);
 
-  const displayText = isBuildOrRead
-    ? formatText(translatedQuestion, numberStyle)
-    : `${formatText(translatedQuestion, numberStyle)} = ${pickLang({ ar: '؟', en: '?' }, lang)}`;
+    const displayText = isBuildOrRead
+      ? formatText(translatedQuestion, numberStyle)
+      : `${formatText(translatedQuestion, numberStyle)} = ${pickLang({ ar: '؟', en: '?' }, lang)}`;
+
     const sizeClass = displayTextSize(displayText.length, isBuildOrRead);
 
     return (
@@ -823,9 +824,9 @@ if (phase === 'showing' && currentQ) {
                   exit={{ opacity: 0, scale: 1.5 }}
                   transition={{ duration: 0.3 }}
                   className="text-center">
-                  <p className={`font-black font-display text-white ${isBuildOrRead ? 'text-3xl sm:text-5xl' : 'text-7xl sm:text-9xl'}`}
+                  <p className={`font-black font-display text-white text-center px-4 leading-tight ${isBuildOrRead ? 'text-2xl sm:text-4xl whitespace-normal break-words' : 'text-7xl sm:text-9xl'}`}
                     dir={dir}>
-                    {formatText(displayTerms[currentTermIdx], numberStyle)}
+                    {formatText(translateDynamic({ question: displayTerms[currentTermIdx] }, lang, 'question') ?? displayTerms[currentTermIdx], numberStyle)}
                   </p>
                   <p className="text-sm text-white/40 font-body mt-4">
                     {formatNumber(currentTermIdx + 1, numberStyle)} / {formatNumber(displayTerms.length, numberStyle)}
@@ -844,7 +845,7 @@ if (phase === 'showing' && currentQ) {
               </p>
               <p
                 dir={dir}
-                className={`font-black font-display text-white ${sizeClass} whitespace-nowrap`}
+                className={`font-black font-display text-white ${sizeClass} whitespace-normal break-words text-center px-2 leading-tight`}
               >
                 {displayText}
               </p>
