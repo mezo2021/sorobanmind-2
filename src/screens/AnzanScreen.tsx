@@ -986,7 +986,7 @@ export function AnzanScreen({
               </div>
             )}
             {translatedSolution && (
-              <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-400/30 text-right">
+              <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-400/30 text-start">
                 <p className="text-xs text-blue-200 font-body leading-relaxed">
                   💡 {formatText(translatedSolution, numberStyle)}
                 </p>
