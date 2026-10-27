@@ -53,7 +53,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
 
   const handleSelect = (role: Role) => {
     if (!isLoggedIn) {
-      playSound('error');
       return; // البطاقات مقفلة
     }
 
