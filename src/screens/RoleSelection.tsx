@@ -1,7 +1,11 @@
 // src/screens/RoleSelection.tsx
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight } from 'lucide-react';
+import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages } from 'lucide-react';
+
+import { useT, useLangStore } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+
 import type { Role, CharacterType } from '@/types';
 import { CharacterSelector } from '@/components/CharacterSelector';
 import { NameInputModal } from '@/components/NameInputModal';
@@ -18,6 +22,9 @@ const NAME_STORAGE_KEY = 'soroban_child_name';
 type Step = 'idle' | 'name' | 'companion';
 
 export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
+  const { lang, dir } = useT();
+  const setLang = useLangStore((s) => s.setLang);
+
   const [step, setStep] = useState<Step>('idle');
   const [pendingRole, setPendingRole] = useState<Role>(null);
 
@@ -47,8 +54,8 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   const handleNameSaved = (name: string) => {
     const trimmedName = name.trim();
     localStorage.setItem(NAME_STORAGE_KEY, trimmedName);
-    
-    // 🆕 تحديث المتجر المركزي ليتزامن مع الألعاب
+
+    // 🆕 Sync the central store with the games
     useProgressStore.getState().setChildName(trimmedName);
 
     const savedCompanion = localStorage.getItem(COMPANION_STORAGE_KEY);
@@ -73,13 +80,33 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-3 sm:px-6 py-8 sm:py-12">
-      {/* العنوان */}
+    <div
+      dir={dir}
+      className="relative min-h-screen flex flex-col items-center justify-center px-3 sm:px-6 py-8 sm:py-12"
+    >
+      {/* 🆕 زر تبديل اللغة */}
+      <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-50">
+        <button
+          type="button"
+          onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 transition text-white shadow-lg backdrop-blur-md"
+          aria-label={pickLang({ ar: 'تبديل اللغة', en: 'Switch language' }, lang)}
+        >
+          <Languages className="w-4 h-4 text-white/80" />
+          <span className="text-xs font-bold" dir="ltr">
+            <span className={lang === 'ar' ? 'text-emerald-300' : 'text-white/40'}>AR</span>
+            <span className="text-white/30"> | </span>
+            <span className={lang === 'en' ? 'text-blue-300' : 'text-white/40'}>EN</span>
+          </span>
+        </button>
+      </div>
+
+      {/* Title */}
       <motion.div
         initial={{ y: -30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-        className="text-center mb-8 sm:mb-14"
+        className="text-center mb-8 sm:mb-14 mt-8"
       >
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
@@ -94,7 +121,7 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           SorobanMind
         </h1>
         <p className="text-2xl sm:text-4xl text-white/90 font-body font-bold mb-3">
-          أكاديمية السوروبان
+          {pickLang({ ar: 'أكاديمية السوروبان', en: 'Soroban Academy' }, lang)}
         </p>
         <motion.p
           initial={{ opacity: 0 }}
@@ -102,11 +129,17 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           transition={{ delay: 0.5 }}
           className="text-base sm:text-xl text-white/60 mt-2 font-body max-w-md mx-auto leading-relaxed"
         >
-          اختر شخصيتك وابدأ مغامرة الحساب الذهني
+          {pickLang(
+            {
+              ar: 'اختر شخصيتك وابدأ مغامرة الحساب الذهني',
+              en: 'Choose your character and start the mental math adventure',
+            },
+            lang,
+          )}
         </motion.p>
       </motion.div>
 
-      {/* البطاقات */}
+      {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8 w-full max-w-5xl">
         {/* Hero */}
         <motion.button
@@ -116,7 +149,9 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           whileHover={{ scale: 1.03, y: -5 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => handleSelect('hero')}
-          className="group relative glass-card p-7 sm:p-10 overflow-hidden text-right"
+          className={`group relative glass-card p-7 sm:p-10 overflow-hidden ${
+            lang === 'ar' ? 'text-right' : 'text-left'
+          }`}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-transparent to-electric-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
@@ -136,17 +171,28 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           </motion.div>
 
           <h2 className="text-3xl sm:text-4xl font-extrabold font-display text-white mb-2">
-            البطل
+            {pickLang({ ar: 'البطل', en: 'Hero' }, lang)}
           </h2>
           <p className="text-xl text-purple-300/90 font-body mb-4 font-semibold">
             Hero (Child)
           </p>
           <p className="text-base text-white/70 font-body mb-6 leading-relaxed">
-            تدرب على السوروبان، العب ألعاب الأنزان، اكسب نقاط الخبرة، وارتقِ في المستويات
+            {pickLang(
+              {
+                ar: 'تدرب على السوروبان، العب ألعاب الأنزان، اكسب نقاط الخبرة، وارتقِ في المستويات',
+                en: 'Practice the soroban, play Anzan games, earn XP, and level up',
+              },
+              lang,
+            )}
           </p>
 
           <div className="flex flex-wrap gap-2 mb-6">
-            {['تعلّم', 'تدرّب', 'أنزان', 'مغامرات'].map((tag) => (
+            {[
+              pickLang({ ar: 'تعلّم', en: 'Learn' }, lang),
+              pickLang({ ar: 'تدرّب', en: 'Practice' }, lang),
+              pickLang({ ar: 'أنزان', en: 'Anzan' }, lang),
+              pickLang({ ar: 'مغامرات', en: 'Adventures' }, lang),
+            ].map((tag) => (
               <span
                 key={tag}
                 className="px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-sm font-body text-white/80"
@@ -157,8 +203,8 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           </div>
 
           <div className="flex items-center gap-2 text-purple-300 font-bold text-base group-hover:gap-3 transition-all">
-            <span>ابدأ المغامرة</span>
-            <ArrowRight className="w-5 h-5 rotate-180" />
+            <span>{pickLang({ ar: 'ابدأ المغامرة', en: 'Start the adventure' }, lang)}</span>
+            <ArrowRight className={`w-5 h-5 ${lang === 'ar' ? 'rotate-180' : ''}`} />
           </div>
         </motion.button>
 
@@ -170,7 +216,9 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           whileHover={{ scale: 1.03, y: -5 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => handleSelect('guardian')}
-          className="group relative glass-card p-7 sm:p-10 overflow-hidden text-right"
+          className={`group relative glass-card p-7 sm:p-10 overflow-hidden ${
+            lang === 'ar' ? 'text-right' : 'text-left'
+          }`}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-emerald2-500/20 via-transparent to-gold-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
@@ -183,17 +231,28 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           </motion.div>
 
           <h2 className="text-3xl sm:text-4xl font-extrabold font-display text-white mb-2">
-            ولي الأمر
+            {pickLang({ ar: 'ولي الأمر', en: 'Guardian' }, lang)}
           </h2>
           <p className="text-xl text-emerald2-300/90 font-body mb-4 font-semibold">
             Guardian (Parent)
           </p>
           <p className="text-base text-white/70 font-body mb-6 leading-relaxed">
-            تابع تقدم طفلك، اطلع على الإحصائيات، وشجعه على الاستمرار في رحلة التعلم
+            {pickLang(
+              {
+                ar: 'تابع تقدم طفلك، اطلع على الإحصائيات، وشجعه على الاستمرار في رحلة التعلم',
+                en: "Track your child's progress, view statistics, and encourage them to continue the learning journey",
+              },
+              lang,
+            )}
           </p>
 
           <div className="flex flex-wrap gap-2 mb-6">
-            {['تقارير', 'إحصائيات', 'متابعة', 'تقدم'].map((tag) => (
+            {[
+              pickLang({ ar: 'تقارير', en: 'Reports' }, lang),
+              pickLang({ ar: 'إحصائيات', en: 'Statistics' }, lang),
+              pickLang({ ar: 'متابعة', en: 'Tracking' }, lang),
+              pickLang({ ar: 'تقدم', en: 'Progress' }, lang),
+            ].map((tag) => (
               <span
                 key={tag}
                 className="px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-sm font-body text-white/80"
@@ -204,13 +263,13 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           </div>
 
           <div className="flex items-center gap-2 text-emerald2-300 font-bold text-base group-hover:gap-3 transition-all">
-            <span>لوحة المتابعة</span>
-            <ArrowRight className="w-5 h-5 rotate-180" />
+            <span>{pickLang({ ar: 'لوحة المتابعة', en: 'Dashboard' }, lang)}</span>
+            <ArrowRight className={`w-5 h-5 ${lang === 'ar' ? 'rotate-180' : ''}`} />
           </div>
         </motion.button>
       </div>
 
-      {/* ملاحظة سفلية */}
+      {/* Footer note */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -218,7 +277,15 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         className="flex items-center gap-3 mt-10 sm:mt-14 text-white/50 text-sm sm:text-base font-body text-center px-4"
       >
         <TrendingUp className="w-5 h-5 shrink-0" />
-        <span>منصة تعليمية تفاعلية للحساب الذهني بالعداد الياباني</span>
+        <span>
+          {pickLang(
+            {
+              ar: 'منصة تعليمية تفاعلية للحساب الذهني بالعداد الياباني',
+              en: 'An interactive educational platform for mental arithmetic with the Japanese abacus',
+            },
+            lang,
+          )}
+        </span>
       </motion.div>
 
       {/* Modals */}
@@ -233,7 +300,9 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           >
             <NameInputModal
               onSave={handleNameSaved}
-              onSkip={() => handleNameSaved('البطل')}
+              onSkip={() =>
+                handleNameSaved(pickLang({ ar: 'البطل', en: 'Hero' }, lang))
+              }
             />
           </motion.div>
         )}
