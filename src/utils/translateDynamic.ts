@@ -1,3 +1,17 @@
+// ═══════════════════════════════════════════════════════════════════
+// 📘 src/utils/translateDynamic.ts — القاموس الديناميكي الموحّد
+// ═══════════════════════════════════════════════════════════════════
+//
+// 📊 الهيكل المعتمد للدمج المرحلي:
+//   ✅ 1. Baseline — الكلمات والعبارات الأساسية للنظام
+//   ✅ 2. [L0] — المستوى التمهيدي (مُدمج ومُعتمد)
+//   🆕 3. [L1-L2] — جاهز لاستقبال تقرير الزميل الأول
+//   🆕 4. [L3-L4] — جاهز لاستقبال تقرير الزميل الثاني
+//   🆕 5. [L5-L7] — جاهز لاستقبال تقرير المسؤول الحالي
+//
+// ⚠️ ملاحظة: يجب إدراج كل تقرير في مكانه المخصص لتجنب التكرار.
+// ═══════════════════════════════════════════════════════════════════
+
 type DynamicText = Record<string, any>;
 
 // دالة ذكية لتوحيد النصوص
@@ -15,9 +29,13 @@ function normalizeArabic(text: string): string {
     .trim();
 }
 
-// القاموس الثابت (مدمج فيه كل النصوص الأصلية + النصوص الثابتة لبنك A و B)
+// القاموس الثابت
 const RAW_AR_TO_EN: Record<string, string> = {
-  // --- الكلمات السابقة (من ملفك الأصلي) ---
+  // =====================================================================
+  // ✅ [BASELINE] — الكلمات والعبارات الأساسية للنظام
+  // =====================================================================
+  
+  // --- الكلمات السابقة ---
   "ضرب باصدقاء 5": "Mul with Friends of 5", "ضرب بأصدقاء 5": "Mul with Friends of 5",
   "ضرب باصدقاء 10": "Mul with Friends of 10", "ضرب بأصدقاء 10": "Mul with Friends of 10",
   "ضرب مركب": "Compound Mul", "ضرب بسيط": "Direct Mul",
@@ -39,6 +57,8 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "تعافى من جلسة علاجية": "Recovered from session",
   "أتم قسم كامل": "Completed a section", 
   "ميمو": "Mimo", "البطل": "Hero",
+
+  // --- أوصاف المستويات (LevelScreen) ---
   "التعرّف على السوروبان والأرقام من ٠ إلى ٩ والقيمة المكانية": "Discover the soroban, numbers 0-9, and place value",
   "جمع وطرح بسيط + أصدقاء ٥ + أصدقاء ١٠ + عمليات مركّبة": "Simple addition & subtraction + Friends of 5 + Friends of 10 + compound operations",
   "الضرب المتدرّج (١×٢ · ٢×٢) على السوروبان": "Gradual multiplication (1x2 · 2x2) on the soroban",
@@ -47,6 +67,8 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "الضرب (٢×٣) والقسمة المتقدمة بطرق تاكاشي": "Multiplication (2x3) and advanced division using Takashi methods",
   "العمليات على الأعداد العشرية (جمع · طرح · ضرب · قسمة)": "Operations on decimals (add · sub · mul · div)",
   "الجذور التربيعية الكاملة": "Complete square roots",
+
+  // --- الأسرار السحرية (العناوين والقواعد) ---
   "سر جدول الـ 5": "Secret of the 5 Table", "سر جدول الـ 6": "Secret of the 6 Table",
   "لغز الرقم 7": "The Mystery of 7", "سر جدول الـ 8": "Secret of the 8 Table",
   "سر جدول الـ 9": "Secret of the 9 Table", "سر المضاعفة": "The Doubling Secret",
@@ -88,6 +110,8 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "١) احسب بُعد كل رقم عن 500 (الرقم − 500)": "1) Calculate distance of each number from 500 (number − 500)",
   "٢) الجزء الأول: 500 + مجموع البُعدين | ٣) الجزء الثاني: حاصل ضرب البُعدين | ٤) (الجزء الأول × 1000) ÷ 2 + الجزء الثاني": "2) First part: 500 + sum of distances | 3) Second part: product of distances | 4) (First part × 1000) ÷ 2 + Second part",
   "مع الأعداد الفردية استخدم طريقة أخرى!": "With odd numbers, use another method!",
+
+  // --- رياضيات الأصابع (FingerMathScreen) ---
   "في مملكة الأصابع، تعيش عائلتان صديقتان: عائلة اليد اليمنى المسؤولة عن الآحاد، وعائلة اليد اليسرى المسؤولة عن العشرات. الإبهام هو الجدة الحنونة قيمتها 5، والأصابع الأربعة أطفال كل واحد قيمته 1. اجتمعوا معاً ليصنعوا كل الأعداد من 0 إلى 99!": "In the kingdom of fingers, two friendly families live: the right-hand family responsible for units, and the left-hand family responsible for tens. The thumb is the kind grandmother worth 5, and the four fingers are children, each worth 1. Together they create all numbers from 0 to 99!",
   "الإبهام = 5 (الجدة) · الأصابع الأخرى = 1 (طفل)": "Thumb = 5 (Grandma) · Other fingers = 1 (Child)",
   "اليد اليمنى = الآحاد · اليد اليسرى = العشرات": "Right hand = Units · Left hand = Tens",
@@ -95,6 +119,8 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "مثل الرقم 1": "Like the number 1", "مثل الرقم 3": "Like the number 3", "مثل الرقم 5 (الجدة)": "Like the number 5 (Grandma)",
   "مثل الرقم 7": "Like the number 7", "مثل الرقم 9": "Like the number 9", "مثل الرقم 10": "Like the number 10",
   "مثل الرقم 27": "Like the number 27", "مثل الرقم 99": "Like the number 99",
+
+  // --- شاشة الأقسام (CategoryScreen) ---
   "٥ - ١٢ سنة": "Ages 5 - 12", "١٣+ سنة": "Ages 13+",
   "الامتحان النهائي — القسم الأول": "Final Exam — Section One", "الامتحان النهائي — القسم الثاني": "Final Exam — Section Two",
   "أسرار الضرب": "Multiplication Secrets", "٢٠ سراً لجدول الضرب": "20 secrets for the multiplication table",
@@ -135,8 +161,10 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "✅ الناتج = 11": "✅ Result = 11", "✅ الناتج = 2": "✅ Result = 2", "✅ الناتج = 44": "✅ Result = 44", "✅ الناتج = 6": "✅ Result = 6",
 
   // =====================================================================
-  // 🆕 [الحصر التام] النصوص الثابتة من بنك A (أسئلة وحلول)
+  // ✅ [L0] — المستوى التمهيدي (مُدمج ومُعتمد)
   // =====================================================================
+  
+  // --- L0: أسئلة بنك A ---
   "مثل العدد 0 على العداد": "Represent the number 0 on the abacus",
   "ارفع خرزة سفلية واحدة": "Raise 1 lower bead",
   "مثل العدد 2 على العداد": "Represent the number 2 on the abacus",
@@ -163,6 +191,7 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "مثل العدد 1000 على العداد": "Represent the number 1000 on the abacus",
   "مثل العدد 1500 على العداد": "Represent the number 1500 on the abacus",
 
+  // --- L0: حلول بنك A ---
   "سبب الاختيار: تمثيل الصفر. لا ترفع أي خرزة سفلية، ولا تُنزل الخرزة العلوية. جميع الخرزات بعيدة عن العارضة الفاصلة.": "Reason: Representing zero. Do not raise any lower beads, and do not lower the upper bead. All beads are away from the bar.",
   "سبب الاختيار: حركة واحدة من الصفر. ارفع خرزة سفلية واحدة بالإبهام نحو العارضة. الخرزة السفلية الواحدة تمثل 1.": "Reason: One movement from zero. Raise 1 lower bead with the thumb towards the bar. 1 lower bead represents 1.",
   "سبب الاختيار: عدد صغير (1-4) يُرفع بالخرزات السفلية. ارفع خرزتين سفليتين معًا بالإبهام نحو العارضة.": "Reason: Small number (1-4) raised with lower beads. Raise 2 lower beads together with the thumb towards the bar.",
@@ -189,14 +218,11 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "سبب الاختيار: آلاف نظيفة. في الآلاف: ارفع خرزة سفلية واحدة بالإبهام = 1000. باقي الأعمدة فارغة.": "Reason: Clean thousands. In thousands: Raise 1 lower bead with the thumb = 1000. The rest of the columns are empty.",
   "سبب الاختيار: آلاف + مئات. الآلاف: ارفع سفليه واحدة = 1000. المئات: أنزل الخرزة العلوية = 500.": "Reason: Thousands + hundreds. Thousands: Raise 1 lower bead = 1000. Hundreds: Lower the upper bead = 500.",
 
-  // =====================================================================
-  // 🆕 [الحصر التام] النصوص الثابتة من بنك B (أسئلة وحلول)
-  // =====================================================================
+  // --- L0: أسئلة وحلول بنك B ---
   "لا شيء مرفوع = ؟": "Nothing raised = ?",
   "أدنى قيمة في عمود واحد = ؟": "Minimum value in one column = ?",
   "العلوية فقط = ؟": "Upper bead only = ?",
   "أقصى قيمة في عمود واحد = ؟": "Maximum value in one column = ?",
-  
   "عدم تفعيل أي خرزة يمثل الرقم 0.": "Not activating any bead represents the number 0.",
   "خرزة سفلية واحدة تساوي 1.": "1 lower bead equals 1.",
   "خرزتان سفليتان تساويان 2.": "2 lower beads equal 2.",
@@ -213,6 +239,21 @@ const RAW_AR_TO_EN: Record<string, string> = {
   "الخرزة العلوية في العشرات + الخرزة العلوية في الآحاد.": "Upper bead in tens + upper bead in units.",
   "1 في منزلة المئات يساوي 100.": "1 in hundreds place equals 100.",
   "خرزة في المئات + خرزتان في العشرات + 3 خرزات في الآحاد.": "1 bead in hundreds + 2 beads in tens + 3 beads in units.",
+
+  // =====================================================================
+  // 🆕 [L1-L2] — جاهز لاستقبال تقرير الزميل الأول
+  // =====================================================================
+  // 📌 (سيتم إدراج قاموس L1 و L2 هنا)
+  
+  // =====================================================================
+  // 🆕 [L3-L4] — جاهز لاستقبال تقرير الزميل الثاني
+  // =====================================================================
+  // 📌 (سيتم إدراج قاموس L3 و L4 هنا)
+  
+  // =====================================================================
+  // 🆕 [L5-L7] — جاهز لاستقبال تقرير المسؤول الحالي
+  // =====================================================================
+  // 📌 (سيتم إدراج قاموس L5 و L6 و L7 هنا)
 };
 
 const AR_TO_EN: Record<string, string> = {};
@@ -224,67 +265,32 @@ Object.entries(RAW_AR_TO_EN).forEach(([key, val]) => {
 function translatePattern(text: string): string | null {
   let match;
 
-  // 🆕 ترجمة بادئات التلميح والحل والخطوات
-  if (text.startsWith("تلميح:")) {
-    return text.replace(/^تلميح\s*:\s*/, "Hint: ");
-  }
-  if (text.startsWith("الحل:")) {
-    return text.replace(/^الحل\s*:\s*/, "Solution: ");
-  }
-  if (text.startsWith("الخطوات:")) {
-    return text.replace(/^الخطوات\s*:\s*/, "Steps: ");
-  }
-
-  // 🆕 ترجمة بادئات المعادلات والنصوص
-  match = text.match(/^احسب\s*السلسلة\s*:\s*(.*)/);
-  if (match) return `Calculate the chain: ${match[1]}`;
-
-  match = text.match(/^احسب\s*:\s*(.*)/);
-  if (match) return `Calculate: ${match[1]}`;
-
-  match = text.match(/^ماذا\s*:\s*(.*)/);
-  if (match) return `What: ${match[1]}`;
-
-  match = text.match(/^ضع\s*:\s*(.*)/);
-  if (match) return `Place: ${match[1]}`;
-
-  match = text.match(/^ارفع\s*:\s*(.*)/);
-  if (match) return `Raise: ${match[1]}`;
-
-  // 🆕 ترجمة أكواد المستويات (L0, L1... إلخ)
-  match = text.match(/^L(\d+)$/);
-  if (match) return `Level ${match[1]}`;
-
-  match = text.match(/جرب.*?(\d+).*?مهاره/);
-  if (match) return `Tried ${match[1]} skills`;
-
-  match = text.match(/(\d+).*?مهارات.*?بزمن.*?قياسي/);
-  if (match) return `${match[1]} skills in record time`;
-
-  match = text.match(/(\d+).*?شارات.*?اتقان/);
-  if (match) return `${match[1]} mastery badges`;
-
-  match = text.match(/(\d+).*?مهارات.*?بلا.*?خطا/);
-  if (match) return `${match[1]} skills without mistakes`;
-
-  match = text.match(/(\d+).*?محاول.*?اجماليه/);
-  if (match) return `${match[1]} total attempts`;
-
-  match = text.match(/(\d+).*?اجاب.*?صحيحه/);
-  if (match) return `${match[1]} correct answers`;
-
-  match = text.match(/(\d+).*?اجاب.*?متتاليه/);
-  if (match) return `${match[1]} consecutive correct`;
-
-  match = text.match(/مهاره.*?بدقه.*?(\d+)/);
-  if (match) return `Skill with ${match[1]}% accuracy`;
+  // =====================================================================
+  // 🔹 [BASELINE] — البادئات العامة
+  // =====================================================================
   
-  match = text.match(/(\d+).*?مهاره.*?بدقه/);
-  if (match) return `Skill with ${match[1]}% accuracy`;
+  if (text.startsWith("تلميح:")) return text.replace(/^تلميح\s*:\s*/, "Hint: ");
+  if (text.startsWith("الحل:")) return text.replace(/^الحل\s*:\s*/, "Solution: ");
+  if (text.startsWith("الخطوات:")) return text.replace(/^الخطوات\s*:\s*/, "Steps: ");
 
-  match = text.match(/(\d+).*?متتاليه.*?في.*?السلاسل/);
-  if (match) return `${match[1]} streak in chains`;
+  match = text.match(/^احسب\s*السلسلة\s*:\s*(.*)/); if (match) return `Calculate the chain: ${match[1]}`;
+  match = text.match(/^احسب\s*:\s*(.*)/); if (match) return `Calculate: ${match[1]}`;
+  match = text.match(/^ماذا\s*:\s*(.*)/); if (match) return `What: ${match[1]}`;
+  match = text.match(/^ضع\s*:\s*(.*)/); if (match) return `Place: ${match[1]}`;
+  match = text.match(/^ارفع\s*:\s*(.*)/); if (match) return `Raise: ${match[1]}`;
+  match = text.match(/^L(\d+)$/); if (match) return `Level ${match[1]}`;
 
+  // --- أنماط الإحصائيات العامة ---
+  match = text.match(/جرب.*?(\d+).*?مهاره/); if (match) return `Tried ${match[1]} skills`;
+  match = text.match(/(\d+).*?مهارات.*?بزمن.*?قياسي/); if (match) return `${match[1]} skills in record time`;
+  match = text.match(/(\d+).*?شارات.*?اتقان/); if (match) return `${match[1]} mastery badges`;
+  match = text.match(/(\d+).*?مهارات.*?بلا.*?خطا/); if (match) return `${match[1]} skills without mistakes`;
+  match = text.match(/(\d+).*?محاول.*?اجماليه/); if (match) return `${match[1]} total attempts`;
+  match = text.match(/(\d+).*?اجاب.*?صحيحه/); if (match) return `${match[1]} correct answers`;
+  match = text.match(/(\d+).*?اجاب.*?متتاليه/); if (match) return `${match[1]} consecutive correct`;
+  match = text.match(/مهاره.*?بدقه.*?(\d+)/); if (match) return `Skill with ${match[1]}% accuracy`;
+  match = text.match(/(\d+).*?مهاره.*?بدقه/); if (match) return `Skill with ${match[1]}% accuracy`;
+  match = text.match(/(\d+).*?متتاليه.*?في.*?السلاسل/); if (match) return `${match[1]} streak in chains`;
   match = text.match(/(\d+)\s*[٪%].*?مهاره.*?مكتمله/) || text.match(/دقه.*?(\d+)/);
   if (match) {
     const digitsMatch = text.match(/(\d+)/);
@@ -293,109 +299,99 @@ function translatePattern(text: string): string | null {
   }
 
   // =====================================================================
-  // 🎯 [الحصر التام] الأنماط الديناميكية لبنك A (أسئلة وحلول)
+  // ✅ [L0] — أنماط المستوى التمهيدي
   // =====================================================================
+  
+  // --- L0: أنماط أسئلة بنك A ---
   match = text.match(/^مثل\s*العدد\s*(\d+)\s*علي\s*العداد$/);
   if (match) return `Represent the number ${match[1]} on the abacus`;
-
   match = text.match(/^ارفع\s*(\d+)\s*خرزات\s*سفليه$/);
   if (match) return `Raise ${match[1]} lower beads`;
-
   match = text.match(/^انزل\s*العلويه\s*وارفع\s*(\d+)\s*سفليات$/);
   if (match) return `Lower the upper bead and raise ${match[1]} lower beads`;
 
-  // =====================================================================
-  // 🎯 [الحصر التام] الأنماط الديناميكية لبنك B (أسئلة)
-  // =====================================================================
+  // --- L0: أنماط أسئلة بنك B ---
   match = text.match(/^(\d+)\s*سفليه\s*فقط\s*=\s*؟$/);
   if (match) return `Only ${match[1]} lower bead(s) = ?`;
-
   match = text.match(/^كم\s*خرزه\s*سفليه\s*تحتاج\s*لتمثيل\s*(\d+)؟$/);
   if (match) return `How many lower beads do you need to represent ${match[1]}?`;
-
   match = text.match(/^مثل\s*الرقم\s*(\d+)\s*علي\s*العداد$/);
   if (match) return `Represent the number ${match[1]} on the abacus`;
-
   match = text.match(/^العلويه\s*\+\s*(\d+)\s*سفليه\s*=\s*؟$/);
   if (match) return `Upper bead + ${match[1]} lower bead(s) = ?`;
-
   match = text.match(/^قيمه\s*الخرزه\s*في\s*منزله\s*(الاحاد|العشرات|المئات|الالاف)\s*=\s*؟$/);
   if (match) {
     const placeMap: Record<string, string> = { "الاحاد": "units", "العشرات": "tens", "المئات": "hundreds", "الالاف": "thousands" };
     return `Value of the bead in the ${placeMap[match[1]]} place = ?`;
   }
-
   match = text.match(/^(\d+)\s*في\s*العشرات\s*\+\s*(\d+)\s*في\s*الاحاد\s*=\s*؟$/);
   if (match) return `${match[1]} in tens + ${match[2]} in units = ?`;
-
   match = text.match(/^اين\s*يقع\s*(الاحاد|العشرات|المئات|الالاف)\s*علي\s*العداد؟\s*\(رقم\s*العمود\s*من\s*اليمين\)$/);
   if (match) {
     const placeMap: Record<string, string> = { "الاحاد": "units", "العشرات": "tens", "المئات": "hundreds", "الالاف": "thousands" };
     return `Where is the ${placeMap[match[1]]} located on the abacus? (column number from the right)`;
   }
-
   match = text.match(/^(\d+)\s*=\s*(\d+)\s*في\s*اي\s*منزله؟\s*\(1=احاد,\s*2=عشرات,\s*3=مئات\)$/);
   if (match) return `${match[1]} = ${match[2]} in which place? (1=units, 2=tens, 3=hundreds)`;
-
   match = text.match(/^ما\s*الرقم\s*الذي\s*يمثله:\s*(\d+)\s*عشرات\s*\+\s*(\d+)\s*احاد؟$/);
   if (match) return `What number does this represent: ${match[1]} tens + ${match[2]} units?`;
-
   match = text.match(/^(\d+)\s*في\s*المئات\s*=\s*؟$/);
   if (match) return `${match[1]} in hundreds = ?`;
-
   match = text.match(/^(\d+)\s*في\s*المئات\s*\+\s*(\d+)\s*في\s*العشرات\s*\+\s*(\d+)\s*في\s*الاحاد\s*=\s*؟$/);
   if (match) return `${match[1]} in hundreds + ${match[2]} in tens + ${match[3]} in units = ?`;
-
   match = text.match(/^ما\s*الرقم\s*الذي\s*يمثله:\s*(\d+)\s*مئات\s*\+\s*(\d+)\s*عشرات\s*\+\s*(\d+)\s*احاد؟$/);
   if (match) return `What number does this represent: ${match[1]} hundreds + ${match[2]} tens + ${match[3]} units?`;
-
   match = text.match(/^كم\s*يساوي\s*(\d+)\s*في\s*العشرات\s*\+\s*(\d+)\s*في\s*المئات؟$/);
   if (match) return `How much is ${match[1]} in tens + ${match[2]} in hundreds?`;
 
-  // =====================================================================
-  // 🎯 [الحصر التام] الأنماط الديناميكية لبنك B (حلول)
-  // =====================================================================
+  // --- L0: أنماط حلول بنك B ---
   match = text.match(/^نحتاج\s*الي\s*تفعيل\s*(\d+)\s*خرزات\s*سفليه\s*لتمثيل\s*الرقم\s*(\d+)\.$/);
   if (match) return `We need to activate ${match[1]} lower beads to represent the number ${match[2]}.`;
-
   match = text.match(/^الخرزه\s*العلويه\s*\(5\)\s*\+\s*(\d+)\s*سفليه\s*\((\d+)\)\s*=\s*(\d+)\.$/);
   if (match) return `Upper bead (5) + ${match[1]} lower bead(s) (${match[2]}) = ${match[3]}.`;
-
   match = text.match(/^الخرزه\s*السفليه\s*في\s*عمود\s*(الاحاد|العشرات|المئات|الالاف)\s*تساوي\s*(\d+)\.$/);
   if (match) {
     const placeMap: Record<string, string> = { "الاحاد": "units", "العشرات": "tens", "المئات": "hundreds", "الالاف": "thousands" };
     return `Lower bead in ${placeMap[match[1]]} column equals ${match[2]}.`;
   }
-
   match = text.match(/^(\d+)\s*عشرات\s*\+\s*(\d+)\s*احاد\s*=\s*(\d+)\.$/);
   if (match) return `${match[1]} tens + ${match[2]} units = ${match[3]}.`;
-
   match = text.match(/^(\d+)\s*عشرات\s*\((\d+)\)\s*\+\s*(\d+)\s*احاد\s*\((\d+)\)\s*=\s*(\d+)\.$/);
   if (match) return `${match[1]} tens (${match[2]}) + ${match[3]} units (${match[4]}) = ${match[5]}.`;
-
   match = text.match(/^عمود\s*(الاحاد|العشرات|المئات|الالاف)\s*هو\s*العمود\s*رقم\s*(\d+)\s*من\s*اليمين\.$/);
   if (match) {
     const placeMap: Record<string, string> = { "الاحاد": "Units", "العشرات": "Tens", "المئات": "Hundreds", "الالاف": "Thousands" };
     return `${placeMap[match[1]]} column is column number ${match[2]} from the right.`;
   }
-
   match = text.match(/^الرقم\s*(\d+)\s*يعني\s*(\d+)\s*في\s*منزله\s*(العشرات|المئات|الالاف)\s*\(العمود\s*رقم\s*(\d+)\)\.$/);
   if (match) {
     const placeMap: Record<string, string> = { "العشرات": "tens", "المئات": "hundreds", "الالاف": "thousands" };
     return `The number ${match[1]} means ${match[2]} in the ${placeMap[match[3]]} place (column number ${match[4]}).`;
   }
-
   match = text.match(/^(\d+)\s*عشرات\s*=\s*(\d+)\.$/);
   if (match) return `${match[1]} tens = ${match[2]}.`;
-
   match = text.match(/^رفع\s*خرزه\s*سفليه\s*واحده\s*في\s*عمود\s*(العشرات|المئات|الالاف)\.$/);
   if (match) {
     const placeMap: Record<string, string> = { "العشرات": "tens", "المئات": "hundreds", "الالاف": "thousands" };
     return `Raise 1 lower bead in the ${placeMap[match[1]]} column.`;
   }
-
   match = text.match(/^(\d+)\s*\+\s*(\d+)\s*\+\s*(\d+)\s*=\s*(\d+)\.$/);
   if (match) return `${match[1]} + ${match[2]} + ${match[3]} = ${match[4]}.`;
+
+  // =====================================================================
+  // 🆕 [L1-L2] — أنماط جاهزة للاستقبال
+  // =====================================================================
+  // 📌 (سيتم إدراج أنماط L1 و L2 هنا)
+  
+  // =====================================================================
+  // 🆕 [L3-L4] — أنماط جاهزة للاستقبال
+  // =====================================================================
+  // 📌 (سيتم إدراج أنماط L3 و L4 هنا)
+  
+  // =====================================================================
+  // 🆕 [L5-L7] — أنماط جاهزة للاستقبال
+  // =====================================================================
+  // 📌 (سيتم إدراج أنماط L5 و L6 و L7 هنا)
 
   return null;
 }
@@ -425,7 +421,6 @@ export function translateDynamic(
         return patternTranslation;
       }
 
-      // 🆕 ترجمة الخطوات الرياضية التي تحتوي على أرقام ورموز (Fallback)
       if (field === "steps" || normalizedKey.includes("←") || normalizedKey.includes("→")) {
         return normalizedKey
           .replace(/فردي/g, "odd")
