@@ -19,6 +19,7 @@ import {
 import { useQuests } from '../hooks/useQuests';
 
 import { cloudSync } from '../lib/cloudSync';
+import { CloudStatus } from '../components/CloudStatus';
 
 import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
 import { useMasteryBadgesStore } from '../store/masteryBadgesStore';
@@ -554,7 +555,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
         <div className="flex-1" />
         <span className="text-[10px] text-white/40 font-body">{pickLang({ ar: 'SRB · محدّث آنياً', en: 'SRB · Real-time updated' }, lang)}</span>
       </div>
-
+<CloudStatus />
       {/* ═══ نظرة عامة على الطفل ═══ */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5 sm:p-6 mb-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-emerald2-500/10 rounded-full blur-3xl" />
