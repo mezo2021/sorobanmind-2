@@ -1,10 +1,9 @@
 import { supabase } from './supabase';
 import { useProgressStore, type ProgressState } from '../store/progressStore';
 
-// ═══ دالة مساعدة لتنظيف الحالة من الدوال قبل الحفظ ═══
 function extractPureState(state: ProgressState) {
   const { 
-    setChildName, setCategory, markLevelComplete, markLessonCompleted, 
+    setChildName, setParentName, setCategory, markLevelComplete, markLessonCompleted, 
     markPracticePassed, markAnzanVisualPassed, markAnzanAudioPassed, 
     setGrade, getGrades, computeFinalScore, setPendingRemediation, 
     clearPendingRemediation, addRemediationSession, setExam1Passed, 
@@ -17,13 +16,15 @@ function extractPureState(state: ProgressState) {
 }
 
 export const cloudSync = {
-  // 1. إنشاء حساب جديد لولي الأمر
   async registerParent(email: string, password: string, parentName: string, childName: string) {
     const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
     if (authError) throw new Error(authError.message);
     if (!authData.user) throw new Error('فشل إنشاء الحساب');
 
-    // حفظ البيانات الأولية في الجدول
+    // حفظ الأسماء في المتجر المحلي فوراً
+    useProgressStore.getState().setParentName(parentName);
+    useProgressStore.getState().setChildName(childName);
+
     const initialState = extractPureState(useProgressStore.getState());
     const { error: dbError } = await supabase.from('soroban_progress').insert({
       user_id: authData.user.id,
@@ -36,25 +37,21 @@ export const cloudSync = {
     return authData.user;
   },
 
-  // 2. تسجيل الدخول
   async loginParent(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
     return data.user;
   },
 
-  // 3. تسجيل الخروج
   async logoutParent() {
     await supabase.auth.signOut();
   },
 
-  // 4. جلب المستخدم الحالي
   async getCurrentUser() {
     const { data } = await supabase.auth.getUser();
     return data.user;
   },
 
-  // 5. حفظ التقدم الحالي في السحابة
   async saveToCloud() {
     const user = await this.getCurrentUser();
     if (!user) throw new Error('يجب تسجيل الدخول أولاً');
@@ -63,6 +60,7 @@ export const cloudSync = {
     const pureData = extractPureState(currentState);
 
     const { error } = await supabase.from('soroban_progress').update({
+      parent_name: currentState.parentName,
       child_name: currentState.childName,
       progress_data: pureData,
       updated_at: new Date().toISOString(),
@@ -72,26 +70,27 @@ export const cloudSync = {
     return true;
   },
 
-  // 6. استعادة التقدم من السحابة
   async loadFromCloud() {
     const user = await this.getCurrentUser();
     if (!user) throw new Error('يجب تسجيل الدخول أولاً');
 
     const { data, error } = await supabase
       .from('soroban_progress')
-      .select('progress_data, child_name')
+      .select('progress_data, child_name, parent_name')
       .eq('user_id', user.id)
       .single();
 
     if (error) throw new Error(error.message);
     if (!data) throw new Error('لا توجد نسخة احتياطية');
 
-    // دمج البيانات القادمة مع دوال المتجر
     const currentStore = useProgressStore.getState();
+    
+    // تحديث المتجر بالبيانات السحابية (بما فيها الأسماء)
     useProgressStore.setState({
       ...currentStore,
       ...(data.progress_data as any),
       childName: data.child_name,
+      parentName: data.parent_name,
     });
 
     return true;
