@@ -38,9 +38,13 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     const checkAuth = async () => {
       try {
         const user = await cloudSync.getCurrentUser();
-        // يعتبر مسجلاً إذا كان هناك مستخدم في Supabase واسم طفل في المتجر
-        if (user && storeChildName) {
-          setIsLoggedIn(true);
+        if (user) {
+          setIsLoggedIn(true); // المستخدم مسجل
+          try {
+            await cloudSync.fetchChildren();
+          } catch (fetchErr) {
+            console.warn('فشل جلب الأطفال:', fetchErr);
+          }
         }
       } catch (e) {
         // لا يوجد مستخدم
@@ -49,7 +53,7 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
       }
     };
     checkAuth();
-  }, [storeChildName]);
+  }, []);
 
   const handleSelect = (role: Role) => {
     if (!isLoggedIn) {
