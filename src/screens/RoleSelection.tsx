@@ -39,7 +39,7 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
       try {
         const user = await cloudSync.getCurrentUser();
         if (user) {
-          setIsLoggedIn(true); // المستخدم مسجل
+          setIsLoggedIn(true);
           try {
             await cloudSync.fetchChildren();
           } catch (fetchErr) {
@@ -189,12 +189,21 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         </motion.button>
       </div>
 
-      {/* شريط التسجيل العريض (يظهر فقط إذا لم يسجل) */}
-      {!isLoggedIn && (
-        <div className="w-full max-w-5xl">
-          <CloudSyncSection onLoginSuccess={() => setIsLoggedIn(true)} />
-        </div>
-      )}
+      {/* شاشة التسجيل المنبثقة (تغطي المنتصف) */}
+      <AnimatePresence>
+        {!isLoggedIn && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+          >
+            <div className="w-full max-w-lg my-auto">
+              <CloudSyncSection onLoginSuccess={() => setIsLoggedIn(true)} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Modals */}
       <AnimatePresence>
