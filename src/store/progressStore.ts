@@ -534,7 +534,7 @@ export const useProgressStore = create<ProgressState>()(
             lastPlayedDate: (old.lastPlayedDate as string) || null,
             completedLevels: (old.completedLevels as LevelId[]) || [],
               completedLessons: [] as string[],
-} as ProgressState);
+} as unknown as ProgressState);
         }
 
         if (version < 4) {
@@ -542,7 +542,7 @@ export const useProgressStore = create<ProgressState>()(
             ...initialState,
             ...old,
             completedLessons: (old.completedLessons as string[]) || [],
-          } as ProgressState);
+          } as unknown as ProgressState);
         }
 
         if (version < 5) {
@@ -552,7 +552,7 @@ export const useProgressStore = create<ProgressState>()(
             grades: (old.grades as Record<string, LevelGrades>) || {},
             pendingRemediation: (old.pendingRemediation as PendingRemediation | null) || null,
             remediationHistory: (old.remediationHistory as RemediationSession[]) || [],
-          } as ProgressState);
+          } as unknown as ProgressState);
         }
 
         if (version < 6 || version < 7 || version < 8 || version < 9) {
@@ -564,7 +564,7 @@ export const useProgressStore = create<ProgressState>()(
             ...old,
             ticketXP: existingTicketXP > 0 ? existingTicketXP : Math.min(TICKET_XP_CAP, oldTotalXP),
             tickets: existingTickets,
-          } as ProgressState);
+          } as unknown as ProgressState);
         }
 
         if (version < 10) {
@@ -579,7 +579,7 @@ export const useProgressStore = create<ProgressState>()(
             ...old,
             skillProgress: upgraded,
             stats: (old.stats as ProgressStats) || { totalAttempts: 0, totalCorrect: 0 },
-          } as ProgressState);
+          } as unknown as ProgressState);
         }
 
         if (version < 11) {
@@ -587,7 +587,7 @@ export const useProgressStore = create<ProgressState>()(
             ...initialState,
             ...old,
             dailyXP: (old.dailyXP as Record<string, number>) || {},
-          } as ProgressState);
+          } as unknown as ProgressState);
         }
 
         // المسار الأخير: v11 → v12 (حالة مصطفى)
