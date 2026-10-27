@@ -1,3 +1,11 @@
+import { supabase } from './lib/supabase';
+
+// الاستماع لحالة الدخول لتحديث الواجهة
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+    // يمكنك هنا إجبار الصفحة على التحديث إذا لزم الأمر
+  }
+});
 import { Component, Suspense, type ReactNode } from 'react';
 import React from "react";
 import ReactDOM from "react-dom/client";
