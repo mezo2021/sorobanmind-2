@@ -5,21 +5,19 @@
 // 📅 2026-10-20
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useMemo, useState, useRef, useEffect } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import {
   ArrowRight, TrendingUp, Target, Award,
   Brain, Calendar, Zap, CheckCircle2, BarChart3,
   Star, Eye, Crown, Diamond, Trophy, Lock as LockBadge,
   Swords, ShieldCheck, Circle, Lock, Volume2, RefreshCw,
   Home, Sparkles, PlayCircle, Timer, Lightbulb,
-  Upload, Download, Trash2, Unlock,
-  Cloud, LogIn,
+  Upload, Download, Trash2, Unlock, Cloud,
   type LucideIcon,
 } from 'lucide-react';
 
 import { useQuests } from '../hooks/useQuests';
 import { cloudSync } from '../lib/cloudSync';
-import { AuthModal } from '../components/AuthModal';
 
 import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
 
@@ -208,15 +206,7 @@ export function GuardianDashboard({
 
   // ═══ الأزرار الإدارية ═══
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-
-  // ☁️ Cloud Sync States
-  const [isCloudLoggedIn, setIsCloudLoggedIn] = useState(false);
-  const [showCloudAuth, setShowCloudAuth] = useState(false);
   const [cloudMsg, setCloudMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-
-  useEffect(() => {
-    cloudSync.getCurrentUser().then(u => setIsCloudLoggedIn(!!u)).catch(() => {});
-  }, []);
 
   const handleCloudSave = async () => {
     try {
@@ -569,26 +559,16 @@ export function GuardianDashboard({
           <span>{pickLang({ ar: 'استعادة', en: 'Restore' }, lang)}</span>
         </button>
 
-        {isCloudLoggedIn ? (
-          <>
-            <button type="button" onClick={handleCloudSave}
-              className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-purple-500/20 border border-purple-400/40 text-purple-100 text-xs font-body">
-              <Cloud className="w-4 h-4" />
-              <span>{pickLang({ ar: 'حفظ في السحابة', en: 'Save to Cloud' }, lang)}</span>
-            </button>
-            <button type="button" onClick={handleCloudLoad}
-              className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 text-indigo-100 text-xs font-body">
-              <Cloud className="w-4 h-4" />
-              <span>{pickLang({ ar: 'استعادة من السحابة', en: 'Load from Cloud' }, lang)}</span>
-            </button>
-          </>
-        ) : (
-          <button type="button" onClick={() => setShowCloudAuth(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 text-xs font-body">
-            <LogIn className="w-4 h-4" />
-            <span>{pickLang({ ar: 'تسجيل دخول السحابة', en: 'Cloud Login' }, lang)}</span>
-          </button>
-        )}
+        <button type="button" onClick={handleCloudSave}
+          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-purple-500/20 border border-purple-400/40 text-purple-100 text-xs font-body">
+          <Cloud className="w-4 h-4" />
+          <span>{pickLang({ ar: 'حفظ في السحابة', en: 'Save to Cloud' }, lang)}</span>
+        </button>
+        <button type="button" onClick={handleCloudLoad}
+          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 text-indigo-100 text-xs font-body">
+          <Cloud className="w-4 h-4" />
+          <span>{pickLang({ ar: 'استعادة من السحابة', en: 'Load from Cloud' }, lang)}</span>
+        </button>
 
         <input type="file" accept=".json" ref={fileInputRef} onChange={handleRestore} style={{ display: 'none' }} />
 
@@ -1101,15 +1081,6 @@ export function GuardianDashboard({
         )}
       </AnimatePresence>
 
-      {/* ☁️ Cloud Auth Modal */}
-      {showCloudAuth && (
-        <AuthModal
-          onClose={() => setShowCloudAuth(false)}
-          onSuccess={() => { setShowCloudAuth(false); setIsCloudLoggedIn(true); }}
-        />
-      )}
-
-      {/* ☁️ Cloud Toast */}
       {cloudMsg && (
         <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-[300] px-4 py-2 rounded-xl text-sm font-bold ${
           cloudMsg.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
