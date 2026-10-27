@@ -22,7 +22,6 @@ import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
 
 // ═══ SRB Stores ═══
 import { useProgressStore, selectObservationAccuracy } from '../store/progressStore';
-import { useMasteryBadgesStore } from '../store/masteryBadgesStore';
 
 // ═══ SRB Data ═══
 import { SRB_LEVELS } from '../data/srb/curriculum';
@@ -551,7 +550,6 @@ export function GuardianDashboard({
         <div className="flex-1" />
         <span className="text-[10px] text-white/40 font-body">{pickLang({ ar: 'SRB · محدّث آنياً', en: 'SRB · Real-time updated' }, lang)}</span>
       </div>
-<CloudSyncSection />
 
       {/* ═══ نظرة عامة على الطفل ═══ */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5 sm:p-6 mb-6 relative overflow-hidden">
