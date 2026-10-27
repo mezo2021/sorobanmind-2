@@ -1,7 +1,7 @@
 // src/screens/RoleSelection.tsx
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages } from 'lucide-react';
+import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages, Wrench, Cloud } from 'lucide-react';
 
 import { useT, useLangStore } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
@@ -9,6 +9,7 @@ import { pickLang } from '@/i18n/pickLang';
 import type { Role, CharacterType } from '@/types';
 import { CharacterSelector } from '@/components/CharacterSelector';
 import { NameInputModal } from '@/components/NameInputModal';
+import { AuthModal } from '@/components/AuthModal';
 import { useProgressStore } from '@/store/progressStore';
 
 interface RoleSelectionProps {
@@ -27,6 +28,7 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
 
   const [step, setStep] = useState<Step>('idle');
   const [pendingRole, setPendingRole] = useState<Role>(null);
+  const [showAuth, setShowAuth] = useState(false);
 
   const handleSelect = (role: Role) => {
     if (role === 'hero') {
@@ -84,8 +86,28 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
       dir={dir}
       className="relative min-h-screen flex flex-col items-center justify-center px-3 sm:px-6 py-8 sm:py-12"
     >
-      {/* 🆕 زر تبديل اللغة */}
-      <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-50">
+      {/* 🆕 أزرار المطور والحساب واللغة */}
+      <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-50 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => { playSound('click'); onSelect('guardian'); }}
+          title={pickLang({ ar: 'وضع المطور', en: 'Developer Mode' }, lang)}
+          className="p-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 transition"
+        >
+          <Wrench className="w-4 h-4" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { playSound('click'); setShowAuth(true); }}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-white shadow-lg backdrop-blur-md transition"
+        >
+          <Cloud className="w-4 h-4 text-purple-300" />
+          <span className="text-xs font-bold">
+            {pickLang({ ar: 'حسابي', en: 'Account' }, lang)}
+          </span>
+        </button>
+
         <button
           type="button"
           onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
@@ -290,6 +312,13 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
 
       {/* Modals */}
       <AnimatePresence>
+        {showAuth && (
+          <AuthModal
+            onClose={() => setShowAuth(false)}
+            onSuccess={() => setShowAuth(false)}
+          />
+        )}
+
         {step === 'name' && (
           <motion.div
             initial={{ opacity: 0 }}
