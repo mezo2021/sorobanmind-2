@@ -3,7 +3,39 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { useProgressStore } from './store/progressStore'; // 👈 [m6-b] استيراد المتجر
+import { useProgressStore } from './store/progressStore';
+
+// ═══ 🔍 Google Analytics 4 (GA4) ═══
+const GA_MEASUREMENT_ID = 'G-WCVPW40J43';
+
+// تفعيل GA فقط إذا كان المعرّف صحيحاً
+const isValidGAId =
+  GA_MEASUREMENT_ID &&
+  !GA_MEASUREMENT_ID.includes('XXXXXXXXXX') &&
+  /^G-[A-Z0-9]{10}$/.test(GA_MEASUREMENT_ID);
+
+if (isValidGAId && typeof window !== 'undefined') {
+  try {
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+    document.head.appendChild(script);
+
+    (window as any).dataLayer = (window as any).dataLayer || [];
+    (window as any).gtag = function (...args: any[]) {
+      (window as any).dataLayer.push(args);
+    };
+    (window as any).gtag('js', new Date());
+    (window as any).gtag('config', GA_MEASUREMENT_ID, {
+      anonymize_ip: true,
+      allow_google_signals: false,
+      allow_ad_personalization_signals: false,
+      send_page_view: true,
+    });
+  } catch (err) {
+    console.warn('[GA] Failed to initialize:', err);
+  }
+}
 
 // ═══ Cleanup: dead keys (one-time, v12) ═══
 [
@@ -13,13 +45,11 @@ import { useProgressStore } from './store/progressStore'; // 👈 [m6-b] است�
   'soroban_exam_result',
   'soroban_anzan_badges',
   'soroban_anzan_audio_badges',
-  'soroban_passed_level_tests',   // 🆕 v11 — لا قارئ ولا كاتب بعد إصلاحات 2026-10-20
-  'soroban_weak_skills_v2',       // 🆕 v11 — لا قارئ ولا كاتب بعد إصلاحات 2026-10-20
-  // 🆕 [m3-d] مفاتيح توقفنا عن الكتابة فيها بعد تنظيف App.tsx
+  'soroban_passed_level_tests',
+  'soroban_weak_skills_v2',
   'soroban_completed_levels',
   'soroban_placement_result',
   'soroban_section2_unlocked',
-  // 🆕 [m11] مفاتيح ميتة بعد م6-أ (لا قارئ ولا كاتب — أكد البحث)
   'soroban_completed_lessons',
   'soroban_passed_practice',
 ].forEach((k) => {
@@ -30,8 +60,7 @@ import { useProgressStore } from './store/progressStore'; // 👈 [m6-b] است�
   }
 });
 
-// ═══ Migration: نقل اسم الطفل من المفاتيح القديمة إلى المتجر ═══
-// 👈 [m6-b] هذا الكود ينقل الاسم القديم تلقائياً حتى لا يضطر الطفل لكتابته مجدداً
+// ═══ Migration: نقل اسم الطفل ═══
 try {
   const legacyName = localStorage.getItem('soroban_child_name');
   if (legacyName && !useProgressStore.getState().childName) {
