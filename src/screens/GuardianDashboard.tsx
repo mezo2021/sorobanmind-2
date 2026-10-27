@@ -240,6 +240,7 @@ export function GuardianDashboard({
   // ═══ اسم الطفل ═══
   const rawName = storedName || childName || 'البطل';
   const savedName = translateDynamic({ name: rawName }, lang, 'name');
+const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
 
   // ═══ مشتقات ═══
   const totalLevelsCount = SRB_LEVELS.length;
