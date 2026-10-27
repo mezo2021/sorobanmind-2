@@ -19,6 +19,7 @@ import {
 import { useQuests } from '../hooks/useQuests';
 
 import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
+import { useMasteryBadgesStore } from '../store/masteryBadgesStore';
 
 // ═══ SRB Stores ═══
 import { useProgressStore, selectObservationAccuracy } from '../store/progressStore';
