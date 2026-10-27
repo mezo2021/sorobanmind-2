@@ -496,13 +496,13 @@ function translatePattern(text: string): string | null {
   if (text.startsWith("الخطوات:")) return text.replace(/^الخطوات\s*:\s*/, "Steps: ");
 
   // [FIX L6] - السؤال الطويل المخصص (بنك B)
-  match = text.match(/^احسب\s*:\s*(.*?)\s*اذا\s*كان\s*الناتج\s*([\d\.]+)\s*مثله\s*([\d\.]+)\s*علي\s*المعداد$/);
+  match = text.match(/^احسب\s*:\s*(.*?)\s*اذا\s*كان\s*الناتج\s*([\d.]+)\s*مثله\s*([\d.]+)\s*علي\s*المعداد$/);
   if (match) {
     return `Calculate: ${match[1]} (If the result is ${match[2]}, represent it as ${match[3]} on the abacus)`;
   }
 
   // [FIX L6] - التلميح (Hint) المستخرج من الحل
-  match = text.match(/^مثل\s*بدون\s*فاصله\s*\(([\d\.]+)\s*->\s*([\d\.]+)\)$/);
+  match = text.match(/^مثل\s*بدون\s*فاصله\s*\(([\d.]+)\s*->\s*([\d.]+)\)$/);
   if (match) {
     return `Represent without a decimal point (${match[1]} -> ${match[2]})`;
   }
