@@ -12,12 +12,12 @@ import {
   Star, Eye, Crown, Diamond, Trophy, Lock as LockBadge,
   Swords, ShieldCheck, Circle, Lock, Volume2, RefreshCw,
   Home, Sparkles, PlayCircle, Timer, Lightbulb,
-  Upload, Download, Trash2, Unlock,
+  Upload, Download, Trash2, Unlock, LogOut,
   type LucideIcon,
 } from 'lucide-react';
 
 import { useQuests } from '../hooks/useQuests';
-import { ... LogOut ... } from 'lucide-react';
+
 import { cloudSync } from '../lib/cloudSync';
 
 import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
