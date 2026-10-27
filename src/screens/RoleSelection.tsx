@@ -1,7 +1,7 @@
 // src/screens/RoleSelection.tsx
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
-import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages, Lock, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages } from 'lucide-react';
 
 import { useT, useLangStore } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
@@ -9,9 +9,7 @@ import { pickLang } from '@/i18n/pickLang';
 import type { Role, CharacterType } from '@/types';
 import { CharacterSelector } from '@/components/CharacterSelector';
 import { NameInputModal } from '@/components/NameInputModal';
-import { CloudSyncSection } from '@/components/CloudSyncSection';
 import { useProgressStore } from '@/store/progressStore';
-import { cloudSync } from '@/lib/cloudSync';
 
 interface RoleSelectionProps {
   onSelect: (role: Role) => void;
@@ -30,36 +28,8 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
 
   const [step, setStep] = useState<Step>('idle');
   const [pendingRole, setPendingRole] = useState<Role>(null);
-  
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const user = await cloudSync.getCurrentUser();
-        if (user) {
-          setIsLoggedIn(true);
-          try {
-            await cloudSync.fetchChildren();
-          } catch (fetchErr) {
-            console.warn('فشل جلب الأطفال:', fetchErr);
-          }
-        }
-      } catch (e) {
-        // لا يوجد مستخدم
-      } finally {
-        setCheckingAuth(false);
-      }
-    };
-    checkAuth();
-  }, []);
 
   const handleSelect = (role: Role) => {
-    if (!isLoggedIn) {
-      return; // البطاقات مقفلة
-    }
-
     if (role === 'hero') {
       const savedCompanion = localStorage.getItem(COMPANION_STORAGE_KEY);
       const savedName = storeChildName || localStorage.getItem(NAME_STORAGE_KEY);
@@ -108,14 +78,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     }
   };
 
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0b1020]">
-        <Loader2 className="w-10 h-10 text-purple-500 animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div dir={dir} className="relative min-h-screen flex flex-col items-center justify-center px-3 sm:px-6 py-8 sm:py-12">
       
@@ -143,22 +105,12 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         <h1 className="text-5xl sm:text-7xl font-extrabold font-display shimmer-text mb-3">SorobanMind</h1>
       </motion.div>
 
-      {/* البطاقات (مقفلة إذا لم يسجل) */}
+      {/* البطاقات (مفتوحة دائماً) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8 w-full max-w-5xl mb-8 relative">
-        
-        {/* قفل البطاقات إذا لم يسجل */}
-        {!isLoggedIn && (
-          <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-[2px] rounded-3xl flex flex-col items-center justify-center border border-white/5">
-            <Lock className="w-16 h-16 text-white/50 mb-4" />
-            <p className="text-white/80 font-bold text-lg">{pickLang({ ar: 'الشاشات مقفلة', en: 'Screens Locked' }, lang)}</p>
-          </div>
-        )}
-
         {/* Hero */}
         <motion.button
           onClick={() => handleSelect('hero')}
-          disabled={!isLoggedIn}
-          className={`group relative glass-card p-7 sm:p-10 overflow-hidden ${lang === 'ar' ? 'text-right' : 'text-left'} ${!isLoggedIn ? 'opacity-50' : ''}`}
+          className={`group relative glass-card p-7 sm:p-10 overflow-hidden ${lang === 'ar' ? 'text-right' : 'text-left'}`}
         >
           <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-electric-500 flex items-center justify-center shadow-xl mb-6">
             <Swords className="w-11 h-11 text-white" />
@@ -174,8 +126,7 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         {/* Guardian */}
         <motion.button
           onClick={() => handleSelect('guardian')}
-          disabled={!isLoggedIn}
-          className={`group relative glass-card p-7 sm:p-10 overflow-hidden ${lang === 'ar' ? 'text-right' : 'text-left'} ${!isLoggedIn ? 'opacity-50' : ''}`}
+          className={`group relative glass-card p-7 sm:p-10 overflow-hidden ${lang === 'ar' ? 'text-right' : 'text-left'}`}
         >
           <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald2-500 to-gold-500 flex items-center justify-center shadow-xl mb-6">
             <Shield className="w-11 h-11 text-white" />
@@ -188,22 +139,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           </div>
         </motion.button>
       </div>
-
-      {/* شاشة التسجيل المنبثقة (تغطي المنتصف) */}
-      <AnimatePresence>
-        {!isLoggedIn && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
-          >
-            <div className="w-full max-w-lg my-auto">
-              <CloudSyncSection onLoginSuccess={() => setIsLoggedIn(true)} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Modals */}
       <AnimatePresence>
