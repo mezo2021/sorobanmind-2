@@ -33,6 +33,7 @@ import { formatNumber } from '@/utils/numberStyle';
 import { useT } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
 import { translateDynamic } from '@/utils/translateDynamic';
+import { CloudSyncSection } from '../components/CloudSyncSection';
 
 // ═══════════════════════════════════════════════════════════
 // أدوات
@@ -550,6 +551,7 @@ export function GuardianDashboard({
         <div className="flex-1" />
         <span className="text-[10px] text-white/40 font-body">{pickLang({ ar: 'SRB · محدّث آنياً', en: 'SRB · Real-time updated' }, lang)}</span>
       </div>
+<CloudSyncSection />
 
       {/* ═══ نظرة عامة على الطفل ═══ */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5 sm:p-6 mb-6 relative overflow-hidden">
