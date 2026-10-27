@@ -13,6 +13,7 @@ function normalizeArabic(text: string): string {
     .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))) // تحويل الأرقام العربية
     .replace(/\s+/g, " ")          // إزالة المسافات الزائدة
     .trim();
+.replace(/٫/g, ".")            // تحويل الفاصلة العشرية العربية إلى نقطة
 }
 
 // القاموس الثابت (مدمج فيه كل النصوص الأصلية + النصوص الثابتة لبنك A و B)
@@ -290,6 +291,13 @@ function translatePattern(text: string): string | null {
     const digitsMatch = text.match(/(\d+)/);
     const num = digitsMatch ? digitsMatch[1] : "85";
     return `${num}% accuracy in skill`;
+// [FIX L6] - التلميح المرفق بالسؤال (اذا كان الناتج...)
+match = text.match(/^اذا\s*كان\s*الناتج\s*([\d\.]+)\s*مثله\s*([\d\.]+)\s*=\s*؟\s*علي\s*المعداد$/);
+if (match) return `(If the result is ${match[1]}, represent it as ${match[2]} = ? on the abacus)`;
+
+// [FIX L6] - التلميح المستخرج من حل السؤال (مثل بدون فاصلة)
+match = text.match(/^مثل\s*بدون\s*فاصله\s*\(([\d\.]+)\s*->\s*([\d\.]+)\)$/);
+if (match) return `Represent without a decimal point (${match[1]} -> ${match[2]})`;
   }
 
   // =====================================================================
