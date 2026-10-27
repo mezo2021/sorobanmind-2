@@ -2,7 +2,7 @@
 // ☁️ نظام المزامنة المبسط (نظام 2)
 // - يحفظ الأسماء في user_metadata (لا جداول أطفال)
 // - يحفظ التقدم في جدول soroban_progress (عمودان فقط)
-// - كل الرسائل ثنائية اللغة (AR/EN)
+// - يزامن localStorage مع المتجر لشاشة البطل
 
 import { supabase } from './supabase';
 import { useProgressStore, type ProgressState } from '../store/progressStore';
@@ -42,6 +42,9 @@ export const cloudSync = {
     // تحديث المتجر المحلي فوراً
     useProgressStore.getState().setParentName(parentName.trim());
     useProgressStore.getState().setChildName(childName.trim());
+    
+    // 👇 تحديث الذاكرة المحلية لكي تقرأها شاشة البطل فوراً
+    localStorage.setItem('soroban_child_name', childName.trim());
 
     // إنشاء صف التقدم في الجدول (إذا لم يكن موجوداً)
     await supabase.from('soroban_progress').upsert({
@@ -63,8 +66,14 @@ export const cloudSync = {
 
     // استرجاع الأسماء من user_metadata
     const meta = data.user.user_metadata || {};
-    useProgressStore.getState().setParentName(meta.parent_name || 'ولي الأمر');
-    useProgressStore.getState().setChildName(meta.child_name || 'البطل');
+    const pName = meta.parent_name || 'ولي الأمر';
+    const cName = meta.child_name || 'البطل';
+    
+    useProgressStore.getState().setParentName(pName);
+    useProgressStore.getState().setChildName(cName);
+    
+    // 👇 تحديث الذاكرة المحلية لكي تقرأها شاشة البطل
+    localStorage.setItem('soroban_child_name', cName);
 
     return data.user;
   },
@@ -79,8 +88,14 @@ export const cloudSync = {
     const { data } = await supabase.auth.getUser();
     if (data.user) {
       const meta = data.user.user_metadata || {};
-      useProgressStore.getState().setParentName(meta.parent_name || 'ولي الأمر');
-      useProgressStore.getState().setChildName(meta.child_name || 'البطل');
+      const pName = meta.parent_name || 'ولي الأمر';
+      const cName = meta.child_name || 'البطل';
+      
+      useProgressStore.getState().setParentName(pName);
+      useProgressStore.getState().setChildName(cName);
+      
+      // 👇 تحديث الذاكرة المحلية عند التحقق من المستخدم
+      localStorage.setItem('soroban_child_name', cName);
     }
     return data.user;
   },
