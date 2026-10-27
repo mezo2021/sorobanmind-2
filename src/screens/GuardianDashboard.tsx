@@ -12,39 +12,29 @@ import {
   Star, Eye, Crown, Diamond, Trophy, Lock as LockBadge,
   Swords, ShieldCheck, Circle, Lock, Volume2, RefreshCw,
   Home, Sparkles, PlayCircle, Timer, Lightbulb,
-  Upload, Download, Trash2, Unlock, LogOut,
+  Upload, Download, Trash2, Unlock,
   type LucideIcon,
 } from 'lucide-react';
 
 import { useQuests } from '../hooks/useQuests';
 
-import { cloudSync } from '../lib/cloudSync';
-import { CloudStatus } from '../components/CloudStatus';
-import { ChildSwitcher } from '../components/ChildSwitcher';
 import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
-import { useMasteryBadgesStore } from '../store/masteryBadgesStore';
 
 // ═══ SRB Stores ═══
 import { useProgressStore, selectObservationAccuracy } from '../store/progressStore';
+import { useMasteryBadgesStore } from '../store/masteryBadgesStore';
 
 // ═══ SRB Data ═══
 import { SRB_LEVELS } from '../data/srb/curriculum';
 import { getModuleName } from '../data/srb/modules';
 import type { SRBLevel, SRBSection, SRBModule } from '../data/srb/types';
-import { useNumberStyleStore } from '@/store/numberStyleStore';
-import { formatNumber } from '@/utils/numberStyle';
-import { useT } from '@/i18n/useTranslation';
-import { pickLang } from '@/i18n/pickLang';
-import { translateDynamic } from '@/utils/translateDynamic';
-import { CloudSyncSection } from '../components/CloudSyncSection';
 
 // ═══════════════════════════════════════════════════════════
 // أدوات
 // ═══════════════════════════════════════════════════════════
 
-// 🔢 يتبع زر تبديل الأرقام (عربي ٠١٢٣ ↔ لاتيني 0123) — الاسم محفوظ للتوافق
 function toArabicNumber(value: number | string): string {
-  return formatNumber(value, useNumberStyleStore.getState().style);
+  return String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 }
 
 interface ParsedSkillId {
@@ -69,11 +59,10 @@ function parseSkillId(skillId: string): ParsedSkillId | null {
   };
 }
 
-function getSkillLabel(skillId: string, lang: string): string {
+function getSkillLabel(skillId: string): string {
   const parsed = parseSkillId(skillId);
   if (!parsed) return skillId;
-  const arName = getModuleName(parsed.section, parsed.module);
-  return translateDynamic({ nameAr: arName, name: arName }, lang, 'name');
+  return getModuleName(parsed.section, parsed.module);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -131,7 +120,6 @@ function LevelNodeButton({
   level: LevelNodeData;
   index: number;
 }) {
-  const { lang } = useT();
   const isOdd = index % 2 === 1;
   const Icon =
     level.status === 'locked' ? Lock
@@ -158,16 +146,16 @@ function LevelNodeButton({
       </div>
       <div className="text-center max-w-[90px]">
         <p className={`text-xs sm:text-sm font-bold font-body ${level.status === 'locked' ? 'text-white/30' : 'text-white/80'}`}>
-          {pickLang({ ar: level.nameAr, en: level.nameEn }, lang)}
+          {level.nameAr}
         </p>
         {level.status === 'completed' && (
           <p className="text-[10px] text-emerald-300 font-body mt-0.5 font-bold">
-            {pickLang({ ar: '✓ مكتمل', en: '✓ Completed' }, lang)}
+            ✓ مكتمل
           </p>
         )}
         {level.status === 'available' && (
           <p className="text-[10px] text-purple-300 font-body mt-0.5 font-bold">
-            {pickLang({ ar: '🟣 متاح', en: '🟣 Available' }, lang)}
+            🟣 متاح
           </p>
         )}
       </div>
@@ -182,12 +170,10 @@ function LevelNodeButton({
 export function GuardianDashboard({
   onBack,
   playSound,
-  childName,
+  childName = 'البطل',
   onSwitchToHero,
   onShowWelcome,
 }: GuardianDashboardProps) {
-  const { lang, dir } = useT();
-  useNumberStyleStore((s) => s.style); // 🔢 إعادة الرسم عند تبديل نمط الأرقام
   // ═══ progressStore (SRB) ═══
   const storedName = useProgressStore((s) => s.childName);
   const totalXP = useProgressStore((s) => s.totalXP);
@@ -242,9 +228,7 @@ export function GuardianDashboard({
   }, [recentRemediation]);
 
   // ═══ اسم الطفل ═══
-  const rawName = storedName || childName || 'البطل';
-  const savedName = translateDynamic({ name: rawName }, lang, 'name');
-const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
+  const savedName = storedName || childName;
 
   // ═══ مشتقات ═══
   const totalLevelsCount = SRB_LEVELS.length;
@@ -293,15 +277,15 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
   // ═══ شارات الأنزان البصري — 7 شارات ═══
   const anzanBadgeList = useMemo(
     () => [
-      { id: 'master_addition', label: pickLang({ ar: 'خبير جمع وطرح', en: 'Addition Expert' }, lang), icon: '🧠', color: 'from-cyan-500 to-blue-700', earned: !!anzanBadges.master_addition },
-      { id: 'master_multiplication', label: pickLang({ ar: 'خبير ضرب', en: 'Multiplication Expert' }, lang), icon: '✖️', color: 'from-indigo-500 to-purple-700', earned: !!anzanBadges.master_multiplication },
-      { id: 'master_division', label: pickLang({ ar: 'خبير قسمة', en: 'Division Expert' }, lang), icon: '➗', color: 'from-blue-500 to-cyan-700', earned: !!anzanBadges.master_division },
-      { id: 'master_chains', label: pickLang({ ar: 'خبير سلاسل', en: 'Chains Expert' }, lang), icon: '🔗', color: 'from-teal-500 to-cyan-700', earned: !!anzanBadges.master_chains },
-      { id: 'master_advanced', label: pickLang({ ar: 'خبير المتقدم', en: 'Advanced Expert' }, lang), icon: '🎯', color: 'from-fuchsia-500 to-purple-700', earned: !!anzanBadges.master_advanced },
-      { id: 'master_decimals', label: pickLang({ ar: 'خبير العشريات', en: 'Decimals Expert' }, lang), icon: '🔢', color: 'from-rose-500 to-pink-700', earned: !!anzanBadges.master_decimals },
-      { id: 'master_roots', label: pickLang({ ar: 'خبير الجذور', en: 'Roots Expert' }, lang), icon: '√', color: 'from-slate-500 to-gray-700', earned: !!anzanBadges.master_roots },
+      { id: 'master_addition', label: 'خبير جمع وطرح', icon: '🧠', color: 'from-cyan-500 to-blue-700', earned: !!anzanBadges.master_addition },
+      { id: 'master_multiplication', label: 'خبير ضرب', icon: '✖️', color: 'from-indigo-500 to-purple-700', earned: !!anzanBadges.master_multiplication },
+      { id: 'master_division', label: 'خبير قسمة', icon: '➗', color: 'from-blue-500 to-cyan-700', earned: !!anzanBadges.master_division },
+      { id: 'master_chains', label: 'خبير سلاسل', icon: '🔗', color: 'from-teal-500 to-cyan-700', earned: !!anzanBadges.master_chains },
+      { id: 'master_advanced', label: 'خبير المتقدم', icon: '🎯', color: 'from-fuchsia-500 to-purple-700', earned: !!anzanBadges.master_advanced },
+      { id: 'master_decimals', label: 'خبير العشريات', icon: '🔢', color: 'from-rose-500 to-pink-700', earned: !!anzanBadges.master_decimals },
+      { id: 'master_roots', label: 'خبير الجذور', icon: '√', color: 'from-slate-500 to-gray-700', earned: !!anzanBadges.master_roots },
     ],
-    [anzanBadges, lang],
+    [anzanBadges],
   );
 
   const earnedAnzanCount = anzanBadgeList.filter((b) => b.earned).length;
@@ -309,15 +293,15 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
   // ═══ شارات الأنزان السمعي — 7 شارات ═══
   const audioAnzanBadgeList = useMemo(
     () => [
-      { id: 'master_addition_audio', label: pickLang({ ar: 'خبير جمع وطرح سماعي', en: 'Audio Addition Expert' }, lang), icon: '🎤', color: 'from-cyan-500 to-blue-700', earned: !!anzanAudioBadges.master_addition_audio },
-      { id: 'master_multiplication_audio', label: pickLang({ ar: 'خبير ضرب سماعي', en: 'Audio Multiplication Expert' }, lang), icon: '🎤', color: 'from-indigo-500 to-purple-700', earned: !!anzanAudioBadges.master_multiplication_audio },
-      { id: 'master_division_audio', label: pickLang({ ar: 'خبير قسمة سماعية', en: 'Audio Division Expert' }, lang), icon: '🎤', color: 'from-blue-500 to-cyan-700', earned: !!anzanAudioBadges.master_division_audio },
-      { id: 'master_chains_audio', label: pickLang({ ar: 'خبير سلاسل سماعي', en: 'Audio Chains Expert' }, lang), icon: '🎤', color: 'from-teal-500 to-cyan-700', earned: !!anzanAudioBadges.master_chains_audio },
-      { id: 'master_advanced_audio', label: pickLang({ ar: 'خبير المتقدم سماعي', en: 'Audio Advanced Expert' }, lang), icon: '🎤', color: 'from-fuchsia-500 to-purple-700', earned: !!anzanAudioBadges.master_advanced_audio },
-      { id: 'master_decimals_audio', label: pickLang({ ar: 'خبير العشريات سماعي', en: 'Audio Decimals Expert' }, lang), icon: '🎤', color: 'from-rose-500 to-pink-700', earned: !!anzanAudioBadges.master_decimals_audio },
-      { id: 'master_roots_audio', label: pickLang({ ar: 'خبير الجذور سماعي', en: 'Audio Roots Expert' }, lang), icon: '🎤', color: 'from-slate-500 to-gray-700', earned: !!anzanAudioBadges.master_roots_audio },
+      { id: 'master_addition_audio', label: 'خبير جمع وطرح سماعي', icon: '🎤', color: 'from-cyan-500 to-blue-700', earned: !!anzanAudioBadges.master_addition_audio },
+      { id: 'master_multiplication_audio', label: 'خبير ضرب سماعي', icon: '🎤', color: 'from-indigo-500 to-purple-700', earned: !!anzanAudioBadges.master_multiplication_audio },
+      { id: 'master_division_audio', label: 'خبير قسمة سماعية', icon: '🎤', color: 'from-blue-500 to-cyan-700', earned: !!anzanAudioBadges.master_division_audio },
+      { id: 'master_chains_audio', label: 'خبير سلاسل سماعي', icon: '🎤', color: 'from-teal-500 to-cyan-700', earned: !!anzanAudioBadges.master_chains_audio },
+      { id: 'master_advanced_audio', label: 'خبير المتقدم سماعي', icon: '🎤', color: 'from-fuchsia-500 to-purple-700', earned: !!anzanAudioBadges.master_advanced_audio },
+      { id: 'master_decimals_audio', label: 'خبير العشريات سماعي', icon: '🎤', color: 'from-rose-500 to-pink-700', earned: !!anzanAudioBadges.master_decimals_audio },
+      { id: 'master_roots_audio', label: 'خبير الجذور سماعي', icon: '🎤', color: 'from-slate-500 to-gray-700', earned: !!anzanAudioBadges.master_roots_audio },
     ],
-    [anzanAudioBadges, lang],
+    [anzanAudioBadges],
   );
 
   const earnedAudioCount = audioAnzanBadgeList.filter((b) => b.earned).length;
@@ -331,36 +315,12 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
     const listening = Math.min(100, Math.round((passedAnzanAudio.length / totalLevelsCount) * 100));
 
     return [
-      { 
-        id: 'concentration', 
-        name: pickLang({ ar: 'التركيز والانتباه', en: 'Concentration & Focus' }, lang), 
-        description: pickLang({ ar: 'قدرة الطفل على البقاء مركّزاً خلال الجلسات', en: 'Child ability to stay focused during sessions' }, lang), 
-        percentage: concentration, 
-        available: true 
-      },
-      { 
-        id: 'visualization', 
-        name: pickLang({ ar: 'التخيل والتصور', en: 'Visualization & Soroban' }, lang), 
-        description: pickLang({ ar: 'قدرة الطفل على تخيل المعداد في عقله (الأنزان)', en: 'Child ability to visualize the abacus in mind' }, lang), 
-        percentage: visualization, 
-        available: true 
-      },
-      { 
-        id: 'observation', 
-        name: pickLang({ ar: 'دقة الملاحظة', en: 'Observation Accuracy' }, lang), 
-        description: pickLang({ ar: 'قدرة الطفل على حل المسائل من المحاولة الأولى', en: 'Child ability to solve problems on first try' }, lang), 
-        percentage: observation, 
-        available: true 
-      },
-      { 
-        id: 'listening', 
-        name: pickLang({ ar: 'الاستماع والانتباه السمعي', en: 'Listening & Auditory Focus' }, lang), 
-        description: pickLang({ ar: 'قدرة الطفل على الحساب من خلال السماع', en: 'Child ability to calculate through listening' }, lang), 
-        percentage: listening, 
-        available: true 
-      },
+      { id: 'concentration', nameAr: 'التركيز والانتباه', descriptionAr: 'قدرة الطفل على البقاء مركّزاً خلال الجلسات', percentage: concentration, available: true },
+      { id: 'visualization', nameAr: 'التخيل والتصور', descriptionAr: 'قدرة الطفل على تخيل المعداد في عقله (الأنزان)', percentage: visualization, available: true },
+      { id: 'observation', nameAr: 'دقة الملاحظة', descriptionAr: 'قدرة الطفل على حل المسائل من المحاولة الأولى', percentage: observation, available: true },
+      { id: 'listening', nameAr: 'الاستماع والانتباه السمعي', descriptionAr: 'قدرة الطفل على الحساب من خلال السماع', percentage: listening, available: true },
     ];
-  }, [passedPractice, passedAnzanVisual, passedAnzanAudio, totalLevelsCount, observation, lang]);
+  }, [passedPractice, passedAnzanVisual, passedAnzanAudio, totalLevelsCount, observation]);
 
   // ═══ خارطة المستويات ═══
   const levelNodes: LevelNodeData[] = useMemo(
@@ -388,15 +348,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
   // ═══ نشاط الأسبوع ═══
   // ✅ [SURGICAL FIX] — جلب بيانات السجل اليومي الحقيقية ومطابقتها مع أيام الأسبوع
   const weeklyXP = useMemo(() => {
-    const days = [
-      pickLang({ ar: 'السبت', en: 'Sat' }, lang),
-      pickLang({ ar: 'الأحد', en: 'Sun' }, lang),
-      pickLang({ ar: 'الاثنين', en: 'Mon' }, lang),
-      pickLang({ ar: 'الثلاثاء', en: 'Tue' }, lang),
-      pickLang({ ar: 'الأربعاء', en: 'Wed' }, lang),
-      pickLang({ ar: 'الخميس', en: 'Thu' }, lang),
-      pickLang({ ar: 'الجمعة', en: 'Fri' }, lang),
-    ];
+    const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
     const today = new Date();
     const jsDay = today.getDay(); // 0 = الأحد، 6 = السبت
     const daysSinceSat = (jsDay + 1) % 7; 
@@ -413,16 +365,16 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
         xp: dailyXP[dateStr] || 0
       };
     });
-  }, [dailyXP, lang]);
+  }, [dailyXP]);
 
   const maxWeeklyXP = Math.max(...weeklyXP.map((d) => d.xp), 1);
 
   // ═══ الإحصائيات العلوية ═══
   const stats = [
-    { label: pickLang({ ar: 'نقاط الخبرة', en: 'XP Points' }, lang), labelEn: 'XP Points', value: toArabicNumber(totalXP), icon: Zap, gradient: 'from-gold-400 to-gold-600', glow: 'shadow-gold-500/30' },
-    { label: pickLang({ ar: 'المستوى', en: 'Level' }, lang), labelEn: 'Level', value: `L${childLevel}`, icon: Award, gradient: 'from-purple-500 to-purple-700', glow: 'shadow-purple-500/30' },
-    { label: pickLang({ ar: 'الأيام المتتالية', en: 'Day Streak' }, lang), labelEn: 'Day Streak', value: toArabicNumber(currentStreak), icon: TrendingUp, gradient: 'from-orange-500 to-red-500', glow: 'shadow-orange-500/30' },
-    { label: pickLang({ ar: 'المهارات المتقنة', en: 'Mastered' }, lang), labelEn: 'Mastered', value: toArabicNumber(masteryBadgesList.length), icon: Target, gradient: 'from-emerald2-500 to-emerald2-700', glow: 'shadow-emerald2-500/30' },
+    { label: 'نقاط الخبرة', labelEn: 'XP Points', value: toArabicNumber(totalXP), icon: Zap, gradient: 'from-gold-400 to-gold-600', glow: 'shadow-gold-500/30' },
+    { label: 'المستوى', labelEn: 'Level', value: `L${childLevel}`, icon: Award, gradient: 'from-purple-500 to-purple-700', glow: 'shadow-purple-500/30' },
+    { label: 'الأيام المتتالية', labelEn: 'Day Streak', value: toArabicNumber(currentStreak), icon: TrendingUp, gradient: 'from-orange-500 to-red-500', glow: 'shadow-orange-500/30' },
+    { label: 'المهارات المتقنة', labelEn: 'Mastered', value: toArabicNumber(masteryBadgesList.length), icon: Target, gradient: 'from-emerald2-500 to-emerald2-700', glow: 'shadow-emerald2-500/30' },
   ];
 
   // ═══ Refresh ═══
@@ -475,7 +427,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
       URL.revokeObjectURL(url);
       playSound('click');
     } catch (err) {
-      window.alert(pickLang({ ar: 'خطأ: ', en: 'Error: ' }, lang) + String(err));
+      window.alert('خطأ: ' + String(err));
     }
   };
 
@@ -493,7 +445,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
         playSound('click');
         setTimeout(() => window.location.reload(), 300);
       } catch (err) {
-        window.alert(pickLang({ ar: 'ملف غير صالح: ', en: 'Invalid file: ' }, lang) + String(err));
+        window.alert('ملف غير صالح: ' + String(err));
       }
     };
     reader.readAsText(file);
@@ -503,60 +455,58 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
   // JSX
   // ═══════════════════════════════════════════════════════════
   return (
-    <div className="px-3 sm:px-6 py-6 max-w-5xl mx-auto" dir={dir}>
+    <div className="px-3 sm:px-6 py-6 max-w-5xl mx-auto" dir="rtl">
       {/* ═══ رأس الصفحة ═══ */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
         <button onClick={() => { playSound('click'); onBack(); }} className="btn-ghost !px-3 !py-2">
           <ArrowRight className="w-5 h-5" />
-          <span className="hidden sm:inline">{pickLang({ ar: 'تبديل الدور', en: 'Switch Role' }, lang)}</span>
+          <span className="hidden sm:inline">تبديل الدور</span>
         </button>
 
         <button onClick={handleRefresh} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-500/15 border border-blue-400/30 text-blue-200 hover:bg-blue-500/25 transition-all text-sm font-body">
           <RefreshCw className="w-4 h-4" />
-          <span>{pickLang({ ar: 'تحديث الصفحة', en: 'Refresh Page' }, lang)}</span>
+          <span>تحديث الصفحة</span>
         </button>
 
         {onShowWelcome && (
           <button onClick={() => { playSound('click'); onShowWelcome(); }} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-200 hover:bg-amber-500/25 transition-all text-sm font-body">
             <PlayCircle className="w-4 h-4" />
-            <span>{pickLang({ ar: 'شاشة الترحيب', en: 'Welcome Screen' }, lang)}</span>
+            <span>شاشة الترحيب</span>
           </button>
         )}
 
         {onSwitchToHero && (
           <button onClick={() => { playSound('click'); onSwitchToHero(); }} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-purple-500/15 border border-purple-400/30 text-purple-200 hover:bg-purple-500/25 transition-all text-sm font-body">
             <Home className="w-4 h-4" />
-            <span>{pickLang({ ar: 'وضع البطل', en: 'Hero Mode' }, lang)}</span>
+            <span>وضع البطل</span>
           </button>
         )}
 
         <button type="button" onClick={handleBackup} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-blue-500/20 border border-blue-400/40 text-blue-100 hover:bg-blue-500/30 transition-all text-xs font-body">
           <Download className="w-4 h-4" />
-          <span>{pickLang({ ar: 'حفظ نسخة', en: 'Backup' }, lang)}</span>
+          <span>حفظ نسخة</span>
         </button>
 
         <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-body">
           <Upload className="w-4 h-4" />
-          <span>{pickLang({ ar: 'استعادة', en: 'Restore' }, lang)}</span>
+          <span>استعادة</span>
         </button>
 
         <input type="file" accept=".json" ref={fileInputRef} onChange={handleRestore} style={{ display: 'none' }} />
 
         <button type="button" onClick={handlePreviewToggle} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-bold font-body">
           <Unlock className="w-4 h-4" />
-          <span>{inPreview ? pickLang({ ar: '🚪 خروج من المعاينة', en: '🚪 Exit Preview' }, lang) : pickLang({ ar: '👁️ وضع المعاينة', en: '👁️ Preview Mode' }, lang)}</span>
+          <span>{inPreview ? '🚪 خروج من المعاينة' : '👁️ وضع المعاينة'}</span>
         </button>
 
         <button type="button" onClick={() => { playSound('click'); setShowResetConfirm(true); }} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-red-500/10 border border-red-400/30 text-red-300 hover:bg-red-500/20 transition-all text-xs font-body">
           <Trash2 className="w-4 h-4" />
-          <span>{pickLang({ ar: 'تصفير', en: 'Reset' }, lang)}</span>
+          <span>تصفير</span>
         </button>
 
         <div className="flex-1" />
-        <span className="text-[10px] text-white/40 font-body">{pickLang({ ar: 'SRB · محدّث آنياً', en: 'SRB · Real-time updated' }, lang)}</span>
+        <span className="text-[10px] text-white/40 font-body">SRB · محدّث آنياً</span>
       </div>
-<CloudStatus />
-<ChildSwitcher />
 
       {/* ═══ نظرة عامة على الطفل ═══ */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5 sm:p-6 mb-6 relative overflow-hidden">
@@ -569,16 +519,13 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="w-4 h-4 text-gold-300" />
-              <p className="text-xs text-gold-300 font-body font-bold">{pickLang({ ar: 'تقدم الطفل', en: "Child's Progress" }, lang)}</p>
+              <p className="text-xs text-gold-300 font-body font-bold">تقدم الطفل</p>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white truncate">{savedName}</h2>
-<p className="text-xs text-white/50 font-body mt-1">
-  {pickLang({ ar: 'ولي الأمر:', en: 'Guardian:' }, lang)} <span className="text-white/80">{parentName}</span>
-</p>
             {/* ✅ [SURGICAL FIX] — عرض L1 بدلاً من 1 */}
             <p className="text-sm text-emerald2-300 font-body mt-0.5">
-              {pickLang({ ar: 'مستوى ', en: 'Level ' }, lang)}{`L${childLevel}`} ·{' '}
-              {toArabicNumber(effectiveCompletedCount)}/{toArabicNumber(totalLevelsCount)} {pickLang({ ar: 'مستويات مكتملة', en: 'Levels completed' }, lang)}
+              مستوى {`L${childLevel}`} ·{' '}
+              {toArabicNumber(effectiveCompletedCount)}/{toArabicNumber(totalLevelsCount)} مستويات مكتملة
             </p>
           </div>
         </div>
@@ -597,8 +544,8 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
             <div className="relative p-6 sm:p-8">
               <div className="text-center">
                 <motion.div animate={{ y: [0, -10, 0], rotate: [0, 4, -4, 0] }} transition={{ duration: 4, repeat: Infinity }} className="inline-block text-6xl sm:text-7xl mb-4 drop-shadow-[0_0_25px_rgba(250,204,21,0.8)]">👑</motion.div>
-                <motion.h2 initial={{ opacity: 0, letterSpacing: '0.5em' }} animate={{ opacity: 1, letterSpacing: '0.15em' }} transition={{ delay: 0.4, duration: 0.8 }} className="text-3xl sm:text-4xl font-extrabold font-display text-gold-50 mb-3" style={{ textShadow: '0 0 30px rgba(250,204,21,0.6), 0 2px 10px rgba(0,0,0,0.5)' }}>{pickLang({ ar: 'أسطورة السوروبان', en: 'Soroban Legend' }, lang)}</motion.h2>
-                <p className="text-sm sm:text-base text-gold-100 font-body mb-5 leading-relaxed">{pickLang({ ar: '🎉 يا ', en: '🎉 Hey ' }, lang)}<strong>{savedName}</strong>{pickLang({ ar: '! أتممت جميع مستويات أكاديمية السوروبان', en: '! You have completed all levels of Soroban Academy' }, lang)}</p>
+                <motion.h2 initial={{ opacity: 0, letterSpacing: '0.5em' }} animate={{ opacity: 1, letterSpacing: '0.15em' }} transition={{ delay: 0.4, duration: 0.8 }} className="text-3xl sm:text-4xl font-extrabold font-display text-gold-50 mb-3" style={{ textShadow: '0 0 30px rgba(250,204,21,0.6), 0 2px 10px rgba(0,0,0,0.5)' }}>أسطورة السوروبان</motion.h2>
+                <p className="text-sm sm:text-base text-gold-100 font-body mb-5 leading-relaxed">🎉 يا <strong>{savedName}</strong>! أتممت جميع مستويات أكاديمية السوروبان</p>
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   <span className="px-4 py-2 rounded-2xl bg-gold-400/40 border border-gold-300/60 text-gold-50 text-sm font-bold flex items-center gap-2">🏆 {toArabicNumber(totalLevelsCount)}/{toArabicNumber(totalLevelsCount)}</span>
                   <span className="px-4 py-2 rounded-2xl bg-gold-400/40 border border-gold-300/60 text-gold-50 text-sm font-bold flex items-center gap-2">⭐ {toArabicNumber(totalXP)} XP</span>
@@ -630,13 +577,13 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Target className="w-5 h-5 text-emerald2-300" />
-          <h3 className="text-xl font-extrabold font-display text-white">{pickLang({ ar: 'المهارات', en: 'Skills' }, lang)}</h3>
+          <h3 className="text-xl font-extrabold font-display text-white">المهارات</h3>
         </div>
         <div className="space-y-4">
           {skills.map((skill, i) => (
             <motion.div key={skill.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 + i * 0.08 }}>
               <div className="flex items-center justify-between mb-1.5">
-                <p className="text-sm font-bold font-body text-white/80">{skill.name}</p>
+                <p className="text-sm font-bold font-body text-white/80">{skill.nameAr}</p>
                 <span className={`text-xs font-bold font-display ${skill.percentage >= 70 ? 'text-emerald2-300' : skill.percentage >= 40 ? 'text-gold-300' : 'text-red-300'}`}>
                   {toArabicNumber(skill.percentage)}٪
                 </span>
@@ -644,7 +591,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
               <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
                 <motion.div className={`h-full rounded-full ${skill.percentage >= 70 ? 'bg-gradient-to-r from-emerald2-400 to-emerald2-600' : skill.percentage >= 40 ? 'bg-gradient-to-r from-gold-400 to-gold-600' : 'bg-gradient-to-r from-red-400 to-red-600'}`} initial={{ width: 0 }} animate={{ width: `${skill.percentage}%` }} transition={{ delay: 0.35 + i * 0.08, duration: 0.8 }} />
               </div>
-              <p className="text-[10px] text-white/40 font-body mt-1.5">{skill.description}</p>
+              <p className="text-[10px] text-white/40 font-body mt-1.5">{skill.descriptionAr}</p>
             </motion.div>
           ))}
         </div>
@@ -655,7 +602,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-gold-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">{pickLang({ ar: '🎓 شارات إنجاز المستوى', en: '🎓 Level Achievement Badges' }, lang)}</h3>
+            <h3 className="text-xl font-extrabold font-display text-white">🎓 شارات إنجاز المستوى</h3>
           </div>
           <span className="badge bg-gold-400/15 border-gold-400/20 text-gold-200 text-xs">
             {toArabicNumber(earnedLevelBadges)}/{toArabicNumber(levelBadges.length)}
@@ -669,7 +616,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
                 <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${badge.earned ? `bg-gradient-to-br ${badge.gradient}` : 'bg-white/5'}`}>
                   {badge.earned ? <Icon className="w-7 h-7 text-white" /> : <LockBadge className="w-6 h-6 text-white/25" />}
                 </div>
-                <p className={`text-xs font-bold font-body text-center ${badge.earned ? 'text-white/80' : 'text-white/30'}`}>{pickLang({ ar: badge.label, en: badge.labelEn }, lang)}</p>
+                <p className={`text-xs font-bold font-body text-center ${badge.earned ? 'text-white/80' : 'text-white/30'}`}>{badge.label}</p>
                 <p className="text-[10px] text-white/40 font-body text-center leading-tight">{badge.labelEn}</p>
               </motion.div>
             );
@@ -682,7 +629,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5 text-gold-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">{pickLang({ ar: '🏅 شارات إتقان المهارات', en: '🏅 Skill Mastery Badges' }, lang)}</h3>
+            <h3 className="text-xl font-extrabold font-display text-white">🏅 شارات إتقان المهارات</h3>
           </div>
           <span className="badge bg-gold-400/15 border-gold-400/20 text-gold-200 text-xs">
             {toArabicNumber(masteryBadgesList.length)}
@@ -691,12 +638,12 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
 
         {masteryBadgesList.length === 0 ? (
           <p className="text-center text-white/40 font-body text-sm py-6">
-            {pickLang({ ar: '🏅 لم يتقن الطفل أي مهارة بعد — أكمل بزمن قياسي للحصول على شارة!', en: '🏅 The child has not mastered any skill yet — complete in record time to get a badge!' }, lang)}
+            🏅 لم يتقن الطفل أي مهارة بعد — أكمل بزمن قياسي للحصول على شارة!
           </p>
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
             {masteryBadgesList.map((badge) => {
-              const label = getSkillLabel(badge.skillId, lang);
+              const label = getSkillLabel(badge.skillId);
               const timeSec = Math.round(badge.bestTimeMs / 1000);
               return (
                 <motion.div
@@ -730,7 +677,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-purple-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">{pickLang({ ar: 'شارات الأنزان البصري', en: 'Visual Anzan Badges' }, lang)}</h3>
+            <h3 className="text-xl font-extrabold font-display text-white">شارات الأنزان البصري</h3>
           </div>
           <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-200 text-xs">
             {toArabicNumber(earnedAnzanCount)}/{toArabicNumber(anzanBadgeList.length)}
@@ -753,7 +700,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Volume2 className="w-5 h-5 text-purple-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">{pickLang({ ar: 'شارات الأنزان السماعي', en: 'Auditory Anzan Badges' }, lang)}</h3>
+            <h3 className="text-xl font-extrabold font-display text-white">شارات الأنزان السماعي</h3>
           </div>
           <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-200 text-xs">
             {toArabicNumber(earnedAudioCount)}/{toArabicNumber(audioAnzanBadgeList.length)}
@@ -777,31 +724,30 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Lightbulb className="w-5 h-5 text-amber-300" />
-              <h3 className="text-xl font-extrabold font-display text-white">{pickLang({ ar: '🩺 الجلسات العلاجية', en: '🩺 Remedial Sessions' }, lang)}</h3>
+              <h3 className="text-xl font-extrabold font-display text-white">🩺 الجلسات العلاجية</h3>
             </div>
             <span className="badge bg-amber-400/15 border-amber-400/20 text-amber-200 text-xs">
-              {toArabicNumber(remediationSummary.length)} {pickLang({ ar: 'مهارة', en: 'skills' }, lang)}
+              {toArabicNumber(remediationSummary.length)} مهارة
             </span>
           </div>
 
           <p className="text-xs text-white/50 font-body mb-4 leading-relaxed">
-            {pickLang({ ar: 'آخر ٧ أيام — المهارات التي خضع لها الطفل لجلسات علاجية', en: 'Last 7 days — Skills the child took remedial sessions for' }, lang)}
+            آخر ٧ أيام — المهارات التي خضع لها الطفل لجلسات علاجية
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {(showAllRemediation ? remediationSummary : remediationSummary.slice(0, 5)).map((item) => {
               const parsed = parseSkillId(item.skillId);
-              const rawLabel = parsed
+              const label = parsed
                 ? getModuleName(parsed.section, parsed.module)
                 : item.skillId;
-              const label = translateDynamic({ nameAr: rawLabel, name: rawLabel }, lang, 'name');
               const daysAgo = Math.floor(
                 (Date.now() - item.lastAt) / (24 * 60 * 60 * 1000),
               );
               const daysLabel =
-                daysAgo === 0 ? pickLang({ ar: 'اليوم', en: 'Today' }, lang)
-                : daysAgo === 1 ? pickLang({ ar: 'أمس', en: 'Yesterday' }, lang)
-                : pickLang({ ar: `منذ ${toArabicNumber(daysAgo)} أيام`, en: `${toArabicNumber(daysAgo)} days ago` }, lang);
+                daysAgo === 0 ? 'اليوم'
+                : daysAgo === 1 ? 'أمس'
+                : `منذ ${toArabicNumber(daysAgo)} أيام`;
 
               // 🎨 تلوين حسب التكرار
               const intensity = item.count >= 5 ? 'high' : item.count >= 3 ? 'mid' : 'low';
@@ -825,7 +771,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
                     <p className="text-xs font-bold text-white truncate" dir="ltr">{item.skillId}</p>
                     <p className="text-[10px] text-white/70 truncate">{label}</p>
                     <p className="text-[10px] text-white/50 mt-0.5">
-                      {daysLabel} · {toArabicNumber(item.count)} {pickLang({ ar: 'جلسة', en: 'session' }, lang)}
+                      {daysLabel} · {toArabicNumber(item.count)} جلسة
                     </p>
                   </div>
                 </motion.div>
@@ -840,8 +786,8 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
               className="mt-3 w-full py-2 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-200 text-xs font-bold hover:bg-amber-500/25 transition"
             >
               {showAllRemediation
-                ? pickLang({ ar: 'عرض أقل', en: 'Show Less' }, lang)
-                : pickLang({ ar: `عرض ${toArabicNumber(remediationSummary.length - 5)} أخرى`, en: `Show ${toArabicNumber(remediationSummary.length - 5)} more` }, lang)}
+                ? 'عرض أقل'
+                : `عرض ${toArabicNumber(remediationSummary.length - 5)} أخرى`}
             </button>
           )}
         </motion.div>
@@ -852,10 +798,10 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-300" />
-            <h3 className="text-xl font-extrabold font-display text-white">{pickLang({ ar: 'خارطة المستويات', en: 'Levels Map' }, lang)}</h3>
+            <h3 className="text-xl font-extrabold font-display text-white">خارطة المستويات</h3>
           </div>
           <span className="badge bg-purple-500/15 border-purple-400/20 text-purple-300 text-xs">
-            {toArabicNumber(effectiveCompletedCount)}/{toArabicNumber(totalLevelsCount)} {pickLang({ ar: 'مكتمل', en: 'completed' }, lang)}
+            {toArabicNumber(effectiveCompletedCount)}/{toArabicNumber(totalLevelsCount)} مكتمل
           </span>
         </div>
         <div className="relative overflow-x-auto scrollbar-hide pb-4">
@@ -872,7 +818,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center gap-2 mb-5">
           <BarChart3 className="w-5 h-5 text-electric-400" />
-          <h3 className="text-lg font-extrabold font-display text-white">{pickLang({ ar: 'نشاط الأسبوع', en: 'Weekly Activity' }, lang)}</h3>
+          <h3 className="text-lg font-extrabold font-display text-white">نشاط الأسبوع</h3>
         </div>
         <div className="flex items-end justify-between gap-2 sm:gap-3 h-40 mt-4">
           {weeklyXP.map((day, i) => {
@@ -901,39 +847,40 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }} className="glass-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="w-5 h-5 text-emerald2-400" />
-            <p className="text-sm text-white/60 font-body">{pickLang({ ar: 'تمارين ناجحة', en: 'Passed Exercises' }, lang)}</p>
+            <p className="text-sm text-white/60 font-body">تمارين ناجحة</p>
           </div>
           <p className="text-3xl font-extrabold font-display text-white">{toArabicNumber(passedPractice.length)}</p>
-          <p className="text-xs text-emerald2-300 font-body mt-1">{pickLang({ ar: 'من ', en: 'out of ' }, lang)}{toArabicNumber(totalLevelsCount)}</p>
+          <p className="text-xs text-emerald2-300 font-body mt-1">من {toArabicNumber(totalLevelsCount)}</p>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.55 }} className="glass-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <Eye className="w-5 h-5 text-electric-400" />
-            <p className="text-sm text-white/60 font-body">{pickLang({ ar: 'أنزان بصري ناجح', en: 'Passed Visual Anzan' }, lang)}</p>
+            <p className="text-sm text-white/60 font-body">أنزان بصري ناجح</p>
           </div>
           <p className="text-3xl font-extrabold font-display text-white">{toArabicNumber(passedAnzanVisual.length)}</p>
-          <p className="text-xs text-electric-300 font-body mt-1">{pickLang({ ar: 'من ', en: 'out of ' }, lang)}{toArabicNumber(totalLevelsCount)}</p>
+          <p className="text-xs text-electric-300 font-body mt-1">من {toArabicNumber(totalLevelsCount)}</p>
         </motion.div>
 
+        {/* 🆕 بطاقة الأنزان السمعي */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.58 }} className="glass-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <Volume2 className="w-5 h-5 text-rose-400" />
-            <p className="text-sm text-white/60 font-body">{pickLang({ ar: 'أنزان سمعي ناجح', en: 'Passed Auditory Anzan' }, lang)}</p>
+            <p className="text-sm text-white/60 font-body">أنزان سمعي ناجح</p>
           </div>
           <p className="text-3xl font-extrabold font-display text-white">{toArabicNumber(passedAnzanAudio.length)}</p>
-          <p className="text-xs text-rose-300 font-body mt-1">{pickLang({ ar: 'من ', en: 'out of ' }, lang)}{toArabicNumber(totalLevelsCount)}</p>
+          <p className="text-xs text-rose-300 font-body mt-1">من {toArabicNumber(totalLevelsCount)}</p>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.62 }} className="glass-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <Award className="w-5 h-5 text-gold-400" />
-            <p className="text-sm text-white/60 font-body">{pickLang({ ar: 'إجمالي الشارات', en: 'Total Badges' }, lang)}</p>
+            <p className="text-sm text-white/60 font-body">إجمالي الشارات</p>
           </div>
           <p className="text-3xl font-extrabold font-display text-white">
             {toArabicNumber(earnedLevelBadges + masteryBadgesList.length + earnedAnzanCount + earnedAudioCount)}
           </p>
-          <p className="text-xs text-gold-300 font-body mt-1">{pickLang({ ar: 'جميع الأنواع', en: 'All Types' }, lang)}</p>
+          <p className="text-xs text-gold-300 font-body mt-1">جميع الأنواع</p>
         </motion.div>
       </div>
 
@@ -941,7 +888,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }} className="glass-card p-5 sm:p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-extrabold font-display text-white">{pickLang({ ar: 'تقدم المستويات', en: 'Levels Progress' }, lang)}</h3>
+          <h3 className="text-lg font-extrabold font-display text-white">تقدم المستويات</h3>
         </div>
         <div className="space-y-2.5">
           {levelNodes.map((node, i) => {
@@ -949,7 +896,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
             return (
               <motion.div key={node.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.7 + i * 0.04 }} className="flex items-center gap-3">
                 <span className={`w-2 h-2 rounded-full shrink-0 ${node.status === 'completed' ? 'bg-emerald2-400' : node.status === 'available' ? 'bg-purple-400 animate-pulse' : 'bg-white/20'}`} />
-                <span className={`text-sm font-body w-28 sm:w-36 shrink-0 ${node.status === 'locked' ? 'text-white/30' : 'text-white/70'}`}>{pickLang({ ar: node.nameAr, en: node.nameEn }, lang)}</span>
+                <span className={`text-sm font-body w-28 sm:w-36 shrink-0 ${node.status === 'locked' ? 'text-white/30' : 'text-white/70'}`}>{node.nameAr}</span>
                 <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
                   <motion.div className={`h-full rounded-full ${node.status === 'completed' ? 'bg-gradient-to-r from-emerald2-400 to-emerald2-600' : node.status === 'available' ? 'bg-gradient-to-r from-purple-400 to-electric-500' : 'bg-white/10'}`} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.8 + i * 0.04, duration: 0.6 }} />
                 </div>
@@ -966,7 +913,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
           <div className="flex items-center gap-2">
             <Swords className="w-5 h-5 text-gold-300" />
             <h3 className="text-xl font-extrabold font-display text-white">
-              {pickLang({ ar: '⚔️ مغامرات ', en: "⚔️ Adventures of " }, lang)}{savedName}
+              ⚔️ مغامرات {savedName}
             </h3>
           </div>
           <span className="badge bg-gold-400/15 border-gold-400/20 text-gold-200 text-xs">
@@ -993,11 +940,9 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
                   <span className={`text-lg ${quest.earned ? '' : 'opacity-30 grayscale'}`}>{quest.icon}</span>
                 </div>
                 <p className={`text-[10px] font-bold font-body text-center leading-tight ${quest.earned ? 'text-gold-100' : 'text-white/60'}`}>
-                  {translateDynamic(quest, lang, 'title') || translateDynamic(quest, lang, 'name')}
+                  {quest.titleAr}
                 </p>
-                <p className="text-[9px] text-white/40 font-body text-center leading-tight line-clamp-2">
-                  {translateDynamic(quest, lang, 'description') || translateDynamic(quest, lang, 'desc')}
-                </p>
+                <p className="text-[9px] text-white/40 font-body text-center leading-tight line-clamp-2">{quest.descriptionAr}</p>
                 <div className="w-full mt-0.5">
                   <div className="h-1 rounded-full bg-white/10 overflow-hidden">
                     <motion.div
@@ -1020,7 +965,7 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
 
         {quests.length === 0 && (
           <p className="text-center text-white/40 font-body text-sm py-6">
-            {pickLang({ ar: 'لا توجد إنجازات بعد — ابدأ رحلة التعلم!', en: 'No achievements yet — start the learning journey!' }, lang)}
+            لا توجد إنجازات بعد — ابدأ رحلة التعلم!
           </p>
         )}
       </motion.div>
@@ -1029,27 +974,27 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
       <AnimatePresence>
         {showResetConfirm && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.85, opacity: 0, y: 30 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.85, opacity: 0, y: 30 }} transition={{ type: 'spring', stiffness: 250, damping: 25 }} className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-red-500/30 text-center" dir={dir}>
+            <motion.div initial={{ scale: 0.85, opacity: 0, y: 30 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.85, opacity: 0, y: 30 }} transition={{ type: 'spring', stiffness: 250, damping: 25 }} className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-red-500/30 text-center" dir="rtl">
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-500/20 border border-red-400/30 flex items-center justify-center">
                 <Trash2 className="w-8 h-8 text-red-300" />
               </div>
-              <h3 className="text-xl font-extrabold font-display text-white mb-2">{pickLang({ ar: 'تصفير التقدم؟', en: 'Reset Progress?' }, lang)}</h3>
+              <h3 className="text-xl font-extrabold font-display text-white mb-2">تصفير التقدم؟</h3>
               <p className="text-sm text-white/60 font-body mb-4 leading-relaxed">
-                {pickLang({ ar: 'سيتم حذف التقدم والبيانات القديمة.', en: 'Old progress and data will be deleted.' }, lang)}<br />
-                <span className="text-red-400 font-bold">{pickLang({ ar: 'يُرجى حفظ نسخة احتياطية قبل التصفير لضمان عدم ضياع تقدم الطفل.', en: 'Please save a backup before resetting to ensure child progress is not lost.' }, lang)}</span>
-              </p>
+  سيتم حذف التقدم والبيانات القديمة.<br />
+  <span className="text-red-400 font-bold">يُرجى حفظ نسخة احتياطية قبل التصفير لضمان عدم ضياع تقدم الطفل.</span>
+</p>
               <div className="mb-5 p-3 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-right">
                 <p className="text-xs text-amber-200 font-body leading-relaxed mb-3">
-                  💡 <strong>{pickLang({ ar: 'تنبيه:', en: 'Note:' }, lang)}</strong> {pickLang({ ar: 'يُنصح بحفظ نسخة احتياطية قبل التصفير.', en: 'It is recommended to save a backup before resetting.' }, lang)}
+                  💡 <strong>تنبيه:</strong> يُنصح بحفظ نسخة احتياطية قبل التصفير.
                 </p>
                 <button type="button" onClick={handleBackup} className="w-full py-2.5 rounded-xl bg-blue-500/25 border border-blue-400/50 text-blue-100 font-bold text-xs flex items-center justify-center gap-2 hover:bg-blue-500/35 transition">
                   <Download className="w-4 h-4" />
-                  {pickLang({ ar: 'حفظ نسخة احتياطية الآن', en: 'Save Backup Now' }, lang)}
+                  حفظ نسخة احتياطية الآن
                 </button>
               </div>
               <div className="flex gap-3">
-                <button type="button" onClick={handleReset} className="btn-primary flex-1 !bg-gradient-to-br !from-red-500 !to-red-700">{pickLang({ ar: 'نعم، صفّر', en: 'Yes, Reset' }, lang)}</button>
-                <button type="button" onClick={() => { playSound('click'); setShowResetConfirm(false); }} className="btn-ghost flex-1">{pickLang({ ar: 'إلغاء', en: 'Cancel' }, lang)}</button>
+                <button type="button" onClick={handleReset} className="btn-primary flex-1 !bg-gradient-to-br !from-red-500 !to-red-700">نعم، صفّر</button>
+                <button type="button" onClick={() => { playSound('click'); setShowResetConfirm(false); }} className="btn-ghost flex-1">إلغاء</button>
               </div>
             </motion.div>
           </motion.div>
