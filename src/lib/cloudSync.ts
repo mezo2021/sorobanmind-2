@@ -17,7 +17,16 @@ function extractPureState(state: ProgressState) {
 
 export const cloudSync = {
   async registerParent(email: string, password: string, parentName: string, childName: string) {
-    const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
+    const { data: authData, error: authError } = await supabase.auth.signUp({ 
+  email, 
+  password,
+  options: {
+    data: {
+      parent_name: parentName,
+      child_name: childName,
+    }
+  }
+});
     if (authError) throw new Error(authError.message);
     if (!authData.user) throw new Error('فشل إنشاء الحساب');
 
