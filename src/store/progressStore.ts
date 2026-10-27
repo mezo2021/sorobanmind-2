@@ -97,6 +97,8 @@ export const TICKETS_MAX = 5;
 // ═══ الحالة الكاملة ═══
 export interface ProgressState {
   childName: string;
+  childrenList: { id: string; name: string }[];
+  activeChildId: string | null;
   parentName: string;
   category: Category | null;
   categoryChosenAt: string | null;
@@ -130,6 +132,8 @@ export interface ProgressState {
   dailyXP: Record<string, number>; // 🆕 v11: سجل النقاط اليومية
 
   setChildName: (name: string) => void;
+  setChildrenList: (children: { id: string; name: string }[]) => void;
+  setActiveChild: (id: string) => void;
   setParentName: (name: string) => void;
   setCategory: (category: Category) => void;
   markLevelComplete: (levelId: LevelId) => void;
@@ -180,6 +184,8 @@ const EMPTY_GRADES: LevelGrades = {
 
 const initialState = {
   childName: "",
+  childrenList: [],
+  activeChildId: null,
   parentName: "",
   category: null as Category | null,
   categoryChosenAt: null as string | null,
@@ -249,6 +255,11 @@ export const useProgressStore = create<ProgressState>()(
       ...initialState,
 
       setChildName: (name) => set({ childName: name.trim() }),
+      setChildrenList: (children) => set({ childrenList: children }),
+      setActiveChild: (id) => {
+        const child = get().childrenList.find((c) => c.id === id);
+        set({ activeChildId: id, childName: child ? child.name : '' });
+      },
       setParentName: (name) => set({ parentName: name.trim() }),
 
       setCategory: (category) =>
