@@ -1,7 +1,7 @@
 // src/screens/RoleSelection.tsx
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages, Wrench, Cloud, Lock, KeyRound, X } from 'lucide-react';
+import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages, Wrench, Cloud, Lock, KeyRound, X, LogOut } from 'lucide-react';
 
 import { useT, useLangStore } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
@@ -39,14 +39,33 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
 
   useEffect(() => {
     cloudSync.getCurrentUser()
-      .then(u => setIsLoggedIn(!!u))
-      .catch(() => setIsLoggedIn(false))
+      .then(u => {
+        setIsLoggedIn(!!u);
+        if (!u) setShowAuth(true); // فتح نافذة التسجيل تلقائياً
+      })
+      .catch(() => {
+        setIsLoggedIn(false);
+        setShowAuth(true);
+      })
       .finally(() => setCheckingAuth(false));
   }, []);
 
+  // دالة تسجيل الخروج
+  const handleLogout = async () => {
+    playSound('click');
+    await cloudSync.logoutParent();
+    
+    // مسح الأسماء من المتجر والذاكرة المحلية
+    useProgressStore.getState().setChildName('');
+    useProgressStore.getState().setParentName('');
+    localStorage.removeItem(NAME_STORAGE_KEY);
+    
+    setIsLoggedIn(false);
+    setShowAuth(true); // إعادة فتح نافذة التسجيل
+  };
+
   const handleSelect = (role: Role) => {
     if (role === 'guardian') {
-      // Requires dev password
       playSound('click');
       setShowDevPassword(true);
       return;
@@ -121,7 +140,7 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   return (
     <div dir={dir} className="relative min-h-screen flex flex-col items-center justify-center px-3 sm:px-6 py-8 sm:py-12">
       
-      {/* Buttons - Wrench (dev), Cloud (account), Language */}
+      {/* أزرار المطور، الحساب/الخروج، واللغة */}
       <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-50 flex items-center gap-2">
         <button
           type="button"
@@ -132,22 +151,35 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           <Wrench className="w-4 h-4" />
         </button>
 
-        <button
-          type="button"
-          onClick={() => { playSound('click'); setShowAuth(true); }}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-white shadow-lg backdrop-blur-md transition"
-        >
-          <Cloud className="w-4 h-4 text-purple-300" />
-          <span className="text-xs font-bold">
-            {pickLang({ ar: 'حسابي', en: 'Account' }, lang)}
-          </span>
-        </button>
+        {/* زر الحساب أو الخروج */}
+        {isLoggedIn ? (
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-400/40 text-white shadow-lg backdrop-blur-md transition"
+          >
+            <LogOut className="w-4 h-4 text-red-300" />
+            <span className="text-xs font-bold">
+              {pickLang({ ar: 'خروج', en: 'Logout' }, lang)}
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => { playSound('click'); setShowAuth(true); }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-white shadow-lg backdrop-blur-md transition"
+          >
+            <Cloud className="w-4 h-4 text-purple-300" />
+            <span className="text-xs font-bold">
+              {pickLang({ ar: 'حسابي', en: 'Account' }, lang)}
+            </span>
+          </button>
+        )}
 
         <button
           type="button"
           onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 transition text-white shadow-lg backdrop-blur-md"
-          aria-label={pickLang({ ar: 'تبديل اللغة', en: 'Switch language' }, lang)}
         >
           <Languages className="w-4 h-4 text-white/80" />
           <span className="text-xs font-bold" dir="ltr">
@@ -158,7 +190,7 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         </button>
       </div>
 
-      {/* Title */}
+      {/* العنوان */}
       <motion.div initial={{ y: -30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 20 }} className="text-center mb-8 sm:mb-14 mt-8">
         <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }} className="inline-flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-[2rem] bg-gradient-to-br from-purple-500 to-electric-500 shadow-2xl shadow-purple-500/40 mb-5">
           <Brain className="w-14 h-14 sm:w-20 sm:h-20 text-white" />
@@ -167,15 +199,11 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         <p className="text-2xl sm:text-4xl text-white/90 font-body font-bold mb-3">
           {pickLang({ ar: 'أكاديمية السوروبان', en: 'Soroban Academy' }, lang)}
         </p>
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-base sm:text-xl text-white/60 mt-2 font-body max-w-md mx-auto leading-relaxed">
-          {pickLang({ ar: 'اختر شخصيتك وابدأ مغامرة الحساب الذهني', en: 'Choose your character and start the mental math adventure' }, lang)}
-        </motion.p>
       </motion.div>
 
-      {/* Cards */}
+      {/* البطاقات */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8 w-full max-w-5xl relative">
         
-        {/* Lock overlay */}
         {!isLoggedIn && (
           <div className="absolute inset-0 z-20 bg-black/40 backdrop-blur-[2px] rounded-3xl flex flex-col items-center justify-center border border-white/5">
             <Lock className="w-16 h-16 text-white/50 mb-4" />
@@ -229,7 +257,7 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           </div>
         </motion.button>
 
-        {/* Guardian - password protected */}
+        {/* Guardian */}
         <motion.button
           initial={{ x: 50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -280,8 +308,8 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         )}
 
         {showDevPassword && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="glass-card p-6 w-full max-w-sm relative">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-[#0c0c0e] p-6 w-full max-w-sm relative border border-amber-500/30 rounded-3xl shadow-2xl">
               <button onClick={() => { setShowDevPassword(false); setDevPassword(''); setDevPasswordError(false); }} className="absolute top-3 left-3 p-1.5 rounded-full bg-white/5 text-white/60 hover:text-white">
                 <X className="w-4 h-4" />
               </button>
