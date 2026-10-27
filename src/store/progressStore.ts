@@ -97,9 +97,6 @@ export const TICKETS_MAX = 5;
 // ═══ الحالة الكاملة ═══
 export interface ProgressState {
   childName: string;
-  childrenList: { id: string; name: string }[];
-  activeChildId: string | null;
-  parentName: string;
   category: Category | null;
   categoryChosenAt: string | null;
   completedLevels: LevelId[];
@@ -132,9 +129,6 @@ export interface ProgressState {
   dailyXP: Record<string, number>; // 🆕 v11: سجل النقاط اليومية
 
   setChildName: (name: string) => void;
-  setChildrenList: (children: { id: string; name: string }[]) => void;
-  setActiveChild: (id: string) => void;
-  setParentName: (name: string) => void;
   setCategory: (category: Category) => void;
   markLevelComplete: (levelId: LevelId) => void;
   markLessonCompleted: (lessonId: string) => void;
@@ -184,9 +178,6 @@ const EMPTY_GRADES: LevelGrades = {
 
 const initialState = {
   childName: "",
-  childrenList: [],
-  activeChildId: null,
-  parentName: "",
   category: null as Category | null,
   categoryChosenAt: null as string | null,
   completedLevels: [] as LevelId[],
@@ -255,12 +246,6 @@ export const useProgressStore = create<ProgressState>()(
       ...initialState,
 
       setChildName: (name) => set({ childName: name.trim() }),
-      setChildrenList: (children) => set({ childrenList: children }),
-      setActiveChild: (id) => {
-        const child = get().childrenList.find((c) => c.id === id);
-        set({ activeChildId: id, childName: child ? child.name : '' });
-      },
-      setParentName: (name) => set({ parentName: name.trim() }),
 
       setCategory: (category) =>
         set({ category, categoryChosenAt: new Date().toISOString() }),
@@ -526,7 +511,6 @@ export const useProgressStore = create<ProgressState>()(
           return applyLevelIdMigration({
             ...initialState,
             childName: (old.childName as string) || "",
-            parentName: (old.parentName as string) || "",
             skillProgress: (old.skillProgress as Record<string, SkillProgress>) || {},
             levelExams: (old.levelExams as Record<string, ExamResult>) || {},
             totalXP: (old.xp as number) || (old.totalXP as number) || 0,
@@ -534,7 +518,7 @@ export const useProgressStore = create<ProgressState>()(
             lastPlayedDate: (old.lastPlayedDate as string) || null,
             completedLevels: (old.completedLevels as LevelId[]) || [],
               completedLessons: [] as string[],
-} as unknown as ProgressState);
+} as ProgressState);
         }
 
         if (version < 4) {
@@ -542,7 +526,7 @@ export const useProgressStore = create<ProgressState>()(
             ...initialState,
             ...old,
             completedLessons: (old.completedLessons as string[]) || [],
-          } as unknown as ProgressState);
+          } as ProgressState);
         }
 
         if (version < 5) {
@@ -552,7 +536,7 @@ export const useProgressStore = create<ProgressState>()(
             grades: (old.grades as Record<string, LevelGrades>) || {},
             pendingRemediation: (old.pendingRemediation as PendingRemediation | null) || null,
             remediationHistory: (old.remediationHistory as RemediationSession[]) || [],
-          } as unknown as ProgressState);
+          } as ProgressState);
         }
 
         if (version < 6 || version < 7 || version < 8 || version < 9) {
@@ -564,7 +548,7 @@ export const useProgressStore = create<ProgressState>()(
             ...old,
             ticketXP: existingTicketXP > 0 ? existingTicketXP : Math.min(TICKET_XP_CAP, oldTotalXP),
             tickets: existingTickets,
-          } as unknown as ProgressState);
+          } as ProgressState);
         }
 
         if (version < 10) {
@@ -579,7 +563,7 @@ export const useProgressStore = create<ProgressState>()(
             ...old,
             skillProgress: upgraded,
             stats: (old.stats as ProgressStats) || { totalAttempts: 0, totalCorrect: 0 },
-          } as unknown as ProgressState);
+          } as ProgressState);
         }
 
         if (version < 11) {
@@ -587,7 +571,7 @@ export const useProgressStore = create<ProgressState>()(
             ...initialState,
             ...old,
             dailyXP: (old.dailyXP as Record<string, number>) || {},
-          } as unknown as ProgressState);
+          } as ProgressState);
         }
 
         // المسار الأخير: v11 → v12 (حالة مصطفى)
