@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 
 import { useQuests } from '../hooks/useQuests';
+import { ... LogOut ... } from 'lucide-react';
+import { cloudSync } from '../lib/cloudSync';
 
 import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
 import { useMasteryBadgesStore } from '../store/masteryBadgesStore';
@@ -567,6 +569,9 @@ const parentName = useProgressStore((s) => s.parentName) || 'ولي الأمر';
               <p className="text-xs text-gold-300 font-body font-bold">{pickLang({ ar: 'تقدم الطفل', en: "Child's Progress" }, lang)}</p>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white truncate">{savedName}</h2>
+<p className="text-xs text-white/50 font-body mt-1">
+  {pickLang({ ar: 'ولي الأمر:', en: 'Guardian:' }, lang)} <span className="text-white/80">{parentName}</span>
+</p>
             {/* ✅ [SURGICAL FIX] — عرض L1 بدلاً من 1 */}
             <p className="text-sm text-emerald2-300 font-body mt-0.5">
               {pickLang({ ar: 'مستوى ', en: 'Level ' }, lang)}{`L${childLevel}`} ·{' '}
