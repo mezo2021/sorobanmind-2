@@ -211,8 +211,8 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
             <X className="w-5 h-5" />
           </button>
 
-          {/* 👩‍🏫 شخصية سوروبانا الترحيبية في أعلى النافذة */}
-          <div className="flex items-center gap-3 mb-5 px-2 relative z-10">
+          {/* 👩‍🏫 شخصية سوروبانا الترحيبية في أعلى النافذة (متوافقة مع اتجاه اللغة ديناميكياً) */}
+          <div className={`flex items-center gap-3 mb-5 px-2 relative z-10 ${dir === 'ltr' ? 'flex-row-reverse' : 'flex-row'}`}>
             <motion.div 
               className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-purple-500/20 border border-amber-500/30 flex items-center justify-center overflow-hidden shrink-0 shadow-lg shadow-amber-500/5"
               animate={{ y: [0, -3, 0] }}
@@ -227,7 +227,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
             </motion.div>
             
             <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-3.5 py-2 relative backdrop-blur-sm">
-              <p className="text-xs text-white/90 font-body leading-relaxed">
+              <p className={`text-xs text-white/90 font-body leading-relaxed ${dir === 'ltr' ? 'text-left' : 'text-right'}`}>
                 {isRegister
                   ? pickLang({ ar: 'أهلاً بك! أنشئ حسابك لنبدأ رحلة الإبداع في السوروبان معاً.', en: 'Welcome! Create your account to start Soroban together.' }, lang)
                   : pickLang({ ar: 'مرحباً مجدداً! جاهز لتحطيم أرقام قياسية جديدة اليوم؟', en: 'Welcome back! Ready to break new records today?' }, lang)}
