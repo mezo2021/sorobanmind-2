@@ -205,14 +205,14 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-4 left-4 rtl:left-auto rtl:right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition z-20 border border-white/5"
+            className="absolute top-4 left-4 rtl:left-auto rtl:right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition z-30 border border-white/5 backdrop-blur-md"
             aria-label="إغلاق"
           >
             <X className="w-5 h-5" />
           </button>
 
-          {/* 👩‍🏫 شخصية سوروبانا الترحيبية في أعلى النافذة (متوافقة مع اتجاه اللغة ديناميكياً) */}
-          <div className={`flex items-center gap-3 mb-5 px-2 relative z-10 ${dir === 'ltr' ? 'flex-row-reverse' : 'flex-row'}`}>
+          {/* 👩‍🏫 شخصية سوروبانا الترحيبية (تمت إضافة مسافة علوية لمنع التداخل) */}
+          <div className={`flex items-center gap-3 mb-5 mt-6 px-2 relative z-10 ${dir === 'ltr' ? 'flex-row-reverse' : 'flex-row'}`}>
             <motion.div 
               className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-purple-500/20 border border-amber-500/30 flex items-center justify-center overflow-hidden shrink-0 shadow-lg shadow-amber-500/5"
               animate={{ y: [0, -3, 0] }}
