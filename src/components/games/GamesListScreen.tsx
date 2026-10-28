@@ -15,6 +15,7 @@ import { HighScoreBadge } from './HighScoreBadge';
 import { useProgressStore, TICKET_COST } from '../../store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
 import { Num } from '@/components/Num';
+import { gt, useGameLang } from './gamesI18n';
 
 interface GamesListScreenProps {
   onBack: () => void;
@@ -25,6 +26,7 @@ type ActiveView =
   | null;
 
 export function GamesListScreen({ onBack }: GamesListScreenProps) {
+  const { dir, isAr } = useGameLang();
   const [active, setActive] = useState<ActiveView>(null);
   const [preview, setPreview] = useState(false);
 
@@ -68,21 +70,21 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
 
     return (
       <div
-        dir="rtl"
+        dir={dir}
         className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6"
       >
         <h2 className="text-2xl font-black text-amber-300 mb-4">
-          🚧 قيد التطوير
+          🚧 {gt('قيد التطوير')}
         </h2>
         <p className="text-slate-400 mb-8 text-center">
-          هذه اللعبة ستُضاف في الجلسة القادمة
+          {gt('هذه اللعبة ستُضاف في الجلسة القادمة')}
         </p>
         <button
           onClick={() => setActive(null)}
           className="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-xl font-bold transition active:scale-95"
           style={{ touchAction: 'manipulation' }}
         >
-          ← العودة للألعاب
+          ← {gt('العودة للألعاب')}
         </button>
       </div>
     );
@@ -90,7 +92,7 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
 
   return (
     <div
-      dir="rtl"
+      dir={dir}
       className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white pb-10"
     >
       <div className="flex items-center gap-3 p-4 sticky top-0 z-20 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
@@ -98,21 +100,21 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
           onClick={onBack}
           className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0"
           style={{ touchAction: 'manipulation' }}
-          aria-label="رجوع"
+          aria-label={gt('رجوع')}
         >
-          <ArrowRight className="w-6 h-6" />
+          <ArrowRight className={`w-6 h-6 ${isAr ? '' : 'rotate-180'}`} />
         </button>
         <div className="flex-1">
           <h1 className="text-lg sm:text-2xl font-bold text-amber-300 flex items-center gap-2">
-            <Sparkles className="w-5 h-5" /> مَدِينَةُ الأَلْعَابِ
+            <Sparkles className="w-5 h-5" /> {gt('مَدِينَةُ الأَلْعَابِ')}
           </h1>
-          <p className="text-xs text-white/60 mt-0.5">العب · تعلّم · استمتع</p>
+          <p className="text-xs text-white/60 mt-0.5">{gt('العب')} · {gt('تعلّم')} · {gt('استمتع')}</p>
         </div>
 
         {preview && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-200 text-xs font-bold">
             <Eye className="w-4 h-4" />
-            <span>معاينة</span>
+            <span>{gt('معاينة')}</span>
           </div>
         )}
       </div>
@@ -137,11 +139,11 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
             <div className="flex items-center justify-center gap-2 text-amber-200">
               <Eye className="w-5 h-5" />
               <span className="text-sm font-bold">
-                وضع المعاينة الكاملة مُفعَّل
+                {gt('وضع المعاينة الكاملة مُفعَّل')}
               </span>
             </div>
             <p className="text-xs text-amber-300/70 mt-1">
-              جميع الألعاب مفتوحة · بلا تذاكر · بلا XP
+              {gt('جميع الألعاب مفتوحة')} · {gt('بلا تذاكر')} · {gt('بلا')} XP
             </p>
           </motion.div>
         )}
@@ -178,10 +180,10 @@ function TicketMachine({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Ticket className="w-5 h-5 text-amber-400" />
-          <span className="text-sm font-bold text-white">تَذَاكِرُك</span>
+          <span className="text-sm font-bold text-white">{gt('تَذَاكِرُك')}</span>
         </div>
         <span className="text-xs text-white/50">
-          🪙 مَحْفَظَةُ النِّقَاط: <span className="tabular-nums" dir="ltr"><Num>{ticketXP}</Num></span>
+          🪙 {gt('مَحْفَظَةُ النِّقَاط')}: <span className="tabular-nums" dir="ltr"><Num>{ticketXP}</Num></span>
         </span>
       </div>
 
@@ -195,7 +197,7 @@ function TicketMachine({
             🎟️
           </motion.div>
           <span className="text-emerald-400 font-bold text-lg">
-            لَدَيْكَ تَذْكِرَة · اخْتَرْ لُعْبَة!
+            {gt('لَدَيْكَ تَذْكِرَة')} · {gt('اخْتَرْ لُعْبَة!')}
           </span>
         </div>
       )}
@@ -216,7 +218,7 @@ function TicketMachine({
             style={{ touchAction: 'manipulation' }}
           >
             <Ticket className="w-5 h-5" />
-            🎟️ اشْتَرِ تَذْكِرَة بِـ 10 XP
+            🎟️ {gt('اشْتَرِ تَذْكِرَة بِـ')} 10 XP
           </button>
         </div>
       )}
@@ -224,7 +226,7 @@ function TicketMachine({
       {!hasTicket && !canBuy && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-white/60">
-            <span>التَّقَدُّمُ نَحْوَ التَّذْكِرَة</span>
+            <span>{gt('التَّقَدُّمُ نَحْوَ التَّذْكِرَة')}</span>
             <span className="font-bold text-amber-300 tabular-nums" dir="ltr">
               <Num>{ticketXP} / {TICKET_COST}</Num>
             </span>
@@ -238,7 +240,7 @@ function TicketMachine({
             />
           </div>
           <p className="text-xs text-emerald-300/80 text-center pt-1 font-bold">
-            📚 اِذْهَبْ إِلَى دُرُوسِك · اجْمَعْ {TICKET_COST - ticketXP} نِقَاط · وَعُدْ
+            📚 {gt('اِذْهَبْ إِلَى دُرُوسِك')} · {gt('اجْمَعْ')} <Num>{TICKET_COST - ticketXP}</Num> {gt('نِقَاط')} · {gt('وَعُدْ')}
           </p>
         </div>
       )}
@@ -276,18 +278,18 @@ function GameCard({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm sm:text-base font-bold text-white truncate">
-            {game.title}
+            {gt(game.title)}
           </p>
           <p className="text-xs text-white/50 mt-0.5 truncate">
-            {game.subtitle}
+            {gt(game.subtitle)}
           </p>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
             <p className="text-[10px] text-amber-300/80">
-              ⏱️ {game.duration}
+              ⏱️ {gt(game.duration)}
             </p>
             {isBuilding ? (
               <span className="text-[10px] text-amber-300/70 font-bold">
-                🚧 قيد التطوير
+                🚧 {gt('قيد التطوير')}
               </span>
             ) : (
               <HighScoreBadge gameId={game.id} variant="compact" />
@@ -303,7 +305,7 @@ function GameCard({
               : 'bg-white/5 text-white/30 cursor-not-allowed'
           }`}
           style={{ touchAction: 'manipulation' }}
-          aria-label={isBuilding ? 'قيد التطوير' : 'ابدأ اللعبة'}
+          aria-label={isBuilding ? gt('قيد التطوير') : gt('ابدأ اللعبة')}
         >
           {canOpen ? (
             <Play className="w-5 h-5 fill-white text-white" />
