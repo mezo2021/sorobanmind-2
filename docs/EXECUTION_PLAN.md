@@ -1,4 +1,4 @@
-```markdown
+
 # 🎯 خطة التنفيذ والحالة الفعلية — SorobanMind v2 (الإصدار rev.8)
 
 ![الحالة](https://img.shields.io/badge/الحالة-مستقر-00c853?style=flat-square) ![البناء](https://img.shields.io/badge/البناء-أخضر-00c853?style=flat-square) ![الحزمة](https://img.shields.io/badge/الحزمة-445KB-2962ff?style=flat-square) ![LevelId](https://img.shields.io/badge/LevelId-v12-ff6d00?style=flat-square) ![Supabase](https://img.shields.io/badge/Supabase-Active-3ecf8e?style=flat-square)
