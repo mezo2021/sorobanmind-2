@@ -22,6 +22,7 @@ import {
 } from './highScoreStore';
 import { useEffect, useState } from 'react';
 import { Num } from '@/components/Num';
+import { gt, useGameLang } from './gamesI18n';
 
 // ═══ الأنواع ═══
 interface HighScoreBadgeProps {
@@ -76,13 +77,13 @@ function FullBadge({ gameId }: { gameId: string }) {
       >
         <Trophy className="w-6 h-6 text-amber-300/60 mx-auto mb-2" />
         <p className="text-sm font-bold text-amber-200">
-          🏆 كُنِ الأَوَّل!
+          🏆 {gt('كُنِ الأَوَّل!')}
         </p>
         <p className="text-[10px] text-white/50 mt-1">
-          لا يوجد رقم قياسي بعد
+          {gt('لا يوجد رقم قياسي بعد')}
         </p>
         <p className="text-[10px] text-white/30 mt-0.5">
-          📅 سِجِلُّ {monthLabel}
+          📅 {gt('سِجِلُّ')} {gt(monthLabel)}
         </p>
       </motion.div>
     );
@@ -102,10 +103,10 @@ function FullBadge({ gameId }: { gameId: string }) {
       <div className="flex items-center justify-center gap-1.5 mb-3">
         <Trophy className="w-5 h-5 text-amber-400" />
         <span className="text-xs font-bold text-amber-200">
-          الرَّقَمُ القِيَاسِيُّ
+          {gt('الرَّقَمُ القِيَاسِيُّ')}
         </span>
         <span className="text-[10px] text-white/40 mr-1">
-          · {monthLabel}
+          · {gt(monthLabel)}
         </span>
       </div>
 
@@ -124,10 +125,10 @@ function FullBadge({ gameId }: { gameId: string }) {
 
       <div className="text-center mb-3">
         <p className="text-sm font-bold text-white">
-          {top.name}
+          {gt(top.name)}
         </p>
         <p className="text-[10px] text-white/40">
-          <Num>{formatRecordAge(top.date)}</Num>
+          <Num>{gt(formatRecordAge(top.date))}</Num>
         </p>
       </div>
 
@@ -144,7 +145,7 @@ function FullBadge({ gameId }: { gameId: string }) {
                 <div className="flex items-center gap-1.5 min-w-0">
                   <RankIcon rank={idx + 1} />
                   <span className="text-white/70 truncate">
-                    {entry.name}
+                    {gt(entry.name)}
                   </span>
                 </div>
                 <span className="font-bold text-white/60 tabular-nums shrink-0">
@@ -164,6 +165,7 @@ export function HighScoreBadge({
   gameId,
   variant = 'full',
 }: HighScoreBadgeProps) {
+  useGameLang(); // 🌐 إعادة الرسم عند تبديل اللغة
   if (variant === 'compact') {
     return <CompactBadge gameId={gameId} />;
   }
