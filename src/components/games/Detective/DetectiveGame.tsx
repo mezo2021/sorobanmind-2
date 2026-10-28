@@ -11,7 +11,8 @@ import { GameCompanion, type HeroMood } from '../GameCompanion';
 import { HighScoreBadge } from '../HighScoreBadge';
 import { addScore, getHighScore, type HighScoreEntry } from '../highScoreStore';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
-import { useCharacterVoice } from '@/hooks/useCharacterVoice';
+import { useGameVoice } from '@/hooks/useGameVoice';
+import { gt, useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
 import type { CharacterType } from '@/types';
 import { Num } from '@/components/Num';
@@ -126,8 +127,8 @@ function pickUniquePhrase(phrases: string[], used: Set<string>): string {
 }
 
 function readChildName(): string {
-  if (typeof window === 'undefined') return 'بطل';
-  try { return useProgressStore.getState().childName?.trim() || 'بطل'; } catch { return 'بطل'; }
+  if (typeof window === 'undefined') return gt('بطل');
+  try { return useProgressStore.getState().childName?.trim() || gt('بطل'); } catch { return gt('بطل'); }
 }
 
 function getDetectiveTitle(solvedCount: number): string {
@@ -150,7 +151,8 @@ interface ActiveProblem extends ProblemTemplate {
 }
 
 export function DetectiveGame({ onBack }: { onBack: () => void }) {
-  const { speak } = useCharacterVoice(HERO_ID);
+  const { dir, isAr } = useGameLang();
+  const { speak } = useGameVoice(HERO_ID);
   const addXP = useProgressStore((s) => s.addXP);
 
   const [sessionTimeLeft, setSessionTimeLeft] = useState(SESSION_SECONDS);
@@ -266,10 +268,10 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
     if (recordResult.isNewRecord) {
       setIsNewRecord(true);
       setPreviousHigh(recordResult.previousTop);
-      speak('رَقَمٌ قِيَاسِيٌّ جَدِيدٌ لِلْمُحَقِّقِ!');
+      speak(gt('رَقَمٌ قِيَاسِيٌّ جَدِيدٌ لِلْمُحَقِّقِ!'));
     } else {
       setIsNewRecord(false);
-      const endMsg = solvedCasesCount >= 8 ? 'أَدَاءٌ تَحْلِيلِيٌّ بَاهِرٌ!' : 'مُحَاوَلَةٌ طَيِّبَةٌ يَا شَرِيكِي!';
+      const endMsg = solvedCasesCount >= 8 ? gt('أَدَاءٌ تَحْلِيلِيٌّ بَاهِرٌ!') : gt('مُحَاوَلَةٌ طَيِّبَةٌ يَا شَرِيكِي!');
       setHeroText(endMsg);
       speak(endMsg);
     }
@@ -293,7 +295,7 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
     setHeroMood('excited');
 
     const startMsg = pickUniquePhrase(JOUD_START_PHRASES, usedPhrasesRef.current);
-    const greetMsg = `أهلاً ${childName}! ${startMsg}`;
+    const greetMsg = `${gt('أهلاً')} ${childName}! ${gt(startMsg)}`;
     setHeroText(greetMsg);
     speak(greetMsg);
     vibrate(50);
@@ -336,7 +338,7 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
       setSameProblemErrors(newErrorCount);
 
       if (newErrorCount >= 3) {
-        const skipMsg = 'لا بَأْسَ! انْتَقِلْ لِلْقَضِيَّةِ القَادِمَةِ!';
+        const skipMsg = gt('لا بَأْسَ! انْتَقِلْ لِلْقَضِيَّةِ القَادِمَةِ!');
         setHeroText(skipMsg);
         speak(skipMsg);
 
@@ -346,7 +348,7 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
       } else {
         const errorMsg = pickUniquePhrase(JOUD_ERROR_PHRASES, usedPhrasesRef.current);
         setHeroText(errorMsg);
-        setActiveHint(`💡 تَلْمِيحٌ: ${currentProblem.hint}`);
+        setActiveHint(`💡 ${gt('تَلْمِيحٌ')}: ${gt(currentProblem.hint)}`);
 
         addTimeout(() => {
           setIsCheckSuccess(null);
@@ -371,17 +373,17 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
 
   const getRuleBadge = (category: string) => {
     switch (category) {
-      case 'direct': return { label: 'بَسِيطٌ 🟢', style: 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300' };
-      case 'friends5': return { label: 'أَصْدِقَاءُ 5 🟡', style: 'bg-amber-950/80 border-amber-500/50 text-amber-300' };
-      case 'friends10': return { label: 'أَصْدِقَاءُ 10 🟠', style: 'bg-orange-950/80 border-orange-500/50 text-orange-300' };
-      case 'combined': return { label: 'مُرَكَّبٌ 🔴', style: 'bg-rose-950/80 border-rose-500/50 text-rose-300' };
-      default: return { label: 'قَاعِدَةٌ 🔵', style: 'bg-sky-950/80 border-sky-500/50 text-sky-300' };
+      case 'direct': return { label: gt('بَسِيطٌ 🟢'), style: 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300' };
+      case 'friends5': return { label: gt('أَصْدِقَاءُ 5 🟡'), style: 'bg-amber-950/80 border-amber-500/50 text-amber-300' };
+      case 'friends10': return { label: gt('أَصْدِقَاءُ 10 🟠'), style: 'bg-orange-950/80 border-orange-500/50 text-orange-300' };
+      case 'combined': return { label: gt('مُرَكَّبٌ 🔴'), style: 'bg-rose-950/80 border-rose-500/50 text-rose-300' };
+      default: return { label: gt('قَاعِدَةٌ 🔵'), style: 'bg-sky-950/80 border-sky-500/50 text-sky-300' };
     }
   };
 
   return (
     <div
-      dir="rtl"
+      dir={dir}
       className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950 text-white flex flex-col select-none font-sans"
       style={{ touchAction: 'manipulation' }}
     >
@@ -390,13 +392,13 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
           onClick={onBack}
           className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0"
           style={{ touchAction: 'manipulation' }}
-          aria-label="رجوع"
+          aria-label={gt('رجوع')}
         >
-          <ArrowRight className="w-6 h-6 text-sky-400" />
+          <ArrowRight className={`w-6 h-6 text-sky-400 ${isAr ? '' : 'rotate-180'}`} />
         </button>
 
         <div className="flex-1 flex justify-center">
-          <GameCompanion heroId={HERO_ID} mood={heroMood} customText={heroText} />
+          <GameCompanion heroId={HERO_ID} mood={heroMood} customText={gt(heroText)} />
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -421,10 +423,10 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
               🔍
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-sky-400 text-center">
-              المُحَقِّقُ الرقمي
+              {gt('المُحَقِّقُ الرقمي')}
             </h1>
             <p className="text-slate-400 text-sm sm:text-base max-w-xs text-center leading-relaxed">
-              اكْتَشِفِ الخَطَأَ فِي المِعْدَادِ وَأَصْلِحْ الخَرَزَاتِ لِإِغْلَاقِ القَضِيَّةِ!
+              {gt('اكْتَشِفِ الخَطَأَ فِي المِعْدَادِ وَأَصْلِحْ الخَرَزَاتِ لِإِغْلَاقِ القَضِيَّةِ!')}
             </p>
           </motion.div>
 
@@ -438,7 +440,7 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
             className="w-full max-w-xs bg-gradient-to-l from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xl py-4 rounded-2xl shadow-xl shadow-sky-500/30 active:scale-95 transition"
             style={{ touchAction: 'manipulation' }}
           >
-            ▶️ ابْدَأِ التَّحْقِيقَ
+            ▶️ {gt('ابْدَأِ التَّحْقِيقَ')}
           </motion.button>
         </div>
       )}
@@ -454,7 +456,7 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
             <div className="flex justify-between items-center w-full">
               <div className="flex items-center gap-1.5 text-sky-400 text-xs font-bold">
                 <Search className="w-4 h-4" />
-                <span>مَلَفُّ القَضِيَّةِ</span>
+                <span>{gt('مَلَفُّ القَضِيَّةِ')}</span>
               </div>
               <div className={`px-2.5 py-1 rounded-full border text-[11px] font-extrabold ${getRuleBadge(currentProblem.ruleCategory).style}`}>
                 {getRuleBadge(currentProblem.ruleCategory).label}
@@ -519,17 +521,17 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
               {isCheckSuccess === true ? (
                 <>
                   <CheckCircle2 className="w-6 h-6 text-white" />
-                  <span>تمَّ إِغْلَاقُ المَلَفِّ بِنَجَاحٍ!</span>
+                  <span>{gt('تمَّ إِغْلَاقُ المَلَفِّ بِنَجَاحٍ!')}</span>
                 </>
               ) : isCheckSuccess === false ? (
                 <>
                   <ShieldAlert className="w-6 h-6 text-white" />
-                  <span>المِعْدَادُ غَيْرُ مُصَحَّحٍ بَعْدُ!</span>
+                  <span>{gt('المِعْدَادُ غَيْرُ مُصَحَّحٍ بَعْدُ!')}</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-6 h-6" />
-                  <span>إِغْلَاقُ المَلَفِّ (تَحَقَّقْ)</span>
+                  <span>{gt('إِغْلَاقُ المَلَفِّ (تَحَقَّقْ)')}</span>
                 </>
               )}
             </motion.button>
@@ -544,7 +546,7 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4"
-            dir="rtl"
+            dir={dir}
           >
             <motion.div
               initial={{ scale: 0.85, y: 30 }}
@@ -560,23 +562,23 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
 
               {isNewRecord ? (
                 <>
-                  <h2 className="text-2xl font-black text-amber-300">🎉 رَقَمٌ قِيَاسِيٌّ جَدِيدٌ!</h2>
+                  <h2 className="text-2xl font-black text-amber-300">🎉 {gt('رَقَمٌ قِيَاسِيٌّ جَدِيدٌ!')}</h2>
                   <div className="w-full bg-slate-900/80 rounded-2xl border border-amber-400/30 p-4 flex flex-col gap-2">
                     {previousHigh && (
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-400 flex items-center gap-1.5">
                           <Crown className="w-3.5 h-3.5 text-slate-400" />
-                          كُنْتَ:
+                          {gt('كُنْتَ')}:
                         </span>
                         <span className="text-slate-300 font-bold tabular-nums">
-                          {previousHigh.value} قَضِيَّةً ({previousHigh.name})
+                          {previousHigh.value} {gt('قَضِيَّةً')} ({gt(previousHigh.name)})
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between items-center text-base">
                       <span className="text-amber-300 flex items-center gap-1.5 font-bold">
                         <Trophy className="w-4 h-4" />
-                        الآن:
+                        {gt('الآن')}:
                       </span>
                       <span className="text-amber-300 font-black text-lg tabular-nums">
                         {solvedCasesCount} ({childName})
@@ -586,19 +588,19 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
                 </>
               ) : (
                 <>
-                  <h2 className="text-2xl font-black text-sky-400">انْتَهَى التَّحْقِيقُ!</h2>
+                  <h2 className="text-2xl font-black text-sky-400">{gt('انْتَهَى التَّحْقِيقُ!')}</h2>
                   <div className="w-full bg-slate-900/80 rounded-2xl border border-slate-700/50 p-4 flex flex-col gap-2">
-                    <p className="text-slate-400 text-xs">اللَّقَبُ المُكْتَسَبُ:</p>
-                    <p className="text-amber-400 font-black text-lg">{getDetectiveTitle(solvedCasesCount)}</p>
+                    <p className="text-slate-400 text-xs">{gt('اللَّقَبُ المُكْتَسَبُ')}:</p>
+                    <p className="text-amber-400 font-black text-lg">{gt(getDetectiveTitle(solvedCasesCount))}</p>
                     <div className="h-px bg-slate-700/50 my-1" />
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-400">القَضَايَا المُغْلَقَةُ:</span>
+                      <span className="text-slate-400">{gt('القَضَايَا المُغْلَقَةُ')}:</span>
                       <span className="text-emerald-400 font-bold text-base tabular-nums">
                         <Num>{solvedCasesCount}</Num>
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-400">طَاقَةُ XP:</span>
+                      <span className="text-slate-400">{gt('طَاقَةُ')} XP:</span>
                       <span className="text-amber-400 font-bold text-base tabular-nums">
                         +{xpEarned} XP
                       </span>
@@ -614,7 +616,7 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
                   style={{ touchAction: 'manipulation' }}
                 >
                   <RotateCcw className="w-4 h-4" />
-                  إِعَادَةُ التَّحْقِيقِ
+                  {gt('إِعَادَةُ التَّحْقِيقِ')}
                 </button>
                 <button
                   onClick={onBack}
@@ -622,7 +624,7 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
                   style={{ touchAction: 'manipulation' }}
                 >
                   <Home className="w-4 h-4" />
-                  مَدِينَةُ الأَلْعَابِ
+                  {gt('مَدِينَةُ الأَلْعَابِ')}
                 </button>
               </div>
             </motion.div>
