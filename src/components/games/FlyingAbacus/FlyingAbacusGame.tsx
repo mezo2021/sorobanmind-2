@@ -22,7 +22,8 @@ import {
   type HighScoreEntry,
 } from '../highScoreStore';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
-import { useCharacterVoice } from '@/hooks/useCharacterVoice';
+import { useGameVoice } from '@/hooks/useGameVoice';
+import { gt, useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
 import type { CharacterType } from '@/types';
 import { Num } from '@/components/Num';
@@ -157,11 +158,11 @@ function pickUniquePhrase(phrases: string[], used: Set<string>): string {
 }
 
 function readChildName(): string {
-  if (typeof window === 'undefined') return 'بطل';
+  if (typeof window === 'undefined') return gt('بطل');
   try {
-    return useProgressStore.getState().childName?.trim() || 'بطل';
+    return useProgressStore.getState().childName?.trim() || gt('بطل');
   } catch {
-    return 'بطل';
+    return gt('بطل');
   }
 }
 
@@ -306,8 +307,9 @@ function GameTimer({ isPlaying, isGameOver, onTimeOut }: { isPlaying: boolean, i
 
 // ═══ المكوّن الرئيسي ═══
 export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameProps) {
+  const { dir, isAr } = useGameLang();
   const heroId: CharacterType = propHero ?? readSelectedHero();
-  const { speak } = useCharacterVoice(heroId);
+  const { speak } = useGameVoice(heroId);
 
   const addXP = useProgressStore((s) => s.addXP);
 
@@ -415,7 +417,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     if (recordResult.isNewRecord) {
       setIsNewRecord(true);
       setPreviousHigh(recordResult.previousTop);
-      speak('رَقَمٌ قِيَاسِيٌّ جَدِيد!');
+      speak(gt('رَقَمٌ قِيَاسِيٌّ جَدِيد!'));
     } else {
       setIsNewRecord(false);
       const endPool =
@@ -456,7 +458,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
     setHeroMood('excited');
 
     const startMsg = pickUniquePhrase(START_PHRASES, usedStartRef.current);
-    const greetMsg = `أهلاً ${childName}! ${startMsg}`;
+    const greetMsg = `${gt('أهلاً')} ${childName}! ${gt(startMsg)}`;
     setHeroText(greetMsg);
     speak(greetMsg);
     vibrate(50);
@@ -555,7 +557,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
 
   return (
     <div
-      dir="rtl"
+      dir={dir}
       className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col select-none"
       style={{ touchAction: 'manipulation' }}
     >
@@ -565,13 +567,13 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
           onClick={onBack}
           className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0"
           style={{ touchAction: 'manipulation' }}
-          aria-label="رجوع"
+          aria-label={gt('رجوع')}
         >
-          <ArrowRight className="w-6 h-6" />
+          <ArrowRight className={`w-6 h-6 ${isAr ? '' : 'rotate-180'}`} />
         </button>
 
         <div className="flex-1 flex justify-center">
-          <GameCompanion heroId={heroId} mood={heroMood} customText={heroText} />
+          <GameCompanion heroId={heroId} mood={heroMood} customText={gt(heroText)} />
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -597,10 +599,10 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
               🛸
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-sky-400 text-center">
-              العِدَادُ الطَّائِرُ
+              {gt('العِدَادُ الطَّائِرُ')}
             </h1>
             <p className="text-slate-400 text-sm sm:text-base max-w-xs text-center leading-relaxed">
-              اقْرَأْ قِيمَةَ المِعْدَادِ قَبْلَ أَنْ يَخْتَفِيَ!
+              {gt('اقْرَأْ قِيمَةَ المِعْدَادِ قَبْلَ أَنْ يَخْتَفِيَ!')}
             </p>
           </motion.div>
 
@@ -615,7 +617,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
             className="w-full max-w-xs bg-gradient-to-l from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-black text-xl py-4 rounded-2xl shadow-xl shadow-sky-500/30 active:scale-95 transition"
             style={{ touchAction: 'manipulation' }}
           >
-            ▶️ ابْدَأِ التَّحَدِّي
+            ▶️ {gt('ابْدَأِ التَّحَدِّي')}
           </motion.button>
         </div>
       )}
@@ -706,7 +708,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                   animate={{ opacity: 1 }}
                   className="text-slate-500 italic text-sm"
                 >
-                  رَاقِبِ المِعْدَادَ جَيِّداً...
+                  {gt('رَاقِبِ المِعْدَادَ جَيِّداً...')}
                 </motion.p>
               )}
             </AnimatePresence>
@@ -722,7 +724,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4"
-            dir="rtl"
+            dir={dir}
           >
             <motion.div
               initial={{ scale: 0.85, y: 30 }}
@@ -763,7 +765,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
               {isNewRecord ? (
                 <>
                   <h2 className="text-2xl font-black text-amber-300">
-                    🎉 رَقَمٌ قِيَاسِيٌّ جَدِيد!
+                    🎉 {gt('رَقَمٌ قِيَاسِيٌّ جَدِيد!')}
                   </h2>
 
                   <div className="w-full bg-slate-900/80 rounded-2xl border border-amber-400/30 p-4 flex flex-col gap-2">
@@ -771,17 +773,17 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-400 flex items-center gap-1.5">
                           <Crown className="w-3.5 h-3.5 text-slate-400" />
-                          كُنْتَ:
+                          {gt('كُنْتَ')}:
                         </span>
                         <span className="text-slate-300 font-bold tabular-nums">
-                          {previousHigh.value} ({previousHigh.name})
+                          {previousHigh.value} ({gt(previousHigh.name)})
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between items-center text-base">
                       <span className="text-amber-300 flex items-center gap-1.5 font-bold">
                         <Trophy className="w-4 h-4" />
-                        الآن:
+                        {gt('الآن')}:
                       </span>
                       <span className="text-amber-300 font-black text-lg tabular-nums">
                         {correctCount} ({childName})
@@ -789,7 +791,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                     </div>
                     <div className="h-px bg-amber-400/30 my-1" />
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-400">طَاقَةُ XP:</span>
+                      <span className="text-slate-400">{gt('طَاقَةُ')} XP:</span>
                       <span className="text-amber-400 font-bold tabular-nums">
                         +{xpEarned} XP
                       </span>
@@ -799,17 +801,17 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
               ) : (
                 <>
                   <h2 className="text-2xl font-black text-sky-400">
-                    انْتَهَى التَّحَدِّي!
+                    {gt('انْتَهَى التَّحَدِّي!')}
                   </h2>
 
                   <div className="w-full bg-slate-900/80 rounded-2xl border border-slate-700/50 p-4 flex flex-col gap-2">
-                    <p className="text-slate-400 text-xs">اللَّقَبُ:</p>
+                    <p className="text-slate-400 text-xs">{gt('اللَّقَبُ')}:</p>
                     <p className="text-amber-400 font-black text-lg">
-                      {getTitleForScore(correctCount)}
+                      {gt(getTitleForScore(correctCount))}
                     </p>
                     <div className="h-px bg-slate-700/50 my-1" />
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-400">الإِجَابَاتُ الصَّحِيحَةُ:</span>
+                      <span className="text-slate-400">{gt('الإِجَابَاتُ الصَّحِيحَةُ')}:</span>
                       <span className="text-emerald-400 font-bold text-base tabular-nums">
                         <Num>{correctCount}</Num>
                       </span>
@@ -818,15 +820,15 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-400 flex items-center gap-1.5">
                           <Trophy className="w-3.5 h-3.5 text-amber-300" />
-                          الرَّقَمُ:
+                          {gt('الرَّقَمُ')}:
                         </span>
                         <span className="text-amber-300 font-bold tabular-nums">
-                          {previousHigh.value} ({previousHigh.name})
+                          {previousHigh.value} ({gt(previousHigh.name)})
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-400">طَاقَةُ XP:</span>
+                      <span className="text-slate-400">{gt('طَاقَةُ')} XP:</span>
                       <span className="text-amber-400 font-bold text-base tabular-nums">
                         +{xpEarned} XP
                       </span>
@@ -847,7 +849,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                   style={{ touchAction: 'manipulation' }}
                 >
                   <RotateCcw className="w-4 h-4" />
-                  إِعَادَةُ التَّحَدِّي
+                  {gt('إِعَادَةُ التَّحَدِّي')}
                 </button>
                 <button
                   onClick={onBack}
@@ -855,7 +857,7 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
                   style={{ touchAction: 'manipulation' }}
                 >
                   <Home className="w-4 h-4" />
-                  مَدِينَةُ الأَلْعَابِ
+                  {gt('مَدِينَةُ الأَلْعَابِ')}
                 </button>
               </div>
             </motion.div>
