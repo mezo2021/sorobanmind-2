@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-// ⚠️ هذه المفاتيح آمنة للاستخدام في الواجهة الأمامية (مع تفعيل RLS)
 export const supabaseUrl = 'https://tnaetkpmqdmltfbigysp.supabase.co';
-export const supabaseKey = 'sb_publishable_mjntwuRa8yJDaCthyzfD1g_MEGv-c3-';
+export const supabaseKey = 'sb_publishable_WseduPfJaq43k5oBD7o8WA_7YMle7Qo';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
