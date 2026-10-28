@@ -1,3 +1,4 @@
+/* eslint-disable no-misleading-character-class */
 // src/components/games/gamesI18n.ts
 // 🌐 ترجمة نصوص الألعاب (عربي → إنجليزي) — قاموس + أنماط
 // الاستخدام:  gt('نص عربي')  ← يرجع الإنجليزي عند lang === 'en'، وإلا يرجع النص كما هو.
