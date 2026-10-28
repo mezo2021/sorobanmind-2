@@ -38,16 +38,38 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   const [devPasswordError, setDevPasswordError] = useState(false);
 
   useEffect(() => {
-    cloudSync.getCurrentUser()
-      .then(u => {
-        setIsLoggedIn(!!u);
-        if (!u) setShowAuth(true); // فتح نافذة التسجيل تلقائياً
-      })
-      .catch(() => {
+    const checkAuth = async () => {
+      try {
+        // 1. اقرأ الجلسة محلياً (تعمل بدون إنترنت)
+        const session = await cloudSync.getSession();
+        
+        if (session) {
+          setIsLoggedIn(true);
+          setShowAuth(false);
+          
+          // 2. تحقق في الخلفية (لا يؤثر على الواجهة)
+          cloudSync.getCurrentUser().catch((err) => {
+            // إذا كان الخطأ 401 (جلسة منتهية) → أخرج المستخدم
+            if (err?.status === 401 || err?.message?.includes('JWT')) {
+              cloudSync.logoutParent();
+              setIsLoggedIn(false);
+              setShowAuth(true);
+            }
+            // إذا كان خطأ شبكة → ابقَ مفتوحاً (أوفلاين)
+          });
+        } else {
+          setIsLoggedIn(false);
+          setShowAuth(true);
+        }
+      } catch (e) {
         setIsLoggedIn(false);
         setShowAuth(true);
-      })
-      .finally(() => setCheckingAuth(false));
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+    
+    checkAuth();
   }, []);
 
   // دالة تسجيل الخروج
