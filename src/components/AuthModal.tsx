@@ -1,11 +1,14 @@
-// src/components/AuthModal.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { X, Mail, KeyRound, User, Baby, LogIn, UserPlus, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { 
+  X, Mail, KeyRound, User, Baby, LogIn, UserPlus, 
+  Loader2, AlertCircle, CheckCircle2, Wifi, WifiOff 
+} from 'lucide-react';
 
 import { useT } from '../i18n/useTranslation';
 import { pickLang } from '../i18n/pickLang';
 import { cloudSync } from '../lib/cloudSync';
+import { supabaseUrl, supabaseKey } from '../lib/supabase';
 
 interface AuthModalProps {
   onClose: () => void;
@@ -23,24 +26,71 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   
-  // حالة الاتصال بالإنترنت
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
+  // حالات الاتصال
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+  const [isChecking, setIsChecking] = useState<boolean>(true);
 
   const showMsg = (text: string, type: 'success' | 'error') => {
     setMsg({ text, type });
     setTimeout(() => setMsg(null), 4000);
   };
+
+  // دالة الفحص الحقيقية للإنترنت (Ping to Supabase)
+  const checkConnection = useCallback(async (): Promise<boolean> => {
+    // إذا كان المتصفح يعرف مسبقاً أن هناك انقطاعاً، لا داعي للطلب
+    if (!navigator.onLine) {
+      setIsOnline(false);
+      setIsChecking(false);
+      return false;
+    }
+
+    setIsChecking(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+    try {
+      const url = `${supabaseUrl}/auth/v1/health`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { apikey: supabaseKey },
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+
+      const body = await response.json();
+      
+      // التحقق من هوية الرد (GoTrue هو خادم المصادقة في Supabase)
+      const isValid = response.ok && body?.name === 'GoTrue';
+      setIsOnline(isValid);
+      return isValid;
+    } catch (error) {
+      // أي خطأ (شبكة، timeout، أو رد غير متوقع)
+      setIsOnline(false);
+      return false;
+    } finally {
+      clearTimeout(timeoutId);
+      setIsChecking(false);
+    }
+  }, []);
+
+  // فحص أولي عند فتح الشاشة + الاستماع لأحداث المتصفح
+  useEffect(() => {
+    checkConnection();
+
+    const handleOnline = () => void checkConnection();
+    const handleOffline = () => {
+      setIsOnline(false);
+      setIsChecking(false);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [checkConnection]);
 
   const validate = (): string | null => {
     if (!email || !email.includes('@')) {
@@ -65,7 +115,11 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
   };
 
   const handleSubmit = async () => {
-    if (!isOnline) {
+    if (isChecking) return;
+
+    // 1. الفحص النهائي قبل إرسال أي طلب (حاجز الأمان)
+    const reachable = await checkConnection();
+    if (!reachable) {
       showMsg(pickLang({ ar: '❌ لا يوجد اتصال. يرجى التحقق من الشبكة والمحاولة مرة أخرى.', en: '❌ No connection. Please check your network and try again.' }, lang), 'error');
       return;
     }
@@ -87,7 +141,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       }
       setTimeout(() => onSuccess(), 1200);
     } catch (e: any) {
-      // التعامل مع أخطاء الشبكة
+      // التعامل مع أخطاء الشبكة المحتملة إذا انقطع الاتصال بعد الفحص
       const errorMsg = e.message?.toLowerCase().includes('network') || e.message?.toLowerCase().includes('fetch')
         ? pickLang({ ar: '❌ لا يوجد اتصال. يرجى التحقق من الشبكة والمحاولة مرة أخرى.', en: '❌ No connection. Please check your network and try again.' }, lang)
         : e.message;
@@ -118,13 +172,45 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
             <X className="w-5 h-5" />
           </button>
 
-          {/* مؤشر الاتصال */}
-          <div className="flex items-center justify-center gap-2 mb-4 relative z-10">
-            <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
-            <span className={`text-xs font-bold ${isOnline ? 'text-emerald-400' : 'text-red-400'}`}>
-              {isOnline
-                ? pickLang({ ar: 'متصل', en: 'Online' }, lang)
-                : pickLang({ ar: 'غير متصل', en: 'Offline' }, lang)}
+          {/* 🎯 مؤشر الاتصال الفخم (المعدل بثلاث حالات) */}
+          <div className={`group relative flex items-center gap-2.5 px-4 py-1.5 rounded-full border text-xs font-medium mx-auto w-fit mb-4 shadow-sm transition-all duration-300 relative z-10 ${
+            isChecking
+              ? 'border-amber-500/20 bg-amber-950/30 text-amber-400 shadow-amber-900/20 hover:border-amber-500/40'
+              : isOnline
+                ? 'border-emerald-500/20 bg-emerald-950/30 text-emerald-400 shadow-emerald-900/20 hover:border-emerald-500/40'
+                : 'border-red-500/20 bg-red-950/30 text-red-400 shadow-red-900/20 hover:border-red-500/40'
+          }`}>
+            <div className={`absolute inset-0 rounded-full blur-sm transition-opacity ${
+              isChecking ? 'bg-amber-500/5 group-hover:bg-amber-500/10' : isOnline ? 'bg-emerald-500/5 group-hover:bg-emerald-500/10' : 'bg-red-500/5 group-hover:bg-red-500/10'
+            }`} />
+
+            {isChecking ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin relative z-10 opacity-90" />
+            ) : isOnline ? (
+              <Wifi className="w-3.5 h-3.5 relative z-10 opacity-90" />
+            ) : (
+              <WifiOff className="w-3.5 h-3.5 relative z-10 opacity-90" />
+            )}
+
+            <span className="relative z-10 tracking-wide">
+              {isChecking
+                ? pickLang({ ar: 'جاري التحقق...', en: 'Checking...' }, lang)
+                : isOnline
+                  ? pickLang({ ar: 'متصل بخوادم التقييم', en: 'Connected to servers' }, lang)
+                  : pickLang({ ar: 'غير متصل بالإنترنت', en: 'Offline' }, lang)}
+            </span>
+
+            <span className="relative flex h-2 w-2 z-10">
+              {isChecking ? (
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>
+              ) : isOnline ? (
+                <>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                </>
+              ) : (
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+              )}
             </span>
           </div>
 
@@ -143,7 +229,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
           </div>
 
           {/* رسالة استباقية عند انقطاع الإنترنت */}
-          {!isOnline && (
+          {!isOnline && !isChecking && (
             <motion.div 
               initial={{ opacity: 0, y: -10 }} 
               animate={{ opacity: 1, y: 0 }} 
@@ -226,7 +312,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={loading || !isOnline}
+            disabled={loading || isChecking || !isOnline}
             className="btn-primary w-full !py-3.5 mt-6 relative z-10 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
@@ -236,9 +322,13 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
             ) : (
               <LogIn className="w-5 h-5" />
             )}
-            {isRegister
-              ? pickLang({ ar: 'إنشاء حساب', en: 'Register' }, lang)
-              : pickLang({ ar: 'دخول', en: 'Login' }, lang)}
+            {isChecking
+              ? pickLang({ ar: 'جاري التحقق...', en: 'Checking...' }, lang)
+              : !isOnline
+                ? pickLang({ ar: 'لا يوجد اتصال', en: 'No connection' }, lang)
+                : isRegister
+                  ? pickLang({ ar: 'إنشاء حساب', en: 'Register' }, lang)
+                  : pickLang({ ar: 'دخول', en: 'Login' }, lang)}
           </button>
 
           <button
