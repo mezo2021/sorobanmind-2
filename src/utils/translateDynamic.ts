@@ -618,7 +618,7 @@ export function translateDynamic(
     if (en) return String(en);
     
     if (ar) {
-      let textToTranslate = String(ar);
+      const textToTranslate = String(ar);
       
       // 🚀 [الحل الجذري] فصل التلميح عن باقي خطوات الحل
       if (textToTranslate.includes("تلميح:")) {
