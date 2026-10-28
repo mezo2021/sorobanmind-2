@@ -1,14 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // 📘 src/utils/translateDynamic.ts — القاموس الديناميكي الموحّد
 // ═══════════════════════════════════════════════════════════════════
-//
-// 📊 حالة الدمج (مكتمل 100%):
-//   ✅ 1. Baseline
-//   ✅ 2. [L0]
-//   ✅ 3. [L1-L2]
-//   ✅ 4. [L3-L4]
-//   ✅ 5. [L5-L7]
-// ═══════════════════════════════════════════════════════════════════
 
 type DynamicText = Record<string, any>;
 
@@ -501,11 +493,7 @@ function translatePattern(text: string): string | null {
     return `Calculate: ${match[1]} (If the result is ${match[2]}, represent it as ${match[3]} on the abacus)`;
   }
 
-  // [FIX L6] - التلميح (Hint) المستخرج من الحل
-  match = text.match(/^مثل\s*بدون\s*فاصله\s*\(([\d.]+)\s*->\s*([\d.]+)\)$/);
-  if (match) {
-    return `Represent without a decimal point (${match[1]} -> ${match[2]})`;
-  }
+  // 🚨 [تم الحذف] الكود القديم الخاص بالتلميح (الذي كان يعتمد على ->) أصبح غير مهم بسبب الفلترة الجديدة
 
   match = text.match(/^احسب\s*السلسلة\s*:\s*(.*)/); if (match) return `Calculate the chain: ${match[1]}`;
   match = text.match(/^احسب\s*:\s*(.*)/); if (match) return `Calculate: ${match[1]}`;
@@ -630,7 +618,50 @@ export function translateDynamic(
     if (en) return String(en);
     
     if (ar) {
-      const normalizedKey = normalizeArabic(String(ar));
+      let textToTranslate = String(ar);
+      
+      // 🚀 [الحل الجذري] فصل التلميح عن باقي خطوات الحل
+      if (textToTranslate.includes("تلميح:")) {
+        // نقسم النص عند أول نقطة (.) التي تلي التلميح
+        const parts = textToTranslate.split(/\.\s+/);
+        
+        if (parts.length > 1) {
+          const hintAr = parts[0] + "."; // "تلميح: مثّل بدون فاصلة (٣٫٨ → ٣٨)."
+          const restAr = parts.slice(1).join(". "); // "سبب الاختيار: ..."
+          
+          // 1. ترجمة التلميح (بدون Regex معقد)
+          const normalizedHint = normalizeArabic(hintAr);
+          let hintEn = "Hint: ";
+          
+          if (normalizedHint.includes("مثل بدون فاصله") || normalizedHint.includes("مثل بدون فاصلة")) {
+             const nums = normalizedHint.match(/\d+(\.\d+)?/g);
+             if (nums && nums.length >= 2) {
+                 hintEn = `Hint: Represent without a decimal point (${nums[0]} -> ${nums[1]}).`;
+             } else {
+                 hintEn = "Hint: Represent without a decimal point.";
+             }
+          } else {
+             hintEn = hintAr; // في حال وُجد تلميح آخر لم نغطيه (احتياط)
+          }
+
+          // 2. ترجمة باقي الحل من القاموس الذي أضفته أنت
+          const normalizedRest = normalizeArabic(restAr);
+          let restEn = restAr;
+          
+          if (AR_TO_EN[normalizedRest]) {
+            restEn = AR_TO_EN[normalizedRest];
+          } else {
+            const patternTrans = translatePattern(normalizedRest);
+            if (patternTrans) restEn = patternTrans;
+          }
+
+          // 3. دمج التلميح المترجم مع الحل المترجم
+          return `${hintEn} ${restEn}`.trim();
+        }
+      }
+      
+      // --- الكود القديم الخاص بك (البحث العادي في القاموس) ---
+      const normalizedKey = normalizeArabic(textToTranslate);
       
       if (AR_TO_EN[normalizedKey]) {
         return AR_TO_EN[normalizedKey];
