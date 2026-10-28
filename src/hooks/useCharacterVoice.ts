@@ -15,14 +15,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CharacterType } from '../types';
 
-interface VoiceConfig {
+export interface VoiceConfig {
   pitch: number;
   rate: number;
   preferGender: 'male' | 'female';
 }
 
 // 🆕 pitch مُضخَّم — لتفريق أوضح بين الأبطال
-const VOICE_CONFIG: Record<CharacterType, VoiceConfig> = {
+export const VOICE_CONFIG: Record<CharacterType, VoiceConfig> = {
   sham: { pitch: 1.40, rate: 0.95, preferGender: 'female' },
   rayan: { pitch: 0.70, rate: 1.15, preferGender: 'male' },
   bana: { pitch: 1.25, rate: 0.90, preferGender: 'female' },
