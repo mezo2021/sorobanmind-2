@@ -1,8 +1,6 @@
 // src/lib/cloudSync.ts
 // ☁️ نظام المزامنة المبسط (نظام 2)
-// - يحفظ الأسماء في user_metadata (لا جداول أطفال)
-// - يحفظ التقدم في جدول soroban_progress (عمودان فقط)
-// - يزامن localStorage مع المتجر لشاشة البطل
+// [تحديث] إضافة دالة getSession لدعم العمل بدون إنترنت
 
 import { supabase } from './supabase';
 import { useProgressStore, type ProgressState } from '../store/progressStore';
@@ -83,9 +81,25 @@ export const cloudSync = {
     await supabase.auth.signOut();
   },
 
-  // ═══ 4. جلب المستخدم الحالي ═══
+  // ═══ 4. جلب الجلسة من localStorage (يعمل بدون إنترنت) ═══
+  async getSession() {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      const meta = data.session.user.user_metadata || {};
+      const pName = meta.parent_name || 'ولي الأمر';
+      const cName = meta.child_name || 'البطل';
+      
+      useProgressStore.getState().setParentName(pName);
+      useProgressStore.getState().setChildName(cName);
+      localStorage.setItem('soroban_child_name', cName);
+    }
+    return data.session;
+  },
+
+  // ═══ 5. جلب المستخدم الحالي (يتحقق من السيرفر - يحتاج إنترنت) ═══
   async getCurrentUser() {
-    const { data } = await supabase.auth.getUser();
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error; // يرمي خطأ 401 أو Network Error
     if (data.user) {
       const meta = data.user.user_metadata || {};
       const pName = meta.parent_name || 'ولي الأمر';
@@ -93,14 +107,12 @@ export const cloudSync = {
       
       useProgressStore.getState().setParentName(pName);
       useProgressStore.getState().setChildName(cName);
-      
-      // 👇 تحديث الذاكرة المحلية عند التحقق من المستخدم
       localStorage.setItem('soroban_child_name', cName);
     }
     return data.user;
   },
 
-  // ═══ 5. حفظ التقدم في السحابة ═══
+  // ═══ 6. حفظ التقدم في السحابة ═══
   async saveToCloud() {
     const user = await this.getCurrentUser();
     if (!user) throw new Error('Must be logged in / يجب تسجيل الدخول');
@@ -120,7 +132,7 @@ export const cloudSync = {
     return true;
   },
 
-  // ═══ 6. استعادة التقدم من السحابة ═══
+  // ═══ 7. استعادة التقدم من السحابة ═══
   async loadFromCloud() {
     const user = await this.getCurrentUser();
     if (!user) throw new Error('Must be logged in / يجب تسجيل الدخول');
