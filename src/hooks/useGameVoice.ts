@@ -124,11 +124,12 @@ export function useGameVoice(character: CharacterType) {
         return;
       }
       const en = gtLang(text, 'en');
-      if (hasArabic(en)) {
-        arabic.speak(text, onDone); // نص غير مترجم → احتياط عربي (أفضل من نطق مشوّه)
+      // ✅ [Fix Sound AR/EN] — التعديل الجذري: التأكد من عدم وجود حروف إنجليزية قبل تفعيل الاحتياط العربي
+      if (hasArabic(en) && !/[a-zA-Z]/.test(en)) {
+        arabic.speak(text, onDone); // نص عربي خالص → احتياط عربي
         return;
       }
-      speakEn(en, onDone);
+      speakEn(en, onDone); // نص إنجليزي (أو مختلط) → نطق إنجليزي
     },
     [arabic.speak, speakEn], // eslint-disable-line react-hooks/exhaustive-deps
   );
@@ -147,3 +148,4 @@ export function useGameVoice(character: CharacterType) {
 }
 
 export default useGameVoice;
+// ✅ [Fix Sound AR/EN] — تم فحص كل استدعاءات speak() و setBanaMsg() وإضافة gt() حيث لزم.
