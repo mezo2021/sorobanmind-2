@@ -27,7 +27,8 @@ import {
 import { GameCompanion, type HeroMood } from '../GameCompanion';
 import { HighScoreBadge } from '../HighScoreBadge';
 import { addScore, getHighScore, type HighScoreEntry } from '../highScoreStore';
-import { useCharacterVoice } from '@/hooks/useCharacterVoice';
+import { useGameVoice } from '@/hooks/useGameVoice';
+import { gt, lt, useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
 import type { CharacterType } from '@/types';
 import {
@@ -134,8 +135,8 @@ function pickUniquePhrase(phrases: string[], used: Set<string>): string {
 }
 
 function readChildName(): string {
-  if (typeof window === 'undefined') return 'بطل';
-  try { return useProgressStore.getState().childName?.trim() || 'بطل'; } catch { return 'بطل'; }
+  if (typeof window === 'undefined') return gt('بطل');
+  try { return useProgressStore.getState().childName?.trim() || gt('بطل'); } catch { return gt('بطل'); }
 }
 function hasSeenSymbols(): boolean {
   if (typeof window === 'undefined') return true;
@@ -190,16 +191,16 @@ function explainError(prev: AbacusState, next: AbacusState, target: AbacusState)
 
   for (const rod of ['t', 'o'] as const) {
     if (rodMis(next, rod) > rodMis(prev, rod)) {
-      const name = rod === 't' ? 'العَشَرَات (يَسَار)' : 'الآحَاد (يَمِين)';
+      const name = rod === 't' ? gt('العَشَرَات (يَسَار)') : gt('الآحَاد (يَمِين)');
       if (rodMis(prev, rod) === 0) {
-        return `عَمُودُ ${name} كَانَ صَحِيحاً! لا تَلْمِسْهُ.`;
+        return lt(`عَمُودُ ${name} كَانَ صَحِيحاً! لا تَلْمِسْهُ.`, `The ${name} column was correct! Do not touch it.`);
       }
       const upperMoved = rod === 't' ? prev.tensUpper !== next.tensUpper : prev.onesUpper !== next.onesUpper;
-      if (upperMoved) return 'الجَدَّةُ (٥) تَحَرَّكَتْ بِالاتِّجَاهِ المُعَاكِس.';
-      return 'حَرَّكْتَ خَرَزَاتٍ أَكْثَرَ أَوْ أَقَلَّ مِمَّا يَلْزَم.';
+      if (upperMoved) return gt('الجَدَّةُ (٥) تَحَرَّكَتْ بِالاتِّجَاهِ المُعَاكِس.');
+      return gt('حَرَّكْتَ خَرَزَاتٍ أَكْثَرَ أَوْ أَقَلَّ مِمَّا يَلْزَم.');
     }
   }
-  return 'هَذِهِ الحَرَكَةُ تُبْعِدُكَ عَنِ الهَدَف.';
+  return gt('هَذِهِ الحَرَكَةُ تُبْعِدُكَ عَنِ الهَدَف.');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -212,7 +213,7 @@ function SymbolsScreen({ onDismiss }: { onDismiss: () => void }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4"
-      dir="rtl"
+      dir={dir}
     >
       <motion.div
         initial={{ scale: 0.9, y: 20 }}
@@ -222,7 +223,7 @@ function SymbolsScreen({ onDismiss }: { onDismiss: () => void }) {
       >
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className="w-5 h-5 text-sky-400" />
-          <h2 className="text-lg font-black text-sky-300">🥋 رُمُوزُ الدُّوجُو</h2>
+          <h2 className="text-lg font-black text-sky-300">🥋 {gt('رُمُوزُ الدُّوجُو')}</h2>
         </div>
 
         <div className="space-y-2.5 mb-5">
@@ -241,7 +242,7 @@ function SymbolsScreen({ onDismiss }: { onDismiss: () => void }) {
           onClick={() => { markSymbolsSeen(); onDismiss(); }}
           className="w-full py-3.5 rounded-2xl bg-gradient-to-l from-sky-500 to-blue-600 text-white font-black shadow-lg active:scale-95 transition"
         >
-          ▶️ فَهِمْتُ · ابْدَأ
+          ▶️ {gt('فَهِمْتُ')} · {gt('ابْدَأ')}
         </button>
       </motion.div>
     </motion.div>
@@ -252,7 +253,8 @@ function SymbolsScreen({ onDismiss }: { onDismiss: () => void }) {
 // المكوّن الرئيسي
 // ═══════════════════════════════════════════════════════════════════
 export function FriendsGame({ onBack }: { onBack: () => void }) {
-  const { speak } = useCharacterVoice(HERO_ID);
+  const { dir, isAr } = useGameLang();
+  const { speak } = useGameVoice(HERO_ID);
   const addXP = useProgressStore((s) => s.addXP);
 
   const [showSymbols, setShowSymbols] = useState(false);
@@ -354,7 +356,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
     if (result.isNewRecord) {
       setIsNewRecord(true);
       setPreviousHigh(result.previousTop);
-      speak('رَقَمٌ قِيَاسِيٌّ جَدِيد!');
+      speak(gt('رَقَمٌ قِيَاسِيٌّ جَدِيد!'));
     } else {
       setIsNewRecord(false);
       const pool = correct >= 10 ? END_PHRASES_HIGH : correct >= 5 ? END_PHRASES_MID : END_PHRASES_LOW;
@@ -399,7 +401,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
     setLastStars(null);
     setLocked(false);
     setHeroMood('thinking');
-    setHeroText(`اتْبَعِ الخُطُوَة: ${selected.steps[0].instructionText}`);
+    setHeroText(`${gt('اتْبَعِ الخُطُوَة')}: ${gt(selected.steps[0].instructionText)}`);
   }, [setLocked]);
 
   // ═══ بدء اللعبة ═══
@@ -429,7 +431,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
     setHeroMood('excited');
 
     const msg = pickUniquePhrase(SHAM_START_PHRASES, usedPhrasesRef.current);
-    const greetMsg = `أهلاً ${childName}! ${msg}`;
+    const greetMsg = `${gt('أهلاً')} ${childName}! ${gt(msg)}`;
     setHeroText(greetMsg);
     speak(greetMsg);
     vibrate(50);
@@ -492,7 +494,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
         sfxStep();
         vibrate([40, 40]);
         setCurrentStepIndex(nextStep);
-        setHeroText(`عَظِيم! تَابِع: ${currentProblem.steps[nextStep].instructionText}`);
+        setHeroText(`${gt('عَظِيم! تَابِع')}: ${gt(currentProblem.steps[nextStep].instructionText)}`);
       } else {
         completeProblem();
       }
@@ -511,7 +513,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
       setStreak(0);
       setTotalErrors((n) => n + 1);
       setErrorBeads(new Set(diffBeadKeys(prev, next)));
-      setErrorMsg(`${explainError(prev, next, target)}  ·  ${currentProblem.hint}`);
+      setErrorMsg(`${explainError(prev, next, target)}  ·  ${gt(currentProblem.hint)}`);
       setLocked(true);
       sfxError();
       vibrate([60, 40, 60]);
@@ -569,7 +571,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
   // ═══════════════════════════════════════════════════════════
   return (
     <div
-      dir="rtl"
+      dir={dir}
       className="min-h-screen bg-gradient-to-b from-slate-950 via-sky-950/30 to-slate-950 text-white flex flex-col select-none font-sans"
       style={{ touchAction: 'manipulation' }}
     >
@@ -580,27 +582,27 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
       {/* ═══ الرأس ═══ */}
       <div className="sticky top-0 z-20 bg-slate-900/85 backdrop-blur-md border-b border-sky-500/30">
         <div className="flex items-center justify-between gap-2 p-3 sm:p-4">
-          <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/25 transition shrink-0" aria-label="رجوع">
-            <ArrowRight className="w-6 h-6 text-sky-400" />
+          <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/25 transition shrink-0" aria-label={gt('رجوع')}>
+            <ArrowRight className={`w-6 h-6 text-sky-400 ${isAr ? '' : 'rotate-180'}`} />
           </button>
 
           <div className="flex-1 flex justify-center">
-            <GameCompanion heroId={HERO_ID} mood={heroMood} customText={heroText} />
+            <GameCompanion heroId={HERO_ID} mood={heroMood} customText={gt(heroText)} />
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
-              aria-label="لون الليزر"
-              title="لون الليزر"
+              aria-label={gt('لون الليزر')}
+              title={gt('لون الليزر')}
             >
               <Sparkles className={`w-4 h-4 ${laserTheme === 'blue' ? 'text-sky-400' : 'text-rose-400'}`} />
             </button>
             <button
               onClick={() => setShowSymbols(true)}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
-              aria-label="الرموز"
+              aria-label={gt('الرموز')}
             >
               <BookOpen className="w-4 h-4 text-sky-300" />
             </button>
@@ -638,9 +640,9 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
               compact
               theme={laserTheme}
             />
-            <h1 className="text-3xl font-black text-sky-300 mt-1">دُوجُو السُّورُوبَان</h1>
+            <h1 className="text-3xl font-black text-sky-300 mt-1">{gt('دُوجُو السُّورُوبَان')}</h1>
             <p className="text-slate-400 text-sm max-w-xs leading-relaxed">
-              العَشَرَاتُ يَسَاراً · الآحَادُ يَمِيناً. تَعَلَّمْ حَرَكَاتِ الأَصْدِقَاءِ بِالأَصَابِع.
+              {gt('العَشَرَاتُ يَسَاراً')} · {gt('الآحَادُ يَمِيناً. تَعَلَّمْ حَرَكَاتِ الأَصْدِقَاءِ بِالأَصَابِع.')}
             </p>
           </motion.div>
 
@@ -653,7 +655,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
             onClick={handleStartGame}
             className="w-full max-w-xs bg-gradient-to-l from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-black text-xl py-4 rounded-2xl shadow-xl shadow-sky-500/30 active:scale-95 transition"
           >
-            ▶️ ابْدَأِ التَّدْرِيب
+            ▶️ {gt('ابْدَأِ التَّدْرِيب')}
           </motion.button>
         </div>
       )}
@@ -661,7 +663,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
       {/* ═══ منطقة اللعب ═══ */}
       {isPlaying && !currentProblem && (
         <div className="flex-1 flex items-center justify-center text-sky-300 font-black text-lg animate-pulse">
-          🥋 اسْتَعِدّ...
+          🥋 {gt('اسْتَعِدّ...')}
         </div>
       )}
 
@@ -677,7 +679,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
             <div className="flex justify-between items-center w-full mb-0.5">
               <div className={`px-3 py-1 rounded-full border text-xs font-bold flex items-center gap-1.5 ${currentBelt.color}`}>
                 <Award className="w-4 h-4 text-amber-400" />
-                <span className="truncate">{currentBelt.title}</span>
+                <span className="truncate">{gt(currentBelt.title)}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 {streak >= 2 && (
@@ -687,7 +689,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
                   </div>
                 )}
                 <div className="px-2.5 py-1 rounded-full border border-sky-500/40 bg-sky-950/80 text-sky-300 text-[11px] font-extrabold">
-                  {RULE_LABEL[currentProblem.rule]}
+                  {gt(RULE_LABEL[currentProblem.rule])}
                 </div>
               </div>
             </div>
@@ -731,7 +733,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
               theme={laserTheme}
             />
             <div className="mt-2 flex items-center justify-center gap-2 text-xs text-slate-400" dir="rtl">
-              <span>القِيمَةُ:</span>
+              <span>{gt('القِيمَةُ')}:</span>
               <span className="text-sky-300 text-base font-black tabular-nums font-mono"><Num>{calcAbacusValue(abacusState)}</Num></span>
             </div>
 
@@ -757,7 +759,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
                     ))}
                   </div>
                   <p className="text-amber-200 font-black text-sm">
-                    {lastStars === 3 ? 'بِلا أَخْطَاء!' : lastStars === 2 ? 'خَطَأٌ وَاحِد فَقَط' : 'أَحْسَنْتَ المُحَاوَلَة'}
+                    {lastStars === 3 ? gt('بِلا أَخْطَاء!') : lastStars === 2 ? gt('خَطَأٌ وَاحِد فَقَط') : gt('أَحْسَنْتَ المُحَاوَلَة')}
                   </p>
                 </motion.div>
               )}
@@ -790,7 +792,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
                     <span className="text-2xl bg-black/50 px-2.5 py-1 rounded-lg border border-white/10 shrink-0">
                       {activeStep?.fingerSymbol}
                     </span>
-                    <span className="leading-relaxed">{activeStep?.instructionText}</span>
+                    <span className="leading-relaxed">{gt(activeStep?.instructionText ?? '')}</span>
                   </div>
                   <Zap className="w-4 h-4 text-sky-400 shrink-0 animate-bounce" />
                 </motion.div>
@@ -808,7 +810,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4"
-            dir="rtl"
+            dir={dir}
           >
             <motion.div
               initial={{ scale: 0.85, y: 30 }}
@@ -823,28 +825,28 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
               <div className="text-5xl">🥋</div>
 
               <h2 className={`text-2xl font-black ${isNewRecord ? 'text-amber-300' : 'text-sky-300'}`}>
-                {isNewRecord ? '🎉 رَقَمٌ قِيَاسِيٌّ جَدِيد!' : 'انْتَهَى التَّدْرِيب!'}
+                {isNewRecord ? gt('🎉 رَقَمٌ قِيَاسِيٌّ جَدِيد!') : gt('انْتَهَى التَّدْرِيب!')}
               </h2>
 
               <div className="w-full bg-slate-900/80 rounded-2xl border border-slate-700/50 p-4 flex flex-col gap-2">
-                <p className="text-amber-400 font-black text-base">{currentBelt.title}</p>
+                <p className="text-amber-400 font-black text-base">{gt(currentBelt.title)}</p>
                 <div className="h-px bg-slate-700/50 my-1" />
 
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-400">العَمَلِيَّاتُ النَّاجِحَة:</span>
+                  <span className="text-slate-400">{gt('العَمَلِيَّاتُ النَّاجِحَة')}:</span>
                   <span className="text-sky-300 font-bold text-base tabular-nums"><Num>{correctCount}</Num></span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-400">بِلا أَخْطَاء (⭐⭐⭐):</span>
+                  <span className="text-slate-400">{gt('بِلا أَخْطَاء')} (⭐⭐⭐):</span>
                   <span className="text-emerald-300 font-bold tabular-nums"><Num>{perfectCount} · {accuracy}</Num>%</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-400">عَدَدُ الأَخْطَاء:</span>
+                  <span className="text-slate-400">{gt('عَدَدُ الأَخْطَاء')}:</span>
                   <span className="text-rose-300 font-bold tabular-nums"><Num>{totalErrors}</Num></span>
                 </div>
                 {weakest && totalErrors > 0 && (
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-400">تَحْتَاجُ تَدْرِيباً فِي:</span>
+                    <span className="text-slate-400">{gt('تَحْتَاجُ تَدْرِيباً فِي')}:</span>
                     <span className="text-amber-300 font-bold">
                       {RULE_LABEL[weakest[0] as MultiStepProblem['rule']] ?? weakest[0]}
                     </span>
@@ -854,15 +856,15 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-slate-400 flex items-center gap-1.5">
                       {isNewRecord ? <Crown className="w-3.5 h-3.5" /> : <Trophy className="w-3.5 h-3.5 text-amber-300" />}
-                      {isNewRecord ? 'كُنْتَ:' : 'الرَّقَمُ:'}
+                      {isNewRecord ? gt('كُنْتَ:') : gt('الرَّقَمُ:')}
                     </span>
                     <span className="text-amber-300 font-bold tabular-nums">
-                      {previousHigh.value} ({previousHigh.name})
+                      {previousHigh.value} ({gt(previousHigh.name)})
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-400">طَاقَةُ XP:</span>
+                  <span className="text-slate-400">{gt('طَاقَةُ')} XP:</span>
                   <span className="text-amber-400 font-bold text-base tabular-nums">+<Num>{xpEarned}</Num> XP</span>
                 </div>
               </div>
@@ -877,14 +879,14 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
                   }`}
                 >
                   <RotateCcw className="w-4 h-4" />
-                  إِعَادَةُ التَّدْرِيب
+                  {gt('إِعَادَةُ التَّدْرِيب')}
                 </button>
                 <button
                   onClick={onBack}
                   className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 rounded-xl active:scale-95 transition flex items-center justify-center gap-2"
                 >
                   <Home className="w-4 h-4" />
-                  مَدِينَةُ الأَلْعَاب
+                  {gt('مَدِينَةُ الأَلْعَاب')}
                 </button>
               </div>
             </motion.div>
@@ -897,7 +899,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
         <button
           onClick={() => setShowSymbols(false)}
           className="fixed top-4 left-4 z-[60] w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-          aria-label="إغلاق"
+          aria-label={gt('إغلاق')}
         >
           <X className="w-5 h-5 text-white/70" />
         </button>
