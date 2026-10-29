@@ -206,7 +206,8 @@ function explainError(prev: AbacusState, next: AbacusState, target: AbacusState)
 // ═══════════════════════════════════════════════════════════════════
 // شاشة الرموز
 // ═══════════════════════════════════════════════════════════════════
-function SymbolsScreen({ onDismiss }: { onDismiss: () => void }) {
+// [تعديل 1]: إضافة dir كـ prop إلزامي
+function SymbolsScreen({ onDismiss, dir }: { onDismiss: () => void; dir: string }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -253,7 +254,7 @@ function SymbolsScreen({ onDismiss }: { onDismiss: () => void }) {
 // المكوّن الرئيسي
 // ═══════════════════════════════════════════════════════════════════
 export function FriendsGame({ onBack }: { onBack: () => void }) {
-  const { dir, isAr } = useGameLang();
+  const { dir, isAr } = useGameLang(); // [تأكيد]: dir موجودة هنا
   const { speak } = useGameVoice(HERO_ID);
   const addXP = useProgressStore((s) => s.addXP);
 
@@ -576,7 +577,8 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
       style={{ touchAction: 'manipulation' }}
     >
       <AnimatePresence>
-        {showSymbols && <SymbolsScreen onDismiss={() => setShowSymbols(false)} />}
+        {/* [تعديل 2]: تمرير dir={dir} للمكون */}
+        {showSymbols && <SymbolsScreen onDismiss={() => setShowSymbols(false)} dir={dir} />}
       </AnimatePresence>
 
       {/* ═══ الرأس ═══ */}
