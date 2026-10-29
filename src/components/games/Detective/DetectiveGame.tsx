@@ -2,6 +2,7 @@
 // 🆕 src/components/games/Detective/DetectiveGame.tsx — Production Ready
 // ═══════════════════════════════════════════════════════════════════
 // [FIX NAME] — اسم الطفل صوتياً في handleStartGame — 2026-10-13
+// ✅ [Fix Sound AR/EN] — إضافة gt() حول النصوص العربية التي تُنطق لمنع الهلوسة في الوضع الإنجليزي
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -273,7 +274,7 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
       setIsNewRecord(false);
       const endMsg = solvedCasesCount >= 8 ? gt('أَدَاءٌ تَحْلِيلِيٌّ بَاهِرٌ!') : gt('مُحَاوَلَةٌ طَيِّبَةٌ يَا شَرِيكِي!');
       setHeroText(endMsg);
-      speak(endMsg);
+      speak(endMsg); // endMsg already uses gt()
     }
 
     setHeroMood('celebrating');
@@ -316,14 +317,19 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
       setHeroMood('celebrating');
 
       const correctMsg = pickUniquePhrase(JOUD_CORRECT_PHRASES, usedPhrasesRef.current);
-      setHeroText(correctMsg);
+      
+      // ✅ [Fix Sound AR/EN]
+      const translatedCorrectMsg = gt(correctMsg);
+      setHeroText(translatedCorrectMsg);
 
       const milestoneSpeech = JOUD_MILESTONE_PHRASES[newCount];
       if (milestoneSpeech) {
-        setHeroText(milestoneSpeech);
-        speak(milestoneSpeech);
+        // ✅ [Fix Sound AR/EN]
+        setHeroText(gt(milestoneSpeech));
+        speak(gt(milestoneSpeech));
       } else if (newCount % 3 === 0) {
-        speak(correctMsg);
+        // ✅ [Fix Sound AR/EN]
+        speak(translatedCorrectMsg);
       }
 
       addTimeout(() => {
@@ -347,7 +353,8 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
         }, 1200);
       } else {
         const errorMsg = pickUniquePhrase(JOUD_ERROR_PHRASES, usedPhrasesRef.current);
-        setHeroText(errorMsg);
+        // ✅ [Fix Sound AR/EN] — عرض الخطأ لا يحتاج نطقاً، لكن تأمين النص أفضل
+        setHeroText(gt(errorMsg));
         setActiveHint(`💡 ${gt('تَلْمِيحٌ')}: ${gt(currentProblem.hint)}`);
 
         addTimeout(() => {
