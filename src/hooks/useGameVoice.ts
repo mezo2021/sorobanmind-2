@@ -1,8 +1,5 @@
 // src/hooks/useGameVoice.ts
-// 🎭 صوت شخصيات الألعاب بلغتين — نفس واجهة useCharacterVoice
-//  • العربية: تُفوَّض كما هي إلى useCharacterVoice (بلا أي تغيير في الـ pitch/الصوت)
-//  • الإنجليزية: الشخصيات الأربع بنفس قيم pitch/rate (VOICE_CONFIG) على أصوات en-US
-// ✅ [Fix Mixed AR/EN] — تحويل الأسماء العربية إلى حروف إنجليزية (Transliteration) لنطقها بسلاسة في وضع EN
+// 🎭 صوت شخصيات الألعاب بلغتين — معالجة الأسماء العربية في وضع الإنجليزي
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CharacterType } from '../types';
@@ -11,12 +8,16 @@ import { useLangStore } from '@/i18n/useTranslation';
 import { gtLang } from '@/components/games/gamesI18n';
 import { sanitizeForSpeech } from './useReadAloud';
 
-// دالة تحويل الحروف العربية إلى إنجليزية للنطق (لضمان عدم صمت محرك الصوت)
-const transliterateArabic = (str: string): string => {
+// دالة تحويل الحروف العربية إلى إنجليزية (Transliteration)
+const transliterateArabicName = (str: string): string => {
   const map: Record<string, string> = {
-    'ا':'a', 'أ':'a', 'إ':'e', 'آ':'a', 'ب':'b', 'ت':'t', 'ث':'th', 'ج':'j', 'ح':'h', 'خ':'kh', 'د':'d', 'ذ':'th', 'ر':'r', 'ز':'z', 'س':'s', 'ش':'sh', 'ص':'s', 'ض':'d', 'ط':'t', 'ظ':'th', 'ع':'a', 'غ':'gh', 'ف':'f', 'ق':'q', 'ك':'k', 'ل':'l', 'م':'m', 'ن':'n', 'ه':'h', 'و':'o', 'ي':'y', 'ى':'a', 'ة':'h', 'ء':"'",
+    'ا': 'a', 'أ': 'a', 'إ': 'e', 'آ': 'aa', 'ب': 'b', 'ت': 't', 'ث': 'th',
+    'ج': 'j', 'ح': 'h', 'خ': 'kh', 'د': 'd', 'ذ': 'th', 'ر': 'r', 'ز': 'z',
+    'س': 's', 'ش': 'sh', 'ص': 's', 'ض': 'd', 'ط': 't', 'ظ': 'th', 'ع': 'a',
+    'غ': 'gh', 'ف': 'f', 'ق': 'q', 'ك': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n',
+    'ه': 'h', 'و': 'o', 'ي': 'y', 'ى': 'a', 'ة': 'h', 'ء': '',
   };
-  return str.split('').map(c => map[c] || c).join('');
+  return str.split('').map((c) => map[c] || c).join('');
 };
 
 const EN_FEMALE_HINTS = [
@@ -39,7 +40,6 @@ function findEnglishVoice(
   const other = gender === 'female' ? EN_MALE_HINTS : EN_FEMALE_HINTS;
   const name = (v: SpeechSynthesisVoice) => v.name.toLowerCase();
   const us = (v: SpeechSynthesisVoice) => v.lang.toLowerCase().replace('_', '-') === 'en-us';
-  // ممنوع "female" داخل "male" (female يحتوي male)
   const isGender = (v: SpeechSynthesisVoice, hs: string[]) =>
     hs.some((h) => {
       if (h === 'male') return /(^|[^fe])male/.test(name(v)) && !name(v).includes('female');
@@ -83,11 +83,9 @@ export function useGameVoice(character: CharacterType) {
         onDone?.();
         return;
       }
-      
-      // إلغاء أي نطق سابق لضمان عدم التداخل
+
       window.speechSynthesis.cancel();
 
-      // نفس قيم الشخصيات العربية (pitch / rate / الجنس)
       const config = VOICE_CONFIG[character] || VOICE_CONFIG.sham;
       const u = new SpeechSynthesisUtterance(clean);
       u.lang = 'en-US';
@@ -99,7 +97,6 @@ export function useGameVoice(character: CharacterType) {
       const { voice, matched } = findEnglishVoice(voicesRef.current, config.preferGender);
       if (voice) {
         u.voice = voice;
-        // الصوت المتاح لا يطابق الجنس → نُضخّم الفرق بالـ pitch (كما في العربية)
         if (!matched) {
           u.pitch =
             config.preferGender === 'male'
@@ -127,24 +124,24 @@ export function useGameVoice(character: CharacterType) {
   const speak = useCallback(
     (text: string, onDone?: () => void) => {
       const lang = useLangStore.getState().lang;
-      
-      // وضع اللغة العربية: نطق مباشر (كما كان)
+
+      // النطق باللغة العربية: يمرر النص كما هو
       if (lang !== 'en') {
         arabic.speak(text, onDone);
         return;
       }
 
-      // وضع اللغة الإنجليزية: نقوم بالترجمة أولاً
+      // النطق باللغة الإنجليزية
+      // 1. نترجم النص (ستبقى الأسماء العربية كما هي لأن القاموس لا يترجمها)
       const en = gtLang(text, 'en');
       
-      // تحويل أي حروف عربية متبقية (مثل اسم الطفل) إلى إنجليزية
-      // هذا يمنع محرك الصوت الإنجليزي من الصمت ويجعل الجملة متصلة
-      const finalText = transliterateArabic(en);
+      // 2. نحول أي حروف عربية متبقية (وهي الأسماء) إلى إنجليزية
+      const finalEn = transliterateArabicName(en);
 
-      // نطق النص النهائي بالصوت الإنجليزي
-      speakEn(finalText, onDone);
+      // 3. ننطق النص النهائي بالصوت الإنجليزي
+      speakEn(finalEn, onDone);
     },
-    [arabic.speak, speakEn], // eslint-disable-line react-hooks/exhaustive-deps
+    [arabic.speak, speakEn],
   );
 
   const stop = useCallback(() => {
@@ -153,7 +150,7 @@ export function useGameVoice(character: CharacterType) {
       window.speechSynthesis.cancel();
     }
     if (mountedRef.current) setEnSpeaking(false);
-  }, [arabic.stop]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [arabic.stop]);
 
   return {
     speak,
@@ -164,4 +161,4 @@ export function useGameVoice(character: CharacterType) {
 }
 
 export default useGameVoice;
-// ✅ [Fix Mixed AR/EN] — التحويل الصوتي (Transliteration) لمنع صمت محرك الصوت الإنجليزي عند نطق الأسماء العربية.
+// ✅ [Fix Mixed AR/EN] — تحويل الأسماء بالكامل إلى إنجليزية لضمان نطقها بسلاسة دون التأثير على باقي الجملة.
