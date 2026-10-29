@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════
 // [FIX NAME] — اسم الطفل صوتياً في handleStartGame — 2026-10-13
 // ✅ [Fix Sound AR/EN] — إضافة gt() حول النصوص العربية التي تُنطق لمنع الهلوسة في الوضع الإنجليزي
-// ✅ [Fix HighScore] — إضافة endGame إلى dependency array لمنع مشكلة Stale Closure وحفظ الرقم القياسي
+// ✅ [Fix HighScore] — إضافة endGame إلى dependency array ونقل الـ useEffect بعد الدالة لحفظ الرقم القياسي
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -32,7 +32,6 @@ interface ProblemTemplate {
 }
 
 const PROBLEM_BANK: ProblemTemplate[] = [
-  // 🟢 1. الجمع والطرح المباشر (Direct)
   { expression: '2 + 2 = ?', correctValue: 4, distortedValue: 3, ruleCategory: 'direct', hint: 'ارْفَعْ 4 خَرَزَاتٍ سُفْلِيَّةٍ مِباشَرَةً!' },
   { expression: '1 + 3 = ?', correctValue: 4, distortedValue: 2, ruleCategory: 'direct', hint: 'ارْفَعْ خَرَزَةً سُفْلِيَّةً إِضَافِيَّةً!' },
   { expression: '5 + 3 = ?', correctValue: 8, distortedValue: 7, ruleCategory: 'direct', hint: 'أَنْزِلْ الخَمْسَةَ العُلْوِيَّةَ وَارْفَعْ 3 سُفْلِيَّةً!' },
@@ -44,7 +43,6 @@ const PROBLEM_BANK: ProblemTemplate[] = [
   { expression: '6 + 2 = ?', correctValue: 8, distortedValue: 7, ruleCategory: 'direct', hint: 'ارْفَعْ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ إِضَافِيَّتَيْنِ!' },
   { expression: '4 - 3 = ?', correctValue: 1, distortedValue: 2, ruleCategory: 'direct', hint: 'اتْرُكْ خَرَزَةً سُفْلِيَّةً وَاحِدَةً فَقَطْ!' },
 
-  // 🟡 2. أصدقاء 5 (Small Friends)
   { expression: '4 + 4 = ?', correctValue: 8, distortedValue: 9, ruleCategory: 'friends5', hint: 'صَدِيقُ 4 هُوَ 1! (+5 - 1)' },
   { expression: '3 + 3 = ?', correctValue: 6, distortedValue: 7, ruleCategory: 'friends5', hint: 'صَدِيقُ 3 هُوَ 2! (+5 - 2)' },
   { expression: '2 + 4 = ?', correctValue: 6, distortedValue: 5, ruleCategory: 'friends5', hint: 'صَدِيقُ 4 هُوَ 1! (+5 - 1)' },
@@ -56,7 +54,6 @@ const PROBLEM_BANK: ProblemTemplate[] = [
   { expression: '8 - 4 = ?', correctValue: 4, distortedValue: 3, ruleCategory: 'friends5', hint: 'اطْرَحْ 5 وَأَضِفْ صَدِيقَ 4 وَهُوَ 1!' },
   { expression: '2 + 3 = ?', correctValue: 5, distortedValue: 6, ruleCategory: 'friends5', hint: 'صَدِيقُ 3 هُوَ 2! (+5 - 2)' },
 
-  // 🟠 3. أصدقاء 10 (Big Friends)
   { expression: '9 + 1 = ?', correctValue: 10, distortedValue: 11, ruleCategory: 'friends10', hint: 'صَدِيقُ 1 هُوَ 9! (+10 - 9)' },
   { expression: '8 + 2 = ?', correctValue: 10, distortedValue: 9, ruleCategory: 'friends10', hint: 'صَدِيقُ 2 هُوَ 8! (+10 - 8)' },
   { expression: '7 + 5 = ?', correctValue: 12, distortedValue: 13, ruleCategory: 'friends10', hint: 'صَدِيقُ 5 هُوَ 5! (+10 - 5)' },
@@ -68,7 +65,6 @@ const PROBLEM_BANK: ProblemTemplate[] = [
   { expression: '10 - 1 = ?', correctValue: 9, distortedValue: 8, ruleCategory: 'friends10', hint: 'اطْرَحْ 10 وَأَضِفْ صَدِيقَ 1 وَهُوَ 9!' },
   { expression: '12 - 5 = ?', correctValue: 7, distortedValue: 6, ruleCategory: 'friends10', hint: 'اطْرَحْ 10 وَأَضِفْ صَدِيقَ 5 وَهُوَ 5!' },
 
-  // 🔴 4. القواعد المركبة وسلاسل العمليات (Combined)
   { expression: '5 + 6 = ?', correctValue: 11, distortedValue: 12, ruleCategory: 'combined', hint: 'أَضِفْ 10 وَاطْرَحْ 5!' },
   { expression: '6 + 7 = ?', correctValue: 13, distortedValue: 14, ruleCategory: 'combined', hint: 'أَضِفْ 10، اطْرَحْ 5 وَأَضِفْ 2!' },
   { expression: '7 + 6 = ?', correctValue: 13, distortedValue: 12, ruleCategory: 'combined', hint: 'أَضِفْ 10، اطْرَحْ 5 وَأَضِفْ 1!' },
@@ -211,13 +207,6 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
     return () => clearInterval(timer);
   }, [isPlaying, isGameOver]);
 
-  // ✅ [Fix HighScore] — تمت إضافة endGame إلى المصفوفة لحفظ الرقم القياسي بدقة
-  useEffect(() => {
-    if (sessionTimeLeft === 0 && isPlaying && !isGameOver) {
-      endGame();
-    }
-  }, [sessionTimeLeft, isPlaying, isGameOver, endGame]);
-
   const fetchNextProblem = useCallback((overrideCategory?: 'direct') => {
     const elapsed = SESSION_SECONDS - sessionTimeLeft;
     let targetCategory: 'direct' | 'friends5' | 'friends10' | 'combined' = overrideCategory || 'direct';
@@ -258,6 +247,7 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
     setHeroText(thinkMsg);
   }, [sessionTimeLeft]);
 
+  // ✅ [Fix HighScore] — تعريف endGame أولاً
   const endGame = useCallback(() => {
     setIsGameOver(true);
     setIsPlaying(false);
@@ -282,6 +272,13 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
     setHeroMood('celebrating');
     vibrate([0, 40, 40, 40, 40, 80]);
   }, [solvedCasesCount, addXP, speak, clearAllTimeouts, childName]);
+
+  // ✅ [Fix HighScore] — نقل الـ useEffect ليكون بعد تعريف endGame
+  useEffect(() => {
+    if (sessionTimeLeft === 0 && isPlaying && !isGameOver) {
+      endGame();
+    }
+  }, [sessionTimeLeft, isPlaying, isGameOver, endGame]);
 
   const handleStartGame = useCallback(() => {
     clearAllTimeouts();
