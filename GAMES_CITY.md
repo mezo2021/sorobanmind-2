@@ -668,6 +668,73 @@ sorobaniaSfx.ts 133 WebAudio
 3. تحقق من أسماء الملفات
 4. اسأل قبل التخمين
 
+
+خريطة دقيقة توضح أين وكيف يتم حفظ الرقم القياسي في الألعاب الخمس:
+
+🏛️ المخزن المركزي (المشترك بين الجميع)
+
+· الملف: src/components/games/highScoreStore.ts
+· الدالة المستخدمة للحفظ: addScore(GAME_ID, childName, value, HERO_ID)
+· آلية العمل: هذه الدالة تأخذ النتيجة، تقارنها بالرقم القياسي السابق (المحفوظ في localStorage تحت مفتاح شهري)، وإذا كانت أعلى، تقوم بتحديثه وتعيد { isNewRecord: true }.
+
+---
+
+1️⃣ لعبة العداد الطائر (FlyingAbacusGame.tsx)
+
+· أين يتم الحفظ؟ داخل دالة endGame() (حوالي السطر 400).
+· متى يتم استدعاؤها؟ عندما يصل مؤقت اللعبة (60 ثانية) إلى الصفر.
+· الكود المسؤول:
+  ```typescript
+  const recordResult = addScore(GAME_ID, childName, correctCount, heroId);
+  ```
+  (يقوم بحفظ عدد الإجابات الصحيحة correctCount).
+
+2️⃣ لعبة المحقق الرقمي (DetectiveGame.tsx)
+
+· أين يتم الحفظ؟ داخل دالة endGame() (حوالي السطر 300).
+· متى يتم استدعاؤها؟ عندما يصل مؤقت اللعبة (45 ثانية) إلى الصفر (بعد التعديل الذي أجريناه مؤخراً).
+· الكود المسؤول:
+  ```typescript
+  const recordResult = addScore(GAME_ID, childName, solvedCasesCount, HERO_ID);
+  ```
+  (يقوم بحفظ عدد القضايا التي تم حلها solvedCasesCount).
+
+3️⃣ لعبة دوجو السوروبان (FriendsGame.tsx)
+
+· أين يتم الحفظ؟ داخل دالة endGame() (حوالي السطر 350).
+· متى يتم استدعاؤها؟ عندما يصل مؤقت الجلسة (90 ثانية) إلى الصفر.
+· الكود المسؤول:
+  ```typescript
+  const result = addScore(GAME_ID, childName, correct, HERO_ID);
+  ```
+  (يقوم بحفظ عدد العمليات الصحيحة correct).
+
+4️⃣ لعبة سباق القراصنة (PirateRaceGame.tsx)
+
+(بناءً على نمط الكود الموحد في المشروع)
+
+· أين يتم الحفظ؟ داخل دالة endGame() أو finishRace().
+· متى يتم استدعاؤها؟ عند انتهاء الوقت أو عند وصول شريط الفجوة إلى النهاية (100%).
+· الكود المسؤول:
+  ```typescript
+  const result = addScore(GAME_ID, childName, score, 'rayan');
+  ```
+
+5️⃣ لعبة جزيرة سوروبانيا (SorobaniaGame.tsx) - استثناء!
+
+هذه اللعبة تحفظ رقمين قياسيين مختلفين:
+
+1. أطول سلسلة إجابات صحيحة:
+   · أين؟ داخل دالة commitStreakRecord().
+   · متى؟ يتم استدعاؤها فوراً إذا انكسرت السلسلة، أو عند نهاية المرحلة، أو عند الخروج.
+   · الكود: addScore(GAME_ID, name, best, HERO_ID)
+2. أسرع متوسط زمن (نقاط السرعة):
+   · أين؟ داخل دالة finishStage().
+   · متى؟ عند الفوز بالمرحلة (إذا كان قد أجاب على 4 أسئلة على الأقل).
+   · الكود: addScore(SPEED_GAME_ID, name, speedPts, HERO_ID)
+
+---
+
 📖 الملفات المرجعية
 
 · STATE_OF_THE_PROJECT.md — مصدر الحقيقة
