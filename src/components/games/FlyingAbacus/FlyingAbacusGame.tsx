@@ -8,7 +8,7 @@
 //   3. تفعيل رد الفعل الصوتي والشفهي للبطل عند الإجابة الصحيحة.
 //   4. إضافة عبارات دعم دافئة وخاصة من البطل أثناء وضع التكيف الذكي.
 //
-// [PERF] — عزل المؤقت لمنع إعادة الرسم كل ثانية، وتخفيف حركات الخروج.
+// ✅ [Fix Sound AR/EN] — إضافة gt() حول النصوص العربية التي تُنطق لمنع الهلوسة في الوضع الإنجليزي
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -389,15 +389,15 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
 
     if (isAdaptive) {
       const adaptiveText = pickUniquePhrase(ADAPTIVE_SUPPORT_PHRASES, usedAdaptiveRef.current);
-      setHeroText(adaptiveText);
-      speak(adaptiveText);
+      setHeroText(gt(adaptiveText)); // ✅
+      speak(gt(adaptiveText)); // ✅
     } else {
-      setHeroText(pickUniquePhrase(THINKING_PHRASES, usedThinkingRef.current));
+      setHeroText(gt(pickUniquePhrase(THINKING_PHRASES, usedThinkingRef.current))); // ✅
     }
 
     addTimeout(() => {
       setIsAbacusVisible(false);
-      setHeroText(pickUniquePhrase(ASK_PHRASES, usedAskRef.current));
+      setHeroText(gt(pickUniquePhrase(ASK_PHRASES, usedAskRef.current))); // ✅
     }, problem.showMs);
   }, [addTimeout, speak]);
 
@@ -426,8 +426,8 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
         : correctCount >= 5 ? END_PHRASES_LOW
         : END_PHRASES_NONE;
       const endMsg = pickUniquePhrase(endPool, usedEndRef.current);
-      setHeroText(endMsg);
-      speak(endMsg);
+      setHeroText(gt(endMsg)); // ✅
+      speak(gt(endMsg)); // ✅
     }
 
     setHeroMood('celebrating');
@@ -487,8 +487,8 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
       const milestone = STREAK_PHRASES[newStreak];
 
       if (milestone) {
-        setHeroText(milestone);
-        speak(milestone);
+        setHeroText(gt(milestone)); // ✅
+        speak(gt(milestone)); // ✅
 
         if (newStreak === 3) {
           setIsGoldMode(true);
@@ -499,8 +499,8 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
         }
       } else {
         const correctMsg = pickUniquePhrase(CORRECT_PHRASES, usedCorrectRef.current);
-        setHeroText(correctMsg);
-        speak(correctMsg);
+        setHeroText(gt(correctMsg)); // ✅
+        speak(gt(correctMsg)); // ✅
         if (!isGoldMode) setHeroMood('celebrating');
       }
 
@@ -520,8 +520,8 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
 
       if (!shouldAdapt) {
         const errMsg = pickUniquePhrase(ERROR_PHRASES, usedErrorRef.current);
-        setHeroText(errMsg);
-        speak(errMsg);
+        setHeroText(gt(errMsg)); // ✅
+        speak(gt(errMsg)); // ✅
       }
 
       addTimeout(() => {
