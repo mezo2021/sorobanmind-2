@@ -13,6 +13,7 @@
 import { useId, useRef } from 'react';
 import { motion } from 'framer-motion';
 import type { AbacusState } from './bank';
+import { gt } from '../gamesI18n';
 
 export type LaserTheme = 'blue' | 'red';
 type Rod = 't' | 'o';
@@ -210,12 +211,12 @@ export function LaserAbacus({
     <div dir="ltr" className="w-full select-none" style={{ touchAction: 'none' }}>
       {!compact && (
         <div className="grid grid-cols-2 text-center mb-1.5">
-          <span className="text-xs font-black text-sky-300/90">عَشَرَات</span>
-          <span className="text-xs font-black text-emerald-300/90">آحَاد</span>
+          <span className="text-xs font-black text-sky-300/90">{gt('عَشَرَات')}</span>
+          <span className="text-xs font-black text-emerald-300/90">{gt('آحَاد')}</span>
         </div>
       )}
 
-      <svg viewBox={`0 0 ${VB_W} ${VB_H}`} className="w-full h-auto" role="img" aria-label="معداد سوروبان">
+      <svg viewBox={`0 0 ${VB_W} ${VB_H}`} className="w-full h-auto" role="img" aria-label={gt('معداد سوروبان')}>
         <defs>
           <linearGradient id={`${uid}act`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={c.core} />
