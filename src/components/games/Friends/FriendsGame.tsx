@@ -1,22 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // 🥋 src/components/games/Friends/FriendsGame.tsx   (v2 · ليزر)
 // ═══════════════════════════════════════════════════════════════════
-//
-// الجديد في هذه النسخة:
-//   1. معداد SVG احترافي بليزر أزرق/أحمر (LaserAbacus.tsx)
-//   2. ترتيب المنازل الصحيح: العشرات يسار · الآحاد يمين
-//   3. محرّك تصحيح الخطأ على طريقة معلّم السوروبان:
-//        - يكشف الحركة الخاطئة فوراً (تبعد عن الهدف)
-//        - يُومض الخرزة الخاطئة بالأحمر مع اهتزاز وصوت
-//        - يشرح السبب (عمود صحيح لُمس · جدة بالاتجاه المعاكس · خرزات زائدة)
-//        - يُرجِع الخرزات تلقائياً إلى ما قبل الخطأ
-//        - سلّم تلميحات: نص ← أشباح زرقاء ← الإشارة بالأصابع
-//   4. نجوم لكل مسألة (٣ بلا خطأ) + سلسلة كومبو
-//   5. تدريب تكيّفي: القاعدة الأضعف تظهر أكثر
-//   6. أصوات لمس وتصفيق (WebAudio) + اهتزاز
-//
-// [FIX NAME] — اسم الطفل صوتياً في handleStartGame — 2026-10-13
-// ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -46,8 +30,8 @@ const HERO_ID: CharacterType = 'sham';
 const SYMBOL_SEEN_KEY = 'soroban_friends_symbol_seen_v1';
 const WEAK_KEY = 'soroban_friends_weak_v1';
 const THEME_KEY = 'soroban_laser_theme_v1';
-const IDLE_HINT_MS = 6000;   // بعد كم ثانية خمول يظهر الشبح الأزرق
-const REVERT_MS = 850;       // مدة وميض الخطأ قبل إرجاع الخرزات
+const IDLE_HINT_MS = 6000;
+const REVERT_MS = 850;
 const EMPTY_STATE: AbacusState = { tensUpper: false, tensLower: 0, onesUpper: false, onesLower: 0 };
 
 const RULE_LABEL: Record<MultiStepProblem['rule'], string> = {
@@ -206,7 +190,6 @@ function explainError(prev: AbacusState, next: AbacusState, target: AbacusState)
 // ═══════════════════════════════════════════════════════════════════
 // شاشة الرموز
 // ═══════════════════════════════════════════════════════════════════
-// [تعديل 1]: إضافة dir كـ prop إلزامي
 function SymbolsScreen({ onDismiss, dir }: { onDismiss: () => void; dir: string }) {
   return (
     <motion.div
@@ -232,8 +215,8 @@ function SymbolsScreen({ onDismiss, dir }: { onDismiss: () => void; dir: string 
             <div key={s.icon} className="flex items-start gap-3 p-3 rounded-2xl bg-slate-900/60 border border-sky-500/20">
               <span className="text-2xl shrink-0 bg-black/50 rounded-lg px-2.5 py-1 border border-white/10">{s.icon}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-sky-300">{s.name}</p>
-                <p className="text-[11px] text-white/60 mt-0.5 leading-relaxed">{s.desc}</p>
+                <p className="text-sm font-bold text-sky-300">{gt(s.name)}</p>
+                <p className="text-[11px] text-white/60 mt-0.5 leading-relaxed">{gt(s.desc)}</p>
               </div>
             </div>
           ))}
@@ -254,7 +237,7 @@ function SymbolsScreen({ onDismiss, dir }: { onDismiss: () => void; dir: string 
 // المكوّن الرئيسي
 // ═══════════════════════════════════════════════════════════════════
 export function FriendsGame({ onBack }: { onBack: () => void }) {
-  const { dir, isAr } = useGameLang(); // [تأكيد]: dir موجودة هنا
+  const { dir, isAr } = useGameLang();
   const { speak } = useGameVoice(HERO_ID);
   const addXP = useProgressStore((s) => s.addXP);
 
@@ -362,8 +345,8 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
       setIsNewRecord(false);
       const pool = correct >= 10 ? END_PHRASES_HIGH : correct >= 5 ? END_PHRASES_MID : END_PHRASES_LOW;
       const msg = pool[Math.floor(Math.random() * pool.length)];
-      setHeroText(msg);
-      speak(msg);
+      setHeroText(gt(msg)); // ✅ [Fix Sound AR/EN]
+      speak(gt(msg)); // ✅ [Fix Sound AR/EN]
     }
     setHeroMood('celebrating');
     vibrate([0, 40, 40, 40, 40, 80]);
@@ -465,12 +448,12 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
 
     const milestone = SHAM_MILESTONE_PHRASES[newCount];
     if (milestone) {
-      setHeroText(milestone);
-      speak(milestone);
+      setHeroText(gt(milestone)); // ✅ [Fix Sound AR/EN]
+      speak(gt(milestone)); // ✅ [Fix Sound AR/EN]
     } else {
       const msg = pickUniquePhrase(SHAM_CORRECT_PHRASES, usedCorrectRef.current);
-      setHeroText(msg);
-      if (newCount % 3 === 0) speak(msg);
+      setHeroText(gt(msg)); // ✅ [Fix Sound AR/EN]
+      if (newCount % 3 === 0) speak(gt(msg)); // ✅ [Fix Sound AR/EN]
     }
 
     addTimeout(() => { fetchNextProblem(); }, 1300);
@@ -520,8 +503,8 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
       vibrate([60, 40, 60]);
       if (errs === 1) {
         const msg = pickUniquePhrase(SHAM_ERROR_PHRASES, usedErrorRef.current);
-        setHeroText(msg);
-        speak(msg);
+        setHeroText(gt(msg)); // ✅ [Fix Sound AR/EN]
+        speak(gt(msg)); // ✅ [Fix Sound AR/EN]
       }
 
       // إرجاع الخرزات إلى ما قبل الخطأ (كما يفعل المعلّم)
@@ -577,7 +560,6 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
       style={{ touchAction: 'manipulation' }}
     >
       <AnimatePresence>
-        {/* [تعديل 2]: تمرير dir={dir} للمكون */}
         {showSymbols && <SymbolsScreen onDismiss={() => setShowSymbols(false)} dir={dir} />}
       </AnimatePresence>
 
@@ -911,3 +893,4 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
 }
 
 export default FriendsGame;
+// ✅ [Fix Sound AR/EN] — تم فحص كل استدعاءات speak() و setBanaMsg() وإضافة gt() حيث لزم.
