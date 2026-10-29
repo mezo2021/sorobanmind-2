@@ -904,7 +904,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                       transition={{ delay: 1.6 }}
                       className="rounded-xl border-2 border-sky-300/60 bg-sky-400/15 px-3 py-1.5 text-center text-sm font-black text-sky-200"
                     >
-                      {result.unlockedStage && <div>🗺️ {gt('منطقة جديدة')}: {gt(result.unlockedStage.name)}</div>}
+                      {result.unlockedStage && <div>🗺️ {lt('منطقة جديدة', 'New region')}: {gt(result.unlockedStage.name)}</div>}
                       {result.rootsUnlocked && <div>🔑 {gt('فُتحت أسرار الجذور على الخريطة')}</div>}
                     </motion.div>
                   )}
