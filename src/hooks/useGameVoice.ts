@@ -2,9 +2,7 @@
 // 🎭 صوت شخصيات الألعاب بلغتين — نفس واجهة useCharacterVoice
 //  • العربية: تُفوَّض كما هي إلى useCharacterVoice (بلا أي تغيير في الـ pitch/الصوت)
 //  • الإنجليزية: الشخصيات الأربع بنفس قيم pitch/rate (VOICE_CONFIG) على أصوات en-US
-//
-// الواجهة: { speak(text, onDone?), stop(), isSpeaking, isSupported }
-// يمكن تمرير نص عربي (يُترجم تلقائيًا عبر gtLang) أو إنجليزي جاهز.
+// ✅ [Fix Mixed AR/EN] — تحويل الأسماء العربية إلى حروف إنجليزية (Transliteration) لنطقها بسلاسة في وضع EN
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CharacterType } from '../types';
@@ -12,6 +10,14 @@ import { useCharacterVoice, VOICE_CONFIG } from './useCharacterVoice';
 import { useLangStore } from '@/i18n/useTranslation';
 import { gtLang } from '@/components/games/gamesI18n';
 import { sanitizeForSpeech } from './useReadAloud';
+
+// دالة تحويل الحروف العربية إلى إنجليزية للنطق (لضمان عدم صمت محرك الصوت)
+const transliterateArabic = (str: string): string => {
+  const map: Record<string, string> = {
+    'ا':'a', 'أ':'a', 'إ':'e', 'آ':'a', 'ب':'b', 'ت':'t', 'ث':'th', 'ج':'j', 'ح':'h', 'خ':'kh', 'د':'d', 'ذ':'th', 'ر':'r', 'ز':'z', 'س':'s', 'ش':'sh', 'ص':'s', 'ض':'d', 'ط':'t', 'ظ':'th', 'ع':'a', 'غ':'gh', 'ف':'f', 'ق':'q', 'ك':'k', 'ل':'l', 'م':'m', 'ن':'n', 'ه':'h', 'و':'o', 'ي':'y', 'ى':'a', 'ة':'h', 'ء':"'",
+  };
+  return str.split('').map(c => map[c] || c).join('');
+};
 
 const EN_FEMALE_HINTS = [
   'female', 'samantha', 'zira', 'victoria', 'karen', 'moira', 'tessa', 'susan',
@@ -22,9 +28,6 @@ const EN_MALE_HINTS = [
   'male', 'david', 'mark', 'daniel', 'alex', 'fred', 'guy', 'george', 'tom',
   'google uk english male',
 ];
-
-// تعبير نمطي لاكتشاف مقاطع اللغة العربية (متتالية من الكلمات العربية)
-const ARABIC_RUN_RE = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]+(?:\s+[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]+)*/g;
 
 function findEnglishVoice(
   voices: SpeechSynthesisVoice[],
@@ -80,8 +83,9 @@ export function useGameVoice(character: CharacterType) {
         onDone?.();
         return;
       }
-      // ملاحظة: تم إزالة window.speechSynthesis.cancel() من هنا 
-      // لأننا نستخدم نظام الطابور (Queue) لنطق الجمل المختلطة بالتتابع.
+      
+      // إلغاء أي نطق سابق لضمان عدم التداخل
+      window.speechSynthesis.cancel();
 
       // نفس قيم الشخصيات العربية (pitch / rate / الجنس)
       const config = VOICE_CONFIG[character] || VOICE_CONFIG.sham;
@@ -133,57 +137,12 @@ export function useGameVoice(character: CharacterType) {
       // وضع اللغة الإنجليزية: نقوم بالترجمة أولاً
       const en = gtLang(text, 'en');
       
-      // إذا كان النص إنجليزياً خالصاً (بدون أي حروف عربية)، ننطقه مباشرة
-      if (!/[\u0600-\u06FF]/.test(en)) {
-        speakEn(en, onDone);
-        return;
-      }
+      // تحويل أي حروف عربية متبقية (مثل اسم الطفل) إلى إنجليزية
+      // هذا يمنع محرك الصوت الإنجليزي من الصمت ويجعل الجملة متصلة
+      const finalText = transliterateArabic(en);
 
-      // الحل الجديد: النص مختلط (إنجليزي + اسم عربي)
-      // تقسيم النص إلى مقاطع
-      const parts = en.split(ARABIC_RUN_RE);
-      
-      const chunks = parts
-        .map((part) => ({
-          text: part.trim(),
-          isArabic: /[\u0600-\u06FF]/.test(part),
-        }))
-        // فلترة المقاطع الفارغة أو التي تحتوي على علامات ترقيم فقط
-        .filter((chunk) => /[\p{L}\p{N}]/u.test(chunk.text));
-
-      if (chunks.length === 0) {
-        onDone?.();
-        return;
-      }
-
-      // إلغاء أي نطق سابق قبل بدء الطابور الجديد
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-
-      let currentIndex = 0;
-      
-      const playNext = () => {
-        if (currentIndex >= chunks.length) {
-          if (mountedRef.current) setEnSpeaking(false);
-          onDone?.();
-          return;
-        }
-
-        const chunk = chunks[currentIndex];
-        currentIndex++;
-
-        if (chunk.isArabic) {
-          // المقطع العربي: يستخدم نبرة الشخصية العربية
-          arabic.speak(chunk.text, playNext);
-        } else {
-          // المقطع الإنجليزي: يستخدم نبرة الشخصية الإنجليزية
-          speakEn(chunk.text, playNext);
-        }
-      };
-
-      // بدء تشغيل الطابور
-      playNext();
+      // نطق النص النهائي بالصوت الإنجليزي
+      speakEn(finalText, onDone);
     },
     [arabic.speak, speakEn], // eslint-disable-line react-hooks/exhaustive-deps
   );
@@ -205,4 +164,4 @@ export function useGameVoice(character: CharacterType) {
 }
 
 export default useGameVoice;
-// ✅ [Fix Mixed AR/EN] — تقسيم الجمل المختلطة (إنجليزي + اسم عربي) لضمان نطق الاسم بالصوت العربي والجملة بالإنجليزي، مع الحفاظ على نبرة الشخصية.
+// ✅ [Fix Mixed AR/EN] — التحويل الصوتي (Transliteration) لمنع صمت محرك الصوت الإنجليزي عند نطق الأسماء العربية.
