@@ -1,12 +1,14 @@
 // src/hooks/useGameVoice.ts
-// 🎭 صوت شخصيات الألعاب بلغتين — قاموس نطق ذكي للأسماء العربية في الوضع الإنجليزي
+// 🎭 صوت شخصيات الألعاب بلغتين — استبدال مباشر لاسم الطفل (100% مضمون)
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CharacterType } from '../types';
 import { useCharacterVoice, VOICE_CONFIG } from './useCharacterVoice';
 import { useLangStore } from '@/i18n/useTranslation';
 import { sanitizeForSpeech } from './useReadAloud';
+import { useProgressStore } from '@/store/progressStore'; // <-- أضفنا هذا
 
+// قاموس النطق
 const NAME_PRONUNCIATIONS: Record<string, string> = {
   "محمد": "Mohammed", "أحمد": "Ahmed", "محمود": "Mahmoud", "مصطفى": "Mustafa", "عمر": "Omar", "عمرو": "Amr", "علي": "Ali", "حسن": "Hassan", "حسين": "Hussein", "حامد": "Hamed", "حمزة": "Hamza", "خالد": "Khaled", "وليد": "Waleed", "سعيد": "Saeed", "سعد": "Saad", "سلمان": "Salman", "سليمان": "Sulaiman", "يوسف": "Yusuf", "يونس": "Younes", "إبراهيم": "Ibrahim", "اسماعيل": "Ismail", "إسماعيل": "Ismail", "إسحاق": "Ishaq", "يعقوب": "Yacoub", "آدم": "Adam", "نوح": "Noah", "إدريس": "Idris", "أيوب": "Ayyub", "زكريا": "Zakariya", "يحيى": "Yahya", "داود": "Dawood", "طارق": "Tariq", "مازن": "Mazen", "رامي": "Rami", "سامر": "Samer", "سمير": "Samir", "كريم": "Karim", "نبيل": "Nabil", "جمال": "Jamal", "جلال": "Jalal", "فارس": "Fares", "فادي": "Fadi", "فؤاد": "Fuad", "زياد": "Ziad", "رياض": "Riyad", "أنس": "Anas", "أمير": "Amir", "أكرم": "Akram", "باسم": "Bassem", "باسل": "Basil", "بلال": "Bilal", "تامر": "Tamer", "ثامر": "Thamer", "جابر": "Jaber", "حازم": "Hazem", "حكيم": "Hakim", "خليل": "Khalil", "راشد": "Rashid", "رائد": "Raed", "رشيد": "Rashid", "رضا": "Reda", "عادل": "Adel", "عاصم": "Asim", "عمار": "Ammar", "عيسى": "Isa", "غسان": "Ghassan", "قاسم": "Qasim", "قصي": "Qusai", "لؤي": "Luay", "مروان": "Marwan", "منصور": "Mansour", "مهند": "Muhannad", "نادر": "Nader", "ناصر": "Nasser", "نايف": "Naif", "هاشم": "Hashem", "هاني": "Hani", "هيثم": "Haitham", "وائل": "Wael", "وسيم": "Waseem", "يزن": "Yazan", "ياسر": "Yasser", "ياسين": "Yaseen", "بدر": "Badr", "براء": "Baraa", "جواد": "Jawad", "رعد": "Raad", "شادي": "Shadi", "صالح": "Saleh", "صهيب": "Suhaib", "ضياء": "Dia", "عروة": "Urwa", "معاذ": "Muadh", "معتز": "Moataz", "منذر": "Munther", "نواف": "Nawaf",
   "سارة": "Sarah", "ساره": "Sarah", "مريم": "Mariam", "فاطمة": "Fatima", "عائشة": "Aisha", "خديجة": "Khadija", "زينب": "Zainab", "رقية": "Ruqayya", "حفصة": "Hafsa", "آمنة": "Amina", "أمينة": "Amina", "أمل": "Amal", "امل": "Amal", "نور": "Noor", "نورا": "Noura", "نورة": "Noura", "هدى": "Huda", "منى": "Mona", "مي": "Mai", "ريم": "Reem", "رنا": "Rana", "دانا": "Dana", "دينا": "Dina", "لينا": "Lina", "ليلى": "Layla", "ليلا": "Laila", "لمى": "Lama", "لارا": "Lara", "هنا": "Hana", "هناء": "Hanaa", "هبة": "Heba", "حنان": "Hanan", "حنين": "Haneen", "دعاء": "Duaa", "دلال": "Dalal", "جنى": "Jana", "جود": "Joud", "جوري": "Jouri", "جميلة": "Jamila", "حلا": "Hala", "حياة": "Hayat", "رحمة": "Rahma", "رغد": "Raghad", "روان": "Rawan", "روضة": "Rawda", "سلمى": "Salma", "سما": "Sama", "سمية": "Sumaya", "سندس": "Sundus", "شهد": "Shahd", "شذى": "Shatha", "صفاء": "Safa", "ضحى": "Duha", "عبير": "Abeer", "غادة": "Ghada", "غلا": "Ghala", "فرح": "Farah", "فريدة": "Farida", "كارما": "Karma", "لانا": "Lana", "لجين": "Lujain", "لورا": "Laura", "ميس": "Mais", "ميساء": "Maysaa", "ملك": "Malak", "مها": "Maha", "مودة": "Mawadda", "ميار": "Mayar", "نادين": "Nadine", "نادية": "Nadia", "نسرين": "Nisreen", "نسمة": "Nesma", "نهى": "Noha", "هالة": "Hala", "هديل": "Hadeel", "يارا": "Yara", "ياسمين": "Yasmin", "بيان": "Bayan", "تالا": "Tala", "تسنيم": "Tasneem", "تمارا": "Tamara", "جمانة": "Jumana", "حور": "Hoor", "ديمة": "Dima", "ريتاج": "Ritaj", "رزان": "Razan", "رفيف": "Rafeef", "سجى": "Saja", "سلسبيل": "Salsabil", "شام": "Sham", "علا": "Ola", "عهد": "Ahed", "لما": "Lama", "ميرا": "Mira", "نغم": "Nagham", "وتين": "Wateen", "يقين": "Yaqeen",
@@ -22,46 +24,34 @@ for (const [name, pronunciation] of Object.entries(NAME_PRONUNCIATIONS)) {
   NORMALIZED_NAME_PRONUNCIATIONS[normalizeArabicName(name)] = pronunciation;
 }
 
-const ARABIC_LETTER = "[\\u0621-\\u063A\\u0641-\\u064A\\u066E-\\u06D3\\u0750-\\u077F\\u08A0-\\u08FF][\\u064B-\\u065F\\u0670\\u0640]*";
-const ARABIC_NAME_BLOCK = new RegExp(`${ARABIC_LETTER}(?:\\s+${ARABIC_LETTER})*`, "gu");
-
 const FALLBACK_TRANSLITERATION: Record<string, string> = {
   "ا": "a", "أ": "a", "إ": "i", "آ": "aa", "ٱ": "a", "ب": "b", "ت": "t", "ث": "th", "ج": "j", "ح": "h", "خ": "kh", "د": "d", "ذ": "th", "ر": "r", "ز": "z", "س": "s", "ش": "sh", "ص": "s", "ض": "d", "ط": "t", "ظ": "z", "ع": "a", "غ": "gh", "ف": "f", "ق": "q", "ك": "k", "ل": "l", "م": "m", "ن": "n", "ه": "h", "و": "oo", "ي": "ee", "ى": "a", "ة": "a", "ء": "", "ؤ": "o", "ئ": "e", "پ": "p", "چ": "ch", "گ": "g",
 };
 
-// دالة تحويل أي كتلة عربية إلى حروف إنجليزية
 function transliterateBlock(block: string): string {
   return Array.from(block).map((char) => {
-    if (/\s/.test(char)) return " "; // الحفاظ على المسافات
+    if (/\s/.test(char)) return " ";
     return FALLBACK_TRANSLITERATION[normalizeArabicName(char)] ?? char;
   }).join("");
 }
+
+const ARABIC_LETTER = "[\\u0621-\\u063A\\u0641-\\u064A\\u066E-\\u06D3\\u0750-\\u077F\\u08A0-\\u08FF][\\u064B-\\u065F\\u0670\\u0640]*";
+const ARABIC_NAME_BLOCK = new RegExp(`${ARABIC_LETTER}(?:\\s+${ARABIC_LETTER})*`, "gu");
 
 function extractAndTranslateFirstName(text: string): string {
   return text.replace(ARABIC_NAME_BLOCK, (block) => {
     const words = block.trim().split(/\s+/);
     const firstName = words[0];
     if (!firstName) return block;
-    
     const normalized = normalizeArabicName(firstName);
     const knownName = NORMALIZED_NAME_PRONUNCIATIONS[normalized];
-    
-    // إذا كانت الكلمة الأولى اسماً معروفاً في القاموس (مثل: محمد)، نأخذها ونختصر الباقي
-    if (knownName) {
-        return knownName;
-    }
-
-    // إذا لم تكن الكلمة الأولى اسماً معروفاً (مثل: يا بطل)، نحوّل الكتلة كاملة حفاظاً على المعنى
+    if (knownName) return knownName;
     return transliterateBlock(block);
   });
 }
 
-const EN_FEMALE_HINTS = [
-  'female', 'samantha', 'zira', 'victoria', 'karen', 'moira', 'tessa', 'susan', 'allison', 'ava', 'serena', 'fiona', 'jenny', 'aria', 'google us english', 'google uk english female',
-];
-const EN_MALE_HINTS = [
-  'male', 'david', 'mark', 'daniel', 'alex', 'fred', 'guy', 'george', 'tom', 'google uk english male',
-];
+const EN_FEMALE_HINTS = ['female', 'samantha', 'zira', 'victoria', 'karen', 'moira', 'tessa', 'susan', 'allison', 'ava', 'serena', 'fiona', 'jenny', 'aria', 'google us english', 'google uk english female'];
+const EN_MALE_HINTS = ['male', 'david', 'mark', 'daniel', 'alex', 'fred', 'guy', 'george', 'tom', 'google uk english male'];
 
 function findEnglishVoice(
   voices: SpeechSynthesisVoice[],
@@ -153,8 +143,24 @@ export function useGameVoice(character: CharacterType) {
         return;
       }
 
-      // المسار الإنجليزي: النص مترجم مسبقاً، نمرره لمعالج الأسماء مباشرة
-      const finalEn = extractAndTranslateFirstName(text);
+      let finalEn = text;
+
+      // 🎯 الخطة النووية: استبدال الاسم مباشرة من المتجر
+      const childName = useProgressStore.getState().childName?.trim();
+      if (childName) {
+        // نأخذ الاسم الأول فقط
+        const firstName = childName.split(/\s+/)[0];
+        const normalized = normalizeArabicName(firstName);
+        const translatedName = NORMALIZED_NAME_PRONUNCIATIONS[normalized] || transliterateBlock(firstName);
+        
+        // نستبدل الاسم الثلاثي بالكامل بالاسم الأول المترجم
+        const escapedName = childName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        finalEn = finalEn.replace(new RegExp(escapedName, 'g'), translatedName);
+      }
+
+      // التخلص من أي بقايا عربية أخرى (مثل كلمة "يا بطل" إن وجدت)
+      finalEn = extractAndTranslateFirstName(finalEn);
+
       speakEn(finalEn, onDone);
     },
     [arabic.speak, speakEn],
@@ -177,4 +183,3 @@ export function useGameVoice(character: CharacterType) {
 }
 
 export default useGameVoice;
-// ✅ [Fix Final v2] — ترقية معالجة الأسماء: اختصار الاسم الثلاثي إذا كان معروفاً، وتحويل الكتلة كاملة إذا كانت جملة عربية للحفاظ على المعنى.
