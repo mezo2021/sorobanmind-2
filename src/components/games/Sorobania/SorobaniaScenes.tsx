@@ -33,6 +33,7 @@ import type {
   Progress,
   BurstState,
 } from './sorobaniaData';
+import { gt } from '../gamesI18n';
 
 // ═══════════════════════════════════════════════════════════════════
 // رسوم SVG
@@ -136,7 +137,7 @@ export const PlayScene: React.FC<PlaySceneProps> = ({ stage, pos, torches }) => 
       preserveAspectRatio="xMidYMax slice"
       className="absolute inset-0 h-full w-full"
       role="img"
-      aria-label="مشهد معبد سوروبانيا"
+      aria-label={gt('مشهد معبد سوروبانيا')}
     >
       <defs>
         <linearGradient id="p-sky" x1="0" y1="0" x2="0" y2="1">
@@ -311,7 +312,7 @@ export const MapScene: React.FC<{
       preserveAspectRatio="xMidYMid meet"
       className="absolute inset-0 h-full w-full"
       role="img"
-      aria-label="خريطة جزيرة سوروبانيا"
+      aria-label={gt('خريطة جزيرة سوروبانيا')}
     >
       <defs>
         <linearGradient id="m-bg" x1="0" y1="0" x2="0" y2="1">
@@ -441,7 +442,7 @@ export const MapScene: React.FC<{
         const sel = s.id === selectedId;
         const { x, y } = s.node;
         return (
-          <g key={s.id} onClick={() => onSelect(s.id)} style={{ cursor: 'pointer' }} role="button" aria-label={s.name}>
+          <g key={s.id} onClick={() => onSelect(s.id)} style={{ cursor: 'pointer' }} role="button" aria-label={gt(s.name)}>
             {st > 0 && <circle cx={x} cy={y} r={46} fill="url(#m-glow)" opacity="0.6" />}
             {sel && (
               <motion.circle
@@ -502,7 +503,7 @@ export const MapScene: React.FC<{
               strokeWidth="3"
               paintOrder="stroke"
             >
-              {s.name}
+              {gt(s.name)}
             </text>
             <g transform={`translate(${x - 21} ${y + 46})`}>
               {[0, 1, 2].map((i) => (
