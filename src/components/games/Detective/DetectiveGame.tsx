@@ -4,6 +4,7 @@
 // [FIX NAME] — اسم الطفل صوتياً في handleStartGame — 2026-10-13
 // ✅ [Fix Sound AR/EN] — إضافة gt() حول النصوص العربية التي تُنطق لمنع الهلوسة في الوضع الإنجليزي
 // ✅ [Fix HighScore] — إضافة endGame إلى dependency array ونقل الـ useEffect بعد الدالة لحفظ الرقم القياسي
+// ✅ [Fix GameID] — توحيد الـ ID ليكون 'detective' ليتطابق مع gamesData.ts
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -20,7 +21,7 @@ import type { CharacterType } from '@/types';
 import { Num } from '@/components/Num';
 
 const SESSION_SECONDS = 45;
-const GAME_ID = 'detective-game';
+const GAME_ID = 'detective'; // ✅ [Fix GameID]
 const HERO_ID: CharacterType = 'joud';
 
 interface ProblemTemplate {
@@ -247,7 +248,6 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
     setHeroText(thinkMsg);
   }, [sessionTimeLeft]);
 
-  // ✅ [Fix HighScore] — تعريف endGame أولاً
   const endGame = useCallback(() => {
     setIsGameOver(true);
     setIsPlaying(false);
@@ -273,7 +273,6 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
     vibrate([0, 40, 40, 40, 40, 80]);
   }, [solvedCasesCount, addXP, speak, clearAllTimeouts, childName]);
 
-  // ✅ [Fix HighScore] — نقل الـ useEffect ليكون بعد تعريف endGame
   useEffect(() => {
     if (sessionTimeLeft === 0 && isPlaying && !isGameOver) {
       endGame();
