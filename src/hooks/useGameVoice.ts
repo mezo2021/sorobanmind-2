@@ -1,5 +1,5 @@
 // src/hooks/useGameVoice.ts
-// 🎭 صوت شخصيات الألعاب بلغتين — معالجة الأسماء العربية في وضع الإنجليزي
+// 🎭 صوت شخصيات الألعاب بلغتين — نطق الاسم الأول فقط في الوضع الإنجليزي
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CharacterType } from '../types';
@@ -7,6 +7,12 @@ import { useCharacterVoice, VOICE_CONFIG } from './useCharacterVoice';
 import { useLangStore } from '@/i18n/useTranslation';
 import { gtLang } from '@/components/games/gamesI18n';
 import { sanitizeForSpeech } from './useReadAloud';
+
+// دالة استخراج الكلمة الأولى فقط من أي كتلة كلمات عربية (لاختصار الاسم الثلاثي)
+const keepFirstArabicWord = (str: string): string => {
+  // تبحث عن أي كلمتين عربيتين متتاليتين أو أكثر، وتستبدلها بالكلمة الأولى فقط
+  return str.replace(/([\u0600-\u06FF]+)(?:\s+[\u0600-\u06FF]+)+/g, '$1');
+};
 
 // دالة تحويل الحروف العربية إلى إنجليزية (Transliteration)
 const transliterateArabicName = (str: string): string => {
@@ -125,20 +131,23 @@ export function useGameVoice(character: CharacterType) {
     (text: string, onDone?: () => void) => {
       const lang = useLangStore.getState().lang;
 
-      // النطق باللغة العربية: يمرر النص كما هو
+      // 1. النطق باللغة العربية (سليم 100% كما كان، الاسم الثلاثي يُنطق كاملاً)
       if (lang !== 'en') {
         arabic.speak(text, onDone);
         return;
       }
 
-      // النطق باللغة الإنجليزية
-      // 1. نترجم النص (ستبقى الأسماء العربية كما هي لأن القاموس لا يترجمها)
+      // 2. النطق باللغة الإنجليزية
+      // أ- نترجم النص
       const en = gtLang(text, 'en');
       
-      // 2. نحول أي حروف عربية متبقية (وهي الأسماء) إلى إنجليزية
-      const finalEn = transliterateArabicName(en);
+      // ب- نختصر أي كتلة أسماء عربية إلى الكلمة الأولى فقط (الاسم الأول)
+      const firstNameOnly = keepFirstArabicWord(en);
+      
+      // ج- نحول الاسم الأول إلى حروف إنجليزية
+      const finalEn = transliterateArabicName(firstNameOnly);
 
-      // 3. ننطق النص النهائي بالصوت الإنجليزي
+      // د- نطق النص النهائي
       speakEn(finalEn, onDone);
     },
     [arabic.speak, speakEn],
@@ -161,4 +170,3 @@ export function useGameVoice(character: CharacterType) {
 }
 
 export default useGameVoice;
-// ✅ [Fix Mixed AR/EN] — تحويل الأسماء بالكامل إلى إنجليزية لضمان نطقها بسلاسة دون التأثير على باقي الجملة.
