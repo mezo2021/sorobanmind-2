@@ -2,26 +2,6 @@
 // src/components/games/Sorobania/SorobaniaGame.tsx
 // 🏝️ جزيرة سوروبانيا — الملف الرئيسي (منطق اللعبة والشاشات)
 // ═══════════════════════════════════════════════════════════════════
-// الدور: العقل المدبّر. يربط القطع ببعضها:
-//   • الحالة: الشاشة الحالية · التقدّم · الجولة الجارية · السلسلة · المشاعل
-//   • معالجة الإجابات (صحيح / خطأ / انتهاء الوقت) والانتقال بين الأسئلة
-//   • نهاية المرحلة: النجوم · XP · الأرقام القياسية · فتح المناطق
-//   • التذاكر (selectHasTicket / buyTicket / consumeTicket)
-//   • عرض شاشات: الخريطة · الدرس · اللعب · الفوز · الخسارة · الأرقام القياسية
-//
-// الملفات المساندة (نفس المجلد):
-//   • sorobaniaData.ts   : ثوابت · أنواع · مراحل · أسئلة · حفظ التقدّم
-//   • sorobaniaSfx.ts    : الأصوات
-//   • SorobaniaScenes.tsx: الرسوم (SVG) والاحتفالات
-//   • SorobaniaUI.tsx    : Hud · بانة · الفتيل · الدروس
-//
-// الملف الوحيد الذي تستورده gamesData / GamesListScreen (export default).
-//
-// متى تعدّله؟ لتغيير قواعد اللعب (حيوات · نجوم · إشعال مشعل · مكافآت).
-//
-// [FIX A1] — isPreviewMode → isPreviewMode() في ensureTicket — 2026-10-13
-// [FIX A2] — استيراد dispose + استدعاؤه في useEffect التنظيف — 2026-10-13
-// ═══════════════════════════════════════════════════════════════════
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -362,8 +342,10 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
         speak(`${gt(pick(CHEERS))} ${gt('أشعلت مشعلاً!')}`);
       } else {
         triggerBurst('right');
-        setBanaMsg(newStreak >= 3 ? lt(`سلسلة ${newStreak}! حسابات خارقة!`, `Streak ${newStreak}! Amazing math!`) : pick(CHEERS));
-        if (newStreak % 3 === 0) speak(`${pick(CHEERS)} ${name}!`);
+        // ✅ [Fix Sound AR/EN] — إضافة gt() حول pick(CHEERS)
+        setBanaMsg(newStreak >= 3 ? lt(`سلسلة ${newStreak}! حسابات خارقة!`, `Streak ${newStreak}! Amazing math!`) : gt(pick(CHEERS)));
+        // ✅ [Fix Sound AR/EN] — إضافة gt() حول pick(CHEERS)
+        if (newStreak % 3 === 0) speak(`${gt(pick(CHEERS))} ${name}!`);
       }
       scheduleAdvance(relight ? 1250 : 850);
       return;
@@ -385,7 +367,8 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
     });
     sfx.wrong();
     triggerBurst('wrong');
-    setBanaMsg(kind === 'timeout' ? gt('انتهى الوقت! انظر للجواب.') : pick(OOPS));
+    // ✅ [Fix Sound AR/EN] — إضافة gt() حول pick(OOPS)
+    setBanaMsg(kind === 'timeout' ? gt('انتهى الوقت! انظر للجواب.') : gt(pick(OOPS)));
     if (r.torches - 1 <= 0) speak(gt('آخر مشعل انطفأ!'));
     scheduleAdvance(1700);
   };
@@ -1061,3 +1044,4 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
     </div>
   );
 }
+// ✅ [Fix Sound AR/EN] — تم فحص كل استدعاءات speak() و setBanaMsg() وإضافة gt() حيث لزم.
