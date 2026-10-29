@@ -31,7 +31,8 @@ import { useProgressStore, selectHasTicket } from '@/store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
 import { HighScoreBadge } from '../HighScoreBadge';
 import { addScore, getHighScore, type HighScoreEntry } from '../highScoreStore';
-import { useCharacterVoice } from '@/hooks/useCharacterVoice';
+import { useGameVoice } from '@/hooks/useGameVoice';
+import { gt, lt, useGameLang } from '../gamesI18n';
 
 import {
   GAME_ID,
@@ -87,8 +88,9 @@ interface SorobaniaGameProps {
 }
 
 export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
+  const { dir } = useGameLang();
   const { addXP, buyTicket, consumeTicket } = useProgressStore();
-  const { speak } = useCharacterVoice(HERO_ID);
+  const { speak } = useGameVoice(HERO_ID);
 
   const [screen, setScreen] = useState<Screen>('map');
   const [progress, setProgress] = useState<Progress>(() => loadProgress());
@@ -265,12 +267,12 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
         }
       }
       sfx.fanfare();
-      speak(`مبروك يا ${name}! انفتح باب المعبد!`);
-      setBanaMsg(stars === 3 ? 'ثلاث نجوم! أنت أسطورة!' : 'انتصار رائع! حاول جمع كل النجوم.');
+      speak(lt(`مبروك يا ${name}! انفتح باب المعبد!`, `Congratulations ${name}! The temple gate is open!`));
+      setBanaMsg(stars === 3 ? gt('ثلاث نجوم! أنت أسطورة!') : gt('انتصار رائع! حاول جمع كل النجوم.'));
     } else {
       sfx.lose();
-      speak('انطفأت المشاعل، لكنك ستعود أقوى!');
-      setBanaMsg('لا بأس! كل محاولة تجعلك أسرع.');
+      speak(gt('انطفأت المشاعل، لكنك ستعود أقوى!'));
+      setBanaMsg(gt('لا بأس! كل محاولة تجعلك أسرع.'));
     }
 
     const newStreak = commitStreakRecord() || newStreakFlagRef.current;
@@ -347,7 +349,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
           rootsCrossedRef.current = true;
           window.setTimeout(() => {
             sfx.unlock();
-            showNotice('🔑 فُتحت أسرار الجذور! ستجدها على الخريطة.');
+            showNotice(gt('🔑 فُتحت أسرار الجذور! ستجدها على الخريطة.'));
           }, 500);
         }
       }
@@ -356,11 +358,11 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
       if (relight) {
         sfx.relight();
         triggerBurst('relight');
-        setBanaMsg('أشعلت مشعلاً جديداً! 🔥');
-        speak(`${pick(CHEERS)} أشعلت مشعلاً!`);
+        setBanaMsg(gt('أشعلت مشعلاً جديداً! 🔥'));
+        speak(`${gt(pick(CHEERS))} ${gt('أشعلت مشعلاً!')}`);
       } else {
         triggerBurst('right');
-        setBanaMsg(newStreak >= 3 ? `سلسلة ${newStreak}! حسابات خارقة!` : pick(CHEERS));
+        setBanaMsg(newStreak >= 3 ? lt(`سلسلة ${newStreak}! حسابات خارقة!`, `Streak ${newStreak}! Amazing math!`) : pick(CHEERS));
         if (newStreak % 3 === 0) speak(`${pick(CHEERS)} ${name}!`);
       }
       scheduleAdvance(relight ? 1250 : 850);
@@ -383,8 +385,8 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
     });
     sfx.wrong();
     triggerBurst('wrong');
-    setBanaMsg(kind === 'timeout' ? 'انتهى الوقت! انظر للجواب.' : pick(OOPS));
-    if (r.torches - 1 <= 0) speak('آخر مشعل انطفأ!');
+    setBanaMsg(kind === 'timeout' ? gt('انتهى الوقت! انظر للجواب.') : pick(OOPS));
+    if (r.torches - 1 <= 0) speak(gt('آخر مشعل انطفأ!'));
     scheduleAdvance(1700);
   };
 
@@ -428,7 +430,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
   // ─── بدء مرحلة ───
   const beginStage = (stage: StageDef) => {
     if (!ensureTicket()) {
-      showNotice('تحتاج إلى تذكرة لدخول المعبد');
+      showNotice(gt('تحتاج إلى تذكرة لدخول المعبد'));
       setScreen('map');
       return;
     }
@@ -453,8 +455,8 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
     setSelectedId(stage.id);
     setScreen('play');
     sfx.click();
-    setBanaMsg('٣ إجابات متتالية تُشعل مشعلاً!');
-    speak(`أهلاً ${getLocalChildName()}! لنبدأ ${stage.name}`);
+    setBanaMsg(gt('٣ إجابات متتالية تُشعل مشعلاً!'));
+    speak(lt(`أهلاً ${getLocalChildName()}! لنبدأ ${stage.name}`, `Hello ${getLocalChildName()}! Let us start ${gt(stage.name)}`));
   };
 
   const launchStage = (stageId: string) => {
@@ -462,7 +464,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
     if (!stage) return;
     if (!isUnlocked(stage, progressRef.current)) {
       sfx.wrong();
-      showNotice(lockReason(stage, progressRef.current));
+      showNotice(gt(lockReason(stage, progressRef.current)));
       return;
     }
     if (stage.lesson && !progressRef.current.seen[stage.lesson]) {
@@ -494,7 +496,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
     commitStreakRecord();
     setStreak(0);
     setSelectedId(suggestStage(progressRef.current));
-    setBanaMsg('اختر منطقة وابدأ المغامرة!');
+    setBanaMsg(gt('اختر منطقة وابدأ المغامرة!'));
     setScreen('map');
   };
 
@@ -535,21 +537,21 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
   const canGoNext = !!resultNext && isUnlocked(resultNext, progress);
 
   return (
-    <div dir="rtl" className="fixed inset-0 z-[60] flex select-none justify-center bg-[#07051a] text-white [touch-action:manipulation]">
+    <div dir={dir} className="fixed inset-0 z-[60] flex select-none justify-center bg-[#07051a] text-white [touch-action:manipulation]">
       <div className="relative flex h-full w-full max-w-md flex-col overflow-hidden bg-[#140f33]">
         {/* ═══════════ الخريطة ═══════════ */}
         {screen === 'map' && (
           <>
             <Hud
-              title="جزيرة سوروبانيا"
-              subtitle={`النجوم ${totalStars} من ${STAGES.length * 3}`}
+              title={gt('جزيرة سوروبانيا')}
+              subtitle={lt(`النجوم ${totalStars} من ${STAGES.length * 3}`, `Stars ${totalStars} of ${STAGES.length * 3}`)}
               onBack={handleBack}
               muted={muted}
               onToggleMute={toggleMute}
               right={
                 <button
                   type="button"
-                  aria-label="الأرقام القياسية"
+                  aria-label={gt('الأرقام القياسية')}
                   onClick={() => {
                     sfx.click();
                     setRecordsOpen(true);
@@ -569,19 +571,19 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                   sfx.click();
                   setSelectedId(id);
                   const st = STAGES.find((s) => s.id === id);
-                  if (st && !isUnlocked(st, progressRef.current)) showNotice(lockReason(st, progressRef.current));
+                  if (st && !isUnlocked(st, progressRef.current)) showNotice(gt(lockReason(st, progressRef.current)));
                 }}
               />
-              <BanaCorner excited={totalStars >= 3} message={banaMsg} />
+              <BanaCorner excited={totalStars >= 3} message={gt(banaMsg)} />
             </div>
 
             <div className="flex min-h-0 flex-[4] flex-col justify-center gap-2.5 overflow-y-auto bg-gradient-to-b from-[#1d1546] to-[#120c2e] px-4 pb-4 pt-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="truncate text-2xl font-black text-amber-200">{sel.name}</div>
-                  <div className="truncate text-sm font-bold text-white/65">{sel.blurb}</div>
+                  <div className="truncate text-2xl font-black text-amber-200">{gt(sel.name)}</div>
+                  <div className="truncate text-sm font-bold text-white/65">{gt(sel.blurb)}</div>
                 </div>
-                <div className="flex shrink-0 gap-1" dir="ltr" aria-label={`${selStars} من 3 نجوم`}>
+                <div className="flex shrink-0 gap-1" dir="ltr" aria-label={lt(`${selStars} من 3 نجوم`, `${selStars} of 3 stars`)}>
                   {[0, 1, 2].map((i) => (
                     <svg key={i} viewBox="0 0 24 24" className="h-8 w-8">
                       <polygon
@@ -595,7 +597,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
               </div>
 
               <div className="flex items-center gap-2 text-xs font-extrabold text-white/70">
-                <span>{rootsOpen ? '🔑 الجذور مفتوحة' : '🔑 مفتاح الجذور'}</span>
+                <span>{rootsOpen ? gt('🔑 الجذور مفتوحة') : gt('🔑 مفتاح الجذور')}</span>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full rounded-full bg-gradient-to-l from-sky-300 to-emerald-300 transition-all"
@@ -614,12 +616,12 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                     onClick={() => launchStage(sel.id)}
                     className="h-16 flex-1 rounded-2xl border-b-8 border-[#a4620f] bg-gradient-to-b from-amber-300 to-amber-500 text-2xl font-black text-[#2b1808] active:translate-y-1 active:border-b-4"
                   >
-                    {selStars > 0 ? 'العب مرة أخرى' : 'ابدأ المرحلة'}
+                    {selStars > 0 ? gt('العب مرة أخرى') : gt('ابدأ المرحلة')}
                   </button>
                   {sel.lesson && (
                     <button
                       type="button"
-                      aria-label="الدرس"
+                      aria-label={gt('الدرس')}
                       onClick={() => openLesson(sel.lesson as LessonId)}
                       className="flex h-16 w-16 items-center justify-center rounded-2xl border-b-8 border-[#2c2160] bg-gradient-to-b from-[#6c58c9] to-[#4a3a9a] active:translate-y-1 active:border-b-4"
                     >
@@ -630,7 +632,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
               ) : (
                 <div className="flex h-16 items-center gap-3 rounded-2xl border-2 border-white/10 bg-white/5 px-4 text-sm font-extrabold leading-snug text-white/80">
                   <Lock className="h-6 w-6 shrink-0 text-amber-300" />
-                  <span>{lockReason(sel, progress)}</span>
+                  <span>{gt(lockReason(sel, progress))}</span>
                 </div>
               )}
             </div>
@@ -641,7 +643,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
         {screen === 'lesson' && lesson && (
           <LessonScreen
             lessonId={lesson.id}
-            finishLabel={lesson.stageId ? 'ابدأ المرحلة' : 'العودة للخريطة'}
+            finishLabel={lesson.stageId ? gt('ابدأ المرحلة') : gt('العودة للخريطة')}
             onDone={finishLesson}
             onBack={handleBack}
             muted={muted}
@@ -653,8 +655,8 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
         {inGame && run && (
           <>
             <Hud
-              title={run.stage.name}
-              subtitle={screen === 'play' ? `سؤال ${run.index + 1} من ${run.deck.length}   ${pips}` : undefined}
+              title={gt(run.stage.name)}
+              subtitle={screen === 'play' ? lt(`سؤال ${run.index + 1} من ${run.deck.length}   ${pips}`, `Question ${run.index + 1} of ${run.deck.length}   ${pips}`) : undefined}
               onBack={handleBack}
               muted={muted}
               onToggleMute={toggleMute}
@@ -686,17 +688,17 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                     >
                       <div className="h-5 text-sm font-extrabold">
                         {run.feedback === 'right' ? (
-                          <span className="text-emerald-700">صحيح!</span>
+                          <span className="text-emerald-700">{gt('صحيح!')}</span>
                         ) : run.feedback ? (
-                          <span className="text-rose-700">الجواب: <Num>{q.ans}</Num></span>
+                          <span className="text-rose-700">{gt('الجواب')}: <Num>{q.ans}</Num></span>
                         ) : (
                           <span className="text-[#6b4a26]">
-                            {q.kind === 'squares' ? 'ما مربّع هذا العدد؟' : 'ما جذر هذا العدد؟'}
+                            {q.kind === 'squares' ? gt('ما مربّع هذا العدد؟') : gt('ما جذر هذا العدد؟')}
                           </span>
                         )}
                       </div>
                       <div dir="ltr" className="text-5xl font-black leading-tight tracking-wide">
-                        {q.kind === 'squares' ? `${q.num}² = ؟` : `√${q.val} = ؟`}
+                        {q.kind === 'squares' ? lt(`${q.num}² = ؟`, `${q.num}² = ?`) : lt(`√${q.val} = ؟`, `√${q.val} = ?`)}
                       </div>
                       {q.kind === 'roots' && (
                         <div dir="ltr" className="mt-0.5 flex items-center justify-center gap-2 text-xl font-black">
@@ -749,7 +751,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                   transition={{ duration: 0.5 }}
                 >
                   <div className="rounded-2xl bg-amber-400 px-5 py-2 text-2xl font-black text-[#3a1f04] shadow-xl">
-                    🔥 مشعل جديد!
+                    🔥 {gt('مشعل جديد!')}
                   </div>
                 </motion.div>
               )}
@@ -764,7 +766,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                       transition={{ type: 'spring', stiffness: 200, damping: 12 }}
                       className="rounded-3xl bg-[#140f33]/70 px-6 py-2 text-center backdrop-blur-sm"
                     >
-                      <div className="text-3xl font-black text-amber-300">انفتح باب المعبد!</div>
+                      <div className="text-3xl font-black text-amber-300">{gt('انفتح باب المعبد!')}</div>
                       <StarsRow earned={result.stars} />
                     </motion.div>
                   </div>
@@ -778,13 +780,13 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                     animate={{ scale: 1, opacity: 1 }}
                     className="rounded-3xl bg-black/55 px-6 py-3 text-center"
                   >
-                    <div className="text-3xl font-black text-rose-300">انطفأت المشاعل</div>
-                    <div className="mt-1 text-base font-bold text-white/80">أجبت {result?.correct ?? 0} من {run.deck.length} بشكل صحيح</div>
+                    <div className="text-3xl font-black text-rose-300">{gt('انطفأت المشاعل')}</div>
+                    <div className="mt-1 text-base font-bold text-white/80">{lt(`أجبت ${result?.correct ?? 0} من ${run.deck.length} بشكل صحيح`, `You answered ${result?.correct ?? 0} of ${run.deck.length} correctly`)}</div>
                   </motion.div>
                 </div>
               )}
 
-              <BanaCorner excited={streak >= 3 || screen === 'win'} message={banaMsg} />
+              <BanaCorner excited={streak >= 3 || screen === 'win'} message={gt(banaMsg)} />
             </div>
 
             {/* اللوحة السفلية */}
@@ -858,10 +860,10 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                       type="button"
                       whileTap={{ scale: 0.93, y: 3 }}
                       onClick={clearInput}
-                      aria-label="مسح"
+                      aria-label={gt('مسح')}
                       className="min-h-[2.6rem] rounded-2xl border-b-4 border-rose-950 bg-gradient-to-b from-rose-500 to-rose-700 text-lg font-black"
                     >
-                      مسح
+                      {gt('مسح')}
                     </motion.button>
                     <motion.button
                       type="button"
@@ -876,7 +878,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                       type="button"
                       whileTap={{ scale: 0.93, y: 3 }}
                       onClick={pressBackspace}
-                      aria-label="حذف رقم"
+                      aria-label={gt('حذف رقم')}
                       className="min-h-[2.6rem] rounded-2xl border-b-4 border-[#5a3a0c] bg-gradient-to-b from-amber-500 to-amber-700 text-2xl font-black"
                     >
                       ⌫
@@ -890,12 +892,12 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                 <div className="flex flex-col gap-2.5">
                   <div className="grid grid-cols-2 gap-2 text-center text-sm font-extrabold">
                     <div className="rounded-xl bg-white/10 px-2 py-2">
-                      صحيحة <span className="text-lg text-emerald-300" dir="ltr"><Num>{result.correct}/{result.total}</Num></span>
+                      {gt('صحيحة')} <span className="text-lg text-emerald-300" dir="ltr"><Num>{result.correct}/{result.total}</Num></span>
                     </div>
                     <div className="rounded-xl bg-white/10 px-2 py-2">
-                      متوسط الزمن{' '}
+                      {gt('متوسط الزمن')}{' '}
                       <span className="text-lg text-amber-300" dir="ltr">
-                        {result.avgSec !== null ? `${result.avgSec.toFixed(1)}ث` : '—'}
+                        {result.avgSec !== null ? `${result.avgSec.toFixed(1)}${gt('ث')}` : '—'}
                       </span>
                     </div>
                   </div>
@@ -907,8 +909,8 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                       transition={{ delay: 1.2, type: 'spring' }}
                       className="rounded-xl border-2 border-amber-300 bg-amber-400/20 px-3 py-1.5 text-center text-sm font-black text-amber-200"
                     >
-                      {result.newStreak && <div>🏆 رقم قياسي جديد: أطول سلسلة {result.streakBest}</div>}
-                      {result.newSpeed && <div>⚡ رقم قياسي جديد: السرعة {result.speedPts} نقطة</div>}
+                      {result.newStreak && <div>🏆 {gt('رقم قياسي جديد: أطول سلسلة')} {result.streakBest}</div>}
+                      {result.newSpeed && <div>⚡ {gt('رقم قياسي جديد: السرعة')} {result.speedPts} {gt('نقطة')}</div>}
                     </motion.div>
                   )}
 
@@ -919,8 +921,8 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                       transition={{ delay: 1.6 }}
                       className="rounded-xl border-2 border-sky-300/60 bg-sky-400/15 px-3 py-1.5 text-center text-sm font-black text-sky-200"
                     >
-                      {result.unlockedStage && <div>🗺️ منطقة جديدة: {result.unlockedStage.name}</div>}
-                      {result.rootsUnlocked && <div>🔑 فُتحت أسرار الجذور على الخريطة</div>}
+                      {result.unlockedStage && <div>🗺️ {gt('منطقة جديدة')}: {gt(result.unlockedStage.name)}</div>}
+                      {result.rootsUnlocked && <div>🔑 {gt('فُتحت أسرار الجذور على الخريطة')}</div>}
                     </motion.div>
                   )}
 
@@ -930,12 +932,12 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                       onClick={() => (canGoNext && resultNext ? launchStage(resultNext.id) : toMap())}
                       className="h-14 flex-1 rounded-2xl border-b-8 border-[#a4620f] bg-gradient-to-b from-amber-300 to-amber-500 text-xl font-black text-[#2b1808] active:translate-y-1 active:border-b-4"
                     >
-                      {canGoNext ? 'المنطقة التالية' : 'الخريطة'}
+                      {canGoNext ? gt('المنطقة التالية') : gt('الخريطة')}
                     </button>
                     {result.stars < 3 && (
                       <button
                         type="button"
-                        aria-label="أعد المرحلة"
+                        aria-label={gt('أعد المرحلة')}
                         onClick={() => resultStage && launchStage(resultStage.id)}
                         className="flex h-14 w-14 items-center justify-center rounded-2xl border-b-8 border-[#2c2160] bg-gradient-to-b from-[#6c58c9] to-[#4a3a9a] active:translate-y-1 active:border-b-4"
                       >
@@ -948,7 +950,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                         onClick={toMap}
                         className="h-14 rounded-2xl border-b-8 border-[#2c2160] bg-gradient-to-b from-[#6c58c9] to-[#4a3a9a] px-4 text-base font-black active:translate-y-1 active:border-b-4"
                       >
-                        الخريطة
+                        {gt('الخريطة')}
                       </button>
                     )}
                   </div>
@@ -959,11 +961,11 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
               {screen === 'lose' && result && (
                 <div className="flex flex-col gap-3">
                   <div className="rounded-xl bg-white/10 px-3 py-2 text-center text-base font-extrabold">
-                    أطول سلسلة لك في هذه الجولة <span className="text-amber-300" dir="ltr"><Num>{result.streakBest}</Num></span>
+                    {gt('أطول سلسلة لك في هذه الجولة')} <span className="text-amber-300" dir="ltr"><Num>{result.streakBest}</Num></span>
                   </div>
                   {result.newStreak && (
                     <div className="rounded-xl border-2 border-amber-300 bg-amber-400/20 px-3 py-1.5 text-center text-sm font-black text-amber-200">
-                      🏆 رقم قياسي جديد: أطول سلسلة {result.streakBest}
+                      🏆 {gt('رقم قياسي جديد: أطول سلسلة')} {result.streakBest}
                     </div>
                   )}
                   <button
@@ -972,14 +974,14 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                     className="flex h-16 items-center justify-center gap-2 rounded-2xl border-b-8 border-[#a4620f] bg-gradient-to-b from-amber-300 to-amber-500 text-2xl font-black text-[#2b1808] active:translate-y-1 active:border-b-4"
                   >
                     <RotateCcw className="h-6 w-6" />
-                    <span>حاول مجدداً</span>
+                    <span>{gt('حاول مجدداً')}</span>
                   </button>
                   <button
                     type="button"
                     onClick={toMap}
                     className="h-12 rounded-2xl bg-white/10 text-lg font-black active:scale-95"
                   >
-                    الخريطة
+                    {gt('الخريطة')}
                   </button>
                 </div>
               )}
@@ -1024,11 +1026,11 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xl font-black text-amber-300">
                     <Trophy className="h-6 w-6" />
-                    <span>الأرقام القياسية</span>
+                    <span>{gt('الأرقام القياسية')}</span>
                   </div>
                   <button
                     type="button"
-                    aria-label="إغلاق"
+                    aria-label={gt('إغلاق')}
                     onClick={() => setRecordsOpen(false)}
                     className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10"
                   >
@@ -1039,14 +1041,14 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                 <div className="space-y-3">
                   <div>
                     <div className="mb-1 text-sm font-extrabold text-white/70">
-                      أطول سلسلة إجابات صحيحة {streakEntry ? `· ${streakEntry.value}` : ''}
+                      {gt('أطول سلسلة إجابات صحيحة')} {streakEntry ? `· ${streakEntry.value}` : ''}
                     </div>
                     <HighScoreBadge key={`streak-${scoreVersion}`} gameId={GAME_ID} variant="full" />
                   </div>
                   <div>
                     <div className="mb-1 text-sm font-extrabold text-white/70">
-                      نقاط السرعة {speedEntry ? `· ${speedEntry.value}` : ''}
-                      {progress.bestSpeedSec !== null ? ` · أسرع متوسط ${progress.bestSpeedSec}ث` : ''}
+                      {gt('نقاط السرعة')} {speedEntry ? `· ${speedEntry.value}` : ''}
+                      {progress.bestSpeedSec !== null ? ` · ${gt('أسرع متوسط')} ${progress.bestSpeedSec}${gt('ث')}` : ''}
                     </div>
                     <HighScoreBadge key={`speed-${scoreVersion}`} gameId={SPEED_GAME_ID} variant="full" />
                   </div>
