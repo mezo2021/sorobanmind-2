@@ -27,6 +27,8 @@ import type {
   LessonId,
 } from './sorobaniaData';
 import { Num } from '@/components/Num';
+import { gt, lt, useGameLang } from '../gamesI18n';
+import { T } from '../T';
 
 // ═══════════════════════════════════════════════════════════════════
 // مكوّنات الواجهة
@@ -43,11 +45,11 @@ export const Hud: React.FC<{
   <div className="z-20 flex h-14 shrink-0 items-center gap-2 border-b border-white/10 bg-[#140f33] px-3">
     <button
       type="button"
-      aria-label="رجوع"
+      aria-label={gt('رجوع')}
       onClick={onBack}
       className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 active:scale-95"
     >
-      <ArrowRight className="h-5 w-5" />
+      <ArrowRight className={`h-5 w-5 ${lt('', 'rotate-180')}`} />
     </button>
     <div className="min-w-0 flex-1 text-center leading-tight">
       <div className="truncate text-base font-black text-amber-200">{title}</div>
@@ -56,7 +58,7 @@ export const Hud: React.FC<{
     {right}
     <button
       type="button"
-      aria-label={muted ? 'تشغيل الصوت' : 'كتم الصوت'}
+      aria-label={muted ? gt('تشغيل الصوت') : gt('كتم الصوت')}
       onClick={onToggleMute}
       className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 active:scale-95"
     >
@@ -116,7 +118,7 @@ export const FuseTimer: React.FC<{ total: number; frozen: boolean; onExpire: () 
   const color = pct > 55 ? '#f59e0b' : pct > 28 ? '#ea580c' : '#dc2626';
 
   return (
-    <div className="flex w-full items-center gap-2" role="timer" aria-label="الوقت المتبقي">
+    <div className="flex w-full items-center gap-2" role="timer" aria-label={gt('الوقت المتبقي')}>
       <div className="h-3 flex-1 overflow-hidden rounded-full bg-[#3a2410]/25">
         <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color, transition: 'width 100ms linear' }} />
       </div>
@@ -163,7 +165,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
               <span>1225</span>
             </div>
             <p className="text-lg font-bold leading-8 text-white/90">
-              خذ رقم العشرات (3) واضربه في الرقم الذي يليه (4) فيكون الناتج 12، ثم اكتب 25 بجانبه.
+              <T ar="خذ رقم العشرات (3) واضربه في الرقم الذي يليه (4) فيكون الناتج 12، ثم اكتب 25 بجانبه." en="Take the tens digit (3) and multiply it by the next number (4) to get 12, then write 25 next to it." />
             </p>
           </div>
         ),
@@ -172,7 +174,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
         title: 'جرّب بنفسك',
         body: (
           <p className="text-center text-lg font-bold leading-8 text-white/90">
-            العشرات في 45 هي 4، والعدد الذي يليها 5. اضربهما ثم ألصق 25.
+            <T ar="العشرات في 45 هي 4، والعدد الذي يليها 5. اضربهما ثم ألصق 25." en="The tens digit in 45 is 4, and the next number is 5. Multiply them, then attach 25." />
           </p>
         ),
         quiz: {
@@ -186,7 +188,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
         title: 'مرة أخرى',
         body: (
           <p className="text-center text-lg font-bold leading-8 text-white/90">
-            العشرات في 75 هي 7، والعدد الذي يليها 8.
+            <T ar="العشرات في 75 هي 7، والعدد الذي يليها 8." en="The tens digit in 75 is 7, and the next number is 8." />
           </p>
         ),
         quiz: {
@@ -200,7 +202,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
         title: 'أصبحت تعرف السرّ!',
         body: (
           <p className="text-center text-lg font-bold leading-8 text-white/90">
-            كل عدد ينتهي بـ 5 يمكنك تربيعه في ثانيتين. هيا إلى بوابة الخمسات!
+            <T ar="كل عدد ينتهي بـ 5 يمكنك تربيعه في ثانيتين. هيا إلى بوابة الخمسات!" en="Any number ending in 5 can be squared in two seconds. Off to the Gate of Fives!" />
           </p>
         ),
       },
@@ -219,7 +221,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
             <Chip tone="gold">21</Chip>
           </div>
           <p className="text-lg font-bold leading-8 text-white/90">
-            قسّم العدد إلى أزواج من اليمين. الزوج الأول (15) يعطيك عشرات الجذر: أكبر مربع لا يزيد على 15 هو 9، أي 3². إذن العشرات 3.
+            <T ar="قسّم العدد إلى أزواج من اليمين. الزوج الأول (15) يعطيك عشرات الجذر: أكبر مربع لا يزيد على 15 هو 9، أي 3². إذن العشرات 3." en="Split the number into pairs from the right. The first pair (15) gives you the tens of the root: the largest square not greater than 15 is 9, i.e. 3². So the tens digit is 3." />
           </p>
         </div>
       ),
@@ -229,15 +231,15 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
       body: (
         <div className="space-y-3 text-center">
           <p className="text-lg font-bold leading-8 text-white/90">
-            آخر رقم في العدد يحدد آحاد الجذر:
+            <T ar="آخر رقم في العدد يحدد آحاد الجذر:" en="The last digit of the number decides the units digit of the root:" />
           </p>
           <div dir="ltr" className="mx-auto grid max-w-xs grid-cols-2 gap-2 text-xl font-black">
-            <Chip tone="gold">ينتهي بـ 1 → 1 أو 9</Chip>
-            <Chip tone="sky">ينتهي بـ 4 → 2 أو 8</Chip>
-            <Chip tone="jade">ينتهي بـ 6 → 4 أو 6</Chip>
-            <Chip tone="rose">ينتهي بـ 9 → 3 أو 7</Chip>
+            <Chip tone="gold"><T ar="ينتهي بـ 1 → 1 أو 9" en="Ends in 1 → 1 or 9" /></Chip>
+            <Chip tone="sky"><T ar="ينتهي بـ 4 → 2 أو 8" en="Ends in 4 → 2 or 8" /></Chip>
+            <Chip tone="jade"><T ar="ينتهي بـ 6 → 4 أو 6" en="Ends in 6 → 4 or 6" /></Chip>
+            <Chip tone="rose"><T ar="ينتهي بـ 9 → 3 أو 7" en="Ends in 9 → 3 or 7" /></Chip>
           </div>
-          <p className="text-base font-bold text-white/70">وما ينتهي بـ 0 أو 5 فجذره ينتهي بـ 0 أو 5.</p>
+          <p className="text-base font-bold text-white/70"><T ar="وما ينتهي بـ 0 أو 5 فجذره ينتهي بـ 0 أو 5." en="And what ends in 0 or 5 has a root that ends in 0 or 5." /></p>
         </div>
       ),
       quiz: {
@@ -253,11 +255,11 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
         <div className="space-y-3 text-center">
           <div dir="ltr" className="flex flex-wrap items-center justify-center gap-2 text-2xl font-black text-amber-200">
             <Chip tone="gold">3 × 4 = 12</Chip>
-            <span>و</span>
+            <span><T ar="و" en="and" /></span>
             <Chip tone="sky">15</Chip>
           </div>
           <p className="text-lg font-bold leading-8 text-white/90">
-            احسب العشرات × العدد الذي يليها (3 × 4 = 12). إن كان الزوج الأول أكبر منه أو يساويه (15 ≥ 12) فاختر الآحاد الأكبر: 39. وإن كان أصغر فاختر الأصغر.
+            <T ar="احسب العشرات × العدد الذي يليها (3 × 4 = 12). إن كان الزوج الأول أكبر منه أو يساويه (15 ≥ 12) فاختر الآحاد الأكبر: 39. وإن كان أصغر فاختر الأصغر." en="Work out the tens × the next number (3 × 4 = 12). If the first pair is greater than or equal to it (15 ≥ 12), pick the larger units digit: 39. If it is smaller, pick the smaller one." />
           </p>
         </div>
       ),
@@ -266,7 +268,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
       title: 'الآن دورك',
       body: (
         <p className="text-center text-lg font-bold leading-8 text-white/90">
-          √2916 ← الأزواج 29 | 16. العشرات 5 (لأن 25 ≤ 29). الآحاد 4 أو 6. احسب 5 × 6 = 30 وقارن بـ 29.
+          <T ar="√2916 ← الأزواج 29 | 16. العشرات 5 (لأن 25 ≤ 29). الآحاد 4 أو 6. احسب 5 × 6 = 30 وقارن بـ 29." en="√2916 ← pairs 29 | 16. The tens digit is 5 (because 25 ≤ 29). The units digit is 4 or 6. Work out 5 × 6 = 30 and compare it with 29." />
         </p>
       ),
       quiz: {
@@ -280,7 +282,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
       title: 'فككت شفرة الجذور!',
       body: (
         <p className="text-center text-lg font-bold leading-8 text-white/90">
-          أزواج، ثم عشرات، ثم آحاد، ثم مقارنة. هيا إلى كهف الجذور!
+          <T ar="أزواج، ثم عشرات، ثم آحاد، ثم مقارنة. هيا إلى كهف الجذور!" en="Pairs, then tens, then units, then comparison. Off to the Root Cave!" />
         </p>
       ),
     },
@@ -295,6 +297,7 @@ export const LessonScreen: React.FC<{
   muted: boolean;
   onToggleMute: () => void;
 }> = ({ lessonId, finishLabel, onDone, onBack, muted, onToggleMute }) => {
+  useGameLang(); // 🌐
   const steps = useMemo(() => buildLessonSteps(lessonId), [lessonId]);
   const [step, setStep] = useState<number>(0);
   const [picked, setPicked] = useState<number | null>(null);
@@ -329,8 +332,8 @@ export const LessonScreen: React.FC<{
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-gradient-to-b from-[#1d1546] to-[#0d0926]">
       <Hud
-        title={lessonId === 'five' ? 'سرّ الخمسات' : 'طريقة الأزواج'}
-        subtitle={`الخطوة ${step + 1} من ${steps.length}`}
+        title={lessonId === 'five' ? gt('سرّ الخمسات') : gt('طريقة الأزواج')}
+        subtitle={lt(`الخطوة ${step + 1} من ${steps.length}`, `Step ${step + 1} of ${steps.length}`)}
         onBack={onBack}
         muted={muted}
         onToggleMute={onToggleMute}
@@ -348,12 +351,12 @@ export const LessonScreen: React.FC<{
           animate={{ opacity: 1, y: 0 }}
           className="rounded-3xl border-2 border-amber-300/30 bg-[#241a5c]/80 p-5 shadow-xl"
         >
-          <h2 className="mb-4 text-center text-2xl font-black text-amber-300">{cur.title}</h2>
+          <h2 className="mb-4 text-center text-2xl font-black text-amber-300">{gt(cur.title)}</h2>
           {cur.body}
 
           {cur.quiz && (
             <div className="mt-5 space-y-3">
-              <div className="text-center text-xl font-black">{cur.quiz.prompt}</div>
+              <div className="text-center text-xl font-black">{gt(cur.quiz.prompt)}</div>
               <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${cur.quiz.options.length}, minmax(0, 1fr))` }}>
                 {cur.quiz.options.map((opt, i) => {
                   const isRight = solved && i === cur.quiz!.correct;
@@ -381,8 +384,8 @@ export const LessonScreen: React.FC<{
                 })}
               </div>
               <div className="min-h-[2.5rem] text-center text-base font-extrabold">
-                {solved && <span className="text-emerald-300">صحيح! {cur.quiz.why}</span>}
-                {!solved && picked !== null && <span className="text-rose-300">ليس تماماً، فكّر وجرّب مرة أخرى</span>}
+                {solved && <span className="text-emerald-300">{gt('صحيح!')} {gt(cur.quiz.why)}</span>}
+                {!solved && picked !== null && <span className="text-rose-300">{gt('ليس تماماً، فكّر وجرّب مرة أخرى')}</span>}
               </div>
             </div>
           )}
@@ -400,7 +403,7 @@ export const LessonScreen: React.FC<{
               : 'border-white/10 bg-white/10 text-white/40'
           }`}
         >
-          {isLast ? finishLabel : 'التالي'}
+          {isLast ? gt(finishLabel) : gt('التالي')}
         </button>
       </div>
     </div>
