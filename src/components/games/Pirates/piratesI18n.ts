@@ -8,6 +8,7 @@ import { gt } from '../gamesI18n';
 
 const TASH = /[\u064B-\u065F\u0670\u0640]/g;
 const AR_RE = /[\u0600-\u06FF]/;
+// eslint-disable-next-line no-misleading-character-class
 const RUN_RE = /[\u0600-\u06FF](?:[\u0600-\u06FF\u064B-\u065F\u0640\s\d،؟!.:؛+\-()×÷=%]*[\u0600-\u06FF!؟.؛)?])?/g;
 
 function normalizeAr(s: string): string {
