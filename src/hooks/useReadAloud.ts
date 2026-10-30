@@ -75,13 +75,15 @@ export function sanitizeForSpeech(raw: string, lang: ReadLang): string {
   const w = WORDS[lang];
   let t = toLatinDigits(raw);
 
-  // ✅ تصحيح النطق العربي (يُطبَّق فقط في الوضع العربي)
-  // يجب أن يكون مبكرًا قبل حذف أي محارف
-  if (lang === 'ar') {
-    for (const [pattern, replacement] of AR_PRONUNCIATION_FIXES) {
-      t = t.replace(pattern, replacement);
-    }
+// ✅ تصحيح النطق العربي (يُطبَّق فقط في الوضع العربي)
+// يجب أن يكون مبكرًا قبل حذف أي محارف
+if (lang === 'ar') {
+  for (const [pattern, replacement] of AR_PRONUNCIATION_FIXES) {
+    t = t.replace(pattern, replacement);
   }
+  // ✅ إصلاح مشكلة التنوين المزدوج (بيتاً → بيتً) — يُنطق "بيتان" بدلاً من "بيتنن"
+  t = t.replace(/اً/g, 'ً');
+}
 
   // الإيموجي والأسهم والنقاط
   if (EMOJI_RE) t = t.replace(EMOJI_RE, ' ');
