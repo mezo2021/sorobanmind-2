@@ -38,6 +38,7 @@ import { formatText, formatNumber } from '@/utils/numberStyle';
 import { useT } from '@/i18n/useTranslation';
 import { pickLang, type Localized } from '@/i18n/pickLang';
 import { useReadAloud, isSpeakableIn } from '@/hooks/useReadAloud';
+import ReadAloudButton from '../components/ReadAloudButton';
 
 // ═══════════════════════════════════════════════════════════
 // الثوابت
@@ -216,6 +217,7 @@ function getExerciseText(ex: LessonExercise): string {
 function getExerciseResult(ex: LessonExercise): number {
   return ex.expectedValue ?? ex.result ?? 0;
 }
+<ReadAloudButton text="مرحباً بكم في قلعة السوروبان، أنا هنا للتجربة" lang="ar" />
 
 // ═══════════════════════════════════════════════════════════
 // [PATCH] مُولِّد الاختيارات — مستقل عن currentTry/currentTryExpected
