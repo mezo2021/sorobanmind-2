@@ -1,4 +1,4 @@
-# 📊 Audit v8 — التقرير الكامل (2026-10-30)
+# 📊 Audit v8 v9 معا— التقرير الكامل (2026-10-30)
 
 **Repository:** `mezo2021/sorobanmind-2`
 **Branch/ref:** `refs/heads/main`
@@ -376,3 +376,326 @@ Build time ✅ 6.35s — ✅
 الخطوة التالية: Audit v9 (Bash-based) — مفاتيح ميتة + كاتب بلا قارئ
 
 ```
+
+# 📊 تحليل Audit v9 الجديد — 2026-10-30
+
+**Commit:** `db7a78710225eadcec426cab206277323f8809e1`
+**Generated:** 2026-10-30T02:55:45Z
+**Node:** v20.20.2
+
+---
+
+## 🎯 1. الحكم السريع
+
+| البند | النتيجة |
+| :--- | :---: |
+| **4 متاجر** | ✅ كلها نشطة ومؤكدة |
+| **ملفات المفاتيح الديناميكية** | ✅ كلها موجودة وتعمل |
+| **مفاتيح يتيمة (Dead keys)** | 🟡 5 (منذ تنظيف قديم، غير ضارة) |
+| **المحرك (engine)** | 🔴 **100% معزول** (متوقع، ينتظر الربط) |
+| **بنوك ميتة (bank-*)** | ✅ **0 مستورد** (حُذفت نهائياً) |
+| **الاستيرادات** | ✅ 750 استيراد صحي |
+| **Scripts (build/lint/typecheck)** | ✅ كلها موجودة |
+
+**الخلاصة:** 🟢 **صحة عامة ممتازة** — لا مشاكل جديدة، والمحرك ينتظر الربط كما هو مخطط.
+
+---
+
+## 📈 2. المقارنة: v9 القديم vs v9 الجديد
+
+| المؤشر | v9 القديم (2026-10-20) | v9 الجديد (2026-10-30) | Δ |
+| :--- | :---: | :---: | :---: |
+| **المتاجر النشطة** | 4 | **4** | = |
+| **مفاتيح ميتة** | 5 | **5** | = (نفس المفاتيح) |
+| **كاتب بلا قارئ** | 2 | **0** | ✅ **-2** (حُذفا في م3-ب) |
+| **قارئ بلا كاتب** | 1 | **0** | ✅ **-1** (حُذف في م3-ج) |
+| **بنوك ميتة (bank-*)** | مستوردة | **0** | ✅ **حُذفت** |
+| **المحرك معزول** | ❌ يظهر كـ نشط | ✅ **مؤكد معزول** | ✅ |
+
+**التحسّن الحقيقي:** 3 فجوات ميتة حُذفت (بلا كاتب/قارئ) + تأكيد عزل المحرك.
+
+---
+
+## 📊 3. تحليل تفصيلي بالقطاعات
+
+### 3️⃣.1 القسم 1: المتاجر الأربعة (Stores)
+
+| المتجر | الأسطر | المفتاح | الحالة |
+| :--- | :---: | :--- | :---: |
+| `progressStore.ts` | **644** | `sorobanmind-v2-progress` | ✅ v12 نشط |
+| `masteryBadgesStore.ts` | **123** | `soroban_mastery_badges` | ✅ v1 نشط |
+| `numberStyleStore.ts` | **29** | `soroban_number_style` | ✅ نشط |
+| `useTranslation.ts` | **41** | `sorobanmind-v2-lang` | ✅ نشط |
+
+**ملاحظة حرجة:** `progressStore` كبر إلى **644 سطراً** (كان 633 في v11). نمو طبيعي مع إضافة `dailyXP` و `stats`.
+
+---
+
+### 3️⃣.2 القسم 5: المفاتيح اليتيمة (Orphan Keys) — 11 مفتاح
+
+هذا هو القسم الأهم. دعنا نفرز بدقة:
+
+#### 🔴 المفاتيح الميتة حقاً (5):
+(موجودة في `localStorage` من نسخ قديمة، لكن لا يكتبها أو يقرأها أحد)
+
+| المفتاح | السبب | الإجراء |
+| :--- | :--- | :---: |
+| `soroban_passed_level_tests` | ميت تماماً | 🗑️ يمكن حذفه من `localStorage` |
+| `soroban_exam_result` | حُذف كاتبه في م3-ج | 🗑️ يمكن حذفه |
+| `soroban_placement_result` | حُذف كاتبه في م3-ب | 🗑️ يمكن حذفه |
+| `soroban_placement_last_attempt` | لم يكن له كاتب أصلاً | 🗑️ يمكن حذفه |
+| `soroban_kids_certificate_ready` | حُذف في م3-ج | 🗑️ يمكن حذفه |
+| `soroban_section2_unlocked` | حُذف في م3-ب | 🗑️ يمكن حذفه |
+| `soroban_weak_skills_v2` | ميت | 🗑️ يمكن حذفه |
+
+*(ملاحظة: هذه المفاتيح موجودة فقط في `localStorage` للأجهزة القديمة. لن تؤثر على أي شيء، لكن يمكن تنظيفها في `main.tsx` لمزيد من النظافة).*
+
+#### ⚠️ المفاتيح الظاهرة "بلا كاتب" لكنها نشطة (2):
+**هذا هو التحذير الشهير من v9 القديم — يتكرر الآن!**
+
+| المفتاح | v9 يقول | الحقيقة (من v8) |
+| :--- | :--- | :--- |
+| `soroban_placement_recommended` | "لا كاتب ثابت" | ✅ **يُكتب في `App.tsx:246`** |
+| `soroban_placement_weak_skills` | "لا كاتب ثابت" | ✅ **يُكتب في `App.tsx:242`** |
+
+**سبب الالتباس:** `App.tsx` يكتبهما عبر سطر متعدد:
+```typescript
+localStorage.setItem(
+  'soroban_placement_recommended',
+  recommendedLevel
+);
+```
+
+grep الحرفي في v9 يبحث عن النمط في سطر واحد، فلا يجده. v8 (AST) هو المرجع الحقيقي.
+
+✅ المفاتيح النشطة (2):
+
+المفتاح كاتب قارئ حذف
+soroban_child_name 4 (cloudSync) 3 ❌ لا يوجد
+soroban_companion 3 (HeroDashboard) 3 ❌ لا يوجد
+
+ملاحظة: soroban_child_name و soroban_companion لا يُحذفان أبداً (removeItem) — وهذا مقصود، لأنهما يبقيان بعد تسجيل الخروج.
+
+---
+
+3️⃣.3 القسم 7: خريطة الاستيراد (Import Map) — القسم الأخطر
+
+🔴 اكتشاف حرج: المحرك 100% معزول
+
+```
+✅ progressStore: 31 مستورد (نشط جداً)
+✅ masteryBadgesStore: 6 مستوردين
+✅ numberStyleStore: 22 مستورداً
+✅ useTranslation: 40 مستورداً
+✅ srb-adapter: 10 مستوردين
+
+🔴 engine: 0 مستوردين من أي شاشة
+✅ bank-v2: 0 مستوردين (حُذف)
+✅ bank-raw: 0 مستوردين (حُذف)
+✅ bank-linked: 0 مستوردين (حُذف)
+✅ bank-adapter: 0 مستوردين (حُذف)
+```
+
+التفصيل الدقيق للمحرك (القسم 8):
+
+الملف من يستورده؟
+adaptiveEngine.ts ❌ لا أحد (فقط تعليق داخلي)
+masteryTracker.ts ⚠️ فقط adaptiveEngine (الذي لا أحد يستورده)
+problemGenerator.ts ❌ لا أحد (فقط في تعليقات)
+sorobanEngine.ts ❌ لا أحد (يُستورد فقط داخلياً في sorobanMoves)
+sorobanMoves.ts ⚠️ فقط sorobanEngine
+
+الحكم القاطع: المحرك بالكامل معزول تماماً. لا تستورده أي شاشة. مؤكد أنه Stubs كما هو موثق.
+
+✅ اكتشاف إيجابي: البنوك القديمة 100% ميتة
+
+· bank-v2: 0 مستورد ✅
+· bank-raw: 0 مستورد ✅
+· bank-linked: 0 مستورد ✅
+· bank-adapter: 0 مستورد ✅
+
+هذا يُثبت نجاح م10 (إعدام البنوك) بشكل قاطع. لا يوجد أي طريق غير مباشر لاستخدامها.
+
+---
+
+3️⃣.4 القسم 9: الشارات (Badges)
+
+التدفق الصحيح:
+
+```
+PracticeScreen → awardBadge() → masteryBadgesStore
+AnzanScreen → setAnzanBadge() → progressStore
+AnzanScreen → awardBadge() → masteryBadgesStore
+AudioAnzanScreen → setAnzanAudioBadge() → progressStore
+AudioAnzanScreen → awardBadge() → masteryBadgesStore
+```
+
+⚠️ دوال ميتة (مؤكد):
+
+· saveAnzanBadges — 0 استدعاء
+· saveAudioAnzanBadges — 0 استدعاء
+· BadgeModal — 0 استدعاء
+
+ملاحظة: هذه الدوال موجودة من v10 لكن لا تُستدعى. قد تكون بقايا من نظام قديم. آمنة (لا تُضرّ).
+
+✅ AdaptiveFeedback يعمل:
+
+· يُستدعى في 3 شاشات: PracticeScreen, AnzanScreen, AudioAnzanScreen.
+· يستقبل levelNum الحقيقي (إصلاح FIX 3).
+
+---
+
+3️⃣.5 القسم 3: أنماط المفاتيح الديناميكية
+
+الاكتشاف: v9 يجد 3 أنماط فقط بمفتاح ${}:
+
+```text
+CategoryExamScreen:246 → setItem `${cfg.storageKey}_score`
+CategoryExamScreen:247 → setItem `${cfg.storageKey}_last_attempt`
+CategoryExamScreen:163 → getItem `${cfg.storageKey}_last_attempt`
+```
+
+لماذا قليلة؟ لأن v9 يبحث عن ${ فقط. المفاتيح الديناميكية الأخرى (مثل soroban_lesson_session_${lessonId}) موجودة داخل دوال (وظائف) وليست في localStorage مباشرة — لذلك v9 لا يراها.
+
+الحكم: ✅ مطابق لما توقعناه. لا جديد.
+
+---
+
+3️⃣.6 القسم 4: package.json + Lockfile
+
+البند القيمة
+Version 2.0.0
+React 18.3.1
+Vite 5.3.3
+TypeScript 5.5.3
+Zustand 4.5.2
+Supabase 2.45.4
+Framer Motion 11.0.8
+Lockfile ✅ موجود (171,336 bytes)
+Scripts (8) dev, build, preview, test, test:run, typecheck, deploy, lint
+.gitignore ✅ لا ذكر لـ lock (جيد!)
+
+الحكم: ✅ البنية التحتية سليمة.
+
+---
+
+🚨 4. الاكتشافات الحرجة (Critical Findings)
+
+🔴 الاكتشاف 1: المحرك 100% معزول (مؤكد)
+
+الحقائق:
+
+· adaptiveEngine.ts (1072 سطر) — لا أحد يستورده.
+· problemGenerator.ts — لا أحد يستورده.
+· sorobanEngine.ts و sorobanMoves.ts — لا تستخدمهما أي شاشة.
+· masteryTracker.ts — يستورده فقط adaptiveEngine (المعزول بدوره).
+
+التأثير:
+
+· كل الجلسات (تمرن، أنزان، علاجية) لا تستخدم المحرك.
+· تعتمد فقط على srb-adapter المباشر (بدون تكيف).
+· هذا يتطابق 100% مع ما وثقناه.
+
+التوصية: 🔴 ربط المحرك بـ srb-adapter = الأولوية القصوى الآن.
+
+---
+
+🟡 الاكتشاف 2: 5 مفاتيح ميتة في localStorage
+
+المفاتيح:
+
+· soroban_passed_level_tests
+· soroban_exam_result
+· soroban_placement_result
+· soroban_placement_last_attempt
+· soroban_kids_certificate_ready
+· soroban_section2_unlocked
+· soroban_weak_skills_v2
+
+التأثير:
+
+· لا تؤثر على أي شيء (لا كاتب ولا قارئ).
+· تستهلك ~1-2 KB في localStorage لكل طالب.
+· ضارة فقط من ناحية النظافة.
+
+التوصية: 🟡 إضافتها إلى قائمة main.tsx cleanup في v13.
+
+---
+
+🟡 الاكتشاف 3: 3 دوال/مكونات ميتة
+
+· saveAnzanBadges
+· saveAudioAnzanBadges
+· BadgeModal
+
+التأثير: لا تُستدعى أبداً. آمنة لكن يمكن حذفها في v13.
+
+التوصية: 🟡 حذفها في جلسة تنظيف مستقبلية.
+
+---
+
+🟡 الاكتشاف 4: v9 لا يزال يخطئ في App.tsx:242, 246
+
+الخطأ المتكرر:
+
+· v9 يقول: soroban_placement_recommended بلا كاتب.
+· الحقيقة: الكاتب في App.tsx:246.
+
+السبب: grep حرفي. v8 هو المرجع.
+
+التوصية: 🟡 لا تعتمد على v9 وحده — استخدم v8 للمفاتيح.
+
+---
+
+✅ الاكتشاف 5: البنوك القديمة 100% ميتة
+
+bank-v2, bank-raw, bank-linked, bank-adapter — كلها 0 مستورد (حتى تعليقات لا توجد).
+
+هذا يُثبت بشكل قاطع نجاح م10. لا يوجد أي احتمال لبقاء رمز يستوردها.
+
+---
+
+🎯 5. التوصيات النهائية
+
+🔴 أولوية قصوى:
+
+1. ربط المحرك بـ srb-adapter — الأولوية القصوى الحالية، مبررة الآن بشكل قاطع.
+   · خطة: engine-types.ts → sorobanEngine → questionTracer → RemediationScreen.
+
+🟠 أولوية متوسطة:
+
+2. إضافة v13 cleanup في main.tsx — لحذف 7 مفاتيح ميتة.
+3. حذف 3 دوال/مكونات ميتة (saveAnzanBadges, saveAudioAnzanBadges, BadgeModal).
+
+🟡 أولوية منخفضة:
+
+4. توحيد SOUND_KEY في Pirates مع progressStore.soundEnabled.
+5. مراجعة حجم الحزمة (871 KB) — يحتاج تحليلاً مستقلاً.
+
+---
+
+📊 6. الحكم النهائي على Audit v9
+
+المعيار النتيجة
+المتاجر النشطة ✅ 4/4
+المفاتيح الميتة 🟡 5 (غير ضارة)
+بنوك ميتة ✅ 0
+المحرك 🔴 معزول (متوقع)
+الشارات ✅ تعمل
+الاستيرادات ✅ 750
+Scripts ✅ 8
+التحسّن مقارنة بالقديم ✅ -3 فجوات ميتة
+
+الحكم: 🟢 صحة ممتازة، والتحسّن ملموس. لا مشاكل حرجة جديدة.
+
+---
+
+🚀 الخطوة التالية
+
+Audit v9 مكتمل ✅
+
+الآن لدينا:
+
+· ✅ v8 (AST): 59 فجوة (كلها by-design)
+· ✅ v9 (Bash): 5 مفاتيح ميتة (غير ضارة)
+· ✅ تقرير المخزون الكامل
