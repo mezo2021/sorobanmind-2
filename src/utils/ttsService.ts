@@ -1,4 +1,5 @@
 // src/utils/ttsService.ts
+// @ts-ignore
 import { EdgeTTSBrowser } from 'https://cdn.jsdelivr.net/npm/@kingdanx/edge-tts-browser@1.0.1/dist/edge-tts-browser.es.js';
 
 // قاموس لتصحيح الكلمات الحرجة (يمكنك التوسع فيه)
