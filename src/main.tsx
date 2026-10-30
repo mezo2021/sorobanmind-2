@@ -52,6 +52,8 @@ if (isValidGAId && typeof window !== 'undefined') {
   'soroban_section2_unlocked',
   'soroban_completed_lessons',
   'soroban_passed_practice',
+  'soroban_placement_last_attempt',
+  'soroban_kids_certificate_ready',
 ].forEach((k) => {
   try {
     localStorage.removeItem(k);
