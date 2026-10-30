@@ -32,7 +32,9 @@ import {
 import { GameCompanion, type HeroMood } from '../GameCompanion';
 import { HighScoreBadge } from '../HighScoreBadge';
 import { addScore, getHighScore, type HighScoreEntry } from '../highScoreStore';
-import { useCharacterVoice } from '@/hooks/useCharacterVoice';
+import { useGameVoice } from '@/hooks/useGameVoice';
+import { lt, useGameLang } from '../gamesI18n';
+import { pgt } from './piratesI18n';
 import { useProgressStore } from '@/store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
 import type { CharacterType } from '@/types';
@@ -93,8 +95,8 @@ function vibrate(pattern: number | number[]): void {
 }
 
 function readChildName(): string {
-  if (typeof window === 'undefined') return 'بطل';
-  try { return useProgressStore.getState().childName?.trim() || 'بطل'; } catch { return 'بطل'; }
+  if (typeof window === 'undefined') return pgt('بطل');
+  try { return useProgressStore.getState().childName?.trim() || pgt('بطل'); } catch { return pgt('بطل'); }
 }
 
 function loadSound(): boolean {
@@ -126,19 +128,20 @@ function starsFromGap(gap: number): number {
 }
 
 function defaultBubble(gap: number, streak: number, ropeAvail: boolean, elapsed: number): string {
-  if (gap < ROPE_THRESHOLD && ropeAvail) return 'خُذْ حَبْلَ الإِنْقَاذ! 🤝';
-  if (gap < 40) return 'القَرَاصِنَةُ يَقْتَرِبُون!';
-  if (elapsed >= SESSION_SECONDS - 10) return 'الجَزِيرَةُ أَمَامَنَا! 🏝️';
-  if (streak >= 3) return 'أَنْتَ أُسْطُورَة! 🔥';
-  if (gap > CANNON_THRESHOLD) return 'نَحْنُ فِي المُقَدِّمَة!';
-  return 'أَسْرِعْ يَا بَطَل!';
+  if (gap < ROPE_THRESHOLD && ropeAvail) return pgt('خُذْ حَبْلَ الإِنْقَاذ! 🤝');
+  if (gap < 40) return pgt('القَرَاصِنَةُ يَقْتَرِبُون!');
+  if (elapsed >= SESSION_SECONDS - 10) return pgt('الجَزِيرَةُ أَمَامَنَا! 🏝️');
+  if (streak >= 3) return pgt('أَنْتَ أُسْطُورَة! 🔥');
+  if (gap > CANNON_THRESHOLD) return pgt('نَحْنُ فِي المُقَدِّمَة!');
+  return pgt('أَسْرِعْ يَا بَطَل!');
 }
 
 // ═══════════════════════════════════════════════════════════════════
 // المكوّن الرئيسي
 // ═══════════════════════════════════════════════════════════════════
 export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
-  const { speak } = useCharacterVoice(HERO_ID);
+  const { dir, isAr } = useGameLang();
+  const { speak } = useGameVoice(HERO_ID);
   const addXP = useProgressStore((s) => s.addXP);
   const tickets = useProgressStore((s) => s.tickets);
   const buyTicket = useProgressStore((s) => s.buyTicket);
@@ -281,7 +284,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
 
     if (end === 'victory') {
       setHeroMood('celebrating');
-      speak(result.isNewRecord ? 'وَصَلْتَ لِلجَزِيرَةِ! رَقَمٌ قِيَاسِيٌّ جَدِيد!' : 'وَصَلْنَا لِلجَزِيرَة! أَحْسَنْتَ!');
+      speak(result.isNewRecord ? pgt('وَصَلْتَ لِلجَزِيرَةِ! رَقَمٌ قِيَاسِيٌّ جَدِيد!') : pgt('وَصَلْنَا لِلجَزِيرَة! أَحْسَنْتَ!'));
       vibrate([0, 40, 40, 40, 40, 80]);
       goPhase('victory');
     } else {
@@ -289,7 +292,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
       vibrate([0, 40, 40, 80]);
       goPhase('caught');
       addTimeout(() => {
-        speak('لا بَأْس يَا بَطَل! سَنَسْتَعِيدُ الكَنْزَ مَعاً. مَرَّةً أُخْرَى؟');
+        speak(pgt('لا بَأْس يَا بَطَل! سَنَسْتَعِيدُ الكَنْزَ مَعاً. مَرَّةً أُخْرَى؟'));
         goPhase('defeat');
       }, 1900);
     }
@@ -324,7 +327,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
     setHeroMood(golden ? 'excited' : 'thinking');
     setHud((h) => ({ ...h, left: t, max: t }));
     if (golden) {
-      showToast('🧰 مَسْأَلَةٌ ذَهَبِيَّة! نِقَاطٌ ×2 وَبِلَا خَسَارَة');
+      showToast(pgt('🧰 مَسْأَلَةٌ ذَهَبِيَّة! نِقَاطٌ ×2 وَبِلَا خَسَارَة'));
       seaSfx.playTrumpet(true);
     }
   }, [showToast]);
@@ -386,11 +389,11 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
     if (elapsedRef.current >= SESSION_SECONDS - 10) gain += 2;   // سباق الجزيرة
     if (st > 0 && st % 5 === 0) {
       gain += 8;
-      showToast('💥 مِدْفَعُ رَيَّان!');
-      say('مِدْفَعِي! ارْجِعُوا يَا قَرَاصِنَة!');
-      speak('مِدْفَعِي!');
+      showToast(pgt('💥 مِدْفَعُ رَيَّان!'));
+      say(pgt('مِدْفَعِي! ارْجِعُوا يَا قَرَاصِنَة!'));
+      speak(pgt('مِدْفَعِي!'));
     } else if (st === 3) {
-      showToast('🔥 الرِّيحُ مَعَنَا!');
+      showToast(pgt('🔥 الرِّيحُ مَعَنَا!'));
     }
     gapRef.current = Math.min(GAP_MAX, gapRef.current + gain);
 
@@ -408,7 +411,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
   const handleTimeout = useCallback(() => {
     if (!problemRef.current || answeredRef.current) return;
     answeredRef.current = true;
-    failProblem({ kind: 'timeout', why: 'انْتَهَى الوَقْت! إِلَيْكَ الحَلُّ خُطْوَةً خُطْوَة.', wrongValue: null }, LOSS_TIMEOUT);
+    failProblem({ kind: 'timeout', why: pgt('انْتَهَى الوَقْت! إِلَيْكَ الحَلُّ خُطْوَةً خُطْوَة.'), wrongValue: null }, LOSS_TIMEOUT);
   }, [failProblem]);
 
   // ═══════════════════════════════════════════════════════════
@@ -435,7 +438,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
     if (gapRef.current < ROPE_THRESHOLD && !dangerWarnedRef.current) {
       dangerWarnedRef.current = true;
       setHeroMood('thinking');
-      say('القَرَاصِنَةُ يَقْتَرِبُون!', 2200);
+      say(pgt('القَرَاصِنَةُ يَقْتَرِبُون!'), 2200);
     } else if (gapRef.current >= 40) {
       dangerWarnedRef.current = false;
     }
@@ -528,7 +531,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
     setReview(null);
     setToast(null);
     setHeroMood('excited');
-    const greetMsg = `أَسْرِعْ يَا ${childName}! القَرَاصِنَةُ خَلْفَنَا!`;
+    const greetMsg = `${pgt('أَسْرِعْ يَا')} ${childName}! ${pgt('القَرَاصِنَةُ خَلْفَنَا!')}`;
     say(greetMsg);
     speak(greetMsg);
     vibrate(50);
@@ -558,7 +561,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
     setRopeUsed(true);
     vibrate(40);
     seaSfx.playTrumpet(true);
-    showToast('🤝 حَبْلُ رَيَّان!');
+    showToast(pgt('🤝 حَبْلُ رَيَّان!'));
 
     // نحذف خياراً خاطئاً واحداً (عشوائياً)
     setOptions((prev) => {
@@ -588,10 +591,10 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
   // ═══════════════════════════════════════════════════════════
   if (phase === 'welcome') {
     return (
-      <div dir="rtl" className="min-h-screen bg-gradient-to-b from-slate-950 via-rose-950/40 to-slate-950 text-white flex flex-col">
+      <div dir={dir} className="min-h-screen bg-gradient-to-b from-slate-950 via-rose-950/40 to-slate-950 text-white flex flex-col">
         <div className="flex items-center gap-2 p-4">
-          <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition" aria-label="رجوع">
-            <ArrowRight className="w-6 h-6 text-rose-400" />
+          <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition" aria-label={pgt('رجوع')}>
+            <ArrowRight className={`w-6 h-6 text-rose-400 ${isAr ? '' : 'rotate-180'}`} />
           </button>
         </div>
 
@@ -605,9 +608,9 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
             <div className="w-28 h-28 rounded-full bg-rose-500/20 border-2 border-rose-400 flex items-center justify-center text-6xl shadow-2xl shadow-rose-500/30">
               🏴‍☠️
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-rose-400">سِبَاقُ القَرَاصِنَة</h1>
+            <h1 className="text-3xl sm:text-4xl font-black text-rose-400">{pgt('سِبَاقُ القَرَاصِنَة')}</h1>
             <p className="text-slate-400 text-sm sm:text-base max-w-xs leading-relaxed">
-              اضْرِبْ بِسُرْعَةٍ لِتَبْقَى أَمَامَ القَرَاصِنَة. اصْمُدْ 90 ثَانِيَةً حَتَّى تَصِلَ إِلَى الجَزِيرَة!
+              {pgt('اضْرِبْ بِسُرْعَةٍ لِتَبْقَى أَمَامَ القَرَاصِنَة. اصْمُدْ 90 ثَانِيَةً حَتَّى تَصِلَ إِلَى الجَزِيرَة!')}
             </p>
           </motion.div>
 
@@ -621,7 +624,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
             className="w-full max-w-xs bg-gradient-to-l from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white font-black text-xl py-4 rounded-2xl shadow-xl shadow-rose-500/30 active:scale-95 transition"
             style={{ touchAction: 'manipulation' }}
           >
-            ▶️ ابْدَأِ السِّبَاق
+            ▶️ {pgt('ابْدَأِ السِّبَاق')}
           </motion.button>
         </div>
       </div>
@@ -633,7 +636,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
   // ═══════════════════════════════════════════════════════════
   if (phase === 'victory') {
     return (
-      <div dir="rtl" className="min-h-screen bg-gradient-to-b from-emerald-950 via-slate-950 to-slate-950 text-white flex flex-col items-center justify-center p-4 gap-3">
+      <div dir={dir} className="min-h-screen bg-gradient-to-b from-emerald-950 via-slate-950 to-slate-950 text-white flex flex-col items-center justify-center p-4 gap-3">
         <div className="w-full max-w-sm rounded-2xl overflow-hidden border border-amber-400/40" style={{ aspectRatio: '360 / 220' }}>
           <Scene gap={100} elapsedSec={SESSION_SECONDS} isLightning={false} weather="sunny" />
         </div>
@@ -649,7 +652,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
           }`}
         >
           <h2 className={`text-2xl font-black ${isNewRecord ? 'text-amber-300' : 'text-emerald-400'}`}>
-            {isNewRecord ? '🎉 رَقَمٌ قِيَاسِيٌّ جَدِيد!' : 'وَصَلْتَ لِلجَزِيرَة!'}
+            {isNewRecord ? pgt('🎉 رَقَمٌ قِيَاسِيٌّ جَدِيد!') : pgt('وَصَلْتَ لِلجَزِيرَة!')}
           </h2>
 
           {/* صندوق الكنز */}
@@ -674,27 +677,27 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
                 </motion.div>
               ))}
             </div>
-            <p className="text-amber-200 text-xs font-bold">🪙 × <Num>{finalStars}</Num> قِطْعَةٌ ذَهَبِيَّة</p>
+            <p className="text-amber-200 text-xs font-bold">🪙 × <Num>{finalStars}</Num> {pgt('قِطْعَةٌ ذَهَبِيَّة')}</p>
           </div>
 
           <div className="w-full bg-slate-900/80 rounded-2xl border border-slate-700/50 p-3 flex flex-col gap-1.5 text-sm">
             <div className="flex justify-between">
-              <span className="text-slate-400">الإِجَابَاتُ الصَّحِيحَة:</span>
+              <span className="text-slate-400">{pgt('الإِجَابَاتُ الصَّحِيحَة')}:</span>
               <span className="text-rose-300 font-bold tabular-nums"><Num>{scoreCount}</Num></span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">الأَخْطَاء:</span>
+              <span className="text-slate-400">{pgt('الأَخْطَاء')}:</span>
               <span className="text-slate-300 font-bold tabular-nums"><Num>{finalWrong}</Num></span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">النِّقَاط:</span>
+              <span className="text-slate-400">{pgt('النِّقَاط')}:</span>
               <span className="text-amber-300 font-bold tabular-nums"><Num>{points}</Num></span>
             </div>
             {previousHigh && (
               <div className="flex justify-between">
                 <span className="text-slate-400 flex items-center gap-1.5">
                   {isNewRecord ? <Crown className="w-3.5 h-3.5" /> : <Trophy className="w-3.5 h-3.5 text-amber-300" />}
-                  {isNewRecord ? 'كُنْتَ:' : 'الرَّقَم:'}
+                  {isNewRecord ? pgt('كُنْتَ:') : pgt('الرَّقَم:')}
                 </span>
                 <span className="text-amber-300 font-bold tabular-nums"><Num>{previousHigh.value}</Num> ({previousHigh.name})</span>
               </div>
@@ -708,7 +711,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
               style={{ touchAction: 'manipulation' }}
             >
               <RotateCcw className="w-4 h-4" />
-              إِعَادَةُ السِّبَاق
+              {pgt('إِعَادَةُ السِّبَاق')}
             </button>
             <button
               onClick={onBack}
@@ -716,7 +719,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
               style={{ touchAction: 'manipulation' }}
             >
               <Home className="w-4 h-4" />
-              مَدِينَةُ الأَلْعَاب
+              {pgt('مَدِينَةُ الأَلْعَاب')}
             </button>
           </div>
         </motion.div>
@@ -729,7 +732,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
   // ═══════════════════════════════════════════════════════════
   if (phase === 'defeat') {
     return (
-      <div dir="rtl" className="min-h-screen bg-gradient-to-b from-rose-950 via-slate-950 to-slate-950 text-white flex flex-col items-center justify-center p-6">
+      <div dir={dir} className="min-h-screen bg-gradient-to-b from-rose-950 via-slate-950 to-slate-950 text-white flex flex-col items-center justify-center p-6">
         <motion.div
           initial={{ scale: 0.85, y: 30 }}
           animate={{ scale: 1, y: 0 }}
@@ -737,31 +740,31 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
           className="w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl flex flex-col items-center gap-4 bg-slate-800 border-2 border-rose-700"
         >
           <div className="text-5xl">🦜</div>
-          <h2 className="text-2xl font-black text-rose-400">سَرَقُوا الكَنْز... مُؤَقَّتاً!</h2>
+          <h2 className="text-2xl font-black text-rose-400">{pgt('سَرَقُوا الكَنْز... مُؤَقَّتاً!')}</h2>
           <p className="text-slate-400 text-sm leading-relaxed">
-            لا بَأْسَ يَا بَطَل · سَنَسْتَعِيدُهُ مَعاً. مَرَّةً أُخْرَى؟
+            {pgt('لا بَأْسَ يَا بَطَل')} · {pgt('سَنَسْتَعِيدُهُ مَعاً. مَرَّةً أُخْرَى؟')}
           </p>
 
           <div className="w-full bg-slate-900/80 rounded-2xl border border-slate-700/50 p-3 flex flex-col gap-1.5 text-sm">
             <div className="flex justify-between">
-              <span className="text-slate-400">الإِجَابَاتُ الصَّحِيحَة:</span>
+              <span className="text-slate-400">{pgt('الإِجَابَاتُ الصَّحِيحَة')}:</span>
               <span className="text-rose-300 font-bold tabular-nums"><Num>{scoreCount}</Num></span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">النِّقَاط:</span>
+              <span className="text-slate-400">{pgt('النِّقَاط')}:</span>
               <span className="text-amber-300 font-bold tabular-nums"><Num>{points}</Num></span>
             </div>
             {previousHigh && (
               <div className="flex justify-between">
                 <span className="text-slate-400 flex items-center gap-1.5">
                   <Trophy className="w-3.5 h-3.5 text-amber-300" />
-                  الرَّقَم:
+                  {pgt('الرَّقَم')}:
                 </span>
                 <span className="text-amber-300 font-bold tabular-nums"><Num>{previousHigh.value}</Num> ({previousHigh.name})</span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-slate-400">🪙 قِطْعَةٌ لِلْمُحَاوَلَة:</span>
+              <span className="text-slate-400">🪙 {pgt('قِطْعَةٌ لِلْمُحَاوَلَة')}:</span>
               <span className="text-amber-300 font-bold tabular-nums">1</span>
             </div>
           </div>
@@ -773,7 +776,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
               style={{ touchAction: 'manipulation' }}
             >
               <RotateCcw className="w-4 h-4" />
-              حَاوِلْ مُجَدَّداً
+              {pgt('حَاوِلْ مُجَدَّداً')}
             </button>
             <button
               onClick={onBack}
@@ -781,7 +784,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
               style={{ touchAction: 'manipulation' }}
             >
               <Home className="w-4 h-4" />
-              مَدِينَةُ الأَلْعَاب
+              {pgt('مَدِينَةُ الأَلْعَاب')}
             </button>
           </div>
         </motion.div>
@@ -803,15 +806,15 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
 
   return (
     <div
-      dir="rtl"
+      dir={dir}
       className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950/60 to-slate-950 text-white flex flex-col select-none"
       style={{ touchAction: 'manipulation' }}
     >
       {/* ═══ الرأس ═══ */}
       <div className="sticky top-0 z-20 bg-slate-900/85 backdrop-blur-md border-b border-rose-500/20">
         <div className="flex items-center justify-between gap-2 p-3">
-          <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0" aria-label="رجوع">
-            <ArrowRight className="w-5 h-5 text-rose-400" />
+          <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0" aria-label={pgt('رجوع')}>
+            <ArrowRight className={`w-5 h-5 text-rose-400 ${isAr ? '' : 'rotate-180'}`} />
           </button>
 
           <div className="flex-1 flex justify-center min-w-0">
@@ -822,7 +825,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
             <button
               onClick={toggleSound}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
-              aria-label={soundOn ? 'كتم الصوت' : 'تشغيل الصوت'}
+              aria-label={soundOn ? pgt('كتم الصوت') : pgt('تشغيل الصوت')}
             >
               {soundOn ? <Volume2 className="w-4 h-4 text-sky-300" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
             </button>
@@ -858,7 +861,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
           <div className="absolute top-2 inset-x-3 flex justify-center pointer-events-none">
             <div className="max-w-full bg-slate-900/80 backdrop-blur-sm border border-amber-400/30 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-md">
               <span className="text-base shrink-0">👦</span>
-              <span className="text-[11px] font-bold text-amber-100 truncate">{bubble}</span>
+              <span className="text-[11px] font-bold text-amber-100 truncate">{pgt(bubble)}</span>
             </div>
           </div>
 
@@ -873,7 +876,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
                 className="absolute inset-x-0 top-1/2 flex justify-center pointer-events-none"
               >
                 <span className="px-4 py-1.5 rounded-full bg-amber-400 text-slate-950 text-sm font-black shadow-lg shadow-amber-500/40">
-                  {toast.text}
+                  {pgt(toast.text)}
                 </span>
               </motion.div>
             )}
@@ -894,7 +897,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
                 >
                   🏴‍☠️
                 </motion.div>
-                <p className="text-rose-100 font-black text-lg">أَمْسَكُوا بِنَا!</p>
+                <p className="text-rose-100 font-black text-lg">{pgt('أَمْسَكُوا بِنَا!')}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -911,16 +914,16 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-1.5">
               <div className="text-[11px] font-bold text-slate-300 bg-black/40 px-2 py-1 rounded-full border border-white/10">
-                المُسْتَوَى {level}
+                {pgt('المُسْتَوَى')} {level}
               </div>
               {currentProblem && (
                 <div className="text-[11px] font-bold text-sky-200 bg-sky-950/60 px-2 py-1 rounded-full border border-sky-500/30">
-                  {currentProblem.op === 'div' ? '➗ قِسْمَة' : '✖️ ضَرْب'}
+                  {currentProblem.op === 'div' ? pgt('➗ قِسْمَة') : pgt('✖️ ضَرْب')}
                 </div>
               )}
               {isGolden && (
                 <div className="text-[11px] font-black text-amber-300 bg-amber-900/70 px-2 py-1 rounded-full border border-amber-400/50">
-                  🧰 ذَهَبِيَّة ×2
+                  🧰 {pgt('ذَهَبِيَّة')} ×2
                 </div>
               )}
               {streak >= 2 && (
@@ -936,17 +939,17 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
                 style={{ touchAction: 'manipulation' }}
               >
                 <Hand className="w-3.5 h-3.5" />
-                حَبْلُ رَيَّان
+                {pgt('حَبْلُ رَيَّان')}
               </button>
             )}
           </div>
 
           {currentProblem ? (
             <div className="text-4xl font-black text-amber-300 text-center font-mono tabular-nums" dir="ltr">
-              {currentProblem.a} {currentProblem.symbol} {currentProblem.b} = ؟
+              {currentProblem.a} {currentProblem.symbol} {currentProblem.b} = {pgt('؟')}
             </div>
           ) : (
-            <div className="text-2xl font-black text-sky-300 text-center py-1 animate-pulse">⛵ اسْتَعِدّ!</div>
+            <div className="text-2xl font-black text-sky-300 text-center py-1 animate-pulse">⛵ {pgt('اسْتَعِدّ!')}</div>
           )}
 
           {showCountdown && (
