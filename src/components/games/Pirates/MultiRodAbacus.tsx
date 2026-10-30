@@ -19,6 +19,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { pgt } from './piratesI18n';
 
 export interface RodChip {
   rod: number;      // فهرس العمود من اليسار
@@ -79,7 +80,7 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
 
   const labels =
     columns <= 5
-      ? LABELS.slice(5 - columns)
+      ? LABELS.slice(5 - columns).map((l) => pgt(l))
       : Array.from({ length: columns }, (_, i) => String(columns - i));
 
   const firstNonZero = digits.findIndex((d) => d !== 0);
@@ -88,10 +89,11 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
   // الشرائح داخل المعداد فقط
   const vis = chips.filter((c) => c.rod >= 0 && c.rod < columns);
   const chipXs = vis.map((c) => rodX(c.rod));
+  const arcShown = arcText ? pgt(arcText) : arcText; // 🌐 نص القوس مترجم
   const hasArc = !!arcText && vis.length > 0;
   const arcMin = chipXs.length ? Math.min(...chipXs) : 0;
   const arcMax = chipXs.length ? Math.max(...chipXs) : 0;
-  const pillW = arcText ? Math.max(compact ? 110 : 64, arcText.length * (compact ? 11 : 6.6) + (compact ? 28 : 18)) : 0;
+  const pillW = arcText ? Math.max(compact ? 110 : 64, (arcShown ?? '').length * (compact ? 11 : 6.6) + (compact ? 28 : 18)) : 0;
   const pillCx = Math.min(316 - pillW / 2, Math.max(pillW / 2 + 4, (arcMin + arcMax) / 2));
 
   return (
@@ -152,7 +154,7 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
                 <g>
                   <rect x={x - L.cellW / 2} y={0} width={L.cellW} height={L.carryH} rx={L.carryH / 2} fill="#b45309" />
                   <text x={x} y={L.carryH - 2.4} textAnchor="middle" fontSize={L.carryFont} fontWeight={800} fill="#fef3c7">
-                    حمل 1
+                    {pgt('حمل')} 1
                   </text>
                 </g>
               )}
@@ -277,7 +279,7 @@ const MultiRodAbacus: React.FC<MultiRodAbacusProps> = ({
               x={pillCx} y={L.pillY + L.pillH * 0.72} textAnchor="middle"
               fontSize={L.pillFont} fontWeight={900} fontFamily="monospace" fill={T.chipText}
             >
-              {arcText}
+              {arcShown}
             </text>
           </motion.g>
         )}
