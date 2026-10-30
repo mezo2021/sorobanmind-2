@@ -43,3 +43,4 @@ export async function speak(text: string, lang: 'ar' | 'en'): Promise<void> {
     console.error("متصفحك لا يدعم النطق الصوتي");
   }
 }
+// update
