@@ -695,12 +695,12 @@ export function translateDynamic(
              hintEn = hintAr; // في حال وُجد تلميح آخر لم نغطيه (احتياط)
           }
 
-          // 2. ترجمة باقي الحل من القاموس الذي أضفته أنت
+                    // 2. ترجمة باقي الحل من القاموس
           const normalizedRest = normalizeArabic(restAr);
           let restEn = restAr;
-          
-          if (AR_TO_EN[normalizedRest]) {
-            restEn = AR_TO_EN[normalizedRest];
+
+          if (RAW_AR_TO_EN[normalizedRest]) {
+            restEn = RAW_AR_TO_EN[normalizedRest];
           } else {
             const patternTrans = translatePattern(normalizedRest);
             if (patternTrans) restEn = patternTrans;
@@ -710,14 +710,14 @@ export function translateDynamic(
           return `${hintEn} ${restEn}`.trim();
         }
       }
-      
-      // --- الكود القديم الخاص بك (البحث العادي في القاموس) ---
+
+      // --- البحث العادي في القاموس ---
       const normalizedKey = normalizeArabic(textToTranslate);
-      
-      if (AR_TO_EN[normalizedKey]) {
-        return AR_TO_EN[normalizedKey];
+
+      if (RAW_AR_TO_EN[normalizedKey]) {
+        return RAW_AR_TO_EN[normalizedKey];
       }
-      
+
       const patternTranslation = translatePattern(normalizedKey);
       if (patternTranslation) {
         return patternTranslation;
