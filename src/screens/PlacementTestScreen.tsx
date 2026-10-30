@@ -68,8 +68,16 @@ function formatTime(seconds: number): string {
 /**
  * ✅ حساب الأعمدة من max(السلسلة، الناتج)
  */
-function getColumnsForQuestion(question: PlacementQuestion): number {
-  const nums = (question.question.match(/\d+/g) ?? []).map(Number);
+function getColumnsForQuestion(question: PlacementQuestion, lang: string = 'ar'): number {
+  // ✅ الإصلاح: التحقق من نوع السؤال
+  const rawQ = question.question as any;
+  const qStr = typeof rawQ === 'string'
+    ? rawQ
+    : (rawQ && typeof rawQ === 'object'
+        ? (rawQ[lang] || rawQ.ar || rawQ.en || '')
+        : '');
+
+  const nums = (qStr.match(/\d+/g) ?? []).map(Number);
   const candidates: number[] = [
     Math.abs(Math.round(question.result * (question.result % 1 !== 0 ? 100 : 1))),
     ...nums.map(Math.abs),
@@ -380,7 +388,7 @@ export function PlacementTestScreen({
   if (phase === 'running' && currentQ) {
     const progress = ((currentIdx + 1) / questions.length) * 100;
     const timeWarning = timeLeft <= 60;
-    const columns = getColumnsForQuestion(currentQ);
+    const columns = getColumnsForQuestion(currentQ, lang);
     const isLastQuestion = currentIdx === questions.length - 1;
     const isFirstQuestion = currentIdx === 0;
 
