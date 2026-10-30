@@ -1,30 +1,33 @@
-# 📊 Audit v8 v9 معا— التقرير الكامل (2026-10-30)
+# 📊 Audit v8 + v9 معاً — التقرير الكامل (2026-10-30)
 
 **Repository:** `mezo2021/sorobanmind-2`
 **Branch/ref:** `refs/heads/main`
-**Commit:** `e77129e53df7d5a1ac2021ca4b7f04dd848b21bb`
-**Workflow run:** `40992590975`
+**Commit الأصلي (قبل الإصلاحات):** `e77129e53df7d5a1ac2021ca4b7f04dd848b21bb`
+**Workflow run الأصلي:** `40992590975`
 **Generated:** 2026-10-30T02:36:04.466Z
 **Node:** v20.20.2 · **npm:** 10.8.2 · **Lockfile:** ✅ present
+
+> 🟢 **آخر تحديث للإصلاحات:** 2026-10-30
+> **ملاحظة:** هذا التقرير يعكس الحالة الأصلية عند توليد الفحص. تمت إضافة علامات ✅ **"منتهي"** بجانب كل إصلاح تم تنفيذه فعلياً بعد الفحص.
 
 ---
 
 ## 🎯 1. الملخص التنفيذي (Executive Summary)
 
-| المؤشر | النتيجة | التقييم |
-| :--- | :---: | :---: |
-| **Build** | ✅ نجح في 6.35s (2075 modules) | 🟢 ممتاز |
-| **TypeScript** | ✅ 0 أخطاء (`tsc --noEmit`) | 🟢 ممتاز |
-| **ESLint** | ✅ 0 أخطاء | 🟢 ممتاز |
-| **Source files** | 154 ملف | 🟡 (من 165 سابقاً، −11) |
-| **Imports** | 750 | 🟢 صحي |
-| **Call expressions** | 8,863 | 🟢 صحي |
-| **Static storage keys** | 32 مفتاح | 🟢 (من 45 سابقاً، −13) |
-| **Storage operations** | 91 عملية | 🟢 (من 113 سابقاً، −22) |
-| **Store candidates** | 8 | 🟢 مستقر |
-| **Gaps requiring review** | 59 فجوة | 🟡 (من 68 سابقاً، −9) |
-| **Errors/diagnostics** | 0 | 🟢 ممتاز |
-| **Main bundle** | ⚠️ **871.31 KB** (gzip: 234.57 KB) | 🟠 **تحذير** |
+| المؤشر | النتيجة (بعد الفحص) | التقييم | الحالة الحالية |
+| :--- | :---: | :---: | :---: |
+| **Build** | ✅ نجح في 6.35s (2075 modules) | 🟢 ممتاز | ✅ منتهي |
+| **TypeScript** | ✅ 0 أخطاء (`tsc --noEmit`) | 🟢 ممتاز | ✅ منتهي |
+| **ESLint** | ✅ 0 أخطاء | 🟢 ممتاز | ✅ منتهي |
+| **Source files** | 154 ملف | 🟡 (من 165 سابقاً، −11) | — |
+| **Imports** | 750 | 🟢 صحي | — |
+| **Call expressions** | 8,863 | 🟢 صحي | — |
+| **Static storage keys** | 32 مفتاح | 🟢 (من 45 سابقاً، −13) | — |
+| **Storage operations** | 91 عملية | 🟢 (من 113 سابقاً، −22) | — |
+| **Store candidates** | 8 | 🟢 مستقر | — |
+| **Gaps requiring review** | 59 فجوة | 🟡 (من 68 سابقاً، −9) | — |
+| **Errors/diagnostics** | 0 | 🟢 ممتاز | — |
+| **Main bundle** | ⚠️ كان **871.31 KB** | 🟠 تحذير | ✅ **منتهي — الآن 399.46 KB** |
 
 ---
 
@@ -78,8 +81,6 @@
 
 ### 3.2 العمليات الديناميكية (59 فجوة) — تصنيف دقيق
 
-**الجدول الكامل موجود في التقرير التفصيلي السابق. الخلاصة:**
-
 | الفئة | العدد | التقييم |
 | :--- | :---: | :---: |
 | **بالتصميم — آمنة تماماً** | 41 | ✅ |
@@ -101,220 +102,173 @@
 **ملاحظة التقرير:**
 > *"Candidates only; verify imports and runtime usage before classifying a store as active."*
 
-**الحكم:** ✅ **جميع المتاجر الأربعة مؤكدة نشطة** (تحققنا منها في التوثيق الشامل).
+**الحكم:** ✅ **جميع المتاجر الأربعة مؤكدة نشطة**.
 
 ---
 
-## 🏗️ 5. نتائج البناء (Build Output) — ⚠️ تحذير حرج
+## 🏗️ 5. نتائج البناء (Build Output)
 
-### 5.1 ملخص البناء
+### 5.1 ملخص البناء (قبل الإصلاح)
 
-```
-
+```text
 ✅ tsc && vite build
 ✅ 2075 modules transformed
 ✅ built in 6.35s
 ⚠️ تحذير: بعض الـ chunks > 500 KB
-
 ```
 
-### 5.2 الحجم الفعلي للحزمة
+5.2 الحجم الفعلي للحزمة (قبل الإصلاح)
 
-| الملف | الحجم (KB) | gzip (KB) | الحالة |
-| :--- | :---: | :---: | :---: |
-| **`index-DrwvzNU9.js` (main)** | **871.31** | **234.57** | 🟠 **> 500 KB** |
-| `index-qw_NYcuC.js` (data) | 315.60 | 32.09 | 🟢 |
-| `index-CNSWJn5R.js` | 300.30 | 63.90 | 🟢 |
-| `GamesListScreen-rBo24aEx.js` | 234.46 | 75.73 | 🟢 (Lazy) |
-| `progress-CMOo_Jbx.js` | 152.48 | 18.40 | 🟢 |
-| `index-Dp9e4rg2.css` | 101.98 | 15.80 | 🟢 |
-| `FlashListScreen-BZU_28tr.js` | 60.22 | 11.81 | 🟢 (Lazy) |
-| `LessonScreen-CqAvfxiF.js` | 32.16 | 9.17 | 🟢 (Lazy) |
-| `AnzanScreen-1N2RF78m.js` | 26.23 | 8.47 | 🟢 (Lazy) |
-| `MagicSecretsScreen-CdahJxw4.js` | 24.01 | 8.33 | 🟢 (Lazy) |
-| `AudioAnzanScreen-CAaS8-mV.js` | 22.29 | 7.32 | 🟢 (Lazy) |
-| `Soroban2D5-C2XsjDEv.js` | 21.32 | 7.32 | 🟢 |
-| `CategoryExamScreen-BNq4q5mT.js` | 19.64 | 6.14 | 🟢 (Lazy) |
-| `CertificateScreen-Dce6AZmS.js` | 18.25 | 5.85 | 🟢 (Lazy) |
-| `PracticeScreen-Z5N06GHl.js` | 17.70 | 6.38 | 🟢 (Lazy) |
-| `PlacementTestScreen-5HRcis51.js` | 16.64 | 5.32 | 🟢 (Lazy) |
-| `KidsCertificateScreen-CoPT_sYW.js` | 15.89 | 5.00 | 🟢 (Lazy) |
-| `FingerMathScreen-C7agyQu_.js` | 15.15 | 5.30 | 🟢 (Lazy) |
-| `RemediationScreen-CEYlwP6b.js` | 13.73 | 4.70 | 🟢 (Lazy) |
-| `LevelScreen-DHIJPjs5.js` | 12.94 | 4.80 | 🟢 (Lazy) |
-| `LevelTestScreen--Uf0CgWa.js` | 12.71 | 4.35 | 🟢 (Lazy) |
-| `CategoryScreen-Do251yBY.js` | 12.11 | 4.23 | 🟢 (Lazy) |
-| `FlashScreen-Cd5GakCv.js` | 8.86 | 3.24 | 🟢 (Lazy) |
-| `AdaptiveFeedback-CVhZukV3.js` | 8.42 | 2.63 | 🟢 |
-| `LearnScreen-BiqC2GYW.js` | 5.65 | 2.36 | 🟢 (Lazy) |
-| `SorobanPlayground-BPyS1tra.js` | 5.30 | 2.03 | 🟢 (Lazy) |
-| `CertificateMedal-BpNQ5CJ1.js` | 5.12 | 2.03 | 🟢 |
-| `IntroductionScreen-sWQHudtY.js` | 4.44 | 1.82 | 🟢 (Lazy) |
-| `useReadAloud-CvIGwBph.js` | 3.64 | 1.86 | 🟢 |
-| `FloatingCompanion-DMUeX4Sb.js` | 3.52 | 2.04 | 🟢 |
-| **+20 ملفات صغيرة أخرى** | < 2 KB | < 1 KB | 🟢 |
+الملف الحجم (KB) gzip (KB) الحالة
+index-*.js (main) 871.31 234.57 🟠 > 500 KB
+index-qw_NYcuC.js (data) 315.60 32.09 🟢
+GamesListScreen-*.js 234.46 75.73 🟢 (Lazy)
+progress-*.js 152.48 18.40 🟢
+index-*.css 101.98 15.80 🟢
++~30 ملفاً آخر < 60 KB < 12 KB 🟢
 
-### 5.3 🚨 التحذير الحرج
+5.3 ✅ الحالة بعد الإصلاح (منتهي)
 
+الإصلاح المُنفَّذ: manualChunks في vite.config.ts
+النتيجة الفعلية (من CI):
+
+· index-*.js (main): 399.46 KB (gzip: 94.73 KB) ← انخفاض 54%
+· supabase-*.js: 214.34 KB (gzip: 55.47 KB) ← منفصل
+· react-vendor-*.js: 133.93 KB (gzip: 43.12 KB) ← منفصل
+· framer-*.js: 122.91 KB (gzip: 40.60 KB) ← منفصل
+
+✅ تحذير "Some chunks are larger than 500 kB" اختفى تماماً.
+
+5.4 ملف vite.config.ts بعد الإصلاح (المرجع)
+
+```typescript
+build: {
+  outDir: "dist",
+  sourcemap: false,
+  rollupOptions: {
+    output: {
+      manualChunks: {
+        "react-vendor": ["react", "react-dom"],
+        "supabase": ["@supabase/supabase-js"],
+        "framer": ["framer-motion"],
+      },
+    },
+  },
+},
 ```
-
-(!) Some chunks are larger than 500 kB after minification.
-
-```
-
-**الملف المتسبب:** `index-DrwvzNU9.js` = **871.31 KB**
-
-**المشكلة:** هذا **تناقض مع الوعد السابق** في `README.md` و `MASTER_PROJECT_DESCRIPTION`:
-- **ادعاء قديم:** "445 KB" (بعد م5-ب).
-- **واقع حالي:** **871.31 KB** (ضعف الحجم).
-
-**الاحتمالات:**
-1. **م5-ب تم التراجع عنه** (يُعيد استيراد الدروس بشكل ثابت).
-2. **إضافات جديدة:** `piratesI18n`, `useReadAloud`, `useConfetti`, `useGameVoice`, `SorobanaCompanion`, شهادات.
-3. **استيرادات ثابتة لم تكن lazy:** `AdaptiveFeedback`, `SorobanaCompanion`, إلخ.
-
-**يحتاج تحقيقاً فورياً** — انظر التوصيات (القسم 8).
 
 ---
 
-## ✅ 6. نتائج TypeScript
+✅ 6. نتائج TypeScript
 
-```
-
+```text
 sorobanmind-2@2.0.0 typecheck
 tsc --noEmit
 [لا توجد أخطاء]
-
 ```
 
-**الحكم:** ✅ **صفر أخطاء TypeScript** — الكود آمن من حيث الأنواع.
+الحكم: ✅ صفر أخطاء TypeScript.
 
 ---
 
-## 🚨 7. ملاحظات حرجة (Critical Findings)
+🚨 7. ملاحظات حرجة (Critical Findings)
 
-### 🔴 ملاحظة 1: حجم الحزمة الحقيقي (871 KB)
+🔴 ملاحظة 1: حجم الحزمة — ✅ منتهي
 
-**الحقائق:**
-- الوعد القديم: 445 KB.
-- الواقع الحالي: 871.31 KB.
-- **الفرق:** +426 KB (+96% زيادة).
+قبل: 871.31 KB → بعد: 399.46 KB (بعد manualChunks).
 
-**التأثير:**
-- بطء تحميل أول مرة على شبكات 3G.
-- تجربة سيئة على الأجهزة القديمة.
+الإصلاح المُنفَّذ:
 
-**الإجراء المطلوب:**
-1. مراجعة `vite.config.ts` (هل `manualChunks` محدّثة؟).
-2. مراجعة `App.tsx` (هل الدروس عادت استيرادات ثابتة؟).
-3. تحليل `index-DrwvzNU9.js` بـ `vite-bundle-visualizer`.
+· إضافة manualChunks في vite.config.ts.
+· تقسيم: React, Supabase, Framer Motion إلى ملفات منفصلة.
+· النتيجة: لا تحذير 500 KB، الزوار المتكررون يحمّلون ~400 KB فقط.
 
-### 🟡 ملاحظة 2: `SOUND_KEY` في `PirateRaceGame` (تضارب محتمل)
+🟡 ملاحظة 2: SOUND_KEY في PirateRaceGame — ⏳ مؤجل
 
-**الحقائق:**
-- `PirateRaceGame.tsx:103,586` يستخدم `SOUND_KEY` منفصل.
-- `progressStore.soundEnabled` يحمل حالة الصوت العامة.
-- **الخطر:** إذا كتم الطفل الصوت من `Header`، قد تظل لعبة Pirates تصدر صوتاً.
+الحقائق:
 
-**الإجراء المطلوب:**
-- **يوثَّق في تقرير الألعاب** (كما طلبت).
-- **يُوحَّد مستقبلاً** مع `progressStore.soundEnabled` في جلسة تنظيف.
+· PirateRaceGame.tsx:103,586 يستخدم SOUND_KEY منفصل.
+· progressStore.soundEnabled يحمل حالة الصوت العامة.
+· الخطر: إذا كتم الطفل الصوت من Header، قد تظل لعبة Pirates تصدر صوتاً.
 
-### 🟡 ملاحظة 3: مفاتيح جديدة لم تُظهَر في الجدول الثابت
+الحالة: ⏳ مؤجل لتقرير الألعاب (كما اتفقنا).
 
-| المفتاح | الملف | السبب |
-| :--- | :--- | :--- |
-| `soroban_completed_enrichment` | `FingerMathScreen.tsx:166,170` | ثابت `COMPLETED_KEY` (AST لا يحلّه) |
-| `soroban_secrets_best_scores` | `MagicSecretsScreen.tsx:247,259` | ثابت `BEST_SCORES_KEY` |
-| `SOUND_KEY` (Pirates) | `PirateRaceGame.tsx:103,586` | ثابت داخلي |
-| `sorobania_progress_v2` | `sorobaniaData.ts` | ثابت داخلي |
-| `soroban_friends_*` | `FriendsGame.tsx` | مفاتيح الأحزمة |
+🟡 ملاحظة 3: مفاتيح جديدة لم تُظهَر في الجدول الثابت
 
-**الإجراء المطلوب:**
-- إضافة هذه المفاتيح إلى `MASTER_PROJECT_DESCRIPTION.md` (قائمة المفاتيح الرسمية).
+المفتاح الملف السبب
+soroban_completed_enrichment FingerMathScreen.tsx:166,170 ثابت COMPLETED_KEY
+soroban_secrets_best_scores MagicSecretsScreen.tsx:247,259 ثابت BEST_SCORES_KEY
+SOUND_KEY (Pirates) PirateRaceGame.tsx:103,586 ثابت داخلي
+sorobania_progress_v2 sorobaniaData.ts ثابت داخلي
+soroban_friends_* FriendsGame.tsx مفاتيح الأحزمة
 
-### 🟡 ملاحظة 4: نمط "الاسمين" — تصميم صحيح
+الإجراء المطلوب: إضافتها إلى MASTER_PROJECT_DESCRIPTION.md — ⏳ مؤجل.
 
-| المفتاح | الغرض | أمثلة |
-| :--- | :--- | :--- |
-| `soroban_child_name` | الاسم القصير (ترحيب يومي) | "مرحباً يا مصطفى!" |
-| `soroban_child_full_name` | الاسم الثلاثي (شهادة رسمية) | "مصطفى علي أكر" |
+🟡 ملاحظة 4: نمط "الاسمين" — ✅ تصميم صحيح
 
-**الحكم:** ✅ **تصميم صحيح ومقصود** — يحتاج توثيقاً رسمياً فقط.
+المفتاح الغرض
+soroban_child_name الاسم القصير (ترحيب يومي)
+soroban_child_full_name الاسم الثلاثي (شهادة رسمية)
+
+الحكم: ✅ تصميم صحيح ومقصود.
 
 ---
 
-## 📋 8. التوصيات (Recommendations)
+📋 8. التوصيات (Recommendations) — بعد الإصلاح
 
-### 🔴 أولوية قصوى:
+🔴 أولوية قصوى:
 
-**1. التحقيق في حجم الحزمة (871 KB)**
+1. ✅ منتهي — حجم الحزمة
 
-خطوات مقترحة:
-```bash
-# 1. فحص تكوين الحزمة
-npx vite-bundle-visualizer
+· manualChunks مُنفَّذ، التحذير اختفى.
+· 871 KB → 399 KB.
 
-# 2. مراجعة vite.config.ts
-grep -n "manualChunks\|rollupOptions" vite.config.ts
+2. ✅ منتهي — إصلاحات مكتملة إضافية:
 
-# 3. مراجعة App.tsx (هل الدروس عادت ثابتة؟)
-grep -n "import.*curriculum\|import.*lessons" src/App.tsx
-
-# 4. مراجعة الاستيرادات الثابتة الجديدة
-grep -rn "^import" src/App.tsx | wc -l
-```
-
-الهدف: تقليل index-DrwvzNU9.js إلى < 500 KB.
+· PlacementTestScreen.tsx: getColumnsForQuestion أصبحت تدعم {ar, en} بدلاً من .match() على السلسلة فقط.
+· LevelScreen.tsx: زر "اختبار المستوى" أصبح مفتوحاً في وضع المعاينة (!inPreview && ...).
+· translateDynamic.ts: تم إضافة رأس "قنبلة موقوتة مدرعة" أعلى الملف (5 خطوات + قواعد صارمة لمنع اللمس).
+· main.tsx cleanup: تمت إضافة soroban_placement_last_attempt و soroban_kids_certificate_ready إلى قائمة التنظيف (المجموع: 15 مفتاحاً ميتاً).
 
 🟠 أولوية متوسطة:
 
-2. توحيد SOUND_KEY في PirateRaceGame
+3. ⏳ مؤجل — توحيد SOUND_KEY في PirateRaceGame (تقرير الألعاب).
 
-· الخطر: تجربة صوتية غير متسقة.
-· الحل: استخدام useProgressStore((s) => s.soundEnabled) بدلاً من SOUND_KEY.
-
-3. توثيق المفاتيح الجديدة
-
-· إضافة soroban_completed_enrichment, soroban_secrets_best_scores, SOUND_KEY, sorobania_progress_v2, soroban_friends_* إلى MASTER_PROJECT_DESCRIPTION.
-· إضافة تعليق // by-design أعلى كل مفتاح ديناميكي شريف.
+4. ⏳ مؤجل — توثيق المفاتيح الجديدة في MASTER_PROJECT_DESCRIPTION.
 
 🟡 أولوية منخفضة:
 
-4. مراقبة حجم الاستيرادات (750 import)
+5. ⏳ مراقبة حجم الاستيرادات (750 import).
 
-· حد أقصى مقترح: 900 import.
-· إذا تجاوزنا، يجب البدء في تحليل أعمق.
+6. ⏳ إضافة تعليق // by-design أعلى كل مفتاح ديناميكي.
 
-5. إضافة تعليقات توضيحية
-
-· // by-design للمفاتيح الديناميكية.
-· // PIRATE_SOUND في PirateRaceGame.tsx (لتوضيح التضارب المؤقت).
+7. ⏳ إصلاح ترجمة L0 في وضع EN — تمت محاولة لكن تم التراجع، المشكلة تبقى مؤجلة.
 
 ---
 
-📊 9. مقارنة شاملة (v8 القديم vs v8 الجديد)
+📊 9. مقارنة شاملة (v8 القديم vs v8 الجديد vs الحالة بعد الإصلاح)
 
-المؤشر v8 القديم (2026-10-20) v8 الجديد (2026-10-30) Δ التقييم
-Source files 165 154 −11 ✅
-Imports 627 750 +123 ✅
-Call expressions 7,466 8,863 +1,397 ✅
-Static keys 45 32 −13 ✅
-Storage ops 113 91 −22 ✅
-Store candidates 8 8 = ✅
-Key references 3,387 2,965 −422 ✅
-Gaps 68 59 −9 ✅
-Errors 0 0 = ✅
-Main bundle 445 KB (مزعوم) 871.31 KB +426 🟠
-TypeScript ✅ ✅ = ✅
-ESLint ✅ ✅ = ✅
-Build time ✅ 6.35s — ✅
+المؤشر v8 القديم v8 الجديد بعد الإصلاح
+Source files 165 154 154
+Imports 627 750 750
+Call expressions 7,466 8,863 8,863
+Static keys 45 32 32
+Storage ops 113 91 91
+Store candidates 8 8 8
+Key references 3,387 2,965 2,965
+Gaps 68 59 59
+Errors 0 0 0
+Main bundle 445 KB (مزعوم) 871.31 KB ✅ 399.46 KB
+Rollup warning — ⚠️ موجود ✅ اختفى
+TypeScript ✅ ✅ ✅
+ESLint ✅ ✅ ✅
+Build time — 6.35s 6.37s
 
 ---
 
 🎯 10. الحكم النهائي (Final Verdict)
 
-✅ نقاط القوة (8):
+✅ نقاط القوة (9):
 
 1. 0 أخطاء (TypeScript + ESLint + Runtime).
 2. تنظيف ممتاز (−13 مفتاح ثابت، −22 عملية تخزين).
@@ -322,13 +276,14 @@ Build time ✅ 6.35s — ✅
 4. 8 متاجر سليمة (كلها مؤكدة نشطة).
 5. نظام الأوفلاين يعمل (getSession + chunk-reload).
 6. ترجمة الألعاب مكتملة (5/5).
-7. TypeScript صفر أخطاء (tsc --noEmit).
-8. Build سريع (6.35s لـ 2075 module).
+7. TypeScript صفر أخطاء.
+8. Build سريع (6.37s).
+9. ✅ الحزمة الرئيسية: 399 KB (بعد manualChunks).
 
 🟡 نقاط تحتاج متابعة (2):
 
-1. حجم الحزمة (871 KB) — تناقض مع وعد 445 KB يحتاج تحليلاً.
-2. SOUND_KEY في Pirates — تضارب محتمل مع progressStore.
+1. SOUND_KEY في Pirates — تضارب محتمل (⏳ مؤجل).
+2. ترجمة L0 في EN — مشكلة [object Object] (⏳ مؤجل).
 
 🔴 نقاط حرجة (0):
 
@@ -336,10 +291,10 @@ Build time ✅ 6.35s — ✅
 
 ---
 
-📌 11. مقارنة مع الادعاءات السابقة (تصحيح)
+📌 11. مقارنة مع الادعاءات السابقة (تصحيح مُحدَّث)
 
 # الادعاء السابق الواقع الحالي
-1 "حزمة 445 KB" 871 KB (يحتاج تحقيقاً)
+1 "حزمة 445 KB" ✅ 399 KB (بعد manualChunks)
 2 "PWA · Offline-First" ليس PWA (لا Service Worker)
 3 "Zero server transmissions" Supabase نشط
 4 "دروس L2-L7 مفقودة" L2-L4 مكتملة، أسئلة L5-L7 جاهزة
@@ -348,38 +303,39 @@ Build time ✅ 6.35s — ✅
 
 ---
 
-🚀 12. خطة العمل الفورية
+🚀 12. خطة العمل الفورية (مُحدَّثة)
 
-اليوم:
+✅ تم إنجازه (2026-10-30):
 
-1. تشغيل vite-bundle-visualizer (لتحليل 871 KB).
-2. التحقق من vite.config.ts (هل manualChunks سليمة؟).
-3. إرسال نتائج التحليل للتشخيص الدقيق.
+1. manualChunks في vite.config.ts → 871 KB → 399 KB.
+2. PlacementTestScreen → دعم {ar, en} بدلاً من .match().
+3. LevelScreen → فتح اختبار المستوى في المعاينة.
+4. translateDynamic.ts → رأس "مدرع" لمنع اللمس العشوائي.
+5. main.tsx cleanup → 15 مفتاحاً ميتاً (بدلاً من 13).
 
-هذا الأسبوع:
+⏳ مؤجل (بترتيب الأولوية):
 
-4. توحيد SOUND_KEY في Pirates (ملف واحد، 15 دقيقة).
-5. توثيق المفاتيح الجديدة في MASTER_PROJECT_DESCRIPTION (ملف واحد).
-6. إضافة // by-design للمفاتيح الديناميكية.
-
-الشهر القادم:
-
-7. تقليل الحزمة إلى < 500 KB (استكمال مسار م5-ب).
-8. ربط engine بـ srb-adapter (الأولوية القصوى).
+1. ربط المحرك (engine ← srb-adapter) — الأولوية القصوى القادمة.
+2. توحيد SOUND_KEY في PirateRaceGame — في تقرير الألعاب.
+3. إصلاح ترجمة L0 في EN — مشكلة [object Object].
+4. حذف 3 دوال ميتة (saveAnzanBadges, saveAudioAnzanBadges, BadgeModal).
+5. توثيق المفاتيح الجديدة في MASTER_PROJECT_DESCRIPTION.
 
 ---
 
-آخر تحديث: 2026-10-30 (rev.8-complete)
-الحالة: 🟢 البناء أخضر · ✅ 0 أخطاء · 🟡 حجم الحزمة يحتاج متابعة
+آخر تحديث: 2026-10-30 (rev.8-final)
+الحالة: 🟢 البناء أخضر · ✅ 0 أخطاء · ✅ الحزمة 399 KB · 🟡 المحرك ينتظر الربط
 
-تم التوليد بواسطة: Audit v8 workflow
-الخطوة التالية: Audit v9 (Bash-based) — مفاتيح ميتة + كاتب بلا قارئ
+تم التوليد بواسطة: Audit v8 + v9 workflow
+الخطوة التالية: ربط المحرك التكيفي (engine → srb-adapter).
 
 ```
 
+---
+
 # 📊 تحليل Audit v9 الجديد — 2026-10-30
 
-**Commit:** `db7a78710225eadcec426cab206277323f8809e1`
+**Commit الأصلي:** `db7a78710225eadcec426cab206277323f8809e1`
 **Generated:** 2026-10-30T02:55:45Z
 **Node:** v20.20.2
 
@@ -387,17 +343,14 @@ Build time ✅ 6.35s — ✅
 
 ## 🎯 1. الحكم السريع
 
-| البند | النتيجة |
-| :--- | :---: |
-| **4 متاجر** | ✅ كلها نشطة ومؤكدة |
-| **ملفات المفاتيح الديناميكية** | ✅ كلها موجودة وتعمل |
-| **مفاتيح يتيمة (Dead keys)** | 🟡 5 (منذ تنظيف قديم، غير ضارة) |
-| **المحرك (engine)** | 🔴 **100% معزول** (متوقع، ينتظر الربط) |
-| **بنوك ميتة (bank-*)** | ✅ **0 مستورد** (حُذفت نهائياً) |
-| **الاستيرادات** | ✅ 750 استيراد صحي |
-| **Scripts (build/lint/typecheck)** | ✅ كلها موجودة |
-
-**الخلاصة:** 🟢 **صحة عامة ممتازة** — لا مشاكل جديدة، والمحرك ينتظر الربط كما هو مخطط.
+| البند | النتيجة | الحالة الحالية |
+| :--- | :---: | :---: |
+| **4 متاجر** | ✅ كلها نشطة ومؤكدة | ✅ منتهي |
+| **مفاتيح ميتة** | 🟡 7 مفاتيح | ✅ **منتهي — تمت إضافتها إلى cleanup** |
+| **المحرك (engine)** | 🔴 100% معزول | ⏳ **ينتظر الربط** |
+| **بنوك ميتة** | ✅ 0 مستورد | ✅ منتهي |
+| **الاستيرادات** | ✅ 750 | ✅ صحي |
+| **Scripts** | ✅ 8 | ✅ منتهي |
 
 ---
 
@@ -406,296 +359,59 @@ Build time ✅ 6.35s — ✅
 | المؤشر | v9 القديم (2026-10-20) | v9 الجديد (2026-10-30) | Δ |
 | :--- | :---: | :---: | :---: |
 | **المتاجر النشطة** | 4 | **4** | = |
-| **مفاتيح ميتة** | 5 | **5** | = (نفس المفاتيح) |
-| **كاتب بلا قارئ** | 2 | **0** | ✅ **-2** (حُذفا في م3-ب) |
-| **قارئ بلا كاتب** | 1 | **0** | ✅ **-1** (حُذف في م3-ج) |
-| **بنوك ميتة (bank-*)** | مستوردة | **0** | ✅ **حُذفت** |
-| **المحرك معزول** | ❌ يظهر كـ نشط | ✅ **مؤكد معزول** | ✅ |
-
-**التحسّن الحقيقي:** 3 فجوات ميتة حُذفت (بلا كاتب/قارئ) + تأكيد عزل المحرك.
+| **مفاتيح ميتة** | 5 | **7** | +2 (اكتُشفت) |
+| **كاتب بلا قارئ** | 2 | **0** | ✅ −2 |
+| **قارئ بلا كاتب** | 1 | **0** | ✅ −1 |
+| **بنوك ميتة (bank-*)** | مستوردة | **0** | ✅ حُذفت |
 
 ---
 
-## 📊 3. تحليل تفصيلي بالقطاعات
+## 🗑️ 3. المفاتيح الميتة السبع — ✅ **منتهي**
 
-### 3️⃣.1 القسم 1: المتاجر الأربعة (Stores)
+| # | المفتاح | الحالة | الإجراء |
+|:-:|:---|:---:|:---|
+| 1 | `soroban_passed_level_tests` | 🗑️ ميت | ✅ موجود في cleanup |
+| 2 | `soroban_exam_result` | 🗑️ ميت | ✅ موجود في cleanup |
+| 3 | `soroban_placement_result` | 🗑️ ميت | ✅ موجود في cleanup |
+| 4 | `soroban_placement_last_attempt` | 🗑️ ميت | ✅ **أُضيف اليوم إلى cleanup** |
+| 5 | `soroban_kids_certificate_ready` | 🗑️ ميت | ✅ **أُضيف اليوم إلى cleanup** |
+| 6 | `soroban_section2_unlocked` | 🗑️ ميت | ✅ موجود في cleanup |
+| 7 | `soroban_weak_skills_v2` | 🗑️ ميت | ✅ موجود في cleanup |
 
-| المتجر | الأسطر | المفتاح | الحالة |
-| :--- | :---: | :--- | :---: |
-| `progressStore.ts` | **644** | `sorobanmind-v2-progress` | ✅ v12 نشط |
-| `masteryBadgesStore.ts` | **123** | `soroban_mastery_badges` | ✅ v1 نشط |
-| `numberStyleStore.ts` | **29** | `soroban_number_style` | ✅ نشط |
-| `useTranslation.ts` | **41** | `sorobanmind-v2-lang` | ✅ نشط |
-
-**ملاحظة حرجة:** `progressStore` كبر إلى **644 سطراً** (كان 633 في v11). نمو طبيعي مع إضافة `dailyXP` و `stats`.
+**✅ القائمة الرسمية في `main.tsx` تحتوي الآن 15 مفتاحاً ميتاً.**
 
 ---
 
-### 3️⃣.2 القسم 5: المفاتيح اليتيمة (Orphan Keys) — 11 مفتاح
+## 🔴 4. المحرك المعزول — ⏳ **ينتظر الربط**
 
-هذا هو القسم الأهم. دعنا نفرز بدقة:
+| الملف | من يستورده؟ |
+| :--- | :--- |
+| `adaptiveEngine.ts` | ❌ لا أحد |
+| `masteryTracker.ts` | ⚠️ فقط `adaptiveEngine` (المعزول بدوره) |
+| `problemGenerator.ts` | ❌ لا أحد |
+| `sorobanEngine.ts` | ❌ لا أحد (داخلياً فقط) |
+| `sorobanMoves.ts` | ⚠️ فقط `sorobanEngine` |
 
-#### 🔴 المفاتيح الميتة حقاً (5):
-(موجودة في `localStorage` من نسخ قديمة، لكن لا يكتبها أو يقرأها أحد)
+**الحكم:** 🔴 **مؤكد معزول** — الأولوية القصوى القادمة هي الربط.
 
-| المفتاح | السبب | الإجراء |
-| :--- | :--- | :---: |
-| `soroban_passed_level_tests` | ميت تماماً | 🗑️ يمكن حذفه من `localStorage` |
-| `soroban_exam_result` | حُذف كاتبه في م3-ج | 🗑️ يمكن حذفه |
-| `soroban_placement_result` | حُذف كاتبه في م3-ب | 🗑️ يمكن حذفه |
-| `soroban_placement_last_attempt` | لم يكن له كاتب أصلاً | 🗑️ يمكن حذفه |
-| `soroban_kids_certificate_ready` | حُذف في م3-ج | 🗑️ يمكن حذفه |
-| `soroban_section2_unlocked` | حُذف في م3-ب | 🗑️ يمكن حذفه |
-| `soroban_weak_skills_v2` | ميت | 🗑️ يمكن حذفه |
+---
 
-*(ملاحظة: هذه المفاتيح موجودة فقط في `localStorage` للأجهزة القديمة. لن تؤثر على أي شيء، لكن يمكن تنظيفها في `main.tsx` لمزيد من النظافة).*
+## 📊 5. الحكم النهائي على Audit v9
 
-#### ⚠️ المفاتيح الظاهرة "بلا كاتب" لكنها نشطة (2):
-**هذا هو التحذير الشهير من v9 القديم — يتكرر الآن!**
+| المعيار | النتيجة | الحالة |
+| :--- | :---: | :---: |
+| **المتاجر النشطة** | ✅ 4/4 | ✅ منتهي |
+| **المفاتيح الميتة** | ✅ 7 (موثقة) | ✅ **منتهي — في cleanup** |
+| **بنوك ميتة** | ✅ 0 | ✅ منتهي |
+| **المحرك** | 🔴 معزول | ⏳ **ينتظر الربط** |
+| **الشارات** | ✅ تعمل | ✅ منتهي |
+| **الاستيرادات** | ✅ 750 | ✅ صحي |
+| **Scripts** | ✅ 8 | ✅ منتهي |
 
-| المفتاح | v9 يقول | الحقيقة (من v8) |
-| :--- | :--- | :--- |
-| `soroban_placement_recommended` | "لا كاتب ثابت" | ✅ **يُكتب في `App.tsx:246`** |
-| `soroban_placement_weak_skills` | "لا كاتب ثابت" | ✅ **يُكتب في `App.tsx:242`** |
+---
 
-**سبب الالتباس:** `App.tsx` يكتبهما عبر سطر متعدد:
-```typescript
-localStorage.setItem(
-  'soroban_placement_recommended',
-  recommendedLevel
-);
+**آخر تحديث:** 2026-10-30 (rev.9-final)
+**الحالة:** 🟢 صحة ممتازة · ✅ المفاتيح الميتة نُظِّفت · 🔴 المحرك ينتظر الربط
+
+**الخطوة التالية:** ربط المحرك التكيفي (`engine` → `srb-adapter`).
 ```
-
-grep الحرفي في v9 يبحث عن النمط في سطر واحد، فلا يجده. v8 (AST) هو المرجع الحقيقي.
-
-✅ المفاتيح النشطة (2):
-
-المفتاح كاتب قارئ حذف
-soroban_child_name 4 (cloudSync) 3 ❌ لا يوجد
-soroban_companion 3 (HeroDashboard) 3 ❌ لا يوجد
-
-ملاحظة: soroban_child_name و soroban_companion لا يُحذفان أبداً (removeItem) — وهذا مقصود، لأنهما يبقيان بعد تسجيل الخروج.
-
----
-
-3️⃣.3 القسم 7: خريطة الاستيراد (Import Map) — القسم الأخطر
-
-🔴 اكتشاف حرج: المحرك 100% معزول
-
-```
-✅ progressStore: 31 مستورد (نشط جداً)
-✅ masteryBadgesStore: 6 مستوردين
-✅ numberStyleStore: 22 مستورداً
-✅ useTranslation: 40 مستورداً
-✅ srb-adapter: 10 مستوردين
-
-🔴 engine: 0 مستوردين من أي شاشة
-✅ bank-v2: 0 مستوردين (حُذف)
-✅ bank-raw: 0 مستوردين (حُذف)
-✅ bank-linked: 0 مستوردين (حُذف)
-✅ bank-adapter: 0 مستوردين (حُذف)
-```
-
-التفصيل الدقيق للمحرك (القسم 8):
-
-الملف من يستورده؟
-adaptiveEngine.ts ❌ لا أحد (فقط تعليق داخلي)
-masteryTracker.ts ⚠️ فقط adaptiveEngine (الذي لا أحد يستورده)
-problemGenerator.ts ❌ لا أحد (فقط في تعليقات)
-sorobanEngine.ts ❌ لا أحد (يُستورد فقط داخلياً في sorobanMoves)
-sorobanMoves.ts ⚠️ فقط sorobanEngine
-
-الحكم القاطع: المحرك بالكامل معزول تماماً. لا تستورده أي شاشة. مؤكد أنه Stubs كما هو موثق.
-
-✅ اكتشاف إيجابي: البنوك القديمة 100% ميتة
-
-· bank-v2: 0 مستورد ✅
-· bank-raw: 0 مستورد ✅
-· bank-linked: 0 مستورد ✅
-· bank-adapter: 0 مستورد ✅
-
-هذا يُثبت نجاح م10 (إعدام البنوك) بشكل قاطع. لا يوجد أي طريق غير مباشر لاستخدامها.
-
----
-
-3️⃣.4 القسم 9: الشارات (Badges)
-
-التدفق الصحيح:
-
-```
-PracticeScreen → awardBadge() → masteryBadgesStore
-AnzanScreen → setAnzanBadge() → progressStore
-AnzanScreen → awardBadge() → masteryBadgesStore
-AudioAnzanScreen → setAnzanAudioBadge() → progressStore
-AudioAnzanScreen → awardBadge() → masteryBadgesStore
-```
-
-⚠️ دوال ميتة (مؤكد):
-
-· saveAnzanBadges — 0 استدعاء
-· saveAudioAnzanBadges — 0 استدعاء
-· BadgeModal — 0 استدعاء
-
-ملاحظة: هذه الدوال موجودة من v10 لكن لا تُستدعى. قد تكون بقايا من نظام قديم. آمنة (لا تُضرّ).
-
-✅ AdaptiveFeedback يعمل:
-
-· يُستدعى في 3 شاشات: PracticeScreen, AnzanScreen, AudioAnzanScreen.
-· يستقبل levelNum الحقيقي (إصلاح FIX 3).
-
----
-
-3️⃣.5 القسم 3: أنماط المفاتيح الديناميكية
-
-الاكتشاف: v9 يجد 3 أنماط فقط بمفتاح ${}:
-
-```text
-CategoryExamScreen:246 → setItem `${cfg.storageKey}_score`
-CategoryExamScreen:247 → setItem `${cfg.storageKey}_last_attempt`
-CategoryExamScreen:163 → getItem `${cfg.storageKey}_last_attempt`
-```
-
-لماذا قليلة؟ لأن v9 يبحث عن ${ فقط. المفاتيح الديناميكية الأخرى (مثل soroban_lesson_session_${lessonId}) موجودة داخل دوال (وظائف) وليست في localStorage مباشرة — لذلك v9 لا يراها.
-
-الحكم: ✅ مطابق لما توقعناه. لا جديد.
-
----
-
-3️⃣.6 القسم 4: package.json + Lockfile
-
-البند القيمة
-Version 2.0.0
-React 18.3.1
-Vite 5.3.3
-TypeScript 5.5.3
-Zustand 4.5.2
-Supabase 2.45.4
-Framer Motion 11.0.8
-Lockfile ✅ موجود (171,336 bytes)
-Scripts (8) dev, build, preview, test, test:run, typecheck, deploy, lint
-.gitignore ✅ لا ذكر لـ lock (جيد!)
-
-الحكم: ✅ البنية التحتية سليمة.
-
----
-
-🚨 4. الاكتشافات الحرجة (Critical Findings)
-
-🔴 الاكتشاف 1: المحرك 100% معزول (مؤكد)
-
-الحقائق:
-
-· adaptiveEngine.ts (1072 سطر) — لا أحد يستورده.
-· problemGenerator.ts — لا أحد يستورده.
-· sorobanEngine.ts و sorobanMoves.ts — لا تستخدمهما أي شاشة.
-· masteryTracker.ts — يستورده فقط adaptiveEngine (المعزول بدوره).
-
-التأثير:
-
-· كل الجلسات (تمرن، أنزان، علاجية) لا تستخدم المحرك.
-· تعتمد فقط على srb-adapter المباشر (بدون تكيف).
-· هذا يتطابق 100% مع ما وثقناه.
-
-التوصية: 🔴 ربط المحرك بـ srb-adapter = الأولوية القصوى الآن.
-
----
-
-🟡 الاكتشاف 2: 5 مفاتيح ميتة في localStorage
-
-المفاتيح:
-
-· soroban_passed_level_tests
-· soroban_exam_result
-· soroban_placement_result
-· soroban_placement_last_attempt
-· soroban_kids_certificate_ready
-· soroban_section2_unlocked
-· soroban_weak_skills_v2
-
-التأثير:
-
-· لا تؤثر على أي شيء (لا كاتب ولا قارئ).
-· تستهلك ~1-2 KB في localStorage لكل طالب.
-· ضارة فقط من ناحية النظافة.
-
-التوصية: 🟡 إضافتها إلى قائمة main.tsx cleanup في v13.
-
----
-
-🟡 الاكتشاف 3: 3 دوال/مكونات ميتة
-
-· saveAnzanBadges
-· saveAudioAnzanBadges
-· BadgeModal
-
-التأثير: لا تُستدعى أبداً. آمنة لكن يمكن حذفها في v13.
-
-التوصية: 🟡 حذفها في جلسة تنظيف مستقبلية.
-
----
-
-🟡 الاكتشاف 4: v9 لا يزال يخطئ في App.tsx:242, 246
-
-الخطأ المتكرر:
-
-· v9 يقول: soroban_placement_recommended بلا كاتب.
-· الحقيقة: الكاتب في App.tsx:246.
-
-السبب: grep حرفي. v8 هو المرجع.
-
-التوصية: 🟡 لا تعتمد على v9 وحده — استخدم v8 للمفاتيح.
-
----
-
-✅ الاكتشاف 5: البنوك القديمة 100% ميتة
-
-bank-v2, bank-raw, bank-linked, bank-adapter — كلها 0 مستورد (حتى تعليقات لا توجد).
-
-هذا يُثبت بشكل قاطع نجاح م10. لا يوجد أي احتمال لبقاء رمز يستوردها.
-
----
-
-🎯 5. التوصيات النهائية
-
-🔴 أولوية قصوى:
-
-1. ربط المحرك بـ srb-adapter — الأولوية القصوى الحالية، مبررة الآن بشكل قاطع.
-   · خطة: engine-types.ts → sorobanEngine → questionTracer → RemediationScreen.
-
-🟠 أولوية متوسطة:
-
-2. إضافة v13 cleanup في main.tsx — لحذف 7 مفاتيح ميتة.
-3. حذف 3 دوال/مكونات ميتة (saveAnzanBadges, saveAudioAnzanBadges, BadgeModal).
-
-🟡 أولوية منخفضة:
-
-4. توحيد SOUND_KEY في Pirates مع progressStore.soundEnabled.
-5. مراجعة حجم الحزمة (871 KB) — يحتاج تحليلاً مستقلاً.
-
----
-
-📊 6. الحكم النهائي على Audit v9
-
-المعيار النتيجة
-المتاجر النشطة ✅ 4/4
-المفاتيح الميتة 🟡 5 (غير ضارة)
-بنوك ميتة ✅ 0
-المحرك 🔴 معزول (متوقع)
-الشارات ✅ تعمل
-الاستيرادات ✅ 750
-Scripts ✅ 8
-التحسّن مقارنة بالقديم ✅ -3 فجوات ميتة
-
-الحكم: 🟢 صحة ممتازة، والتحسّن ملموس. لا مشاكل حرجة جديدة.
-
----
-
-🚀 الخطوة التالية
-
-Audit v9 مكتمل ✅
-
-الآن لدينا:
-
-· ✅ v8 (AST): 59 فجوة (كلها by-design)
-· ✅ v9 (Bash): 5 مفاتيح ميتة (غير ضارة)
-· ✅ تقرير المخزون الكامل
