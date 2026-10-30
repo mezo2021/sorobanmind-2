@@ -11,9 +11,18 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "dist",
-    sourcemap: false,
+  outDir: "dist",
+  sourcemap: false,
+  rollupOptions: {
+    output: {
+      manualChunks: {
+        'react-vendor': ['react', 'react-dom'],
+        'supabase': ['@supabase/supabase-js'],
+        'framer': ['framer-motion'],
+      },
+    },
   },
+},
   test: {
     globals: true,
     environment: "node",
