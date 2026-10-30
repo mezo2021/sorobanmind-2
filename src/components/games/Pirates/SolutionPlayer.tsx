@@ -23,6 +23,8 @@ import MultiRodAbacus, { type RodChip, type AbacusTone } from './MultiRodAbacus'
 import { rodsFromNumber } from './mulEngine';
 import { carriesFor, type QuizProblem, type QuizStep, type ReviewInfo } from './quizTypes';
 import { Num } from '@/components/Num';
+import { lt, useGameLang } from '../gamesI18n';
+import { pgt } from './piratesI18n';
 
 const AUTO_FIRST_MS = 700;
 const AUTO_STEP_MS = 1500;
@@ -32,14 +34,14 @@ const rodName = (i: number) => ROD_NAMES[i] ?? `المَنْزِلَة ${i + 1}`
 
 function errorLabel(info: ReviewInfo, op: 'mul' | 'div'): string {
   switch (info.kind) {
-    case 'missed': return 'هَذَا الجُزْءُ الَّذِي نَسِيتَه';
-    case 'carry': return 'هُنَا يَجِبُ الحَمْل';
-    case 'padding': return op === 'div' ? 'هُنَا يُكْتَبُ الصِّفْر' : 'هُنَا نَسِيتَ الصِّفْر';
-    case 'bringdown': return 'هُنَا نَسِيتَ إِنْزَالَ رَقْم';
-    case 'estimate': return 'هُنَا قَدَّرْتَ الرَّقْمَ خَطَأً';
-    case 'shift': return 'هُنَا المَنْزِلَةُ خَاطِئَة';
-    case 'swap': return 'هُنَا قَلَبْتَ الرَّقْمَيْن';
-    default: return 'هُنَا مَوْضِعُ الخَطَأ';
+    case 'missed': return pgt('هَذَا الجُزْءُ الَّذِي نَسِيتَه');
+    case 'carry': return pgt('هُنَا يَجِبُ الحَمْل');
+    case 'padding': return op === 'div' ? pgt('هُنَا يُكْتَبُ الصِّفْر') : pgt('هُنَا نَسِيتَ الصِّفْر');
+    case 'bringdown': return pgt('هُنَا نَسِيتَ إِنْزَالَ رَقْم');
+    case 'estimate': return pgt('هُنَا قَدَّرْتَ الرَّقْمَ خَطَأً');
+    case 'shift': return pgt('هُنَا المَنْزِلَةُ خَاطِئَة');
+    case 'swap': return pgt('هُنَا قَلَبْتَ الرَّقْمَيْن');
+    default: return pgt('هُنَا مَوْضِعُ الخَطَأ');
   }
 }
 
@@ -52,6 +54,7 @@ interface Props {
 }
 
 export function SolutionPlayer({ problem, info, onContinue }: Props) {
+  const { dir } = useGameLang();
   const isDiv = problem.op === 'div';
   const steps = problem.steps;
   const n = steps.length;
@@ -126,11 +129,11 @@ export function SolutionPlayer({ problem, info, onContinue }: Props) {
 
   // ═══ الشرح الحالي ═══
   const introText = isDiv
-    ? `نَضَعُ المَقْسُومَ ${problem.a} عَلَى المِعْدَادِ الأَحْمَر، وَنَقْسِمُ عَلَى ${problem.b} مِنَ اليَسَار. رَقْمُ القِسْمَةِ يُكْتَبُ فِي مَنْزِلَةِ آخِرِ رَقْمٍ أَخَذْنَاهُ.`
-    : `نَبْدَأُ بِمِعْدَادٍ فَارِغ · نَضْرِبُ كُلَّ رَقْمٍ مِنَ ${problem.a} فِي كُلِّ رَقْمٍ مِنَ ${problem.b} مِنَ اليَسَار. نَاتِجُ رَقْمَيْنِ يَشْغَلُ مَنْزِلَتَيْنِ دَائِماً.`;
+    ? lt(`نَضَعُ المَقْسُومَ ${problem.a} عَلَى المِعْدَادِ الأَحْمَر، وَنَقْسِمُ عَلَى ${problem.b} مِنَ اليَسَار. رَقْمُ القِسْمَةِ يُكْتَبُ فِي مَنْزِلَةِ آخِرِ رَقْمٍ أَخَذْنَاهُ.`, `We place the dividend ${problem.a} on the red abacus and divide by ${problem.b} from the left. The quotient digit is written in the place of the last digit we took.`)
+    : lt(`نَبْدَأُ بِمِعْدَادٍ فَارِغ · نَضْرِبُ كُلَّ رَقْمٍ مِنَ ${problem.a} فِي كُلِّ رَقْمٍ مِنَ ${problem.b} مِنَ اليَسَار. نَاتِجُ رَقْمَيْنِ يَشْغَلُ مَنْزِلَتَيْنِ دَائِماً.`, `We start with an empty abacus · we multiply every digit of ${problem.a} by every digit of ${problem.b} from the left. The product of two digits always occupies two places.`);
   const finalText = isDiv
-    ? `انْتَهَتِ القِسْمَة! النَّاتِج: ${problem.answer} · البَاقِي صِفْر`
-    : `انْتَهَتِ العَمَلِيَّة! النَّاتِج: ${problem.answer}`;
+    ? lt(`انْتَهَتِ القِسْمَة! النَّاتِج: ${problem.answer} · البَاقِي صِفْر`, `Division complete! Result: ${problem.answer} · Remainder zero`)
+    : lt(`انْتَهَتِ العَمَلِيَّة! النَّاتِج: ${problem.answer}`, `Operation complete! Result: ${problem.answer}`);
   const caption = idx < 0 ? introText : idx >= n ? finalText : steps[idx].text;
   const captionErr = idx >= 0 && idx < n && info.stepIndex === idx;
 
@@ -145,13 +148,13 @@ export function SolutionPlayer({ problem, info, onContinue }: Props) {
       exit={{ y: '100%', opacity: 0 }}
       transition={{ type: 'spring', stiffness: 260, damping: 28 }}
       className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md overflow-y-auto"
-      dir="rtl"
+      dir={dir}
     >
       <div className="min-h-full w-full max-w-md mx-auto flex flex-col gap-2.5 px-4 pt-3">
         {/* الرأس */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-          <span className="text-rose-400 font-bold text-sm">⚡ تَصْحِيحُ المَسَار</span>
-          <span className="text-[11px] text-slate-400">⏸ الوَقْتُ مُتَوَقِّف</span>
+          <span className="text-rose-400 font-bold text-sm">⚡ {pgt('تَصْحِيحُ المَسَار')}</span>
+          <span className="text-[11px] text-slate-400">⏸ {pgt('الوَقْتُ مُتَوَقِّف')}</span>
         </div>
 
         {/* المسألة + اختيار الطفل */}
@@ -161,14 +164,14 @@ export function SolutionPlayer({ problem, info, onContinue }: Props) {
           </div>
           {info.wrongValue !== null && (
             <div className="text-xs text-rose-300 bg-rose-950/60 border border-rose-500/30 rounded-full px-3 py-1">
-              اخْتَرْتَ <span className="font-black tabular-nums"><Num>{info.wrongValue}</Num></span>
+              {pgt('اخْتَرْتَ')} <span className="font-black tabular-nums"><Num>{info.wrongValue}</Num></span>
             </div>
           )}
         </div>
 
         {/* سبب الخطأ */}
         <div className="bg-slate-900/85 border border-rose-500/30 rounded-xl px-3 py-2 text-center text-[11px] text-rose-100 font-bold leading-relaxed">
-          {info.why}
+          {pgt(info.why)}
         </div>
 
         {/* شريط التقدّم */}
@@ -179,24 +182,24 @@ export function SolutionPlayer({ problem, info, onContinue }: Props) {
         {/* سلاسل التدرّج */}
         {isDiv ? (
           <div className="flex flex-col gap-1.5">
-            <Chain label="🔴 المقسوم" tone="red" items={divRed} idx={idx} onPick={goto} />
-            <Chain label="🟢 الناتج" tone="green" items={divGreen} idx={idx} onPick={goto} />
+            <Chain label={pgt('🔴 المقسوم')} tone="red" items={divRed} idx={idx} onPick={goto} />
+            <Chain label={pgt('🟢 الناتج')} tone="green" items={divGreen} idx={idx} onPick={goto} />
           </div>
         ) : (
-          <Chain label="الناتج" tone="blue" items={mulChain} idx={idx} onPick={goto} />
+          <Chain label={pgt('الناتج')} tone="blue" items={mulChain} idx={idx} onPick={goto} />
         )}
 
         {/* المعدادات */}
         {isDiv ? (
           <div className="grid grid-cols-2 gap-2" dir="ltr">
-            <Panel title="🔴 المقسوم" value={cur.auxValue} tone="red">
+            <Panel title={pgt('🔴 المقسوم')} value={cur.auxValue} tone="red">
               <MultiRodAbacus
                 digits={auxDigits} columns={cols} compact tone="red"
                 activeRods={auxActive} chips={auxChips} arcText={step?.aux?.arcText}
                 changedRods={auxChanged}
               />
             </Panel>
-            <Panel title="🟢 الناتج" value={cur.running} tone="green">
+            <Panel title={pgt('🟢 الناتج')} value={cur.running} tone="green">
               <MultiRodAbacus
                 digits={mainDigits} columns={cols} compact tone="green"
                 activeRods={mainActive} chips={mainChips} arcText={step?.arcText}
@@ -224,10 +227,10 @@ export function SolutionPlayer({ problem, info, onContinue }: Props) {
           }`}
         >
           {captionErr && <span className="text-rose-300 font-black">🔴 {errorLabel(info, problem.op)}</span>}
-          <span>{caption}</span>
+          <span>{pgt(caption)}</span>
           {step?.add && !isDiv && (
             <span className="text-amber-200 text-[11px]">
-              {step.add.map((a) => `${a.digit} عَلَى ${rodName(a.rod)}`).join('  ·  ')}
+              {step.add.map((a) => pgt(`${a.digit} عَلَى ${rodName(a.rod)}`)).join('  ·  ')}
             </span>
           )}
         </motion.div>
@@ -235,17 +238,17 @@ export function SolutionPlayer({ problem, info, onContinue }: Props) {
         {/* التحكم */}
         <div className="flex items-center justify-between gap-2">
           <div className="text-xs text-slate-400 tabular-nums shrink-0">
-            الخُطْوَة <span className="text-sky-300 font-black"><Num>{idx + 2}</Num></span> / <Num>{totalCards}</Num>
+            {pgt('الخُطْوَة')} <span className="text-sky-300 font-black"><Num>{idx + 2}</Num></span> / <Num>{totalCards}</Num>
           </div>
           <div className="flex items-center gap-1.5" dir="ltr">
-            <CtrlBtn label="إعادة من البداية" onClick={restart}><RotateCcw className="w-4 h-4" /></CtrlBtn>
-            <CtrlBtn label="الخطوة السابقة" onClick={() => goto(idx - 1)} disabled={idx < 0}>
+            <CtrlBtn label={pgt('إعادة من البداية')} onClick={restart}><RotateCcw className="w-4 h-4" /></CtrlBtn>
+            <CtrlBtn label={pgt('الخطوة السابقة')} onClick={() => goto(idx - 1)} disabled={idx < 0}>
               <SkipBack className="w-4 h-4" />
             </CtrlBtn>
-            <CtrlBtn label={playing ? 'إيقاف' : 'تشغيل'} onClick={togglePlay} primary>
+            <CtrlBtn label={playing ? pgt('إيقاف') : pgt('تشغيل')} onClick={togglePlay} primary>
               {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
             </CtrlBtn>
-            <CtrlBtn label="الخطوة التالية" onClick={() => goto(idx + 1)} disabled={atEnd}>
+            <CtrlBtn label={pgt('الخطوة التالية')} onClick={() => goto(idx + 1)} disabled={atEnd}>
               <SkipForward className="w-4 h-4" />
             </CtrlBtn>
           </div>
@@ -263,7 +266,7 @@ export function SolutionPlayer({ problem, info, onContinue }: Props) {
               label={`${i + 1}`}
               icon={PHASE_ICON[s.phase ?? 'partial']}
               mono={s.formula ?? ''}
-              right={s.phase === 'subtract' && s.aux ? `المقسوم ${s.aux.value}` : `الناتج ${s.running}`}
+              right={s.phase === 'subtract' && s.aux ? lt(`المقسوم ${s.aux.value}`, `Dividend ${s.aux.value}`) : lt(`الناتج ${s.running}`, `Result ${s.running}`)}
               rightTone={s.phase === 'subtract' ? 'red' : isDiv ? 'green' : 'blue'}
               state={i === idx ? 'current' : i < idx ? 'done' : 'todo'}
               error={info.stepIndex === i ? errorLabel(info, problem.op) : undefined}
@@ -283,7 +286,7 @@ export function SolutionPlayer({ problem, info, onContinue }: Props) {
             className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-lg active:scale-95 transition"
             style={{ touchAction: 'manipulation' }}
           >
-            ▶️ مُتَابَعَةُ السِّبَاق
+            ▶️ {pgt('مُتَابَعَةُ السِّبَاق')}
           </button>
         </div>
       </div>
@@ -327,7 +330,7 @@ function Chain({
                 active ? C.on : done ? C.done : 'bg-slate-900 text-slate-400 border-slate-700'
               }`}
               style={{ touchAction: 'manipulation' }}
-              aria-label={`الانتقال إلى ${it.v}`}
+              aria-label={lt(`الانتقال إلى ${it.v}`, `Go to ${it.v}`)}
             >
               <Num>{it.v}</Num>
             </button>
