@@ -20,7 +20,7 @@ interface RoleSelectionProps {
 
 const COMPANION_STORAGE_KEY = 'soroban_companion';
 const NAME_STORAGE_KEY = 'soroban_child_name';
-const DEV_PASSWORD = '19871987';
+const DEV_PASSWORD = 'mowalid-m';
 
 type Step = 'idle' | 'name' | 'companion';
 
