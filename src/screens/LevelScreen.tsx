@@ -591,7 +591,7 @@ export function LevelScreen({
             }
             icon={GraduationCap}
             gradient="from-gold-400 to-amber-600"
-            locked={levelTestLocked || isLevelTestPassed}
+            locked={!inPreview && (levelTestLocked || isLevelTestPassed)}
             completed={isLevelTestPassed}
             onClick={() => handleNav(`level-test-${levelId}` as Screen)}
             playSound={sound}
