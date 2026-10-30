@@ -28,20 +28,18 @@ function prepareForTTS(text: string, lang: 'ar' | 'en'): string {
 
 export async function speak(text: string, lang: 'ar' | 'en'): Promise<void> {
   const preparedText = prepareForTTS(text, lang);
-  const voiceName = lang === 'ar' ? 'ar-SA-HamedNeural' : 'en-US-AriaNeural';
-
-  try {
-    // @ts-expect-error: CDN dynamic import
-    const module = await import(/* @vite-ignore */ 'https://cdn.jsdelivr.net/npm/@kingdanx/edge-tts-browser@1.0.1/dist/edge-tts-browser.es.js');
-    const tts = new module.EdgeTTSBrowser();
-    await tts.tts.speak(preparedText, { voice: voiceName, rate: 0.9 });
-  } catch (error) {
-    console.error("TTS failed, using fallback:", error);
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(preparedText);
-      utterance.lang = lang === 'ar' ? 'ar-SA' : 'en-US';
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
-    }
+  
+  // استخدام محرك الصوت المدمج في المتصفح مباشرة
+  if ('speechSynthesis' in window) {
+    // إيقاف أي صوت يعمل حالياً
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(preparedText);
+    utterance.lang = lang === 'ar' ? 'ar-SA' : 'en-US';
+    utterance.rate = 0.9; // سرعة مناسبة للأطفال
+    
+    window.speechSynthesis.speak(utterance);
+  } else {
+    console.error("متصفحك لا يدعم النطق الصوتي");
   }
 }
