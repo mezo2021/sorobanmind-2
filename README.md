@@ -334,4 +334,3 @@ https://img.shields.io/badge/Language-Arabic_&_English-blue?style=for-the-badge
 https://img.shields.io/badge/Cloud-Supabase-3ecf8e?style=for-the-badge
 
 </div>
-```
