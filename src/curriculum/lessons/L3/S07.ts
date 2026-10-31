@@ -24,17 +24,17 @@ export const S07_LESSON: LessonNode = {
       titleEn: "Direct Division",
       emoji: "✨",
       miniStory: {
-        title: "مفتاح البداية - التوزيع المباشر | Beginning Key - Direct Distribution",
+        title: "ُمفتاح البداية - التَّوزيعُ المُبَاشَر | Beginning Key - Direct Distribution",
         emoji: "🧙",
-        story: "في قلعة السوروبان، يوزع الحكيم معداد مفاتيح الكنز بالعدل. سألته البطلة بانة: كيف نوزع 84 حلوى على صديقين؟ قال: نقسم العشرات أولاً ثم الآحاد مباشرة دون استعارة! | In Soroban Castle, Master Abacus distributes treasure keys fairly. Hero Bana asked: How do we share 84 candies between 2 friends? He said: Divide tens first, then units directly without borrowing!",
-        storyAudioText: "فِي قَلْعَةِ السُّورُوبَان، يُوَزِّعُ الحَكِيمُ مِعْدَاد الحَلْوَى بِالعَدْل. ثَمَانِيَة قِسْمَة اثْنَيْنِ تُسَاوِي أَرْبَعَة فِي عَشَرَاتِ الخَارِج، وَأَرْبَعَة قِسْمَة اثْنَيْنِ تُسَاوِي اثْنَيْنِ فِي آحَادِ الخَارِج. النَّاتِجُ اثْنَانِ وَأَرْبَعُون. | In Soroban Castle, Master Abacus shares candies fairly. 8 divided by 2 equals 4 in tens quotient, 4 divided by 2 equals 2 in units quotient. Result is 42.",
+        story: "في قلعة السوروبان، يوزُْعُ الحكيمُ معداد مفاتيحَ الكنزِ بالعدل. سألته البطلة بانة: كيف نوزع 84 حلوى على صديقين؟ قال: نُقَسِّمُ العَشَرَاتَ أوَّلاً ثم الآحاد مُبَاشَرَة دون استعارة! | In Soroban Castle, Master Abacus distributes treasure keys fairly. Hero Bana asked: How do we share 84 candies between 2 friends? He said: Divide tens first, then units directly without borrowing!",
+        storyAudioText: "فِي قَلْعَةِ السُّورُوبَان، يُوَزِّعُ الحَكِيمُ مِعْدَاد الحَلْوَى بِالعَدْلِ. ثَمَانِيَة قِسْمَة اثْنَيْنِ تُسَاوِي أَرْبَعَة فِي عَشَرَاتِ الخَارِج، وَأَرْبَعَة قِسْمَة اثْنَيْنِ تُسَاوِي اثْنَيْنِ فِي آحَادِ الخَارِج. النَّاتِجُ اثْنَانِ وَأَرْبَعُون. | In Soroban Castle, Master Abacus shares candies fairly. 8 divided by 2 equals 4 in tens quotient, 4 divided by 2 equals 2 in units quotient. Result is 42.",
         storyAudioId: null,
       },
       rule: {
-        description: "القاعدة الذهبية 🧙: اقسم العشرات ضع الناتج، اطرح مباشرة بالسبابة، ثم كرر مع الآحاد! | Golden Rule 🧙: Divide tens and place quotient, subtract directly using index finger, then repeat with units!",
+        description: "ِالقاعدة الذهبية 🧙: اِقْسِمْ العَشَرات ِضَعْ الناتج، اِطْرَحْ مُبَاشَرَة بالسَّبابةِ، ثُمَّ كَرِّرْ مع الآحاد! | Golden Rule 🧙: Divide tens and place quotient, subtract directly using index finger, then repeat with units!",
       },
       condition: {
-        formula: "قسمة تامة · طرح مباشر | Exact division · Direct subtraction",
+        formula: "قِسْمَة تامة · طَرْح مُبَاشَر | Exact division · Direct subtraction",
         explanation: "جميع الخرزات متاحة للطرح المباشر ولا نحتاج لأصدقاء 5 أو 10! | All beads are available for direct subtraction; no friends of 5 or 10 needed!",
       },
       discrimination: {
@@ -622,7 +622,7 @@ export const S07_LESSON: LessonNode = {
       miniStory: {
         title: "مفتاح التحالف المزدوج - قوة أصدقاء 10 و5 | Dual Alliance Key - Power of Friends of 10 & 5",
         emoji: "👑",
-        story: "في التحدي النهائي الغرفة السرية 216 ÷ 8: 21 قسمة 8 تساوي 2، لكن طرح 16 يحتاج استعارة 10 وأصدقاء 5 لإضافة المكمل! اتحد الجدة 5 والعملاق 10 لفتح الباب: اطرح 10 من اليسار بسحبة سبابة ⬇️، وتفعيل 5 بالسبابة وطرد الخرزات الزائدة بنزول مزدوج ⬇️⬇️! | In the final room 216 ÷ 8: 21 ÷ 8 = 2, but subtracting 16 requires borrowing 10 AND using Friends of 5 to add the complement! Grandma 5 and Giant 10 united: Subtract 10 from left with index pull ⬇️, activate 5 and push excess beads down with Double Drop ⬇️⬇️!",
+        story: "في التحدي النهائي الغرفة السرية 216 ÷ 8 21 قسمة 8 تساوي 2، لكن طرح 16 يحتاج استعارة 10 وأصدقاء 5 لإضافة المكمل! اتحد الجدة 5 والعملاق 10 لفتح الباب: اطرح 10 من اليسار بسحبة سبابة ⬇️، وتفعيل 5 بالسبابة وطرد الخرزات الزائدة بنزول مزدوج ⬇️⬇️! | In the final room 216 ÷ 8: 21 ÷ 8 = 2, but subtracting 16 requires borrowing 10 AND using Friends of 5 to add the complement! Grandma 5 and Giant 10 united: Subtract 10 from left with index pull ⬇️, activate 5 and push excess beads down with Double Drop ⬇️⬇️!",
         storyAudioText: "مِئَتَانِ وَسِتَّةَ عَشَرَ حَلْوَى عَلَى ثَمَانِيَةِ أَصْدِقَاء. وَاحِدٌ وَعِشْرُونَ قِسْمَة ثَمَانِيَة تُسَاوِي اثْنَيْن. لَكِنَّ طَرْحَ سِتَّةَ عَشَرَ يَحْتَاجُ اسْتِعَارَةَ عَشَرَة وَأَيْضًا صَدِيقَ خَمْسَة. الجَدَّة خَمْسَة وَالعِمْلَاق عَشَرَة يَتَعَاوَنَان. النَّاتِجُ سَبْعَة وَعِشْرُون. | 216 candies shared among 8 friends. 21 divided by 8 equals 2. Subtracting 16 needs borrowing 10 and Friend of 5. Grandma 5 and Giant 10 cooperate. Result is 27.",
         storyAudioId: null,
       },
