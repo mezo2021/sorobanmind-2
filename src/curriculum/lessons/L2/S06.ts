@@ -26,12 +26,12 @@ export const S06_LESSON: LessonNode = {
       miniStory: {
         title: "حقول الفلّاح السّحرية | The Magic Farmer's Fields",
         emoji: "🌾",
-        story: "يَا أَبْطَالُ! لِنَعْرِفْ كَمْ 11 حَبّة في 11 صفّ .. أَرْبَعُ خُطُوَاتٍ سَهْلَةٍ مِنَ الْمِئَاتِ لِلْآحَادِ وَالْخَرَزَاتُ مَفْتُوحَةٌ وَجَاهِزَةْ.. وَالنَّاتِجُ السِّحْرِيُّ: 121! | Champions! Let's find out: 11 seeds by 11 rows.. 4 easy steps from hundreds to units, and the beads are open and ready.. And the magic result: 121!",
+        story: "يَا أَبْطَالُ! لِنَعْرِفْ كَمْ 11 حَبّة في 11 صفّ .. أَرْبَعُ خُطُوَاتٍ سَهْلَةٍ مِنَ الْمِئَاتِ لِلْآحَادِ وَالْخَرَزَاتُ مَفْتُوحَةٌ وَجَاهِزَة.. وَالنَّاتِجُ السِّحْرِيُّ: 121! | Champions! Let's find out: 11 seeds by 11 rows.. 4 easy steps from hundreds to units, and the beads are open and ready.. And the magic result: 121!",
 storyAudioText: "يَا أَبْطَال.. دَعُونَا نَحْسُبْ إِحْدَى عَشْرَةَ فِي إِحْدَى عَشْرَة.. نَضْرِبُ العَشَرَاتِ فِي العَشَرَاتِ أَوَّلاً: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي المِئَات.. ثُمَّ الآحَادَ فِي العَشَرَات: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي العَشَرَات.. ثُمَّ العَشَرَاتِ فِي الآحَاد: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي العَشَرَات.. وَاحِدٌ زَائِدُ وَاحِدٍ يُسَاوِي اثْنَيْن.. ثُمَّ الآحَادَ فِي الآحَاد: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي الآحَاد.. وَالنَّاتِجُ: مِئَةٌ وَوَاحِدٌ وَعِشْرُون! | Champions.. let's calculate 11 times 11.. Multiply tens by tens first: 1 times 1 equals 1 in hundreds.. Then units by tens: 1 times 1 equals 1 in tens.. Then tens by units: 1 times 1 equals 1 in tens.. 1 plus 1 equals 2.. Then units by units: 1 times 1 equals 1 in units.. Result is 121!",
         storyAudioId: null,
       },
       rule: {
-  description: "خريطة الأبطال الأربعة من اليسار لليمين: أوّلاً: مئات (عشرات×عشرات) · ثانياً: عشرات (آحاد×عشرات) · ثالثاً: إضافة للعشرات (عشرات×آحاد) · رابعاً: آحاد (آحاد×آحاد) | Map of the four champions from left to right: First: Hundreds (Tens×Tens) · Second: Tens (Units×Tens) · Third: Add to Tens (Tens×Units) · Fourth: Units (Units×Units)",
+  description: "خريطة الأبطال الأربعة من اليسار لليمين: أوّلاً: مئات (عشرات×عشرات) ·· ثانياً: عشرات (آحاد×عشرات) ·· ثالثاً: إضافة للعشرات (عشرات×آحاد) ·· رابعاً: آحاد (آحاد×آحاد) | Map of the four champions from left to right: First: Hundreds (Tens×Tens) ·· Second: Tens (Units×Tens) ·· Third: Add to Tens (Tens×Units) ·· Fourth: Units (Units×Units)",
 }, // <--- هذا هو القوس الذي كان ناقصاً وسبب الخطأ
 condition: {
         formula: "كل النواتج الجزئية مباشرة | All partial products direct",
