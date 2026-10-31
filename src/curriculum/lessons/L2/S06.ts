@@ -24,14 +24,22 @@ export const S06_LESSON: LessonNode = {
       titleEn: "Direct Multiplication",
       emoji: "✨",
       miniStory: {
-        title: "حقول الفلاح السحرية | The Magic Farmer's Fields",
+        title: "حقول الفلّاح السّحرية | The Magic Farmer's Fields",
         emoji: "🌾",
-        story: "يَا أَبْطَالُ! لِنَعْرِفْ كَمْ 11 حَبّة في 11 صفّ .. أَرْبَعُ خُطُوَاتٍ سَهْلَةٍ مِنَ الْمِئَاتِ لِلْآحَادِ وَالْخَرَزَاتُ مَفْتُوحَةٌ وَجَاهِزَةٌ.. وَالنَّاتِجُ السِّحْرِيُّ: 121! | Champions! Let's find out: 11 seeds by 11 rows.. 4 easy steps from hundreds to units, and the beads are open and ready.. And the magic result: 121!",
+        story: "يَا أَبْطَالُ! لِنَعْرِفْ كَمْ 11 حَبّة في 11 صفّ .. أَرْبَعُ خُطُوَاتٍ سَهْلَةٍ مِنَ الْمِئَاتِ لِلْآحَادِ وَالْخَرَزَاتُ مَفْتُوحَةٌ وَجَاهِزَةْ.. وَالنَّاتِجُ السِّحْرِيُّ: 121! | Champions! Let's find out: 11 seeds by 11 rows.. 4 easy steps from hundreds to units, and the beads are open and ready.. And the magic result: 121!",
 storyAudioText: "يَا أَبْطَال.. دَعُونَا نَحْسُبْ إِحْدَى عَشْرَةَ فِي إِحْدَى عَشْرَة.. نَضْرِبُ العَشَرَاتِ فِي العَشَرَاتِ أَوَّلاً: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي المِئَات.. ثُمَّ الآحَادَ فِي العَشَرَات: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي العَشَرَات.. ثُمَّ العَشَرَاتِ فِي الآحَاد: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي العَشَرَات.. وَاحِدٌ زَائِدُ وَاحِدٍ يُسَاوِي اثْنَيْن.. ثُمَّ الآحَادَ فِي الآحَاد: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي الآحَاد.. وَالنَّاتِجُ: مِئَةٌ وَوَاحِدٌ وَعِشْرُون! | Champions.. let's calculate 11 times 11.. Multiply tens by tens first: 1 times 1 equals 1 in hundreds.. Then units by tens: 1 times 1 equals 1 in tens.. Then tens by units: 1 times 1 equals 1 in tens.. 1 plus 1 equals 2.. Then units by units: 1 times 1 equals 1 in units.. Result is 121!",
         storyAudioId: null,
       },
       rule: {
-        description: "خريطة الأبطال الأربعة من اليسار لليمين: 1. مئات (عشرات×عشرات) · 2. عشرات (آحاد×عشرات) · 3. إضافة للعشرات (عشرات×آحاد) · 4. آحاد (آحاد×آحاد) | Four steps Left-to-Right: 1. Hundreds (Tens×Tens) · 2. Tens (Units×Tens) · 3. Add to Tens (Tens×Units) · 4. Units (Units×Units)",
+        description: "خريطة الأبطال الأربعة من اليسار لليمين:
+ أوّلاً: مئات (عشرات×عشرات) · 
+ثانياً: عشرات (آحاد×عشرات) · 
+ثالثا: إضافة للعشرات (عشرات×آحاد) · 
+رابعاً: آحاد (آحاد×آحاد) | Four steps Left-to-Right:
+ 1. Hundreds (Tens×Tens) ·
+ 2. Tens (Units×Tens) ·
+ 3. Add to Tens (Tens×Units) ·
+ 4. Units (Units×Units)",
       },
       condition: {
         formula: "كل النواتج الجزئية مباشرة | All partial products direct",
@@ -221,7 +229,7 @@ storyAudioText: "يَا أَبْطَال.. دَعُونَا نَحْسُبْ إ�
       titleEn: "Friends of 5",
       emoji: "🤝",
       miniStory: {
-        title: "الجدة 5 تتدخل | Grandma 5 Helps",
+        title: "الجدّة 5 تتدخل | Grandma 5 Helps",
         emoji: "👵",
         story: "عِنْدَ حِسَابِ 13 شَجَرَةً فِي 12 صَفٍّ لَاحَظْنَا ازْدِحَامَ الْعَمُود .. نَزَلَتِ الْجَدَّةُ الْحَنُونَةُ بِالسَّبَّابَةِ وَطَرَدَتْ صَدِيقَ الْعَدَدِ بِالْإِبْهَام.. (حَرَكَةُ نُزُولٍ مُزْدَوَجٍ) أَنْقَذَتِ الْمَوْقِفْ، وَالنَّاتِجْ: 156! | When calculating 13 trees in 12 rows, we noticed the column got crowded.. Grandma the kind came down with the index finger and pushed the number's friend with the thumb.. (A Double Drop movement) saved the situation, and the result: 156!",
         storyAudioText: "ثَلَاثَةَ عَشَرَ فِي اثْنَيْ عَشَر.. العَشَرَاتُ فِي العَشَرَات: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي المِئَات.. الآحَادُ فِي العَشَرَات: ثَلَاثَةٌ فِي وَاحِدٍ يُسَاوِي ثَلَاثَةً فِي العَشَرَات.. العَشَرَاتُ فِي الآحَاد: وَاحِدٌ فِي اثْنَيْنِ يُسَاوِي اثْنَيْن.. نُضِيفُ اثْنَيْنِ لِثَلَاثَةٍ بِأَصْدِقَاءِ خَمْسَة: أَنْزِلْ خَمْسَةً وَاطْرَحْ ثَلَاثَةً بِنُزُولٍ مُزْدَوَج.. الآحَادُ فِي الآحَاد: ثَلَاثَةٌ فِي اثْنَيْنِ يُسَاوِي سِتَّة.. النَّاتِجُ: مِئَةٌ وَسِتَّةٌ وَخَمْسُون! | 13 times 12.. Tens by tens: 1 times 1 equals 1 in hundreds.. Units by tens: 3 times 1 equals 3 in tens.. Tens by units: 1 times 2 equals 2.. Add 2 to 3 via Friends of 5: drop 5 and subtract 3 with Double Drop.. Units by units: 3 times 2 equals 6.. Result is 156!",
@@ -433,14 +441,14 @@ storyAudioText: "يَا أَبْطَال.. دَعُونَا نَحْسُبْ إ�
       titleEn: "Multiplication with Friends of 10",
       emoji: "🌟",
       miniStory: {
-        title: "العملاق 10 يطير للعمود التالي | Giant 10 Leaps to to the next rod",
+        title: "العملاق 10 يَطِيْرُ للعمودِ التالي | Giant 10 Leaps to to the next rod",
         emoji: "🦶",
-        story: "عِنْدَ حِسَابِ 19 زَهْرَةً فِي 11 صَفًّا لَاحَظْنَا الْمَجْمُوعَ فِي الْعَمُودِ وَصَلَ 10 وَمَا فَوْق، فَتَدَخَّلَ الْعِمْلَاقُ 10 لِيَطْرَحَ الْمُتَمِّمَ من العَدَدِ الْمَطْلُوبِ إِضَافَتُهُ وَطَارَ لِلْعَمُودِ التَّالِي. وَالنَّاتِجُ صَارَ: 209! | When calculating 19 flowers in 11 rows, we noticed the column sum reached 10 or more, so Giant 10 stepped in to subtract the complement of the number to be added, and it flew to the next column. The result became: 209!",
+        story: "عِنْدَ حِسَابِ 19 زَهْرَةً فِي 11 صَفًّا لَاحَظْنَا الْمَجْمُوعَ فِي الْعَمُودِ وَصَلَ 10 وَمَا فَوْق، فَتَدَخَّلَ الْعِمْلَاقُ 10 لِيَطْرَحَ المُكَمِّل من العَدَدِ الْمَطْلُوبِ إِضَافَتُهُ وَطَارَ لِلْعَمُودِ التَّالِي. وَالنَّاتِجُ صَارَ: 209! | When calculating 19 flowers in 11 rows, we noticed the column sum reached 10 or more, so Giant 10 stepped in to subtract the complement of the number to be added, and it flew to the next column. The result became: 209!",
         storyAudioText: "تِسْعَةَ عَشَرَ فِي أَحَدَ عَشَر.. العَشَرَاتُ فِي العَشَرَات: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي المِئَات.. الآحَادُ فِي العَشَرَات: تِسْعَةٌ فِي وَاحِدٍ يُسَاوِي تِسْعَةً فِي العَشَرَات.. العَشَرَاتُ فِي الآحَاد: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً.. تِسْعَةٌ زَائِدُ وَاحِدٍ يُسَاوِي عَشَرَة.. العِمْلَاقُ عَشَرَة يَتَدَخَّل: اطْرَحْ تِسْعَةً وَأَضِفْ خَرَزَةً فِي المِئَات.. الآحَادُ فِي الآحَاد: تِسْعَةٌ فِي وَاحِدٍ يُسَاوِي تِسْعَة.. النَّاتِجُ: مِئَتَانِ وَتِسْعَة! | 19 times 11.. Tens by tens: 1 times 1 equals 1 in hundreds.. Units by tens: 9 times 1 equals 9 in tens.. Tens by units: 1 times 1 equals 1.. 9 plus 1 equals 10.. Giant 10 steps in: subtract 9 and add 1 bead to hundreds.. Units by units: 9 times 1 equals 9.. Result is 209!",
         storyAudioId: null,
       },
       rule: {
-        description: "أصدقاء 10 🌟: عندما يتجاوز مجموع عمود العشرات 9، اطْرَحْ المُتَمّم بالسَّبابة ⬇️ وأَضِفْ 1 لعمود المئات الأيسر بالإبهام 👍⬆️! | Friends of 10 🌟: When tens sum exceeds 9, subtract complement with index ⬇️ and leap 1 bead to Hundreds rod with thumb 👍⬆️!",
+        description: "أصدقاء 10 🌟: عندما يتجاوز مجموع عمود العشرات 9، اطْرَحْ المُكَمِّلَ بالسَّبابة ⬇️ وأَضِفْ 1 لعمود المئات الأيسر بالإبهام 👍⬆️! | Friends of 10 🌟: When tens sum exceeds 9, subtract complement with index ⬇️ and leap 1 bead to Hundreds rod with thumb 👍⬆️!",
         cases: [
           { from: 1, formula: "+1 = −9 + 10" },
           { from: 2, formula: "+2 = −8 + 10" },
@@ -488,7 +496,7 @@ storyAudioText: "يَا أَبْطَال.. دَعُونَا نَحْسُبْ إ�
             hint: "+n = −k + 10",
           },
         ],
-        decision: "أصدقاء 10 — اطرح المتمّم بالسبابة واقفز 1 لعمود المئات بالإبهام! | Friends of 10 — Subtract complement with index & leap 1 bead to hundreds with thumb!",
+        decision: "أصدقاء 10 — اطرح المُكَمِّل بالسبابة واقفز 1 لعمود المئات بالإبهام! | Friends of 10 — Subtract complement with index & leap 1 bead to hundreds with thumb!",
       },
       watchPhase: {
         examples: [
@@ -662,7 +670,7 @@ storyAudioText: "يَا أَبْطَال.. دَعُونَا نَحْسُبْ إ�
         storyAudioId: 28,
       },
       rule: {
-    description: "التحالف المزدوج 👑: عندما تكون 5 مفعّلة والسفليات لا تكفي لطرح المكمل، نفّذ رفع مزدوج ⬆️⬆️ على العشرات (إلغاء 5 بالسبابة ⬆️ وإضافة متمم المكمل بالإبهام ⬆️)، ثم أضف 1 لعمود المئات بالإبهام 👍⬆️! | Double Alliance 👑: When 5 is active and lower beads are insufficient to subtract the complement, perform a Double Lift ⬆️⬆️ on the tens (cancel 5 with the index finger ⬆️ and add the friend of the complement with the thumb ⬆️), then add 1 to the hundreds column with the thumb 👍⬆️!",
+    description: "التحالف المزدوج 👑: عندما تكون 5 مفعّلة والسفليات لا تكفي لطرح المكمل، نفّذ رفع مزدوج ⬆️⬆️ على العشرات (إلغاء 5 بالسبابة ⬆️ وإضافة مُتَمِّم المُكَمِّلِ بالإبهام ⬆️)، ثم أضف 1 لعمود المئات بالإبهام 👍⬆️! | Double Alliance 👑: When 5 is active and lower beads are insufficient to subtract the complement, perform a Double Lift ⬆️⬆️ on the tens (cancel 5 with the index finger ⬆️ and add the friend of the complement with the thumb ⬆️), then add 1 to the hundreds column with the thumb 👍⬆️!",
   cases: [
     { from: 6, formula: "+6 = −5 + 1 + 10" },
     { from: 7, formula: "+7 = −5 + 2 + 10" },
