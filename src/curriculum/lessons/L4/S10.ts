@@ -167,7 +167,7 @@ export const S10_LESSON: LessonNode = {
       },
       condition: {
         formula: "السَّفْلِيَّاتُ المُفَعَّلَةُ غير كافية · الجدة 5 مفعّلة | Active lower beads insufficient · bead 5 active",
-        explanation: "عندما تكون \"السَّفْلِيَّاتُ\" فارغة، الجدة 5 تَتَدَخَّل بصعودٍ مُزْدَوَج! | When lower beads are empty, Grandma 5 steps in with a Double Lift!",
+                explanation: "عند ازدحام السفليات، الجدة 5 تتدخل بنزول مزدوج! | When lower beads are crowded, Grandma 5 steps in with a Double Drop!",
       friendsTable: {
         title: "أصدقاء 5 الصغار | Small Friends of 5",
         pairs: [
