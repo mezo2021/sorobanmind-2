@@ -223,9 +223,9 @@ storyAudioText: "يَا أَبْطَال.. دَعُونَا نَحْسُبْ إ�
       miniStory: {
         title: "الجدة 5 تتدخل | Grandma 5 Helps",
         emoji: "👵",
-        story: "13 صف بـ 12 شجرة! لما جمعنا خطوتي العشرات ازدحم العمود.. نزلت تيتا 5 الحنونة بالسبابة وطردت الصديق للإبهام بنزول مزدوج.. والناتج: 156! | 13 rows × 12 trees! When adding tens steps, the column got crowded.. Grandma 5 came down with index & pushed friend down with thumb in a Double Drop.. Result: 156!",
+        story: "عِنْدَ حِسَابِ 12 شَجَرَةً فِي 13 صَفٍّ لَاحَظْنَا ازْدِحَامَ الْعَمُود.. نَزَلَتِ الْجَدَّةُ الْحَنُونَةُ بِالسَّبَّابَةِ وَطَرَدَتْ صَدِيقَ الْعَدَدِ بِالْإِبْهَام.. (حَرَكَةُ نُزُولٍ مُزْدَوَجٍ) أَنْقَذَتِ الْمَوْقِفْ، وَالنَّاتِجْ: 156! | When calculating 12 trees in 13 rows, we noticed the column got crowded.. Grandma the kind came down with the index finger and pushed the number's friend with the thumb.. (A Double Drop movement) saved the situation, and the result: 156!",
         storyAudioText: "ثَلَاثَةَ عَشَرَ فِي اثْنَيْ عَشَر.. العَشَرَاتُ فِي العَشَرَات: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي المِئَات.. الآحَادُ فِي العَشَرَات: ثَلَاثَةٌ فِي وَاحِدٍ يُسَاوِي ثَلَاثَةً فِي العَشَرَات.. العَشَرَاتُ فِي الآحَاد: وَاحِدٌ فِي اثْنَيْنِ يُسَاوِي اثْنَيْن.. نُضِيفُ اثْنَيْنِ لِثَلَاثَةٍ بِأَصْدِقَاءِ خَمْسَة: أَنْزِلْ خَمْسَةً وَاطْرَحْ ثَلَاثَةً بِنُزُولٍ مُزْدَوَج.. الآحَادُ فِي الآحَاد: ثَلَاثَةٌ فِي اثْنَيْنِ يُسَاوِي سِتَّة.. النَّاتِجُ: مِئَةٌ وَسِتَّةٌ وَخَمْسُون! | 13 times 12.. Tens by tens: 1 times 1 equals 1 in hundreds.. Units by tens: 3 times 1 equals 3 in tens.. Tens by units: 1 times 2 equals 2.. Add 2 to 3 via Friends of 5: drop 5 and subtract 3 with Double Drop.. Units by units: 3 times 2 equals 6.. Result is 156!",
-        storyAudioId: 26,
+        storyAudioId: null,
       },
       rule: {
         description: "أصدقاء 5 👵: عندما لا تكفي الخرزات السفلية في عمود العشرات، أنزل 5 بالسبابة ⬇️ واطرد صديق العدد بالإبهام ⬇️ بنزول مزدوج ⬇️⬇️! | Friends of 5 👵: When lower beads are full in tens rod, lower top bead 5 with index ⬇️ and push down the friend with thumb ⬇️ in a Double Drop ⬇️⬇️!",
