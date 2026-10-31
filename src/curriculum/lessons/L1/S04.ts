@@ -274,8 +274,8 @@ export const S04_LESSON: LessonNode = {
       miniStory: {
         title: "العملاق 10 يغادر | Giant 10 Leaves",
         emoji: "🦶",
-        story: "قال العملاق 10: أنا أستطيع الطرح! عندما لا تكفي الآحاد، أغادر أنا (−10)، ويدخل متمم الرقم للآحاد. | Giant 10 said: I can subtract! When units are not enough, I leave (−10), and the number's complement enters the units.",
-        storyAudioText: "قَالَ العِمْلَاقُ عَشَرَة: أَنَا أَسْتَطِيعُ الطَّرْح! عِنْدَمَا لَا تَكْفِي الآحَاد، أُغَادِرُ أَنَا، وَيَدْخُلُ مُتَمِّمُ الرَّقْمِ لِلْآحَاد.",
+        story: "قال العملاق 10: أنا أستطيع الطرح! عندما لا تكفي الآحاد، أغادر أنا (−10)، ويدخل مُكَمِّلُ الرَّقَمِ للآحاد. | Giant 10 said: I can subtract! When units are not enough, I leave (−10), and the number's complement enters the units.",
+        storyAudioText: "قَالَ العِمْلَاقُ عَشَرَة: أَنَا أَسْتَطِيعُ الطَّرْح! عِنْدَمَا لَا تَكْفِي الآحَاد، أُغَادِرُ أَنَا، وَيَدْخُلُ مُكَمِّلُ الرَّقَمِ لِلْآحَاد.",
         storyAudioId: 7,
       },
       rule: {
@@ -318,7 +318,7 @@ export const S04_LESSON: LessonNode = {
             hint: "لو احتاج k تبديل 5، يصبح الطرح مركّبًا | If k needed 5 exchange, subtraction becomes compound" 
           },
         ],
-        decision: "استخدم أصدقاء 10 — أزل عشرات واحدة، وأضف k للآحاد مباشرة! | Use Friends of 10 — Remove one ten, and add k to units directly!",
+        decision: "استخدمْ أصدقاء 10 — أزل عشرات واحدة، وأضف k للآحاد مباشرة! | Use Friends of 10 — Remove one ten, and add k to units directly!",
       },
       watchPhase: {
         examples: [
@@ -410,19 +410,19 @@ export const S04_LESSON: LessonNode = {
     {
       id: "m4",
       ruleCategory: "combined",
-      title: "الطرح المركّب",
+      title: "الطَّرْح المركّب",
       titleEn: "Compound Subtraction",
       emoji: "🎯",
       miniStory: {
         title: "العرش المزدوج | The Double Throne",
         emoji: "👑",
-        story: "وصل الأبطال إلى العرش المزدوج حيث تلتقي الجدة 5 مع العملاق 10. في بعض مسائل الطرح الصعبة، يغادر العملاق 10 أولاً (−10)، ثم تنزل الجدة 5 لتساعد (+5)، ثم يخرج باقي الأصدقاء من الخرزات السفلية! | Heroes reached the Double Throne where Grandma 5 meets Giant 10. In some hard subtraction problems, Giant 10 leaves first (−10), then Grandma 5 comes down to help (+5), then the rest of the friends leave from lower beads!",
-        storyAudioText: "وَصَلَ الأَبْطَالُ إِلَى العَرْشِ المُزْدَوَجِ حَيْثُ تَلْتَقِي الجَدَّةُ خَمْسَة مَعَ العِمْلَاقِ عَشَرَة. فِي بَعْضِ مَسَائِلِ الطَّرْحِ الصَّعْبَة، يُغَادِرُ العِمْلَاقُ عَشَرَة أَوَّلاً، ثُمَّ تَنْزِلُ الجَدَّةُ خَمْسَة لِتُسَاعِد، ثُمَّ يَخْرُجُ بَاقِي الأَصْدِقَاءِ مِنَ الخَرَزَاتِ السُّفْلِيَّة!",
+        story: "وَصَلَ الأَبْطَالُ إِلَى الْعَرْشِ الْمُزْدَوَجِ حَيْثُ تَلْتَقِي الْجَدَّةُ 5 مَعَ الْعِمْلَاقِ 10. فِي بَعْضِ مَسَائِلِ الطَّرْحِ الصَّعْبَةِ، يَنْسَحِبُ الْعِمْلَاقُ 10 أَوَّلًا (−10)، ثُمَّ تَتَدَخَّلُ الْجَدَّةُ 5 لِتُسَاعِدَ (+5)، ثُمَّ يَخْرُجُ (مُتَمِّمُ الْمُكَمِّلِ) مِنَ الْخَرَزَاتِ السُّفْلِيَّةِ! | Heroes reached the Double Throne where Grandma 5 meets Giant 10. In some hard subtraction problems, Giant 10 leaves first (−10), then Grandma 5 steps in to help (+5), then the (friend of the complement) comes out from the lower beads!",
+storyAudioText: "وَصَلَ الأَبْطَالُ إِلَى العَرْشِ المُزْدَوَجِ حَيْثُ تَلْتَقِي الجَدَّةُ خَمْسَة مَعَ العِمْلَاقِ عَشَرَة. فِي بَعْضِ مَسَائِلِ الطَّرْحِ الصَّعْبَة، يَنْسَحِبُ العِمْلَاقُ عَشَرَة أَوَّلاً، ثُمَّ تَتَدَخَّلُ الجَدَّةُ خَمْسَة لِتُسَاعِد، ثُمَّ يَخْرُجُ مُتَمِّمُ المُكَمِّلِ مِنَ الخَرَزَاتِ السُّفْلِيَّة! | Heroes reached the Double Throne where Grandma five meets Giant ten. In some hard subtraction problems, Giant ten leaves first, then Grandma five steps in to help, then the friend of the complement comes out from the lower beads!",
         storyAudioId: 8,
       },
       rule: {
         formula: "−n = −10 + 5 − (5 − k) (حيث k = 10 − n) | −n = −10 + 5 − (5 − k) (where k = 10 − n)",
-        description: "نُزيل عشرات واحدة (−10)، نُنزل العلوية 5 (+5)، ثم نُزيل (5−k) من الخرزات السفلية. | Remove one ten (−10), lower upper 5 (+5), then remove (5−k) from lower beads.",
+        description: "نُزيل عَشْرَة واحدة (−10)، نُنزل العلوية 5 (+5)، ثم نُزيل (5−k) من الخرزات السفلية. | Remove one ten (−10), lower upper 5 (+5), then remove (5−k) from lower beads.",
         cases: [
           { from: 6, formula: "−6 = −10 + 5 − 1" },
           { from: 7, formula: "−7 = −10 + 5 − 2" },
