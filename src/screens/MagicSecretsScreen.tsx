@@ -34,8 +34,21 @@ const QUESTIONS_PER_EXAM = 7;
 // ===== دالة التنظيف الصوتي (حل مشكلة نطق الأرقام في الوضع الإنجليزي) =====
 function sanitizeForSpeech(text: string, lang: string): string {
   if (!text) return '';
-  if (lang === 'ar') return text;
-  // في الوضع الإنجليزي: نحول الأرقام العربية إلى لاتينية، ونحذف أي حروف عربية متبقية
+  
+  if (lang === 'ar') {
+    let t = text;
+    
+    // 1. إصلاح الكلمات الحرجة (قبل حذف الألف)
+    t = t.replace(/أسراراً/g, 'أَسْرَارًا');
+    t = t.replace(/نضرب/g, 'نَضْرِبُ');
+    
+    // 2. حل مشكلة التنوين المزدوج (اً -> ً) لجميع الكلمات
+    t = t.replace(/اً/g, 'ً');
+    
+    return t;
+  }
+  
+  // في الوضع الإنجليزي: لا يتأثر إطلاقاً (نفس الكود القديم)
   return text
     .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
     .replace(/[\u0600-\u06FF]/g, '')
