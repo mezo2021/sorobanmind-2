@@ -286,11 +286,11 @@ export const S03_LESSON: LessonNode = {
         title: "ظهور العملاق 10 | Giant 10 Appears",
         emoji: "🦶",
         story: "عندما كبرت الأرقام، لم تعد الجدة 5 تكفي! ظهر عملاق العشرات 10 في العمود الثاني على اليسار. قال: أنا أتدخل عندما يكتظ عمود الآحاد! نادوا عليّ (+10)، وسأطرح متمم الرقم من الآحاد. | As numbers grew larger, Grandma 5 wasn't enough! Giant 10 appeared on the tens rod. He said: I step in when the units rod gets crowded! Call me (+10), and I will subtract the friend from the units.",
-        storyAudioText: "عِنْدَمَا كَبُرَتِ الأَرْقَام، لَمْ تَعُدِ الجَدَّةُ خَمْسَة تَكْفِي. ظَهَرَ عِمْلَاقُ العَشَرَاتِ عَشَرَة فِي العَمُودِ الثَّانِي عَلَى اليَسَار. قَال: أَنَا أَتَدَخَّلُ عِنْدَمَا يَكْتَظُّ عَمُودُ الآحَاد. نَادُوا عَلَيَّ، وَسَأَطْرَحُ مُتَمِّمَ الرَّقْمِ مِنَ الآحَاد.",
+        storyAudioText: "عِنْدَمَا كَبُرَتِ الأَرْقَام، لَمْ تَعُدِ الجَدَّةُ خَمْسَة تَكْفِي. ظَهَرَ عِمْلَاقُ العَشَرَاتِ عَشَرَة فِي العَمُودِ الثَّانِي عَلَى اليَسَار. قَال: أَنَا أَتَدَخَّلُ عِنْدَمَا يَكْتَظُّ عَمُودُ الآحَاد. نَادُوا عَلَيَّ، وَسَأَطْرَحُ مُكَمِّلَ الرَّقْمِ مِنَ الآحَاد.",
         storyAudioId: 6,
       },
       rule: {
-        description: "قفزة العملاق 10 🌟: عندما يكتظ بيت الآحاد بالكامل، نطرد صديق الرقم بعيداً عن العارضة بالسبابة، ونوقظ خرزة واحدة في بيت العشرات بالإبهام! | Giant 10's Leap 🌟: When the units rod is full, push the number's friend away from the bar with index, and awaken 1 bead in tens rod with thumb!",
+        description: "قفزة العملاق 10 🌟: عندما يكتظ بيت الآحاد بالكامل، نطرد مُكَمِّلَ الرقم بعيداً عن العارضة بالسبابة، ونَرْفَعُ خرزة واحدة في بيت العشرات بالإبهام! | Giant 10's Leap 🌟: When the units rod is full, push the number's friend away from the bar with index, and awaken 1 bead in tens rod with thumb!",
         cases: [
           { from: 1, formula: "+1 = −9 + 10" },
           { from: 2, formula: "+2 = −8 + 10" },
@@ -330,9 +330,9 @@ export const S03_LESSON: LessonNode = {
             answer: "نعم (عمود الآحاد امتليء!) | Yes (Units rod is overflowing!)",
           },
           {
-            question: "هل يمكن طرح صديق 10 مباشرة من الآحاد؟ | Can we subtract 10's friend directly from units?",
+            question: "هل يمكن طرح مُكَمِّلَ 10 مباشرة من الآحاد؟ | Can we subtract 10's friend directly from units?",
             type: "yes-no",
-            actual: "الخرزات المفعّلة ≥ المتمّم | Active beads ≥ Complement",
+            actual: "الخرزات المفعّلة ≥ المُكَمِّل | Active beads ≥ Complement",
             answer: "نعم (الخرزات المفعّلة تكفي للخصم) | Yes (Active beads are enough to subtract)",
             hint: "خصم مباشر من الآحاد دون الحاجة لاستدعاء الجدة 5 | Direct subtraction from units without using Grandma 5",
           },
@@ -434,7 +434,7 @@ export const S03_LESSON: LessonNode = {
         storyAudioId: 8,
       },
       rule: {
-        description: "سحر العرش المزدوج 👑: عندما لا تكفي الخرزات السفلية لخصم صديق 10، نرفع الجدة 5 للأعلى ⬆️، نرفع المكمل سفلياً بالإبهام ⬆️، ونطير للعملاق 10 في العشرات ⬆️! | Double Throne Magic 👑: When lower beads aren't enough to subtract 10's friend, lift Grandma 5 up ⬆️, raise the remaining lower beads with thumb ⬆️, and soar to Giant 10 in tens ⬆️!",
+        description: "سِحْرُ العرش المزدوج 👑: عندما لا تكفي الخرزات السفلية لخصم مُكُمِّل 10، تَنْسَحِبُ الجدة 5 للأعلى بعيداً عن العارضة ⬆️، يَقْفِزُ مُتَمِّمَ المُكَمِّلِ باِاِتِجَاهِ العَارِضَة ⬆️، وَيَطِيْرُ العملاق 10 فِي العشرات ⬆️! | Double Throne Magic 👑: When lower beads aren't enough to subtract 10's friend, lift Grandma 5 up ⬆️, raise the remaining lower beads with thumb ⬆️, and soar to Giant 10 in tens ⬆️!",
         cases: [
           { from: 6, formula: "+6 = −5 + 1 + 10" },
           { from: 7, formula: "+7 = −5 + 2 + 10" },
@@ -461,7 +461,7 @@ export const S03_LESSON: LessonNode = {
             answer: "نعم (لا يمكن الخصم المباشر!) | Yes (Direct subtraction impossible!)",
           },
         ],
-        decision: "جمع مركّب! ابعد 5 للأعلى ⬆️، ارفع المكمل سفلياً ⬆️، واصعد 10 في العشرات ⬆️! | Compound Addition! Lift 5 up ⬆️, raise remainder below ⬆️, add 10 in tens ⬆️!",
+        decision: "جمع مركّب! ابعد 5 للأعلى ⬆️، ارفع مُتَمِّمُ المُكَمِّلِ سفلياً ⬆️، واصعد 10 في العشرات ⬆️! | Compound Addition! Lift 5 up ⬆️, raise remainder below ⬆️, add 10 in tens ⬆️!",
       },
       watchPhase: {
         examples: [
