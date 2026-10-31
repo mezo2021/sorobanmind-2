@@ -662,22 +662,21 @@ storyAudioText: "يَا أَبْطَال.. دَعُونَا نَحْسُبْ إ�
         storyAudioId: 28,
       },
       rule: {
-  description: "التحالف المزدوج 👑: عندما تكون 5 مفعّلة والسفليات لا تكفي لطرح المكمل، نفّذ رفع مزدوج ⬆️⬆️ على العشرات (إلغاء 5 بالسبابة ⬆️ وإضافة متمم المكمل بالإبهام ⬆️)، ثم أضف 1 لعمود المئات بالإبهام 👍⬆️! | Double Alliance 👑: When 5 is active and lower beads are insufficient to subtract the complement, perform a Double Lift ⬆️⬆️ on the tens (cancel 5 with the index finger ⬆️ and add the friend of the complement with the thumb ⬆️), then add 1 to the hundreds column with the thumb 👍⬆️!",
+    description: "التحالف المزدوج 👑: عندما تكون 5 مفعّلة والسفليات لا تكفي لطرح المكمل، نفّذ رفع مزدوج ⬆️⬆️ على العشرات (إلغاء 5 بالسبابة ⬆️ وإضافة متمم المكمل بالإبهام ⬆️)، ثم أضف 1 لعمود المئات بالإبهام 👍⬆️! | Double Alliance 👑: When 5 is active and lower beads are insufficient to subtract the complement, perform a Double Lift ⬆️⬆️ on the tens (cancel 5 with the index finger ⬆️ and add the friend of the complement with the thumb ⬆️), then add 1 to the hundreds column with the thumb 👍⬆️!",
+  cases: [
+    { from: 6, formula: "+6 = −5 + 1 + 10" },
+    { from: 7, formula: "+7 = −5 + 2 + 10" },
+    { from: 8, formula: "+8 = −5 + 3 + 10" },
+    { from: 9, formula: "+9 = −5 + 4 + 10" },
+  ],
 },
-        cases: [
-  { from: 6, formula: "+6 = −5 + 1 + 10" },
-  { from: 7, formula: "+7 = −5 + 2 + 10" },
-  { from: 8, formula: "+8 = −5 + 3 + 10" },
-  { from: 9, formula: "+9 = −5 + 4 + 10" },
-],
-      },
-      condition: {
-        formula: "مجموع العشرات ≥ 10 · 5 مفعّلة · السفليات < المكمّل | Tens sum ≥ 10 · 5 active · Lower beads < Complement",
-        explanation: "الجدة 5 والعملاق 10 يتعاونان معاً لفك ازدحام العمود! | Grandma 5 and Giant 10 ally together to clear column traffic!",
-      },
-      discrimination: {
-        steps: [
-          {
+condition: {
+  formula: "مجموع العشرات ≥ 10 · 5 مفعّلة · السفليات < المكمّل | Tens sum ≥ 10 · 5 active · Lower beads < Complement",
+  explanation: "الجدة 5 والعملاق 10 يتعاونان معاً لفك ازدحام العمود! | Grandma 5 and Giant 10 ally together to clear column traffic!",
+},
+discrimination: {
+  steps: [
+    {
             question: "هل نحتاج ترحيل للمئات (المجموع ≥ 10)؟ | Do we need to carry to Hundreds (Sum ≥ 10)?",
             type: "yes-no",
             actual: "المجموع ≥ 10 | Sum ≥ 10",
