@@ -429,12 +429,12 @@ export const S03_LESSON: LessonNode = {
       miniStory: {
         title: "العرش المزدوج | The Double Throne",
         emoji: "👑",
-        story: "وصل الأبطال إلى العرش المزدوج حيث تلتقي الجدة 5 مع العملاق 10. في بعض المسائل الصعبة، يحتاج الطفل للاتصال بالعملاق 10 والجدة 5 في نفس اللحظة! | The heroes reached the Double Throne where Grandma 5 meets Giant 10. In tricky problems, you need both Giant 10 and Grandma 5 at the exact same time!",
-        storyAudioText: "وَصَلَ الأَبْطَالُ إِلَى العَرْشِ المُزْدَوَجِ حَيْثُ تَلْتَقِي الجَدَّةُ خَمْسَة مَعَ العِمْلَاقِ عَشَرَة. فِي بَعْضِ المَسَائِلِ الصَّعْبَة، يَحْتَاجُ الطِّفْلُ لِلِاتِّصَالِ بِالعِمْلَاقِ عَشَرَة وَالجَدَّةِ خَمْسَة فِي نَفْسِ اللَّحْظَة.",
-        storyAudioId: 8,
-      },
-      rule: {
-        description: "سِحْرُ العرش المزدوج 👑: عندما لا تكفي الخرزات السفلية لخصم مُكُمِّل 10، تَنْسَحِبُ الجدة 5 للأعلى بعيداً عن العارضة ⬆️، يَقْفِزُ مُتَمِّمَ المُكَمِّلِ باِاِتِجَاهِ العَارِضَة ⬆️، وَيَطِيْرُ العملاق 10 فِي العشرات ⬆️! | Double Throne Magic 👑: When lower beads aren't enough to subtract 10's friend, lift Grandma 5 up ⬆️, raise the remaining lower beads with thumb ⬆️, and soar to Giant 10 in tens ⬆️!",
+        story: "وصل الأبطال إلى العرش المزدوج حيث تلتقي الجدة 5 مع العملاق 10. في بعض المسائل الصعبة، يحتاج الطفل للاتصال بالعملاق 10 والجدة 5 في نفس اللحظة! | The heroes reached the Double Throne where Grandma 5 meets Giant 10. In some hard problems, the child needs to connect with Giant 10 and Grandma 5 at the exact same moment!",
+storyAudioText: "وَصَلَ الأَبْطَالُ إِلَى العَرْشِ المُزْدَوَجِ حَيْثُ تَلْتَقِي الجَدَّةُ خَمْسَة مَعَ العِمْلَاقِ عَشَرَة. فِي بَعْضِ المَسَائِلِ الصَّعْبَة، يَحْتَاجُ الطِّفْلُ لِلِاتِّصَالِ بِالعِمْلَاقِ عَشَرَة وَالجَدَّةِ خَمْسَة فِي نَفْسِ اللَّحْظَة. | The heroes reached the Double Throne where Grandma five meets Giant ten. In some hard problems, the child needs to connect with Giant ten and Grandma five at the exact same moment!",
+storyAudioId: 8,
+},
+rule: {
+  description: "سِحْرُ العرش المزدوج 👑: عندما لا تكفي الخرزات السفلية لخصم صَدِيْقِ 10، تَنْسَحِبُ الجدة 5 للأعلى بعيداً عن العارضة ⬆️، يَقْفِزُ مُتَمِّمَ المُكَمِّلِ باِتِجَاهِ العَارِضَة ⬆️، وَيَطِيْرُ العملاق 10 فِي العشرات ⬆️! | Double Throne Magic 👑: When lower beads aren't enough to subtract 10's friend, Grandma 5 withdraws upwards away from the bar ⬆️, the friend of the complement jumps towards the bar ⬆️, and Giant 10 flies in the tens ⬆️!",
         cases: [
           { from: 6, formula: "+6 = −5 + 1 + 10" },
           { from: 7, formula: "+7 = −5 + 2 + 10" },
@@ -457,7 +457,7 @@ export const S03_LESSON: LessonNode = {
           {
             question: "هل الخرزة 5 مفعّلة في الآحاد ولا تكفي السفليات لخصم الصديق؟ | Is bead 5 active and lower beads insufficient to subtract friend?",
             type: "yes-no",
-            actual: "السفليات < المتمّم | Lower beads < Complement",
+            actual: "السفليات < مُتَمِّمُ المُكَمِّلِ | Lower beads < Complement",
             answer: "نعم (لا يمكن الخصم المباشر!) | Yes (Direct subtraction impossible!)",
           },
         ],
