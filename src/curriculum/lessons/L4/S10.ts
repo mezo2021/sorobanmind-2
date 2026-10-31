@@ -165,10 +165,9 @@ export const S10_LESSON: LessonNode = {
           { from: 4, formula: "-4 = -5 + 1" },
         ],
       },
-      condition: {
-        formula: "السَّفْلِيَّاتُ المُفَعَّلَةُ غير كافية · الجدة 5 مفعّلة | Active lower beads insufficient · bead 5 active",
-                explanation: "عند ازدحام السفليات، الجدة 5 تتدخل بنزول مزدوج! | When lower beads are crowded, Grandma 5 steps in with a Double Drop!",
-      friendsTable: {
+        explanation: "عند ازدحام السفليات، الجدة 5 تتدخل بنزول مزدوج! | When lower beads are crowded, Grandma 5 steps in with a Double Drop!",
+},
+friendsTable: {
         title: "أصدقاء 5 الصغار | Small Friends of 5",
         pairs: [
           { from: 1, to: 4 }, { from: 2, to: 3 },
