@@ -433,11 +433,12 @@ condition: {
   titleEn: "Multiplication with Friends of 10",
   emoji: "🌟",
   miniStory: {
-    title: "العملاق 10 يَطِيْرُ للعمودِ التالي | Giant 10 Leaps to the next rod",
-    emoji: "🦶",
-    story: "عِنْدَ حِسَابِ 19 زَهْرَةً فِي 11 صَفًّا لَاحَظْنَا الْمَجْمُوعَ فِي الْعَمُودِ وَصَلَ 10 وَمَا فَوْق، فَتَدَخَّلَ الْعِمْلَاقُ 10 لِيَطْرَحَ المُكَمِّل من العَدَدِ الْمَطْلُوبِ إِضَافَتُهُ وَطَارَ لِلْعَمُودِ التَّالِي. وَالنَّاتِجُ صَارَ: 209! | When calculating 19 flowers in 11 rows, we noticed the column sum reached 10 or more, so Giant 10 stepped in to subtract the complement of the number to be added, and it flew to the next column. The result became: 209!",
-    storyAudioId: null,
-  },
+  title: "العملاق 10 يَطِيْرُ للعمودِ التالي | Giant 10 Leaps to the next rod",
+  emoji: "🦶",
+  story: "عِنْدَ حِسَابِ 19 زَهْرَةً فِي 11 صَفًّا لَاحَظْنَا الْمَجْمُوعَ فِي الْعَمُودِ وَصَلَ 10 وَمَا فَوْق، فَتَدَخَّلَ الْعِمْلَاقُ 10 لِيَطْرَحَ المُكَمِّل من العَدَدِ الْمَطْلُوبِ إِضَافَتُهُ وَطَارَ لِلْعَمُودِ التَّالِي. وَالنَّاتِجُ صَارَ: 209! | When calculating 19 flowers in 11 rows, we noticed the column sum reached 10 or more, so Giant 10 stepped in to subtract the complement of the number to be added, and it flew to the next column. The result became: 209!",
+  storyAudioText: "تِسْعَةَ عَشَرَ فِي أَحَدَ عَشَر.. نَضْرِبُ العَشَرَاتِ فِي العَشَرَات: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي المِئَات.. الآحَادُ فِي العَشَرَات: تِسْعَةٌ فِي وَاحِدٍ يُسَاوِي تِسْعَةً فِي العَشَرَات.. العَشَرَاتُ فِي الآحَاد: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِد.. تِسْعَةٌ زَائِدُ وَاحِدٍ يُسَاوِي عَشَرَة.. بِأَصْدِقَاءِ عَشَرَة: اطْرَحْ تِسْعَةً وَأَضِفْ وَاحِداً لِلْمِئَات.. الآحَادُ فِي الآحَاد: تِسْعَةٌ فِي وَاحِدٍ يُسَاوِي تِسْعَة.. النَّاتِجُ: مِئَتَانِ وَتِسْعَة! | 19 times 11.. Tens by tens: 1 times 1 equals 1 in hundreds.. Units by tens: 9 times 1 equals 9 in tens.. Tens by units: 1 times 1 equals 1.. 9 plus 1 equals 10.. With Friends of 10: subtract 9 and add 1 to hundreds.. Units by units: 9 times 1 equals 9.. Result is 209!",
+  storyAudioId: null,
+},
       rule: {
         description: "أصدقاء 10 🌟: عندما يتجاوز مجموع عمود العشرات 9، اطْرَحْ المُكَمِّلَ بالسَّبابة ⬇️ وأَضِفْ 1 لعمود المئات الأيسر بالإبهام 👍⬆️! | Friends of 10 🌟: When tens sum exceeds 9, subtract complement with index ⬇️ and leap 1 bead to Hundreds rod with thumb 👍⬆️!",
         cases: [
