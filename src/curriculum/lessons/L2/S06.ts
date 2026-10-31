@@ -24,9 +24,9 @@ export const S06_LESSON: LessonNode = {
       titleEn: "Direct Multiplication",
       emoji: "✨",
       miniStory: {
-        title: "حقول الفلّاح السّحرية | The Magic Farmer's Fields",
+        title: "ِحقولُ الفلّاحِ السّحريَّة | The Magic Farmer's Fields",
         emoji: "🌾",
-        story: "يَا أَبْطَالُ! لِنَعْرِفْ كَمْ 11 حَبّة في 11 صفّ .. أَرْبَعُ خُطُوَاتٍ سَهْلَةٍ مِنَ الْمِئَاتِ لِلْآحَادِ وَالْخَرَزَاتُ مَفْتُوحَةٌ وَجَاهِزَة.. وَالنَّاتِجُ السِّحْرِيُّ: 121! | Champions! Let's find out: 11 seeds by 11 rows.. 4 easy steps from hundreds to units, and the beads are open and ready.. And the magic result: 121!",
+        story: "يَا أَبْطَالُ! لِنَعْرِفْ كَمْ 11 حَبّةً في 11 صَفّ .. أَرْبَعُ خُطُوَاتٍ سَهْلَةٍ مِنَ الْمِئَاتِ لِلْآحَادِ وَالْخَرَزَاتُ مَفْتُوحَةٌ وَجَاهِزَة.. وَالنَّاتِجُ السِّحْرِيُّ: 121! | Champions! Let's find out: 11 seeds by 11 rows.. 4 easy steps from hundreds to units, and the beads are open and ready.. And the magic result: 121!",
 storyAudioText: "يَا أَبْطَال.. دَعُونَا نَحْسُبْ إِحْدَى عَشْرَةَ فِي إِحْدَى عَشْرَة.. نَضْرِبُ العَشَرَاتِ فِي العَشَرَاتِ أَوَّلاً: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي المِئَات.. ثُمَّ الآحَادَ فِي العَشَرَات: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي العَشَرَات.. ثُمَّ العَشَرَاتِ فِي الآحَاد: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي العَشَرَات.. وَاحِدٌ زَائِدُ وَاحِدٍ يُسَاوِي اثْنَيْن.. ثُمَّ الآحَادَ فِي الآحَاد: وَاحِدٌ فِي وَاحِدٍ يُسَاوِي وَاحِداً فِي الآحَاد.. وَالنَّاتِجُ: مِئَةٌ وَوَاحِدٌ وَعِشْرُون! | Champions.. let's calculate 11 times 11.. Multiply tens by tens first: 1 times 1 equals 1 in hundreds.. Then units by tens: 1 times 1 equals 1 in tens.. Then tens by units: 1 times 1 equals 1 in tens.. 1 plus 1 equals 2.. Then units by units: 1 times 1 equals 1 in units.. Result is 121!",
         storyAudioId: null,
       },
@@ -228,7 +228,7 @@ condition: {
         storyAudioId: null,
       },
       rule: {
-        description: "أصدقاء 5 👵: عندما لا تكفي ْالخرزات السِّفلية في العمود ، أَنْزِلْ 5 بالسَّبابة ⬇️ واطْرِد ٍصديقَ العددِ بالإبهام ⬇️ بنزولٍ مُزْدَوَج ⬇️⬇️! | Friends of 5 👵: When lower beads are full in rod, lower top bead 5 with index ⬇️ and push down the friend with thumb ⬇️ in a Double Drop ⬇️⬇️!",
+        description: "أصدقاء 5 👵: عندما لا تكفي ْالخرزات السِّفلية في العمود ، أَنْزِلْ 5 بالسَّبابة ⬇️ واِطْرُدْ ٍصديقَ العددِ بالإبهام ⬇️ بنزولٍ مُزْدَوَج ⬇️⬇️! | Friends of 5 👵: When lower beads are full in rod, lower top bead 5 with index ⬇️ and push down the friend with thumb ⬇️ in a Double Drop ⬇️⬇️!",
         cases: [
           { from: 1, formula: "+1 = +5 − 4" },
           { from: 2, formula: "+2 = +5 − 3" },
@@ -237,8 +237,8 @@ condition: {
         ],
       },
       condition: {
-        formula: "السُّفليات غير كافية · خرزة 5 متاحة | Lower beads insufficient · Top bead 5 available",
-        explanation: "نحتاج إضافة خرزات ٍوالسُْفليات ممتلئة — الجَدَّة 5 تتدخل بنزول مُزدَوج! | Need to add tens, lower beads full — Grandma 5 steps in with a Double Drop!",
+        formula: "السِّفليات غير كافية · خرزة 5 متاحة | Lower beads insufficient · Top bead 5 available",
+        explanation: "نحتاج إضافة خرزات ٍوالسِّفليَّات ممتلئة — الجَدَّة 5 تتدخل بنزول مُزْدَوَج! | Need to add tens, lower beads full — Grandma 5 steps in with a Double Drop!",
       },
       friendsTable: {
         title: "أصدقاء 5 الصغار | Small Friends of 5",
@@ -657,12 +657,12 @@ condition: {
       miniStory: {
         title: "التحالف المزدوج الخارق | The Super Double Alliance",
         emoji: "👑",
-        story: "التَّحَدِّي الكَبِير! 23 فِي 23! لَاحَظْنَا العَمُودَ مُمْتَلِئٌ وَالسَّفْلِيَّاتُ لَا تَكْفِي؟ تَتَحَالَفُ الجَدَّةُ 5 مَعَ العِمْلَاقِ 10 فَتَنْسَحِبُ الجَدَّةُ بِالسَّبَّابَةِ لِلْأَعْلَى ⬆️، وَنُضِيفُ مُتَمِّمَ الْمُكَمِّلِ لِلْعَدَدِ الْمَطْلُوبِ طَرْحُهُ ⬆️ بِالْإِبْهَامِ، وَنُطِيرُ لِلْمِئَاتِ مُضِيفِينَ 1 بِالْإِبْهَامِ لِلْأَعْلَى ⬆️ فَيُصْبِحُ النَّاتِجُ الْخَارِقُ: 529! مُلَاحَظَةٌ: الْمُتَمِّمُ (مَا يُبْعِدُهُ عَنْ 5)، وَالْمُكَمِّلُ (مَا يُبْعِدُهُ عَنْ 10). | The big challenge! 23 by 23! We noticed the column is full and the lower beads aren't enough? Grandma 5 allies with Giant 10, so Grandma moves up with the index finger ⬆️, and we add the friend of the complement of the number to be subtracted ⬆️ with the thumb, and we leap to the hundreds adding 1 upwards with the thumb ⬆️, so the super result becomes: 529! Note: The friend (what keeps it from 5) and the complement (what keeps it from 10).",
+        story: "التَّحَدِّي الكَبِير! 23 فِي 23! لَاحَظْنَا العَمُودَ مُمْتَلِئٌ وَالسِّفْلِيَّاتُ لَا تَكْفِي؟ تَتَحَالَفُ الجَدَّةُ 5 مَعَ العِمْلَاقِ 10 فَتَنْسَحِبُ الجَدَّةُ بِالسَّبَّابَةِ لِلْأَعْلَى ⬆️، وَنُضِيفُ مُتَمِّمَ الْمُكَمِّلِ لِلْعَدَدِ الْمَطْلُوبِ طَرْحُهُ ⬆️ بِالْإِبْهَامِ، وَنُطِيرُ لِلْمِئَاتِ مُضِيفِينَ 1 بِالْإِبْهَامِ لِلْأَعْلَى ⬆️ فَيُصْبِحُ النَّاتِجُ الْخَارِقُ: 529! مُلَاحَظَةٌ: الْمُتَمِّمُ (مَا يُبْعِدُهُ عَنْ 5)، وَالْمُكَمِّلُ (مَا يُبْعِدُهُ عَنْ 10). | The big challenge! 23 by 23! We noticed the column is full and the lower beads aren't enough? Grandma 5 allies with Giant 10, so Grandma moves up with the index finger ⬆️, and we add the friend of the complement of the number to be subtracted ⬆️ with the thumb, and we leap to the hundreds adding 1 upwards with the thumb ⬆️, so the super result becomes: 529! Note: The friend (what keeps it from 5) and the complement (what keeps it from 10).",
         storyAudioText: "ثَلَاثَةٌ وَعِشْرُونَ فِي ثَلَاثَةٍ وَعِشْرِين.. العَشَرَاتُ فِي العَشَرَات: اثْنَانِ فِي اثْنَيْنِ يُسَاوِي أَرْبَعَةً فِي المِئَات.. الآحَادُ فِي العَشَرَات: ثَلَاثَةٌ فِي اثْنَيْنِ يُسَاوِي سِتَّةً فِي العَشَرَات.. العَشَرَاتُ فِي الآحَاد: اثْنَانِ فِي ثَلَاثَةٍ يُسَاوِي سِتَّة.. سِتَّةٌ زَائِدُ سِتَّةٍ يُسَاوِي اثْنَيْ عَشَر.. التَّحَالُفُ المُزْدَوَج: أَزِلْ خَمْسَةً، أَضِفْ وَاحِداً، وَأَضِفْ خَرَزَةً فِي المِئَات.. الآحَادُ فِي الآحَاد: ثَلَاثَةٌ فِي ثَلَاثَةٍ يُسَاوِي تِسْعَة.. النَّاتِجُ: خَمْسُمِائَةٍ وَتِسْعَةٌ وَعِشْرُون! | 23 times 23.. Tens by tens: 2 times 2 equals 4 in hundreds.. Units by tens: 3 times 2 equals 6 in tens.. Tens by units: 2 times 3 equals 6.. 6 plus 6 equals 12.. Double Alliance: remove 5, add 1, and add 1 bead in hundreds.. Units by units: 3 times 3 equals 9.. Result is 529!",
         storyAudioId: null,
       },
       rule: {
-    description: "التحالف المزدوج 👑: عندما تكون 5 مفعّلة والسفليات لا تكفي لطرح المكمل، نفّذ رفع مزدوج ⬆️⬆️ على العشرات (إلغاء 5 بالسبابة ⬆️ وإضافة مُتَمِّم المُكَمِّلِ بالإبهام ⬆️)، ثم أضف 1 لعمود المئات بالإبهام 👍⬆️! | Double Alliance 👑: When 5 is active and lower beads are insufficient to subtract the complement, perform a Double Lift ⬆️⬆️ on the tens (cancel 5 with the index finger ⬆️ and add the friend of the complement with the thumb ⬆️), then add 1 to the hundreds column with the thumb 👍⬆️!",
+    description: "التحالف المزدوج 👑: عندما تكون 5 مُفَعَّلَة والسِّفليَّات لا تكفي لِطَرْحِ المُكَمِّل، نَفّذْ رفع مُزْدَوَج ⬆️⬆️ على العشرات (إلغاء 5 بالسبابة ⬆️ وإضافة مُتَمِّم المُكَمِّلِ بالإبهام ⬆️)، ثُمَّ أَضِفْ 1 لعمود المئات بالإبهام 👍⬆️! | Double Alliance 👑: When 5 is active and lower beads are insufficient to subtract the complement, perform a Double Lift ⬆️⬆️ on the tens (cancel 5 with the index finger ⬆️ and add the friend of the complement with the thumb ⬆️), then add 1 to the hundreds column with the thumb 👍⬆️!",
   cases: [
     { from: 6, formula: "+6 = −5 + 1 + 10" },
     { from: 7, formula: "+7 = −5 + 2 + 10" },
@@ -671,8 +671,8 @@ condition: {
   ],
 },
 condition: {
-  formula: "مجموع العشرات ≥ 10 · 5 مفعّلة · السفليات < المكمّل | Tens sum ≥ 10 · 5 active · Lower beads < Complement",
-  explanation: "الجدة 5 والعملاق 10 يتعاونان معاً لفك ازدحام العمود! | Grandma 5 and Giant 10 ally together to clear column traffic!",
+  formula: "مجموع العشرات ≥ 10 · 5 مُفَعّلَة · السِّفليَّات < المُكَمِّل | Tens sum ≥ 10 · 5 active · Lower beads < Complement",
+  explanation: "الجدَّة 5 والعملاق 10 يتعاونان معاً لفك ازدحام العمود! | Grandma 5 and Giant 10 ally together to clear column traffic!",
 },
 discrimination: {
   steps: [
