@@ -26,7 +26,7 @@ export const S05_LESSON: LessonNode = {
       miniStory: {
         title: "حارس الحقل - التوزيع المباشر | The Field Keeper - Direct Distribution",
         emoji: "🌾",
-        story: "زرع الفلاح 12 صفاً في كل صف 3 حبات. نضرب العشرات أولاً: 1×3=3 عشرات، ثم الآحاد: 2×3=6 آحاد. الخرزات متوفرة والمجموع 36 مباشرة! | The farmer planted 12 rows × 3 seeds. Multiply tens first: 1×3=3 tens, then units: 2×3=6 units. Beads are ready, result: 36!",
+        story: "زرع الفلاح 12 صفَّاً في كُلِّ صفٍّ 3 حبَّات. نضرب العشرات أولاً: 1×3=3 عشرات، ثم الآحاد: 2×3=6 آحاد. الخرزات متوفّرة والمجموع 36 مباشرة! | The farmer planted 12 rows × 3 seeds. Multiply tens first: 1×3=3 tens, then units: 2×3=6 units. Beads are ready, result: 36!",
         storyAudioText: "زَرَعَ الفَلَّاحُ اثْنَيْ عَشَرَ صَفّاً فِي كُلِّ صَفٍّ ثَلَاثُ حَبَّات. اضْرِبِ العَشَرَاتِ أَوَّلاً: وَاحِدٌ فِي ثَلَاثَةٍ يُسَاوِي ثَلَاثَ عَشَرَات. ثُمَّ الآحَاد: اثْنَانِ فِي ثَلَاثَةٍ يُسَاوِي سِتَّة. النَّاتِجُ سِتَّةٌ وَثَلَاثُون. | The farmer planted 12 rows times 3 seeds. Multiply tens first: 1 times 3 equals 3 tens. Then units: 2 times 3 equals 6. Result is 36.",
         storyAudioId: 21,
       },
