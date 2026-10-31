@@ -29,12 +29,12 @@ export const S10_LESSON: LessonNode = {
       miniStory: {
         title: "قطار الأرقام يفقد عربات | The Number Train Loses Carriages",
         emoji: "🚂",
-        story: "قال قائد القطار: يا أبطال، سنُنزل عربةً في كل محطة! ابدأ من العربات الكبيرة (العشرات) قبل الصغيرة (الآحاد). | The train conductor said: Heroes, we drop a carriage at each station! Start with the large carriages (tens) before the small ones (units).",
-        storyAudioText: "قَالَ قَائِدُ القِطَار: يَا أَبْطَال، سَنُنْزِلُ عَرَبَةً فِي كُلِّ مَحَطَّة. ابْدَأْ مِنَ العَرَبَاتِ الكَبِيرَة، العَشَرَات، قَبْلَ الصَّغِيرَة، الآحَاد. | The train conductor said: Heroes, we drop a carriage at each station. Start with the large carriages, tens, before the small ones, units.",
+        story: "قال قَائِدُ القِطَار: يا أبطال، سَنُنْزِلُ عَرَبَةً في كُلِّ مَحَطَّة! اِبْدَأْ من العَرَبَاتِ الكبيرة (العَشَرَات) قَبْلَ الصَّغِيرَة (الآحَاد). | The train conductor said: Heroes, we drop a carriage at each station! Start with the large carriages (tens) before the small ones (units).",
+        storyAudioText: "قَالَ قَائِدُ القِطَار: يَا أَبْطَال، سَنُنْزِلُ عَرَبَةً فِي كُلِّ مَحَطَّة. اِبْدَأْ مِنَ العَرَبَاتِ الكَبِيرَة، العَشَرَات، قَبْلَ الصَّغِيرَة، الآحَاد. | The train conductor said: Heroes, we drop a carriage at each station. Start with the large carriages, tens, before the small ones, units.",
         storyAudioId: null,
       },
       rule: {
-        description: "القاعدة الذهبية 🚂: اطرح الحدود بالترتيب، وابدأ من المنزلة الكبرى (العشرات) ثم الصغرى (الآحاد) — الخرزات متاحة، بلا أصدقاء ولا استعارة! | Golden Rule 🚂: Subtract terms in order, starting from the highest place (tens) then the lowest (units) — beads are ready, no friends or borrowing needed!",
+        description: "َالقاعدة الذهبية 🚂: اِطْرَحْ الحُدود بالتَّرتيبِ، واِبْدَأْ من المنزلة الكبرى (العشرات) ثم الصغرى (الآحاد) — الخرزات متاحة، بلا أصدقاء ولا استعارة! | Golden Rule 🚂: Subtract terms in order, starting from the highest place (tens) then the lowest (units) — beads are ready, no friends or borrowing needed!",
       },
       condition: {
         formula: "جميع الطروح مباشرة | All subtractions direct",
@@ -152,12 +152,12 @@ export const S10_LESSON: LessonNode = {
       miniStory: {
         title: "الجدة 5 ترحل | Grandma 5 Departs",
         emoji: "👵",
-        story: "عندما لا تكفي السفليات المفعّلة للطرح، ترفع الجدة 5 بالسبابة ⬆️ وتضيف المكمّل بالإبهام ⬆️ — صعود مزدوج ⬆️⬆️! | When active lower beads are insufficient for subtraction, lift Grandma 5 with index ⬆️ and add remainder with thumb ⬆️ — Double Lift ⬆️⬆️!",
+        story: "ُعندما لا تكفي السِّفْلِيَّاتُ المُفَعَّلَةُ للطرح، تُرْفَع الجدَّةُ 5 بِالسَّبَّابَةِ ⬆️ وَيُضَافُ المُكَمِّلَ بالإبهام ⬆️ — صُعُودٌ مُزْدَوَج. ⬆️⬆️! | When active lower beads are insufficient for subtraction, lift Grandma 5 with index ⬆️ and add remainder with thumb ⬆️ — Double Lift ⬆️⬆️!",
         storyAudioText: "عِنْدَمَا لَا تَكْفِي السَّفْلِيَّاتُ المُفَعَّلَةُ لِلطَّرْح، تَرْفَعُ الجَدَّةُ خَمْسَة بِالسَّبَّابَةِ وَتُضِيفُ المُكَمِّلَ بِالإِبْهَام، صُعُودٌ مُزْدَوَج. | When active lower beads are insufficient for subtraction, lift Grandma 5 with index and add remainder with thumb, Double Lift.",
         storyAudioId: null,
       },
       rule: {
-        description: "أصدقاء 5 👵: عندما لا تكفي السفليات المفعّلة، ارفع 5 بالسبابة ⬆️ وأضف المكمّل بالإبهام ⬆️ (صعود مزدوج ⬆️⬆️). | Friends of 5 👵: When active lower beads insufficient, lift 5 with index ⬆️ and add remainder with thumb ⬆️ (Double Lift ⬆️⬆️).",
+        description: "أصدقاء 5 👵: عندما لا تكفي السَّفْلِيَّاتُ المُفَعَّلَةُ، اِرْفَعْ 5 بِالسَّبَّابَةِ ⬆️ وَأَضِفْ المُكَمِّلَ بِالإِبْهَام ⬆️ (صُعُودٌ مُزْدَوَج. ⬆️⬆️). | Friends of 5 👵: When active lower beads insufficient, lift 5 with index ⬆️ and add remainder with thumb ⬆️ (Double Lift ⬆️⬆️).",
         cases: [
           { from: 1, formula: "-1 = -5 + 4" },
           { from: 2, formula: "-2 = -5 + 3" },
@@ -166,8 +166,8 @@ export const S10_LESSON: LessonNode = {
         ],
       },
       condition: {
-        formula: "السفليات المفعّلة غير كافية · الجدة 5 مفعّلة | Active lower beads insufficient · bead 5 active",
-        explanation: "عندما تكون السفليات فارغة، الجدة 5 تتدخل بصعود مزدوج! | When lower beads are empty, Grandma 5 steps in with a Double Lift!",
+        formula: "السَّفْلِيَّاتُ المُفَعَّلَةُ غير كافية · الجدة 5 مفعّلة | Active lower beads insufficient · bead 5 active",
+        explanation: "عندما تكون "السَّفْلِيَّاتُ فارغة، الجدة ٍ5 تَتَدَخَّل بصعودٍ مُزْدَوَج! | When lower beads are empty, Grandma 5 steps in with a Double Lift!",
       },
       friendsTable: {
         title: "أصدقاء 5 الصغار | Small Friends of 5",
@@ -288,12 +288,12 @@ export const S10_LESSON: LessonNode = {
       miniStory: {
         title: "العملاق 10 يستعير | Giant 10 Borrows",
         emoji: "🦶",
-        story: "عندما يكون الآحاد فارغاً والطرح يستدعي استعارة، يستدعي العملاق 10! أنزل 1 من العشرات بالسبابة ⬇️ وأضف المكمّل في الآحاد بالإبهام ⬆️. | When units are empty and subtraction requires borrowing, Giant 10 arrives! Subtract 1 from tens with index ⬇️ and add remainder to units with thumb ⬆️.",
-        storyAudioText: "عِنْدَمَا يَكُونُ الآحَادُ فَارِغاً وَالطَّرْحُ يَسْتَدْعِي اسْتِعَارَة، يَسْتَدْعِي العِمْلَاقُ عَشَرَة. أَنْزِلْ وَاحِداً مِنَ العَشَرَاتِ بِالسَّبَّابَةِ وَأَضِفِ المُكَمِّلَ فِي الآحَادِ بِالإِبْهَام. | When units are empty and subtraction requires borrowing, Giant 10 arrives. Subtract 1 from tens with index and add remainder to units with thumb.",
+        story: "عندما يكون الآحَادُ فَارِغاً وَالطَّرْحُ يَسْتَدْعِي اسْتِعَارَة، يَسْتَدْعِي العِمْلَاقَ 10! أَنْزِلْ وَاحِداً من العشرات بِالسَّبَّابَةِ ⬇️ وأضف المكمّل في الآحاد بالإبهام ⬆️. | When units are empty and subtraction requires borrowing, Giant 10 arrives! بِالسَّبَّابَةِ Subtract 1 from tens with index ⬇️ and add remainder to units with thumb ⬆️.",
+        storyAudioText: "عِنْدَمَا يَكُونُ الآحَادُ فَارِغاً وَالطَّرْحُ يَسْتَدْعِي اسْتِعَارَة، يَسْتَدْعِي العِمْلَاقَ عَشَرَة. أَنْزِلْ وَاحِداً مِنَ العَشَرَاتِ بِالسَّبَّابَةِ وَأَضِفِ المُكَمِّلَ فِي الآحَادِ بِالإِبْهَام. | When units are empty and subtraction requires borrowing, Giant 10 arrives. Subtract 1 from tens with index and add remainder to units with thumb.",
         storyAudioId: null,
       },
       rule: {
-        description: "أصدقاء 10 🦶: عندما لا تكفي الآحاد، اطرح 1 من العشرات بالسبابة ⬇️ وأضف المكمّل للآحاد بالإبهام ⬆️. | Friends of 10 🦶: When units are insufficient, subtract 1 from tens with index ⬇️ and add remainder to units with thumb ⬆️.",
+        description: "أصدقاء 10 🦶: عندما لا تكفي ِالآحَادُ، اِطْرَحْ 1 من العَشَراتِ بِالسَّبَّابَةِ ⬇️ وَأَضِفْ المُكَمِّلَ للآحاد بالإبهام ⬆️. | Friends of 10 🦶: When units are insufficient, subtract 1 from tens with index ⬇️ and add remainder to units with thumb ⬆️.",
         cases: [
           { from: 1, formula: "-1 = -10 + 9" },
           { from: 2, formula: "-2 = -10 + 8" },
@@ -308,7 +308,7 @@ export const S10_LESSON: LessonNode = {
       },
       condition: {
         formula: "الآحاد < المطلوب | Units < required",
-        explanation: "الآحاد لا تكفي — اقترض من العشرات! | Units insufficient — borrow from tens!",
+        explanation: "الآحاد لا تكفي — اِقْتَرِضْ من العشرات! | Units insufficient — borrow from tens!",
       },
       friendsTable: {
         title: "أصدقاء 10 الكبار | Big Friends of 10",
@@ -430,12 +430,12 @@ export const S10_LESSON: LessonNode = {
       miniStory: {
         title: "التنسيق الثلاثي للطرح | The Triple Subtraction Alliance",
         emoji: "👑",
-        story: "أحياناً تحتاج الجدة 5 والعملاق 10 للطرح معاً! العملاق يقترض من العشرات، والجدة تعيد ترتيب الآحاد. | Sometimes you need Grandma 5 and Giant 10 to subtract together! Giant borrows from tens, and Grandma rearranges units.",
-        storyAudioText: "أَحْيَاناً تَحْتَاجُ الجَدَّةُ خَمْسَة وَالعِمْلَاقُ عَشَرَة لِلطَّرْحِ مَعاً. العِمْلَاقُ يَقْتَرِضُ مِنَ العَشَرَات، وَالجَدَّةُ تُعِيدُ تَرْتِيبَ الآحَاد. | Sometimes you need Grandma 5 and Giant 10 to subtract together. Giant borrows from tens, and Grandma rearranges units.",
+        story: "أَحْيَاناً تَحْتَاجُ الجَدَّةَ 5 والعِمْلَاقَ 10 لِلطَّرْحِ معاً! العِمْلَاقُ يُقْتَرِضُ من العَشَرَات، وَالجَدَّةُ تُعِيدُ تَرْتِيبَ الآحَاد. | Sometimes you need Grandma 5 and Giant 10 to subtract together! Giant borrows from tens, and Grandma rearranges units.",
+        storyAudioText: "أَحْيَاناً تَحْتَاجُ الجَدَّةَ خَمْسَة وَالعِمْلَاقُ عَشَرَة لِلطَّرْحِ مَعاً. العِمْلَاقُ يُقْتَرِضُ مِنَ العَشَرَات، وَالجَدَّةُ تُعِيدُ تَرْتِيبَ الآحَاد. | Sometimes you need Grandma 5 and Giant 10 to subtract together. Giant borrows from tens, and Grandma rearranges units.",
         storyAudioId: null,
       },
       rule: {
-        description: "المركّب 👑: عندما لا تكفي الآحاد، اقترض 10 من العشرات ⬇️، ثم أضف المكمّل (مع تفعيل 5 أو طرحها) بالآحاد! | Compound 👑: When units insufficient, borrow 10 from tens ⬇️, then add remainder (activating or removing 5) to units!",
+        description: "المركّب 👑: عندما لا تكفي الآحاد، اِقْتَرِضْ 10 من العشَراتِ ⬇️، ثم أَضِفْ المُكَمِّلَ (مع تفعيل 5 أو ِطرحها) بالآحاد! | Compound 👑: When units insufficient, borrow 10 from tens ⬇️, then add remainder (activating or removing 5) to units!",
         cases: [
           { from: 6, formula: "-6 = -10 + 5 - 1" },
           { from: 7, formula: "-7 = -10 + 5 - 2" },
@@ -444,17 +444,17 @@ export const S10_LESSON: LessonNode = {
         ],
       },
       condition: {
-        formula: "الآحاد < المطلوب · 5 مفعّلة أو نحتاجها | Units < required · bead 5 active or needed",
-        explanation: "العملاق 10 يقترض، والجدة 5 تساعد في الآحاد! | Giant 10 borrows, and Grandma 5 helps in units!",
+        formula: "الآحاد < المطلوب · 5 مُفَعَّلَة أو نَحْتَاجُهَا | Units < required · bead 5 active or needed",
+        explanation: "العِمْلاقُ 10 يَقْتَرَضُ، والجدَّة 5 تُسَاعِد ِفي الآحاد! | Giant 10 borrows, and Grandma 5 helps in units!",
       },
       discrimination: {
         steps: [
           {
-            question: "هل الآحاد أقل من المطلوب للطرح؟ | Are units less than required?",
+            question: "هل الآحادُ أقلُّ من المطلوب للطَرْح؟ | Are units less than required?",
             type: "yes-no",
             actual: "الآحاد < المطلوب | Units < required",
-            answer: "نعم → نحتاج الاستعارة من العشرات | Yes → Need borrowing from tens",
-            hint: "الآحاد لا تكفي | Units insufficient",
+            answer: "ِنعم → نحتاج الاستعارة من العَشَرات | Yes → Need borrowing from tens",
+            hint: "الآحادُ لا تكفي | Units insufficient",
           },
           {
             question: "هل نحتاج تفعيل 5 أو إلغاؤها في الآحاد بعد الاستعارة؟ | Do we need to activate or cancel 5 in units after borrowing?",
