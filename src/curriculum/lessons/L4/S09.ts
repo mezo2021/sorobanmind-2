@@ -34,7 +34,7 @@ export const S09_LESSON: LessonNode = {
         storyAudioId: null,
       },
       rule: {
-        description: "القاعدة الذهبية 🚂: أضف الحدود بالترتيب، وابدأ من المنزلة الكبرى (العشرات) ثم الصغرى (الآحاد) — الخرزات متاحة، بلا أصدقاء ولا استعارة! | Golden Rule 🚂: Add terms in order, starting from the highest place (tens) then the lowest (units) — beads are ready, no friends or borrowing needed!",
+        description: "القاعدة الذهبية 🚂: أضف الحدود بالترتيب، وابدأ من المنزلة الكبرى (العشراتْ) ثم الصغرى (الآحادْ) — الخرزات متاحة، بلا أصدقاء ولا استعارة! | Golden Rule 🚂: Add terms in order, starting from the highest place (tens) then the lowest (units) — beads are ready, no friends or borrowing needed!",
       },
       condition: {
         formula: "جميع الإضافات مباشرة | All additions direct",
@@ -152,12 +152,12 @@ export const S09_LESSON: LessonNode = {
       miniStory: {
         title: "الجدة 5 في القطار | Grandma 5 on the Train",
         emoji: "👵",
-        story: "عندما تمتلئ عربة الآحاد في القطار، تظهر الجدة 5 لتساعد! أضف 5 بالسبابة وأبعد الصديق بالإبهام — نزول مزدوج ⬇️⬇️. | When the units carriage is full, Grandma 5 appears to help! Add 5 with index and push the friend with thumb — double drop ⬇️⬇️.",
+        story: "عندما تمتلئ عربةُ الآحادِ في القطار، تَظْهَر الجدة 5 لِتُسَاعِد! أضف 5 بالسبابة وأَبْعِد الصَّدِيقَ بالإبهام — نُزُولٌ مُزْدَوَج ⬇️⬇️. | When the units carriage is full, Grandma 5 appears to help! Add 5 with index and push the friend with thumb — double drop ⬇️⬇️.",
         storyAudioText: "عِنْدَمَا تَمْتَلِئُ عَرَبَةُ الآحَادِ فِي القِطَار، تَظْهَرُ الجَدَّةُ خَمْسَة لِتُسَاعِد. أَضِفْ خَمْسَةً بِالسَّبَّابَةِ وَأَبْعِدِ الصَّدِيقَ بِالإِبْهَام، نُزُولٌ مُزْدَوَج. | When the units carriage is full, Grandma 5 appears to help. Add 5 with index and push the friend with thumb — double drop.",
         storyAudioId: null,
       },
       rule: {
-        description: "أصدقاء 5 👵: عندما لا تكفي السفليات، فعّل 5 بالسبابة ⬇️ واطرد الصديق بالإبهام ⬇️ (نزول مزدوج ⬇️⬇️). | Friends of 5 👵: When lower beads insufficient, activate 5 with index ⬇️ and push friend with thumb ⬇️ (Double Drop ⬇️⬇️).",
+        description: "أصدقاء 5 👵: عندما لا تكفي السفليات، فَعِّلْ 5 بالسَّبابَة ⬇️ واطْرِدْ الصَّدِيقَ بالإبهام ⬇️ نُزُولٌ مُزْدَوَج ⬇️⬇️). | Friends of 5 👵: When lower beads insufficient, activate 5 with index ⬇️ and push friend with thumb ⬇️ (Double Drop ⬇️⬇️).",
         cases: [
           { from: 1, formula: "+1 = +5 − 4" },
           { from: 2, formula: "+2 = +5 − 3" },
@@ -167,7 +167,7 @@ export const S09_LESSON: LessonNode = {
       },
       condition: {
         formula: "السفليات غير كافية · الجدة 5 متاحة | Lower beads insufficient · bead 5 available",
-        explanation: "عند ازدحام السفليات، الجدة 5 تتدخل بنزول مزدوج! | When lower beads are crowded, Grandma 5 steps in with a Double Drop!",
+        explanation: "عند ازدحام السفليات، الجدة 5 تَتَدَخَّل بِنُزُولٌ مُزْدَوَج! | When lower beads are crowded, Grandma 5 steps in with a Double Drop!",
       },
       friendsTable: {
         title: "أصدقاء 5 الصغار | Small Friends of 5",
@@ -288,12 +288,12 @@ export const S09_LESSON: LessonNode = {
       miniStory: {
         title: "العملاق 10 يفتح عربة جديدة | Giant 10 Opens a New Carriage",
         emoji: "🦶",
-        story: "عندما يفيض الآحاد عن 9، ينزل العملاق 10 ويضيف خرزة في العشرات! اطرح الصديق من الآحاد بالسبابة ⬇️ وأضف 1 للعشرات بالإبهام ⬆️. | When units exceed 9, Giant 10 arrives and adds a bead to tens! Subtract friend from units with index ⬇️ and add 1 to tens with thumb ⬆️.",
-        storyAudioText: "عِنْدَمَا يَفِيضُ الآحَادُ عَنْ تِسْعَة، يَنْزِلُ العِمْلَاقُ عَشَرَة وَيُضِيفُ خَرَزَةً فِي العَشَرَات. اطْرَحِ الصَّدِيقَ مِنَ الآحَادِ بِالسَّبَّابَةِ وَأَضِفْ وَاحِداً لِلْعَشَرَاتِ بِالإِبْهَام. | When units exceed 9, Giant 10 arrives and adds a bead to tens. Subtract friend from units with index and add 1 to tens with thumb.",
+        story: "عندما يفيضُ الآحادُ عن 9، يَنْزِلُ العملاقُ 10 ويُضِيفُ خرزة في العشرات! اِطْرَحْ الصَّدِيقَ من الآحاد بِالسَّبَّابَةِ ⬇️ وَأَضِفْ وَاحِداً لِلْعَشَرَاتِ بالإبهام ⬆️. | When units exceed 9, Giant 10 arrives and adds a bead to tens! Subtract friend from units with index ⬇️ and add 1 to tens with thumb ⬆️.",
+        storyAudioText: "عِنْدَمَا يَفِيضُ الآحَادُ عَنْ تِسْعَة، يَنْزِلُ العِمْلَاقُ عَشَرَة وَيُضِيفُ خَرَزَةً فِي العَشَرَات. اِطْرَحِ الصَّدِيقَ مِنَ الآحَادِ بِالسَّبَّابَةِ وَأَضِفْ وَاحِداً لِلْعَشَرَاتِ بِالإِبْهَام. | When units exceed 9, Giant 10 arrives and adds a bead to tens. Subtract friend from units with index and add 1 to tens with thumb.",
         storyAudioId: null,
       },
       rule: {
-        description: "أصدقاء 10 🦶: عندما يتجاوز المجموع 9، اطرح المتمّم بالسبابة ⬇️ وأضف 1 للعشرات بالإبهام ⬆️. | Friends of 10 🦶: When sum exceeds 9, subtract complement with index ⬇️ and add 1 to tens with thumb ⬆️.",
+        description: "أصدقاء 10 🦶: عندما يتجاوز المجموع 9، اطرح المُكَمِّلَ بِالسَّبَّابَةِ ⬇️ وَأَضِفْ وَاحِداً لِلْعَشَرَاتِ بِالإِبْهَام ⬆️. | Friends of 10 🦶: When sum exceeds 9, subtract complement with index ⬇️ and add 1 to tens with thumb ⬆️.",
         cases: [
           { from: 1, formula: "+1 = −9 + 10" },
           { from: 2, formula: "+2 = −8 + 10" },
@@ -324,18 +324,18 @@ export const S09_LESSON: LessonNode = {
             question: "هل المجموع في الآحاد يتجاوز 9؟ | Does units sum exceed 9?",
             type: "yes-no",
             actual: "المجموع > 9 | Sum > 9",
-            answer: "نعم → استخدم أصدقاء 10 | Yes → Use Friends of 10",
+            answer: "نعم → اسْتَخْدِم أصدقاء 10 | Yes → Use Friends of 10",
             hint: "الآحاد ممتلئ | Units full",
           },
           {
-            question: "هل يمكن طرح المتمّم مباشرة؟ | Can we subtract complement directly?",
+            question: "هل يمكن طرح المُكَمِّلَ مباشرة؟ | Can we subtract complement directly?",
             type: "yes-no",
-            actual: "الخرزات المفعّلة ≥ المتمّم | Active beads ≥ complement",
+            actual: "الخرزات المفعّلة ≥ المُكَمِّلَ | Active beads ≥ complement",
             answer: "نعم → اطرح بالسبابة ⬇️ + 1 للعشرات بالإبهام ⬆️ | Yes → subtract with index ⬇️ + 1 to tens with thumb ⬆️",
             hint: "+n = −k + 10",
           },
         ],
-        decision: "أصدقاء 10 — اطرح المتمّم واقفز للعشرات! | Friends of 10 — subtract complement & leap to tens!",
+        decision: "أصدقاء 10 — اطرح المُكَمِّلَ واقفز للعشرات! | Friends of 10 — subtract complement & leap to tens!",
       },
       watchPhase: {
         examples: [
@@ -430,12 +430,12 @@ export const S09_LESSON: LessonNode = {
       miniStory: {
         title: "التنسيق الثلاثي | The Triple Alliance",
         emoji: "👑",
-        story: "أحياناً تحتاج الجدة 5 والعملاق 10 معاً! التنسيق بينهما هو سر البطل الحقيقي — الجدة تتدخل أولاً، ثم العملاق يُكمل المهمة. | Sometimes you need Grandma 5 and Giant 10 together! Coordinating them is the real hero's secret — Grandma steps in first, then Giant completes the mission.",
-        storyAudioText: "أَحْيَاناً تَحْتَاجُ الجَدَّةُ خَمْسَة وَالعِمْلَاقُ عَشَرَة مَعاً. التَّنْسِيقُ بَيْنَهُمَا هُوَ سِرُّ البَطَلِ الحَقِيقِيّ، الجَدَّةُ تَتَدَخَّلُ أَوَّلاً، ثُمَّ العِمْلَاقُ يُكْمِلُ المَهَمَّة. | Sometimes you need Grandma 5 and Giant 10 together. Coordinating them is the real hero's secret, Grandma steps in first, then Giant completes the mission.",
+        story: "أَحْيَاناً تَحْتَاجُ الجَدَّة خَمْسَة وَالعِمْلَاقَ عَشَرَة معاً! التنسيق بينهما هو سر البطل الحقيقي — الجدة تتدخل أولاً، ثم العملاق يُكمل المهمة. | Sometimes you need Grandma 5 and Giant 10 together! Coordinating them is the real hero's secret — Grandma steps in first, then Giant completes the mission.",
+        storyAudioText: "أَحْيَاناً تَحْتَاجُ الجَدَّةَ خَمْسَة وَالعِمْلَاقَ عَشَرَة مَعاً. التَّنْسِيقُ بَيْنَهُمَا هُوَ سِرُّ البَطَلِ الحَقِيقِيّ، الجَدَّةُ تَتَدَخَّلُ أَوَّلاً، ثُمَّ العِمْلَاقُ يُكْمِلُ المَهَمَّة. | Sometimes you need Grandma 5 and Giant 10 together. Coordinating them is the real hero's secret, Grandma steps in first, then Giant completes the mission.",
         storyAudioId: null,
       },
       rule: {
-        description: "المركّب 👑: عندما تكون 5 مفعّلة والسفليات لا تكفي، نفّذ رفع مزدوج ⬆️⬆️ (إلغاء 5 بالسبابة + إضافة المكمّل بالإبهام) ثم +10 للعشرات! | Compound 👑: When 5 is active and lower beads insufficient, perform Double Lift ⬆️⬆️ (cancel 5 + add remainder) then +10 to tens!",
+        description: "المركّب 👑: عندما تكون 5 مفعّلة والسفليات لا تكفي، نفّذ رفع مزدوج ⬆️⬆️ (إلغاء 5 بالسبابة + إضافة مُتَمِّمِ المُكَمِّلِ بالإبهام) ثم +10 للعشرات! | Compound 👑: When 5 is active and lower beads insufficient, perform Double Lift ⬆️⬆️ (cancel 5 + add remainder) then +10 to tens!",
         cases: [
           { from: 6, formula: "+6 = −5 + 1 + 10" },
           { from: 7, formula: "+7 = −5 + 2 + 10" },
