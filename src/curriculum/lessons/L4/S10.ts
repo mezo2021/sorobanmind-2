@@ -165,9 +165,11 @@ export const S10_LESSON: LessonNode = {
           { from: 4, formula: "-4 = -5 + 1" },
         ],
       },
+      condition: {
+        formula: "السَّفْلِيَّاتُ المُفَعَّلَةُ غير كافية · الجدة 5 مفعّلة | Active lower beads insufficient · bead 5 active",
         explanation: "عند ازدحام السفليات، الجدة 5 تتدخل بنزول مزدوج! | When lower beads are crowded, Grandma 5 steps in with a Double Drop!",
-},
-friendsTable: {
+      },
+      friendsTable: {
         title: "أصدقاء 5 الصغار | Small Friends of 5",
         pairs: [
           { from: 1, to: 4 }, { from: 2, to: 3 },
@@ -286,7 +288,7 @@ friendsTable: {
       miniStory: {
         title: "العملاق 10 يستعير | Giant 10 Borrows",
         emoji: "🦶",
-        story: "عندما يكون الآحَادُ فَارِغاً وَالطَّرْحُ يَسْتَدْعِي اسْتِعَارَة، يَسْتَدْعِي العِمْلَاقَ 10! أَنْزِلْ وَاحِداً من العشرات بِالسَّبَّابَةِ ⬇️ وأضف المكمّل في الآحاد بالإبهام ⬆️. | When units are empty and subtraction requires borrowing, Giant 10 arrives! بِالسَّبَّابَةِ Subtract 1 from tens with index ⬇️ and add remainder to units with thumb ⬆️.",
+        story: "عندما يكون الآحَادُ فَارِغاً وَالطَّرْحُ يَسْتَدْعِي اسْتِعَارَة، يَسْتَدْعِي العِمْلَاقَ 10! أَنْزِلْ وَاحِداً من العشرات بِالسَّبَّابَةِ ⬇️ وأضف المكمّل في الآحاد بالإبهام ⬆️. | When units are empty and subtraction requires borrowing, Giant 10 arrives! Subtract 1 from tens with index ⬇️ and add remainder to units with thumb ⬆️.",
         storyAudioText: "عِنْدَمَا يَكُونُ الآحَادُ فَارِغاً وَالطَّرْحُ يَسْتَدْعِي اسْتِعَارَة، يَسْتَدْعِي العِمْلَاقَ عَشَرَة. أَنْزِلْ وَاحِداً مِنَ العَشَرَاتِ بِالسَّبَّابَةِ وَأَضِفِ المُكَمِّلَ فِي الآحَادِ بِالإِبْهَام. | When units are empty and subtraction requires borrowing, Giant 10 arrives. Subtract 1 from tens with index and add remainder to units with thumb.",
         storyAudioId: null,
       },
