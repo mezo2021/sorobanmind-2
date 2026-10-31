@@ -405,12 +405,12 @@ export const S05_LESSON: LessonNode = {
       miniStory: {
         title: "العملاق 10 - القفز إلى المئات | Giant 10 - Leap to Hundreds",
         emoji: "🦶",
-        story: "34 × 3: العشرات 3×3=9 عشرات. الآحاد 4×3=12: أضف 1 للعشرات (9+1=10) و2 للآحاد. 9+1=10 تسع عشرات زائد عشرة واحدة تساوي عشر عشرات، نطرح المتمّم 9 بالسبابة ⬇️ ونستبدلها بمئة واحدة بالإبهام ⬆️! الناتج 102. | 34×3: Tens 3×3=9 tens. Units 4×3=12 → add 1 to tens (9+1=10) & 2 to units. 9+1=10 tens subtract complement 9 with index ⬇️ and exchange for 1 hundred with thumb ⬆️! Result: 102.",
+        story: "34 × 3: العشرات 3×3=9 عشرات. الآحاد 4×3=12: أضف 1 للعشرات (9+1=10) و2 للآحاد. 9+1=10 تسع عشرات زائد عشرة واحدة تساوي عشْرُ عشَرَاتٍ، نطرح المُكَمِّلَ 9 بالسبابة ⬇️ ونستبدلها بمئة واحدة بالإبهام ⬆️! الناتج 102. | 34×3: Tens 3×3=9 tens. Units 4×3=12 → add 1 to tens (9+1=10) & 2 to units. 9+1=10 tens subtract complement 9 with index ⬇️ and exchange for 1 hundred with thumb ⬆️! Result: 102.",
         storyAudioText: "أَرْبَعَةٌ وَثَلَاثُونَ فِي ثَلَاثَة. العَشَرَات: ثَلَاثَةٌ فِي ثَلَاثَةٍ يُسَاوِي تِسْعَ عَشَرَات. الآحَاد: أَرْبَعَةٌ فِي ثَلَاثَةٍ يُسَاوِي اثْنَيْ عَشَر، فَنُضِيفُ وَاحِداً لِلْعَشَرَات. تِسْعَةٌ زَائِدُ وَاحِدٍ يُسَاوِي عَشْرَ عَشَرَات، نَطْرَحُ تِسْعَةً وَنُضِيفُ مِئَة. النَّاتِجُ مِئَةٌ وَاثْنَان. | 34 times 3. Tens: 3 times 3 equals 9 tens. Units: 4 times 3 equals 12, add 1 to tens. 9 plus 1 equals 10 tens, subtract 9 and add 1 hundred. Result is 102.",
         storyAudioId: 23,
       },
       rule: {
-        description: "أصدقاء 10 🌟: عندما يتجاوز عمود العشرات 9، اطرح المتمّم بالسبابة ⬇️ وأضف 1 لعمود المئات الأيسر بالإبهام 👍⬆️! | Friends of 10 🌟: When tens column exceeds 9, subtract complement with index ⬇️ and add 1 to left hundreds column with thumb 👍⬆️!",
+        description: "أصدقاء 10 🌟: عندما يتجاوز عمود العشرات 9، اطرح المُكَمِّلَ بالسبابة ⬇️ وأضف 1 لعمود المئات الأيسر بالإبهام 👍⬆️! | Friends of 10 🌟: When tens column exceeds 9, subtract complement with index ⬇️ and add 1 to left hundreds column with thumb 👍⬆️!",
         cases: [
           { from: 1, formula: "+1 = −9 + 10" },
           { from: 2, formula: "+2 = −8 + 10" },
@@ -451,14 +451,14 @@ export const S05_LESSON: LessonNode = {
             hint: "المجموع يتجاوز سعة العمود الحالية | Sum exceeds current column capacity",
           },
           {
-            question: "هل يمكن طرح المتمّم مباشرة؟ | Can we subtract complement directly?",
+            question: "هل يمكن طرح المُكَمِّلَ مباشرة؟ | Can we subtract complement directly?",
             type: "yes-no",
-            actual: "الخرزات المفعّلة ≥ المتمّم | Active beads ≥ complement",
-            answer: "نعم → اطرح المتمّم بالسبابة ⬇️ وأضف 1 للمئات بالإبهام 👍⬆️ | Yes → Subtract complement with index ⬇️ & add 1 to hundreds with thumb 👍⬆️",
+            actual: "الخرزات المفعّلة ≥ المُكَمِّلَ | Active beads ≥ complement",
+            answer: "نعم → اطرح المُكَمِّلَ بالسبابة ⬇️ وأضف 1 للمئات بالإبهام 👍⬆️ | Yes → Subtract complement with index ⬇️ & add 1 to hundreds with thumb 👍⬆️",
             hint: "+n = −k + 10",
           },
         ],
-        decision: "أصدقاء 10 — اطرح المتمّم بالسبابة واقفز 1 لعمود المئات بالإبهام! | Friends of 10 — Subtract complement with index & leap 1 bead to hundreds with thumb!",
+        decision: "أصدقاء 10 — اطرح المُكَمِّلَ بالسبابة واقفز 1 لعمود المئات بالإبهام! | Friends of 10 — Subtract complement with index & leap 1 bead to hundreds with thumb!",
       },
       watchPhase: {
         examples: [
@@ -622,7 +622,7 @@ export const S05_LESSON: LessonNode = {
         storyAudioId: 24,
       },
       rule: {
-        description: "التحالف المزدوج 👑: عندما تكون 5 مفعّلة والسفليات لا تكفي لطرح المتمّم، نفّذ رفع مزدوج ⬆️⬆️ على العشرات (إلغاء 5 بالسبابة ⬆️ وإضافة المكمل بالإبهام ⬆️)، ثم أضف 1 لعمود المئات بالإبهام 👍⬆️! | Double Alliance 👑: When 5 is active and lower beads are insufficient to subtract complement, perform Double Lift ⬆️⬆️ on tens (cancel 5 with index ⬆️ & add remainder with thumb ⬆️), then add 1 to hundreds with thumb 👍⬆️!",
+        description: "التحالف المزدوج 👑: عندما تكون 5 مفعّلة والسفليات لا تكفي لطرح المُكَمِّلَ، نفّذ رفع مزدوج ⬆️⬆️ على العشرات (إلغاء 5 بالسبابة ⬆️ وإضافة مُتَمِّمُ المُكَمِّلِ بالإبهام ⬆️)، ثم أضف 1 لعمود المئات بالإبهام 👍⬆️! | Double Alliance 👑: When 5 is active and lower beads are insufficient to subtract complement, perform Double Lift ⬆️⬆️ on tens (cancel 5 with index ⬆️ & add remainder with thumb ⬆️), then add 1 to hundreds with thumb 👍⬆️!",
         cases: [
   { from: 6, formula: "+6 = −5 + 1 + 10" },
   { from: 7, formula: "+7 = −5 + 2 + 10" },
@@ -631,7 +631,7 @@ export const S05_LESSON: LessonNode = {
 ],
       },
       condition: {
-        formula: "المجموع ≥ 10 · خرزة 5 مفعّلة · السفليات < المتمّم | Sum ≥ 10 · bead 5 active · lower beads < complement",
+        formula: "المجموع ≥ 10 · خرزة 5 مفعّلة · السفليات < المُكَمِّلِ | Sum ≥ 10 · bead 5 active · lower beads < complement",
         explanation: "الجدة 5 والعملاق 10 يتعاونان معاً: رفع مزدوج على العشرات وقفزة إبهام للمئات! | Grandma 5 and Giant 10 team up: Double Lift on tens and thumb leap to hundreds!",
       },
       discrimination: {
@@ -644,11 +644,11 @@ export const S05_LESSON: LessonNode = {
             hint: "المجموع يتجاوز سعة العمود الحالية | Sum exceeds current column capacity",
           },
           {
-            question: "هل الخرزات السفلية < المتمّم المطلوب؟ | Are lower beads < required complement?",
+            question: "هل الخرزات السفلية < المُكَمِّلِ المطلوب؟ | Are lower beads < required complement?",
             type: "yes-no",
-            actual: "السفليات < المتمّم | Lower beads < complement",
+            actual: "السفليات < المُكَمِّلِ | Lower beads < complement",
             answer: "نعم → استخدم التحالف المزدوج: رفع مزدوج ⬆️⬆️ +10 للمئات | Yes → Use Dual Alliance: Double Lift ⬆️⬆️ +10 to hundreds",
-            hint: "إلغاء 5 بالسبابة ⬆️ + إضافة المكمّل بالإبهام ⬆️ + إضافة 1 للمئات ⬆️",
+            hint: "إلغاء 5 بالسبابة ⬆️ + إضافة مُتَمِّمُ المُكَمِّلِ بالإبهام ⬆️ + إضافة 1 للمئات ⬆️",
           },
         ],
         decision: "ضرب مركّب! رفع مزدوج ⬆️⬆️ على العشرات وإضافة 1 لعمود المئات بالإبهام ⬆️! | Compound multiplication! Double Lift ⬆️⬆️ on tens & add 1 to hundreds with thumb ⬆️!",
