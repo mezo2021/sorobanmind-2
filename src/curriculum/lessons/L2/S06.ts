@@ -31,8 +31,9 @@ storyAudioText: "يَا أَبْطَال.. دَعُونَا نَحْسُبْ إ�
         storyAudioId: null,
       },
       rule: {
-        description: "خريطة الأبطال الأربعة من اليسار لليمين: أوّلاً: مئات (عشرات×عشرات) · ثانياً: عشرات (آحاد×عشرات) · ثالثاً: إضافة للعشرات (عشرات×آحاد) · رابعاً: آحاد (آحاد×آحاد) | Map of the four champions from left to right: First: Hundreds (Tens×Tens) · Second: Tens (Units×Tens) · Third: Add to Tens (Tens×Units) · Fourth: Units (Units×Units)",
-      condition: {
+  description: "خريطة الأبطال الأربعة من اليسار لليمين: أوّلاً: مئات (عشرات×عشرات) · ثانياً: عشرات (آحاد×عشرات) · ثالثاً: إضافة للعشرات (عشرات×آحاد) · رابعاً: آحاد (آحاد×آحاد) | Map of the four champions from left to right: First: Hundreds (Tens×Tens) · Second: Tens (Units×Tens) · Third: Add to Tens (Tens×Units) · Fourth: Units (Units×Units)",
+}, // <--- هذا هو القوس الذي كان ناقصاً وسبب الخطأ
+condition: {
         formula: "كل النواتج الجزئية مباشرة | All partial products direct",
         explanation: "الخرزات مفتوحة تماماً ولا نحتاج أصدقاء أو استعارة! | Beads are ready; no friends or carrying needed!",
       },
