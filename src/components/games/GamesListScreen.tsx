@@ -68,6 +68,9 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
     if (active.gameId === 'sorobania-island') {
       return <SorobaniaGame onBack={() => setActive(null)} />;
     }
+    if (active.gameId === 'mental-archives') {
+      return <MentalArchivesGame onBack={() => setActive(null)} />;
+}
 
     return (
       <div
