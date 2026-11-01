@@ -11,6 +11,7 @@ import { DetectiveGame } from './Detective/DetectiveGame';
 import { FriendsGame } from './Friends/FriendsGame';
 import { PirateRaceGame } from './Pirates/PirateRaceGame';
 import SorobaniaGame from './Sorobania/SorobaniaGame';
+import MentalArchivesGame from './MentalArchivesGame/MentalArchivesGame';
 import { HighScoreBadge } from './HighScoreBadge';
 import { useProgressStore, TICKET_COST } from '../../store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
