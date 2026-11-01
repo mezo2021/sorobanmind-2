@@ -82,6 +82,16 @@ export const GAMES: GameMeta[] = [
     duration: '60 ثانية',
     status: 'ready',
   },
+{
+  id: 'mental-archives', // يجب أن يطابق GAME_ID في level1Data.ts
+  title: 'بوابة الثقب الدودي',
+  subtitle: 'رحلة الزمن والحساب التخيلي',
+  icon: '🌀',
+  gradient: 'from-indigo-600 to-purple-800',
+  recommendHero: 'joud',
+  duration: '60 ثانية', // أو المدة التي تحددها
+  status: 'ready',
+}
 ];
 
 export function getGameById(id: GameId): GameMeta | undefined {
