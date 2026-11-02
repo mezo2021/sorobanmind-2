@@ -105,53 +105,51 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
-  // ═══ Kinetic 2.5D: Breathing & Floating ═══
+  // ═══ Kinetic 2.5D: التمييز البصري الصريح للمتحدث ═══
   const getCharacterMotion = (char: CharacterId, isActive: boolean) => {
-    const glow =
+    const glowColor =
       char === 'jud'
-        ? 'drop-shadow(0 0 15px rgba(56,189,248,0.4))'
+        ? 'rgba(56,189,248,0.55)'
         : char === 'aseel'
-          ? 'drop-shadow(0 0 15px rgba(244,63,94,0.4))'
-          : 'drop-shadow(0 0 15px rgba(168,85,247,0.4))';
-
-    const dimGlow =
-      char === 'jud'
-        ? 'grayscale(80%)'
-        : char === 'aseel'
-          ? 'grayscale(80%)'
-          : 'grayscale(80%)';
+          ? 'rgba(244,63,94,0.55)'
+          : 'rgba(168,85,247,0.55)';
 
     if (shouldReduceMotion) {
       return {
         animate: {
-          scale: isActive ? 1.02 : 0.94,
-          opacity: isActive ? 1 : 0.4,
-          filter: isActive ? glow : dimGlow,
+          scale: isActive ? 1.05 : 0.88,
+          opacity: isActive ? 1 : 0.35,
+          filter: isActive ? `drop-shadow(0 0 20px ${glowColor})` : 'grayscale(100%)',
+        },
+        transition: { duration: 0.35, ease: 'easeOut' as const },
+      };
+    }
+
+    // المتحدث: تنفس خفيف (scale فقط، بدون قفز)
+    if (isActive) {
+      return {
+        animate: {
+          scale: [1.03, 1.06, 1.03],
+          opacity: 1,
+          filter: `drop-shadow(0 0 20px ${glowColor})`,
         },
         transition: {
-          duration: 0.2,
-          ease: 'easeOut',
+          duration: 2.8,
+          repeat: Infinity,
+          repeatType: 'mirror' as const,
+          ease: 'easeInOut' as const,
         },
       };
     }
 
-    // سوروبانا هولوغرام: طفو أبطأ وأخف.
-    const duration = char === 'sorobana' ? 4.2 : isActive ? 3 : 3.6;
-    const floatY = char === 'sorobana' ? -4 : isActive ? -5 : -3;
-
+    // غير المتحدث: ساكن تماماً، رمادي، بلا حركة
     return {
       animate: {
-        scale: isActive ? [1.0, 1.02, 1.0] : [0.94, 0.955, 0.94],
-        y: [0, floatY, 0],
-        opacity: isActive ? 1 : 0.4,
-        filter: isActive ? glow : dimGlow,
+        scale: 0.88,
+        opacity: 0.35,
+        filter: 'grayscale(100%)',
       },
-      transition: {
-        duration,
-        repeat: Infinity,
-        repeatType: 'mirror' as const,
-        ease: 'easeInOut',
-      },
+      transition: { duration: 0.35, ease: 'easeOut' as const },
     };
   };
 
@@ -312,26 +310,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       </button>
       <div className="flex-1 flex justify-center items-center gap-2">
         <div className={`w-12 h-12 rounded-full border-2 overflow-hidden shadow-lg flex items-center justify-center bg-slate-900 ${feedback === 'correct' ? 'border-emerald-400' : 'border-amber-400'}`}>
-          <motion.img
-            src={getTopBarImage()}
-            alt="Companion"
-            animate={
-              shouldReduceMotion
-                ? { scale: 1 }
-                : { scale: [1, 1.03, 1], y: [0, -1, 0] }
-            }
-            transition={
-              shouldReduceMotion
-                ? { duration: 0.2 }
-                : {
-                    duration: 3.2,
-                    repeat: Infinity,
-                    repeatType: 'mirror',
-                    ease: 'easeInOut',
-                  }
-            }
-            className="w-full h-full object-cover"
-          />
+          <img src={getTopBarImage()} alt="Companion" className="w-full h-full object-cover" />
         </div>
         <span className="text-amber-200 font-bold text-sm sm:text-base hidden sm:inline">
           {isAr ? chapter.titleAr : chapter.titleEn}
@@ -380,7 +359,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
               ? { scale: 1.1, opacity: 0.6 }
               : {
                   scale: [1.1, 1.12, 1.1],
-                  y: [0, -6, 0],
                   opacity: [0.6, 0.66, 0.6],
                 }
           }
@@ -433,26 +411,26 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       <div className="relative flex flex-col justify-between min-h-[100dvh] bg-gradient-to-b from-stone-950 via-indigo-950 to-slate-950 text-white overflow-hidden" dir={dir}>
         <TopBar />
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
-        <div className="flex-1 relative w-full max-w-4xl mx-auto flex justify-center items-end mb-6 z-10 gap-2 sm:gap-6 pt-20">
+        <div className="flex-1 relative w-full max-w-4xl mx-auto flex justify-center items-end mb-6 z-10 gap-2 sm:gap-6 pt-20 overflow-hidden">
           <motion.img
             src={aseelImg}
             alt={isAr ? 'أسيل' : 'Aseel'}
             {...getCharacterMotion('aseel', line.character === 'aseel')}
-            className="w-24 sm:w-36 object-contain origin-bottom will-change-transform"
+            className="w-32 sm:w-44 object-contain origin-bottom will-change-transform"
           />
 
           <motion.img
             src={joudImg}
             alt={isAr ? 'جود' : 'Joud'}
             {...getCharacterMotion('jud', line.character === 'jud')}
-            className="w-32 sm:w-44 object-contain origin-bottom z-20 will-change-transform"
+            className="w-40 sm:w-56 object-contain origin-bottom z-20 will-change-transform"
           />
 
           <motion.img
             src={sorobanaImg}
             alt={isAr ? 'سوروبانا' : 'Sorobana'}
             {...getCharacterMotion('sorobana', line.character === 'sorobana')}
-            className="w-28 sm:w-40 object-contain origin-bottom will-change-transform"
+            className="w-36 sm:w-48 object-contain origin-bottom will-change-transform"
           />
         </div>
         <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={() => { if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); } }} className="relative w-full max-w-3xl mx-auto bg-slate-900/95 backdrop-blur-md p-6 sm:p-8 rounded-t-3xl border-t-2 border-amber-500/30 shadow-2xl z-20 cursor-pointer">
