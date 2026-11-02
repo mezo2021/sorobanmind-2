@@ -1,14 +1,15 @@
 // src/components/games/MentalArchivesGame/MentalArchivesGame.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { LEVEL_1_DATA, GAME_ID, DEFAULT_HERO } from './level1Data';
+import { LEVEL_1_DATA, GAME_ID, DEFAULT_HERO, ASSETS } from './level1Data';
 import { GameCompanion } from '../GameCompanion';
 import { useGameVoice } from '@/hooks/useGameVoice';
 import { gt, lt } from '../gamesI18n';
 import { addScore } from '../highScoreStore';
 import { useProgressStore } from '@/store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
+import { Play, SkipForward } from 'lucide-react'; // أيقونات للفيديو
 
-type GamePhase = 'story' | 'example' | 'challenge' | 'failed' | 'success';
+type GamePhase = 'intro' | 'story' | 'example' | 'challenge' | 'failed' | 'success';
 
 interface Props {
   onBack: () => void;
@@ -16,7 +17,8 @@ interface Props {
 }
 
 export default function MentalArchivesGame({ onBack, onComplete }: Props) {
-  const [phase, setPhase] = useState<GamePhase>('story');
+  // نبدأ بمرحلة الفيديو
+  const [phase, setPhase] = useState<GamePhase>('intro');
   const [storyIndex, setStoryIndex] = useState(0);
   
   // حالة التحدي
@@ -33,7 +35,6 @@ export default function MentalArchivesGame({ onBack, onComplete }: Props) {
   const addXP = useProgressStore((s) => s.addXP);
   const recordSaved = useRef(false);
 
-  // النصوص المساعدة (تمر عبر gt)
   const heroText = gt(
     phase === 'story' ? LEVEL_1_DATA.story[storyIndex].textAr : 
     phase === 'example' ? LEVEL_1_DATA.example.titleAr :
@@ -47,7 +48,7 @@ export default function MentalArchivesGame({ onBack, onComplete }: Props) {
       timer = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 100) {
-            handleAnswer(false); // انتهى الوقت
+            handleAnswer(false);
             return LEVEL_1_DATA.timePerQuestionMs;
           }
           return prev - 100;
@@ -71,23 +72,16 @@ export default function MentalArchivesGame({ onBack, onComplete }: Props) {
   // 3. التحقق من الإجابة
   const handleAnswer = (isManualSubmit: boolean) => {
     if (feedback !== 'none') return;
-    
     const q = LEVEL_1_DATA.questions[currentQIndex];
     const actualCorrect = isManualSubmit ? parseInt(userInput) === q.answer : false;
 
     if (actualCorrect) {
       setFeedback('correct');
       setCorrectCount(prev => prev + 1);
-      
-      setTimeout(() => {
-        advanceQuestion();
-      }, 1200);
+      setTimeout(() => advanceQuestion(), 1200);
     } else {
       setFeedback('wrong');
-      
-      setTimeout(() => {
-        advanceQuestion();
-      }, 1500);
+      setTimeout(() => advanceQuestion(), 1500);
     }
   };
 
@@ -98,7 +92,6 @@ export default function MentalArchivesGame({ onBack, onComplete }: Props) {
       setTimeLeft(LEVEL_1_DATA.timePerQuestionMs);
       setFeedback('none');
     } else {
-      // نهاية الجولة
       const finalCorrect = correctCount + (feedback === 'correct' ? 1 : 0);
       if (finalCorrect >= LEVEL_1_DATA.requiredCorrect) {
         endGame(true, finalCorrect);
@@ -112,24 +105,17 @@ export default function MentalArchivesGame({ onBack, onComplete }: Props) {
     if (recordSaved.current) return;
     recordSaved.current = true;
 
-    // حفظ الرقم القياسي (حسب توجيهات GAMES_CITY)
     addScore(GAME_ID, childName, finalScore, DEFAULT_HERO);
+    if (!isPreviewMode()) addXP(isSuccess ? 5 : 2); 
+    if (isSuccess) localStorage.setItem('mental_archives_max_level', '2');
     
-    // منح XP (إذا لم نكن في وضع المعاينة)
-    if (!isPreviewMode()) {
-      addXP(isSuccess ? 5 : 2); 
-    }
-
     setPhase(isSuccess ? 'success' : 'failed');
     speak(gt(isSuccess ? 'عبرت البوابة بنجاح!' : 'تحتاج إلى مزيد من السرعة.'));
   };
 
   const handleRetry = () => {
     setFailedAttempts(prev => prev + 1);
-    if (failedAttempts >= 2) {
-      // هنا نتركه في شاشة الفشل ليرى الرسالة المطلوبة (3 محاولات)
-      return; 
-    }
+    if (failedAttempts >= 2) return; 
     setCurrentQIndex(0);
     setCorrectCount(0);
     setUserInput('');
@@ -141,10 +127,9 @@ export default function MentalArchivesGame({ onBack, onComplete }: Props) {
 
   // ================= الواجهات (UI) =================
   
-  // زر الرجوع العلوي
   const Header = () => (
-    <div className="w-full flex justify-between items-center p-4 absolute top-0 left-0 right-0 z-10">
-      <button onClick={onBack} className="text-slate-400 hover:text-white px-4 py-2 bg-slate-800/50 rounded-lg backdrop-blur-sm">
+    <div className="w-full flex justify-between items-center p-4 absolute top-0 left-0 right-0 z-50">
+      <button onClick={onBack} className="text-slate-400 hover:text-white px-4 py-2 bg-slate-800/50 rounded-lg backdrop-blur-sm z-50">
         {lt('رجوع', 'Back')}
       </button>
       {phase === 'challenge' && (
@@ -155,21 +140,70 @@ export default function MentalArchivesGame({ onBack, onComplete }: Props) {
     </div>
   );
 
-  // 1. واجهة القصة
-  if (phase === 'story') {
+  // 👇 شاشة الفيديو الافتتاحي 👇
+  if (phase === 'intro') {
     return (
-      <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-slate-900 text-white p-6" dir="rtl">
+      <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-black text-white" dir="rtl">
         <Header />
-        <GameCompanion 
-          heroId={LEVEL_1_DATA.story[storyIndex].character === 'sorobana' ? 'bana' : 'joud'} 
-          mood="idle" 
-          text={heroText}
-          isSpeaking={false} 
+        <video 
+          src={ASSETS.introVideo} 
+          autoPlay 
+          playsInline 
+          controls
+          className="w-full h-full max-h-[100dvh] object-cover"
+          onEnded={() => setPhase('story')}
         />
-        <div className="max-w-2xl bg-slate-800 p-8 mt-24 rounded-2xl shadow-2xl border border-slate-700 w-full">
-          <p className="text-xl leading-relaxed mb-6">
-            <span className="text-cyan-400 font-bold ml-2">
-              {gt(LEVEL_1_DATA.story[storyIndex].character)}:
+        <button 
+          onClick={() => setPhase('story')}
+          className="absolute bottom-20 right-6 bg-slate-800/80 hover:bg-slate-700 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-md transition-all z-50 border border-slate-600"
+        >
+          <span>{lt('تخطي المقدمة', 'Skip Intro')}</span>
+          <SkipForward className="w-5 h-5" />
+        </button>
+      </div>
+    );
+  }
+
+  // 👇 شاشة القصة (بالصور الجديدة) 👇
+  if (phase === 'story') {
+    const currentLine = LEVEL_1_DATA.story[storyIndex];
+    const isSorobana = currentLine.character === 'sorobana';
+    const isAseel = currentLine.character === 'aseel';
+
+    return (
+      <div className="relative flex flex-col items-center justify-end min-h-[100dvh] bg-gradient-to-b from-indigo-950 to-slate-900 text-white p-6 overflow-hidden" dir="rtl">
+        <Header />
+        
+        {/* خلفية ضوئية بسيطة تعطي جواً زمنياً */}
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 pointer-events-none"></div>
+
+        {/* عرض الشخصيات الثلاثة */}
+        <div className="relative w-full max-w-4xl flex justify-center items-end mb-8 z-10">
+          {/* أسيل */}
+          <img 
+            src={ASSETS.aseel} 
+            alt="Aseel" 
+            className={`w-32 sm:w-48 object-contain transition-all duration-500 ${isAseel ? 'scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'opacity-50 grayscale-[50%] scale-90'}`} 
+          />
+          {/* جود */}
+          <img 
+            src={ASSETS.joud} 
+            alt="Joud" 
+            className={`w-40 sm:w-56 object-contain transition-all duration-500 z-20 ${!isSorobana && !isAseel ? 'scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'opacity-50 grayscale-[50%] scale-90'}`} 
+          />
+          {/* سوروبانا */}
+          <img 
+            src={ASSETS.sorobana} 
+            alt="Sorobana" 
+            className={`w-36 sm:w-52 object-contain transition-all duration-500 ${isSorobana ? 'scale-110 drop-shadow-[0_0_20px_rgba(168,85,247,0.5)]' : 'opacity-50 grayscale-[50%] scale-90'}`} 
+          />
+        </div>
+
+        {/* صندوق الحوار */}
+        <div className="relative max-w-2xl bg-slate-800/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-slate-600 w-full z-20 mb-8">
+          <p className="text-lg sm:text-xl leading-relaxed mb-6">
+            <span className={`font-bold ml-2 ${isSorobana ? 'text-purple-400' : isAseel ? 'text-rose-400' : 'text-cyan-400'}`}>
+              {gt(currentLine.character)}:
             </span>
             {heroText}
           </p>
@@ -178,7 +212,7 @@ export default function MentalArchivesGame({ onBack, onComplete }: Props) {
               if (storyIndex < LEVEL_1_DATA.story.length - 1) setStoryIndex(s => s + 1);
               else setPhase('example');
             }}
-            className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-bold text-lg transition-all"
+            className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-bold text-lg transition-all shadow-lg shadow-cyan-900/50"
           >
             {lt('متابعة', 'Continue')}
           </button>
@@ -187,7 +221,7 @@ export default function MentalArchivesGame({ onBack, onComplete }: Props) {
     );
   }
 
-  // 2. واجهة المثال المحلول
+  // (شاشات المثال، الفشل، النجاح، والتحدي تبقى كما هي، مع إصلاحات الأخطاء)
   if (phase === 'example') {
     return (
       <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-slate-900 text-white p-6" dir="rtl">
@@ -209,7 +243,7 @@ export default function MentalArchivesGame({ onBack, onComplete }: Props) {
           </ul>
           <button 
             onClick={() => setPhase('challenge')}
-            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-lg transition-all"
+            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-lg transition-all shadow-lg shadow-emerald-900/50"
           >
             {lt('أنا مستعد للتحدي', 'Ready for Challenge')}
           </button>
@@ -218,13 +252,13 @@ export default function MentalArchivesGame({ onBack, onComplete }: Props) {
     );
   }
 
-  // 3. واجهة الفشل بعد 3 محاولات
   if (phase === 'failed' && failedAttempts >= 2) {
     return (
       <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-slate-900 text-white p-6" dir="rtl">
         <Header />
-        <GameCompanion heroId="bana" mood="sad" text={gt("تحتاج إلى مزيد من السرعة للامتحان، تدرب جيداً لتكون جاهزاً.")} />
-        <div className="max-w-md bg-slate-800 p-8 mt-24 rounded-2xl text-center border-t-4 border-amber-500 w-full">
+        {/* هنا نستخدم الصورة المخصصة لسوروبانا بدل GameCompanion */}
+        <img src={ASSETS.sorobana} alt="Sorobana" className="w-40 mb-4 opacity-80" />
+        <div className="max-w-md bg-slate-800 p-8 rounded-2xl text-center border-t-4 border-amber-500 w-full">
           <h2 className="text-2xl font-bold text-amber-400 mb-4">{lt('تحتاج إلى مزيد من السرعة!', 'Need More Speed!')}</h2>
           <p className="text-slate-300 mb-8">{gt('تحتاج إلى مزيد من السرعة للامتحان، تدرب جيداً لتكون جاهزاً.')}</p>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -236,33 +270,34 @@ export default function MentalArchivesGame({ onBack, onComplete }: Props) {
     );
   }
 
-  // 4. واجهة النجاح
   if (phase === 'success') {
     return (
       <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-slate-900 text-white p-6" dir="rtl">
         <Header />
-        <GameCompanion heroId="joud" mood="celebrating" text={gt("عبرت البوابة بنجاح! لقد أعدت ربط سجلات إبلا وماري.")} />
-        <div className="text-center mt-24">
+        <div className="flex gap-4 mb-8">
+          <img src={ASSETS.joud} alt="Joud" className="w-32 object-contain animate-bounce" />
+          <img src={ASSETS.aseel} alt="Aseel" className="w-32 object-contain animate-bounce delay-100" />
+        </div>
+        <div className="text-center">
           <div className="text-6xl mb-6">✨</div>
           <h2 className="text-3xl font-bold text-emerald-400 mb-4">{lt('عبرت البوابة بنجاح!', 'Gate Crossed Successfully!')}</h2>
           <p className="text-slate-300 mb-8">{gt("لقد أعدت ربط سجلات إبلا وماري.")}</p>
-          <button onClick={onComplete || onBack} className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold shadow-lg shadow-emerald-900/50">
-            {lt('المستوى التالي', 'Next Level')}
+          <button onClick={onBack} className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold shadow-lg shadow-emerald-900/50">
+            {lt('العودة لمدينة الألعاب', 'Return to Games City')}
           </button>
         </div>
       </div>
     );
   }
 
-  // 5. واجهة التحدي (الأسئلة)
   const currentQ = LEVEL_1_DATA.questions[currentQIndex];
   return (
     <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-slate-900 text-white p-6" dir="rtl">
       <Header />
       
-      {/* البطل المرافق يظهر صغيراً في الزاوية أو أعلى الشاشة */}
+      {/* استخدام GameCompanion هنا فقط للتحدي (بدون text) */}
       <div className="absolute top-20 left-4 z-0 pointer-events-none opacity-50">
-        <GameCompanion heroId={DEFAULT_HERO} mood={feedback === 'correct' ? 'excited' : feedback === 'wrong' ? 'sad' : 'thinking'} text="" />
+        <GameCompanion heroId={DEFAULT_HERO} mood={feedback === 'correct' ? 'excited' : feedback === 'wrong' ? 'sad' : 'thinking'} />
       </div>
 
       <div className="w-full max-w-2xl flex justify-between items-center mb-8 mt-16 z-10">
