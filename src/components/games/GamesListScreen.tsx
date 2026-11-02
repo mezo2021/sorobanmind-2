@@ -11,7 +11,6 @@ import { DetectiveGame } from './Detective/DetectiveGame';
 import { FriendsGame } from './Friends/FriendsGame';
 import { PirateRaceGame } from './Pirates/PirateRaceGame';
 import SorobaniaGame from './Sorobania/SorobaniaGame';
-// 👇 تم تحديث الاستيراد ليشير إلى المدير الجديد
 import MentalArchivesManager from './MentalArchivesGame/MentalArchivesManager';
 import { HighScoreBadge } from './HighScoreBadge';
 import { useProgressStore, TICKET_COST } from '../../store/progressStore';
@@ -69,7 +68,6 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
     if (active.gameId === 'sorobania-island') {
       return <SorobaniaGame onBack={() => setActive(null)} />;
     }
-    // 👇 تم تصحيح القوس المفقود هنا
     if (active.gameId === 'mental-archives') {
       return <MentalArchivesManager onBack={() => setActive(null)} />;
     }
@@ -260,6 +258,7 @@ function GameCard({
 }: {
   game: GameMeta; index: number; unlocked: boolean; onOpen: () => void;
 }) {
+  const { isAr } = useGameLang(); // 👈 إضافة 1: قراءة اللغة داخل البطاقة
   const isBuilding = game.status !== 'ready';
   const canOpen = unlocked && !isBuilding;
 
@@ -284,10 +283,12 @@ function GameCard({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm sm:text-base font-bold text-white truncate">
-            {gt(game.title)}
+            {/* 👇 إضافة 2: استخدام الترجمة الإنجليزية إذا وجدت */}
+            {!isAr && game.titleEn ? game.titleEn : gt(game.title)}
           </p>
           <p className="text-xs text-white/50 mt-0.5 truncate">
-            {gt(game.subtitle)}
+            {/* 👇 إضافة 3: استخدام الترجمة الإنجليزية إذا وجدت */}
+            {!isAr && game.subtitleEn ? game.subtitleEn : gt(game.subtitle)}
           </p>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
             <p className="text-[10px] text-amber-300/80">
