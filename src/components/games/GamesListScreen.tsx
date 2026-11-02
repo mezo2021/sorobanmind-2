@@ -11,7 +11,8 @@ import { DetectiveGame } from './Detective/DetectiveGame';
 import { FriendsGame } from './Friends/FriendsGame';
 import { PirateRaceGame } from './Pirates/PirateRaceGame';
 import SorobaniaGame from './Sorobania/SorobaniaGame';
-import MentalArchivesGame from './MentalArchivesGame/MentalArchivesGame';
+// 👇 تم تحديث الاستيراد ليشير إلى المدير الجديد
+import MentalArchivesManager from './MentalArchivesGame/MentalArchivesManager';
 import { HighScoreBadge } from './HighScoreBadge';
 import { useProgressStore, TICKET_COST } from '../../store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
@@ -68,9 +69,10 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
     if (active.gameId === 'sorobania-island') {
       return <SorobaniaGame onBack={() => setActive(null)} />;
     }
+    // 👇 تم تصحيح القوس المفقود هنا
     if (active.gameId === 'mental-archives') {
-      return <MentalArchivesGame onBack={() => setActive(null)} />;
-}
+      return <MentalArchivesManager onBack={() => setActive(null)} />;
+    }
 
     return (
       <div
