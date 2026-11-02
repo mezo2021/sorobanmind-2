@@ -31,7 +31,7 @@ export const UI_TEXT = {
     ar: 'تَحْتَاجُ إِلَى مَزِيدٍ مِنَ السُّرْعَةِ لِلِامْتِحَان، تَدَرَّبْ جَيِّداً لِتَكُونَ جَاهِزاً.', 
     en: 'You need more speed for the exam, practice well to be ready.' 
   },
-  successMsg: { ar: 'ٍعَبَرْتَ البوابةَ بنجاح!', en: 'Gate Crossed!' },
+  successMsg: { ar: 'عَبَرْتَ الْبَوَّابَةَ بِنَجَاح!', en: 'Gate Crossed Successfully!' },
   returnToGames: { ar: 'العودة لمدينة الألعاب', en: 'Return to Games' },
   
   // عام
@@ -39,6 +39,14 @@ export const UI_TEXT = {
   archiveGuide: { ar: 'مرشد زمني', en: 'Archive Guide' },
   correct: { ar: 'إِجَابَةٌ صَحِيحَة!', en: 'Correct answer!' },
   wrong: { ar: 'إِجَابَةٌ خَاطِئَة، حَاوِلْ أَسْرَع.', en: 'Wrong answer, try faster.' },
+
+  // 👇 إضافات جديدة لشاشة اختيار المستويات (الخريطة)
+  gameTitle: { ar: 'بوابة الثقب الدودي', en: 'Wormhole Gate' },
+  backToGamesCity: { ar: 'العودة لمدينة الألعاب', en: 'Back to Game City' },
+  statusCompleted: { ar: 'مكتمل', en: 'Completed' },
+  statusBestScore: { ar: 'أفضل نتيجة', en: 'Best Score' },
+  statusAvailable: { ar: 'متاح للعب', en: 'Available to Play' },
+  statusLocked: { ar: 'مغلق', en: 'Locked' },
 };
 
 export type UIKey = keyof typeof UI_TEXT;
