@@ -4,11 +4,15 @@ import MentalArchivesEngine from './MentalArchivesEngine';
 import { INTRO_DATA } from './data/introData';
 import { LEVEL_1_DATA } from './data/level1Data';
 import { Chapter, ChapterId, Scene } from './gameFlowTypes';
+// 👇 استبدلنا progressStore بالمتجر المحلي الجديد
+import { useMentalArchivesStore } from './mentalArchivesStore';
+// 👇 استيراد دالة حفظ الرقم القياسي
+import { addScore } from '../highScoreStore';
+// 👇 نستخدم progressStore فقط لجلب اسم الطفل (للرقم القياسي)
 import { useProgressStore } from '@/store/progressStore';
 import { useGameLang } from '../gamesI18n';
 import { tUI } from './gameUI';
 
-// تجميع الفصول المتاحة في كائن واحد
 const CHAPTERS: Record<ChapterId, Chapter> = {
   intro: INTRO_DATA,
   level1: LEVEL_1_DATA,
@@ -18,27 +22,36 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
   const { dir, isAr } = useGameLang();
   const [activeChapterId, setActiveChapterId] = useState<ChapterId | null>(null);
   
-  const mentalProgress = useProgressStore((s) => s.mentalArchivesProgress);
-  const completeMentalChapter = useProgressStore((s) => s.completeMentalChapter);
+  // 👇 استخدام المتجر المحلي الجديد
+  const progress = useMentalArchivesStore((s) => s.progress);
+  const completeChapter = useMentalArchivesStore((s) => s.completeChapter);
+  
+  // 👇 اسم الطفل من المتجر المركزي (لحفظ الرقم القياسي باسمه)
+  const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
   const handleComplete = (score: number) => {
     if (activeChapterId) {
-      // 👇 إصلاح: نتأكد أولاً من نتيجة الطفل
       const chapter = CHAPTERS[activeChapterId];
       const challengeScene = chapter.scenes.find((s): s is Extract<Scene, { kind: 'challenge' }> => s.kind === 'challenge');
       
-      // إذا كان هناك تحدي، نتحقق من النتيجة. إذا لم يكن (مثل التمهيد)، نعتبره ناجحاً.
       const isSuccess = challengeScene ? score >= challengeScene.requiredCorrect : true;
       
       if (isSuccess) {
-        // حفظ التقدم فقط عند النجاح
-        completeMentalChapter(activeChapterId, score);
-      } else {
-        // اختياري: يمكنك إظهار تنبيه أو رسالة إذا فشل الطفل
-        console.log("لم يتم حفظ التقدم، الطفل لم يجتز التحدي.");
+        // 1. حفظ نتيجة الفصل في المتجر المحلي (لفتح الفصل التالي)
+        completeChapter(activeChapterId, score);
+        
+        // 2. حساب المجموع الكلي لكل الفصول (للرقم القياسي في القائمة الخارجية)
+        const updatedProgress = useMentalArchivesStore.getState().progress;
+        const totalScore = Object.values(updatedProgress).reduce(
+          (sum, ch) => sum + (ch?.bestScore || 0),
+          0
+        );
+        
+        // 3. حفظ المجموع الكلي في highScoreStore (يظهر في القائمة الخارجية)
+        addScore('mental-archives', childName, totalScore, 'joud');
       }
       
-      setActiveChapterId(null); // العودة لشاشة الخريطة
+      setActiveChapterId(null);
     }
   };
 
@@ -55,15 +68,16 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
             {tUI('backToGamesCity')}
           </button>
           
-          {/* 👇 السطر الذي وعدتك بحفظه */}
           <h1 className="text-3xl font-black text-amber-400 mb-8 drop-shadow-lg">
             {tUI('gameTitle')}
           </h1>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {Object.values(CHAPTERS).map((chapter) => {
-              const isCompleted = !!mentalProgress[chapter.id];
-              const isUnlocked = chapter.requires.every(req => !!mentalProgress[req]);
+              const isCompleted = !!progress[chapter.id];
+              const isUnlocked = chapter.requires.every(req => !!progress[req]);
+              // 👇 هل هذا الفصل يحتوي على تمرين؟
+              const hasChallenge = chapter.scenes.some(s => s.kind === 'challenge');
 
               return (
                 <div 
@@ -81,7 +95,9 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
                   
                   {isCompleted ? (
                     <span className="text-emerald-400 text-sm flex items-center gap-1">
-                      ✅ {tUI('statusCompleted')} ({tUI('statusBestScore')}: {mentalProgress[chapter.id]?.bestScore})
+                      ✅ {tUI('statusCompleted')}
+                      {/* 👇 نعرض النتيجة فقط إذا كان هناك تمرين */}
+                      {hasChallenge && ` (${tUI('statusBestScore')}: ${progress[chapter.id]?.bestScore})`}
                     </span>
                   ) : isUnlocked ? (
                     <span className="text-amber-400 text-sm flex items-center gap-1">
