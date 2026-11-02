@@ -2,7 +2,6 @@
 // [v10] — peakStreak + stats + 7 شارات أنزان (بصري + سمعي) — 2026-10-16
 // [v11] — إضافة dailyXP لتتبع نشاط الأسبوع — 2026-10-20
 // [v12] — توحيد LevelId من srb-adapter + تحويل passed* إلى LevelId[] — 2026-10-23
-// [v13] — إضافة تقدم لعبة بوابة الثقب الدودي (Mental Archives)
 // ✅ لا earnedBadges · لا QUESTS · لا BADGES
 
 import { create } from "zustand";
@@ -21,12 +20,6 @@ import type { LevelId } from "../data/srb-adapter";
 export interface SkillProgress extends BaseSkillProgress {
   peakStreak?: number;
 }
-
-// ═══════════════════════════════════════════════════════════
-// 🆕 [v13] أنواع خاصة بلعبة بوابة الثقب الدودي
-// ═══════════════════════════════════════════════════════════
-export type MentalChapterId = 'intro' | 'level1' | 'level2' | 'level3' | 'level4' | 'level5' | 'level6' | 'level7' | 'level8';
-export type MentalGameProgress = Partial<Record<MentalChapterId, { bestScore: number; at: number }>>;
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -135,9 +128,6 @@ export interface ProgressState {
   tickets: number;
   stats: ProgressStats;
   dailyXP: Record<string, number>; // 🆕 v11: سجل النقاط اليومية
-  
-  // 🆕 [v13] حالة بوابة الثقب الدودي
-  mentalArchivesProgress: MentalGameProgress;
 
   setChildName: (name: string) => void;
   setParentName: (name: string) => void;
@@ -174,10 +164,6 @@ export interface ProgressState {
 
   buyTicket: () => void;
   consumeTicket: () => void;
-
-  // 🆕 [v13] دوال بوابة الثقب الدودي
-  completeMentalChapter: (id: MentalChapterId, score: number) => void;
-  resetMentalProgress: () => void;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -225,7 +211,6 @@ const initialState = {
   tickets: 0,
   stats: { totalAttempts: 0, totalCorrect: 0 } as ProgressStats,
   dailyXP: {} as Record<string, number>, // 🆕 v11
-  mentalArchivesProgress: {} as MentalGameProgress, // 🆕 [v13]
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -493,25 +478,10 @@ export const useProgressStore = create<ProgressState>()(
           if (state.tickets <= 0) return state;
           return { tickets: state.tickets - 1 };
         }),
-
-      // 🆕 [v13] دوال بوابة الثقب الدودي
-      completeMentalChapter: (id, score) => set((state) => {
-        const existing = state.mentalArchivesProgress[id];
-        if (existing && existing.bestScore >= score) return state;
-        
-        return {
-          mentalArchivesProgress: {
-            ...state.mentalArchivesProgress,
-            [id]: { bestScore: score, at: Date.now() }
-          }
-        };
-      }),
-
-      resetMentalProgress: () => set({ mentalArchivesProgress: {} }),
     }),
     {
       name: "sorobanmind-v2-progress",
-      version: 13, // 🆕 تم رفع الإصدار إلى 13
+      version: 12,
       migrate: (persistedState, version) => {
         const old = (persistedState as Record<string, unknown>) || {};
 
@@ -552,8 +522,8 @@ export const useProgressStore = create<ProgressState>()(
             currentStreak: (old.streak as number) || (old.currentStreak as number) || 0,
             lastPlayedDate: (old.lastPlayedDate as string) || null,
             completedLevels: (old.completedLevels as LevelId[]) || [],
-            completedLessons: [] as string[],
-          } as ProgressState);
+              completedLessons: [] as string[],
+} as ProgressState);
         }
 
         if (version < 4) {
@@ -609,24 +579,7 @@ export const useProgressStore = create<ProgressState>()(
           } as ProgressState);
         }
 
-        // 🆕 [v13] ترحيل بيانات بوابة الثقب الدودي
-        if (version < 13) {
-          const oldMaxLevel = parseInt(localStorage.getItem('mental_archives_max_level') || '0');
-          const newCompleted: MentalGameProgress = {};
-          
-          if (oldMaxLevel >= 1) newCompleted['intro'] = { bestScore: 100, at: Date.now() };
-          if (oldMaxLevel >= 2) newCompleted['level1'] = { bestScore: 100, at: Date.now() };
-          
-          localStorage.removeItem('mental_archives_max_level'); // تنظيف المفتاح القديم
-
-          return applyLevelIdMigration({
-            ...initialState,
-            ...old,
-            mentalArchivesProgress: newCompleted,
-          } as ProgressState);
-        }
-
-        // المسار الأخير: v12 → v13
+        // المسار الأخير: v11 → v12 (حالة مصطفى)
         return applyLevelIdMigration(persistedState as ProgressState);
       },
     },
