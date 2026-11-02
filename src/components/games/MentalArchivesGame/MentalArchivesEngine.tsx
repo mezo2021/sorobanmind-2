@@ -1,13 +1,14 @@
 // src/components/games/MentalArchivesGame/MentalArchivesEngine.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Chapter } from './gameFlowTypes'; 
 import { tUI } from './gameUI';
-import { useCharacterVoice } from '@/hooks/useCharacterVoice';
+// 👇 التغيير الأول: استبدلنا useCharacterVoice بـ useGameVoice
+import { useGameVoice } from '@/hooks/useGameVoice';
 import { useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
-import { SkipForward, ArrowRight, Sparkles, Award, Play, Volume2, Square, RotateCcw, Home } from 'lucide-react';
+import { SkipForward, ArrowRight, Sparkles, Award, Play, Volume2, Square, Home } from 'lucide-react';
 
 import introVideo from './intro.mp4';
 import joudImg from './joud.png';
@@ -37,7 +38,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [isTyping, setIsTyping] = useState(false);
 
   const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null);
-  const exampleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const [qIndex, setQIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
@@ -45,41 +45,22 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [correctCount, setCorrectCount] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'correct' | 'wrong'>('none');
 
-  const { speak: speakJoud, stop: stopJoud } = useCharacterVoice('joud');
-  const { speak: speakAseel, stop: stopAseel } = useCharacterVoice('bana'); 
-  const { speak: speakSorobana, stop: stopSorobana } = useCharacterVoice('sham'); 
+  // 👇 التغيير الثاني: استخدام useGameVoice الذكي لكل شخصية
+  const { speak: speakJoud, stop: stopJoud } = useGameVoice('joud');
+  const { speak: speakAseel, stop: stopAseel } = useGameVoice('bana'); 
+  const { speak: speakSorobana, stop: stopSorobana } = useGameVoice('sham'); 
+
+  // 👇 جلب اسم الطفل من المتجر (لإضافته في التشجيع)
+  const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
   const getTxt = (ar: string, en: string) => isAr ? ar : en;
 
-  // دالة مخصصة للنطق الإنجليزي بجودة عالية
-  const speakEnglish = (text: string, onEnd?: () => void) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    
-    const cleanText = text.replace(/؟/g, '?').replace(/،/g, ',');
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.85; 
-    
-    const voices = window.speechSynthesis.getVoices();
-    const bestVoice = voices.find(v => v.lang.startsWith('en') && v.localService) || voices.find(v => v.lang.startsWith('en'));
-    if (bestVoice) utterance.voice = bestVoice;
-
-    if (onEnd) utterance.onend = onEnd;
-    window.speechSynthesis.speak(utterance);
-  };
-
   const stopAllAudio = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
     if (stopJoud) stopJoud();
     if (stopAseel) stopAseel();
     if (stopSorobana) stopSorobana();
-    if (exampleTimerRef.current) clearTimeout(exampleTimerRef.current);
   };
 
-  // تنظيف الأصوات عند تغيير المشهد أو الخروج
   useEffect(() => {
     return () => stopAllAudio();
   }, [sceneIndex, phase]);
@@ -93,7 +74,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
-  // 1. إدارة الآلة الكاتبة وصوت الحوار
   useEffect(() => {
     if (videoState !== 'done' || phase !== 'playing') return;
     
@@ -107,7 +87,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       setDisplayedText('');
       setIsTyping(true);
       
-      stopAllAudio(); // إيقاف أي صوت سابق
+      stopAllAudio();
       charData.speak(fullText);
 
       let i = 0;
@@ -121,11 +101,13 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         }
       }, 30);
 
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+        stopAllAudio();
+      };
     }
   }, [lineIndex, sceneIndex, isAr, videoState, phase]);
 
-  // إعادة ضبط المؤقت عند تغيير السؤال
   useEffect(() => {
     if (currentScene?.kind === 'challenge') {
       setTimeLeft(currentScene.timePerQuestionMs);
@@ -133,7 +115,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   }, [qIndex, sceneIndex, currentScene]);
 
-  // 2. إدارة مؤقت التحدي
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (currentScene?.kind === 'challenge' && feedback === 'none' && timeLeft > 0 && phase === 'playing') {
@@ -141,7 +122,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         setTimeLeft((prev) => {
           if (prev <= 100) {
             clearInterval(timer); 
-            handleAnswer(false); // انتهى الوقت
+            handleAnswer(false);
             return 0;
           }
           return prev - 100;
@@ -154,12 +135,13 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const handleFinishChapter = () => {
     setPhase('success');
     stopAllAudio();
-    if (isAr) speakJoud(tUI('successMsg'));
-    else speakEnglish(tUI('successMsg'));
+    const msg = isAr ? `${tUI('successMsg')} يا ${childName}!` : `${tUI('successMsg')} ${childName}!`;
+    speakJoud(msg);
     try { confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 } }); } catch (e) {}
   };
 
   const nextScene = () => {
+    stopAllAudio();
     if (sceneIndex < chapter.scenes.length - 1) {
       setSceneIndex(s => s + 1);
       setLineIndex(0);
@@ -178,8 +160,11 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     if (actualCorrect) {
       setFeedback('correct');
       setCorrectCount(prev => prev + 1);
-      if (isAr) speakJoud(tUI('correct'));
-      else speakEnglish(tUI('correct'));
+      
+      // 👇 إضافة اسم الطفل في التشجيع
+      const msg = isAr ? `أحسنت يا ${childName}!` : `Well done ${childName}!`;
+      speakJoud(msg);
+      
       try { confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 }, colors: ['#F59E0B', '#10B981', '#38BDF8'] }); } catch (e) {}
       
       setTimeout(() => {
@@ -194,8 +179,11 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       }, 1200);
     } else {
       setFeedback('wrong');
-      if (isAr) speakJoud(tUI('wrong'));
-      else speakEnglish(tUI('wrong'));
+      
+      // 👇 إضافة اسم الطفل في التشجيع عند الخطأ
+      const msg = isAr ? `حاول مرة أخرى يا ${childName}!` : `Try again ${childName}!`;
+      speakJoud(msg);
+      
       setTimeout(() => {
         if (qIndex < currentScene.questions.length - 1) {
           setQIndex(prev => prev + 1);
@@ -225,21 +213,13 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         return;
       }
       setActiveStepIndex(index);
-      const textAr = currentScene.example.steps[index].textAr;
-      const textEn = currentScene.example.steps[index].textEn;
+      const textToSpeak = getTxt(currentScene.example.steps[index].textAr, currentScene.example.steps[index].textEn);
       
-      if (!isAr) {
-        speakEnglish(textEn, () => {
-          index++;
-          playStep();
-        });
-      } else {
-        speakSorobana(textAr);
-        exampleTimerRef.current = setTimeout(() => {
-          index++;
-          playStep();
-        }, Math.max(4000, textAr.length * 150));
-      }
+      // 👇 استخدام onDone من useGameVoice للتسلسل التلقائي بدون مؤقتات
+      speakSorobana(textToSpeak, () => {
+        index++;
+        playStep();
+      });
     };
     playStep();
   };
@@ -271,7 +251,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     </div>
   );
 
-  // شاشة النجاح
   if (phase === 'success') {
     return (
       <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-slate-950 text-white p-6" dir={dir}>
