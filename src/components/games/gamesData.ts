@@ -1,12 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/gamesData.ts — v5
-// ═══════════════════════════════════════════════════════════════════
-//
-// ما تغيّر عن v4:
-//   - anzan-island → sorobania-island
-//   - البطلة: sham → bana
-//   - العنوان: جزيرة سوروبانيا
-//   - status: building → ready
+// 🆕 src/components/games/gamesData.ts — v6
 // ═══════════════════════════════════════════════════════════════════
 
 import type { CharacterType } from '../../types';
@@ -16,7 +9,8 @@ export type GameId =
   | 'detective'
   | 'friends'
   | 'pirate-race'
-  | 'sorobania-island';
+  | 'sorobania-island'
+  | 'mental-archives'; // 👈 أضفنا اللعبة الجديدة هنا
 
 export type GameStatus = 'ready' | 'building';
 
@@ -82,16 +76,16 @@ export const GAMES: GameMeta[] = [
     duration: '60 ثانية',
     status: 'ready',
   },
-{
-  id: 'mental-archives',
-  title: 'بوابة الثقب الدودي',
-  subtitle: 'رحلة الزمن والحساب التخيلي',
-  icon: '🌀',
-  gradient: 'from-indigo-600 to-purple-800',
-  recommendHero: 'joud',
-  duration: '60 ثانية',
-  status: 'ready',
-}
+  {
+    id: 'mental-archives',
+    title: 'بوابة الثقب الدودي',
+    subtitle: 'رحلة الزمن والحساب التخيلي',
+    icon: '🌀',
+    gradient: 'from-indigo-600 to-purple-800',
+    recommendHero: 'joud',
+    duration: '60 ثانية',
+    status: 'ready',
+  }
 ];
 
 export function getGameById(id: GameId): GameMeta | undefined {
