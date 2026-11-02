@@ -1,6 +1,6 @@
 // src/components/games/MentalArchivesGame/MentalArchivesEngine.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Chapter, CharacterId } from './gameFlowTypes'; 
 import { tUI } from './gameUI';
@@ -21,7 +21,6 @@ interface Props {
 
 export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Props) {
   const { dir, isAr } = useGameLang();
-  const shouldReduceMotion = useReducedMotion();
   
   const [sceneIndex, setSceneIndex] = useState(0);
   const currentScene = chapter.scenes[sceneIndex];
@@ -105,54 +104,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
-  // ═══ Kinetic 2.5D: التمييز البصري الصريح للمتحدث ═══
-  const getCharacterMotion = (char: CharacterId, isActive: boolean) => {
-    const glowColor =
-      char === 'jud'
-        ? 'rgba(56,189,248,0.55)'
-        : char === 'aseel'
-          ? 'rgba(244,63,94,0.55)'
-          : 'rgba(168,85,247,0.55)';
-
-    if (shouldReduceMotion) {
-      return {
-        animate: {
-          scale: isActive ? 1.05 : 0.88,
-          opacity: isActive ? 1 : 0.35,
-          filter: isActive ? `drop-shadow(0 0 20px ${glowColor})` : 'grayscale(100%)',
-        },
-        transition: { duration: 0.35, ease: 'easeOut' as const },
-      };
-    }
-
-    // المتحدث: تنفس خفيف (scale فقط، بدون قفز)
-    if (isActive) {
-      return {
-        animate: {
-          scale: [1.03, 1.06, 1.03],
-          opacity: 1,
-          filter: `drop-shadow(0 0 20px ${glowColor})`,
-        },
-        transition: {
-          duration: 2.8,
-          repeat: Infinity,
-          repeatType: 'mirror' as const,
-          ease: 'easeInOut' as const,
-        },
-      };
-    }
-
-    // غير المتحدث: ساكن تماماً، رمادي، بلا حركة
-    return {
-      animate: {
-        scale: 0.88,
-        opacity: 0.35,
-        filter: 'grayscale(100%)',
-      },
-      transition: { duration: 0.35, ease: 'easeOut' as const },
-    };
-  };
-
   useEffect(() => {
     if (videoState !== 'done' || phase !== 'playing') return;
     
@@ -185,13 +136,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       };
     }
   }, [lineIndex, sceneIndex, isAr, videoState, phase]);
-
-  useEffect(() => {
-    if (currentScene?.kind === 'challenge') {
-      setTimeLeft(currentScene.timePerQuestionMs);
-      stopAllAudio();
-    }
-  }, [qIndex, sceneIndex, currentScene]);
 
   useEffect(() => {
     if (currentScene?.kind !== 'challenge' || feedback !== 'none' || phase !== 'playing' || timeLeft <= 0) return;
@@ -350,30 +294,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   if (videoState === 'start') {
     return (
       <div className="relative w-full h-[100dvh] bg-black flex flex-col items-center justify-center overflow-hidden" dir={dir}>
-        <motion.img
-          src={joudImg}
-          alt="Joud"
-          initial={{ scale: 1.1, opacity: 0.6 }}
-          animate={
-            shouldReduceMotion
-              ? { scale: 1.1, opacity: 0.6 }
-              : {
-                  scale: [1.1, 1.12, 1.1],
-                  opacity: [0.6, 0.66, 0.6],
-                }
-          }
-          transition={
-            shouldReduceMotion
-              ? { duration: 0.2 }
-              : {
-                  duration: 6,
-                  repeat: Infinity,
-                  repeatType: 'mirror',
-                  ease: 'easeInOut',
-                }
-          }
-          className="absolute inset-0 w-full h-full object-cover blur-sm"
-        />
+        <img src={joudImg} alt="Joud" className="absolute inset-0 w-full h-full object-cover opacity-60 blur-sm scale-110" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-transparent"></div>
         <div className="z-10 flex flex-col items-center gap-6 mt-32">
           <button onClick={() => setVideoState('playing')} className="flex items-center gap-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 px-8 py-4 rounded-full font-extrabold text-xl sm:text-2xl transition-all shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:scale-105 active:scale-95">
@@ -411,27 +332,10 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       <div className="relative flex flex-col justify-between min-h-[100dvh] bg-gradient-to-b from-stone-950 via-indigo-950 to-slate-950 text-white overflow-hidden" dir={dir}>
         <TopBar />
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
-        <div className="flex-1 relative w-full max-w-4xl mx-auto flex justify-center items-end mb-6 z-10 gap-2 sm:gap-6 pt-20 overflow-hidden">
-          <motion.img
-            src={aseelImg}
-            alt={isAr ? 'أسيل' : 'Aseel'}
-            {...getCharacterMotion('aseel', line.character === 'aseel')}
-            className="w-32 sm:w-44 object-contain origin-bottom will-change-transform"
-          />
-
-          <motion.img
-            src={joudImg}
-            alt={isAr ? 'جود' : 'Joud'}
-            {...getCharacterMotion('jud', line.character === 'jud')}
-            className="w-40 sm:w-56 object-contain origin-bottom z-20 will-change-transform"
-          />
-
-          <motion.img
-            src={sorobanaImg}
-            alt={isAr ? 'سوروبانا' : 'Sorobana'}
-            {...getCharacterMotion('sorobana', line.character === 'sorobana')}
-            className="w-36 sm:w-48 object-contain origin-bottom will-change-transform"
-          />
+        <div className="flex-1 relative w-full max-w-4xl mx-auto flex justify-center items-end mb-6 z-10 gap-2 sm:gap-6 pt-20">
+          <motion.img src={aseelImg} animate={{ scale: line.character === 'aseel' ? 1.1 : 0.85, opacity: line.character === 'aseel' ? 1 : 0.35, filter: line.character === 'aseel' ? 'drop-shadow(0 0 15px rgba(244,63,94,0.4))' : 'grayscale(80%)' }} className="w-24 sm:w-36 object-contain origin-bottom transition-all duration-300" />
+          <motion.img src={joudImg} animate={{ scale: line.character === 'jud' ? 1.1 : 0.85, opacity: line.character === 'jud' ? 1 : 0.35, filter: line.character === 'jud' ? 'drop-shadow(0 0 15px rgba(56,189,248,0.4))' : 'grayscale(80%)' }} className="w-32 sm:w-44 object-contain origin-bottom z-20 transition-all duration-300" />
+          <motion.img src={sorobanaImg} animate={{ scale: line.character === 'sorobana' ? 1.1 : 0.85, opacity: line.character === 'sorobana' ? 1 : 0.35, filter: line.character === 'sorobana' ? 'drop-shadow(0 0 15px rgba(168,85,247,0.4))' : 'grayscale(80%)' }} className="w-28 sm:w-40 object-contain origin-bottom transition-all duration-300" />
         </div>
         <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={() => { if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); } }} className="relative w-full max-w-3xl mx-auto bg-slate-900/95 backdrop-blur-md p-6 sm:p-8 rounded-t-3xl border-t-2 border-amber-500/30 shadow-2xl z-20 cursor-pointer">
           <div className="flex items-center gap-2 mb-3">
@@ -487,6 +391,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
             </button>
           </div>
           
+          {/* 👇 هنا تم تعديل علامة الاستفهام في المسألة */}
           <div className="text-3xl sm:text-4xl text-center font-mono bg-stone-900 border border-amber-500/20 py-4 rounded-2xl mb-6 text-amber-400 tracking-wider shadow-inner" dir="ltr">
             {isAr ? currentExample.problem : currentExample.problem.replace(/؟/g, '?')}
           </div>
@@ -534,6 +439,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
               ))}
             </div>
             <div className="h-px w-3/4 bg-amber-500/30 mx-auto mb-6"></div>
+            {/* 👇 هنا تم تعديل علامة الاستفهام في مربع الإدخال */}
             <input type="number" value={userInput} onChange={(e) => setUserInput(e.target.value)} disabled={feedback !== 'none'} className={`w-44 mx-auto text-center text-5xl font-bold bg-slate-950 border-2 rounded-2xl p-4 outline-none transition-all shadow-inner ${feedback === 'correct' ? 'border-emerald-500 text-emerald-400 shadow-emerald-500/20' : feedback === 'wrong' ? 'border-red-500 text-red-400 shadow-red-500/20' : 'border-amber-500/40 focus:border-amber-400 text-amber-200'}`} placeholder={isAr ? '؟' : '?'} autoFocus />
           </div>
           <button onClick={() => handleAnswer(true)} disabled={!userInput || feedback !== 'none'} className="w-full py-4 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 disabled:opacity-50 rounded-2xl font-extrabold text-xl transition-all shadow-lg text-slate-950 flex items-center justify-center gap-2">
