@@ -1,5 +1,4 @@
 // src/components/games/MentalArchivesGame/gameFlowTypes.ts
-import { GameQuestion, SolvedExample } from './gameTypes'; // نستخدم الأنواع القديمة للأسئلة
 
 export type ChapterId = 'intro' | 'level1' | 'level2' | 'level3' | 'level4' | 'level5' | 'level6' | 'level7' | 'level8';
 
@@ -11,6 +10,22 @@ export type Line = {
   textEn: string;
 };
 
+export interface SolvedExample {
+  titleAr: string;
+  titleEn: string;
+  problem: string;
+  steps: { textAr: string; textEn: string; }[];
+}
+
+export type GameQuestion =
+  | { type: 'direct'; numbers: number[]; answer: number }
+  | { type: 'complement5'; numbers: number[]; answer: number }
+  | { type: 'complement10'; numbers: number[]; answer: number }
+  | { type: 'mitori'; numbers: number[]; answer: number }
+  | { type: 'multiplication'; numbers: number[]; answer: number }
+  | { type: 'division'; numbers: number[]; answer: number }
+  | { type: 'subtraction'; numbers: number[]; answer: number };
+
 export type Scene =
   | { kind: 'dialogue'; id: string; lines: Line[] }
   | { kind: 'example'; id: string; example: SolvedExample }
@@ -20,7 +35,7 @@ export type Chapter = {
   id: ChapterId;
   titleAr: string;
   titleEn: string;
-  requires: ChapterId[];      // الفصول التي يجب إكمالها لفتح هذا الفصل
-  next?: ChapterId;           // الفصل التالي
-  scenes: Scene[];            // مشاهد هذا الفصل
+  requires: ChapterId[];      
+  next?: ChapterId;           
+  scenes: Scene[];            
 };
