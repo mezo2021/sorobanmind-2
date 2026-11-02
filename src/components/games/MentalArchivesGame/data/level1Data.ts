@@ -31,7 +31,7 @@ export const LEVEL_1_DATA: Chapter = {
       id: 'level1-examples',
       // 👇 القاعدة العامة كفقرة نصية
       ruleAr: "الْقَاعِدَةُ الذَّهَبِيَّة: جَرِّبْ الْمُبَاشَرَ أَوَّلاً، فَإِنْ ضَاقَ الْأَسْفَلُ فَاسْتَعِنْ بِالْمُتَمِّمِ (5)، وَإِنْ امْتَلَأَ الْعَمُودُ أَوْ تَجَاوَزَتِ التِّسْعَة فَاسْتَعِنْ بِالْمُكَمِّلِ (10). وَإِنْ عَجَزْتَ عَنِ الطَّرْحِ، فَطَبِّقْ الْقَاعِدَةَ الْمُرَكَّبَة: (+10 - 5 + مُتَمِّمِ الْمُكَمِّل).",
-      ruleEn: "GOLDEN RULE: Try direct addition first. If the lower beads are full, use Complement 5. If the column is full or exceeds ten, use Complement 10. If you can't subtract, apply the Combined Rule: (+10 - 5 + the complement of the complement).",
+      ruleEn: "GOLDEN RULE: Try direct addition first. If the lower beads are full, use Complement 5. If the column is full or exceeds Nine, use Complement 10. If you can't subtract, apply the Combined Rule: (+10 - 5 + the complement of the complement).",
       examples: [
         {
           titleAr: "مِثَال 1: الْجَمْعُ الْمُبَاشِر",
