@@ -7,7 +7,7 @@ import { tUI } from './gameUI';
 import { useCharacterVoice } from '@/hooks/useCharacterVoice';
 import { useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
-import { SkipForward, ArrowRight, Sparkles, Award, Play, Volume2, Square } from 'lucide-react';
+import { SkipForward, ArrowRight, Sparkles, Award, Play, Volume2, Square, RotateCcw, Home } from 'lucide-react';
 
 import introVideo from './intro.mp4';
 import joudImg from './joud.png';
@@ -26,10 +26,11 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [sceneIndex, setSceneIndex] = useState(0);
   const currentScene = chapter.scenes[sceneIndex];
 
-  // 👇 إصلاح 1: إدارة الفيديو بحالة منفصلة (start -> playing -> done)
   const [videoState, setVideoState] = useState<'start' | 'playing' | 'done'>(
     chapter.id === 'intro' ? 'start' : 'done'
   );
+
+  const [phase, setPhase] = useState<'playing' | 'success'>('playing');
 
   const [lineIndex, setLineIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
@@ -40,20 +41,48 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
 
   const [qIndex, setQIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
-  // 👇 إصلاح 2: تهيئة المؤقت بالوقت الصحيح بدلاً من الصفر
   const [timeLeft, setTimeLeft] = useState(currentScene?.kind === 'challenge' ? currentScene.timePerQuestionMs : 0);
   const [correctCount, setCorrectCount] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'correct' | 'wrong'>('none');
 
-  const { speak: speakJoud } = useCharacterVoice('joud');
-  const { speak: speakAseel } = useCharacterVoice('bana'); 
-  const { speak: speakSorobana } = useCharacterVoice('sham'); 
-
-  const addXP = useProgressStore((s) => s.addXP);
-  const childName = useProgressStore((s) => s.childName) || tUI('champion');
-  const recordSaved = useRef(false);
+  const { speak: speakJoud, stop: stopJoud } = useCharacterVoice('joud');
+  const { speak: speakAseel, stop: stopAseel } = useCharacterVoice('bana'); 
+  const { speak: speakSorobana, stop: stopSorobana } = useCharacterVoice('sham'); 
 
   const getTxt = (ar: string, en: string) => isAr ? ar : en;
+
+  // دالة مخصصة للنطق الإنجليزي بجودة عالية
+  const speakEnglish = (text: string, onEnd?: () => void) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    
+    const cleanText = text.replace(/؟/g, '?').replace(/،/g, ',');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.85; 
+    
+    const voices = window.speechSynthesis.getVoices();
+    const bestVoice = voices.find(v => v.lang.startsWith('en') && v.localService) || voices.find(v => v.lang.startsWith('en'));
+    if (bestVoice) utterance.voice = bestVoice;
+
+    if (onEnd) utterance.onend = onEnd;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopAllAudio = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (stopJoud) stopJoud();
+    if (stopAseel) stopAseel();
+    if (stopSorobana) stopSorobana();
+    if (exampleTimerRef.current) clearTimeout(exampleTimerRef.current);
+  };
+
+  // تنظيف الأصوات عند تغيير المشهد أو الخروج
+  useEffect(() => {
+    return () => stopAllAudio();
+  }, [sceneIndex, phase]);
 
   const getCharacterData = (char: string) => {
     switch (char) {
@@ -64,16 +93,21 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
-  // إدارة الآلة الكاتبة
+  // 1. إدارة الآلة الكاتبة وصوت الحوار
   useEffect(() => {
+    if (videoState !== 'done' || phase !== 'playing') return;
+    
     if (currentScene?.kind === 'dialogue') {
       const line = currentScene.lines[lineIndex];
       if (!line) return;
+      
       const charData = getCharacterData(line.character);
       const fullText = getTxt(line.textAr, line.textEn);
       
       setDisplayedText('');
       setIsTyping(true);
+      
+      stopAllAudio(); // إيقاف أي صوت سابق
       charData.speak(fullText);
 
       let i = 0;
@@ -89,19 +123,20 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
 
       return () => clearInterval(interval);
     }
-  }, [lineIndex, sceneIndex, isAr]);
+  }, [lineIndex, sceneIndex, isAr, videoState, phase]);
 
   // إعادة ضبط المؤقت عند تغيير السؤال
   useEffect(() => {
     if (currentScene?.kind === 'challenge') {
       setTimeLeft(currentScene.timePerQuestionMs);
+      stopAllAudio();
     }
-  }, [qIndex, sceneIndex]);
+  }, [qIndex, sceneIndex, currentScene]);
 
-  // إدارة مؤقت التحدي
+  // 2. إدارة مؤقت التحدي
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (currentScene?.kind === 'challenge' && feedback === 'none' && timeLeft > 0) {
+    if (currentScene?.kind === 'challenge' && feedback === 'none' && timeLeft > 0 && phase === 'playing') {
       timer = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 100) {
@@ -114,7 +149,15 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       }, 100);
     }
     return () => clearInterval(timer);
-  }, [currentScene, qIndex, feedback]);
+  }, [currentScene, qIndex, feedback, phase]);
+
+  const handleFinishChapter = () => {
+    setPhase('success');
+    stopAllAudio();
+    if (isAr) speakJoud(tUI('successMsg'));
+    else speakEnglish(tUI('successMsg'));
+    try { confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 } }); } catch (e) {}
+  };
 
   const nextScene = () => {
     if (sceneIndex < chapter.scenes.length - 1) {
@@ -122,7 +165,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       setLineIndex(0);
       setQIndex(0);
     } else {
-      onComplete(correctCount);
+      handleFinishChapter();
     }
   };
 
@@ -135,7 +178,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     if (actualCorrect) {
       setFeedback('correct');
       setCorrectCount(prev => prev + 1);
-      speakJoud(tUI('correct'));
+      if (isAr) speakJoud(tUI('correct'));
+      else speakEnglish(tUI('correct'));
       try { confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 }, colors: ['#F59E0B', '#10B981', '#38BDF8'] }); } catch (e) {}
       
       setTimeout(() => {
@@ -150,7 +194,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       }, 1200);
     } else {
       setFeedback('wrong');
-      speakJoud(tUI('wrong'));
+      if (isAr) speakJoud(tUI('wrong'));
+      else speakEnglish(tUI('wrong'));
       setTimeout(() => {
         if (qIndex < currentScene.questions.length - 1) {
           setQIndex(prev => prev + 1);
@@ -167,8 +212,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const toggleExampleAudio = () => {
     if (activeStepIndex !== null) {
       setActiveStepIndex(null);
-      if (exampleTimerRef.current) clearTimeout(exampleTimerRef.current);
-      window.speechSynthesis.cancel();
+      stopAllAudio();
       return;
     }
 
@@ -184,21 +228,13 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       const textAr = currentScene.example.steps[index].textAr;
       const textEn = currentScene.example.steps[index].textEn;
       
-      // 👇 إصلاح 3: استخدام onend للصوت الإنجليزي لمنع التقطع وإبطاء السرعة
       if (!isAr) {
-        window.speechSynthesis.cancel();
-        const cleanEnText = textEn.replace(/؟/g, '?');
-        const utterance = new SpeechSynthesisUtterance(cleanEnText);
-        utterance.lang = 'en-US';
-        utterance.rate = 0.75; // سرعة أبطأ
-        utterance.onend = () => {
+        speakEnglish(textEn, () => {
           index++;
           playStep();
-        };
-        window.speechSynthesis.speak(utterance);
+        });
       } else {
         speakSorobana(textAr);
-        // وقت أطول للعربية لضمان عدم التقطع
         exampleTimerRef.current = setTimeout(() => {
           index++;
           playStep();
@@ -210,7 +246,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
 
   const TopBar = () => (
     <div className="flex items-center justify-between gap-2 p-3 sm:p-4 sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-amber-500/20 shadow-lg">
-      <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0">
+      <button onClick={() => { stopAllAudio(); onBack(); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0">
         <ArrowRight className={`w-6 h-6 text-amber-400 ${isAr ? '' : 'rotate-180'}`} />
       </button>
       <div className="flex-1 flex justify-center items-center gap-2">
@@ -222,7 +258,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        {currentScene?.kind === 'challenge' && (
+        {currentScene?.kind === 'challenge' && phase === 'playing' && (
           <div className="relative flex items-center justify-center w-12 h-12">
             <svg className="w-full h-full transform -rotate-90">
               <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="3" className="text-slate-800 fill-none" />
@@ -235,7 +271,24 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     </div>
   );
 
-  // شاشة بدء الفيديو
+  // شاشة النجاح
+  if (phase === 'success') {
+    return (
+      <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-slate-950 text-white p-6" dir={dir}>
+        <TopBar />
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center z-10 max-w-lg bg-slate-900/90 border border-amber-500/40 p-8 rounded-3xl shadow-2xl backdrop-blur-md">
+          <div className="text-6xl mb-4 animate-bounce">🏛️✨</div>
+          <h2 className="text-3xl font-extrabold text-amber-400 mb-3">{tUI('successMsg')}</h2>
+          <p className="text-slate-300 mb-8">{getTxt(chapter.titleAr, chapter.titleEn)}</p>
+          <button onClick={() => onComplete(correctCount)} className="w-full py-4 mt-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-2xl font-bold text-lg shadow-lg transition flex items-center justify-center gap-2">
+            <Home className="w-5 h-5" />
+            {tUI('returnToGames')}
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (videoState === 'start') {
     return (
       <div className="relative w-full h-[100dvh] bg-black flex flex-col items-center justify-center overflow-hidden" dir={dir}>
@@ -250,7 +303,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     );
   }
 
-  // تشغيل الفيديو
   if (videoState === 'playing') {
     return (
       <div className="relative w-full h-[100dvh] bg-black flex flex-col items-center justify-center" dir={dir}>
