@@ -41,7 +41,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
 
   const [qIndex, setQIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
-  // ⚠️ المؤقت يبدأ صفراً، ويُضبط عبر useEffect
   const [timeLeft, setTimeLeft] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'correct' | 'wrong'>('none');
@@ -104,7 +103,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   }, [sceneIndex, qIndex, currentScene]);
 
-  // ═══ محرك المؤقت: يعمل فقط في التحدي وعندما لا يكون هناك feedback ═══
+  // ═══ محرك المؤقت ═══
   useEffect(() => {
     if (currentScene?.kind !== 'challenge' || feedback !== 'none' || phase !== 'playing' || timeLeft <= 0) return;
     
@@ -130,7 +129,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
-  // ═══ التمييز البصري القوي: المتحدث نجم، والبقية مجمدون ═══
   const getCharacterMotion = (char: CharacterId, isActive: boolean) => {
     const glow =
       char === 'jud'
@@ -139,37 +137,29 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           ? 'drop-shadow(0 0 25px rgba(244,63,94,0.7))'
           : 'drop-shadow(0 0 25px rgba(168,85,247,0.7))';
 
-    // الشخصيات غير المتحدثة: مجمدة تماماً، صغيرة، رمادية
     if (!isActive) {
       return {
         animate: {
-          scale: 0.8,
+          scale: 0.82,
           y: 0,
-          opacity: 0.3,
+          opacity: 0.35,
           filter: 'grayscale(90%) contrast(80%)',
         },
         transition: { duration: 0.3, ease: 'easeOut' as const },
       };
     }
 
-    // في وضع تقليل الحركة: المتحدث ثابت مع توهج
     if (shouldReduceMotion) {
       return {
-        animate: {
-          scale: 1.05,
-          y: 0,
-          opacity: 1,
-          filter: glow,
-        },
+        animate: { scale: 1.05, y: 0, opacity: 1, filter: glow },
         transition: { duration: 0.2 },
       };
     }
 
-    // الشخصية المتحدثة: تنفس + طفو + توهج قوي
     return {
       animate: {
         scale: [1.02, 1.07, 1.02],
-        y: [0, -6, 0],
+        y: [0, -4, 0],
         opacity: 1,
         filter: glow,
       },
@@ -396,27 +386,27 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         <TopBar />
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
         
-        {/* ═══ الشخصيات: المتحدث نجم كبير، البقية صغار مجمدون ═══ */}
-        <div className="flex-1 relative w-full max-w-5xl mx-auto flex justify-center items-end mb-4 z-10 gap-4 sm:gap-8 pt-10">
+        {/* ═══ الشخصيات: أحجام محسوبة للجوال، shrink-0 يمنع الضغط ═══ */}
+        <div className="flex-1 relative w-full max-w-5xl mx-auto flex justify-center items-end mb-4 z-10 pt-16 gap-1 sm:gap-4">
           <motion.img
             src={aseelImg}
             alt={isAr ? 'أسيل' : 'Aseel'}
             {...getCharacterMotion('aseel', line.character === 'aseel')}
-            className="w-36 sm:w-48 object-contain origin-bottom will-change-transform"
+            className="w-24 sm:w-48 object-contain origin-bottom shrink-0"
           />
 
           <motion.img
             src={joudImg}
             alt={isAr ? 'جود' : 'Joud'}
             {...getCharacterMotion('jud', line.character === 'jud')}
-            className="w-44 sm:w-60 object-contain origin-bottom z-20 will-change-transform"
+            className="w-32 sm:w-60 object-contain origin-bottom z-20 shrink-0"
           />
 
           <motion.img
             src={sorobanaImg}
             alt={isAr ? 'سوروبانا' : 'Sorobana'}
             {...getCharacterMotion('sorobana', line.character === 'sorobana')}
-            className="w-40 sm:w-56 object-contain origin-bottom will-change-transform"
+            className="w-28 sm:w-56 object-contain origin-bottom shrink-0"
           />
         </div>
         
