@@ -31,6 +31,7 @@ export const UI_TEXT = {
     ar: 'تَحْتَاجُ إِلَى مَزِيدٍ مِنَ السُّرْعَةِ لِلِامْتِحَان، تَدَرَّبْ جَيِّداً لِتَكُونَ جَاهِزاً.', 
     en: 'You need more speed for the exam, practice well to be ready.' 
   },
+  // 👇 تم تصحيح الكسرة هنا
   successMsg: { ar: 'عَبَرْتَ الْبَوَّابَةَ بِنَجَاح!', en: 'Gate Crossed Successfully!' },
   returnToGames: { ar: 'العودة لمدينة الألعاب', en: 'Return to Games' },
   
@@ -40,7 +41,7 @@ export const UI_TEXT = {
   correct: { ar: 'إِجَابَةٌ صَحِيحَة!', en: 'Correct answer!' },
   wrong: { ar: 'إِجَابَةٌ خَاطِئَة، حَاوِلْ أَسْرَع.', en: 'Wrong answer, try faster.' },
 
-  // 👇 إضافات جديدة لشاشة اختيار المستويات (الخريطة)
+  // 👇 نصوص شاشة الخريطة (للمستقبل)
   gameTitle: { ar: 'بوابة الثقب الدودي', en: 'Wormhole Gate' },
   backToGamesCity: { ar: 'العودة لمدينة الألعاب', en: 'Back to Game City' },
   statusCompleted: { ar: 'مكتمل', en: 'Completed' },
