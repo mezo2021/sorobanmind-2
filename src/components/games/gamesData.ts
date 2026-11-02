@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/gamesData.ts — v6
+// 🆕 src/components/games/gamesData.ts — v7
 // ═══════════════════════════════════════════════════════════════════
 
 import type { CharacterType } from '../../types';
@@ -10,14 +10,16 @@ export type GameId =
   | 'friends'
   | 'pirate-race'
   | 'sorobania-island'
-  | 'mental-archives'; // 👈 أضفنا اللعبة الجديدة هنا
+  | 'mental-archives'; 
 
 export type GameStatus = 'ready' | 'building';
 
 export interface GameMeta {
   id: GameId;
   title: string;
+  titleEn?: string; // 👈 حقل جديد اختياري
   subtitle: string;
+  subtitleEn?: string; // 👈 حقل جديد اختياري
   icon: string;
   gradient: string;
   recommendHero: CharacterType;
@@ -79,7 +81,9 @@ export const GAMES: GameMeta[] = [
   {
     id: 'mental-archives',
     title: 'بوابة الثقب الدودي',
+    titleEn: 'Wormhole Gate', // 👈 الترجمة هنا
     subtitle: 'رحلة الزمن والحساب التخيلي',
+    subtitleEn: 'Time Travel & Mental Math', // 👈 الترجمة هنا
     icon: '🌀',
     gradient: 'from-indigo-600 to-purple-800',
     recommendHero: 'joud',
