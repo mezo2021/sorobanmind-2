@@ -31,7 +31,7 @@ export const UI_TEXT = {
     ar: 'تَحْتَاجُ إِلَى مَزِيدٍ مِنَ السُّرْعَةِ لِلِامْتِحَان، تَدَرَّبْ جَيِّداً لِتَكُونَ جَاهِزاً.', 
     en: 'You need more speed for the exam, practice well to be ready.' 
   },
-  successMsg: { ar: 'عبرت البوابة بنجاح!', en: 'Gate Crossed!' },
+  successMsg: { ar: 'ٍعَبَرْتَ البوابةَ بنجاح!', en: 'Gate Crossed!' },
   returnToGames: { ar: 'العودة لمدينة الألعاب', en: 'Return to Games' },
   
   // عام
