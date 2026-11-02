@@ -1,5 +1,12 @@
 // src/components/games/MentalArchivesGame/level1Data.ts
 
+export const ASSETS = {
+  introVideo: '/assets/mental-archives/intro.mp4',
+  joud: '/assets/mental-archives/joud.png',
+  aseel: '/assets/mental-archives/aseel.png',
+  sorobana: '/assets/mental-archives/sorobana.png',
+};
+
 export const GAME_ID = 'mental-archives';
 export const DEFAULT_HERO = 'joud'; // البطل الافتراضي لهذه اللعبة
 
