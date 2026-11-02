@@ -23,10 +23,10 @@ export interface VoiceConfig {
 
 // 🆕 pitch مُضخَّم — لتفريق أوضح بين الأبطال
 export const VOICE_CONFIG: Record<CharacterType, VoiceConfig> = {
-  sham: { pitch: 1.40, rate: 0.95, preferGender: 'female' },
-  rayan: { pitch: 0.70, rate: 1.15, preferGender: 'male' },
-  bana: { pitch: 1.25, rate: 0.90, preferGender: 'female' },
-  joud: { pitch: 0.80, rate: 1.05, preferGender: 'male' },
+  sham: { pitch: 1.40, rate: 0.85, preferGender: 'female' },
+  rayan: { pitch: 0.70, rate: 0.90, preferGender: 'male' },
+  bana: { pitch: 1.25, rate: 0.85, preferGender: 'female' },
+  joud: { pitch: 0.80, rate: 0.90, preferGender: 'male' },
 };
 
 // 🆕 كلمات بحث أوسع
