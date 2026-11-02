@@ -1,13 +1,15 @@
 # 🌀 بوابة الثقب الدودي: حكاية الخرز الذي حفظ الزمن
 **وثيقة تصميم اللعبة (GDD) - الجزء الثالث: القمة والامتحان**
-**النسخة:** 2.0 (الهيكل التقني النهائي ودليل التطوير)
+**النسخة:** 3.0 (متوافقة مع الهيكلة النهائية بعد العزل)
+
+> **⚠️ ملاحظة حاسمة للمطور:** هذا المستند يحتوي على تفاصيل المستويات 5-8، وتم توثيقها بناءً على طلب صاحب المشروع. بعض التفاصيل (خاصة أنماط الأسئلة وسرعات المؤقت) تحتاج إلى **مراجعة وتوثيق رسمي** من مواصفات نيشورين، وقد وُضعت لها إشارات تحذيرية `⚠️ [ملاحظة للمطور]`.
 
 ---
 
 ## 🚢 المستوى الخامس: ميناء الخانات — اللاذقية 2024 (الكيو 4)
 *   **الهدف التاريخي:** العودة إلى الحاضر (سوريا المعاصرة) لإنقاذ سجلات الشحن في ميناء اللاذقية.
-*   **المهارة الرياضية:** ميتوري (5 صفوف، كلها من خانتين = 10 خانات إجمالاً). الضرب (خانتين × خانة)، القسمة (3 أو 4 خانات ÷ خانة).
-*   **سرعة التحدي:** 10.2 ثانية للسؤال.
+*   **المهارة الرياضية:** ميتوري (5 صفوف، كلها من خانتين = 10 خانات إجمالاً). الضرب (خانتين × خانة)، القسمة (3 أو 4 خانات ÷ خانة). ⚠️ **[ملاحظة للمطور: يرجى مراجعة المصادر الرسمية لتأكيد هذا النمط وتفاصيله.]**
+*   **سرعة التحدي:** 10.2 ثانية للسؤال. ⚠️ **[ملاحظة للمطور: راجع المواصفات.]**
 
 ### 1. المثال المحلول (قاعدة السوروبان)
 **الحالة 1 (ميتوري):** `26 + 35 + 18 + 42 + 17 = 138`
@@ -32,8 +34,8 @@
 
 ## 🏙️ المستوى السادس: مكتبة الذاكرة — دمشق 2050 (الكيو 3)
 *   **الهدف التاريخي:** إصلاح مسارات النقل الذكي في دمشق المستقبلية (خيال علمي).
-*   **المهارة الرياضية:** ميتوري (5 صفوف من 3 خانات = 15 خانة). الضرب (3 خانات × خانة)، القسمة (4 خانات ÷ خانة).
-*   **سرعة التحدي:** 9.6 ثانية للسؤال.
+*   **المهارة الرياضية:** ميتوري (5 صفوف من 3 خانات = 15 خانة). الضرب (3 خانات × خانة)، القسمة (4 خانات ÷ خانة). ⚠️ **[ملاحظة للمطور: يرجى مراجعة المصادر الرسمية لتأكيد هذا النمط وتفاصيله.]**
+*   **سرعة التحدي:** 9.6 ثانية للسؤال. ⚠️ **[ملاحظة للمطور: راجع المواصفات.]**
 
 ### 1. المثال المحلول (قاعدة السوروبان)
 **الحالة 1 (ميتوري):** `125 + 247 + 368 + 159 + 74 = 973`
@@ -58,8 +60,8 @@
 
 ## 🌐 المستوى السابع: شبكة النور — اللاذقية الذكية 2200 (الكيو 2)
 *   **الهدف التاريخي:** إدارة أزمة الطاقة في اللاذقية السيبرانية (خيال علمي).
-*   **المهارة الرياضية:** ميتوري (7 صفوف من 3 خانات). الضرب (خانتين × خانتين). القسمة (4 خانات ÷ خانتين). برمجة مرئية.
-*   **سرعة التحدي:** 9.3 ثانية للسؤال.
+*   **المهارة الرياضية:** ميتوري (7 صفوف من 3 خانات). الضرب (خانتين × خانتين). القسمة (4 خانات ÷ خانتين). برمجة مرئية. ⚠️ **[ملاحظة للمطور: يرجى مراجعة المصادر الرسمية لتأكيد هذا النمط وتفاصيله.]**
+*   **سرعة التحدي:** 9.3 ثانية للسؤال. ⚠️ **[ملاحظة للمطور: راجع المواصفات.]**
 
 ### 1. المثال المحلول (قاعدة السوروبان)
 **الحالة 1 (ميتوري):** `125 + 34 + 216 + 107 + 53 + 320 + 45 = 900`
@@ -83,8 +85,8 @@
 
 ## ❤️ المستوى الثامن: قلب الشبكة — الذروة (الكيو 1)
 *   **الهدف التاريخي:** إصلاح الأرشيف المركزي وإنقاذ التاريخ البشري.
-*   **المهارة الرياضية:** ميتوري (10 صفوف من 3 خانات، **مع إدخال الطرح**). الضرب (3 خانات × خانتين). القسمة (5 خانات ÷ 2 أو 3).
-*   **سرعة التحدي:** 9 ثوانٍ للسؤال.
+*   **المهارة الرياضية:** ميتوري (10 صفوف من 3 خانات، **مع إدخال الطرح**). الضرب (3 خانات × خانتين). القسمة (5 خانات ÷ 2 أو 3). ⚠️ **[ملاحظة للمطور: يرجى مراجعة المصادر الرسمية لتأكيد هذا النمط وتفاصيله.]**
+*   **سرعة التحدي:** 9 ثوانٍ للسؤال. ⚠️ **[ملاحظة للمطور: راجع المواصفات.]**
 
 ### 1. المثال المحلول (قاعدة السوروبان)
 **الحالة 1 (ميتوري):** `583 + 147 - 268 + 95 - 34 + 206 - 117 + 48 - 59 + 132 = 733`
@@ -114,19 +116,22 @@
 
 ---
 
-## ⚙️ الملحق التقني: العقد البرمجي (TypeScript Contract)
-هذا هو الشكل الذي يجب أن تُبنى به ملفات البيانات (Data Files) في مجلد `data/`:
+## ⚙️ الملحق التقني: العقد البرمجي النهائي (TypeScript Contract)
+
+هذا هو الشكل النهائي الذي تُبنى به ملفات البيانات (Data Files) في مجلد `data/` بعد إعادة الهيكلة:
 
 ```typescript
-// src/components/games/MentalArchivesGame/gameTypes.ts
+// src/components/games/MentalArchivesGame/gameFlowTypes.ts
+
+export type ChapterId = 'intro' | 'level1' | 'level2' | 'level3' | 'level4' | 'level5' | 'level6' | 'level7' | 'level8';
 
 export type CharacterId = 'jud' | 'aseel' | 'sorobana';
 
-export interface StoryLine {
+export type Line = {
   character: CharacterId;
   textAr: string;
   textEn: string;
-}
+};
 
 export interface SolvedExample {
   titleAr: string;
@@ -144,52 +149,46 @@ export type GameQuestion =
   | { type: 'division'; numbers: number[]; answer: number }
   | { type: 'subtraction'; numbers: number[]; answer: number };
 
-export interface LevelData {
-  id: string;
-  levelNumber: number;
+export type Scene =
+  | { kind: 'dialogue'; id: string; lines: Line[] }
+  | { kind: 'example'; id: string; ruleAr?: string; ruleEn?: string; examples: SolvedExample[] }
+  | { kind: 'challenge'; id: string; questions: GameQuestion[]; timePerQuestionMs: number; requiredCorrect: number };
+
+export type Chapter = {
+  id: ChapterId;
   titleAr: string;
   titleEn: string;
-  story: StoryLine[];
-  example: SolvedExample;
-  questions: GameQuestion[];
-  timePerQuestionMs: number;
-  requiredCorrect: number;
-}
+  requires: ChapterId[];      
+  next?: ChapterId;           
+  scenes: Scene[];            
+};
 ```
 
 ---
 
 🛠️ دليل المطور الشامل: كيف تضيف مستوى جديداً؟ (للمبرمجين وأدوات AI)
 
-لإضافة أي مستوى جديد (مثلاً المستوى الخامس)، اتبع هذه الخطوات بدقة:
+لإضافة أي مستوى جديد (مثلاً المستوى الخامس)، اتبع هذه الخطوات بدقة بناءً على الهيكلة الحالية بعد العزل:
 
 الخطوة 1: إنشاء ملف البيانات (Data File)
 
 1. اذهب إلى المجلد: src/components/games/MentalArchivesGame/data/
-2. أنشئ ملفاً جديداً باسم level5Data.ts (أو level2Data.ts للمستوى الثاني).
+2. أنشئ ملفاً جديداً باسم level5Data.ts.
 3. اكتب الكود التالي واملأ البيانات بالقصص والأسئلة (بالعربية والإنجليزية):
 
 ```typescript
-import { LevelData } from '../gameTypes';
+import { Chapter } from '../gameFlowTypes';
 
-export const LEVEL_5_DATA: LevelData = {
+export const LEVEL_5_DATA: Chapter = {
   id: 'level5',
-  levelNumber: 5,
   titleAr: 'ميناء الخانات',
   titleEn: 'Port of Digits',
-  timePerQuestionMs: 10200,
-  requiredCorrect: 3,
-  story: [
-    { character: 'jud', textAr: '...', textEn: '...' },
-  ],
-  example: {
-    titleAr: '...', titleEn: '...', problem: '26 + 35 + 18 + 42 + 17 = ؟',
-    steps: [{ textAr: '...', textEn: '...' }]
-  },
-  questions: [
-    { type: 'mitori', numbers: [15, 24, 33, 12, 18], answer: 102 },
-    { type: 'multiplication', numbers: [43, 3], answer: 129 },
-    { type: 'division', numbers: [84, 4], answer: 21 }
+  requires: ['level4'],
+  next: 'level6',
+  scenes: [
+    { kind: 'dialogue', id: '...', lines: [{ character: 'jud', textAr: '...', textEn: '...' }] },
+    { kind: 'example', id: '...', ruleAr: '...', ruleEn: '...', examples: [...] },
+    { kind: 'challenge', id: '...', timePerQuestionMs: 10000, requiredCorrect: 3, questions: [...] }
   ]
 };
 ```
@@ -203,166 +202,136 @@ export const LEVEL_5_DATA: LevelData = {
 import { LEVEL_5_DATA } from './data/level5Data';
 ```
 
-3. ابحث عن الدالة getLevelData وأضف الحالة الجديدة:
+3. ابحث عن كائن CHAPTERS وأضف المستوى الجديد إليه:
 
 ```typescript
-const getLevelData = () => {
-  switch (currentLevel) {
-    case 0: return INTRO_DATA;
-    case 1: return LEVEL_1_DATA;
-    case 2: return LEVEL_2_DATA;
-    case 3: return LEVEL_3_DATA;
-    case 4: return LEVEL_4_DATA;
-    case 5: return LEVEL_5_DATA; // 👈 أضف هذا السطر
-    default: return INTRO_DATA;
-  }
-};
+const CHAPTERS: Record<ChapterId, Chapter> = {
+  intro: INTRO_DATA,
+  level1: LEVEL_1_DATA,
+  level2: LEVEL_2_DATA,
+  level3: LEVEL_3_DATA,
+  level4: LEVEL_4_DATA,
+  level5: LEVEL_5_DATA, // 👈 السطر الجديد
+} as Record<ChapterId, Chapter>;
 ```
 
-4. ابحث عن دالة handleComplete وحدث الرقم الأقصى للمستويات:
+(ملاحظة: لم نعد نستخدم دالة getLevelData و switch. بمجرد إضافة المستوى إلى كائن CHAPTERS، سيظهر تلقائياً في شاشة الخريطة).
 
-```typescript
-const handleComplete = () => {
-  const nextLevel = currentLevel + 1;
-  if (nextLevel > 5) { // 👈 غير الرقم ليطابق أعلى مستوى تمت إضافته
-    onBack();
-    return;
-  }
-  localStorage.setItem('mental_archives_max_level', nextLevel.toString());
-  setCurrentLevel(nextLevel);
-};
-```
+الخطوة 3: آلية فتح المستوى
 
-الخطوة 3: الاختبار والتحقق
+· تأكد أن requires في ملف البيانات يحتوي على المستويات السابقة (مثلاً requires: ['level4']).
+
+الخطوة 4: الأصول (Assets) - اختياري
+
+· المحرك الحالي يستخدم الصور الأساسية (joud, aseel, sorobana). إذا كان المستوى يحتاج صوراً مخصصة، ستحتاج لتعديل دالة getTopBarImage وgetCharacterData في المحرك.
+
+الخطوة 5: الاختبار والتحقق
 
 1. احفظ الملفات واعمل Commit.
-2. افتح اللعبة في المتصفح أو الهاتف.
-3. إذا كنت في المستوى السابق، أكمله وصولاً للمستوى الجديد. أو امسح الـ localStorage (المفتاح: mental_archives_max_level) واختبره من البداية.
-4. تأكد من أن الصور تعمل، والمؤقت يعمل، والآلة الكاتبة تعرض النصوص بشكل صحيح.
+2. امسح بيانات الموقع (Clear Site Data) لبدء تجربة نظيفة، ثم العب وصولاً للمستوى الجديد.
+3. تأكد من أن الأسئلة والقصص تعرض بشكل صحيح، والصوت يعمل دون تداخل.
 
+---
 
+🛡️ الملحق الثاني: إدارة التقدم في المتجر المحلي (mentalArchivesStore)
 
- الملحق التقني: الدروس المستفادة وقواعد التطوير (Lessons Learned & Dev Rules)
-**الغرض من هذا القسم:** توثيق الأخطاء المعمارية والتقنية التي واجهتنا أثناء بناء "لعبة بوابة الثقب الدودي" وكيف تم حلها، لتكون مرجعاً لأي مطور أو أداة ذكاء اصطناعي تعمل على هذا المشروع مستقبلاً.
+بعد إعادة الهيكلة، تم عزل لعبة "بوابة الثقب الدودي" عن المتجر المركزي progressStore، وأصبحت تعتمد على متجر محلي خاص بها اسمه mentalArchivesStore.ts.
 
-## 1️⃣ التعديلات المعمارية الأساسية (Architecture & State Management)
-*   **فصل المحرك عن المدير (Engine vs Manager):** 
-    *   **المدير (`MentalArchivesManager.tsx`):** هو المسؤول الوحيد عن عرض شاشة الخريطة (Level Map)، وقراءة تقدم الطفل من `progressStore`، وتحديد المستويات المفتوحة، وحفظ النتيجة بعد النجاح.
-    *   **المحرك (`MentalArchivesEngine.tsx`):** مكون "أعمى" لا يعرف شيئاً عن المستويات. يستقبل `Chapter` ويعرض المشاهد (قصة -> مثال -> تحدي).
-*   **الاعتماد على `progressStore` الموحد:** 
-    *   **ممنوع منعاً باتاً** استخدام `localStorage` للتحكم في تقدم اللعبة. 
-    *   تمت إضافة `mentalArchivesProgress` داخل `progressStore` لحفظ "الفصول المكتملة" (وليس رقم المستوى). هذا يضمن المزامنة السحابية عبر Supabase، ويسمح للطفل بإعادة لعب الفصول السابقة في أي وقت.
-*   **هيكلة البيانات (Data-Driven Design):**
-    *   كل مستوى هو ملف مستقل في مجلد `data/` يحتوي على `Chapter` و `scenes`.
-    *   **قاعدة صارمة:** النصوص القصصية توضع في ملفات البيانات (`introData.ts`)، بينما نصوص الواجهة الثابتة (أزرار، رسائل) توضع في `gameUI.ts`.
-
-## 2️⃣ الأخطاء القاتلة التي تم حلها (Critical Bugs Solved)
-
-| المشكلة (Bug) | السبب التقني | الحل المعتمد |
-| :--- | :--- | :--- |
-| **تجميد التطبيق (Freeze) عند الإجابة** | مكتبة `canvas-confetti` ترمي خطأ إذا لم يجد عنصر DOM جاهز. | تغليف استدعاء `confetti()` داخل `try/catch`. |
-| **قطع السؤال الأول فوراً** | تهيئة المتغير `timeLeft` بالصفر بدلاً من وقت السؤال الفعلي. | تهيئة `timeLeft` بقيمة `currentScene.timePerQuestionMs` في `useState`. |
-| **تداخل الأصوات (Audio Collision)** | الصوت السابق (مثل صوت المثال) لا يتم إيقافه عند الانتقال للتحدي. | استدعاء `window.speechSynthesis.cancel()` ودالة `stop()` في `useCharacterVoice` عند تغيير المشهد. |
-| **اختفاء الفيديو** | عدم وجود وسم `<video>` حقيقي في الكود. | إضافة حالة `videoState` (start -> playing -> done) ووضع وسم الفيديو بداخلها. |
-| **خشة/تقطع الصوت الإنجليزي** | استخدام الصوت الافتراضي العربي أو سرعة عالية. | إنشاء دالة `speakEnglish` مخصصة تبحث عن `en-US` Voice، وتستخدم `onend`، وتضبط السرعة إلى `0.75`. |
-| **اختفاء الحروف العربية (Typewriter)** | استخدام `setInterval` مع الإضافة التراكمية `prev + char`. | استخدام `setDisplayedText(fullText.slice(0, i + 1))`. |
-| **عدم ترجمة اسم اللعبة في القائمة** | ملف `gamesI18n` يقوم بتحويل "ة" إلى "ه" تلقائياً. | إضافة `titleEn` في `gamesData.ts` وقراءته مباشرة في `GamesListScreen` بدلاً من القاموس. |
-| **حفظ المستوى كـ "مكتمل" رغم الفشل** | دالة `onComplete` كانت تستدعى بمجرد نهاية الأسئلة دون فحص النتيجة. | في المدير، نفحص `score >= requiredCorrect` قبل استدعاء `completeMentalChapter`. |
-
-## 3️⃣ قواعد صارمة لإدارة الصوت (Audio TTS Rules)
-*   **ممنوع استخدام `window.speechSynthesis` مباشرة للغة العربية:** يجب استخدام خطاف `useCharacterVoice` المخصص للمشروع.
-*   **ممنوع ترك صوت يعمل في الخلفية:** عند الضغط على "رجوع" أو الانتقال لمشهد جديد، يجب استدعاء `stopAllAudio()` فوراً.
-*   **لغة الصوت:** في دالة `toggleExampleAudio`، لا نمرر النص العربي لمحرك إنجليزي أو العكس. إذا كان التطبيق إنجليزياً، نستخدم `SpeechSynthesisUtterance` مستقلة.
-
-## 4️⃣ دليل إضافة مستوى جديد (للمبرمجين و AI)
-لإضافة المستوى الخامس (مثلاً)، اتبع الخطوات التالية بدقة:
-1.  **ملف البيانات:** أنشئ `data/level5Data.ts` يحتوي على `Chapter` (مع `scenes`).
-2.  **تحديث المدير:** 
-    *   استورد الملف الجديد في `MentalArchivesManager.tsx`.
-    *   أضفه إلى الكائن `CHAPTERS`.
-3.  **آلية الفتح:** تأكد أن `requires` في ملف البيانات يحتوي على المستويات السابقة (مثلاً `requires: ['level4']`).
-4.  **الترجمة:** أضف أي نصوص جديدة (مثل عناوين الأزرار) إلى `gameUI.ts`.
-5.  **الاختبار:** امسح الـ `localStorage` مرة واحدة، وجرب اللعب من البداية، وتأكد من أن المؤقت يبدأ صحيحاً، والصوت لا يتداخل.
-
-**⚠️ قاعدة ذهبية:** لا تقم بتعديل ملفات `gameTypes.ts` أو `MentalArchivesEngine.tsx` عند إضافة مستوى جديد، إلا إذا كان المستوى يحتاج نوعاً جديداً من الأسئلة (مثل البرمجة المرئية). المحرك مصمم ليعمل مع أي بيانات تُمرر إليه.
-```
-
-الإضافات الأربعة في progressStore.ts
-
-الإضافة الأولى: تعريف الأنواع (Types)
-في أعلى الملف (تحت الاستيرادات)، أضفنا أنواعاً خاصة بالفصول.
+📂 الملف: src/components/games/MentalArchivesGame/mentalArchivesStore.ts
 
 ```typescript
-export type MentalChapterId = 'intro' | 'level1' | 'level2' | 'level3' | 'level4' | 'level5' | 'level6' | 'level7' | 'level8';
-export type MentalGameProgress = Partial<Record<MentalChapterId, { bestScore: number; at: number }>>;
-```
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { ChapterId } from './gameFlowTypes';
 
-· السبب: تعريف شكل البيانات التي سيتم حفظها (معرف الفصل، أفضل نتيجة، وتاريخ الإنجاز) لضمان حماية الكود من الأخطاء (Type Safety).
+export type MentalGameProgress = Partial<Record<ChapterId, { bestScore: number; at: number }>>;
 
-الإضافة الثانية: تحديث الواجهة (Interface)
-داخل interface ProgressState، أضفنا حالة تقدم اللعبة والدوال التي تتحكم بها.
+interface MentalArchivesState {
+  progress: MentalGameProgress;
+  completeChapter: (id: ChapterId, score: number) => void;
+  resetProgress: () => void;
+}
 
-```typescript
-  // --- حالة لعبة بوابة الثقب الدودي ---
-  mentalArchivesProgress: MentalGameProgress;
-  completeMentalChapter: (id: MentalChapterId, score: number) => void;
-  resetMentalProgress: () => void;
-```
-
-· السبب: جعل React والمكونات الأخرى تدرك وجود هذا التقدم، وتتيح استدعاء دوال الحفظ والتصفير.
-
-الإضافة الثالثة: حالة البداية ودوال التحكم (Store Actions)
-داخل initialState (وفي دالة create)، أضفنا حالة فارغة ودالة لحفظ التقدم.
-
-```typescript
-// داخل initialState:
-  mentalArchivesProgress: {} as MentalGameProgress,
-
-// داخل دوال المتجر:
-      completeMentalChapter: (id, score) => set((state) => {
-        const existing = state.mentalArchivesProgress[id];
-        // لا نحدث السجل إذا كانت النتيجة الجديدة أقل من السابقة
+export const useMentalArchivesStore = create<MentalArchivesState>()(
+  persist(
+    (set) => ({
+      progress: {},
+      completeChapter: (id, score) => set((state) => {
+        const existing = state.progress[id];
         if (existing && existing.bestScore >= score) return state;
-        
         return {
-          mentalArchivesProgress: {
-            ...state.mentalArchivesProgress,
+          progress: {
+            ...state.progress,
             [id]: { bestScore: score, at: Date.now() }
           }
         };
       }),
-
-      resetMentalProgress: () => set({ mentalArchivesProgress: {} }),
+      resetProgress: () => set({ progress: {} }),
+    }),
+    {
+      name: 'mental_archives_progress_v1', // 👈 مفتاح الحفظ في localStorage
+    }
+  )
+);
 ```
 
-· السبب: completeMentalChapter تضمن حفظ أفضل نتيجة فقط (لا تحفظ نتيجة أسوأ إذا أعاد الطفل اللعب)، و resetMentalProgress تتيح للمطورين تصفير اللعبة أثناء الاختبار.
+🔗 الحفظ في النسخة الاحتياطية (JSON Backup)
 
-الإضافة الرابعة: ترحيل البيانات (Migration v13)
-داخل إعدادات persist (وتحديداً في دالة migrate)، رفعنا الإصدار إلى 13 وأضفنا كوداً لتحويل البيانات القديمة.
+لضمان حفظ تقدم اللعبة في نسخة JSON الاحتياطية، تمت إضافة المفتاح 'mental_archives_progress_v1' إلى مصفوفة keysToKeep في ملف GuardianDashboard.tsx:
 
 ```typescript
-      version: 13, // تم رفع الإصدار من 12 إلى 13
-
-      // ... داخل دالة migrate ...
-        if (version < 13) {
-          const oldMaxLevel = parseInt(localStorage.getItem('mental_archives_max_level') || '0');
-          const newCompleted: MentalGameProgress = {};
-          
-          if (oldMaxLevel >= 1) newCompleted['intro'] = { bestScore: 100, at: Date.now() };
-          if (oldMaxLevel >= 2) newCompleted['level1'] = { bestScore: 100, at: Date.now() };
-          
-          localStorage.removeItem('mental_archives_max_level'); // تنظيف المفتاح القديم
-
-          return applyLevelIdMigration({
-            ...initialState,
-            ...old,
-            mentalArchivesProgress: newCompleted,
-          } as ProgressState);
-        }
+const keysToKeep = [
+  'soroban_companion',
+  'soroban_child_name',
+  // ...
+  'sorobania_progress_v2',
+  'mental_archives_progress_v1', // 👈 تمت الإضافة هنا
+];
 ```
 
-· السبب: الأهم في المشاريع الحية! هذا الكود يقرأ التقدم القديم المخزن في localStorage (الذي كان يعتمد على رقم المستوى max_level)، ويحوله إلى الشكل الجديد (سجل الفصول المكتملة)، ويمسح المفتاح القديم. هذا يضمن أن أي طفل لعب النسخة القديمة لن يفقد تقدمه عند تحديث التطبيق.
+🏆 الرقم القياسي (High Score)
+
+يتم حفظ الرقم القياسي للعبة في highScoreStore (مثل الألعاب الخمس الأخرى). يقوم المدير (MentalArchivesManager) باستدعاء دالة addScore عند نجاح الطفل في أي فصل، ليظهر الرقم في القائمة الخارجية لمدينة الألعاب.
 
 ---
 
-يمكنك إضافة هذه الإضافات الأربعة تحت عنوان جديد في الملحق باسم "دمج لعبة الثقب الدودي في المتجر الموحد (Progress Store)".
+📚 الملحق الثالث: الدروس المستفادة وقواعد التطوير (Lessons Learned & Dev Rules)
+
+الغرض: توثيق الأخطاء المعمارية والتقنية التي واجهتنا وكيف تم حلها، لتكون مرجعاً لأي مطور أو أداة ذكاء اصطناعي مستقبلاً.
+
+1️⃣ التعديلات المعمارية الأساسية (Architecture)
+
+· فصل المحرك عن المدير (Engine vs Manager):
+  · المدير (MentalArchivesManager.tsx): مسؤول عن شاشة الخريطة، قراءة التقدم من mentalArchivesStore، تحديد المستويات المفتوحة، وحفظ النتيجة في highScoreStore.
+  · المحرك (MentalArchivesEngine.tsx): مكون "أعمى" يستقبل Chapter ويعرض المشاهد.
+· الاعتماد على mentalArchivesStore (وليس progressStore):
+  · تم عزل اللعبة عن المتجر المركزي، لتعمل مثل سوروبانيا.
+  · التقدم يُحفظ في localStorage تحت مفتاح mental_archives_progress_v1.
+· هيكلة البيانات (Data-Driven Design):
+  · كل مستوى هو ملف مستقل في مجلد data/.
+  · النصوص القصصية في ملفات البيانات، ونصوص الواجهة في gameUI.ts.
+
+2️⃣ الأخطاء القاتلة التي تم حلها (Critical Bugs Solved)
+
+المشكلة (Bug) السبب التقني الحل المعتمد
+تجميد التطبيق عند الإجابة مكتبة canvas-confetti ترمي خطأ إذا لم يجد عنصر DOM جاهز. تغليف استدعاء confetti() داخل try/catch.
+قطع السؤال الأول فوراً تهيئة المتغير timeLeft بالصفر. تهيئة timeLeft بقيمة currentScene.timePerQuestionMs.
+تداخل الأصوات (Audio Collision) الصوت السابق لا يتم إيقافه عند الانتقال للتحدي. استدعاء window.speechSynthesis.cancel() عند تغيير المشهد.
+اختفاء الفيديو عدم وجود وسم <video> حقيقي في الكود. إضافة حالة videoState (start -> playing -> done).
+خشة/تقطع الصوت الإنجليزي استخدام الصوت الافتراضي العربي أو سرعة عالية. دالة speakCustom تستخدم en-US Voice، سرعة 0.7، وتستخدم onend.
+اختفاء الحروف العربية (Typewriter) استخدام setInterval مع الإضافة التراكمية. استخدام setDisplayedText(fullText.slice(0, i + 1)).
+عدم ترجمة اسم اللعبة في القائمة ملف gamesI18n يحول "ة" إلى "ه" تلقائياً. إضافة titleEn في gamesData.ts وقراءته مباشرة.
+حفظ المستوى كـ "مكتمل" رغم الفشل دالة onComplete تستدعى دون فحص النتيجة. في المدير، نفحص score >= requiredCorrect قبل الحفظ.
+المؤقت لا يتحرك شرط timeLeft > 0 داخل useEffect يمنع التشغيل. إضافة timeLeft إلى مصفوفة الاعتماديات.
+
+3️⃣ قواعد صارمة لإدارة الصوت (Audio TTS Rules)
+
+· ممنوع استخدام window.speechSynthesis مباشرة للغة العربية: يجب استخدام الخطاف المخصص.
+· ممنوع ترك صوت يعمل في الخلفية: عند الضغط على "رجوع" أو الانتقال، يجب استدعاء stopAllAudio().
+· لغة الصوت: لا نمرر النص العربي لمحرك إنجليزي أو العكس.
+
+4️⃣ قاعدة ذهبية نهائية
+
+لا تقم بتعديل ملفات gameFlowTypes.ts أو MentalArchivesEngine.tsx عند إضافة مستوى جديد، إلا إذا كان المستوى يحتاج نوعاً جديداً من الأسئلة (مثل البرمجة المرئية). المحرك مصمم ليعمل مع أي بيانات تُمرر إليه.
+
+```
