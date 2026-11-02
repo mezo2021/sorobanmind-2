@@ -152,7 +152,6 @@ export default function MentalArchivesEngine({ levelData, onComplete, onBack }: 
     addScore('mental-archives', childName, finalScore, 'joud');
     if (!isPreviewMode()) addXP(isSuccess ? 5 : 2);
     if (isSuccess) {
-      localStorage.setItem('mental_archives_max_level', (levelData.levelNumber + 1).toString());
       confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
     }
 
