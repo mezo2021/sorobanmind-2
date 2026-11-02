@@ -32,6 +32,7 @@ const DICT: Record<string, string> = {
   '7 × 8 = 56، ثم 25 فيكون 5625': '7 × 8 = 56, then 25, so it is 5625',
   '9 × 9 = 81 وينتهي ب 1': '9 × 9 = 81 and it ends in 1',
   'ابحث عن القاعده المفقوده..': 'Look for the missing rule..',
+  'بوابة الثقب الدودي': 'Wormhole Gate',
   'ابدا': 'Start',
   'ابدا التحدي': 'Start the challenge',
   'ابدا التحقيق': 'Start the investigation',
