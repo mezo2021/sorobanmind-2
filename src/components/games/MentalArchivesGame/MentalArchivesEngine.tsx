@@ -145,21 +145,19 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   }, [qIndex, sceneIndex, currentScene]);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (currentScene?.kind === 'challenge' && feedback === 'none' && timeLeft > 0 && phase === 'playing') {
-      timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 100) {
-            clearInterval(timer); 
-            handleAnswer(false);
-            return 0;
-          }
-          return prev - 100;
-        });
-      }, 100);
-    }
-    return () => clearInterval(timer);
-  }, [currentScene, qIndex, feedback, phase]);
+    if (currentScene?.kind !== 'challenge' || feedback !== 'none' || phase !== 'playing' || timeLeft <= 0) return;
+    
+    const timer = setTimeout(() => {
+      if (timeLeft <= 100) {
+        setTimeLeft(0);
+        handleAnswer(false);
+      } else {
+        setTimeLeft(timeLeft - 100);
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [timeLeft, currentScene, qIndex, feedback, phase]);
 
   const handleFinishChapter = () => {
     setPhase('success');
