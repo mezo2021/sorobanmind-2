@@ -286,3 +286,83 @@ const handleComplete = () => {
 
 **⚠️ قاعدة ذهبية:** لا تقم بتعديل ملفات `gameTypes.ts` أو `MentalArchivesEngine.tsx` عند إضافة مستوى جديد، إلا إذا كان المستوى يحتاج نوعاً جديداً من الأسئلة (مثل البرمجة المرئية). المحرك مصمم ليعمل مع أي بيانات تُمرر إليه.
 ```
+
+الإضافات الأربعة في progressStore.ts
+
+الإضافة الأولى: تعريف الأنواع (Types)
+في أعلى الملف (تحت الاستيرادات)، أضفنا أنواعاً خاصة بالفصول.
+
+```typescript
+export type MentalChapterId = 'intro' | 'level1' | 'level2' | 'level3' | 'level4' | 'level5' | 'level6' | 'level7' | 'level8';
+export type MentalGameProgress = Partial<Record<MentalChapterId, { bestScore: number; at: number }>>;
+```
+
+· السبب: تعريف شكل البيانات التي سيتم حفظها (معرف الفصل، أفضل نتيجة، وتاريخ الإنجاز) لضمان حماية الكود من الأخطاء (Type Safety).
+
+الإضافة الثانية: تحديث الواجهة (Interface)
+داخل interface ProgressState، أضفنا حالة تقدم اللعبة والدوال التي تتحكم بها.
+
+```typescript
+  // --- حالة لعبة بوابة الثقب الدودي ---
+  mentalArchivesProgress: MentalGameProgress;
+  completeMentalChapter: (id: MentalChapterId, score: number) => void;
+  resetMentalProgress: () => void;
+```
+
+· السبب: جعل React والمكونات الأخرى تدرك وجود هذا التقدم، وتتيح استدعاء دوال الحفظ والتصفير.
+
+الإضافة الثالثة: حالة البداية ودوال التحكم (Store Actions)
+داخل initialState (وفي دالة create)، أضفنا حالة فارغة ودالة لحفظ التقدم.
+
+```typescript
+// داخل initialState:
+  mentalArchivesProgress: {} as MentalGameProgress,
+
+// داخل دوال المتجر:
+      completeMentalChapter: (id, score) => set((state) => {
+        const existing = state.mentalArchivesProgress[id];
+        // لا نحدث السجل إذا كانت النتيجة الجديدة أقل من السابقة
+        if (existing && existing.bestScore >= score) return state;
+        
+        return {
+          mentalArchivesProgress: {
+            ...state.mentalArchivesProgress,
+            [id]: { bestScore: score, at: Date.now() }
+          }
+        };
+      }),
+
+      resetMentalProgress: () => set({ mentalArchivesProgress: {} }),
+```
+
+· السبب: completeMentalChapter تضمن حفظ أفضل نتيجة فقط (لا تحفظ نتيجة أسوأ إذا أعاد الطفل اللعب)، و resetMentalProgress تتيح للمطورين تصفير اللعبة أثناء الاختبار.
+
+الإضافة الرابعة: ترحيل البيانات (Migration v13)
+داخل إعدادات persist (وتحديداً في دالة migrate)، رفعنا الإصدار إلى 13 وأضفنا كوداً لتحويل البيانات القديمة.
+
+```typescript
+      version: 13, // تم رفع الإصدار من 12 إلى 13
+
+      // ... داخل دالة migrate ...
+        if (version < 13) {
+          const oldMaxLevel = parseInt(localStorage.getItem('mental_archives_max_level') || '0');
+          const newCompleted: MentalGameProgress = {};
+          
+          if (oldMaxLevel >= 1) newCompleted['intro'] = { bestScore: 100, at: Date.now() };
+          if (oldMaxLevel >= 2) newCompleted['level1'] = { bestScore: 100, at: Date.now() };
+          
+          localStorage.removeItem('mental_archives_max_level'); // تنظيف المفتاح القديم
+
+          return applyLevelIdMigration({
+            ...initialState,
+            ...old,
+            mentalArchivesProgress: newCompleted,
+          } as ProgressState);
+        }
+```
+
+· السبب: الأهم في المشاريع الحية! هذا الكود يقرأ التقدم القديم المخزن في localStorage (الذي كان يعتمد على رقم المستوى max_level)، ويحوله إلى الشكل الجديد (سجل الفصول المكتملة)، ويمسح المفتاح القديم. هذا يضمن أن أي طفل لعب النسخة القديمة لن يفقد تقدمه عند تحديث التطبيق.
+
+---
+
+يمكنك إضافة هذه الإضافات الأربعة تحت عنوان جديد في الملحق باسم "دمج لعبة الثقب الدودي في المتجر الموحد (Progress Store)".
