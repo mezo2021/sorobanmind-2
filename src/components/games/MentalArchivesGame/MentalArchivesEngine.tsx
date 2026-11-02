@@ -26,7 +26,10 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [sceneIndex, setSceneIndex] = useState(0);
   const currentScene = chapter.scenes[sceneIndex];
 
-  const [videoStarted, setVideoStarted] = useState(chapter.id !== 'intro');
+  // 👇 إصلاح 1: إدارة الفيديو بحالة منفصلة (start -> playing -> done)
+  const [videoState, setVideoState] = useState<'start' | 'playing' | 'done'>(
+    chapter.id === 'intro' ? 'start' : 'done'
+  );
 
   const [lineIndex, setLineIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
@@ -37,7 +40,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
 
   const [qIndex, setQIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
-  const [timeLeft, setTimeLeft] = useState(0);
+  // 👇 إصلاح 2: تهيئة المؤقت بالوقت الصحيح بدلاً من الصفر
+  const [timeLeft, setTimeLeft] = useState(currentScene?.kind === 'challenge' ? currentScene.timePerQuestionMs : 0);
   const [correctCount, setCorrectCount] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'correct' | 'wrong'>('none');
 
@@ -60,12 +64,11 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
-  // 1. إدارة الآلة الكاتبة
+  // إدارة الآلة الكاتبة
   useEffect(() => {
     if (currentScene?.kind === 'dialogue') {
       const line = currentScene.lines[lineIndex];
       if (!line) return;
-      
       const charData = getCharacterData(line.character);
       const fullText = getTxt(line.textAr, line.textEn);
       
@@ -88,15 +91,23 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   }, [lineIndex, sceneIndex, isAr]);
 
-  // 2. إدارة مؤقت التحدي
+  // إعادة ضبط المؤقت عند تغيير السؤال
+  useEffect(() => {
+    if (currentScene?.kind === 'challenge') {
+      setTimeLeft(currentScene.timePerQuestionMs);
+    }
+  }, [qIndex, sceneIndex]);
+
+  // إدارة مؤقت التحدي
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (currentScene?.kind === 'challenge' && feedback === 'none') {
+    if (currentScene?.kind === 'challenge' && feedback === 'none' && timeLeft > 0) {
       timer = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 100) {
-            handleAnswer(false);
-            return currentScene.timePerQuestionMs;
+            clearInterval(timer); 
+            handleAnswer(false); // انتهى الوقت
+            return 0;
           }
           return prev - 100;
         });
@@ -131,7 +142,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         if (qIndex < currentScene.questions.length - 1) {
           setQIndex(prev => prev + 1);
           setUserInput('');
-          setTimeLeft(currentScene.timePerQuestionMs);
           setFeedback('none');
         } else {
           setFeedback('none');
@@ -145,7 +155,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         if (qIndex < currentScene.questions.length - 1) {
           setQIndex(prev => prev + 1);
           setUserInput('');
-          setTimeLeft(currentScene.timePerQuestionMs);
           setFeedback('none');
         } else {
           setFeedback('none');
@@ -175,22 +184,26 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       const textAr = currentScene.example.steps[index].textAr;
       const textEn = currentScene.example.steps[index].textEn;
       
+      // 👇 إصلاح 3: استخدام onend للصوت الإنجليزي لمنع التقطع وإبطاء السرعة
       if (!isAr) {
         window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(textEn);
+        const cleanEnText = textEn.replace(/؟/g, '?');
+        const utterance = new SpeechSynthesisUtterance(cleanEnText);
         utterance.lang = 'en-US';
-        utterance.rate = 0.9;
+        utterance.rate = 0.75; // سرعة أبطأ
+        utterance.onend = () => {
+          index++;
+          playStep();
+        };
         window.speechSynthesis.speak(utterance);
       } else {
         speakSorobana(textAr);
+        // وقت أطول للعربية لضمان عدم التقطع
+        exampleTimerRef.current = setTimeout(() => {
+          index++;
+          playStep();
+        }, Math.max(4000, textAr.length * 150));
       }
-      
-      const textToSpeak = isAr ? textAr : textEn;
-      const duration = Math.max(3000, textToSpeak.length * 80);
-      exampleTimerRef.current = setTimeout(() => {
-        index++;
-        playStep();
-      }, duration);
     };
     playStep();
   };
@@ -222,19 +235,37 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     </div>
   );
 
-  if (!videoStarted) {
+  // شاشة بدء الفيديو
+  if (videoState === 'start') {
     return (
-      <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-black text-white" dir={dir}>
-        <div className="relative w-full h-[100dvh] overflow-hidden flex flex-col items-center justify-center">
-          <img src={joudImg} alt="Joud" className="absolute inset-0 w-full h-full object-cover opacity-60 blur-sm scale-110" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-transparent"></div>
-          <div className="z-10 flex flex-col items-center gap-6 mt-32">
-            <h1 className="text-4xl sm:text-6xl font-black text-amber-400 text-center drop-shadow-2xl">{tUI('startJourney')}</h1>
-            <button onClick={() => setVideoStarted(true)} className="flex items-center gap-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 px-8 py-4 rounded-full font-extrabold text-xl sm:text-2xl transition-all shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:scale-105 active:scale-95">
-              <Play fill="currentColor" className="w-6 h-6" /> {tUI('startJourney')}
-            </button>
-          </div>
+      <div className="relative w-full h-[100dvh] bg-black flex flex-col items-center justify-center overflow-hidden" dir={dir}>
+        <img src={joudImg} alt="Joud" className="absolute inset-0 w-full h-full object-cover opacity-60 blur-sm scale-110" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-transparent"></div>
+        <div className="z-10 flex flex-col items-center gap-6 mt-32">
+          <button onClick={() => setVideoState('playing')} className="flex items-center gap-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 px-8 py-4 rounded-full font-extrabold text-xl sm:text-2xl transition-all shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:scale-105 active:scale-95">
+            <Play fill="currentColor" className="w-6 h-6" /> {tUI('startJourney')}
+          </button>
         </div>
+      </div>
+    );
+  }
+
+  // تشغيل الفيديو
+  if (videoState === 'playing') {
+    return (
+      <div className="relative w-full h-[100dvh] bg-black flex flex-col items-center justify-center" dir={dir}>
+        <video 
+          src={introVideo} 
+          autoPlay 
+          playsInline 
+          controls 
+          className="w-full h-full object-contain"
+          onEnded={() => setVideoState('done')}
+        />
+        <button onClick={() => setVideoState('done')} className="absolute bottom-20 right-6 bg-slate-800/80 hover:bg-slate-700 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-md transition-all z-50 border border-slate-600">
+          <span>{tUI('skipIntro')}</span>
+          <SkipForward className="w-5 h-5" />
+        </button>
       </div>
     );
   }
@@ -281,7 +312,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           </div>
           <div className="text-4xl text-center font-mono bg-stone-900 border border-amber-500/20 py-4 rounded-2xl mb-6 text-amber-400 tracking-wider shadow-inner" dir="ltr">{currentScene.example.problem}</div>
           <ul className="space-y-4 mb-8">
-            {/* 👇 إصلاح الخطأ 1: إضافة أنواع صريحة step و idx */}
             {currentScene.example.steps.map((step: { textAr: string, textEn: string }, idx: number) => (
               <li key={idx} className={`flex items-start p-3 rounded-xl border transition-all duration-300 ${activeStepIndex === idx ? 'bg-amber-900/40 border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.2)] scale-[1.02]' : 'bg-slate-800/50 border-slate-700/50'}`}>
                 <span className={`rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold ml-3 mt-0.5 shrink-0 transition-colors ${activeStepIndex === idx ? 'bg-amber-500 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}>{idx + 1}</span>
@@ -310,7 +340,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           <div className="bg-stone-900/90 border-2 border-amber-500/40 p-8 rounded-3xl shadow-2xl w-full text-center relative backdrop-blur-md">
             <div className="absolute -top-3 right-6 bg-amber-500/20 text-amber-300 text-xs px-3 py-1 rounded-full border border-amber-500/30">{tUI('digitalTablet')}</div>
             <div className="flex flex-col items-center text-5xl font-mono mb-8 pt-4" dir="ltr">
-              {/* 👇 إصلاح الخطأ 2: إضافة أنواع صريحة num و i */}
               {q.numbers.map((num: number, i: number) => (
                 <div key={i} className="flex items-center justify-center w-36 relative my-1">
                   <span className="w-16 text-center text-amber-100 drop-shadow-md">{num}</span>
