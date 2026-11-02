@@ -1,18 +1,16 @@
-// src/components/games/MentalArchivesGame/MentalArchivesGame.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { LEVEL_1_DATA, GAME_ID, DEFAULT_HERO } from './level1Data';
-import { GameCompanion, type HeroMood } from '../GameCompanion';
+import { GameCompanion } from '../GameCompanion';
 import { HighScoreBadge } from '../HighScoreBadge';
 import { addScore, getHighScore, type HighScoreEntry } from '../highScoreStore';
-import { useCharacterVoice } from '@/hooks/useCharacterVoice'; // نستخدم هذا لتعدد الأصوات
+import { useCharacterVoice } from '@/hooks/useCharacterVoice';
 import { gt, lt, useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
-import { SkipForward, ArrowRight, RotateCcw, Home, Trophy, Crown } from 'lucide-react';
+import { SkipForward, ArrowRight, Play } from 'lucide-react';
 import { Num } from '@/components/Num';
 
-// 👇 استيراد الصور والفيديو مباشرة من نفس المجلد
 import introVideo from './intro.mp4';
 import joudImg from './joud.png';
 import aseelImg from './aseel.png';
@@ -20,16 +18,11 @@ import sorobanaImg from './sorobana.png';
 
 type GamePhase = 'intro' | 'story' | 'example' | 'challenge' | 'failed' | 'success';
 
-interface Props {
-  onBack: () => void;
-}
-
-export default function MentalArchivesGame({ onBack }: Props) {
+export default function MentalArchivesGame({ onBack }: { onBack: () => void }) {
   const { dir, isAr } = useGameLang();
   const [phase, setPhase] = useState<GamePhase>('intro');
   const [storyIndex, setStoryIndex] = useState(0);
   
-  // حالة التحدي
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
   const [timeLeft, setTimeLeft] = useState(LEVEL_1_DATA.timePerQuestionMs);
@@ -37,21 +30,19 @@ export default function MentalArchivesGame({ onBack }: Props) {
   const [correctCount, setCorrectCount] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'correct' | 'wrong'>('none');
   
-  // 👇 إعداد الأصوات الثلاثة (باستخدام الأصوات المتاحة في مشروعك)
+  // 👇 أصوات الشخصيات: سوروبانا (شام) - أسيل (بانة) - جود (جود)
   const { speak: speakJoud } = useCharacterVoice('joud');
-  const { speak: speakAseel } = useCharacterVoice('sham'); // أسيل بصوت شام
-  const { speak: speakSorobana } = useCharacterVoice('bana'); // سوروبانا بصوت بانة
+  const { speak: speakAseel } = useCharacterVoice('bana'); 
+  const { speak: speakSorobana } = useCharacterVoice('sham'); 
 
   const childName = useProgressStore((s) => s.childName) || gt('بطل');
   const addXP = useProgressStore((s) => s.addXP);
   
-  // الرقم القياسي
   const [previousHigh, setPreviousHigh] = useState<HighScoreEntry | null>(null);
   const [isNewRecord, setIsNewRecord] = useState(false);
   const recordSaved = useRef(false);
 
-  // حالات البطل
-  const [heroMood, setHeroMood] = useState<HeroMood>('idle');
+  const [heroMood, setHeroMood] = useState<any>('idle');
   const [heroText, setHeroText] = useState('');
 
   useEffect(() => {
@@ -70,7 +61,6 @@ export default function MentalArchivesGame({ onBack }: Props) {
   const currentLine = LEVEL_1_DATA.story[storyIndex];
   const currentCharData = currentLine ? getCharacterData(currentLine.character) : null;
 
-  // إدارة النطق
   useEffect(() => {
     if (phase === 'story' && currentCharData) {
       setHeroText(gt(currentLine.textAr));
@@ -78,7 +68,6 @@ export default function MentalArchivesGame({ onBack }: Props) {
     }
   }, [storyIndex, phase]);
 
-  // إدارة المؤقت
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (phase === 'challenge' && feedback === 'none') {
@@ -126,11 +115,7 @@ export default function MentalArchivesGame({ onBack }: Props) {
       setHeroText('');
     } else {
       const finalCorrect = correctCount + (feedback === 'correct' ? 1 : 0);
-      if (finalCorrect >= LEVEL_1_DATA.requiredCorrect) {
-        endGame(true, finalCorrect);
-      } else {
-        endGame(false, finalCorrect);
-      }
+      endGame(finalCorrect >= LEVEL_1_DATA.requiredCorrect, finalCorrect);
     }
   };
 
@@ -138,32 +123,22 @@ export default function MentalArchivesGame({ onBack }: Props) {
     if (recordSaved.current) return;
     recordSaved.current = true;
 
-    // حفظ الرقم القياسي
     const recordResult = addScore(GAME_ID, childName, finalScore, DEFAULT_HERO);
     if (recordResult.isNewRecord) {
       setIsNewRecord(true);
       setPreviousHigh(recordResult.previousTop);
     }
     
-    // منح XP
-    if (!isPreviewMode()) {
-      addXP(isSuccess ? 5 : 2);
-    }
-
-    // حفظ التقدم لفتح المستوى الثاني
-    if (isSuccess) {
-      localStorage.setItem('mental_archives_max_level', '2');
-      speakJoud(gt('عبرت البوابة بنجاح!'));
-    } else {
-      speakJoud(gt('تحتاج إلى مزيد من السرعة.'));
-    }
+    if (!isPreviewMode()) addXP(isSuccess ? 5 : 2);
+    if (isSuccess) localStorage.setItem('mental_archives_max_level', '2');
 
     setPhase(isSuccess ? 'success' : 'failed');
+    if (isSuccess) speakJoud(gt('عبرت البوابة بنجاح!'));
   };
 
   const handleRetry = () => {
     setFailedAttempts(prev => prev + 1);
-    if (failedAttempts >= 2) return; // 3 محاولات إجمالاً
+    if (failedAttempts >= 2) return; 
     setCurrentQIndex(0);
     setCorrectCount(0);
     setUserInput('');
@@ -175,7 +150,15 @@ export default function MentalArchivesGame({ onBack }: Props) {
     recordSaved.current = false;
   };
 
-  // ================= الواجهات (UI) =================
+  // دالة لاختيار البطل المرافق بناءً على المتحدث
+  const getCompanionId = () => {
+    if (phase === 'story') {
+      if (currentLine.character === 'sorobana') return 'sham'; // نستخدم شام كبديل لسوروبانا في الشريط العلوي
+      if (currentLine.character === 'aseel') return 'bana';
+      return 'joud';
+    }
+    return DEFAULT_HERO;
+  };
 
   const TopBar = () => (
     <div className="flex items-center justify-between gap-2 p-3 sm:p-4 sticky top-0 z-20 bg-slate-900/85 backdrop-blur-md border-b border-sky-500/20">
@@ -184,7 +167,8 @@ export default function MentalArchivesGame({ onBack }: Props) {
       </button>
       
       <div className="flex-1 flex justify-center">
-        <GameCompanion heroId={DEFAULT_HERO} mood={heroMood} customText={heroText} />
+        {/* 👇 البطل المرافق يتغير حسب الشخصية التي تتحدث */}
+        <GameCompanion heroId={getCompanionId() as any} mood={heroMood} customText={heroText} />
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
@@ -204,17 +188,20 @@ export default function MentalArchivesGame({ onBack }: Props) {
           src={introVideo} 
           autoPlay 
           playsInline 
+          muted // 👈 أضفنا muted لضمان التشغيل التلقائي في بعض المتصفحات
           controls
           className="w-full h-full max-h-[100dvh] object-cover"
           onEnded={() => setPhase('story')}
         />
-        <button 
-          onClick={() => setPhase('story')}
-          className="absolute bottom-20 right-6 bg-slate-800/80 hover:bg-slate-700 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-md transition-all z-50 border border-slate-600"
-        >
-          <span>{lt('تخطي المقدمة', 'Skip')}</span>
-          <SkipForward className="w-5 h-5" />
-        </button>
+        <div className="absolute bottom-20 flex flex-col items-center gap-4 z-50">
+          <button 
+            onClick={() => setPhase('story')}
+            className="bg-slate-800/80 hover:bg-slate-700 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-md transition-all border border-slate-600"
+          >
+            <span>{lt('تخطي المقدمة', 'Skip')}</span>
+            <SkipForward className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     );
   }
@@ -224,10 +211,8 @@ export default function MentalArchivesGame({ onBack }: Props) {
       <div className="relative flex flex-col justify-between min-h-[100dvh] bg-gradient-to-b from-indigo-950 to-slate-900 text-white overflow-hidden" dir={dir}>
         <TopBar />
         
-        {/* خلفية */}
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 pointer-events-none"></div>
 
-        {/* عرض الشخصيات */}
         <div className="flex-1 relative w-full max-w-4xl mx-auto flex justify-center items-end mb-6 z-10 gap-2 sm:gap-6 pt-24">
           <motion.img 
             src={aseelImg} alt="Aseel" 
@@ -246,7 +231,6 @@ export default function MentalArchivesGame({ onBack }: Props) {
           />
         </div>
 
-        {/* صندوق الحوار */}
         <motion.div 
           initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
           className="relative w-full max-w-2xl mx-auto bg-slate-800/95 backdrop-blur-md p-6 rounded-t-3xl border-t border-slate-600 z-20"
@@ -271,6 +255,7 @@ export default function MentalArchivesGame({ onBack }: Props) {
     );
   }
 
+  // ... (بقية الواجهات مثال، فشل، نجاح، وتحدي تبقى كما هي)
   if (phase === 'example') {
     return (
       <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-slate-900 text-white p-6" dir={dir}>
@@ -333,7 +318,6 @@ export default function MentalArchivesGame({ onBack }: Props) {
     );
   }
 
-  // واجهة التحدي
   const currentQ = LEVEL_1_DATA.questions[currentQIndex];
   return (
     <div className="relative flex flex-col min-h-[100dvh] bg-slate-900 text-white" dir={dir}>
