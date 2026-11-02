@@ -2,53 +2,45 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Chapter, Scene } from './gameFlowTypes'; // 👈 استخدام النوع الجديد
+import { Chapter } from './gameFlowTypes'; 
 import { tUI } from './gameUI';
 import { useCharacterVoice } from '@/hooks/useCharacterVoice';
 import { useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
 import { SkipForward, ArrowRight, Sparkles, Award, Play, Volume2, Square } from 'lucide-react';
 
-// استيراد الصور والفيديو
 import introVideo from './intro.mp4';
 import joudImg from './joud.png';
 import aseelImg from './aseel.png';
 import sorobanaImg from './sorobana.png';
 
 interface Props {
-  chapter: Chapter; // 👈 نستقبل Chapter
-  onComplete: (score: number) => void; // 👈 نمرر النتيجة للمدير
+  chapter: Chapter; 
+  onComplete: (score: number) => void; 
   onBack: () => void;
 }
 
 export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Props) {
   const { dir, isAr } = useGameLang();
   
-  // حالة التنقل بين المشاهد
   const [sceneIndex, setSceneIndex] = useState(0);
   const currentScene = chapter.scenes[sceneIndex];
 
-  // حالة الفيديو (فقط للتمهيد)
   const [videoStarted, setVideoStarted] = useState(chapter.id !== 'intro');
 
-  // حالة الحوار
   const [lineIndex, setLineIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
-  // حالة المثال
   const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null);
   const exampleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // حالة التحدي
   const [qIndex, setQIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
   const [timeLeft, setTimeLeft] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'correct' | 'wrong'>('none');
-  const [failedAttempts, setFailedAttempts] = useState(0);
 
-  // الأصوات
   const { speak: speakJoud } = useCharacterVoice('joud');
   const { speak: speakAseel } = useCharacterVoice('bana'); 
   const { speak: speakSorobana } = useCharacterVoice('sham'); 
@@ -68,7 +60,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
-  // 1. إدارة الآلة الكاتبة للحوار
+  // 1. إدارة الآلة الكاتبة
   useEffect(() => {
     if (currentScene?.kind === 'dialogue') {
       const line = currentScene.lines[lineIndex];
@@ -113,7 +105,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     return () => clearInterval(timer);
   }, [currentScene, qIndex, feedback]);
 
-  // التنقل للمشهد التالي
   const nextScene = () => {
     if (sceneIndex < chapter.scenes.length - 1) {
       setSceneIndex(s => s + 1);
@@ -124,7 +115,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
-  // التحقق من الإجابة
   const handleAnswer = (isManualSubmit: boolean) => {
     if (currentScene?.kind !== 'challenge' || feedback !== 'none') return;
     
@@ -135,7 +125,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       setFeedback('correct');
       setCorrectCount(prev => prev + 1);
       speakJoud(tUI('correct'));
-      
       try { confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 }, colors: ['#F59E0B', '#10B981', '#38BDF8'] }); } catch (e) {}
       
       setTimeout(() => {
@@ -166,7 +155,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
-  // تشغيل صوت المثال
   const toggleExampleAudio = () => {
     if (activeStepIndex !== null) {
       setActiveStepIndex(null);
@@ -187,7 +175,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       const textAr = currentScene.example.steps[index].textAr;
       const textEn = currentScene.example.steps[index].textEn;
       
-      // 👇 إصلاح الصوت الإنجليزي
       if (!isAr) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(textEn);
@@ -213,7 +200,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       <button onClick={onBack} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0">
         <ArrowRight className={`w-6 h-6 text-amber-400 ${isAr ? '' : 'rotate-180'}`} />
       </button>
-      
       <div className="flex-1 flex justify-center items-center gap-2">
         <div className={`w-12 h-12 rounded-full border-2 overflow-hidden shadow-lg flex items-center justify-center bg-slate-900 ${feedback === 'correct' ? 'border-emerald-400' : 'border-amber-400'}`}>
           <img src={joudImg} alt="Companion" className="w-full h-full object-cover" />
@@ -222,7 +208,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           {getTxt(chapter.titleAr, chapter.titleEn)}
         </span>
       </div>
-
       <div className="flex items-center gap-2 shrink-0">
         {currentScene?.kind === 'challenge' && (
           <div className="relative flex items-center justify-center w-12 h-12">
@@ -237,9 +222,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     </div>
   );
 
-  // ================= الواجهات =================
-
-  // شاشة الفيديو (للتمهيد فقط)
   if (!videoStarted) {
     return (
       <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-black text-white" dir={dir}>
@@ -257,7 +239,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     );
   }
 
-  // شاشة الحوار
   if (currentScene?.kind === 'dialogue') {
     const line = currentScene.lines[lineIndex];
     const charData = getCharacterData(line.character);
@@ -287,7 +268,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     );
   }
 
-  // شاشة المثال
   if (currentScene?.kind === 'example') {
     return (
       <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-slate-950 text-white p-6" dir={dir}>
@@ -301,7 +281,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           </div>
           <div className="text-4xl text-center font-mono bg-stone-900 border border-amber-500/20 py-4 rounded-2xl mb-6 text-amber-400 tracking-wider shadow-inner" dir="ltr">{currentScene.example.problem}</div>
           <ul className="space-y-4 mb-8">
-            {currentScene.example.steps.map((step, idx) => (
+            {/* 👇 إصلاح الخطأ 1: إضافة أنواع صريحة step و idx */}
+            {currentScene.example.steps.map((step: { textAr: string, textEn: string }, idx: number) => (
               <li key={idx} className={`flex items-start p-3 rounded-xl border transition-all duration-300 ${activeStepIndex === idx ? 'bg-amber-900/40 border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.2)] scale-[1.02]' : 'bg-slate-800/50 border-slate-700/50'}`}>
                 <span className={`rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold ml-3 mt-0.5 shrink-0 transition-colors ${activeStepIndex === idx ? 'bg-amber-500 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}>{idx + 1}</span>
                 <span className="text-base sm:text-lg text-slate-200">{getTxt(step.textAr, step.textEn)}</span>
@@ -316,7 +297,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     );
   }
 
-  // شاشة التحدي
   if (currentScene?.kind === 'challenge') {
     const q = currentScene.questions[qIndex];
     return (
@@ -330,7 +310,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           <div className="bg-stone-900/90 border-2 border-amber-500/40 p-8 rounded-3xl shadow-2xl w-full text-center relative backdrop-blur-md">
             <div className="absolute -top-3 right-6 bg-amber-500/20 text-amber-300 text-xs px-3 py-1 rounded-full border border-amber-500/30">{tUI('digitalTablet')}</div>
             <div className="flex flex-col items-center text-5xl font-mono mb-8 pt-4" dir="ltr">
-              {q.numbers.map((num, i) => (
+              {/* 👇 إصلاح الخطأ 2: إضافة أنواع صريحة num و i */}
+              {q.numbers.map((num: number, i: number) => (
                 <div key={i} className="flex items-center justify-center w-36 relative my-1">
                   <span className="w-16 text-center text-amber-100 drop-shadow-md">{num}</span>
                   {i < q.numbers.length - 1 && (
