@@ -1,6 +1,6 @@
 // src/components/games/MentalArchivesGame/MentalArchivesEngine.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Chapter, CharacterId } from './gameFlowTypes'; 
 import { tUI } from './gameUI';
@@ -21,6 +21,7 @@ interface Props {
 
 export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Props) {
   const { dir, isAr } = useGameLang();
+  const shouldReduceMotion = useReducedMotion();
   
   const [sceneIndex, setSceneIndex] = useState(0);
   const currentScene = chapter.scenes[sceneIndex];
@@ -40,7 +41,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
 
   const [qIndex, setQIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
-  const [timeLeft, setTimeLeft] = useState(currentScene?.kind === 'challenge' ? currentScene.timePerQuestionMs : 0);
+  // ⚠️ المؤقت يبدأ صفراً، ويُضبط عبر useEffect
+  const [timeLeft, setTimeLeft] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'correct' | 'wrong'>('none');
 
@@ -95,6 +97,30 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     stopAllAudio();
   }, [sceneIndex]);
 
+  // ═══ إصلاح المؤقت: إعادة ضبطه عند دخول التحدي أو تغيير السؤال ═══
+  useEffect(() => {
+    if (currentScene?.kind === 'challenge') {
+      setTimeLeft(currentScene.timePerQuestionMs);
+    }
+  }, [sceneIndex, qIndex, currentScene]);
+
+  // ═══ محرك المؤقت: يعمل فقط في التحدي وعندما لا يكون هناك feedback ═══
+  useEffect(() => {
+    if (currentScene?.kind !== 'challenge' || feedback !== 'none' || phase !== 'playing' || timeLeft <= 0) return;
+    
+    const timer = setTimeout(() => {
+      setTimeLeft(prev => {
+        if (prev <= 100) {
+          handleAnswer(false);
+          return 0;
+        }
+        return prev - 100;
+      });
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [timeLeft, currentScene, qIndex, feedback, phase]);
+
   const getCharacterData = (char: CharacterId) => {
     switch (char) {
       case 'jud': return { name: isAr ? 'جود' : 'Joud', img: joudImg, color: 'text-cyan-400' };
@@ -102,6 +128,58 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       case 'sorobana': return { name: isAr ? 'سوروبانا' : 'Sorobana', img: sorobanaImg, color: 'text-purple-400' };
       default: return { name: '', img: joudImg, color: '' };
     }
+  };
+
+  // ═══ التمييز البصري القوي: المتحدث نجم، والبقية مجمدون ═══
+  const getCharacterMotion = (char: CharacterId, isActive: boolean) => {
+    const glow =
+      char === 'jud'
+        ? 'drop-shadow(0 0 25px rgba(56,189,248,0.7))'
+        : char === 'aseel'
+          ? 'drop-shadow(0 0 25px rgba(244,63,94,0.7))'
+          : 'drop-shadow(0 0 25px rgba(168,85,247,0.7))';
+
+    // الشخصيات غير المتحدثة: مجمدة تماماً، صغيرة، رمادية
+    if (!isActive) {
+      return {
+        animate: {
+          scale: 0.8,
+          y: 0,
+          opacity: 0.3,
+          filter: 'grayscale(90%) contrast(80%)',
+        },
+        transition: { duration: 0.3, ease: 'easeOut' as const },
+      };
+    }
+
+    // في وضع تقليل الحركة: المتحدث ثابت مع توهج
+    if (shouldReduceMotion) {
+      return {
+        animate: {
+          scale: 1.05,
+          y: 0,
+          opacity: 1,
+          filter: glow,
+        },
+        transition: { duration: 0.2 },
+      };
+    }
+
+    // الشخصية المتحدثة: تنفس + طفو + توهج قوي
+    return {
+      animate: {
+        scale: [1.02, 1.07, 1.02],
+        y: [0, -6, 0],
+        opacity: 1,
+        filter: glow,
+      },
+      transition: {
+        duration: 3,
+        repeat: Infinity,
+        repeatType: 'mirror' as const,
+        ease: 'easeInOut',
+      },
+    };
   };
 
   useEffect(() => {
@@ -136,21 +214,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       };
     }
   }, [lineIndex, sceneIndex, isAr, videoState, phase]);
-
-  useEffect(() => {
-    if (currentScene?.kind !== 'challenge' || feedback !== 'none' || phase !== 'playing' || timeLeft <= 0) return;
-    
-    const timer = setTimeout(() => {
-      if (timeLeft <= 100) {
-        setTimeLeft(0);
-        handleAnswer(false);
-      } else {
-        setTimeLeft(timeLeft - 100);
-      }
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [timeLeft, currentScene, qIndex, feedback, phase]);
 
   const handleFinishChapter = () => {
     setPhase('success');
@@ -332,11 +395,31 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       <div className="relative flex flex-col justify-between min-h-[100dvh] bg-gradient-to-b from-stone-950 via-indigo-950 to-slate-950 text-white overflow-hidden" dir={dir}>
         <TopBar />
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
-        <div className="flex-1 relative w-full max-w-4xl mx-auto flex justify-center items-end mb-6 z-10 gap-2 sm:gap-6 pt-20">
-          <motion.img src={aseelImg} animate={{ scale: line.character === 'aseel' ? 1.1 : 0.85, opacity: line.character === 'aseel' ? 1 : 0.35, filter: line.character === 'aseel' ? 'drop-shadow(0 0 15px rgba(244,63,94,0.4))' : 'grayscale(80%)' }} className="w-24 sm:w-36 object-contain origin-bottom transition-all duration-300" />
-          <motion.img src={joudImg} animate={{ scale: line.character === 'jud' ? 1.1 : 0.85, opacity: line.character === 'jud' ? 1 : 0.35, filter: line.character === 'jud' ? 'drop-shadow(0 0 15px rgba(56,189,248,0.4))' : 'grayscale(80%)' }} className="w-32 sm:w-44 object-contain origin-bottom z-20 transition-all duration-300" />
-          <motion.img src={sorobanaImg} animate={{ scale: line.character === 'sorobana' ? 1.1 : 0.85, opacity: line.character === 'sorobana' ? 1 : 0.35, filter: line.character === 'sorobana' ? 'drop-shadow(0 0 15px rgba(168,85,247,0.4))' : 'grayscale(80%)' }} className="w-28 sm:w-40 object-contain origin-bottom transition-all duration-300" />
+        
+        {/* ═══ الشخصيات: المتحدث نجم كبير، البقية صغار مجمدون ═══ */}
+        <div className="flex-1 relative w-full max-w-5xl mx-auto flex justify-center items-end mb-4 z-10 gap-4 sm:gap-8 pt-10">
+          <motion.img
+            src={aseelImg}
+            alt={isAr ? 'أسيل' : 'Aseel'}
+            {...getCharacterMotion('aseel', line.character === 'aseel')}
+            className="w-36 sm:w-48 object-contain origin-bottom will-change-transform"
+          />
+
+          <motion.img
+            src={joudImg}
+            alt={isAr ? 'جود' : 'Joud'}
+            {...getCharacterMotion('jud', line.character === 'jud')}
+            className="w-44 sm:w-60 object-contain origin-bottom z-20 will-change-transform"
+          />
+
+          <motion.img
+            src={sorobanaImg}
+            alt={isAr ? 'سوروبانا' : 'Sorobana'}
+            {...getCharacterMotion('sorobana', line.character === 'sorobana')}
+            className="w-40 sm:w-56 object-contain origin-bottom will-change-transform"
+          />
         </div>
+        
         <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={() => { if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); } }} className="relative w-full max-w-3xl mx-auto bg-slate-900/95 backdrop-blur-md p-6 sm:p-8 rounded-t-3xl border-t-2 border-amber-500/30 shadow-2xl z-20 cursor-pointer">
           <div className="flex items-center gap-2 mb-3">
             <span className={`font-extrabold text-lg sm:text-xl ${charData.color}`}>{charData.name}</span>
@@ -391,7 +474,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
             </button>
           </div>
           
-          {/* 👇 هنا تم تعديل علامة الاستفهام في المسألة */}
           <div className="text-3xl sm:text-4xl text-center font-mono bg-stone-900 border border-amber-500/20 py-4 rounded-2xl mb-6 text-amber-400 tracking-wider shadow-inner" dir="ltr">
             {isAr ? currentExample.problem : currentExample.problem.replace(/؟/g, '?')}
           </div>
@@ -439,7 +521,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
               ))}
             </div>
             <div className="h-px w-3/4 bg-amber-500/30 mx-auto mb-6"></div>
-            {/* 👇 هنا تم تعديل علامة الاستفهام في مربع الإدخال */}
             <input type="number" value={userInput} onChange={(e) => setUserInput(e.target.value)} disabled={feedback !== 'none'} className={`w-44 mx-auto text-center text-5xl font-bold bg-slate-950 border-2 rounded-2xl p-4 outline-none transition-all shadow-inner ${feedback === 'correct' ? 'border-emerald-500 text-emerald-400 shadow-emerald-500/20' : feedback === 'wrong' ? 'border-red-500 text-red-400 shadow-red-500/20' : 'border-amber-500/40 focus:border-amber-400 text-amber-200'}`} placeholder={isAr ? '؟' : '?'} autoFocus />
           </div>
           <button onClick={() => handleAnswer(true)} disabled={!userInput || feedback !== 'none'} className="w-full py-4 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 disabled:opacity-50 rounded-2xl font-extrabold text-xl transition-all shadow-lg text-slate-950 flex items-center justify-center gap-2">
