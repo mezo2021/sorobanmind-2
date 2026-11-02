@@ -54,7 +54,7 @@ export const LEVEL_1_DATA: Chapter = {
     {
       kind: 'challenge',
       id: 'level1-challenge',
-      timePerQuestionMs: 14400,
+      timePerQuestionMs: 8000,
       requiredCorrect: 3,
       questions: [
         { type: "direct", numbers: [3, 2, 4], answer: 9 },
