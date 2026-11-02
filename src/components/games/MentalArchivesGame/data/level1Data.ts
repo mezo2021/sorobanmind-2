@@ -30,7 +30,7 @@ export const LEVEL_1_DATA: Chapter = {
       kind: 'example',
       id: 'level1-examples',
       // 👇 القاعدة العامة كفقرة نصية
-      ruleAr: "الْقَاعِدَةُ الذَّهَبِيَّة: جَرِّبْ الْمُبَاشَرَةَ أَوَّلاً، فَإِنْ ضَاقَ الْأَسْفَلُ فَاسْتَعِنْ بِالْمُتَمِّمِ (5)، وَإِنْ امْتَلَأَ الْعَمُودُ أَوْ تَجَاوَزَتِ الْعَشَرَةَ فَاسْتَعِنْ بِالْمُكَمِّلِ (10). وَإِنْ عَجَزْتَ عَنِ الطَّرْحِ، فَطَبِّقْ الْقَاعِدَةَ الْمُرَكَّبَة: (+10 - 5 + مُتَمِّمِ الْمُكَمِّل).",
+      ruleAr: "الْقَاعِدَةُ الذَّهَبِيَّة: جَرِّبْ الْمُبَاشَرَ أَوَّلاً، فَإِنْ ضَاقَ الْأَسْفَلُ فَاسْتَعِنْ بِالْمُتَمِّمِ (5)، وَإِنْ امْتَلَأَ الْعَمُودُ أَوْ تَجَاوَزَتِ التِّسْعَة فَاسْتَعِنْ بِالْمُكَمِّلِ (10). وَإِنْ عَجَزْتَ عَنِ الطَّرْحِ، فَطَبِّقْ الْقَاعِدَةَ الْمُرَكَّبَة: (+10 - 5 + مُتَمِّمِ الْمُكَمِّل).",
       ruleEn: "GOLDEN RULE: Try direct addition first. If the lower beads are full, use Complement 5. If the column is full or exceeds ten, use Complement 10. If you can't subtract, apply the Combined Rule: (+10 - 5 + the complement of the complement).",
       examples: [
         {
@@ -38,7 +38,7 @@ export const LEVEL_1_DATA: Chapter = {
           titleEn: "Example 1: Direct Addition",
           problem: "5 + 2 + 1 = ؟",
           steps: [
-            { textAr: "الْخُطْوَةُ 1 (الرَّقْمُ 5): نُنْزِلُ الْخَرَزَةَ الْعُلْوِيَّةَ لِتُلَامِسَ الْعَارِضَةَ.", textEn: "Step 1 (5): Bring down the upper bead to touch the bar." },
+            { textAr: "الْخُطْوَةُ 1 (الرَّقْمُ 5): نُنْزِلُ الْخَرَزَةَ الْعِلْوِيَّةَ لِتُلَامِسَ الْعَارِضَةَ.", textEn: "Step 1 (5): Bring down the upper bead to touch the bar." },
             { textAr: "الْخُطْوَةُ 2 (إِضَافَةُ 2): نَرْفَعُ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ.", textEn: "Step 2 (+2): Lift two lower beads." },
             { textAr: "الْخُطْوَةُ 3 (إِضَافَةُ 1): نَرْفَعُ خَرَزَةً سُفْلِيَّةً وَاحِدَةً.", textEn: "Step 3 (+1): Lift one lower bead." },
             { textAr: "النَّتِيجَةُ النِّهَائِيَّة: 8.", textEn: "Final result: 8." }
@@ -50,7 +50,7 @@ export const LEVEL_1_DATA: Chapter = {
           problem: "4 + 2 + 1 + 2 = ؟",
           steps: [
             { textAr: "الْخُطْوَةُ 1 (الرَّقْمُ 4): نَرْفَعُ 4 خَرَزَاتٍ سُفْلِيَّةٍ.", textEn: "Step 1 (4): Lift four lower beads." },
-            { textAr: "الْخُطْوَةُ 2 (+2): الْخَرَزَاتُ السُّفْلِيَّةُ مُمْتَلِئَة. نَسْتَخْدِمُ الْمُتَمِّم: نُنْزِلُ الْعُلْوِيَّةَ (5) وَنُبْعِدُ 3 خَرَزَاتٍ سُفْلِيَّةٍ.", textEn: "Step 2 (+2): Lower beads are full. Use Complement 5: Bring down upper bead (5) and move three lower beads away." },
+            { textAr: "الْخُطْوَةُ 2 (+2): الْخَرَزَاتُ السُّفْلِيَّةُ مُمْتَلِئَة. نَسْتَخْدِمُ الْمُتَمِّم: نُنْزِلُ الْعِلْوِيَّةَ (5) وَنُبْعِدُ 3 خَرَزَاتٍ سُفْلِيَّةٍ.", textEn: "Step 2 (+2): Lower beads are full. Use Complement 5: Bring down upper bead (5) and move three lower beads away." },
             { textAr: "الْخُطْوَةُ 3 (+1): نَرْفَعُ خَرَزَةً سُفْلِيَّةً وَاحِدَةً.", textEn: "Step 3 (+1): Lift one lower bead." },
             { textAr: "الْخُطْوَةُ 4 (+2): نَرْفَعُ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ.", textEn: "Step 4 (+2): Lift two lower beads." },
             { textAr: "النَّتِيجَةُ النِّهَائِيَّة: 9.", textEn: "Final result: 9." }
@@ -61,7 +61,7 @@ export const LEVEL_1_DATA: Chapter = {
           titleEn: "Example 3: Complement 10",
           problem: "7 + 1 + 2 + 3 + 2 = ؟",
           steps: [
-            { textAr: "الْخُطْوَةُ 1 (الرَّقْمُ 7): نُنْزِلُ الْعُلْوِيَّةَ وَنَرْفَعُ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ.", textEn: "Step 1 (7): Bring down upper bead and lift two lower beads." },
+            { textAr: "الْخُطْوَةُ 1 (الرَّقْمُ 7): نُنْزِلُ الْعِلْوِيَّةَ وَنَرْفَعُ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ.", textEn: "Step 1 (7): Bring down upper bead and lift two lower beads." },
             { textAr: "الْخُطْوَةُ 2 (+1): نَرْفَعُ خَرَزَةً سُفْلِيَّةً (النَّاتِجُ 8).", textEn: "Step 2 (+1): Lift one lower bead (result 8)." },
             { textAr: "الْخُطْوَةُ 3 (+2): نَسْتَخْدِمُ الْمُكَمِّل: نَرْفَعُ خَرَزَةً فِي الْعَشَرَاتِ وَنُصَفِّرُ الْآحَادَ.", textEn: "Step 3 (+2): Use Complement 10: Lift a bead in the tens column and clear the units." },
             { textAr: "الْخُطْوَةُ 4 (+3): نَرْفَعُ 3 خَرَزَاتٍ سُفْلِيَّةٍ (النَّاتِجُ 13).", textEn: "Step 4 (+3): Lift three lower beads (result 13)." },
@@ -74,8 +74,8 @@ export const LEVEL_1_DATA: Chapter = {
           problem: "3 + 2 + 7 = ؟",
           steps: [
             { textAr: "الْخُطْوَةُ 1 (الرَّقْمُ 3): نَرْفَعُ 3 خَرَزَاتٍ سُفْلِيَّةٍ.", textEn: "Step 1 (3): Lift three lower beads." },
-            { textAr: "الْخُطْوَةُ 2 (+2): نَسْتَخْدِمُ الْمُتَمِّم: نُنْزِلُ الْعُلْوِيَّةَ (5) وَنُبْعِدُ 3 خَرَزَاتٍ سُفْلِيَّةٍ (النَّاتِجُ 5).", textEn: "Step 2 (+2): Use Complement 5: Bring down upper bead (5) and move three lower beads away (result 5)." },
-            { textAr: "الْخُطْوَةُ 3 (+7): نَسْتَخْدِمُ الْقَاعِدَةَ الذَّهَبِيَّة (+10 - 5 + 2): نَرْفَعُ خَرَزَةً فِي الْعَشَرَاتِ، نَرْفَعُ الْعُلْوِيَّةَ لِلْأَعْلَى، وَنَرْفَعُ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ.", textEn: "Step 3 (+7): Use the Golden Rule (+10 - 5 + 2): Lift a ten bead, lift the upper bead, and lift two lower beads." },
+            { textAr: "الْخُطْوَةُ 2 (+2): نَسْتَخْدِمُ الْمُتَمِّم: نُنْزِلُ الْعِلْوِيَّةَ (5) وَنُبْعِدُ 3 خَرَزَاتٍ سُفْلِيَّةٍ (النَّاتِجُ 5).", textEn: "Step 2 (+2): Use Complement 5: Bring down upper bead (5) and move three lower beads away (result 5)." },
+            { textAr: "الْخُطْوَةُ 3 (+7): نَسْتَخْدِمُ الْقَاعِدَةَ الذَّهَبِيَّة (+10 - 5 + 2): نَرْفَعُ خَرَزَةً فِي الْعَشَرَاتِ، نَرْفَعُ الْعِلْوِيَّةَ لِلْأَعْلَى، وَنَرْفَعُ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ.", textEn: "Step 3 (+7): Use the Golden Rule (+10 - 5 + 2): Lift a ten bead, lift the upper bead, and lift two lower beads." },
             { textAr: "النَّتِيجَةُ النِّهَائِيَّة: 12.", textEn: "Final result: 12." }
           ]
         }
