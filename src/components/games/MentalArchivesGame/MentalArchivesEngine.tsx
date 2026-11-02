@@ -1,11 +1,9 @@
 // src/components/games/MentalArchivesGame/MentalArchivesEngine.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Chapter } from './gameFlowTypes'; 
+import { Chapter, CharacterId } from './gameFlowTypes'; 
 import { tUI } from './gameUI';
-// 👇 التغيير الأول: استبدلنا useCharacterVoice بـ useGameVoice
-import { useGameVoice } from '@/hooks/useGameVoice';
 import { useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
 import { SkipForward, ArrowRight, Sparkles, Award, Play, Volume2, Square, Home } from 'lucide-react';
@@ -37,6 +35,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
+  // 👇 حالة مثال التمرين (للأمثلة الأربعة)
+  const [exampleIndex, setExampleIndex] = useState(0);
   const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null);
 
   const [qIndex, setQIndex] = useState(0);
@@ -45,35 +45,71 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [correctCount, setCorrectCount] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'correct' | 'wrong'>('none');
 
-  // 👇 التغيير الثاني: استخدام useGameVoice الذكي لكل شخصية
-  const { speak: speakJoud, stop: stopJoud } = useGameVoice('joud');
-  const { speak: speakAseel, stop: stopAseel } = useGameVoice('bana'); 
-  const { speak: speakSorobana, stop: stopSorobana } = useGameVoice('sham'); 
-
-  // 👇 جلب اسم الطفل من المتجر (لإضافته في التشجيع)
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
-  const getTxt = (ar: string, en: string) => isAr ? ar : en;
+  // دالة مخصصة للصوت بالسرعات المتفق عليها (0.7 للإنكليزية، 0.8 للعربية)
+  // وتحتوي على ترجمة بسيطة للأسماء لضمان النطق السليم
+  const speakCustom = useCallback((characterId: CharacterId, text: string, onDone?: () => void) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      if (onDone) onDone();
+      return;
+    }
+    
+    window.speechSynthesis.cancel();
+    
+    let finalText = text;
+    // معالجة اسم الطفل في الوضع الإنجليزي
+    if (!isAr && childName) {
+      const firstName = childName.split(/\s+/)[0];
+      const nameDict: Record<string, string> = {
+        'مصطفى': 'Mustafa', 'ميمو': 'Mezo', 'محمد': 'Mohammed', 'جود': 'Joud', 'أسيل': 'Aseel', 'سوروبانا': 'Sorobana'
+      };
+      const translatedName = nameDict[firstName] || firstName;
+      finalText = finalText.replace(new RegExp(childName, 'g'), translatedName);
+      finalText = finalText.replace(/؟/g, '?').replace(/،/g, ',');
+    }
+
+    const utterance = new SpeechSynthesisUtterance(finalText);
+    utterance.lang = isAr ? 'ar-SA' : 'en-US';
+    utterance.rate = isAr ? 0.8 : 0.7;
+    utterance.pitch = characterId === 'jud' ? 0.8 : characterId === 'aseel' ? 1.4 : 1.25;
+    
+    const voices = window.speechSynthesis.getVoices();
+    const langPrefix = isAr ? 'ar' : 'en';
+    const bestVoice = voices.find(v => v.lang.startsWith(langPrefix));
+    if (bestVoice) utterance.voice = bestVoice;
+
+    if (onDone) utterance.onend = onDone;
+    window.speechSynthesis.speak(utterance);
+  }, [isAr, childName]);
 
   const stopAllAudio = () => {
-    if (stopJoud) stopJoud();
-    if (stopAseel) stopAseel();
-    if (stopSorobana) stopSorobana();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
   };
 
   useEffect(() => {
     return () => stopAllAudio();
   }, [sceneIndex, phase]);
 
-  const getCharacterData = (char: string) => {
+  // إعادة ضبط المؤشرات عند تغيير المشهد
+  useEffect(() => {
+    setExampleIndex(0);
+    setActiveStepIndex(null);
+    stopAllAudio();
+  }, [sceneIndex]);
+
+  const getCharacterData = (char: CharacterId) => {
     switch (char) {
-      case 'jud': return { name: isAr ? 'جود' : 'Joud', img: joudImg, color: 'text-cyan-400', speak: speakJoud };
-      case 'aseel': return { name: isAr ? 'أسيل' : 'Aseel', img: aseelImg, color: 'text-rose-400', speak: speakAseel };
-      case 'sorobana': return { name: isAr ? 'سوروبانا' : 'Sorobana', img: sorobanaImg, color: 'text-purple-400', speak: speakSorobana };
-      default: return { name: '', img: joudImg, color: '', speak: () => {} };
+      case 'jud': return { name: isAr ? 'جود' : 'Joud', img: joudImg, color: 'text-cyan-400' };
+      case 'aseel': return { name: isAr ? 'أسيل' : 'Aseel', img: aseelImg, color: 'text-rose-400' };
+      case 'sorobana': return { name: isAr ? 'سوروبانا' : 'Sorobana', img: sorobanaImg, color: 'text-purple-400' };
+      default: return { name: '', img: joudImg, color: '' };
     }
   };
 
+  // 1. إدارة الآلة الكاتبة وصوت الحوار
   useEffect(() => {
     if (videoState !== 'done' || phase !== 'playing') return;
     
@@ -81,14 +117,13 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       const line = currentScene.lines[lineIndex];
       if (!line) return;
       
-      const charData = getCharacterData(line.character);
-      const fullText = getTxt(line.textAr, line.textEn);
+      const fullText = isAr ? line.textAr : line.textEn;
       
       setDisplayedText('');
       setIsTyping(true);
       
       stopAllAudio();
-      charData.speak(fullText);
+      speakCustom(line.character, fullText);
 
       let i = 0;
       const interval = setInterval(() => {
@@ -108,6 +143,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   }, [lineIndex, sceneIndex, isAr, videoState, phase]);
 
+  // إعادة ضبط المؤقت عند تغيير السؤال
   useEffect(() => {
     if (currentScene?.kind === 'challenge') {
       setTimeLeft(currentScene.timePerQuestionMs);
@@ -115,6 +151,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   }, [qIndex, sceneIndex, currentScene]);
 
+  // 2. إدارة مؤقت التحدي
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (currentScene?.kind === 'challenge' && feedback === 'none' && timeLeft > 0 && phase === 'playing') {
@@ -136,7 +173,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     setPhase('success');
     stopAllAudio();
     const msg = isAr ? `${tUI('successMsg')} يا ${childName}!` : `${tUI('successMsg')} ${childName}!`;
-    speakJoud(msg);
+    speakCustom('jud', msg);
     try { confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 } }); } catch (e) {}
   };
 
@@ -161,13 +198,12 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       setFeedback('correct');
       setCorrectCount(prev => prev + 1);
       
-      // 👇 إضافة اسم الطفل في التشجيع
       const msg = isAr ? `أحسنت يا ${childName}!` : `Well done ${childName}!`;
-      speakJoud(msg);
       
       try { confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 }, colors: ['#F59E0B', '#10B981', '#38BDF8'] }); } catch (e) {}
       
-      setTimeout(() => {
+      // 👇 استخدام onDone للانتقال بعد انتهاء الصوت فقط
+      speakCustom('jud', msg, () => {
         if (qIndex < currentScene.questions.length - 1) {
           setQIndex(prev => prev + 1);
           setUserInput('');
@@ -176,15 +212,13 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           setFeedback('none');
           nextScene();
         }
-      }, 1200);
+      });
     } else {
       setFeedback('wrong');
       
-      // 👇 إضافة اسم الطفل في التشجيع عند الخطأ
       const msg = isAr ? `حاول مرة أخرى يا ${childName}!` : `Try again ${childName}!`;
-      speakJoud(msg);
       
-      setTimeout(() => {
+      speakCustom('jud', msg, () => {
         if (qIndex < currentScene.questions.length - 1) {
           setQIndex(prev => prev + 1);
           setUserInput('');
@@ -193,7 +227,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           setFeedback('none');
           nextScene();
         }
-      }, 1500);
+      });
     }
   };
 
@@ -205,23 +239,31 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
 
     if (currentScene?.kind !== 'example') return;
+    const currentExample = currentScene.examples[exampleIndex];
+    if (!currentExample) return;
 
     let index = 0;
     const playStep = () => {
-      if (index >= currentScene.example.steps.length) {
+      if (index >= currentExample.steps.length) {
         setActiveStepIndex(null);
         return;
       }
       setActiveStepIndex(index);
-      const textToSpeak = getTxt(currentScene.example.steps[index].textAr, currentScene.example.steps[index].textEn);
+      const textToSpeak = isAr ? currentExample.steps[index].textAr : currentExample.steps[index].textEn;
       
-      // 👇 استخدام onDone من useGameVoice للتسلسل التلقائي بدون مؤقتات
-      speakSorobana(textToSpeak, () => {
+      speakCustom('sorobana', textToSpeak, () => {
         index++;
         playStep();
       });
     };
     playStep();
+  };
+
+  // 👇 دالة لتحديد صورة الشريط العلوي حسب المشهد
+  const getTopBarImage = () => {
+    if (currentScene?.kind === 'example') return sorobanaImg;
+    if (currentScene?.kind === 'challenge') return joudImg;
+    return joudImg;
   };
 
   const TopBar = () => (
@@ -231,10 +273,11 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       </button>
       <div className="flex-1 flex justify-center items-center gap-2">
         <div className={`w-12 h-12 rounded-full border-2 overflow-hidden shadow-lg flex items-center justify-center bg-slate-900 ${feedback === 'correct' ? 'border-emerald-400' : 'border-amber-400'}`}>
-          <img src={joudImg} alt="Companion" className="w-full h-full object-cover" />
+          {/* 👇 الصورة ديناميكية الآن */}
+          <img src={getTopBarImage()} alt="Companion" className="w-full h-full object-cover" />
         </div>
         <span className="text-amber-200 font-bold text-sm sm:text-base hidden sm:inline">
-          {getTxt(chapter.titleAr, chapter.titleEn)}
+          {isAr ? chapter.titleAr : chapter.titleEn}
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0">
@@ -258,7 +301,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center z-10 max-w-lg bg-slate-900/90 border border-amber-500/40 p-8 rounded-3xl shadow-2xl backdrop-blur-md">
           <div className="text-6xl mb-4 animate-bounce">🏛️✨</div>
           <h2 className="text-3xl font-extrabold text-amber-400 mb-3">{tUI('successMsg')}</h2>
-          <p className="text-slate-300 mb-8">{getTxt(chapter.titleAr, chapter.titleEn)}</p>
+          <p className="text-slate-300 mb-8">{isAr ? chapter.titleAr : chapter.titleEn}</p>
           <button onClick={() => onComplete(correctCount)} className="w-full py-4 mt-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-2xl font-bold text-lg shadow-lg transition flex items-center justify-center gap-2">
             <Home className="w-5 h-5" />
             {tUI('returnToGames')}
@@ -314,7 +357,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           <motion.img src={joudImg} animate={{ scale: line.character === 'jud' ? 1.1 : 0.85, opacity: line.character === 'jud' ? 1 : 0.35, filter: line.character === 'jud' ? 'drop-shadow(0 0 15px rgba(56,189,248,0.4))' : 'grayscale(80%)' }} className="w-32 sm:w-44 object-contain origin-bottom z-20 transition-all duration-300" />
           <motion.img src={sorobanaImg} animate={{ scale: line.character === 'sorobana' ? 1.1 : 0.85, opacity: line.character === 'sorobana' ? 1 : 0.35, filter: line.character === 'sorobana' ? 'drop-shadow(0 0 15px rgba(168,85,247,0.4))' : 'grayscale(80%)' }} className="w-28 sm:w-40 object-contain origin-bottom transition-all duration-300" />
         </div>
-        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={() => { if (isTyping) { setDisplayedText(getTxt(line.textAr, line.textEn)); setIsTyping(false); } }} className="relative w-full max-w-3xl mx-auto bg-slate-900/95 backdrop-blur-md p-6 sm:p-8 rounded-t-3xl border-t-2 border-amber-500/30 shadow-2xl z-20 cursor-pointer">
+        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={() => { if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); } }} className="relative w-full max-w-3xl mx-auto bg-slate-900/95 backdrop-blur-md p-6 sm:p-8 rounded-t-3xl border-t-2 border-amber-500/30 shadow-2xl z-20 cursor-pointer">
           <div className="flex items-center gap-2 mb-3">
             <span className={`font-extrabold text-lg sm:text-xl ${charData.color}`}>{charData.name}</span>
             <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">{tUI('archiveGuide')}</span>
@@ -322,7 +365,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           <p className="text-lg sm:text-xl leading-relaxed mb-6 min-h-[4rem] text-slate-100 font-medium">
             {displayedText}{isTyping && <span className="inline-block w-2 h-5 bg-amber-400 ml-1 animate-pulse"></span>}
           </p>
-          <button onClick={(e) => { e.stopPropagation(); if (isTyping) { setDisplayedText(getTxt(line.textAr, line.textEn)); setIsTyping(false); return; } if (lineIndex < currentScene.lines.length - 1) setLineIndex(l => l + 1); else nextScene(); }} className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 rounded-xl font-extrabold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
+          <button onClick={(e) => { e.stopPropagation(); if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); return; } if (lineIndex < currentScene.lines.length - 1) setLineIndex(l => l + 1); else nextScene(); }} className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 rounded-xl font-extrabold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
             <span>{isTyping ? tUI('showFullText') : tUI('continueStory')}</span><Sparkles className="w-5 h-5" />
           </button>
         </motion.div>
@@ -331,27 +374,61 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   }
 
   if (currentScene?.kind === 'example') {
+    const currentExample = currentScene.examples[exampleIndex];
+    if (!currentExample) return null;
+
     return (
-      <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-slate-950 text-white p-6" dir={dir}>
+      <div className="relative flex flex-col items-center justify-start min-h-[100dvh] bg-slate-950 text-white p-6 pt-24 overflow-y-auto" dir={dir}>
         <TopBar />
-        <div className="max-w-2xl bg-slate-900/90 border border-amber-500/30 p-8 mt-16 rounded-3xl shadow-2xl w-full z-10 backdrop-blur-md">
+        
+        {/* 👇 عرض القاعدة العامة في الأعلى */}
+        <div className="max-w-2xl w-full mb-6 bg-amber-950/30 border border-amber-500/30 p-4 rounded-xl text-center z-10 shadow-lg">
+          <p className="text-amber-200 font-bold text-sm sm:text-base leading-relaxed">
+            {isAr ? currentScene.ruleAr : currentScene.ruleEn}
+          </p>
+        </div>
+
+        <div className="max-w-2xl bg-slate-900/90 border border-amber-500/30 p-8 rounded-3xl shadow-2xl w-full z-10 backdrop-blur-md">
+          
+          {/* أزرار التنقل بين الأمثلة */}
+          <div className="flex justify-between items-center mb-6 gap-2 overflow-x-auto pb-2">
+            {currentScene.examples.map((_, idx) => (
+              <button 
+                key={idx}
+                onClick={() => { setExampleIndex(idx); setActiveStepIndex(null); stopAllAudio(); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${exampleIndex === idx ? 'bg-amber-600 text-slate-950 shadow-md' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+              >
+                {isAr ? `مثال ${idx + 1}` : `Example ${idx + 1}`}
+              </button>
+            ))}
+          </div>
+
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3"><Award className="w-8 h-8 text-amber-400" /><h2 className="text-2xl font-bold text-amber-300">{getTxt(currentScene.example.titleAr, currentScene.example.titleEn)}</h2></div>
+            <div className="flex items-center gap-3">
+              <Award className="w-8 h-8 text-amber-400" />
+              <h2 className="text-xl sm:text-2xl font-bold text-amber-300">{isAr ? currentExample.titleAr : currentExample.titleEn}</h2>
+            </div>
             <button onClick={toggleExampleAudio} className={`p-3 rounded-full flex items-center justify-center transition-all ${activeStepIndex !== null ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-amber-500/20 text-amber-400 border border-amber-500/50 hover:bg-amber-500/30'}`}>
               {activeStepIndex !== null ? <Square className="w-5 h-5 fill-current" /> : <Volume2 className="w-5 h-5" />}
             </button>
           </div>
-          <div className="text-4xl text-center font-mono bg-stone-900 border border-amber-500/20 py-4 rounded-2xl mb-6 text-amber-400 tracking-wider shadow-inner" dir="ltr">{currentScene.example.problem}</div>
+          
+          <div className="text-3xl sm:text-4xl text-center font-mono bg-stone-900 border border-amber-500/20 py-4 rounded-2xl mb-6 text-amber-400 tracking-wider shadow-inner" dir="ltr">
+            {currentExample.problem}
+          </div>
+          
           <ul className="space-y-4 mb-8">
-            {currentScene.example.steps.map((step: { textAr: string, textEn: string }, idx: number) => (
+            {currentExample.steps.map((step, idx) => (
               <li key={idx} className={`flex items-start p-3 rounded-xl border transition-all duration-300 ${activeStepIndex === idx ? 'bg-amber-900/40 border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.2)] scale-[1.02]' : 'bg-slate-800/50 border-slate-700/50'}`}>
                 <span className={`rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold ml-3 mt-0.5 shrink-0 transition-colors ${activeStepIndex === idx ? 'bg-amber-500 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}>{idx + 1}</span>
-                <span className="text-base sm:text-lg text-slate-200">{getTxt(step.textAr, step.textEn)}</span>
+                <span className="text-base sm:text-lg text-slate-200">{isAr ? step.textAr : step.textEn}</span>
               </li>
             ))}
           </ul>
-          <button onClick={nextScene} className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-2xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
-            <span>{tUI('readyForChallenge')}</span><Sparkles className="w-5 h-5" />
+          
+          <button onClick={() => { if (exampleIndex < currentScene.examples.length - 1) { setExampleIndex(prev => prev + 1); setActiveStepIndex(null); stopAllAudio(); } else { nextScene(); } }} className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-2xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
+            <span>{exampleIndex < currentScene.examples.length - 1 ? (isAr ? 'المثال التالي' : 'Next Example') : tUI('readyForChallenge')}</span>
+            <Sparkles className="w-5 h-5" />
           </button>
         </div>
       </div>
