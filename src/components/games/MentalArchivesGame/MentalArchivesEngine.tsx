@@ -35,7 +35,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
-  // 👇 حالة مثال التمرين (للأمثلة الأربعة)
   const [exampleIndex, setExampleIndex] = useState(0);
   const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null);
 
@@ -47,8 +46,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
 
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
-  // دالة مخصصة للصوت بالسرعات المتفق عليها (0.7 للإنكليزية، 0.8 للعربية)
-  // وتحتوي على ترجمة بسيطة للأسماء لضمان النطق السليم
   const speakCustom = useCallback((characterId: CharacterId, text: string, onDone?: () => void) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       if (onDone) onDone();
@@ -58,7 +55,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     window.speechSynthesis.cancel();
     
     let finalText = text;
-    // معالجة اسم الطفل في الوضع الإنجليزي
     if (!isAr && childName) {
       const firstName = childName.split(/\s+/)[0];
       const nameDict: Record<string, string> = {
@@ -93,7 +89,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     return () => stopAllAudio();
   }, [sceneIndex, phase]);
 
-  // إعادة ضبط المؤشرات عند تغيير المشهد
   useEffect(() => {
     setExampleIndex(0);
     setActiveStepIndex(null);
@@ -109,7 +104,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
-  // 1. إدارة الآلة الكاتبة وصوت الحوار
   useEffect(() => {
     if (videoState !== 'done' || phase !== 'playing') return;
     
@@ -143,7 +137,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   }, [lineIndex, sceneIndex, isAr, videoState, phase]);
 
-  // إعادة ضبط المؤقت عند تغيير السؤال
   useEffect(() => {
     if (currentScene?.kind === 'challenge') {
       setTimeLeft(currentScene.timePerQuestionMs);
@@ -151,7 +144,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   }, [qIndex, sceneIndex, currentScene]);
 
-  // 2. إدارة مؤقت التحدي
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (currentScene?.kind === 'challenge' && feedback === 'none' && timeLeft > 0 && phase === 'playing') {
@@ -202,7 +194,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       
       try { confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 }, colors: ['#F59E0B', '#10B981', '#38BDF8'] }); } catch (e) {}
       
-      // 👇 استخدام onDone للانتقال بعد انتهاء الصوت فقط
       speakCustom('jud', msg, () => {
         if (qIndex < currentScene.questions.length - 1) {
           setQIndex(prev => prev + 1);
@@ -259,7 +250,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     playStep();
   };
 
-  // 👇 دالة لتحديد صورة الشريط العلوي حسب المشهد
   const getTopBarImage = () => {
     if (currentScene?.kind === 'example') return sorobanaImg;
     if (currentScene?.kind === 'challenge') return joudImg;
@@ -273,7 +263,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       </button>
       <div className="flex-1 flex justify-center items-center gap-2">
         <div className={`w-12 h-12 rounded-full border-2 overflow-hidden shadow-lg flex items-center justify-center bg-slate-900 ${feedback === 'correct' ? 'border-emerald-400' : 'border-amber-400'}`}>
-          {/* 👇 الصورة ديناميكية الآن */}
           <img src={getTopBarImage()} alt="Companion" className="w-full h-full object-cover" />
         </div>
         <span className="text-amber-200 font-bold text-sm sm:text-base hidden sm:inline">
@@ -381,7 +370,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       <div className="relative flex flex-col items-center justify-start min-h-[100dvh] bg-slate-950 text-white p-6 pt-24 overflow-y-auto" dir={dir}>
         <TopBar />
         
-        {/* 👇 عرض القاعدة العامة في الأعلى */}
         <div className="max-w-2xl w-full mb-6 bg-amber-950/30 border border-amber-500/30 p-4 rounded-xl text-center z-10 shadow-lg">
           <p className="text-amber-200 font-bold text-sm sm:text-base leading-relaxed">
             {isAr ? currentScene.ruleAr : currentScene.ruleEn}
@@ -390,7 +378,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
 
         <div className="max-w-2xl bg-slate-900/90 border border-amber-500/30 p-8 rounded-3xl shadow-2xl w-full z-10 backdrop-blur-md">
           
-          {/* أزرار التنقل بين الأمثلة */}
           <div className="flex justify-between items-center mb-6 gap-2 overflow-x-auto pb-2">
             {currentScene.examples.map((_, idx) => (
               <button 
@@ -413,8 +400,9 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
             </button>
           </div>
           
+          {/* 👇 هنا تم تعديل علامة الاستفهام في المسألة */}
           <div className="text-3xl sm:text-4xl text-center font-mono bg-stone-900 border border-amber-500/20 py-4 rounded-2xl mb-6 text-amber-400 tracking-wider shadow-inner" dir="ltr">
-            {currentExample.problem}
+            {isAr ? currentExample.problem : currentExample.problem.replace(/؟/g, '?')}
           </div>
           
           <ul className="space-y-4 mb-8">
@@ -460,7 +448,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
               ))}
             </div>
             <div className="h-px w-3/4 bg-amber-500/30 mx-auto mb-6"></div>
-            <input type="number" value={userInput} onChange={(e) => setUserInput(e.target.value)} disabled={feedback !== 'none'} className={`w-44 mx-auto text-center text-5xl font-bold bg-slate-950 border-2 rounded-2xl p-4 outline-none transition-all shadow-inner ${feedback === 'correct' ? 'border-emerald-500 text-emerald-400 shadow-emerald-500/20' : feedback === 'wrong' ? 'border-red-500 text-red-400 shadow-red-500/20' : 'border-amber-500/40 focus:border-amber-400 text-amber-200'}`} placeholder="؟" autoFocus />
+            {/* 👇 هنا تم تعديل علامة الاستفهام في مربع الإدخال */}
+            <input type="number" value={userInput} onChange={(e) => setUserInput(e.target.value)} disabled={feedback !== 'none'} className={`w-44 mx-auto text-center text-5xl font-bold bg-slate-950 border-2 rounded-2xl p-4 outline-none transition-all shadow-inner ${feedback === 'correct' ? 'border-emerald-500 text-emerald-400 shadow-emerald-500/20' : feedback === 'wrong' ? 'border-red-500 text-red-400 shadow-red-500/20' : 'border-amber-500/40 focus:border-amber-400 text-amber-200'}`} placeholder={isAr ? '؟' : '?'} autoFocus />
           </div>
           <button onClick={() => handleAnswer(true)} disabled={!userInput || feedback !== 'none'} className="w-full py-4 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 disabled:opacity-50 rounded-2xl font-extrabold text-xl transition-all shadow-lg text-slate-950 flex items-center justify-center gap-2">
             <span>{tUI('confirmAnswer')}</span><Sparkles className="w-5 h-5" />
