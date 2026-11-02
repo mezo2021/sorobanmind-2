@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import MentalArchivesEngine from './MentalArchivesEngine';
 import { INTRO_DATA } from './data/introData';
 import { LEVEL_1_DATA } from './data/level1Data';
-import { Chapter, ChapterId } from './gameFlowTypes';
+import { Chapter, ChapterId, Scene } from './gameFlowTypes';
 import { useProgressStore } from '@/store/progressStore';
+import { useGameLang } from '../gamesI18n';
+import { tUI } from './gameUI';
 
 // تجميع الفصول المتاحة في كائن واحد
 const CHAPTERS: Record<ChapterId, Chapter> = {
@@ -13,34 +15,50 @@ const CHAPTERS: Record<ChapterId, Chapter> = {
 } as Record<ChapterId, Chapter>;
 
 export default function MentalArchivesManager({ onBack }: { onBack: () => void }) {
-  // الحالة الآن هي "معرف الفصل النشط" بدلاً من رقم المستوى
+  const { dir, isAr } = useGameLang();
   const [activeChapterId, setActiveChapterId] = useState<ChapterId | null>(null);
   
-  // 👇 استخدام المتجر الموحد (لا يوجد localStorage مباشر هنا)
   const mentalProgress = useProgressStore((s) => s.mentalArchivesProgress);
   const completeMentalChapter = useProgressStore((s) => s.completeMentalChapter);
 
   const handleComplete = (score: number) => {
     if (activeChapterId) {
-      // حفظ التقدم في المتجر الموحد (سيُزامن مع السحابة لاحقاً)
-      completeMentalChapter(activeChapterId, score);
-      setActiveChapterId(null); // العودة لشاشة الخريطة بعد النجاح
+      // 👇 إصلاح: نتأكد أولاً من نتيجة الطفل
+      const chapter = CHAPTERS[activeChapterId];
+      const challengeScene = chapter.scenes.find((s): s is Extract<Scene, { kind: 'challenge' }> => s.kind === 'challenge');
+      
+      // إذا كان هناك تحدي، نتحقق من النتيجة. إذا لم يكن (مثل التمهيد)، نعتبره ناجحاً.
+      const isSuccess = challengeScene ? score >= challengeScene.requiredCorrect : true;
+      
+      if (isSuccess) {
+        // حفظ التقدم فقط عند النجاح
+        completeMentalChapter(activeChapterId, score);
+      } else {
+        // اختياري: يمكنك إظهار تنبيه أو رسالة إذا فشل الطفل
+        console.log("لم يتم حفظ التقدم، الطفل لم يجتز التحدي.");
+      }
+      
+      setActiveChapterId(null); // العودة لشاشة الخريطة
     }
   };
 
   // ═══ 1. شاشة اختيار المستويات (Level Map) ═══
   if (!activeChapterId) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white p-6" dir="rtl">
+      <div className="min-h-screen bg-slate-950 text-white p-6" dir={dir}>
         <div className="max-w-4xl mx-auto">
           <button 
             onClick={onBack} 
             className="mb-8 text-amber-400 font-bold flex items-center gap-2 hover:text-amber-300 transition"
           >
-            ← العودة لمدينة الألعاب
+            <span className={isAr ? 'ml-2' : 'mr-2 rotate-180'}>←</span>
+            {tUI('backToGamesCity')}
           </button>
           
-          <h1 className="text-3xl font-black text-amber-400 mb-8 drop-shadow-lg">بوابة الثقب الدودي</h1>
+          {/* 👇 السطر الذي وعدتك بحفظه */}
+          <h1 className="text-3xl font-black text-amber-400 mb-8 drop-shadow-lg">
+            {tUI('gameTitle')}
+          </h1>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {Object.values(CHAPTERS).map((chapter) => {
@@ -57,18 +75,21 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
                       : 'border-slate-800 bg-slate-900/50 opacity-60 cursor-not-allowed'
                   }`}
                 >
-                  <h2 className="text-xl font-bold mb-3">{chapter.titleAr}</h2>
+                  <h2 className="text-xl font-bold mb-3">
+                    {isAr ? chapter.titleAr : chapter.titleEn}
+                  </h2>
+                  
                   {isCompleted ? (
                     <span className="text-emerald-400 text-sm flex items-center gap-1">
-                      ✅ مكتمل (أفضل نتيجة: {mentalProgress[chapter.id]?.bestScore})
+                      ✅ {tUI('statusCompleted')} ({tUI('statusBestScore')}: {mentalProgress[chapter.id]?.bestScore})
                     </span>
                   ) : isUnlocked ? (
                     <span className="text-amber-400 text-sm flex items-center gap-1">
-                      ▶️ متاح للعب
+                      ▶️ {tUI('statusAvailable')}
                     </span>
                   ) : (
                     <span className="text-slate-500 text-sm flex items-center gap-1">
-                      🔒 مغلق
+                      🔒 {tUI('statusLocked')}
                     </span>
                   )}
                 </div>
@@ -83,8 +104,8 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
   // ═══ 2. شاشة اللعب (المحرك) ═══
   return (
     <MentalArchivesEngine 
-      key={activeChapterId} // يضمن إعادة تشغيل المحرك من الصفر عند تغيير الفصل
-      chapter={CHAPTERS[activeChapterId]} // 👈 نمرر "chapter" بدلاً من "levelData"
+      key={activeChapterId} 
+      chapter={CHAPTERS[activeChapterId]} 
       onComplete={handleComplete} 
       onBack={() => setActiveChapterId(null)} 
     />
