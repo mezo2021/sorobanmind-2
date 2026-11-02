@@ -28,7 +28,8 @@ export type GameQuestion =
 
 export type Scene =
   | { kind: 'dialogue'; id: string; lines: Line[] }
-  | { kind: 'example'; id: string; example: SolvedExample }
+  // 👇 التعديل هنا: examples مصفوفة بدلاً من example مفرد
+  | { kind: 'example'; id: string; examples: SolvedExample[] }
   | { kind: 'challenge'; id: string; questions: GameQuestion[]; timePerQuestionMs: number; requiredCorrect: number };
 
 export type Chapter = {
