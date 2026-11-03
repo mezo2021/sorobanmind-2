@@ -6,7 +6,6 @@ import { INTRO_DATA } from './data/introData';
 import { LEVEL_1_DATA } from './data/level1Data';
 import { LEVEL_2_DATA } from './data/level2Data';
 import { Chapter, ChapterId, Scene } from './gameFlowTypes';
-import { useMentalArchivesStore } from './mentalArchivesStore';
 import { addScore } from '../highScoreStore';
 import { useProgressStore } from '@/store/progressStore';
 import { useGameLang } from '../gamesI18n';
@@ -25,8 +24,8 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
   const [activeChapterId, setActiveChapterId] = useState<ChapterId | null>(null);
   const [showExams, setShowExams] = useState(false);
 
-  const progress = useMentalArchivesStore((s) => s.progress);
-  const completeChapter = useMentalArchivesStore((s) => s.completeChapter);
+  const progress = useProgressStore((s) => s.mentalArchivesProgress);
+  const completeChapter = useProgressStore((s) => s.completeMentalChapter);
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
   const handleComplete = (score: number) => {
@@ -37,7 +36,7 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
       
       if (isSuccess) {
         completeChapter(activeChapterId, score);
-        const updatedProgress = useMentalArchivesStore.getState().progress;
+        const updatedProgress = useProgressStore.getState().mentalArchivesProgress;
         const totalScore = Object.values(updatedProgress).reduce((sum, ch) => sum + (ch?.bestScore || 0), 0);
         addScore('mental-archives', childName, totalScore, 'joud');
       }
