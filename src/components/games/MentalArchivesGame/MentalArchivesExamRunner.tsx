@@ -90,7 +90,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     });
 
     let grade = undefined;
-    let passed = score >= examData.passingScore;
+    const passed = score >= examData.passingScore;
 
     if (examData.gradeThresholds) {
       for (const th of examData.gradeThresholds) {
@@ -127,7 +127,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
         }
       });
     });
-    let passed = score >= examData.passingScore;
+    const passed = score >= examData.passingScore;
 
     return (
       <div className="min-h-screen bg-slate-950 text-white p-6 flex flex-col items-center justify-center" dir={dir}>
