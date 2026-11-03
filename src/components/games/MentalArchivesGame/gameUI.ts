@@ -25,6 +25,28 @@ export const UI_TEXT = {
   digitalTablet: { ar: 'لوح طيني رقمي', en: 'Digital Tablet' },
   archSpeedChallenge: { ar: 'تحدي السرعة الأثرية', en: 'Speed Challenge' },
   
+  // الإدخال (لوحة / عجلة / ميكروفون)
+  keypadMode: { ar: 'لوحة الأحجار', en: 'Keypad' },
+  dialMode: { ar: 'العجلة الزمنية', en: 'Time Dial' },
+  dialStamp: { ar: 'اختم', en: 'Stamp' },
+  micStart: { ar: 'انطق الإجابة', en: 'Speak answer' },
+  micListening: { ar: 'أستمع إليك...', en: 'Listening...' },
+  micNotHeard: { ar: 'لم أسمعك، جرّب مجدداً', en: "Didn't catch that, try again" },
+  micDenied: { ar: 'الميكروفون غير متاح، استخدم اللوحة', en: 'Mic unavailable, use the keypad' },
+
+  // التغذية الراجعة (Time Echoes)
+  encourage1: { ar: 'قريب جداً، حاول مرة أخرى', en: 'So close, try again' },
+  encourage2: { ar: 'لا بأس، أنت تتعلم! مرة أخيرة', en: "That's okay, you're learning! One more try" },
+  hintDirect: { ar: 'فكّر في الخرزات: اجمع الأعلى ثم الأسفل.', en: 'Think of the beads: add the top first, then the bottom.' },
+  hintComplement5: { ar: 'تلميح: استخدم صديق الخمسة (الخرزة العلوية).', en: 'Hint: use the Friend of 5 (the top bead).' },
+  hintComplement10: { ar: 'تلميح: استخدم صديق العشرة، أضف عشرة واطرح المتمم.', en: 'Hint: use the Friend of 10, add ten and remove the complement.' },
+  hintMitori: { ar: 'تلميح: اجمع رقماً رقماً وانظر للنتيجة الجزئية.', en: 'Hint: add one number at a time and track the running total.' },
+  hintMultiplication: { ar: 'تلميح: قسّم الضرب إلى عشرات وآحاد.', en: 'Hint: split the multiplication into tens and ones.' },
+  hintDivision: { ar: 'تلميح: كم مرة يتسع المقسوم عليه؟', en: 'Hint: how many times does the divisor fit?' },
+  hintSubtraction: { ar: 'تلميح: انتبه للاستلاف من الخانة الأعلى.', en: 'Hint: watch for borrowing from the next column.' },
+  hintDigits: { ar: 'الإجابة من {n} خانة وتبدأ بالرقم {d}.', en: 'The answer has {n} digit(s) and starts with {d}.' },
+  revealMsg: { ar: 'الإجابة هي {a}. سنتدرب عليها لاحقاً!', en: 'The answer is {a}. We will practice it later!' },
+
   // رسائل النجاح والفشل
   needMoreSpeed: { ar: 'تحتاج إلى مزيد من السرعة!', en: 'Need More Speed!' },
   needMoreSpeedDesc: { 
