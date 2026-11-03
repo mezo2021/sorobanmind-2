@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import MentalArchivesEngine from './MentalArchivesEngine';
 import { INTRO_DATA } from './data/introData';
 import { LEVEL_1_DATA } from './data/level1Data';
+import { LEVEL_2_DATA } from './data/level2Data';
 import { Chapter, ChapterId, Scene } from './gameFlowTypes';
 // 👇 استبدلنا progressStore بالمتجر المحلي الجديد
 import { useMentalArchivesStore } from './mentalArchivesStore';
@@ -18,6 +19,7 @@ import { Num } from '@/components/Num';
 const CHAPTERS: Record<ChapterId, Chapter> = {
   intro: INTRO_DATA,
   level1: LEVEL_1_DATA,
+  level2: LEVEL_2_DATA,
 } as Record<ChapterId, Chapter>;
 
 export default function MentalArchivesManager({ onBack }: { onBack: () => void }) {
