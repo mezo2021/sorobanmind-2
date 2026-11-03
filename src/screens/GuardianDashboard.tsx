@@ -470,7 +470,6 @@ export function GuardianDashboard({
       'srb_progress',
       'soroban_number_style',
       'sorobania_progress_v2',
-      'mental_archives_progress_v1',
     ];
     Object.keys(localStorage).forEach((key) => {
       if (!keysToKeep.includes(key)) localStorage.removeItem(key);
