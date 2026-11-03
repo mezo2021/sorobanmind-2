@@ -410,18 +410,24 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           />
         </div>
         
-        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={() => { if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); } }} className="relative w-full max-w-3xl mx-auto bg-slate-900/95 backdrop-blur-md p-6 sm:p-8 rounded-t-3xl border-t-2 border-amber-500/30 shadow-2xl z-20 cursor-pointer">
-          <div className="flex items-center gap-2 mb-3">
-            <span className={`font-extrabold text-lg sm:text-xl ${charData.color}`}>{charData.name}</span>
-            <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">{tUI('archiveGuide')}</span>
-          </div>
-          <p className="text-lg sm:text-xl leading-relaxed mb-6 min-h-[4rem] text-slate-100 font-medium">
-            {displayedText}{isTyping && <span className="inline-block w-2 h-5 bg-amber-400 ml-1 animate-pulse"></span>}
-          </p>
-          <button onClick={(e) => { e.stopPropagation(); if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); return; } if (lineIndex < currentScene.lines.length - 1) setLineIndex(l => l + 1); else nextScene(); }} className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 rounded-xl font-extrabold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
-            <span>{isTyping ? tUI('showFullText') : tUI('continueStory')}</span><Sparkles className="w-5 h-5" />
-          </button>
-        </motion.div>
+        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={() => { if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); } }} className="relative w-full max-w-3xl mx-auto bg-slate-900/95 backdrop-blur-md p-6 sm:p-8 rounded-t-3xl border-t-2 border-amber-500/30 shadow-2xl z-20 cursor-pointer shrink-0">
+  <div className="flex items-center gap-2 mb-3">
+    <span className={`font-extrabold text-lg sm:text-xl ${charData.color}`}>{charData.name}</span>
+    <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">{tUI('archiveGuide')}</span>
+  </div>
+  
+  {/* حاوية ذات ارتفاع ثابت لمنع تمدد صندوق الحوار واهتزاز الشخصيات */}
+  <div className="h-24 sm:h-28 mb-6 overflow-y-auto custom-scrollbar flex items-start">
+    <p className="text-lg sm:text-xl leading-relaxed text-slate-100 font-medium w-full">
+      {displayedText}{isTyping && <span className="inline-block w-2 h-5 bg-amber-400 ml-1 animate-pulse"></span>}
+    </p>
+  </div>
+
+  <button onClick={(e) => { e.stopPropagation(); if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); return; } if (lineIndex < currentScene.lines.length - 1) setLineIndex(l => l + 1); else nextScene(); }} className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 rounded-xl font-extrabold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
+    <span>{isTyping ? tUI('showFullText') : tUI('continueStory')}</span><Sparkles className="w-5 h-5" />
+  </button>
+</motion.div>
+
       </div>
     );
   }
