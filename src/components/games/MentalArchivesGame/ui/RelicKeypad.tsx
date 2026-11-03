@@ -1,6 +1,7 @@
 // src/components/games/MentalArchivesGame/ui/RelicKeypad.tsx
 // لوحة مفاتيح "السوروبان الأثرية" — أحجار/ألواح مضيئة.
 import { motion } from 'framer-motion';
+import Num from '@/components/Num';
 
 type Props = {
   value: string;
@@ -39,7 +40,7 @@ export default function RelicKeypad({ value, onChange, disabled, maxLen = 6, red
                 : 'bg-gradient-to-b from-amber-200/90 via-amber-300/80 to-amber-600/80 border-amber-100/60 text-stone-900 shadow-amber-500/20'
             }`}
           >
-            {k === 'clear' ? '✕' : k === 'back' ? '⌫' : k}
+            {k === 'clear' ? '✕' : k === 'back' ? '⌫' : <Num>{k}</Num>}
           </motion.button>
         );
       })}
