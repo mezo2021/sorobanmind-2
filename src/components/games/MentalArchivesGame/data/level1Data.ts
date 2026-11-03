@@ -106,7 +106,7 @@ export const LEVEL_1_DATA: Chapter = {
         { type: "direct", numbers: [5, 2, 1], answer: 8 },
         { type: "complement5", numbers: [4, 1, 2], answer: 7 },
         { type: "complement10", numbers: [8, 1, 2], answer: 11 },
-        { type: "mitori", numbers: [6, 9, 8], answer: 23 }
+        { type: "combined", numbers: [6, 9, 8], answer: 23 } // 👈 تم التعديل هنا
       ]
     }
   ]
