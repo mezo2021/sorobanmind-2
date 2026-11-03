@@ -553,10 +553,17 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           </div>
 
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Award className="w-8 h-8 text-amber-400" />
-              <h2 className="text-xl sm:text-2xl font-bold text-amber-300"><Num>{isAr ? currentExample.titleAr : currentExample.titleEn}</Num></h2>
-            </div>
+  <div className="flex flex-col gap-3 w-full">
+    <div className="flex items-center gap-3">
+      <Award className="w-8 h-8 text-amber-400 shrink-0" />
+      <h2 className="text-xl sm:text-2xl font-bold text-amber-300">
+        {isAr ? currentExample.ruleTitleAr : currentExample.ruleTitleEn}
+      </h2>
+    </div>
+    <div className="text-sm text-amber-100/90 bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 leading-relaxed">
+      <Num>{isAr ? currentExample.ruleDescAr : currentExample.ruleDescEn}</Num>
+    </div>
+  </div>
             <button onClick={toggleExampleAudio} className={`p-3 rounded-full flex items-center justify-center transition-all ${activeStepIndex !== null ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-amber-500/20 text-amber-400 border border-amber-500/50 hover:bg-amber-500/30'}`}>
               {activeStepIndex !== null ? <Square className="w-5 h-5 fill-current" /> : <Volume2 className="w-5 h-5" />}
             </button>
