@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useMotionValue, animate } from 'framer-motion';
 import { Cog } from 'lucide-react';
+import Num from '@/components/Num';
 import { tUI } from '../gameUI';
 
 const ITEM = 56;
@@ -71,7 +72,7 @@ export default function TimeDial({ disabled, reduceMotion, onStamp, onBack, onCl
               style={{ width: ITEM }}
               className={`h-full text-3xl font-mono font-bold select-none ${d === sel ? 'text-amber-200' : 'text-amber-500/40'}`}
             >
-              {d}
+              <Num>{d}</Num>
             </button>
           ))}
         </motion.div>
@@ -84,7 +85,7 @@ export default function TimeDial({ disabled, reduceMotion, onStamp, onBack, onCl
           onClick={() => onStamp(String(sel))}
           className="flex-1 h-12 rounded-xl bg-gradient-to-b from-amber-300 to-amber-600 text-stone-900 font-extrabold flex items-center justify-center gap-2 border border-amber-100/60 disabled:opacity-50"
         >
-          <Cog className="w-5 h-5" /> {tUI('dialStamp')} {sel}
+          <Cog className="w-5 h-5" /> {tUI('dialStamp')} <Num>{sel}</Num>
         </button>
         <button type="button" disabled={disabled} onClick={onBack} className="h-12 w-12 rounded-xl bg-stone-800 border border-stone-600/60 text-stone-300 text-xl">⌫</button>
       </div>
