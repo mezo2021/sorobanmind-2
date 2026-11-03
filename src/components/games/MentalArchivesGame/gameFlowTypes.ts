@@ -14,7 +14,7 @@ export interface SolvedExample {
   titleAr: string;
   titleEn: string;
   problem: string;
-  // 👇 الحقول التي كانت ناقصة وتسبب الخطأ
+  // 👇 هذه الحقول ضرورية لكي يعمل level1Data.ts الذي أرسلته
   ruleTitleAr?: string;
   ruleDescAr?: string;
   ruleTitleEn?: string;
@@ -26,7 +26,7 @@ export type GameQuestion =
   | { type: 'direct'; numbers: number[]; answer: number }
   | { type: 'complement5'; numbers: number[]; answer: number }
   | { type: 'complement10'; numbers: number[]; answer: number }
-  | { type: 'combined'; numbers: number[]; answer: number } // 👈 النوع الجديد
+  | { type: 'combined'; numbers: number[]; answer: number } // 👈 أضفنا هذا النوع فقط
   | { type: 'mitori'; numbers: number[]; answer: number }
   | { type: 'multiplication'; numbers: number[]; answer: number }
   | { type: 'division'; numbers: number[]; answer: number }
