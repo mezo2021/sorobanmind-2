@@ -8,6 +8,8 @@ import { useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
 import { SkipForward, ArrowRight, Sparkles, Award, Play, Volume2, Square, Home } from 'lucide-react';
 
+import Num from '@/components/Num';
+import { parseInput } from '@/utils/numberStyle';
 import RelicKeypad from './ui/RelicKeypad';
 import TimeDial from './ui/TimeDial';
 import SpeechCrystal from './ui/SpeechCrystal';
@@ -306,7 +308,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     if (isManualSubmit && !userInput) return;
 
     const q = currentScene.questions[qIndex];
-    const guess = isManualSubmit ? parseInt(userInput, 10) : NaN;
+    const guess = isManualSubmit ? parseInput(userInput) : NaN;
     const actualCorrect = guess === q.answer;
 
     const advance = () => {
@@ -409,7 +411,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
               <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="3" className="text-slate-800 fill-none" />
               <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="3" className={`fill-none transition-all duration-100 ${timeLeft < 3000 ? 'text-red-500 animate-pulse' : 'text-amber-400'}`} strokeDasharray={125.6} strokeDashoffset={125.6 * (1 - timeLeft / currentScene.timePerQuestionMs)} />
             </svg>
-            <span className="absolute text-xs font-mono font-bold text-amber-200">{(timeLeft / 1000).toFixed(0)}s</span>
+            <span className="absolute text-xs font-mono font-bold text-amber-200"><Num>{(timeLeft / 1000).toFixed(0)}</Num>s</span>
           </div>
         )}
       </div>
@@ -592,7 +594,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         <TopBar />
         <div className="flex-1 flex flex-col items-center justify-center px-4 py-3 gap-3 z-10 w-full max-w-md mx-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <div className="w-full flex justify-between items-center text-sm font-bold text-slate-400 bg-slate-900/60 px-4 py-2 rounded-xl border border-slate-800">
-            <span>{tUI('question')} {qIndex + 1} / {currentScene.questions.length}</span>
+            <span>{tUI('question')} <Num>{qIndex + 1} / {currentScene.questions.length}</Num></span>
             <span className="text-amber-400 font-mono">⚡ {tUI('archSpeedChallenge')}</span>
           </div>
 
@@ -612,7 +614,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
             <div className="flex flex-col items-center text-4xl font-mono mb-3 pt-3" dir="ltr">
               {q.numbers.map((num: number, i: number) => (
                 <div key={i} className="flex items-center justify-center w-36 relative my-0.5">
-                  <span className="w-16 text-center text-amber-100 drop-shadow-md">{num}</span>
+                  <span className="w-16 text-center text-amber-100 drop-shadow-md"><Num>{num}</Num></span>
                   {i < q.numbers.length - 1 && (
                     <span className="absolute -right-4 text-amber-500/80 text-2xl font-bold">
                       {q.type === 'multiplication' ? '×' : q.type === 'division' ? '÷' : '+'}
@@ -634,13 +636,13 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
                   animate={{ opacity: 0 }}
                   transition={{ duration: shouldReduceMotion ? 0 : 1.2 }}
                   dir="ltr"
-                >{ghost}</motion.span>
+                ><Num>{ghost}</Num></motion.span>
               )}
               <span dir="ltr" className={`text-5xl font-mono font-bold ${revealed !== null ? 'text-sky-300' : feedback === 'correct' ? 'text-emerald-400' : 'text-amber-200'}`}>
-                {shownValue || (isAr ? '؟' : '?')}
+                <Num>{shownValue || (isAr ? '؟' : '?')}</Num>
               </span>
             </div>
-            <div className="min-h-[40px] mt-2 text-xs sm:text-sm text-violet-300 leading-snug">{hint}</div>
+            <div className="min-h-[40px] mt-2 text-xs sm:text-sm text-violet-300 leading-snug"><Num>{hint}</Num></div>
           </motion.div>
 
           <div className="flex items-center gap-2 text-xs">
