@@ -1,5 +1,5 @@
 // src/components/games/MentalArchivesGame/MentalArchivesEngine.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Chapter, CharacterId } from './gameFlowTypes'; 
@@ -8,10 +8,37 @@ import { useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
 import { SkipForward, ArrowRight, Sparkles, Award, Play, Volume2, Square, Home } from 'lucide-react';
 
+import RelicKeypad from './ui/RelicKeypad';
+import TimeDial from './ui/TimeDial';
+import SpeechCrystal from './ui/SpeechCrystal';
 import introVideo from './intro.mp4';
 import joudImg from './joud.png';
 import aseelImg from './aseel.png';
 import sorobanaImg from './sorobana.png';
+
+const GLOWS: { id: CharacterId; bg: string }[] = [
+  { id: 'jud', bg: 'radial-gradient(circle at 50% 75%, rgba(56,189,248,0.5), transparent 60%)' },
+  { id: 'aseel', bg: 'radial-gradient(circle at 50% 75%, rgba(244,114,182,0.5), transparent 60%)' },
+  { id: 'sorobana', bg: 'radial-gradient(circle at 50% 75%, rgba(167,139,250,0.5), transparent 60%)' },
+];
+
+// إضاءة محيطية ثابتة: opacity فقط
+function AmbientGlow({ speaker, reduce }: { speaker: CharacterId; reduce: boolean | null }) {
+  return (
+    <div className="absolute inset-0 pointer-events-none z-0" aria-hidden>
+      {GLOWS.map((g) => (
+        <motion.div
+          key={g.id}
+          className="absolute inset-0"
+          style={{ background: g.bg }}
+          initial={false}
+          animate={{ opacity: speaker === g.id ? 0.6 : 0 }}
+          transition={{ duration: reduce ? 0 : 0.6 }}
+        />
+      ))}
+    </div>
+  );
+}
 
 interface Props {
   chapter: Chapter; 
@@ -44,6 +71,13 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [timeLeft, setTimeLeft] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'correct' | 'wrong'>('none');
+  const [attempts, setAttempts] = useState(0);
+  const [hint, setHint] = useState('');
+  const [ghost, setGhost] = useState<number | null>(null);
+  const [revealed, setRevealed] = useState<number | null>(null);
+  const [speaker, setSpeaker] = useState<CharacterId>('jud');
+  const [inputMode, setInputMode] = useState<'keypad' | 'dial'>('keypad');
+  const handleAnswerRef = useRef<(m: boolean) => void>(() => {});
 
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
@@ -119,6 +153,18 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     
     return () => clearTimeout(timer);
   }, [timeLeft, currentScene, qIndex, feedback, phase]);
+
+  // دعم لوحة المفاتيح الفعلية (PWA على سطح المكتب)
+  useEffect(() => {
+    if (currentScene?.kind !== 'challenge' || phase !== 'playing' || feedback !== 'none') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (/^[0-9]$/.test(e.key)) setUserInput((p) => (p.length < 6 ? p + e.key : p));
+      else if (e.key === 'Backspace') setUserInput((p) => p.slice(0, -1));
+      else if (e.key === 'Enter' && userInput) handleAnswerRef.current(true);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [currentScene, phase, feedback, userInput]);
 
   const getCharacterData = (char: CharacterId) => {
     switch (char) {
@@ -224,47 +270,90 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
+  const resetQuestion = () => {
+    setUserInput('');
+    setFeedback('none');
+    setAttempts(0);
+    setHint('');
+    setGhost(null);
+    setRevealed(null);
+    setSpeaker('jud');
+  };
+
+  // يتكلم ثم ينتظر حداً أدنى حتى يُرى التأثير حتى لو لم يتوفر الصوت
+  const speakThen = (who: CharacterId, text: string, minMs: number, cb: () => void) => {
+    const start = Date.now();
+    setSpeaker(who);
+    speakCustom(who, text, () => {
+      window.setTimeout(cb, Math.max(0, minMs - (Date.now() - start)));
+    });
+  };
+
+  const buildHint = (q: { type: string; answer: number }, n: number) => {
+    if (n >= 2) {
+      const ans = String(Math.abs(q.answer));
+      return tUI('hintDigits').replace('{n}', String(ans.length)).replace('{d}', ans[0]);
+    }
+    const map: Record<string, Parameters<typeof tUI>[0]> = {
+      direct: 'hintDirect', complement5: 'hintComplement5', complement10: 'hintComplement10',
+      mitori: 'hintMitori', multiplication: 'hintMultiplication', division: 'hintDivision', subtraction: 'hintSubtraction',
+    };
+    return tUI(map[q.type] || 'hintDirect');
+  };
+
   const handleAnswer = (isManualSubmit: boolean) => {
     if (currentScene?.kind !== 'challenge' || feedback !== 'none') return;
-    
+    if (isManualSubmit && !userInput) return;
+
     const q = currentScene.questions[qIndex];
-    const actualCorrect = isManualSubmit ? parseInt(userInput) === q.answer : false;
+    const guess = isManualSubmit ? parseInt(userInput, 10) : NaN;
+    const actualCorrect = guess === q.answer;
+
+    const advance = () => {
+      if (qIndex < currentScene.questions.length - 1) {
+        setQIndex(prev => prev + 1);
+        resetQuestion();
+      } else {
+        resetQuestion();
+        nextScene();
+      }
+    };
 
     if (actualCorrect) {
       setFeedback('correct');
       setCorrectCount(prev => prev + 1);
-      
       const msg = isAr ? `أحسنت يا ${childName}!` : `Well done ${childName}!`;
-      
-      try { confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 }, colors: ['#F59E0B', '#10B981', '#38BDF8'] }); } catch (e) {}
-      
-      speakCustom('jud', msg, () => {
-        if (qIndex < currentScene.questions.length - 1) {
-          setQIndex(prev => prev + 1);
-          setUserInput('');
-          setFeedback('none');
-        } else {
-          setFeedback('none');
-          nextScene();
-        }
-      });
-    } else {
-      setFeedback('wrong');
-      
-      const msg = isAr ? `حاول مرة أخرى يا ${childName}!` : `Try again ${childName}!`;
-      
-      speakCustom('jud', msg, () => {
-        if (qIndex < currentScene.questions.length - 1) {
-          setQIndex(prev => prev + 1);
-          setUserInput('');
-          setFeedback('none');
-        } else {
-          setFeedback('none');
-          nextScene();
-        }
-      });
+      try { confetti({ particleCount: shouldReduceMotion ? 15 : 40, spread: 60, origin: { y: 0.7 }, colors: ['#F59E0B', '#FBBF24', '#FDE68A'] }); } catch (e) {}
+      speakThen('jud', msg, 900, advance);
+      return;
     }
+
+    // خطأ يدوي ضمن أول محاولتين: تشجيع + تلميح متدرج + إعادة المحاولة
+    if (isManualSubmit && attempts < 2) {
+      const n = attempts + 1;
+      const hintText = buildHint(q, n);
+      setFeedback('wrong');
+      setGhost(guess);
+      setAttempts(n);
+      setHint(hintText);
+      const msg = (n === 1 ? tUI('encourage1') : tUI('encourage2')) + (isAr ? ` يا ${childName}` : ` ${childName}`);
+      speakThen('aseel', msg, 1100, () => {
+        setFeedback('none');
+        setUserInput('');
+        setGhost(null);
+        speakThen('sorobana', hintText, 0, () => {});
+      });
+      return;
+    }
+
+    // محاولة ثالثة خاطئة أو انتهاء الوقت: كشف الإجابة ثم المتابعة
+    setFeedback('wrong');
+    setRevealed(q.answer);
+    setGhost(isManualSubmit ? guess : null);
+    const msg = tUI('revealMsg').replace('{a}', String(q.answer));
+    speakThen('jud', msg, 1800, advance);
   };
+  handleAnswerRef.current = handleAnswer;
 
   const toggleExampleAudio = () => {
     if (activeStepIndex !== null) {
@@ -385,6 +474,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       <div className="relative flex flex-col justify-between min-h-[100dvh] bg-gradient-to-b from-stone-950 via-indigo-950 to-slate-950 text-white overflow-hidden" dir={dir}>
         <TopBar />
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
+        <AmbientGlow speaker={line.character} reduce={shouldReduceMotion} />
         
         {/* ═══ الشخصيات: أحجام محسوبة للجوال، shrink-0 يمنع الضغط ═══ */}
         <div className="flex-1 relative w-full max-w-5xl mx-auto flex justify-center items-end mb-4 z-10 pt-16 gap-1 sm:gap-4">
@@ -494,34 +584,98 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
 
   if (currentScene?.kind === 'challenge') {
     const q = currentScene.questions[qIndex];
+    const locked = feedback !== 'none';
+    const shownValue = revealed !== null ? String(revealed) : userInput;
     return (
       <div className="relative flex flex-col min-h-[100dvh] bg-slate-950 text-white overflow-hidden" dir={dir}>
+        <AmbientGlow speaker={speaker} reduce={shouldReduceMotion} />
         <TopBar />
-        <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6 z-10 w-full max-w-md mx-auto pb-12">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-3 gap-3 z-10 w-full max-w-md mx-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <div className="w-full flex justify-between items-center text-sm font-bold text-slate-400 bg-slate-900/60 px-4 py-2 rounded-xl border border-slate-800">
             <span>{tUI('question')} {qIndex + 1} / {currentScene.questions.length}</span>
             <span className="text-amber-400 font-mono">⚡ {tUI('archSpeedChallenge')}</span>
           </div>
-          <div className="bg-stone-900/90 border-2 border-amber-500/40 p-8 rounded-3xl shadow-2xl w-full text-center relative backdrop-blur-md">
+
+          <motion.div
+            animate={feedback === 'wrong' && !shouldReduceMotion ? { x: [0, -4, 4, -3, 3, 0] } : { x: 0 }}
+            transition={{ duration: 0.4 }}
+            className="bg-stone-900/90 border-2 border-amber-500/40 p-5 rounded-3xl shadow-2xl w-full text-center relative backdrop-blur-md"
+          >
+            <motion.div
+              className="absolute inset-0 rounded-3xl pointer-events-none"
+              style={{ boxShadow: '0 0 40px 6px rgba(251,191,36,0.7) inset' }}
+              initial={false}
+              animate={{ opacity: feedback === 'correct' ? 1 : 0 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.35 }}
+            />
             <div className="absolute -top-3 right-6 bg-amber-500/20 text-amber-300 text-xs px-3 py-1 rounded-full border border-amber-500/30">{tUI('digitalTablet')}</div>
-            <div className="flex flex-col items-center text-5xl font-mono mb-8 pt-4" dir="ltr">
+            <div className="flex flex-col items-center text-4xl font-mono mb-3 pt-3" dir="ltr">
               {q.numbers.map((num: number, i: number) => (
-                <div key={i} className="flex items-center justify-center w-36 relative my-1">
+                <div key={i} className="flex items-center justify-center w-36 relative my-0.5">
                   <span className="w-16 text-center text-amber-100 drop-shadow-md">{num}</span>
                   {i < q.numbers.length - 1 && (
-                    <span className="absolute -right-4 text-amber-500/80 text-3xl font-bold">
+                    <span className="absolute -right-4 text-amber-500/80 text-2xl font-bold">
                       {q.type === 'multiplication' ? '×' : q.type === 'division' ? '÷' : '+'}
                     </span>
                   )}
                 </div>
               ))}
             </div>
-            <div className="h-px w-3/4 bg-amber-500/30 mx-auto mb-6"></div>
-            <input type="number" value={userInput} onChange={(e) => setUserInput(e.target.value)} disabled={feedback !== 'none'} className={`w-44 mx-auto text-center text-5xl font-bold bg-slate-950 border-2 rounded-2xl p-4 outline-none transition-all shadow-inner ${feedback === 'correct' ? 'border-emerald-500 text-emerald-400 shadow-emerald-500/20' : feedback === 'wrong' ? 'border-red-500 text-red-400 shadow-red-500/20' : 'border-amber-500/40 focus:border-amber-400 text-amber-200'}`} placeholder={isAr ? '؟' : '?'} autoFocus />
+            <div className="h-px w-3/4 bg-amber-500/30 mx-auto mb-3"></div>
+
+            {/* شاشة الإجابة: ارتفاع ثابت + صورة طيفية للرقم الخاطئ */}
+            <div className="relative h-16 w-44 mx-auto flex items-center justify-center bg-slate-950 border-2 rounded-2xl overflow-hidden"
+              style={{ borderColor: feedback === 'correct' ? '#10b981' : feedback === 'wrong' ? '#ef4444' : 'rgba(245,158,11,0.4)' }}>
+              {ghost !== null && (
+                <motion.span
+                  key={`ghost-${attempts}-${ghost}`}
+                  className="absolute text-5xl font-mono font-bold text-sky-300 pointer-events-none"
+                  initial={{ opacity: 0.45 }}
+                  animate={{ opacity: 0 }}
+                  transition={{ duration: shouldReduceMotion ? 0 : 1.2 }}
+                  dir="ltr"
+                >{ghost}</motion.span>
+              )}
+              <span dir="ltr" className={`text-5xl font-mono font-bold ${revealed !== null ? 'text-sky-300' : feedback === 'correct' ? 'text-emerald-400' : 'text-amber-200'}`}>
+                {shownValue || (isAr ? '؟' : '?')}
+              </span>
+            </div>
+            <div className="min-h-[40px] mt-2 text-xs sm:text-sm text-violet-300 leading-snug">{hint}</div>
+          </motion.div>
+
+          <div className="flex items-center gap-2 text-xs">
+            {(['keypad', 'dial'] as const).map((m) => (
+              <button key={m} type="button" onClick={() => setInputMode(m)}
+                className={`px-3 py-1 rounded-full border ${inputMode === m ? 'bg-amber-500/20 border-amber-400 text-amber-200' : 'border-slate-700 text-slate-400'}`}>
+                {tUI(m === 'keypad' ? 'keypadMode' : 'dialMode')}
+              </button>
+            ))}
           </div>
-          <button onClick={() => handleAnswer(true)} disabled={!userInput || feedback !== 'none'} className="w-full py-4 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 disabled:opacity-50 rounded-2xl font-extrabold text-xl transition-all shadow-lg text-slate-950 flex items-center justify-center gap-2">
-            <span>{tUI('confirmAnswer')}</span><Sparkles className="w-5 h-5" />
-          </button>
+
+          {inputMode === 'keypad' ? (
+            <RelicKeypad value={userInput} onChange={setUserInput} disabled={locked} reduceMotion={shouldReduceMotion} />
+          ) : (
+            <TimeDial
+              disabled={locked}
+              reduceMotion={shouldReduceMotion}
+              onStamp={(d) => setUserInput((p) => (p.length < 6 ? p + d : p))}
+              onBack={() => setUserInput((p) => p.slice(0, -1))}
+              onClear={() => setUserInput('')}
+            />
+          )}
+
+          <div className="w-full flex items-start gap-3">
+            <SpeechCrystal
+              lang={isAr ? 'ar' : 'en'}
+              disabled={locked}
+              reduceMotion={shouldReduceMotion}
+              onStart={stopAllAudio}
+              onNumber={(n) => setUserInput(String(n).slice(0, 6))}
+            />
+            <button onClick={() => handleAnswer(true)} disabled={!userInput || locked} className="flex-1 h-16 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 disabled:opacity-50 rounded-2xl font-extrabold text-xl transition-all shadow-lg text-slate-950 flex items-center justify-center gap-2">
+              <span>{tUI('confirmAnswer')}</span><Sparkles className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
     );
