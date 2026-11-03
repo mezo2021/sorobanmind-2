@@ -511,7 +511,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   {/* حاوية ذات ارتفاع ثابت لمنع تمدد صندوق الحوار واهتزاز الشخصيات */}
   <div className="h-24 sm:h-28 mb-6 overflow-y-auto custom-scrollbar flex items-start">
     <p className="text-lg sm:text-xl leading-relaxed text-slate-100 font-medium w-full">
-      {displayedText}{isTyping && <span className="inline-block w-2 h-5 bg-amber-400 ml-1 animate-pulse"></span>}
+      <Num>{displayedText}</Num>{isTyping && <span className="inline-block w-2 h-5 bg-amber-400 ml-1 animate-pulse"></span>}
     </p>
   </div>
 
@@ -534,7 +534,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         
         <div className="max-w-2xl w-full mb-6 bg-amber-950/30 border border-amber-500/30 p-4 rounded-xl text-center z-10 shadow-lg">
           <p className="text-amber-200 font-bold text-sm sm:text-base leading-relaxed">
-            {isAr ? currentScene.ruleAr : currentScene.ruleEn}
+            <Num>{isAr ? currentScene.ruleAr : currentScene.ruleEn}</Num>
           </p>
         </div>
 
@@ -547,7 +547,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
                 onClick={() => { setExampleIndex(idx); setActiveStepIndex(null); stopAllAudio(); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${exampleIndex === idx ? 'bg-amber-600 text-slate-950 shadow-md' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
               >
-                {isAr ? `مثال ${idx + 1}` : `Example ${idx + 1}`}
+                {isAr ? 'مثال ' : 'Example '}<Num>{idx + 1}</Num>
               </button>
             ))}
           </div>
@@ -555,7 +555,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <Award className="w-8 h-8 text-amber-400" />
-              <h2 className="text-xl sm:text-2xl font-bold text-amber-300">{isAr ? currentExample.titleAr : currentExample.titleEn}</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-amber-300"><Num>{isAr ? currentExample.titleAr : currentExample.titleEn}</Num></h2>
             </div>
             <button onClick={toggleExampleAudio} className={`p-3 rounded-full flex items-center justify-center transition-all ${activeStepIndex !== null ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-amber-500/20 text-amber-400 border border-amber-500/50 hover:bg-amber-500/30'}`}>
               {activeStepIndex !== null ? <Square className="w-5 h-5 fill-current" /> : <Volume2 className="w-5 h-5" />}
@@ -563,14 +563,14 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           </div>
           
           <div className="text-3xl sm:text-4xl text-center font-mono bg-stone-900 border border-amber-500/20 py-4 rounded-2xl mb-6 text-amber-400 tracking-wider shadow-inner" dir="ltr">
-            {isAr ? currentExample.problem : currentExample.problem.replace(/؟/g, '?')}
+            <Num>{isAr ? currentExample.problem : currentExample.problem.replace(/؟/g, '?')}</Num>
           </div>
           
           <ul className="space-y-4 mb-8">
             {currentExample.steps.map((step, idx) => (
               <li key={idx} className={`flex items-start p-3 rounded-xl border transition-all duration-300 ${activeStepIndex === idx ? 'bg-amber-900/40 border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.2)] scale-[1.02]' : 'bg-slate-800/50 border-slate-700/50'}`}>
-                <span className={`rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold ml-3 mt-0.5 shrink-0 transition-colors ${activeStepIndex === idx ? 'bg-amber-500 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}>{idx + 1}</span>
-                <span className="text-base sm:text-lg text-slate-200">{isAr ? step.textAr : step.textEn}</span>
+                <span className={`rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold ml-3 mt-0.5 shrink-0 transition-colors ${activeStepIndex === idx ? 'bg-amber-500 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}><Num>{idx + 1}</Num></span>
+                <span className="text-base sm:text-lg text-slate-200"><Num>{isAr ? step.textAr : step.textEn}</Num></span>
               </li>
             ))}
           </ul>
