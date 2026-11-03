@@ -12,6 +12,8 @@ import { addScore } from '../highScoreStore';
 import { useProgressStore } from '@/store/progressStore';
 import { useGameLang } from '../gamesI18n';
 import { tUI } from './gameUI';
+// 👇 إضافة استيراد Num لعرض الأرقام العربية
+import { Num } from '@/components/Num';
 
 const CHAPTERS: Record<ChapterId, Chapter> = {
   intro: INTRO_DATA,
@@ -96,8 +98,13 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
                   {isCompleted ? (
                     <span className="text-emerald-400 text-sm flex items-center gap-1">
                       ✅ {tUI('statusCompleted')}
-                      {/* 👇 نعرض النتيجة فقط إذا كان هناك تمرين */}
-                      {hasChallenge && ` (${tUI('statusBestScore')}: ${progress[chapter.id]?.bestScore})`}
+                      {/* 👇 تم تغليف النتيجة بـ Num لتظهر بالعربية */}
+                      {hasChallenge && (
+                        <span>
+                          {' '}
+                          ({tUI('statusBestScore')}: <Num>{progress[chapter.id]?.bestScore}</Num>)
+                        </span>
+                      )}
                     </span>
                   ) : isUnlocked ? (
                     <span className="text-amber-400 text-sm flex items-center gap-1">
