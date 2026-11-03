@@ -1,7 +1,7 @@
 // src/components/games/MentalArchivesGame/MentalArchivesExamRunner.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { KyuExamData } from './data/exams/examTypes';
-import { useExamStore } from './data/exams/examStore';
+import { useProgressStore } from '@/store/progressStore';
 import { Num } from '@/components/Num';
 import { useGameLang } from '../gamesI18n';
 import { Timer, ArrowRight, CheckCircle2, XCircle, RotateCcw, Home } from 'lucide-react';
@@ -14,7 +14,7 @@ interface Props {
 
 export default function MentalArchivesExamRunner({ examData, mode, onExit }: Props) {
   const { dir, isAr } = useGameLang();
-  const recordResult = useExamStore((s) => s.recordResult);
+  const recordResult = useProgressStore((s) => s.recordMentalExam);
 
   // تجميع كل الأسئلة في مصفوفة واحدة للتنقل السلس
   const allQuestions = examData.sections.flatMap((sec, sIdx) => 
@@ -101,8 +101,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
       }
     }
 
-    recordResult({
-      examId: examData.id,
+    recordResult(examData.id, {
       score,
       totalMarks: examData.totalMarks,
       passed,
