@@ -16,6 +16,18 @@ import type {
 // ✅ [m8] LevelId نظيف (L0-L7) من srb-adapter
 import type { LevelId } from "../data/srb-adapter";
 
+// أضف هذا في أعلى الملف تحت الاستيرادات
+export type MentalGameProgress = Record<string, { bestScore: number; at: number }>;
+
+export type MentalExamResult = {
+  score: number;
+  totalMarks: number;
+  passed: boolean;
+  grade?: string;
+  mode: 'training' | 'exam';
+  completedAt: number;
+};
+
 // ═══ امتداد محلي — لا يمس curriculum/types.ts ═══
 export interface SkillProgress extends BaseSkillProgress {
   peakStreak?: number;
@@ -129,6 +141,12 @@ export interface ProgressState {
   stats: ProgressStats;
   dailyXP: Record<string, number>; // 🆕 v11: سجل النقاط اليومية
 
+  // 👇 أضف هذه الأسطر داخل interface ProgressState
+  mentalArchivesProgress: MentalGameProgress;
+  mentalArchivesExams: Record<string, MentalExamResult>;
+  completeMentalChapter: (id: string, score: number) => void;
+  recordMentalExam: (examId: string, result: MentalExamResult) => void;
+
   setChildName: (name: string) => void;
   setParentName: (name: string) => void;
   setCategory: (category: Category) => void;
@@ -211,6 +229,10 @@ const initialState = {
   tickets: 0,
   stats: { totalAttempts: 0, totalCorrect: 0 } as ProgressStats,
   dailyXP: {} as Record<string, number>, // 🆕 v11
+
+  // 👇 أضف هذه الأسطر داخل const initialState
+  mentalArchivesProgress: {} as MentalGameProgress,
+  mentalArchivesExams: {} as Record<string, MentalExamResult>,
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -463,6 +485,31 @@ export const useProgressStore = create<ProgressState>()(
 
       reset: () => set({ ...initialState }),
 
+      // 👇 أضف هذه الدوال بجانب الدوال الموجودة
+      completeMentalChapter: (id, score) => set((state) => {
+        const existing = state.mentalArchivesProgress[id];
+        if (existing && existing.bestScore >= score) return state;
+        return {
+          mentalArchivesProgress: {
+            ...state.mentalArchivesProgress,
+            [id]: { bestScore: score, at: Date.now() },
+          },
+        };
+      }),
+
+      recordMentalExam: (examId, result) => set((state) => {
+        const existing = state.mentalArchivesExams[examId];
+        // نحفظ النتيجة إذا كانت محاولة امتحان (وليس تدريب) وتفوق السابقة، أو إذا لم تكن هناك نتيجة سابقة
+        const shouldUpdate = !existing || (result.mode === 'exam' && result.score > existing.score);
+        if (!shouldUpdate) return state;
+        return {
+          mentalArchivesExams: {
+            ...state.mentalArchivesExams,
+            [examId]: result,
+          },
+        };
+      }),
+
       buyTicket: () =>
         set((state) => {
           if (state.tickets >= TICKETS_MAX) return state;
@@ -481,7 +528,7 @@ export const useProgressStore = create<ProgressState>()(
     }),
     {
       name: "sorobanmind-v2-progress",
-      version: 12,
+      version: 13, // تم رفع الإصدار لإضافة حقول اللعبة
       migrate: (persistedState, version) => {
         const old = (persistedState as Record<string, unknown>) || {};
 
