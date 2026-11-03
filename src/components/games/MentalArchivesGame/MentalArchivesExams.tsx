@@ -1,8 +1,7 @@
 // src/components/games/MentalArchivesGame/MentalArchivesExams.tsx
 import React, { useState } from 'react';
 import { useGameLang } from '../gamesI18n';
-import { useMentalArchivesStore } from './mentalArchivesStore';
-import { useExamStore } from './data/exams/examStore';
+import { useProgressStore } from '@/store/progressStore';
 import { Num } from '@/components/Num';
 import { ArrowRight, Lock, Play, Timer, GraduationCap, BookOpen } from 'lucide-react';
 
@@ -41,12 +40,12 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
   // 👇 حالة جديدة لتشغيل الامتحان
   const [isRunning, setIsRunning] = useState(false);
 
-  const progress = useMentalArchivesStore((s) => s.progress);
-  const examStore = useExamStore();
+  const progress = useProgressStore((s) => s.mentalArchivesProgress);
+  const examResults = useProgressStore((s) => s.mentalArchivesExams);
 
   const isExamUnlocked = (exam: ExamMeta): boolean => {
     if (exam.requiresChapter) return exam.requiresChapter.every(ch => !!progress[ch]);
-    if (exam.requiresExamPass) return examStore.isExamPassed(exam.requiresExamPass);
+    if (exam.requiresExamPass) return examResults[exam.requiresExamPass]?.passed || false;
     return false;
   };
 
@@ -88,7 +87,7 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {EXAMS.map((exam) => {
               const unlocked = isExamUnlocked(exam);
-              const best = examStore.getBestScore(exam.id);
+              const best = examResults[exam.id] || null;
               return (
                 <div 
                   key={exam.id} 
