@@ -80,16 +80,39 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [speaker, setSpeaker] = useState<CharacterId>('jud');
   const [inputMode, setInputMode] = useState<'keypad' | 'dial'>('keypad');
   const handleAnswerRef = useRef<(m: boolean) => void>(() => {});
+  const voiceRef = useRef<SpeechSynthesisVoice | null>(null); // 👈 إضافة المرجع للصوت
 
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
+  // 👈 1. التسخين واختيار الصوت مسبقاً
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const ss = window.speechSynthesis;
+    const pick = () => {
+      voiceRef.current = ss.getVoices().find(v => v.lang.startsWith(isAr ? 'ar' : 'en')) || null;
+    };
+    pick();
+    ss.addEventListener('voiceschanged', pick);
+    
+    // تسخين المحرك (Cold Start Fix)
+    const warm = new SpeechSynthesisUtterance('a');
+    warm.volume = 0;
+    warm.lang = isAr ? 'ar-SA' : 'en-US';
+    try { if (!ss.speaking) ss.speak(warm); } catch {}
+    
+    return () => ss.removeEventListener('voiceschanged', pick);
+  }, [isAr]);
+
+  // 👈 2. تعديل دالة النطق
   const speakCustom = useCallback((characterId: CharacterId, text: string, onDone?: () => void) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       if (onDone) onDone();
       return;
     }
     
-    window.speechSynthesis.cancel();
+    const ss = window.speechSynthesis;
+    const wasBusy = ss.speaking || ss.pending;
+    if (wasBusy) ss.cancel();
     
     let finalText = text;
     if (!isAr && childName) {
@@ -107,13 +130,13 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     utterance.rate = isAr ? 0.8 : 0.7;
     utterance.pitch = characterId === 'jud' ? 0.8 : characterId === 'aseel' ? 1.4 : 1.25;
     
-    const voices = window.speechSynthesis.getVoices();
-    const langPrefix = isAr ? 'ar' : 'en';
-    const bestVoice = voices.find(v => v.lang.startsWith(langPrefix));
-    if (bestVoice) utterance.voice = bestVoice;
+    if (voiceRef.current) utterance.voice = voiceRef.current;
 
     if (onDone) utterance.onend = onDone;
-    window.speechSynthesis.speak(utterance);
+    
+    // إعطاء المتصفح وقتاً لإنهاء الإلغاء إذا كان مشغولاً
+    if (wasBusy) window.setTimeout(() => ss.speak(utterance), 80);
+    else ss.speak(utterance);
   }, [isAr, childName]);
 
   const stopAllAudio = () => {
@@ -132,14 +155,12 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     stopAllAudio();
   }, [sceneIndex]);
 
-  // ═══ إصلاح المؤقت: إعادة ضبطه عند دخول التحدي أو تغيير السؤال ═══
   useEffect(() => {
     if (currentScene?.kind === 'challenge') {
       setTimeLeft(currentScene.timePerQuestionMs);
     }
   }, [sceneIndex, qIndex, currentScene]);
 
-  // ═══ محرك المؤقت ═══
   useEffect(() => {
     if (currentScene?.kind !== 'challenge' || feedback !== 'none' || phase !== 'playing' || timeLeft <= 0) return;
     
@@ -156,7 +177,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     return () => clearTimeout(timer);
   }, [timeLeft, currentScene, qIndex, feedback, phase]);
 
-  // دعم لوحة المفاتيح الفعلية (PWA على سطح المكتب)
   useEffect(() => {
     if (currentScene?.kind !== 'challenge' || phase !== 'playing' || feedback !== 'none') return;
     const onKey = (e: KeyboardEvent) => {
@@ -177,46 +197,33 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
+  // 👈 3. تعديل دالة الحركة (حل كلاود)
   const getCharacterMotion = (char: CharacterId, isActive: boolean) => {
     const glow =
-      char === 'jud'
-        ? 'drop-shadow(0 0 25px rgba(56,189,248,0.7))'
-        : char === 'aseel'
-          ? 'drop-shadow(0 0 25px rgba(244,63,94,0.7))'
-          : 'drop-shadow(0 0 25px rgba(168,85,247,0.7))';
+      char === 'jud' ? 'drop-shadow(0 0 25px rgba(56,189,248,0.7))'
+      : char === 'aseel' ? 'drop-shadow(0 0 25px rgba(244,63,94,0.7))'
+      : 'drop-shadow(0 0 25px rgba(168,85,247,0.7))';
+
+    // نفس عدد الدوال وترتيبها لتتم المزج بسلاسة
+    const inactiveFilter = 'grayscale(90%) contrast(80%) drop-shadow(0 0 0px rgba(0,0,0,0))';
+    const activeFilter = `grayscale(0%) contrast(100%) ${glow}`;
 
     if (!isActive) {
       return {
-        animate: {
-          scale: 0.82,
-          y: 0,
-          opacity: 0.35,
-          filter: 'grayscale(90%) contrast(80%)',
-        },
+        animate: { scale: 0.82, y: 0, opacity: 0.35, filter: inactiveFilter },
         transition: { duration: 0.3, ease: 'easeOut' as const },
       };
     }
-
     if (shouldReduceMotion) {
       return {
-        animate: { scale: 1.05, y: 0, opacity: 1, filter: glow },
+        animate: { scale: 1.05, y: 0, opacity: 1, filter: activeFilter },
         transition: { duration: 0.2 },
       };
     }
-
+    const loop = { duration: 3, repeat: Infinity, repeatType: 'mirror' as const, ease: 'easeInOut' as const };
     return {
-      animate: {
-        scale: [1.02, 1.07, 1.02],
-        y: [0, -4, 0],
-        opacity: 1,
-        filter: glow,
-      },
-      transition: {
-        duration: 3,
-        repeat: Infinity,
-        repeatType: 'mirror' as const,
-        ease: 'easeInOut',
-      },
+      animate: { scale: [1.02, 1.07, 1.02], y: [0, -4, 0], opacity: 1, filter: activeFilter },
+      transition: { scale: loop, y: loop, opacity: { duration: 0.25 }, filter: { duration: 0.25 } },
     };
   };
 
@@ -232,7 +239,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       setDisplayedText('');
       setIsTyping(true);
       
-      stopAllAudio();
+      // 👈 4. حذف stopAllAudio() من هنا (لأن speakCustom يتكفل بذلك)
       speakCustom(line.character, fullText);
 
       let i = 0;
@@ -282,7 +289,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     setSpeaker('jud');
   };
 
-  // يتكلم ثم ينتظر حداً أدنى حتى يُرى التأثير حتى لو لم يتوفر الصوت
   const speakThen = (who: CharacterId, text: string, minMs: number, cb: () => void) => {
     const start = Date.now();
     setSpeaker(who);
@@ -330,7 +336,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       return;
     }
 
-    // خطأ يدوي ضمن أول محاولتين: تشجيع + تلميح متدرج + إعادة المحاولة
     if (isManualSubmit && attempts < 2) {
       const n = attempts + 1;
       const hintText = buildHint(q, n);
@@ -348,7 +353,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       return;
     }
 
-    // محاولة ثالثة خاطئة أو انتهاء الوقت: كشف الإجابة ثم المتابعة
     setFeedback('wrong');
     setRevealed(q.answer);
     setGhost(isManualSubmit ? guess : null);
@@ -478,11 +482,12 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
         <AmbientGlow speaker={line.character} reduce={shouldReduceMotion} />
         
-        {/* ═══ الشخصيات: أحجام محسوبة للجوال، shrink-0 يمنع الضغط ═══ */}
+        {/* ═══ الشخصيات ═══ */}
         <div className="flex-1 relative w-full max-w-5xl mx-auto flex justify-center items-end mb-4 z-10 pt-16 gap-1 sm:gap-4">
           <motion.img
             src={aseelImg}
             alt={isAr ? 'أسيل' : 'Aseel'}
+            initial={false} // 👈 إضافة لمنع الوميض
             {...getCharacterMotion('aseel', line.character === 'aseel')}
             className="w-24 sm:w-48 object-contain origin-bottom shrink-0"
           />
@@ -490,6 +495,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           <motion.img
             src={joudImg}
             alt={isAr ? 'جود' : 'Joud'}
+            initial={false} // 👈 إضافة لمنع الوميض
             {...getCharacterMotion('jud', line.character === 'jud')}
             className="w-32 sm:w-60 object-contain origin-bottom z-20 shrink-0"
           />
@@ -497,28 +503,29 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           <motion.img
             src={sorobanaImg}
             alt={isAr ? 'سوروبانا' : 'Sorobana'}
+            initial={false} // 👈 إضافة لمنع الوميض
             {...getCharacterMotion('sorobana', line.character === 'sorobana')}
             className="w-28 sm:w-56 object-contain origin-bottom shrink-0"
           />
         </div>
         
+        {/* ═══ صندوق النص (لم نلمسه إطلاقاً) ═══ */}
         <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={() => { if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); } }} className="relative w-full max-w-3xl mx-auto bg-slate-900/95 backdrop-blur-md p-6 sm:p-8 rounded-t-3xl border-t-2 border-amber-500/30 shadow-2xl z-20 cursor-pointer shrink-0">
-  <div className="flex items-center gap-2 mb-3">
-    <span className={`font-extrabold text-lg sm:text-xl ${charData.color}`}>{charData.name}</span>
-    <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">{tUI('archiveGuide')}</span>
-  </div>
-  
-  {/* حاوية ذات ارتفاع ثابت لمنع تمدد صندوق الحوار واهتزاز الشخصيات */}
-  <div className="h-24 sm:h-28 mb-6 overflow-y-auto custom-scrollbar flex items-start">
-    <p className="text-lg sm:text-xl leading-relaxed text-slate-100 font-medium w-full">
-      <Num>{displayedText}</Num>{isTyping && <span className="inline-block w-2 h-5 bg-amber-400 ml-1 animate-pulse"></span>}
-    </p>
-  </div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className={`font-extrabold text-lg sm:text-xl ${charData.color}`}>{charData.name}</span>
+            <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">{tUI('archiveGuide')}</span>
+          </div>
+          
+          <div className="h-24 sm:h-28 mb-6 overflow-y-auto custom-scrollbar flex items-start">
+            <p className="text-lg sm:text-xl leading-relaxed text-slate-100 font-medium w-full">
+              <Num>{displayedText}</Num>{isTyping && <span className="inline-block w-2 h-5 bg-amber-400 ml-1 animate-pulse"></span>}
+            </p>
+          </div>
 
-  <button onClick={(e) => { e.stopPropagation(); if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); return; } if (lineIndex < currentScene.lines.length - 1) setLineIndex(l => l + 1); else nextScene(); }} className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 rounded-xl font-extrabold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
-    <span>{isTyping ? tUI('showFullText') : tUI('continueStory')}</span><Sparkles className="w-5 h-5" />
-  </button>
-</motion.div>
+          <button onClick={(e) => { e.stopPropagation(); if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); return; } if (lineIndex < currentScene.lines.length - 1) setLineIndex(l => l + 1); else nextScene(); }} className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 rounded-xl font-extrabold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
+            <span>{isTyping ? tUI('showFullText') : tUI('continueStory')}</span><Sparkles className="w-5 h-5" />
+          </button>
+        </motion.div>
 
       </div>
     );
@@ -553,17 +560,17 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           </div>
 
           <div className="flex items-center justify-between mb-6">
-  <div className="flex flex-col gap-3 w-full">
-    <div className="flex items-center gap-3">
-      <Award className="w-8 h-8 text-amber-400 shrink-0" />
-      <h2 className="text-xl sm:text-2xl font-bold text-amber-300">
-        {isAr ? currentExample.ruleTitleAr : currentExample.ruleTitleEn}
-      </h2>
-    </div>
-    <div className="text-sm text-amber-100/90 bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 leading-relaxed">
-      <Num>{isAr ? currentExample.ruleDescAr : currentExample.ruleDescEn}</Num>
-    </div>
-  </div>
+            <div className="flex flex-col gap-3 w-full">
+              <div className="flex items-center gap-3">
+                <Award className="w-8 h-8 text-amber-400 shrink-0" />
+                <h2 className="text-xl sm:text-2xl font-bold text-amber-300">
+                  {isAr ? currentExample.ruleTitleAr : currentExample.ruleTitleEn}
+                </h2>
+              </div>
+              <div className="text-sm text-amber-100/90 bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 leading-relaxed">
+                <Num>{isAr ? currentExample.ruleDescAr : currentExample.ruleDescEn}</Num>
+              </div>
+            </div>
             <button onClick={toggleExampleAudio} className={`p-3 rounded-full flex items-center justify-center transition-all ${activeStepIndex !== null ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-amber-500/20 text-amber-400 border border-amber-500/50 hover:bg-amber-500/30'}`}>
               {activeStepIndex !== null ? <Square className="w-5 h-5 fill-current" /> : <Volume2 className="w-5 h-5" />}
             </button>
@@ -632,7 +639,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
             </div>
             <div className="h-px w-3/4 bg-amber-500/30 mx-auto mb-3"></div>
 
-            {/* شاشة الإجابة: ارتفاع ثابت + صورة طيفية للرقم الخاطئ */}
             <div className="relative h-16 w-44 mx-auto flex items-center justify-center bg-slate-950 border-2 rounded-2xl overflow-hidden"
               style={{ borderColor: feedback === 'correct' ? '#10b981' : feedback === 'wrong' ? '#ef4444' : 'rgba(245,158,11,0.4)' }}>
               {ghost !== null && (
