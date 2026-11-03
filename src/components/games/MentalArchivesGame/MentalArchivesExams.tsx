@@ -9,6 +9,8 @@ import { ArrowRight, Lock, Play, Timer, GraduationCap, BookOpen } from 'lucide-r
 // 👇 استيراد شاشة الامتحان وبيانات الامتحان الأول
 import MentalArchivesExamRunner from './MentalArchivesExamRunner';
 import { EXAM_10_7 } from './data/exams/exam10_7';
+// 👇 استيراد نوع ChapterId لحل مشكلة TypeScript
+import { ChapterId } from './gameFlowTypes';
 
 interface ExamMeta {
   id: string;
@@ -17,7 +19,7 @@ interface ExamMeta {
   questions: number;
   marks: number;
   minutes: number;
-  requiresChapter?: string[];
+  requiresChapter?: ChapterId[]; // 👈 تم تعديل النوع هنا
   requiresExamPass?: string;
 }
 
