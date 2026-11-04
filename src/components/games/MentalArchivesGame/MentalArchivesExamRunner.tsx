@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 import { tUI } from './gameUI';
 import RelicKeypad from './ui/RelicKeypad';
 
-import logoImg from '@/assets/logo.webp'; // ✅ تأكد من مسار اللوجو
+import logoImg from '@/assets/logo.webp'; 
 
 interface Props {
   examData: KyuExamData;
@@ -34,7 +34,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showReview, setShowReview] = useState(false);
   
-  // ─── التعديل 3: إضافة حالات الرفع التدريجي والنقاط المتطايرة ───
   const [celebratingId, setCelebratingId] = useState<string | null>(null);
   const [celebratedIds, setCelebratedIds] = useState<Set<string>>(new Set());
 
@@ -65,7 +64,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     return () => clearInterval(timer);
   }, [mode, isFinished]);
 
-  // ─── التعديل 3: تحديث دالة الكيبورد لاكتشاف الإجابة الصحيحة في وضع التدريب ───
   const handleKeypadChange = (newVal: string) => {
     if (isFinished) return;
     const q = allQuestions[activeIndex];
@@ -196,7 +194,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 {tUI('backToExamsList')}
               </button>
               <button onClick={() => window.print()} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-xl border border-slate-700 transition">
-                <Printer className="w-4 h-4 text-emerald-400" />
+                <Printer className="w-4 h-4 text-purple-400" />
                 {tUI('printPaper')}
               </button>
             </div>
@@ -207,7 +205,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                   {tUI('printTitle')}
                 </h1>
                 <div className="flex justify-center gap-6 text-sm text-slate-400 print:text-gray-800 font-bold">
-                  <span>{tUI('finalScore')}: <strong className="text-emerald-400 print:text-green-700"><Num>{score}</Num> / <Num>{examData.totalMarks}</Num></strong></span>
+                  <span>{tUI('finalScore')}: <strong className="text-amber-400 print:text-black"><Num>{score}</Num> / <Num>{examData.totalMarks}</Num></strong></span>
                   <span>{isAr ? 'الوضع' : 'Mode'}: <strong className="text-amber-400 print:text-black">{isExamMode ? tUI('examMode') : tUI('examTraining')}</strong></span>
                 </div>
               </div>
@@ -281,7 +279,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
 
     return (
       <div className="min-h-screen bg-[#060a12] text-white p-6 flex flex-col items-center justify-center relative overflow-hidden" dir={dir}>
-        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-[100px] pointer-events-none ${!isExamMode ? 'bg-amber-500/10' : passed ? 'bg-emerald-500/20' : 'bg-rose-500/20'}`}></div>
+        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-[100px] pointer-events-none ${!isExamMode ? 'bg-amber-500/10' : passed ? 'bg-purple-500/20' : 'bg-rose-500/20'}`}></div>
 
         <motion.div 
           initial={{ scale: 0.8, opacity: 0 }} 
@@ -293,8 +291,8 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
               <Sparkles className="w-12 h-12 text-amber-400 animate-pulse" />
             </div>
           ) : passed ? (
-            <div className="w-24 h-24 mx-auto bg-emerald-500/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(16,185,129,0.4)]">
-              <ShieldCheck className="w-12 h-12 text-emerald-400" />
+            <div className="w-24 h-24 mx-auto bg-purple-500/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(168,85,247,0.4)]">
+              <ShieldCheck className="w-12 h-12 text-purple-400" />
             </div>
           ) : (
             <div className="w-24 h-24 mx-auto bg-rose-500/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(244,63,94,0.4)]">
@@ -321,9 +319,9 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
               </p>
             </div>
           ) : earnedGrade && passed ? (
-            <div className="bg-emerald-900/30 border border-emerald-500/50 rounded-2xl p-4 mb-8">
-              <p className="text-sm text-emerald-300 mb-1">{tUI('gradeEarned')}</p>
-              <p className="text-2xl font-black text-emerald-400">
+            <div className="bg-purple-900/30 border border-purple-500/50 rounded-2xl p-4 mb-8">
+              <p className="text-sm text-purple-300 mb-1">{tUI('gradeEarned')}</p>
+              <p className="text-2xl font-black text-purple-400">
                 {earnedGrade}
               </p>
             </div>
@@ -334,7 +332,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
               <CheckCircle2 className="w-5 h-5 text-amber-400" />
               {tUI('reviewAnswers')}
             </button>
-            <button onClick={onExit} className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 rounded-2xl font-bold flex items-center justify-center gap-2 transition shadow-lg text-slate-950">
+            <button onClick={onExit} className="w-full py-4 bg-purple-600 hover:bg-purple-500 rounded-2xl font-bold flex items-center justify-center gap-2 transition shadow-lg text-white">
               <Home className="w-5 h-5" />
               {tUI('backToExamsList')}
             </button>
@@ -351,20 +349,18 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
   return (
     <div className="min-h-screen bg-[#060a12] text-white flex flex-col relative select-none" dir={dir}>
       
-      {/* الشريط العلوي */}
       <div className="flex items-center justify-between p-4 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 shadow-md">
         <button onClick={() => handleSubmit(false)} className="px-5 py-2.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 rounded-xl text-sm font-bold border border-rose-500/30 transition">
           {tUI('finishExam')}
         </button>
         
-        {/* ─── التعديل 2: إضافة شارة (تدريب / امتحان) بين زر الإنهاء والمؤقت ─── */}
         {mode === 'training' ? (
           <span className="text-xs bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full border border-amber-500/30 font-bold">
             {isAr ? '🟡 تدريب' : '🟡 Training'}
           </span>
         ) : (
-          <span className="text-xs bg-rose-500/20 text-rose-400 px-3 py-1 rounded-full border border-rose-500/30 font-bold">
-            {isAr ? '🔴 امتحان' : '🔴 Exam'}
+          <span className="text-xs bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full border border-purple-500/30 font-bold">
+            {isAr ? '🟣 امتحان' : '🟣 Exam'}
           </span>
         )}
         
@@ -378,7 +374,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
         )}
 
         <div className="text-sm font-bold text-slate-400 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
-          <span className="text-emerald-400"><Num>{answeredCount}</Num></span> / <Num>{allQuestions.length}</Num>
+          <span className="text-amber-400"><Num>{answeredCount}</Num></span> / <Num>{allQuestions.length}</Num>
         </div>
       </div>
 
@@ -394,22 +390,20 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 key={q.id}
                 ref={isActive ? activeCardRef : null}
                 onClick={() => setActiveIndex(idx)}
-                // ─── التعديل 1: تغيير توهج البطاقة النشطة إلى البنفسجي الساحر ───
                 className={`relative flex flex-col items-center p-4 rounded-2xl border-2 transition-all cursor-pointer scroll-mb-[350px] ${
                   isActive 
                     ? 'border-amber-400 bg-slate-800/90 shadow-[0_0_35px_rgba(168,85,247,0.6)] scale-[1.02] z-10 ring-2 ring-amber-400/30' 
                     : isAnswered 
-                      ? 'border-emerald-500/40 bg-slate-900' 
+                      ? 'border-purple-500/40 bg-slate-900' 
                       : 'border-slate-800 bg-slate-900/50 opacity-85'
                 }`}
               >
-                {/* ─── التعديل 3: تأثير تطاير النقاط عند الإجابة الصحيحة في وضع التدريب ─── */}
                 {celebratingId === q.id && (
                   <motion.div
                     initial={{ y: 0, opacity: 0, scale: 0.5 }}
                     animate={{ y: -80, opacity: [0, 1, 1, 0], scale: [0.5, 1.3, 1, 1] }}
                     transition={{ duration: 1.5, ease: 'easeOut' }}
-                    className="absolute left-1/2 -translate-x-1/2 top-2 text-emerald-400 font-black text-2xl pointer-events-none z-30 drop-shadow-[0_0_10px_rgba(16,185,129,0.9)]"
+                    className="absolute left-1/2 -translate-x-1/2 top-2 text-amber-400 font-black text-2xl pointer-events-none z-30 drop-shadow-[0_0_10px_rgba(251,191,36,0.9)]"
                   >
                     +{q.points}
                   </motion.div>
@@ -434,7 +428,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                   isActive 
                     ? 'bg-slate-950 text-amber-400 border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.4)]' 
                     : isAnswered 
-                      ? 'bg-slate-950 text-amber-300 border-emerald-500/30' 
+                      ? 'bg-slate-950 text-amber-300 border-purple-500/30' 
                       : 'bg-slate-950/50 text-slate-600 border-transparent'
                 }`}>
                   <Num>{val || '?'}</Num>
