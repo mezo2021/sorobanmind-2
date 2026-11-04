@@ -21,7 +21,20 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
   const { dir, isAr } = useGameLang();
   const recordResult = useProgressStore((s) => s.recordMentalExam);
 
-  const allQuestions = examData.sections.flatMap((sec, sIdx) => 
+  // 🆕 خلط الأسئلة داخل كل قسم (يحدث مرة واحدة عند فتح الامتحان)
+  const [shuffledSections] = useState(() => {
+    return examData.sections.map((sec) => {
+      const shuffled = [...sec.questions];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return { ...sec, questions: shuffled };
+    });
+  });
+
+  // نعتمد على الأقسام المخلوطة بدلاً من الأصلية
+  const allQuestions = shuffledSections.flatMap((sec, sIdx) => 
     sec.questions.map((q, qIdx) => ({ ...q, sectionIndex: sIdx, points: sec.pointsPerQuestion }))
   );
 
@@ -101,13 +114,12 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     let score = 0;
     const currentAnswers = answersRef.current;
 
-    examData.sections.forEach((sec) => {
-      sec.questions.forEach((q) => {
-        const userAnswer = currentAnswers[q.id];
-        if (userAnswer && parseInt(userAnswer) === q.answer) {
-          score += sec.pointsPerQuestion;
-        }
-      });
+    // 🆕 الحساب بناءً على الأسئلة المخلوطة
+    allQuestions.forEach((q) => {
+      const userAnswer = currentAnswers[q.id];
+      if (userAnswer && parseInt(userAnswer) === q.answer) {
+        score += q.points;
+      }
     });
 
     let grade = undefined;
@@ -145,13 +157,12 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
   // ═══ شاشة النتائج وسجل التصحيح ═══
   if (isFinished) {
     let score = 0;
-    examData.sections.forEach((sec) => {
-      sec.questions.forEach((q) => {
-        const userAnswer = answersRef.current[q.id];
-        if (userAnswer && parseInt(userAnswer) === q.answer) {
-          score += sec.pointsPerQuestion;
-        }
-      });
+    // 🆕 الحساب بناءً على الأسئلة المخلوطة
+    allQuestions.forEach((q) => {
+      const userAnswer = answersRef.current[q.id];
+      if (userAnswer && parseInt(userAnswer) === q.answer) {
+        score += q.points;
+      }
     });
     
     const isExamMode = mode === 'exam';
