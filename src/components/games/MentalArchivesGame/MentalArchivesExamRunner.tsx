@@ -9,8 +9,7 @@ import { motion } from 'framer-motion';
 import { tUI } from './gameUI';
 import RelicKeypad from './ui/RelicKeypad';
 
-// 👇 تأكد من مسار اللوجو (حسب الصورة التي أرسلتها)
-import logoImg from '@/assets/logo.webp';
+import logoImg from '@/assets/logo.webp'; // ✅ تم إصلاح الاستيراد
 
 interface Props {
   examData: KyuExamData;
@@ -154,7 +153,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     if (showReview) {
       return (
         <div className="min-h-screen bg-[#060a12] text-white p-4 md:p-8" dir={dir}>
-          {/* كود مخصص لطباعة الورقة بشكل نظيف */}
           <style>{`
             @media print {
               body { background: white !important; color: black !important; }
@@ -173,7 +171,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
 
           <div className="max-w-4xl mx-auto print-page">
             
-            {/* رأس الشهادة (يظهر فقط عند الطباعة) */}
+            {/* رأس الشهادة (عند الطباعة) */}
             <div className="hidden print:flex flex-col items-center justify-center mb-8 text-center border-b-2 border-amber-500 pb-6">
               <img src={logoImg} alt="Academy Logo" className="w-24 h-24 mb-2 object-contain" />
               <h1 className="text-2xl font-black text-black mb-1">أكاديمية السوروبان الدولية</h1>
@@ -181,7 +179,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
               <p className="text-xs text-gray-500 mt-2">{isAr ? 'ورقة تدريب' : 'Training Paper'}</p>
             </div>
 
-            {/* أزرار التحكم (تختفي عند الطباعة) */}
+            {/* أزرار التحكم */}
             <div className="flex justify-between items-center mb-6 print-hidden">
               <button onClick={() => setShowReview(false)} className="flex items-center gap-2 text-amber-400 font-bold hover:text-amber-300">
                 <ArrowRight className={`w-5 h-5 ${isAr ? '' : 'rotate-180'}`} />
@@ -236,7 +234,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                         </span>
                       </div>
                       
-                      {/* إظهار الإجابة الصحيحة دائماً إذا كانت إجابة الطفل خاطئة أو فارغة */}
                       {!isCorrect && (
                         <div className="flex justify-between text-sm">
                           <span className="text-slate-400 print:text-gray-700 font-bold">{tUI('correctAnswer')}:</span>
@@ -248,10 +245,10 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 })}
               </div>
 
-              {/* تذييل الشهادة (يظهر فقط عند الطباعة) */}
+              {/* تذييل الشهادة */}
               <div className="hidden print:flex justify-between items-end mt-12 pt-8 border-t border-gray-300 text-black">
                 <div className="text-center">
-                  <p className="text-sm font-bold text-gray-600">المدير والمؤسس</p>
+                  <p className="text-sm font-bold text-gray-600">تصميم البرنامج</p>
                   <p className="font-black text-lg mt-6">{isAr ? 'مصطفى علي اكر' : 'Mustafa Ali Eker'}</p>
                 </div>
                 
@@ -280,11 +277,11 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
         <motion.div 
           initial={{ scale: 0.8, opacity: 0 }} 
           animate={{ scale: 1, opacity: 1 }} 
-          className="max-w-md w-full bg-slate-900/80 border-2 border-slate-700 rounded-[2rem] p-8 text-center shadow-2xl backdrop-blur-xl relative z-10"
+          className="max-w-md w-full bg-slate-900/85 border-2 border-slate-700 rounded-[2rem] p-8 text-center shadow-2xl backdrop-blur-xl relative z-10"
         >
           {!isExamMode ? (
             <div className="w-24 h-24 mx-auto bg-amber-500/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(245,158,11,0.3)]">
-              <Sparkles className="w-12 h-12 text-amber-400" />
+              <Sparkles className="w-12 h-12 text-amber-400 animate-pulse" />
             </div>
           ) : passed ? (
             <div className="w-24 h-24 mx-auto bg-emerald-500/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(16,185,129,0.4)]">
@@ -298,7 +295,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
           
           <h2 className="text-3xl font-black mb-2">
             {!isExamMode 
-              ? (isAr ? 'انتهى التدريب' : 'Training Finished') 
+              ? (isAr ? 'انتهى التدريب بنجاح' : 'Training Finished') 
               : (passed ? tUI('passedTitle') : tUI('failedTitle'))}
           </h2>
           <p className="text-slate-400 mb-6">{tUI('finalScore')}</p>
@@ -338,14 +335,15 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     );
   }
 
-  // ═══ شاشة الامتحان (الأداء) ═══
+  // ═══ شاشة الامتحان والتدريب الرئيسية ═══
   const currentQ = allQuestions[activeIndex];
   const answeredCount = Object.values(answers).filter(v => v !== '').length;
 
   return (
-    <div className="min-h-screen bg-[#060a12] text-white flex flex-col relative" dir={dir}>
+    <div className="min-h-screen bg-[#060a12] text-white flex flex-col relative select-none" dir={dir}>
       
-      <div className="flex items-center justify-between p-4 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-20">
+      {/* الشريط العلوي */}
+      <div className="flex items-center justify-between p-4 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 shadow-md">
         <button onClick={() => handleSubmit(false)} className="px-5 py-2.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 rounded-xl text-sm font-bold border border-rose-500/30 transition">
           {tUI('finishExam')}
         </button>
@@ -364,7 +362,8 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 pb-72">
+      {/* منطقة الأسئلة مع هامش سفلي كافٍ */}
+      <div className="flex-1 overflow-y-auto p-4 pb-[350px] scroll-smooth" style={{ scrollPaddingBottom: '350px' }}>
         <div className="max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {allQuestions.map((q, idx) => {
             const isActive = idx === activeIndex;
@@ -376,12 +375,12 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 key={q.id}
                 ref={isActive ? activeCardRef : null}
                 onClick={() => setActiveIndex(idx)}
-                className={`relative flex flex-col items-center p-4 rounded-2xl border-2 transition-all cursor-pointer scroll-mb-[300px] ${
+                className={`relative flex flex-col items-center p-4 rounded-2xl border-2 transition-all cursor-pointer scroll-mb-[350px] ${
                   isActive 
-                    ? 'border-amber-400 bg-slate-800 shadow-[0_0_20px_rgba(251,191,36,0.3)] scale-[1.02] z-10' 
+                    ? 'border-amber-400 bg-slate-800/90 shadow-[0_0_25px_rgba(251,191,36,0.35)] scale-[1.02] z-10 ring-2 ring-amber-400/50 animate-pulse' 
                     : isAnswered 
                       ? 'border-emerald-500/40 bg-slate-900' 
-                      : 'border-slate-800 bg-slate-900/50 opacity-80'
+                      : 'border-slate-800 bg-slate-900/50 opacity-85'
                 }`}
               >
                 <div className={`absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded-md ${isActive ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
@@ -399,8 +398,13 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 
                 <div className="w-full h-px bg-slate-700/50 my-3"></div>
                 
-                <div className={`w-full text-center py-2 rounded-xl text-xl font-mono font-bold border ${
-                  isAnswered ? 'bg-slate-950 text-amber-300 border-amber-500/30' : 'bg-slate-950/50 text-slate-600 border-transparent'
+                {/* مربع الإجابة الخاص بكل بطاقة */}
+                <div className={`w-full text-center py-2 rounded-xl text-xl font-mono font-bold border transition-colors ${
+                  isActive 
+                    ? 'bg-slate-950 text-amber-400 border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.4)]' 
+                    : isAnswered 
+                      ? 'bg-slate-950 text-amber-300 border-emerald-500/30' 
+                      : 'bg-slate-950/50 text-slate-600 border-transparent'
                 }`}>
                   <Num>{val || '?'}</Num>
                 </div>
@@ -410,22 +414,16 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 p-4 pb-6 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+      {/* لوحة التحكم السفلية والكيبورد */}
+      <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 p-4 pb-6 z-30 shadow-[0_-15px_50px_rgba(0,0,0,0.7)]">
         <div className="max-w-md mx-auto flex flex-col gap-3">
           
-          <div className="w-full bg-slate-950 border-2 border-amber-500/30 rounded-xl p-2 flex justify-between items-center shadow-inner">
-            <span className="text-xs text-slate-500 font-bold px-2">{tUI('yourAnswer')}</span>
-            <span className="text-3xl font-mono font-bold text-amber-400 px-4 tracking-widest">
-              <Num>{answers[currentQ.id] || '?'}</Num>
-            </span>
-          </div>
-
           <div className="flex gap-2">
-            <button onClick={prevQuestion} disabled={activeIndex === 0} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 rounded-xl font-bold flex justify-center items-center gap-2 transition text-sm">
+            <button onClick={prevQuestion} disabled={activeIndex === 0} className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 rounded-xl font-bold flex justify-center items-center gap-2 transition text-sm border border-slate-700">
               <ArrowRight className={`w-4 h-4 ${isAr ? '' : 'rotate-180'}`} />
               {tUI('back')}
             </button>
-            <button onClick={nextQuestion} disabled={activeIndex === allQuestions.length - 1} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 rounded-xl font-bold flex justify-center items-center gap-2 transition text-sm">
+            <button onClick={nextQuestion} disabled={activeIndex === allQuestions.length - 1} className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 rounded-xl font-bold flex justify-center items-center gap-2 transition text-sm border border-slate-700">
               {tUI('next')}
               <ArrowLeft className={`w-4 h-4 ${isAr ? '' : 'rotate-180'}`} />
             </button>
