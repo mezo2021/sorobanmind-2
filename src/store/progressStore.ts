@@ -2,6 +2,7 @@
 // [v10] — peakStreak + stats + 7 شارات أنزان (بصري + سمعي) — 2026-10-16
 // [v11] — إضافة dailyXP لتتبع نشاط الأسبوع — 2026-10-20
 // [v12] — توحيد LevelId من srb-adapter + تحويل passed* إلى LevelId[] — 2026-10-23
+// [v14] — تنظيف سجلات التدريب من mentalArchivesExams + قائمة بيضاء في recordMentalExam — 2026-11-04
 // ✅ لا earnedBadges · لا QUESTS · لا BADGES
 
 import { create } from "zustand";
@@ -498,10 +499,11 @@ export const useProgressStore = create<ProgressState>()(
       }),
 
       recordMentalExam: (examId, result) => set((state) => {
+        // 🆕 v14: قائمة بيضاء — نقبل فقط محاولات الامتحان الرسمية (التدريب لا يُسجَّل)
+        if (result.mode !== 'exam') return state;
         const existing = state.mentalArchivesExams[examId];
-        // نحفظ النتيجة إذا كانت محاولة امتحان (وليس تدريب) وتفوق السابقة، أو إذا لم تكن هناك نتيجة سابقة
-        const shouldUpdate = !existing || (result.mode === 'exam' && result.score > existing.score);
-        if (!shouldUpdate) return state;
+        // نحفظ إذا كانت أول محاولة امتحان، أو نتيجة أفضل من السابقة
+        if (existing && result.score <= existing.score) return state;
         return {
           mentalArchivesExams: {
             ...state.mentalArchivesExams,
@@ -528,7 +530,8 @@ export const useProgressStore = create<ProgressState>()(
     }),
     {
       name: "sorobanmind-v2-progress",
-      version: 13, // تم رفع الإصدار لإضافة حقول اللعبة
+      // 🆕 v14: تنظيف سجلات التدريب القديمة من mentalArchivesExams
+      version: 14,
       migrate: (persistedState, version) => {
         const old = (persistedState as Record<string, unknown>) || {};
 
@@ -626,7 +629,20 @@ export const useProgressStore = create<ProgressState>()(
           } as ProgressState);
         }
 
-        // المسار الأخير: v11 → v12 (حالة مصطفى)
+        // 🆕 v14: تنظيف سجلات التدريب القديمة (فقدان بيانات التدريب مقصود — راجع Changelog v6.1)
+        // ملاحظة: لا return مبكر — نمرّ دائماً عبر applyLevelIdMigration
+        if (version < 14) {
+          const s = persistedState as ProgressState | null;
+          if (s?.mentalArchivesExams) {
+            s.mentalArchivesExams = Object.fromEntries(
+              Object.entries(s.mentalArchivesExams).filter(
+                ([, res]) => res?.mode === 'exam'
+              )
+            );
+          }
+        }
+
+        // المسار الأخير: v11 → v12 → v13 → v14 (حالة مصطفى والترقيات المستقبلية)
         return applyLevelIdMigration(persistedState as ProgressState);
       },
     },
