@@ -3,8 +3,9 @@ import { Chapter } from '../gameFlowTypes';
 
 export const LEVEL_2_DATA: Chapter = {
   id: 'level2',
-  titleAr: 'المستوى الثاني: إيقاع العلامات',
-  titleEn: 'Level 2: Rhythm of Signs',
+  // 🆕 P15: إضافة الموقع (أوغاريت) ونطاق الكيو
+  titleAr: 'المستوى الثاني: إيقاع العلامات — أوغاريت (8-7 كيو)',
+  titleEn: 'Level 2: Rhythm of Signs — Ugarit (8-7 Kyu)',
   requires: ['level1'],
   next: 'level3',
   scenes: [
