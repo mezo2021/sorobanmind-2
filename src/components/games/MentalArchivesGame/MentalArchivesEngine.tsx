@@ -330,7 +330,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     if (actualCorrect) {
       setFeedback('correct');
       setCorrectCount(prev => prev + 1);
-      const msg = isAr ? `أحسنت يا ${childName}!` : `Well done ${childName}!`;
+      const msg = isAr ? `أَحْسَنْتَ يا ${childName}!` : `Well done ${childName}!`;
       try { confetti({ particleCount: shouldReduceMotion ? 15 : 40, spread: 60, origin: { y: 0.7 }, colors: ['#F59E0B', '#FBBF24', '#FDE68A'] }); } catch (e) {}
       speakThen('jud', msg, 900, advance);
       return;
