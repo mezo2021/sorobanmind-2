@@ -171,10 +171,11 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
 
     let trainMessage = '';
     if (!isExamMode) {
-      if (score >= 400) trainMessage = tUI('trainReadyL7');
-      else if (score >= 350) trainMessage = tUI('trainNeedL8');
-      else if (score >= 300) trainMessage = tUI('trainNeedL9');
-      else if (score >= 250) trainMessage = tUI('trainNeedL10');
+      // 🆕 تم تحديث المفاتيح لتتوافق مع Kyu
+      if (score >= 400) trainMessage = tUI('trainReadyKyu7');
+      else if (score >= 350) trainMessage = tUI('trainNeedKyu8');
+      else if (score >= 300) trainMessage = tUI('trainNeedKyu9');
+      else if (score >= 250) trainMessage = tUI('trainNeedKyu10');
       else trainMessage = tUI('trainNeedMore');
     }
 
