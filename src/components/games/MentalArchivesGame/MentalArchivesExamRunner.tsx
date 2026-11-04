@@ -160,6 +160,40 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
       else trainMessage = tUI('trainNeedMore');
     }
 
+    // ─── التعديل: رسائل وألوان وضع الامتحان بناءً على الدرجة ───
+    let examMainTitle = '';
+    let examSubTitle = '';
+    let examBadge = null;
+    let IconComponent = ShieldCheck;
+    let iconColor = 'text-purple-400';
+    let iconBg = 'bg-purple-500/20';
+    let glowColor = passed ? 'bg-emerald-500/20' : 'bg-purple-500/20';
+
+    if (isExamMode) {
+      if (score < 250) {
+        examMainTitle = isAr ? 'لا تيأس، حاول مرة أخرى' : "Don't give up, try again";
+        examSubTitle = isAr ? 'تستطيع النجاح' : 'You can pass';
+        IconComponent = XCircle;
+        iconColor = 'text-rose-400';
+        iconBg = 'bg-rose-500/20';
+        glowColor = 'bg-rose-500/20';
+      } else {
+        examMainTitle = isAr ? 'مستواك الحالي' : 'Your Current Level';
+        examSubTitle = earnedGrade || '';
+        IconComponent = ShieldCheck;
+        iconColor = 'text-purple-400';
+        iconBg = 'bg-purple-500/20';
+      }
+
+      if (score >= 400) {
+        examBadge = (
+          <span className="inline-block mt-3 bg-emerald-500/20 text-emerald-400 px-4 py-1.5 rounded-full text-sm font-bold border border-emerald-500/30">
+            {isAr ? 'لقد اجتزت الامتحان' : 'You passed the exam'}
+          </span>
+        );
+      }
+    }
+
     if (showReview) {
       return (
         <div className="min-h-screen bg-[#060a12] text-white p-4 md:p-8" dir={dir}>
@@ -181,11 +215,15 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
 
           <div className="max-w-4xl mx-auto print-page">
             
+            {/* التعديل: إصلاح ترجمة رأس الشهادة */}
             <div className="hidden print:flex flex-col items-center justify-center mb-8 text-center border-b-2 border-amber-500 pb-6">
               <img src={logoImg} alt="Academy Logo" className="w-24 h-24 mb-2 object-contain" />
-              <h1 className="text-2xl font-black text-black mb-1">أكاديمية السوروبان الدولية</h1>
-              <h2 className="text-sm font-bold text-gray-600 uppercase tracking-widest">International Soroban Academy</h2>
-              <p className="text-xs text-gray-500 mt-2">{isAr ? 'ورقة تدريب' : 'Training Paper'}</p>
+              <h1 className="text-2xl font-black text-black mb-1">
+                {isAr ? 'أكاديمية السوروبان الدولية' : 'International Soroban Academy'}
+              </h1>
+              <p className="text-xs text-gray-500 mt-2">
+                {isAr ? 'ورقة تدريب' : 'Training Paper'}
+              </p>
             </div>
 
             <div className="flex justify-between items-center mb-6 print-hidden">
@@ -253,10 +291,15 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 })}
               </div>
 
+              {/* التعديل: إصلاح ترجمة تذييل الشهادة */}
               <div className="hidden print:flex justify-between items-end mt-12 pt-8 border-t border-gray-300 text-black">
                 <div className="text-center">
-                  <p className="text-sm font-bold text-gray-600">تصميم البرنامج</p>
-                  <p className="font-black text-lg mt-6">{isAr ? 'مصطفى علي اكر' : 'Mustafa Ali Eker'}</p>
+                  <p className="text-sm font-bold text-gray-600">
+                    {isAr ? 'تصميم البرنامج' : 'Program Design'}
+                  </p>
+                  <p className="font-black text-lg mt-6">
+                    {isAr ? 'مصطفى علي اكر' : 'Mustafa Ali Eker'}
+                  </p>
                 </div>
                 
                 <div className="text-center">
@@ -264,7 +307,9 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 </div>
 
                 <div className="text-center">
-                  <p className="text-sm font-bold text-gray-600">تاريخ الإصدار</p>
+                  <p className="text-sm font-bold text-gray-600">
+                    {isAr ? 'تاريخ الإصدار' : 'Issue Date'}
+                  </p>
                   <p className="font-bold mt-6 font-mono" dir="ltr">
                     {new Date().toLocaleDateString('en-GB').replace(/\//g, ' / ')}
                   </p>
@@ -279,7 +324,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
 
     return (
       <div className="min-h-screen bg-[#060a12] text-white p-6 flex flex-col items-center justify-center relative overflow-hidden" dir={dir}>
-        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-[100px] pointer-events-none ${!isExamMode ? 'bg-amber-500/10' : passed ? 'bg-purple-500/20' : 'bg-rose-500/20'}`}></div>
+        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-[100px] pointer-events-none ${!isExamMode ? 'bg-amber-500/10' : glowColor}`}></div>
 
         <motion.div 
           initial={{ scale: 0.8, opacity: 0 }} 
@@ -290,22 +335,20 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
             <div className="w-24 h-24 mx-auto bg-amber-500/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(245,158,11,0.3)]">
               <Sparkles className="w-12 h-12 text-amber-400 animate-pulse" />
             </div>
-          ) : passed ? (
-            <div className="w-24 h-24 mx-auto bg-purple-500/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(168,85,247,0.4)]">
-              <ShieldCheck className="w-12 h-12 text-purple-400" />
-            </div>
           ) : (
-            <div className="w-24 h-24 mx-auto bg-rose-500/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(244,63,94,0.4)]">
-              <XCircle className="w-12 h-12 text-rose-400" />
+            <div className={`w-24 h-24 mx-auto ${iconBg} rounded-full flex items-center justify-center mb-6 shadow-lg`}>
+              <IconComponent className={`w-12 h-12 ${iconColor}`} />
             </div>
           )}
           
-          <h2 className="text-3xl font-black mb-2">
+          <h2 className="text-3xl font-black mb-2 text-white">
             {!isExamMode 
               ? (isAr ? 'انتهى التدريب بنجاح' : 'Training Finished') 
-              : (passed ? tUI('passedTitle') : tUI('failedTitle'))}
+              : examMainTitle}
           </h2>
-          <p className="text-slate-400 mb-6">{tUI('finalScore')}</p>
+          <p className={`text-lg font-bold mb-4 ${isExamMode && score < 250 ? 'text-rose-400' : 'text-amber-400'}`}>
+            {!isExamMode ? tUI('finalScore') : examSubTitle}
+          </p>
 
           <div className="text-6xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 to-amber-500 mb-2 drop-shadow-md">
             <Num>{score}</Num>
@@ -318,16 +361,11 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 {trainMessage}
               </p>
             </div>
-          ) : earnedGrade && passed ? (
-            <div className="bg-purple-900/30 border border-purple-500/50 rounded-2xl p-4 mb-8">
-              <p className="text-sm text-purple-300 mb-1">{tUI('gradeEarned')}</p>
-              <p className="text-2xl font-black text-purple-400">
-                {earnedGrade}
-              </p>
-            </div>
-          ) : null}
+          ) : (
+            examBadge
+          )}
 
-          <div className="space-y-3">
+          <div className="space-y-3 mt-6">
             <button onClick={() => setShowReview(true)} className="w-full py-4 bg-slate-800 hover:bg-slate-700 rounded-2xl font-bold flex items-center justify-center gap-2 transition border border-slate-700">
               <CheckCircle2 className="w-5 h-5 text-amber-400" />
               {tUI('reviewAnswers')}
