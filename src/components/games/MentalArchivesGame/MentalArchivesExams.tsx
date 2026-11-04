@@ -5,6 +5,7 @@ import { useProgressStore } from '@/store/progressStore';
 import { Num } from '@/components/Num';
 import { ArrowRight, Lock, Play, Timer, GraduationCap, BookOpen, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { isPreviewMode } from '@/utils/previewMode';
 
 import MentalArchivesExamRunner from './MentalArchivesExamRunner';
 import { EXAM_10_7 } from './data/exams/exam10_7';
@@ -44,7 +45,11 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
   const progress = useProgressStore((s) => s.mentalArchivesProgress);
   const examResults = useProgressStore((s) => s.mentalArchivesExams);
 
+  // 🆕 تجاوز الأقفال في وضع المعاينة
+  const preview = isPreviewMode();
+
   const isExamUnlocked = (exam: ExamMeta): boolean => {
+    if (preview) return true; // 🆕
     if (exam.requiresChapter) return exam.requiresChapter.every(ch => !!progress[ch]);
     if (exam.requiresExamPass) return examResults[exam.requiresExamPass]?.passed || false;
     return false;
