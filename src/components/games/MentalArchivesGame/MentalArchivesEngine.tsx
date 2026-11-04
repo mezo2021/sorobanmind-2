@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Chapter, CharacterId, Scene } from './gameFlowTypes'; 
+import { Chapter, CharacterId, Scene, GameQuestion } from './gameFlowTypes'; 
 import { tUI } from './gameUI';
 import { useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
@@ -54,7 +54,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [sceneIndex, setSceneIndex] = useState(0);
   const currentScene = chapter.scenes[sceneIndex];
 
-  // 🆕 P01: استخراج شرط النجاح من مشهد التحدي
   const challengeScene = chapter.scenes.find((s): s is Extract<Scene, { kind: 'challenge' }> => s.kind === 'challenge');
   const requiredCorrect = challengeScene?.requiredCorrect ?? 0;
 
@@ -84,7 +83,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [inputMode, setInputMode] = useState<'keypad' | 'dial'>('keypad');
   const handleAnswerRef = useRef<(m: boolean) => void>(() => {});
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
-  // 🆕 Fix2: حماية من تشغيل useEffect مرتين (StrictMode) في شاشة النجاح
   const successHandledRef = useRef(false);
 
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
@@ -262,14 +260,11 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     stopAllAudio();
   };
 
-  // 🆕 P01: useEffect جديد للتعامل مع شاشة النهاية (نجاح/إخفاق)
-  // 🆕 Fix2: حماية من StrictMode (تشغيل مزدوج) عبر ref
   useEffect(() => {
     if (phase !== 'success') return;
-    if (successHandledRef.current) return; // تجنب التشغيل المزدوج في StrictMode
+    if (successHandledRef.current) return;
     successHandledRef.current = true;
 
-    // 🆕 Fix1: شرط صريح (intro بلا تحدي → نجاح دائماً)
     const isWin = !challengeScene || correctCount >= requiredCorrect;
 
     if (isWin) {
@@ -310,11 +305,15 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     });
   };
 
-  const buildHint = (q: { type: string; answer: number }, n: number) => {
+  // 🆕 بنية التلميحات: (1) نصيحة السؤال المخصصة إن وُجدت، (2) تلميح الأرقام للمحاولة الثانية، (3) تلميح نوعي كاحتياط
+  const buildHint = (q: GameQuestion, n: number) => {
     if (n >= 2) {
       const ans = String(Math.abs(q.answer));
       return tUI('hintDigits').replace('{n}', String(ans.length)).replace('{d}', ans[0]);
     }
+    const explicitTip = isAr ? q.tipAr : q.tipEn;
+    if (explicitTip) return explicitTip;
+
     const map: Record<string, Parameters<typeof tUI>[0]> = {
       direct: 'hintDirect', complement5: 'hintComplement5', complement10: 'hintComplement10',
       combined: 'hintCombined',
@@ -436,7 +435,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     </div>
   );
 
-  // 🆕 P01 + Fix1: شاشة النجاح تعكس النتيجة الحقيقية (بشرط صريح للـ intro)
   if (phase === 'success') {
     const isWin = !challengeScene || correctCount >= requiredCorrect;
     return (
@@ -552,6 +550,9 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     const currentExample = currentScene.examples[exampleIndex];
     if (!currentExample) return null;
 
+    // 🆕 نصيحة المسألة (تحت المسألة مباشرة)
+    const exampleTip = isAr ? currentExample.tipAr : currentExample.tipEn;
+
     return (
       <div className="relative flex flex-col items-center justify-start min-h-[100dvh] bg-slate-950 text-white p-6 pt-24 overflow-y-auto" dir={dir}>
         <TopBar />
@@ -593,9 +594,17 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
             </button>
           </div>
           
-          <div className="text-3xl sm:text-4xl text-center font-mono bg-stone-900 border border-amber-500/20 py-4 rounded-2xl mb-6 text-amber-400 tracking-wider shadow-inner" dir="ltr">
+          <div className={`text-3xl sm:text-4xl text-center font-mono bg-stone-900 border border-amber-500/20 py-4 rounded-2xl text-amber-400 tracking-wider shadow-inner ${exampleTip ? 'mb-3' : 'mb-6'}`} dir="ltr">
             <Num>{isAr ? currentExample.problem : currentExample.problem.replace(/؟/g, '?')}</Num>
           </div>
+
+          {/* 🆕 نصيحة تحت المسألة */}
+          {exampleTip && (
+            <div className="flex items-start gap-2 text-sm text-amber-200/95 bg-amber-950/30 border border-amber-500/25 p-3 rounded-xl mb-6">
+              <span className="shrink-0 text-base leading-none pt-0.5">💡</span>
+              <span className="leading-relaxed"><Num>{exampleTip}</Num></span>
+            </div>
+          )}
           
           <ul className="space-y-4 mb-8">
             {currentExample.steps.map((step, idx) => (
