@@ -3,10 +3,9 @@ import React, { useState } from 'react';
 import { useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
 import { Num } from '@/components/Num';
-import { ArrowRight, Lock, Play, Timer, GraduationCap, BookOpen, Star, Sparkles } from 'lucide-react';
+import { ArrowRight, Lock, Play, Timer, GraduationCap, BookOpen, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// 👇 استيراد شاشة الامتحان وبيانات الامتحان الأول
 import MentalArchivesExamRunner from './MentalArchivesExamRunner';
 import { EXAM_10_7 } from './data/exams/exam10_7';
 import { ChapterId } from './gameFlowTypes';
@@ -21,10 +20,9 @@ interface ExamMeta {
   minutes: number;
   requiresChapter?: ChapterId[];
   requiresExamPass?: string;
-  isReady: boolean; // 👈 ميزة جديدة: هل الامتحان مبرمج أم قريباً؟
+  isReady: boolean;
 }
 
-// 👇 تم التصحيح: 4 امتحانات فقط بناءً على التوجيهات
 const EXAMS: ExamMeta[] = [
   { id: 'exam_10_7', nameAr: '10-7 كيو (ورقة مشتركة)', nameEn: '10-7 Kyu (Combined)', questions: 50, marks: 500, minutes: 12, requiresChapter: ['level1', 'level2'], isReady: true },
   { id: 'exam_6', nameAr: '6 كيو', nameEn: '6 Kyu', questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_10_7', isReady: false },
@@ -36,7 +34,6 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
   const { dir, isAr } = useGameLang();
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [mode, setMode] = useState<'training' | 'exam'>('exam');
-  
   const [isRunning, setIsRunning] = useState(false);
 
   const progress = useProgressStore((s) => s.mentalArchivesProgress);
@@ -50,7 +47,6 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
 
   const selectedExam = EXAMS.find(e => e.id === selectedExamId) || null;
 
-  // 👇 إذا كنا داخل الامتحان، نعرض شاشة الامتحان
   if (isRunning && selectedExamId === 'exam_10_7') {
     return (
       <MentalArchivesExamRunner 
@@ -65,7 +61,6 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
   if (!selectedExamId) {
     return (
       <div className="min-h-screen bg-[#060a12] text-white p-6 relative overflow-hidden" dir={dir}>
-        {/* تأثيرات خلفية */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
 
         <div className="max-w-4xl mx-auto relative z-10">
@@ -109,27 +104,27 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
                   className={`relative p-6 rounded-3xl border-2 transition-all duration-300 backdrop-blur-md overflow-hidden flex flex-col justify-between min-h-[180px]
                     ${unlocked && isReady 
                       ? 'border-emerald-500/50 bg-gradient-to-br from-slate-800/80 to-slate-900/90 hover:border-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] cursor-pointer' 
-                      : 'border-slate-800 bg-slate-900/40 opacity-70 cursor-not-allowed'}
+                      : unlocked && !isReady
+                        ? 'border-slate-600 bg-slate-800/40 opacity-90 cursor-not-allowed'
+                        : 'border-slate-800 bg-slate-900/40 opacity-70 cursor-not-allowed'}
                   `}
                 >
-                  {/* توهج داخلي للبطاقات المفتوحة */}
                   {unlocked && isReady && (
                     <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl"></div>
                   )}
 
                   <div className="flex justify-between items-start mb-4 relative z-10">
                     <div>
-                      <h3 className={`font-black text-xl mb-1 ${unlocked && isReady ? 'text-amber-300' : 'text-slate-500'}`}>
+                      <h3 className={`font-black text-xl mb-1 ${unlocked && isReady ? 'text-amber-300' : unlocked ? 'text-slate-300' : 'text-slate-500'}`}>
                         {isAr ? exam.nameAr : exam.nameEn}
                       </h3>
-                      {!isReady && (
-                        <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full border border-slate-700">
-                          {tUI('comingSoon')}
-                        </span>
-                      )}
                     </div>
-                    {!unlocked || !isReady ? (
+                    {!unlocked ? (
                       <Lock className="w-5 h-5 text-slate-600" />
+                    ) : !isReady ? (
+                      <span className="text-[10px] bg-amber-900/40 text-amber-300 px-2 py-1 rounded-md border border-amber-500/30 whitespace-nowrap">
+                        {tUI('comingSoon')}
+                      </span>
                     ) : (
                       <Sparkles className="w-5 h-5 text-emerald-400 animate-pulse" />
                     )}
