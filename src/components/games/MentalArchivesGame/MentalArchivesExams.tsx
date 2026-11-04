@@ -190,7 +190,8 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
             </div>
             <div className="bg-slate-950/50 p-4 rounded-2xl text-center border border-slate-800">
               <p className="text-xs text-slate-500 mb-1">{tUI('examTime')}</p>
-              <p className="text-2xl font-black text-amber-400"><Num>{selectedExam?.minutes}</Num>m</p>
+              {/* 👇 هنا تم التعديل */}
+              <p className="text-2xl font-black text-amber-400"><Num>{selectedExam?.minutes}</Num>{isAr ? 'د' : 'm'}</p>
             </div>
             <div className="bg-slate-950/50 p-4 rounded-2xl text-center border border-slate-800">
               <p className="text-xs text-slate-500 mb-1">{tUI('examPass')}</p>
