@@ -41,7 +41,7 @@ export const UI_TEXT = {
   hintDirect: { ar: 'فكّر في الخرزات: اجمع الأعلى ثم الأسفل.', en: 'Think of the beads: add the top first, then the bottom.' },
   hintComplement5: { ar: 'تلميح: استخدم صديق الخمسة (الخرزة العلوية).', en: 'Hint: use the Friend of 5 (the top bead).' },
   hintComplement10: { ar: 'تلميح: استخدم صديق العشرة، أضف عشرة واطرح المتمم.', en: 'Hint: use the Friend of 10, add ten and remove the complement.' },
-  hintCombined: { ar: 'تلميح: استخدم القاعدة المركبة (+10 - 5 + متمم المكمل).', en: 'Hint: use the combined rule (+10 - 5 + complement).' }, // 👈 تمت الإضافة
+  hintCombined: { ar: 'تلميح: استخدم القاعدة المركبة (+10 - 5 + متمم المكمل).', en: 'Hint: use the combined rule (+10 - 5 + complement).' },
   hintMitori: { ar: 'تلميح: اجمع رقماً رقماً وانظر للنتيجة الجزئية.', en: 'Hint: add one number at a time and track the running total.' },
   hintMultiplication: { ar: 'تلميح: قسّم الضرب إلى عشرات وآحاد.', en: 'Hint: split the multiplication into tens and ones.' },
   hintDivision: { ar: 'تلميح: كم مرة يتسع المقسوم عليه؟', en: 'Hint: how many times does the divisor fit?' },
@@ -72,7 +72,7 @@ export const UI_TEXT = {
   statusAvailable: { ar: 'متاح للعب', en: 'Available to Play' },
   statusLocked: { ar: 'مغلق', en: 'Locked' },
 
-  // 👇 جديد: قسم الامتحانات (القائمة والإعداد)
+  // قسم الامتحانات (القائمة والإعداد)
   examsTitle: { ar: 'قسم الامتحانات (كيو)', en: 'Kyu Exams' },
   examsSubtitle: { ar: 'محاكاة رسمية لامتحانات نيشورين', en: 'Official Nishuren simulation' },
   backToMap: { ar: 'العودة للخريطة', en: 'Back to Map' },
@@ -94,13 +94,13 @@ export const UI_TEXT = {
   backToExams: { ar: 'العودة لقائمة الامتحانات', en: 'Back to Exams' },
   fullSimulation: { ar: 'محاكاة رسمية كاملة', en: 'Full official simulation' },
 
-  // 👇 جديد: داخل الامتحان (Runner)
+  // داخل الامتحان (Runner)
   finishExam: { ar: 'إنهاء', en: 'Finish' },
   confirmFinishMsg: { ar: 'هل أنت متأكد من إنهاء الامتحان وتسليم إجاباتك؟', en: 'Are you sure you want to finish and submit?' },
   answered: { ar: 'تمت الإجابة', en: 'Answered' },
   timeLeft: { ar: 'الوقت المتبقي', en: 'Time Left' },
 
-  // 👇 جديد: النتائج وسجل التصحيح
+  // النتائج وسجل التصحيح
   passedTitle: { ar: 'نجحت!', en: 'Passed!' },
   failedTitle: { ar: 'لم تنجح هذه المرة', en: 'Not this time' },
   finalScore: { ar: 'النتيجة النهائية', en: 'Final Score' },
@@ -112,6 +112,13 @@ export const UI_TEXT = {
   correctAnswer: { ar: 'الإجابة الصحيحة', en: 'Correct answer' },
   notAnswered: { ar: 'لم تتم الإجابة', en: 'Not answered' },
   backToExamsList: { ar: 'العودة للامتحانات', en: 'Back to Exams' },
+
+  // 👇 رسائل وضع التدريب (التشخيصية)
+  trainReadyL7: { ar: 'مستواك L7، أنت جاهز للامتحان الفعلي!', en: 'Your level is L7. You are ready for the real exam!' },
+  trainNeedL8: { ar: 'مستواك L8، تستطيع التدريب أكثر لاجتياز الامتحان.', en: 'Your level is L8. Train more to pass the exam.' },
+  trainNeedL9: { ar: 'مستواك L9، تستطيع التدريب أكثر لاجتياز الامتحان.', en: 'Your level is L9. Train more to pass the exam.' },
+  trainNeedL10: { ar: 'مستواك L10، تستطيع التدريب أكثر لاجتياز الامتحان.', en: 'Your level is L10. Train more to pass the exam.' },
+  trainNeedMore: { ar: 'تحتاج مزيداً من التدريب بتركيز لتتمكن من الاجتياز.', en: 'You need more focused training to pass.' },
 };
 
 export type UIKey = keyof typeof UI_TEXT;
