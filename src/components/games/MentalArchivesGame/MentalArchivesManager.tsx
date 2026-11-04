@@ -1,5 +1,5 @@
 // src/components/games/MentalArchivesGame/MentalArchivesManager.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MentalArchivesEngine from './MentalArchivesEngine';
 import MentalArchivesExams from './MentalArchivesExams';
 import { INTRO_DATA } from './data/introData';
@@ -13,11 +13,15 @@ import { tUI } from './gameUI';
 import { Num } from '@/components/Num';
 import { GraduationCap } from 'lucide-react';
 
-const CHAPTERS: Record<ChapterId, Chapter> = {
+// 🆕 P04: Partial ليتحقق TS من الحقول الناقصة بدل cast كاذب
+const CHAPTERS: Partial<Record<ChapterId, Chapter>> = {
   intro: INTRO_DATA,
   level1: LEVEL_1_DATA,
   level2: LEVEL_2_DATA,
-} as Record<ChapterId, Chapter>;
+};
+
+// 🆕 P05: متطلب فتح قسم الامتحانات في مكان واحد (بدل hardcode)
+const EXAM_PORTAL_PREREQ_CHAPTERS: ChapterId[] = ['level1', 'level2'];
 
 export default function MentalArchivesManager({ onBack }: { onBack: () => void }) {
   const { dir, isAr } = useGameLang();
@@ -28,20 +32,28 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
   const completeChapter = useProgressStore((s) => s.completeMentalChapter);
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
-  const handleComplete = (score: number) => {
-    if (activeChapterId) {
-      const chapter = CHAPTERS[activeChapterId];
-      const challengeScene = chapter.scenes.find((s): s is Extract<Scene, { kind: 'challenge' }> => s.kind === 'challenge');
-      const isSuccess = challengeScene ? score >= challengeScene.requiredCorrect : true;
-      
-      if (isSuccess) {
-        completeChapter(activeChapterId, score);
-        const updatedProgress = useProgressStore.getState().mentalArchivesProgress;
-        const totalScore = Object.values(updatedProgress).reduce((sum, ch) => sum + (ch?.bestScore || 0), 0);
-        addScore('mental-archives', childName, totalScore, 'joud');
-      }
+  // 🆕 P04: إعادة الضبط النظيفة عند غياب الفصل (بدل setState داخل render)
+  useEffect(() => {
+    if (activeChapterId && !CHAPTERS[activeChapterId]) {
       setActiveChapterId(null);
     }
+  }, [activeChapterId]);
+
+  const handleComplete = (score: number) => {
+    if (!activeChapterId) return;
+    const chapter = CHAPTERS[activeChapterId];
+    if (!chapter) return;
+
+    const challengeScene = chapter.scenes.find((s): s is Extract<Scene, { kind: 'challenge' }> => s.kind === 'challenge');
+    const isSuccess = challengeScene ? score >= challengeScene.requiredCorrect : true;
+
+    if (isSuccess) {
+      completeChapter(activeChapterId, score);
+      const updatedProgress = useProgressStore.getState().mentalArchivesProgress;
+      const totalScore = Object.values(updatedProgress).reduce((sum, ch) => sum + (ch?.bestScore || 0), 0);
+      addScore('mental-archives', childName, totalScore, 'joud');
+    }
+    setActiveChapterId(null);
   };
 
   // ═══ شاشة الامتحانات ═══
@@ -51,10 +63,13 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
 
   // ═══ شاشة اللعب (المحرك) ═══
   if (activeChapterId) {
+    const chapter = CHAPTERS[activeChapterId];
+    // 🆕 P04: حارس نهائي — useEffect أعلاه سيعيد الضبط تلقائياً
+    if (!chapter) return null;
     return (
       <MentalArchivesEngine 
         key={activeChapterId} 
-        chapter={CHAPTERS[activeChapterId]} 
+        chapter={chapter} 
         onComplete={handleComplete} 
         onBack={() => setActiveChapterId(null)} 
       />
@@ -62,8 +77,8 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
   }
 
   // ═══ شاشة الخريطة ═══
-  // شرط فتح الامتحانات: إكمال المستوى 1 و 2
-  const canAccessExams = !!progress['level1'] && !!progress['level2'];
+  // 🆕 P05: قراءة المتطلب من الثابت (وليس تعبيراً صلباً)
+  const canAccessExams = EXAM_PORTAL_PREREQ_CHAPTERS.every((id) => !!progress[id]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-6" dir={dir}>
@@ -80,23 +95,23 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
           {tUI('gameTitle')}
         </h1>
 
-        {/* 👇 زر الامتحانات */}
+        {/* 👇 زر الامتحانات (تعديل 2: تم تغيير اللون إلى بنفسجي ملكي) */}
         <div className="mb-6">
           <button
             onClick={() => canAccessExams && setShowExams(true)}
             disabled={!canAccessExams}
             className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${
               canAccessExams
-                ? 'border-emerald-500/50 bg-gradient-to-r from-emerald-900/40 to-teal-900/40 hover:from-emerald-800/50 hover:to-teal-800/50 cursor-pointer shadow-lg'
+                ? 'border-purple-500/50 bg-gradient-to-r from-purple-900/40 to-indigo-900/40 hover:from-purple-800/50 hover:to-indigo-800/50 cursor-pointer shadow-[0_0_20px_rgba(168,85,247,0.2)]'
                 : 'border-slate-800 bg-slate-900/50 opacity-60 cursor-not-allowed'
             }`}
           >
             <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${canAccessExams ? 'bg-emerald-500/20' : 'bg-slate-800'}`}>
-                <GraduationCap className={`w-6 h-6 ${canAccessExams ? 'text-emerald-400' : 'text-slate-500'}`} />
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${canAccessExams ? 'bg-purple-500/20' : 'bg-slate-800'}`}>
+                <GraduationCap className={`w-6 h-6 ${canAccessExams ? 'text-purple-400' : 'text-slate-500'}`} />
               </div>
               <div className="text-right">
-                <h3 className={`font-bold text-lg ${canAccessExams ? 'text-emerald-300' : 'text-slate-400'}`}>
+                <h3 className={`font-bold text-lg ${canAccessExams ? 'text-amber-300' : 'text-slate-400'}`}>
                   {isAr ? 'قسم الامتحانات (كيو)' : 'Kyu Exams'}
                 </h3>
                 <p className="text-xs text-slate-400">
@@ -104,19 +119,24 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
                 </p>
               </div>
             </div>
+            {/* تعديل 1: نص ديناميكي بدل الثابت */}
             {!canAccessExams && (
               <span className="text-xs text-slate-500 font-bold">
-                {isAr ? 'أكمل المستوى 1 و 2' : 'Finish Level 1 & 2'}
+                {isAr ? `أكمل ${EXAM_PORTAL_PREREQ_CHAPTERS.length} مستويات` : `Finish ${EXAM_PORTAL_PREREQ_CHAPTERS.length} levels`}
               </span>
             )}
           </button>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {Object.values(CHAPTERS).map((chapter) => {
+          {/* 🆕 P04: فلترة undefined لأن Partial قد ينتج undefined */}
+          {(Object.values(CHAPTERS).filter((c): c is Chapter => c !== undefined)).map((chapter) => {
             const isCompleted = !!progress[chapter.id];
             const isUnlocked = chapter.requires.every(req => !!progress[req]);
-            const hasChallenge = chapter.scenes.some(s => s.kind === 'challenge');
+            // 🆕 P06: حساب عدد الأسئلة الكلي للعرض "bestScore / total"
+            const challengeScene = chapter.scenes.find((s): s is Extract<Scene, { kind: 'challenge' }> => s.kind === 'challenge');
+            const hasChallenge = !!challengeScene;
+            const totalQuestions = challengeScene?.questions.length ?? 0;
 
             return (
               <div 
@@ -137,7 +157,7 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
                     ✅ {tUI('statusCompleted')}
                     {hasChallenge && (
                       <span>
-                        {' '}({tUI('statusBestScore')}: <Num>{progress[chapter.id]?.bestScore}</Num>)
+                        {' '}({tUI('statusBestScore')}: <Num>{progress[chapter.id]?.bestScore}</Num> / <Num>{totalQuestions}</Num>)
                       </span>
                     )}
                   </span>
