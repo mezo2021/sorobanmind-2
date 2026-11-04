@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 
 import MentalArchivesExamRunner from './MentalArchivesExamRunner';
 import { EXAM_10_7 } from './data/exams/exam10_7';
+import { EXAM_6 } from './data/exams/exam6'; // 🆕 إضافة استيراد امتحان 6 كيو
 import { ChapterId } from './gameFlowTypes';
 import { tUI } from './gameUI';
 
@@ -26,7 +27,7 @@ interface ExamMeta {
 // 🆕 التوسيع إلى 7 امتحانات (سلسلة خطية)
 const EXAMS: ExamMeta[] = [
   { id: 'exam_10_7', nameAr: '10-7 كيو (ورقة مشتركة)', nameEn: '10-7 Kyu (Combined)', questions: 50, marks: 500, minutes: 12, requiresChapter: ['level1', 'level2'], isReady: true },
-  { id: 'exam_6',    nameAr: '6 كيو',                    nameEn: '6 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_10_7', isReady: false },
+  { id: 'exam_6',    nameAr: '6 كيو',                    nameEn: '6 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_10_7', isReady: true }, // 🆕 تفعيل امتحان 6 كيو
   { id: 'exam_5',    nameAr: '5 كيو',                    nameEn: '5 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_6',    isReady: false },
   { id: 'exam_4',    nameAr: '4 كيو',                    nameEn: '4 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_5',    isReady: false },
   { id: 'exam_3',    nameAr: '3 كيو',                    nameEn: '3 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_4',    isReady: false },
@@ -55,6 +56,17 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
     return (
       <MentalArchivesExamRunner 
         examData={EXAM_10_7} 
+        mode={mode} 
+        onExit={() => { setIsRunning(false); setSelectedExamId(null); }} 
+      />
+    );
+  }
+
+  // 🆕 إضافة تشغيل امتحان 6 كيو
+  if (isRunning && selectedExamId === 'exam_6') {
+    return (
+      <MentalArchivesExamRunner 
+        examData={EXAM_6} 
         mode={mode} 
         onExit={() => { setIsRunning(false); setSelectedExamId(null); }} 
       />
