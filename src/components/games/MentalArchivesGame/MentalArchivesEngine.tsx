@@ -304,6 +304,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
     const map: Record<string, Parameters<typeof tUI>[0]> = {
       direct: 'hintDirect', complement5: 'hintComplement5', complement10: 'hintComplement10',
+      combined: 'hintCombined', // 🆕 P02: إضافة تلميح السؤال المركب (القاعدة الذهبية)
       mitori: 'hintMitori', multiplication: 'hintMultiplication', division: 'hintDivision', subtraction: 'hintSubtraction',
     };
     return tUI(map[q.type] || 'hintDirect');
