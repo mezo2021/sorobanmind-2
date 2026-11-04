@@ -115,11 +115,11 @@ export const UI_TEXT = {
 
   // 👇 رسائل وضع التدريب (التشخيصية)
   // تم تحويل L7 و L8 إلى كلمات لضمان نطقها بشكل صحيح
-  trainReadyL7: { ar: 'مُسْتَوَاكَ سَبْعَة، أَنْتَ جَاهِزٌ لِلِامْتِحَانِ الْفِعْلِيّ!', en: 'Your level is L7. You are ready for the real exam!' },
-  trainNeedL8: { ar: 'مُسْتَوَاكَ ثَمَانِيَة، تَسْتَطِيعُ التَّدْرِيبَ أَكْثَرَ لِاجْتِيَازِ الِامْتِحَان', en: 'Your level is L8. Train more to pass the exam.' },
-  trainNeedL9: { ar: 'مُسْتَوَاكَ تِسْعَة، تَسْتَطِيعُ التَّدْرِيبَ أَكْثَرَ لِاجْتِيَازِ الِامْتِحَان', en: 'Your level is L9. Train more to pass the exam.' },
-  trainNeedL10: { ar: 'مُسْتَوَاكَ عَشَرَة، تَسْتَطِيعُ التَّدْرِيبَ أَكْثَرَ لِاجْتِيَازِ الِامْتِحَان', en: 'Your level is L10. Train more to pass the exam.' },
-  trainNeedMore: { ar: 'تَحْتَاجُ مَزِيدًا مِنَ التَّدْرِيبِ بِتَرْكِيزٍ لِتَتَمَكَّنَ مِنَ الِاجْتِيَاز', en: 'You need more focused training to pass.' },
+  trainReadyKyu7: { ar: 'مُسْتَوَاكَ سَبْعَةُ كْيُو، أَنْتَ جَاهِزٌ لِلِامْتِحَانِ الْفِعْلِيّ!', en: 'You reached 7 Kyu. You are ready for the real exam!' },
+  trainNeedKyu8: { ar: 'مُسْتَوَاكَ ثَمَانِيَةُ كْيُو، تَسْتَطِيعُ التَّدْرِيبَ أَكْثَرَ لِاجْتِيَازِ الِامْتِحَان.', en: 'You reached 8 Kyu. Train more to pass the exam.' },
+  trainNeedKyu9: { ar: 'مُسْتَوَاكَ تِسْعَةُ كْيُو، تَسْتَطِيعُ التَّدْرِيبَ أَكْثَرَ لِاجْتِيَازِ الِامْتِحَان.', en: 'You reached 9 Kyu. Train more to pass the exam.' },
+  trainNeedKyu10: { ar: 'مُسْتَوَاكَ عَشَرَةُ كْيُو، تَسْتَطِيعُ التَّدْرِيبَ أَكْثَرَ لِاجْتِيَازِ الِامْتِحَان.', en: 'You reached 10 Kyu. Train more to pass the exam.' },
+  trainNeedMore: { ar: 'تَحْتَاجُ مَزِيدًا مِنَ التَّدْرِيبِ بِتَرْكِيزٍ لِتَتَمَكَّنَ مِنَ الِاجْتِيَاز.', en: 'You need more focused training to pass.' },
 };
 
 export type UIKey = keyof typeof UI_TEXT;
