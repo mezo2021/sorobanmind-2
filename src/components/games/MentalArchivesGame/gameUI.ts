@@ -8,6 +8,7 @@ export const UI_TEXT = {
   back: { ar: 'رجوع', en: 'Back' },
   retry: { ar: 'تحدي جديد', en: 'Retry' },
   review: { ar: 'مراجعة الشرح', en: 'Review' },
+  cancel: { ar: 'إلغاء', en: 'Cancel' },
   
   // شاشات الانتقال
   startJourney: { ar: '▶️ اضغط لبدء الرحلة', en: '▶️ Press to Start' },
@@ -40,6 +41,7 @@ export const UI_TEXT = {
   hintDirect: { ar: 'فكّر في الخرزات: اجمع الأعلى ثم الأسفل.', en: 'Think of the beads: add the top first, then the bottom.' },
   hintComplement5: { ar: 'تلميح: استخدم صديق الخمسة (الخرزة العلوية).', en: 'Hint: use the Friend of 5 (the top bead).' },
   hintComplement10: { ar: 'تلميح: استخدم صديق العشرة، أضف عشرة واطرح المتمم.', en: 'Hint: use the Friend of 10, add ten and remove the complement.' },
+  hintCombined: { ar: 'تلميح: استخدم القاعدة المركبة (+10 - 5 + متمم المكمل).', en: 'Hint: use the combined rule (+10 - 5 + complement).' }, // 👈 تمت الإضافة
   hintMitori: { ar: 'تلميح: اجمع رقماً رقماً وانظر للنتيجة الجزئية.', en: 'Hint: add one number at a time and track the running total.' },
   hintMultiplication: { ar: 'تلميح: قسّم الضرب إلى عشرات وآحاد.', en: 'Hint: split the multiplication into tens and ones.' },
   hintDivision: { ar: 'تلميح: كم مرة يتسع المقسوم عليه؟', en: 'Hint: how many times does the divisor fit?' },
@@ -53,7 +55,6 @@ export const UI_TEXT = {
     ar: 'تَحْتَاجُ إِلَى مَزِيدٍ مِنَ السُّرْعَةِ لِلِامْتِحَان، تَدَرَّبْ جَيِّداً لِتَكُونَ جَاهِزاً.', 
     en: 'You need more speed for the exam, practice well to be ready.' 
   },
-  // 👇 تم تصحيح الكسرة هنا
   successMsg: { ar: 'عَبَرْتَ الْبَوَّابَةَ بِنَجَاح!', en: 'Gate Crossed Successfully!' },
   returnToGames: { ar: 'العودة لمدينة الألعاب', en: 'Return to Games' },
   
@@ -63,13 +64,54 @@ export const UI_TEXT = {
   correct: { ar: 'إِجَابَةٌ صَحِيحَة!', en: 'Correct answer!' },
   wrong: { ar: 'إِجَابَةٌ خَاطِئَة، حَاوِلْ أَسْرَع.', en: 'Wrong answer, try faster.' },
 
-  // 👇 نصوص شاشة الخريطة (للمستقبل)
+  // شاشة الخريطة
   gameTitle: { ar: 'بوابة الثقب الدودي', en: 'Wormhole Gate' },
   backToGamesCity: { ar: 'العودة لمدينة الألعاب', en: 'Back to Game City' },
   statusCompleted: { ar: 'مكتمل', en: 'Completed' },
   statusBestScore: { ar: 'أفضل نتيجة', en: 'Best Score' },
   statusAvailable: { ar: 'متاح للعب', en: 'Available to Play' },
   statusLocked: { ar: 'مغلق', en: 'Locked' },
+
+  // 👇 جديد: قسم الامتحانات (القائمة والإعداد)
+  examsTitle: { ar: 'قسم الامتحانات (كيو)', en: 'Kyu Exams' },
+  examsSubtitle: { ar: 'محاكاة رسمية لامتحانات نيشورين', en: 'Official Nishuren simulation' },
+  backToMap: { ar: 'العودة للخريطة', en: 'Back to Map' },
+  examTip: { 
+    ar: '💡 للحصول على درجة الكيو، يجب حل الامتحان بوضع "امتحان" والحصول على 400/500 أو أكثر. وضع "تدريب" لا يفتح الامتحان التالي.', 
+    en: '💡 To earn the Kyu grade, solve in "Exam" mode with 400/500+. "Training" mode does not unlock the next exam.' 
+  },
+  examQuestions: { ar: 'الأسئلة', en: 'Questions' },
+  examMarks: { ar: 'العلامات', en: 'Marks' },
+  examTime: { ar: 'الوقت', en: 'Time' },
+  examPass: { ar: 'النجاح', en: 'Pass' },
+  examBest: { ar: 'أفضل نتيجة', en: 'Best' },
+  examTraining: { ar: 'تدريب', en: 'Training' },
+  examTrainingDesc: { ar: 'بلا مؤقت · لا يفتح التالي', en: 'No timer · no unlock' },
+  examMode: { ar: 'امتحان', en: 'Exam' },
+  examModeDesc: { ar: 'بمؤقت · يفتح التالي', en: 'With timer · unlocks next' },
+  startExam: { ar: 'ابدأ', en: 'Start' },
+  comingSoon: { ar: 'قريباً', en: 'Coming Soon' },
+  backToExams: { ar: 'العودة لقائمة الامتحانات', en: 'Back to Exams' },
+  fullSimulation: { ar: 'محاكاة رسمية كاملة', en: 'Full official simulation' },
+
+  // 👇 جديد: داخل الامتحان (Runner)
+  finishExam: { ar: 'إنهاء', en: 'Finish' },
+  confirmFinishMsg: { ar: 'هل أنت متأكد من إنهاء الامتحان وتسليم إجاباتك؟', en: 'Are you sure you want to finish and submit?' },
+  answered: { ar: 'تمت الإجابة', en: 'Answered' },
+  timeLeft: { ar: 'الوقت المتبقي', en: 'Time Left' },
+
+  // 👇 جديد: النتائج وسجل التصحيح
+  passedTitle: { ar: 'نجحت!', en: 'Passed!' },
+  failedTitle: { ar: 'لم تنجح هذه المرة', en: 'Not this time' },
+  finalScore: { ar: 'النتيجة النهائية', en: 'Final Score' },
+  gradeEarned: { ar: 'الدرجة المكتسبة', en: 'Grade earned' },
+  reviewAnswers: { ar: 'مراجعة الإجابات', en: 'Review Answers' },
+  printPaper: { ar: 'طباعة ورقة', en: 'Print Paper' },
+  printTitle: { ar: 'ورقة تدريبية - امتحان 10-7 كيو', en: 'Practice Paper - 10-7 Kyu Exam' },
+  yourAnswer: { ar: 'إجابتك', en: 'Your answer' },
+  correctAnswer: { ar: 'الإجابة الصحيحة', en: 'Correct answer' },
+  notAnswered: { ar: 'لم تتم الإجابة', en: 'Not answered' },
+  backToExamsList: { ar: 'العودة للامتحانات', en: 'Back to Exams' },
 };
 
 export type UIKey = keyof typeof UI_TEXT;
