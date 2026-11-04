@@ -3,8 +3,9 @@ import { Chapter } from '../gameFlowTypes';
 
 export const LEVEL_1_DATA: Chapter = {
   id: 'level1',
-  titleAr: 'المستوى الأول: رفوف الذاكرة',
-  titleEn: 'Level 1: Memory Shelves',
+  // 🆕 P15: إضافة الموقع (إبلا وماري) ونطاق الكيو
+  titleAr: 'المستوى الأول: رفوف الذاكرة — إبلا وماري (10-9 كيو)',
+  titleEn: 'Level 1: Memory Shelves — Ebla & Mari (10-9 Kyu)',
   requires: ['intro'],
   next: 'level2',
   scenes: [
@@ -15,8 +16,9 @@ export const LEVEL_1_DATA: Chapter = {
       lines: [
         { 
           character: "aseel", 
-          textAr: "وَصَلْنَا! هَذِهِ أَلْوَاحُ إِبْلَا الطِّينِيَّة. الطَّيْفُ الصِّفْرِيُّ يَمْسَحُ الْأَرْقَامَ الَّتِي تَرْبِطُ السِّجِلَّات!",
-          textEn: "We have arrived! These are the clay tablets of Ebla. The Zero Spectrum is wiping the numbers that connect the records!"
+          // 🆕 P16: إدماج "ماري" في السرد (تجارة بين المدينتين)
+          textAr: "وَصَلْنَا! هَذِهِ أَلْوَاحُ إِبْلَا وَمَارِي الطِّينِيَّة. الطَّيْفُ الصِّفْرِيُّ يَمْسَحُ الْأَرْقَامَ الَّتِي تَرْبِطُ سِجِلَّاتِ التِّجَارَةِ بَيْنَ الْمَدِينَتَيْن!",
+          textEn: "We have arrived! These are the clay tablets of Ebla and Mari. The Zero Spectrum is wiping the numbers that connect the trade records between the two cities!"
         },
         { 
           character: "jud", 
