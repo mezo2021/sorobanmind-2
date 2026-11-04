@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 import { tUI } from './gameUI';
 import RelicKeypad from './ui/RelicKeypad';
 
-import logoImg from '@/assets/logo.webp'; // ✅ تم إصلاح الاستيراد
+import logoImg from '@/assets/logo.webp'; // ✅ تأكد من مسار اللوجو
 
 interface Props {
   examData: KyuExamData;
@@ -171,7 +171,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
 
           <div className="max-w-4xl mx-auto print-page">
             
-            {/* رأس الشهادة (عند الطباعة) */}
             <div className="hidden print:flex flex-col items-center justify-center mb-8 text-center border-b-2 border-amber-500 pb-6">
               <img src={logoImg} alt="Academy Logo" className="w-24 h-24 mb-2 object-contain" />
               <h1 className="text-2xl font-black text-black mb-1">أكاديمية السوروبان الدولية</h1>
@@ -179,7 +178,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
               <p className="text-xs text-gray-500 mt-2">{isAr ? 'ورقة تدريب' : 'Training Paper'}</p>
             </div>
 
-            {/* أزرار التحكم */}
             <div className="flex justify-between items-center mb-6 print-hidden">
               <button onClick={() => setShowReview(false)} className="flex items-center gap-2 text-amber-400 font-bold hover:text-amber-300">
                 <ArrowRight className={`w-5 h-5 ${isAr ? '' : 'rotate-180'}`} />
@@ -245,7 +243,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 })}
               </div>
 
-              {/* تذييل الشهادة */}
               <div className="hidden print:flex justify-between items-end mt-12 pt-8 border-t border-gray-300 text-black">
                 <div className="text-center">
                   <p className="text-sm font-bold text-gray-600">تصميم البرنامج</p>
@@ -342,7 +339,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
   return (
     <div className="min-h-screen bg-[#060a12] text-white flex flex-col relative select-none" dir={dir}>
       
-      {/* الشريط العلوي */}
       <div className="flex items-center justify-between p-4 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 shadow-md">
         <button onClick={() => handleSubmit(false)} className="px-5 py-2.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 rounded-xl text-sm font-bold border border-rose-500/30 transition">
           {tUI('finishExam')}
@@ -362,7 +358,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
         </div>
       </div>
 
-      {/* منطقة الأسئلة مع هامش سفلي كافٍ */}
       <div className="flex-1 overflow-y-auto p-4 pb-[350px] scroll-smooth" style={{ scrollPaddingBottom: '350px' }}>
         <div className="max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {allQuestions.map((q, idx) => {
@@ -398,7 +393,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 
                 <div className="w-full h-px bg-slate-700/50 my-3"></div>
                 
-                {/* مربع الإجابة الخاص بكل بطاقة */}
                 <div className={`w-full text-center py-2 rounded-xl text-xl font-mono font-bold border transition-colors ${
                   isActive 
                     ? 'bg-slate-950 text-amber-400 border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.4)]' 
@@ -414,7 +408,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
         </div>
       </div>
 
-      {/* لوحة التحكم السفلية والكيبورد */}
       <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 p-4 pb-6 z-30 shadow-[0_-15px_50px_rgba(0,0,0,0.7)]">
         <div className="max-w-md mx-auto flex flex-col gap-3">
           
