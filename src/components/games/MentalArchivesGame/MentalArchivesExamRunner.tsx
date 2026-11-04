@@ -178,7 +178,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
               <img src={logoImg} alt="Academy Logo" className="w-24 h-24 mb-2 object-contain" />
               <h1 className="text-2xl font-black text-black mb-1">أكاديمية السوروبان الدولية</h1>
               <h2 className="text-sm font-bold text-gray-600 uppercase tracking-widest">International Soroban Academy</h2>
-              <p className="text-xs text-gray-500 mt-2">شهادة إتمام وتقييم مستوى</p>
+              <p className="text-xs text-gray-500 mt-2">{isAr ? 'ورقة تدريب' : 'Training Paper'}</p>
             </div>
 
             {/* أزرار التحكم (تختفي عند الطباعة) */}
@@ -252,7 +252,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
               <div className="hidden print:flex justify-between items-end mt-12 pt-8 border-t border-gray-300 text-black">
                 <div className="text-center">
                   <p className="text-sm font-bold text-gray-600">المدير والمؤسس</p>
-                  <p className="font-black text-lg mt-6">مصطفى علي اكر</p>
+                  <p className="font-black text-lg mt-6">{isAr ? 'مصطفى علي اكر' : 'Mustafa Ali Eker'}</p>
                 </div>
                 
                 <div className="text-center">
