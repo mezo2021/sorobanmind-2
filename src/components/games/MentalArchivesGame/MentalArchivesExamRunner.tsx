@@ -9,6 +9,9 @@ import { motion } from 'framer-motion';
 import { tUI } from './gameUI';
 import RelicKeypad from './ui/RelicKeypad';
 
+// 👇 تأكد من مسار اللوجو (حسب الصورة التي أرسلتها)
+import logoImg from '@/assets/logo.webp';
+
 interface Props {
   examData: KyuExamData;
   mode: 'training' | 'exam';
@@ -123,7 +126,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     return '+';
   };
 
-  // ═══ شاشة النتائج ═══
+  // ═══ شاشة النتائج وسجل التصحيح ═══
   if (isFinished) {
     let score = 0;
     examData.sections.forEach((sec) => {
@@ -151,8 +154,35 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     if (showReview) {
       return (
         <div className="min-h-screen bg-[#060a12] text-white p-4 md:p-8" dir={dir}>
-          <div className="max-w-4xl mx-auto print:max-w-none print:p-0">
-            <div className="flex justify-between items-center mb-6 print:hidden">
+          {/* كود مخصص لطباعة الورقة بشكل نظيف */}
+          <style>{`
+            @media print {
+              body { background: white !important; color: black !important; }
+              .print-hidden { display: none !important; }
+              .print-page { 
+                padding: 0; 
+                max-width: 100%; 
+                box-shadow: none !important; 
+                border: none !important;
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+              }
+              .print-card { page-break-inside: avoid; }
+            }
+          `}</style>
+
+          <div className="max-w-4xl mx-auto print-page">
+            
+            {/* رأس الشهادة (يظهر فقط عند الطباعة) */}
+            <div className="hidden print:flex flex-col items-center justify-center mb-8 text-center border-b-2 border-amber-500 pb-6">
+              <img src={logoImg} alt="Academy Logo" className="w-24 h-24 mb-2 object-contain" />
+              <h1 className="text-2xl font-black text-black mb-1">أكاديمية السوروبان الدولية</h1>
+              <h2 className="text-sm font-bold text-gray-600 uppercase tracking-widest">International Soroban Academy</h2>
+              <p className="text-xs text-gray-500 mt-2">شهادة إتمام وتقييم مستوى</p>
+            </div>
+
+            {/* أزرار التحكم (تختفي عند الطباعة) */}
+            <div className="flex justify-between items-center mb-6 print-hidden">
               <button onClick={() => setShowReview(false)} className="flex items-center gap-2 text-amber-400 font-bold hover:text-amber-300">
                 <ArrowRight className={`w-5 h-5 ${isAr ? '' : 'rotate-180'}`} />
                 {tUI('backToExamsList')}
@@ -165,12 +195,12 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
 
             <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 print:border-none print:bg-white print:text-black">
               <div className="text-center mb-8 border-b border-slate-700 print:border-black pb-6">
-                <h1 className="text-2xl font-black text-amber-400 print:text-black mb-2">
+                <h1 className="text-2xl font-black text-amber-400 print:text-black mb-2 print:hidden">
                   {tUI('printTitle')}
                 </h1>
-                <div className="flex justify-center gap-6 text-sm text-slate-400 print:text-gray-600">
-                  <span>{tUI('finalScore')}: <strong className="text-emerald-400 print:text-black"><Num>{score}</Num> / <Num>{examData.totalMarks}</Num></strong></span>
-                  <span>{isAr ? 'الوضع' : 'Mode'}: <strong>{isExamMode ? tUI('examMode') : tUI('examTraining')}</strong></span>
+                <div className="flex justify-center gap-6 text-sm text-slate-400 print:text-gray-800 font-bold">
+                  <span>{tUI('finalScore')}: <strong className="text-emerald-400 print:text-green-700"><Num>{score}</Num> / <Num>{examData.totalMarks}</Num></strong></span>
+                  <span>{isAr ? 'الوضع' : 'Mode'}: <strong className="text-amber-400 print:text-black">{isExamMode ? tUI('examMode') : tUI('examTraining')}</strong></span>
                 </div>
               </div>
 
@@ -178,21 +208,19 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 {allQuestions.map((q, idx) => {
                   const userAnswer = answersRef.current[q.id];
                   const isCorrect = userAnswer && parseInt(userAnswer) === q.answer;
-                  const isWrong = userAnswer && !isCorrect;
                   
                   return (
-                    <div key={q.id} className={`p-4 rounded-xl border-2 flex flex-col gap-2
-                      ${isCorrect ? 'border-emerald-500/50 bg-emerald-900/20 print:border-green-600' : ''}
-                      ${isWrong ? 'border-rose-500/50 bg-rose-900/20 print:border-red-600' : ''}
-                      ${!userAnswer ? 'border-slate-700 bg-slate-800/50 print:border-gray-400' : ''}
+                    <div key={q.id} className={`print-card p-4 rounded-xl border-2 flex flex-col gap-2
+                      ${isCorrect ? 'border-emerald-500/50 bg-emerald-900/20 print:border-green-600 print:bg-green-50' : ''}
+                      ${!isCorrect ? 'border-rose-500/50 bg-rose-900/20 print:border-red-600 print:bg-red-50' : ''}
                     `}>
                       <div className="flex justify-between items-center text-xs text-slate-400 print:text-gray-600 border-b border-slate-700/50 print:border-gray-300 pb-2 mb-1">
                         <span>{tUI('question')} <Num>{idx + 1}</Num></span>
                         {isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-400 print:text-green-600" />}
-                        {isWrong && <XCircle className="w-4 h-4 text-rose-400 print:text-red-600" />}
+                        {!isCorrect && <XCircle className="w-4 h-4 text-rose-400 print:text-red-600" />}
                       </div>
                       
-                      <div className="flex flex-col items-center font-mono my-2">
+                      <div className="flex flex-col items-center font-mono my-2 text-lg print:text-black">
                         {q.numbers.map((num, i) => (
                           <div key={i} className="flex items-center gap-2">
                             <span><Num>{num}</Num></span>
@@ -202,21 +230,43 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                       </div>
 
                       <div className="flex justify-between text-sm mt-2 pt-2 border-t border-slate-700/50 print:border-gray-300">
-                        <span className="text-slate-400 print:text-gray-600">{tUI('yourAnswer')}:</span>
-                        <span className={`font-bold ${isCorrect ? 'text-emerald-400 print:text-green-600' : isWrong ? 'text-rose-400 print:text-red-600' : 'text-slate-500'}`}>
-                          {userAnswer ? <Num>{userAnswer}</Num> : tUI('notAnswered')}
+                        <span className="text-slate-400 print:text-gray-700 font-bold">{tUI('yourAnswer')}:</span>
+                        <span className={`font-bold ${isCorrect ? 'text-emerald-400 print:text-green-700' : 'text-rose-400 print:text-red-700'}`}>
+                          {userAnswer ? <Num>{userAnswer}</Num> : <span className="text-slate-500 print:text-gray-500">{tUI('notAnswered')}</span>}
                         </span>
                       </div>
-                      {isWrong && (
+                      
+                      {/* إظهار الإجابة الصحيحة دائماً إذا كانت إجابة الطفل خاطئة أو فارغة */}
+                      {!isCorrect && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-slate-400 print:text-gray-600">{tUI('correctAnswer')}:</span>
-                          <span className="font-bold text-emerald-400 print:text-green-600"><Num>{q.answer}</Num></span>
+                          <span className="text-slate-400 print:text-gray-700 font-bold">{tUI('correctAnswer')}:</span>
+                          <span className="font-bold text-emerald-400 print:text-green-700"><Num>{q.answer}</Num></span>
                         </div>
                       )}
                     </div>
                   );
                 })}
               </div>
+
+              {/* تذييل الشهادة (يظهر فقط عند الطباعة) */}
+              <div className="hidden print:flex justify-between items-end mt-12 pt-8 border-t border-gray-300 text-black">
+                <div className="text-center">
+                  <p className="text-sm font-bold text-gray-600">المدير والمؤسس</p>
+                  <p className="font-black text-lg mt-6">مصطفى علي اكر</p>
+                </div>
+                
+                <div className="text-center">
+                  <img src={logoImg} alt="Seal" className="w-16 h-16 opacity-50 mx-auto mb-2 grayscale" />
+                </div>
+
+                <div className="text-center">
+                  <p className="text-sm font-bold text-gray-600">تاريخ الإصدار</p>
+                  <p className="font-bold mt-6 font-mono" dir="ltr">
+                    {new Date().toLocaleDateString('en-GB').replace(/\//g, ' / ')}
+                  </p>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
