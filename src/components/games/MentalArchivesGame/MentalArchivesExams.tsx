@@ -103,7 +103,7 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
                   onClick={() => (unlocked && isReady) ? setSelectedExamId(exam.id) : null}
                   className={`relative p-6 rounded-3xl border-2 transition-all duration-300 backdrop-blur-md overflow-hidden flex flex-col justify-between min-h-[180px]
                     ${unlocked && isReady 
-                      ? 'border-emerald-500/50 bg-gradient-to-br from-slate-800/80 to-slate-900/90 hover:border-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] cursor-pointer' 
+                      ? 'border-amber-400/80 bg-gradient-to-br from-slate-800/80 to-slate-900/90 hover:border-amber-400 hover:shadow-[0_0_35px_rgba(168,85,247,0.4)] cursor-pointer' 
                       : unlocked && !isReady
                         ? 'border-slate-600 bg-slate-800/40 opacity-90 cursor-not-allowed'
                         : 'border-slate-800 bg-slate-900/40 opacity-70 cursor-not-allowed'}
@@ -168,7 +168,7 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
           {tUI('backToExams')}
         </button>
 
-        <div className="bg-slate-900/80 border border-emerald-500/30 p-8 rounded-[2rem] shadow-2xl backdrop-blur-xl relative overflow-hidden">
+        <div className="bg-slate-900/80 border border-amber-400/50 shadow-[0_0_40px_rgba(168,85,247,0.2)] p-8 rounded-[2rem] backdrop-blur-xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent"></div>
 
           <div className="text-center mb-8">
@@ -229,7 +229,7 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
 
           <button 
             onClick={() => setIsRunning(true)} 
-            className="w-full py-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xl shadow-[0_0_30px_rgba(16,185,129,0.4)] flex items-center justify-center gap-3 transition-transform active:scale-95"
+            className="w-full py-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xl shadow-[0_0_30px_rgba(168,85,247,0.6)] flex items-center justify-center gap-3 transition-transform active:scale-95"
           >
             <Play className="w-7 h-7 fill-current" />
             {tUI('startExam')}
