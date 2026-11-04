@@ -23,11 +23,15 @@ interface ExamMeta {
   isReady: boolean;
 }
 
+// 🆕 التوسيع إلى 7 امتحانات (سلسلة خطية)
 const EXAMS: ExamMeta[] = [
   { id: 'exam_10_7', nameAr: '10-7 كيو (ورقة مشتركة)', nameEn: '10-7 Kyu (Combined)', questions: 50, marks: 500, minutes: 12, requiresChapter: ['level1', 'level2'], isReady: true },
-  { id: 'exam_6', nameAr: '6 كيو', nameEn: '6 Kyu', questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_10_7', isReady: false },
-  { id: 'exam_5_4', nameAr: '5-4 كيو (ورقة مشتركة)', nameEn: '5-4 Kyu (Combined)', questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_6', isReady: false },
-  { id: 'exam_3_2_1', nameAr: '3-2-1 كيو (ورقة مشتركة)', nameEn: '3-2-1 Kyu (Combined)', questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_5_4', isReady: false },
+  { id: 'exam_6',    nameAr: '6 كيو',                    nameEn: '6 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_10_7', isReady: false },
+  { id: 'exam_5',    nameAr: '5 كيو',                    nameEn: '5 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_6',    isReady: false },
+  { id: 'exam_4',    nameAr: '4 كيو',                    nameEn: '4 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_5',    isReady: false },
+  { id: 'exam_3',    nameAr: '3 كيو',                    nameEn: '3 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_4',    isReady: false },
+  { id: 'exam_2',    nameAr: '2 كيو',                    nameEn: '2 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_3',    isReady: false },
+  { id: 'exam_1',    nameAr: '1 كيو',                    nameEn: '1 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_2',    isReady: false },
 ];
 
 export default function MentalArchivesExams({ onBack }: { onBack: () => void }) {
@@ -190,7 +194,6 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
             </div>
             <div className="bg-slate-950/50 p-4 rounded-2xl text-center border border-slate-800">
               <p className="text-xs text-slate-500 mb-1">{tUI('examTime')}</p>
-              {/* 👇 هنا تم التعديل */}
               <p className="text-2xl font-black text-amber-400"><Num>{selectedExam?.minutes}</Num>{isAr ? 'د' : 'm'}</p>
             </div>
             <div className="bg-slate-950/50 p-4 rounded-2xl text-center border border-slate-800">
