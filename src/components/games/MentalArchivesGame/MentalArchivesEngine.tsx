@@ -24,7 +24,6 @@ const GLOWS: { id: CharacterId; bg: string }[] = [
   { id: 'sorobana', bg: 'radial-gradient(circle at 50% 75%, rgba(167,139,250,0.5), transparent 60%)' },
 ];
 
-// إضاءة محيطية ثابتة: opacity فقط
 function AmbientGlow({ speaker, reduce }: { speaker: CharacterId; reduce: boolean | null }) {
   return (
     <div className="absolute inset-0 pointer-events-none z-0" aria-hidden>
@@ -80,11 +79,10 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [speaker, setSpeaker] = useState<CharacterId>('jud');
   const [inputMode, setInputMode] = useState<'keypad' | 'dial'>('keypad');
   const handleAnswerRef = useRef<(m: boolean) => void>(() => {});
-  const voiceRef = useRef<SpeechSynthesisVoice | null>(null); // 👈 إضافة المرجع للصوت
+  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
-  // 👈 1. التسخين واختيار الصوت مسبقاً
   useEffect(() => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     const ss = window.speechSynthesis;
@@ -94,7 +92,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     pick();
     ss.addEventListener('voiceschanged', pick);
     
-    // تسخين المحرك (Cold Start Fix)
     const warm = new SpeechSynthesisUtterance('a');
     warm.volume = 0;
     warm.lang = isAr ? 'ar-SA' : 'en-US';
@@ -103,7 +100,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     return () => ss.removeEventListener('voiceschanged', pick);
   }, [isAr]);
 
-  // 👈 2. تعديل دالة النطق
   const speakCustom = useCallback((characterId: CharacterId, text: string, onDone?: () => void) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       if (onDone) onDone();
@@ -134,7 +130,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
 
     if (onDone) utterance.onend = onDone;
     
-    // إعطاء المتصفح وقتاً لإنهاء الإلغاء إذا كان مشغولاً
     if (wasBusy) window.setTimeout(() => ss.speak(utterance), 80);
     else ss.speak(utterance);
   }, [isAr, childName]);
@@ -197,14 +192,12 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
-  // 👈 3. تعديل دالة الحركة (حل كلاود)
   const getCharacterMotion = (char: CharacterId, isActive: boolean) => {
     const glow =
       char === 'jud' ? 'drop-shadow(0 0 25px rgba(56,189,248,0.7))'
       : char === 'aseel' ? 'drop-shadow(0 0 25px rgba(244,63,94,0.7))'
       : 'drop-shadow(0 0 25px rgba(168,85,247,0.7))';
 
-    // نفس عدد الدوال وترتيبها لتتم المزج بسلاسة
     const inactiveFilter = 'grayscale(90%) contrast(80%) drop-shadow(0 0 0px rgba(0,0,0,0))';
     const activeFilter = `grayscale(0%) contrast(100%) ${glow}`;
 
@@ -239,7 +232,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       setDisplayedText('');
       setIsTyping(true);
       
-      // 👈 4. حذف stopAllAudio() من هنا (لأن speakCustom يتكفل بذلك)
       speakCustom(line.character, fullText);
 
       let i = 0;
@@ -265,7 +257,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     stopAllAudio();
     const msg = isAr ? `${tUI('successMsg')} يا ${childName}!` : `${tUI('successMsg')} ${childName}!`;
     speakCustom('jud', msg);
-    try { confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 } }); } catch (e) {}
+    try { confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 }, colors: ['#a855f7', '#fbbf24', '#ffffff'] }); } catch (e) {}
   };
 
   const nextScene = () => {
@@ -304,7 +296,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
     const map: Record<string, Parameters<typeof tUI>[0]> = {
       direct: 'hintDirect', complement5: 'hintComplement5', complement10: 'hintComplement10',
-      combined: 'hintCombined', // 🆕 P02: إضافة تلميح السؤال المركب (القاعدة الذهبية)
+      combined: 'hintCombined', 
       mitori: 'hintMitori', multiplication: 'hintMultiplication', division: 'hintDivision', subtraction: 'hintSubtraction',
     };
     return tUI(map[q.type] || 'hintDirect');
@@ -332,7 +324,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       setFeedback('correct');
       setCorrectCount(prev => prev + 1);
       const msg = isAr ? `أَحْسَنْتَ يا ${childName}!` : `Well done ${childName}!`;
-      try { confetti({ particleCount: shouldReduceMotion ? 15 : 40, spread: 60, origin: { y: 0.7 }, colors: ['#F59E0B', '#FBBF24', '#FDE68A'] }); } catch (e) {}
+      try { confetti({ particleCount: shouldReduceMotion ? 15 : 40, spread: 60, origin: { y: 0.7 }, colors: ['#F59E0B', '#FBBF24', '#FDE68A', '#a855f7'] }); } catch (e) {}
       speakThen('jud', msg, 900, advance);
       return;
     }
@@ -397,15 +389,15 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   };
 
   const TopBar = () => (
-    <div className="flex items-center justify-between gap-2 p-3 sm:p-4 sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-amber-500/20 shadow-lg">
+    <div className="flex items-center justify-between gap-2 p-3 sm:p-4 sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-purple-500/30 shadow-[0_4px_20px_rgba(168,85,247,0.15)]">
       <button onClick={() => { stopAllAudio(); onBack(); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0">
         <ArrowRight className={`w-6 h-6 text-amber-400 ${isAr ? '' : 'rotate-180'}`} />
       </button>
       <div className="flex-1 flex justify-center items-center gap-2">
-        <div className={`w-12 h-12 rounded-full border-2 overflow-hidden shadow-lg flex items-center justify-center bg-slate-900 ${feedback === 'correct' ? 'border-emerald-400' : 'border-amber-400'}`}>
+        <div className={`w-12 h-12 rounded-full border-2 overflow-hidden shadow-[0_0_15px_rgba(168,85,247,0.5)] flex items-center justify-center bg-slate-900 ${feedback === 'correct' ? 'border-emerald-400' : 'border-purple-400'}`}>
           <img src={getTopBarImage()} alt="Companion" className="w-full h-full object-cover" />
         </div>
-        <span className="text-amber-200 font-bold text-sm sm:text-base hidden sm:inline">
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-amber-200 font-bold text-sm sm:text-base hidden sm:inline">
           {isAr ? chapter.titleAr : chapter.titleEn}
         </span>
       </div>
@@ -414,9 +406,9 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           <div className="relative flex items-center justify-center w-12 h-12">
             <svg className="w-full h-full transform -rotate-90">
               <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="3" className="text-slate-800 fill-none" />
-              <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="3" className={`fill-none transition-all duration-100 ${timeLeft < 3000 ? 'text-red-500 animate-pulse' : 'text-amber-400'}`} strokeDasharray={125.6} strokeDashoffset={125.6 * (1 - timeLeft / currentScene.timePerQuestionMs)} />
+              <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="3" className={`fill-none transition-all duration-100 ${timeLeft < 3000 ? 'text-red-500 animate-pulse' : 'text-purple-400'}`} strokeDasharray={125.6} strokeDashoffset={125.6 * (1 - timeLeft / currentScene.timePerQuestionMs)} />
             </svg>
-            <span className="absolute text-xs font-mono font-bold text-amber-200"><Num>{(timeLeft / 1000).toFixed(0)}</Num>s</span>
+            <span className="absolute text-xs font-mono font-bold text-purple-200"><Num>{(timeLeft / 1000).toFixed(0)}</Num>s</span>
           </div>
         )}
       </div>
@@ -427,11 +419,11 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     return (
       <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-slate-950 text-white p-6" dir={dir}>
         <TopBar />
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center z-10 max-w-lg bg-slate-900/90 border border-amber-500/40 p-8 rounded-3xl shadow-2xl backdrop-blur-md">
-          <div className="text-6xl mb-4 animate-bounce">🏛️✨</div>
-          <h2 className="text-3xl font-extrabold text-amber-400 mb-3">{tUI('successMsg')}</h2>
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center z-10 max-w-lg bg-slate-900/90 border-2 border-purple-500/50 p-8 rounded-3xl shadow-[0_0_50px_rgba(168,85,247,0.3)] backdrop-blur-md">
+          <div className="text-6xl mb-4 animate-bounce drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]">🏛️✨</div>
+          <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-amber-400 mb-3">{tUI('successMsg')}</h2>
           <p className="text-slate-300 mb-8">{isAr ? chapter.titleAr : chapter.titleEn}</p>
-          <button onClick={() => onComplete(correctCount)} className="w-full py-4 mt-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-2xl font-bold text-lg shadow-lg transition flex items-center justify-center gap-2">
+          <button onClick={() => onComplete(correctCount)} className="w-full py-4 mt-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-2xl font-bold text-lg shadow-lg transition flex items-center justify-center gap-2">
             <Home className="w-5 h-5" />
             {tUI('returnToGames')}
           </button>
@@ -483,12 +475,11 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
         <AmbientGlow speaker={line.character} reduce={shouldReduceMotion} />
         
-        {/* ═══ الشخصيات ═══ */}
         <div className="flex-1 relative w-full max-w-5xl mx-auto flex justify-center items-end mb-4 z-10 pt-16 gap-1 sm:gap-4">
           <motion.img
             src={aseelImg}
             alt={isAr ? 'أسيل' : 'Aseel'}
-            initial={false} // 👈 إضافة لمنع الوميض
+            initial={false}
             {...getCharacterMotion('aseel', line.character === 'aseel')}
             className="w-24 sm:w-48 object-contain origin-bottom shrink-0"
           />
@@ -496,7 +487,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           <motion.img
             src={joudImg}
             alt={isAr ? 'جود' : 'Joud'}
-            initial={false} // 👈 إضافة لمنع الوميض
+            initial={false}
             {...getCharacterMotion('jud', line.character === 'jud')}
             className="w-32 sm:w-60 object-contain origin-bottom z-20 shrink-0"
           />
@@ -504,14 +495,13 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           <motion.img
             src={sorobanaImg}
             alt={isAr ? 'سوروبانا' : 'Sorobana'}
-            initial={false} // 👈 إضافة لمنع الوميض
+            initial={false}
             {...getCharacterMotion('sorobana', line.character === 'sorobana')}
             className="w-28 sm:w-56 object-contain origin-bottom shrink-0"
           />
         </div>
         
-        {/* ═══ صندوق النص (لم نلمسه إطلاقاً) ═══ */}
-        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={() => { if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); } }} className="relative w-full max-w-3xl mx-auto bg-slate-900/95 backdrop-blur-md p-6 sm:p-8 rounded-t-3xl border-t-2 border-amber-500/30 shadow-2xl z-20 cursor-pointer shrink-0">
+        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={() => { if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); } }} className="relative w-full max-w-3xl mx-auto bg-slate-900/95 backdrop-blur-md p-6 sm:p-8 rounded-t-3xl border-t-2 border-purple-500/40 shadow-[0_-10px_40px_rgba(168,85,247,0.2)] z-20 cursor-pointer shrink-0">
           <div className="flex items-center gap-2 mb-3">
             <span className={`font-extrabold text-lg sm:text-xl ${charData.color}`}>{charData.name}</span>
             <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">{tUI('archiveGuide')}</span>
@@ -519,11 +509,11 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           
           <div className="h-24 sm:h-28 mb-6 overflow-y-auto custom-scrollbar flex items-start">
             <p className="text-lg sm:text-xl leading-relaxed text-slate-100 font-medium w-full">
-              <Num>{displayedText}</Num>{isTyping && <span className="inline-block w-2 h-5 bg-amber-400 ml-1 animate-pulse"></span>}
+              <Num>{displayedText}</Num>{isTyping && <span className="inline-block w-2 h-5 bg-purple-400 ml-1 animate-pulse"></span>}
             </p>
           </div>
 
-          <button onClick={(e) => { e.stopPropagation(); if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); return; } if (lineIndex < currentScene.lines.length - 1) setLineIndex(l => l + 1); else nextScene(); }} className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 rounded-xl font-extrabold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
+          <button onClick={(e) => { e.stopPropagation(); if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); return; } if (lineIndex < currentScene.lines.length - 1) setLineIndex(l => l + 1); else nextScene(); }} className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-amber-500 hover:from-purple-500 hover:to-amber-400 text-white rounded-xl font-extrabold text-lg transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] flex items-center justify-center gap-2">
             <span>{isTyping ? tUI('showFullText') : tUI('continueStory')}</span><Sparkles className="w-5 h-5" />
           </button>
         </motion.div>
@@ -540,20 +530,22 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       <div className="relative flex flex-col items-center justify-start min-h-[100dvh] bg-slate-950 text-white p-6 pt-24 overflow-y-auto" dir={dir}>
         <TopBar />
         
-        <div className="max-w-2xl w-full mb-6 bg-amber-950/30 border border-amber-500/30 p-4 rounded-xl text-center z-10 shadow-lg">
-          <p className="text-amber-200 font-bold text-sm sm:text-base leading-relaxed">
-            <Num>{isAr ? currentScene.ruleAr : currentScene.ruleEn}</Num>
-          </p>
-        </div>
+        {currentScene.ruleAr && (
+          <div className="max-w-2xl w-full mb-6 bg-purple-950/30 border border-purple-500/30 p-4 rounded-xl text-center z-10 shadow-[0_0_20px_rgba(168,85,247,0.15)]">
+            <p className="text-purple-200 font-bold text-sm sm:text-base leading-relaxed">
+              <Num>{isAr ? currentScene.ruleAr : currentScene.ruleEn}</Num>
+            </p>
+          </div>
+        )}
 
-        <div className="max-w-2xl bg-slate-900/90 border border-amber-500/30 p-8 rounded-3xl shadow-2xl w-full z-10 backdrop-blur-md">
+        <div className="max-w-2xl bg-slate-900/90 border border-purple-500/30 p-8 rounded-3xl shadow-[0_0_30px_rgba(168,85,247,0.15)] w-full z-10 backdrop-blur-md">
           
           <div className="flex justify-between items-center mb-6 gap-2 overflow-x-auto pb-2">
             {currentScene.examples.map((_, idx) => (
               <button 
                 key={idx}
                 onClick={() => { setExampleIndex(idx); setActiveStepIndex(null); stopAllAudio(); }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${exampleIndex === idx ? 'bg-amber-600 text-slate-950 shadow-md' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${exampleIndex === idx ? 'bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
               >
                 {isAr ? 'مثال ' : 'Example '}<Num>{idx + 1}</Num>
               </button>
@@ -564,33 +556,33 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
             <div className="flex flex-col gap-3 w-full">
               <div className="flex items-center gap-3">
                 <Award className="w-8 h-8 text-amber-400 shrink-0" />
-                <h2 className="text-xl sm:text-2xl font-bold text-amber-300">
+                <h2 className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-purple-300">
                   {isAr ? currentExample.ruleTitleAr : currentExample.ruleTitleEn}
                 </h2>
               </div>
-              <div className="text-sm text-amber-100/90 bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 leading-relaxed">
+              <div className="text-sm text-purple-100/90 bg-slate-800/50 p-3 rounded-xl border border-purple-500/20 leading-relaxed">
                 <Num>{isAr ? currentExample.ruleDescAr : currentExample.ruleDescEn}</Num>
               </div>
             </div>
-            <button onClick={toggleExampleAudio} className={`p-3 rounded-full flex items-center justify-center transition-all ${activeStepIndex !== null ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-amber-500/20 text-amber-400 border border-amber-500/50 hover:bg-amber-500/30'}`}>
+            <button onClick={toggleExampleAudio} className={`p-3 rounded-full flex items-center justify-center transition-all ${activeStepIndex !== null ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-purple-500/20 text-purple-400 border border-purple-500/50 hover:bg-purple-500/30'}`}>
               {activeStepIndex !== null ? <Square className="w-5 h-5 fill-current" /> : <Volume2 className="w-5 h-5" />}
             </button>
           </div>
           
-          <div className="text-3xl sm:text-4xl text-center font-mono bg-stone-900 border border-amber-500/20 py-4 rounded-2xl mb-6 text-amber-400 tracking-wider shadow-inner" dir="ltr">
+          <div className="text-3xl sm:text-4xl text-center font-mono bg-stone-900 border border-purple-500/30 py-4 rounded-2xl mb-6 text-amber-400 tracking-wider shadow-inner" dir="ltr">
             <Num>{isAr ? currentExample.problem : currentExample.problem.replace(/؟/g, '?')}</Num>
           </div>
           
           <ul className="space-y-4 mb-8">
             {currentExample.steps.map((step, idx) => (
-              <li key={idx} className={`flex items-start p-3 rounded-xl border transition-all duration-300 ${activeStepIndex === idx ? 'bg-amber-900/40 border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.2)] scale-[1.02]' : 'bg-slate-800/50 border-slate-700/50'}`}>
-                <span className={`rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold ml-3 mt-0.5 shrink-0 transition-colors ${activeStepIndex === idx ? 'bg-amber-500 text-slate-950' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}><Num>{idx + 1}</Num></span>
+              <li key={idx} className={`flex items-start p-3 rounded-xl border transition-all duration-300 ${activeStepIndex === idx ? 'bg-purple-900/40 border-purple-500/60 shadow-[0_0_15px_rgba(168,85,247,0.2)] scale-[1.02]' : 'bg-slate-800/50 border-slate-700/50'}`}>
+                <span className={`rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold ml-3 mt-0.5 shrink-0 transition-colors ${activeStepIndex === idx ? 'bg-purple-500 text-white' : 'bg-purple-500/20 text-purple-300 border border-purple-500/40'}`}><Num>{idx + 1}</Num></span>
                 <span className="text-base sm:text-lg text-slate-200"><Num>{isAr ? step.textAr : step.textEn}</Num></span>
               </li>
             ))}
           </ul>
           
-          <button onClick={() => { if (exampleIndex < currentScene.examples.length - 1) { setExampleIndex(prev => prev + 1); setActiveStepIndex(null); stopAllAudio(); } else { nextScene(); } }} className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-2xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
+          <button onClick={() => { if (exampleIndex < currentScene.examples.length - 1) { setExampleIndex(prev => prev + 1); setActiveStepIndex(null); stopAllAudio(); } else { nextScene(); } }} className="w-full py-4 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 rounded-2xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
             <span>{exampleIndex < currentScene.examples.length - 1 ? (isAr ? 'المثال التالي' : 'Next Example') : tUI('readyForChallenge')}</span>
             <Sparkles className="w-5 h-5" />
           </button>
@@ -605,6 +597,9 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     const shownValue = revealed !== null ? String(revealed) : userInput;
     return (
       <div className="relative flex flex-col min-h-[100dvh] bg-slate-950 text-white overflow-hidden" dir={dir}>
+        {/* توهج بنفسجي خلفي لشاشة التحدي */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+        
         <AmbientGlow speaker={speaker} reduce={shouldReduceMotion} />
         <TopBar />
         <div className="flex-1 flex flex-col items-center justify-center px-4 py-3 gap-3 z-10 w-full max-w-md mx-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
@@ -616,32 +611,32 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           <motion.div
             animate={feedback === 'wrong' && !shouldReduceMotion ? { x: [0, -4, 4, -3, 3, 0] } : { x: 0 }}
             transition={{ duration: 0.4 }}
-            className="bg-stone-900/90 border-2 border-amber-500/40 p-5 rounded-3xl shadow-2xl w-full text-center relative backdrop-blur-md"
+            className="bg-[#120a1c]/90 border-2 border-purple-500/40 p-5 rounded-3xl shadow-[0_0_35px_rgba(168,85,247,0.2)] w-full text-center relative backdrop-blur-md"
           >
             <motion.div
               className="absolute inset-0 rounded-3xl pointer-events-none"
-              style={{ boxShadow: '0 0 40px 6px rgba(251,191,36,0.7) inset' }}
+              style={{ boxShadow: '0 0 40px 6px rgba(168,85,247,0.5) inset' }}
               initial={false}
               animate={{ opacity: feedback === 'correct' ? 1 : 0 }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.35 }}
             />
-            <div className="absolute -top-3 right-6 bg-amber-500/20 text-amber-300 text-xs px-3 py-1 rounded-full border border-amber-500/30">{tUI('digitalTablet')}</div>
+            <div className="absolute -top-3 right-6 bg-purple-500/20 text-purple-300 text-xs px-3 py-1 rounded-full border border-purple-500/30">{tUI('digitalTablet')}</div>
             <div className="flex flex-col items-center text-4xl font-mono mb-3 pt-3" dir="ltr">
               {q.numbers.map((num: number, i: number) => (
                 <div key={i} className="flex items-center justify-center w-36 relative my-0.5">
                   <span className="w-16 text-center text-amber-100 drop-shadow-md"><Num>{num}</Num></span>
                   {i < q.numbers.length - 1 && (
-                    <span className="absolute -right-4 text-amber-500/80 text-2xl font-bold">
+                    <span className="absolute -right-4 text-purple-400/80 text-2xl font-bold">
                       {q.type === 'multiplication' ? '×' : q.type === 'division' ? '÷' : '+'}
                     </span>
                   )}
                 </div>
               ))}
             </div>
-            <div className="h-px w-3/4 bg-amber-500/30 mx-auto mb-3"></div>
+            <div className="h-px w-3/4 bg-purple-500/30 mx-auto mb-3"></div>
 
             <div className="relative h-16 w-44 mx-auto flex items-center justify-center bg-slate-950 border-2 rounded-2xl overflow-hidden"
-              style={{ borderColor: feedback === 'correct' ? '#10b981' : feedback === 'wrong' ? '#ef4444' : 'rgba(245,158,11,0.4)' }}>
+              style={{ borderColor: feedback === 'correct' ? '#10b981' : feedback === 'wrong' ? '#ef4444' : 'rgba(168,85,247,0.6)' }}>
               {ghost !== null && (
                 <motion.span
                   key={`ghost-${attempts}-${ghost}`}
@@ -656,13 +651,13 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
                 <Num>{shownValue || (isAr ? '؟' : '?')}</Num>
               </span>
             </div>
-            <div className="min-h-[40px] mt-2 text-xs sm:text-sm text-violet-300 leading-snug"><Num>{hint}</Num></div>
+            <div className="min-h-[40px] mt-2 text-xs sm:text-sm text-purple-300 leading-snug"><Num>{hint}</Num></div>
           </motion.div>
 
           <div className="flex items-center gap-2 text-xs">
             {(['keypad', 'dial'] as const).map((m) => (
               <button key={m} type="button" onClick={() => setInputMode(m)}
-                className={`px-3 py-1 rounded-full border ${inputMode === m ? 'bg-amber-500/20 border-amber-400 text-amber-200' : 'border-slate-700 text-slate-400'}`}>
+                className={`px-3 py-1 rounded-full border transition-all ${inputMode === m ? 'bg-purple-500/20 border-purple-400 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'border-slate-700 text-slate-400'}`}>
                 {tUI(m === 'keypad' ? 'keypadMode' : 'dialMode')}
               </button>
             ))}
@@ -688,7 +683,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
               onStart={stopAllAudio}
               onNumber={(n) => setUserInput(String(n).slice(0, 6))}
             />
-            <button onClick={() => handleAnswer(true)} disabled={!userInput || locked} className="flex-1 h-16 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 disabled:opacity-50 rounded-2xl font-extrabold text-xl transition-all shadow-lg text-slate-950 flex items-center justify-center gap-2">
+            <button onClick={() => handleAnswer(true)} disabled={!userInput || locked} className="flex-1 h-16 bg-gradient-to-r from-purple-600 via-purple-500 to-amber-500 hover:from-purple-500 hover:to-amber-400 disabled:opacity-50 rounded-2xl font-extrabold text-xl transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] text-white flex items-center justify-center gap-2">
               <span>{tUI('confirmAnswer')}</span><Sparkles className="w-5 h-5" />
             </button>
           </div>
