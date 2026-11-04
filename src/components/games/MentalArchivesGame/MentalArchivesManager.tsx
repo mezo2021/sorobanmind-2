@@ -13,6 +13,7 @@ import { useGameLang } from '../gamesI18n';
 import { tUI } from './gameUI';
 import { Num } from '@/components/Num';
 import { GraduationCap } from 'lucide-react';
+import { isPreviewMode } from '@/utils/previewMode';
 
 // 🆕 P04: Partial ليتحقق TS من الحقول الناقصة بدل cast كاذب
 const CHAPTERS: Partial<Record<ChapterId, Chapter>> = {
@@ -33,6 +34,9 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
   const progress = useProgressStore((s) => s.mentalArchivesProgress);
   const completeChapter = useProgressStore((s) => s.completeMentalChapter);
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
+
+  // 🆕 تجاوز بوابة الامتحانات في وضع المعاينة
+  const preview = isPreviewMode();
 
   // 🆕 P04: إعادة الضبط النظيفة عند غياب الفصل (بدل setState داخل render)
   useEffect(() => {
@@ -79,8 +83,8 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
   }
 
   // ═══ شاشة الخريطة ═══
-  // 🆕 P05: قراءة المتطلب من الثابت (وليس تعبيراً صلباً)
-  const canAccessExams = EXAM_PORTAL_PREREQ_CHAPTERS.every((id) => !!progress[id]);
+  // 🆕 P05: قراءة المتطلب من الثابت (وليس تعبيراً صلباً) + تجاوز المعاينة
+  const canAccessExams = preview || EXAM_PORTAL_PREREQ_CHAPTERS.every((id) => !!progress[id]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-6" dir={dir}>
