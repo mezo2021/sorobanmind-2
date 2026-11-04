@@ -33,6 +33,10 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
   const [isFinished, setIsFinished] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showReview, setShowReview] = useState(false);
+  
+  // ─── التعديل 3: إضافة حالات الرفع التدريجي والنقاط المتطايرة ───
+  const [celebratingId, setCelebratingId] = useState<string | null>(null);
+  const [celebratedIds, setCelebratedIds] = useState<Set<string>>(new Set());
 
   const activeCardRef = useRef<HTMLDivElement>(null);
 
@@ -61,10 +65,18 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     return () => clearInterval(timer);
   }, [mode, isFinished]);
 
+  // ─── التعديل 3: تحديث دالة الكيبورد لاكتشاف الإجابة الصحيحة في وضع التدريب ───
   const handleKeypadChange = (newVal: string) => {
     if (isFinished) return;
-    const qId = allQuestions[activeIndex].id;
+    const q = allQuestions[activeIndex];
+    const qId = q.id;
     setAnswers((prev) => ({ ...prev, [qId]: newVal }));
+    
+    if (mode === 'training' && newVal === String(q.answer) && !celebratedIds.has(qId)) {
+      setCelebratedIds(prev => new Set(prev).add(qId));
+      setCelebratingId(qId);
+      setTimeout(() => setCelebratingId(null), 1500);
+    }
   };
 
   const nextQuestion = () => {
@@ -339,10 +351,22 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
   return (
     <div className="min-h-screen bg-[#060a12] text-white flex flex-col relative select-none" dir={dir}>
       
+      {/* الشريط العلوي */}
       <div className="flex items-center justify-between p-4 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 shadow-md">
         <button onClick={() => handleSubmit(false)} className="px-5 py-2.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 rounded-xl text-sm font-bold border border-rose-500/30 transition">
           {tUI('finishExam')}
         </button>
+        
+        {/* ─── التعديل 2: إضافة شارة (تدريب / امتحان) بين زر الإنهاء والمؤقت ─── */}
+        {mode === 'training' ? (
+          <span className="text-xs bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full border border-amber-500/30 font-bold">
+            {isAr ? '🟡 تدريب' : '🟡 Training'}
+          </span>
+        ) : (
+          <span className="text-xs bg-rose-500/20 text-rose-400 px-3 py-1 rounded-full border border-rose-500/30 font-bold">
+            {isAr ? '🔴 امتحان' : '🔴 Exam'}
+          </span>
+        )}
         
         {mode === 'exam' && (
           <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold text-lg border ${timeLeft < 60 ? 'bg-rose-900/50 text-rose-400 border-rose-500/50 animate-pulse' : 'bg-slate-950 text-amber-400 border-slate-700'}`}>
@@ -370,14 +394,27 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 key={q.id}
                 ref={isActive ? activeCardRef : null}
                 onClick={() => setActiveIndex(idx)}
+                // ─── التعديل 1: تغيير توهج البطاقة النشطة إلى البنفسجي الساحر ───
                 className={`relative flex flex-col items-center p-4 rounded-2xl border-2 transition-all cursor-pointer scroll-mb-[350px] ${
                   isActive 
-                    ? 'border-amber-400 bg-slate-800/90 shadow-[0_0_25px_rgba(251,191,36,0.35)] scale-[1.02] z-10 ring-2 ring-amber-400/50 animate-pulse' 
+                    ? 'border-amber-400 bg-slate-800/90 shadow-[0_0_35px_rgba(168,85,247,0.6)] scale-[1.02] z-10 ring-2 ring-amber-400/30' 
                     : isAnswered 
                       ? 'border-emerald-500/40 bg-slate-900' 
                       : 'border-slate-800 bg-slate-900/50 opacity-85'
                 }`}
               >
+                {/* ─── التعديل 3: تأثير تطاير النقاط عند الإجابة الصحيحة في وضع التدريب ─── */}
+                {celebratingId === q.id && (
+                  <motion.div
+                    initial={{ y: 0, opacity: 0, scale: 0.5 }}
+                    animate={{ y: -80, opacity: [0, 1, 1, 0], scale: [0.5, 1.3, 1, 1] }}
+                    transition={{ duration: 1.5, ease: 'easeOut' }}
+                    className="absolute left-1/2 -translate-x-1/2 top-2 text-emerald-400 font-black text-2xl pointer-events-none z-30 drop-shadow-[0_0_10px_rgba(16,185,129,0.9)]"
+                  >
+                    +{q.points}
+                  </motion.div>
+                )}
+
                 <div className={`absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded-md ${isActive ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
                   <Num>{idx + 1}</Num>
                 </div>
