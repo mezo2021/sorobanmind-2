@@ -1,3 +1,5 @@
+// src/components/games/MentalArchivesGame/data/exams/examTypes.ts
+
 export type ExamQuestionType = 'mitori' | 'multiplication' | 'division';
 
 export interface ExamQuestion {
@@ -5,6 +7,7 @@ export interface ExamQuestion {
   type: ExamQuestionType;
   numbers: number[];
   answer: number;
+  hasSubtraction?: boolean;   // 🆕 P11: لأسئلة 1 كيو (ميتوري مختلط بالطرح)
 }
 
 export interface ExamSection {
