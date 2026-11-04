@@ -33,6 +33,8 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
   const [isFinished, setIsFinished] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showReview, setShowReview] = useState(false);
+  // 🆕 P09: مودال تأكيد الإنهاء (بدل window.confirm)
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   
   const [celebratingId, setCelebratingId] = useState<string | null>(null);
   const [celebratedIds, setCelebratedIds] = useState<Set<string>>(new Set());
@@ -49,20 +51,22 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     }
   }, [activeIndex]);
 
+  // 🆕 P20: المؤقت يقتصر على العد فقط (بدون استدعاء handleSubmit داخل updater)
   useEffect(() => {
     if (mode === 'training' || isFinished) return;
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          handleSubmit(true);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeLeft(prev => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
     return () => clearInterval(timer);
   }, [mode, isFinished]);
+
+  // 🆕 P20: استدعاء handleSubmit عند وصول المؤقت للصفر (خارج setState)
+  useEffect(() => {
+    if (mode === 'exam' && timeLeft === 0 && !isFinished && !isSubmitting) {
+      handleSubmit(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft, mode, isFinished, isSubmitting]);
 
   const handleKeypadChange = (newVal: string) => {
     if (isFinished) return;
@@ -85,9 +89,12 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
   };
 
   const handleSubmit = (force = false) => {
+    // 🆕 P09: بدل window.confirm — نفتح المودال المخصص
     if (!force) {
-      if (!window.confirm(tUI('confirmFinishMsg'))) return;
+      setShowFinishConfirm(true);
+      return;
     }
+    setShowFinishConfirm(false);
     if (isSubmitting || isFinished) return;
     setIsSubmitting(true);
 
@@ -160,7 +167,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
       else trainMessage = tUI('trainNeedMore');
     }
 
-    // ─── التعديل: رسائل وألوان وضع الامتحان بناءً على الدرجة ───
+    // ─── رسائل وألوان وضع الامتحان بناءً على الدرجة ───
     let examMainTitle = '';
     let examSubTitle = '';
     let examBadge = null;
@@ -192,6 +199,14 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
           </span>
         );
       }
+      // 🆕 P21: 250-399 → إظهار المستوى + تنبيه بالحاجة لـ 7 كيو
+      else if (score >= 250) {
+        examBadge = (
+          <span className="inline-block mt-3 bg-amber-500/20 text-amber-400 px-4 py-1.5 rounded-full text-sm font-bold border border-amber-500/30">
+            {isAr ? 'تحتاج الوصول إلى مستوى 7 كيو للاجتياز' : 'You need to reach 7 Kyu to pass'}
+          </span>
+        );
+      }
     }
 
     if (showReview) {
@@ -215,7 +230,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
 
           <div className="max-w-4xl mx-auto print-page">
             
-            {/* التعديل: إصلاح ترجمة رأس الشهادة */}
+            {/* ترجمة رأس الشهادة */}
             <div className="hidden print:flex flex-col items-center justify-center mb-8 text-center border-b-2 border-amber-500 pb-6">
               <img src={logoImg} alt="Academy Logo" className="w-24 h-24 mb-2 object-contain" />
               <h1 className="text-2xl font-black text-black mb-1">
@@ -291,7 +306,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 })}
               </div>
 
-              {/* التعديل: إصلاح ترجمة تذييل الشهادة */}
+              {/* ترجمة تذييل الشهادة */}
               <div className="hidden print:flex justify-between items-end mt-12 pt-8 border-t border-gray-300 text-black">
                 <div className="text-center">
                   <p className="text-sm font-bold text-gray-600">
@@ -500,6 +515,38 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
 
         </div>
       </div>
+
+      {/* 🆕 P09: مودال تأكيد الإنهاء (بدل window.confirm) */}
+      {showFinishConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" dir={dir}>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="max-w-sm w-full bg-slate-900 border-2 border-slate-700 rounded-3xl p-6 text-center"
+          >
+            <h3 className="text-xl font-bold mb-3 text-white">
+              {tUI('finishExam')}
+            </h3>
+            <p className="text-slate-300 mb-6 text-sm leading-relaxed">
+              {tUI('confirmFinishMsg')}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowFinishConfirm(false)}
+                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold border border-slate-700 transition"
+              >
+                {isAr ? 'إلغاء' : 'Cancel'}
+              </button>
+              <button
+                onClick={() => handleSubmit(true)}
+                className="flex-1 py-3 bg-rose-600 hover:bg-rose-500 rounded-xl font-bold transition text-white"
+              >
+                {isAr ? 'تأكيد' : 'Confirm'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
