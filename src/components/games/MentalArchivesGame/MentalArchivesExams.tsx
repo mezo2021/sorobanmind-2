@@ -3,13 +3,14 @@ import React, { useState } from 'react';
 import { useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
 import { Num } from '@/components/Num';
-import { ArrowRight, Lock, Play, Timer, GraduationCap, BookOpen } from 'lucide-react';
+import { ArrowRight, Lock, Play, Timer, GraduationCap, BookOpen, Star, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // 👇 استيراد شاشة الامتحان وبيانات الامتحان الأول
 import MentalArchivesExamRunner from './MentalArchivesExamRunner';
 import { EXAM_10_7 } from './data/exams/exam10_7';
-// 👇 استيراد نوع ChapterId لحل مشكلة TypeScript
 import { ChapterId } from './gameFlowTypes';
+import { tUI } from './gameUI';
 
 interface ExamMeta {
   id: string;
@@ -18,18 +19,17 @@ interface ExamMeta {
   questions: number;
   marks: number;
   minutes: number;
-  requiresChapter?: ChapterId[]; // 👈 تم تعديل النوع هنا
+  requiresChapter?: ChapterId[];
   requiresExamPass?: string;
+  isReady: boolean; // 👈 ميزة جديدة: هل الامتحان مبرمج أم قريباً؟
 }
 
+// 👇 تم التصحيح: 4 امتحانات فقط بناءً على التوجيهات
 const EXAMS: ExamMeta[] = [
-  { id: 'exam_10_7', nameAr: '10-7 كيو (ورقة مشتركة)', nameEn: '10-7 Kyu (Combined)', questions: 50, marks: 500, minutes: 12, requiresChapter: ['level1', 'level2'] },
-  { id: 'exam_6', nameAr: '6 كيو', nameEn: '6 Kyu', questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_10_7' },
-  { id: 'exam_5', nameAr: '5 كيو', nameEn: '5 Kyu', questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_6' },
-  { id: 'exam_4', nameAr: '4 كيو', nameEn: '4 Kyu', questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_5' },
-  { id: 'exam_3', nameAr: '3 كيو', nameEn: '3 Kyu', questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_4' },
-  { id: 'exam_2', nameAr: '2 كيو', nameEn: '2 Kyu', questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_3' },
-  { id: 'exam_1', nameAr: '1 كيو', nameEn: '1 Kyu', questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_2' },
+  { id: 'exam_10_7', nameAr: '10-7 كيو (ورقة مشتركة)', nameEn: '10-7 Kyu (Combined)', questions: 50, marks: 500, minutes: 12, requiresChapter: ['level1', 'level2'], isReady: true },
+  { id: 'exam_6', nameAr: '6 كيو', nameEn: '6 Kyu', questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_10_7', isReady: false },
+  { id: 'exam_5_4', nameAr: '5-4 كيو (ورقة مشتركة)', nameEn: '5-4 Kyu (Combined)', questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_6', isReady: false },
+  { id: 'exam_3_2_1', nameAr: '3-2-1 كيو (ورقة مشتركة)', nameEn: '3-2-1 Kyu (Combined)', questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_5_4', isReady: false },
 ];
 
 export default function MentalArchivesExams({ onBack }: { onBack: () => void }) {
@@ -37,7 +37,6 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [mode, setMode] = useState<'training' | 'exam'>('exam');
   
-  // 👇 حالة جديدة لتشغيل الامتحان
   const [isRunning, setIsRunning] = useState(false);
 
   const progress = useProgressStore((s) => s.mentalArchivesProgress);
@@ -65,51 +64,96 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
   // ═══ 1. قائمة الامتحانات ═══
   if (!selectedExamId) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white p-6" dir={dir}>
-        <div className="max-w-4xl mx-auto">
-          <button onClick={onBack} className="mb-8 text-amber-400 font-bold flex items-center gap-2 hover:text-amber-300 transition">
-            <span className={isAr ? 'ml-2' : 'mr-2 rotate-180'}>←</span>
-            {isAr ? 'العودة للخريطة' : 'Back to Map'}
+      <div className="min-h-screen bg-[#060a12] text-white p-6 relative overflow-hidden" dir={dir}>
+        {/* تأثيرات خلفية */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <div className="max-w-4xl mx-auto relative z-10">
+          <button onClick={onBack} className="mb-8 text-amber-400 font-bold flex items-center gap-2 hover:text-amber-300 transition group">
+            <ArrowRight className={`w-5 h-5 transition-transform group-hover:-translate-x-1 ${isAr ? '' : 'rotate-180'}`} />
+            {tUI('backToMap')}
           </button>
 
-          <div className="flex items-center gap-3 mb-6">
-            <GraduationCap className="w-10 h-10 text-emerald-400" />
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.4)]">
+              <GraduationCap className="w-10 h-10 text-slate-950" />
+            </div>
             <div>
-              <h1 className="text-2xl font-black text-emerald-400">{isAr ? 'قسم الامتحانات (كيو)' : 'Kyu Exams'}</h1>
-              <p className="text-sm text-slate-400 mt-1">{isAr ? 'محاكاة رسمية لامتحانات نيشورين' : 'Official Nishuren simulation'}</p>
+              <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-100">
+                {tUI('examsTitle')}
+              </h1>
+              <p className="text-sm text-emerald-200/60 mt-1">{tUI('examsSubtitle')}</p>
             </div>
           </div>
 
-          <p className="text-xs text-amber-200/80 bg-amber-950/30 border border-amber-500/30 p-3 rounded-xl mb-6">
-            {isAr ? '💡 للحصول على درجة الكيو، يجب حل الامتحان بوضع "امتحان" والحصول على 400/500 أو أكثر. وضع "تدريب" لا يفتح الامتحان التالي.' : '💡 To earn the Kyu grade, solve in "Exam" mode with 400/500+. "Training" mode does not unlock the next exam.'}
-          </p>
+          <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl mb-8 flex items-start gap-3 backdrop-blur-sm">
+            <span className="text-2xl">💡</span>
+            <p className="text-sm text-amber-200/90 leading-relaxed">
+              {tUI('examTip')}
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {EXAMS.map((exam) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {EXAMS.map((exam, idx) => {
               const unlocked = isExamUnlocked(exam);
               const best = examResults[exam.id] || null;
+              const isReady = exam.isReady;
+
               return (
-                <div 
+                <motion.div 
                   key={exam.id} 
-                  onClick={() => unlocked && setSelectedExamId(exam.id)}
-                  className={`p-5 rounded-2xl border-2 transition-all ${unlocked ? 'border-emerald-500/50 bg-slate-900 hover:bg-slate-800 hover:border-emerald-400 cursor-pointer shadow-lg' : 'border-slate-800 bg-slate-900/50 opacity-60 cursor-not-allowed'}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  onClick={() => (unlocked && isReady) ? setSelectedExamId(exam.id) : null}
+                  className={`relative p-6 rounded-3xl border-2 transition-all duration-300 backdrop-blur-md overflow-hidden flex flex-col justify-between min-h-[180px]
+                    ${unlocked && isReady 
+                      ? 'border-emerald-500/50 bg-gradient-to-br from-slate-800/80 to-slate-900/90 hover:border-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] cursor-pointer' 
+                      : 'border-slate-800 bg-slate-900/40 opacity-70 cursor-not-allowed'}
+                  `}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-bold text-lg text-amber-200">{isAr ? exam.nameAr : exam.nameEn}</h3>
-                    {!unlocked && <Lock className="w-4 h-4 text-slate-500" />}
+                  {/* توهج داخلي للبطاقات المفتوحة */}
+                  {unlocked && isReady && (
+                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl"></div>
+                  )}
+
+                  <div className="flex justify-between items-start mb-4 relative z-10">
+                    <div>
+                      <h3 className={`font-black text-xl mb-1 ${unlocked && isReady ? 'text-amber-300' : 'text-slate-500'}`}>
+                        {isAr ? exam.nameAr : exam.nameEn}
+                      </h3>
+                      {!isReady && (
+                        <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full border border-slate-700">
+                          {tUI('comingSoon')}
+                        </span>
+                      )}
+                    </div>
+                    {!unlocked || !isReady ? (
+                      <Lock className="w-5 h-5 text-slate-600" />
+                    ) : (
+                      <Sparkles className="w-5 h-5 text-emerald-400 animate-pulse" />
+                    )}
                   </div>
-                  <div className="text-xs text-slate-400 space-y-1">
-                    <p>{exam.questions} {isAr ? 'سؤال' : 'Q'} · {exam.marks} {isAr ? 'علامة' : 'marks'}</p>
-                    <p className="flex items-center gap-1"><Timer className="w-3 h-3" /> {exam.minutes} {isAr ? 'دقيقة' : 'min'}</p>
+
+                  <div className="flex items-center gap-4 text-xs text-slate-300 font-medium relative z-10">
+                    <div className="flex items-center gap-1.5 bg-slate-950/50 px-2 py-1 rounded-lg">
+                      <span className="text-emerald-400 font-bold"><Num>{exam.questions}</Num></span> {isAr ? 'سؤال' : 'Q'}
+                    </div>
+                    <div className="flex items-center gap-1.5 bg-slate-950/50 px-2 py-1 rounded-lg">
+                      <Timer className="w-3.5 h-3.5 text-amber-400" />
+                      <Num>{exam.minutes}</Num> {isAr ? 'د' : 'm'}
+                    </div>
                   </div>
+
                   {best && (
-                    <div className="mt-3 text-xs">
-                      <span className={best.passed ? 'text-emerald-400' : 'text-rose-400'}>
-                        {isAr ? 'أفضل نتيجة' : 'Best'}: <Num>{best.score}</Num>/{best.totalMarks} {best.grade && `(${best.grade})`}
+                    <div className="mt-4 pt-3 border-t border-slate-700/50 flex justify-between items-center relative z-10">
+                      <span className="text-xs text-slate-400">{tUI('examBest')}</span>
+                      <span className={`font-mono font-bold ${best.passed ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <Num>{best.score}</Num> / <Num>{best.totalMarks}</Num>
                       </span>
                     </div>
                   )}
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -120,43 +164,80 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
 
   // ═══ 2. إعداد الامتحان المحدد ═══
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6" dir={dir}>
-      <div className="max-w-2xl mx-auto">
-        <button onClick={() => setSelectedExamId(null)} className="mb-8 text-amber-400 font-bold flex items-center gap-2 hover:text-amber-300 transition">
-          <span className={isAr ? 'ml-2' : 'mr-2 rotate-180'}>←</span>
-          {isAr ? 'العودة لقائمة الامتحانات' : 'Back to Exams'}
+    <div className="min-h-screen bg-[#060a12] text-white p-6 relative overflow-hidden flex flex-col justify-center" dir={dir}>
+       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+      <div className="max-w-2xl mx-auto w-full relative z-10">
+        <button onClick={() => setSelectedExamId(null)} className="mb-6 text-amber-400 font-bold flex items-center gap-2 hover:text-amber-300 transition group">
+          <ArrowRight className={`w-5 h-5 transition-transform group-hover:-translate-x-1 ${isAr ? '' : 'rotate-180'}`} />
+          {tUI('backToExams')}
         </button>
 
-        <div className="bg-slate-900 border-2 border-emerald-500/50 p-6 rounded-3xl shadow-2xl">
-          <h2 className="text-2xl font-black text-amber-300 mb-2">{isAr ? selectedExam?.nameAr : selectedExam?.nameEn}</h2>
-          <p className="text-sm text-slate-400 mb-6">{isAr ? 'محاكاة رسمية كاملة' : 'Full official simulation'}</p>
+        <div className="bg-slate-900/80 border border-emerald-500/30 p-8 rounded-[2rem] shadow-2xl backdrop-blur-xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent"></div>
 
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <div className="bg-slate-950 p-3 rounded-xl text-center"><p className="text-xs text-slate-500">{isAr ? 'الأسئلة' : 'Questions'}</p><p className="text-xl font-bold text-emerald-300"><Num>{selectedExam?.questions}</Num></p></div>
-            <div className="bg-slate-950 p-3 rounded-xl text-center"><p className="text-xs text-slate-500">{isAr ? 'العلامات' : 'Marks'}</p><p className="text-xl font-bold text-emerald-300"><Num>{selectedExam?.marks}</Num></p></div>
-            <div className="bg-slate-950 p-3 rounded-xl text-center"><p className="text-xs text-slate-500">{isAr ? 'الوقت' : 'Time'}</p><p className="text-xl font-bold text-emerald-300"><Num>{selectedExam?.minutes}</Num>m</p></div>
-            <div className="bg-slate-950 p-3 rounded-xl text-center"><p className="text-xs text-slate-500">{isAr ? 'النجاح' : 'Pass'}</p><p className="text-xl font-bold text-emerald-300">400</p></div>
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 mb-2">
+              {isAr ? selectedExam?.nameAr : selectedExam?.nameEn}
+            </h2>
+            <p className="text-sm text-slate-400">{tUI('fullSimulation')}</p>
           </div>
 
-          <div className="mb-6">
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="bg-slate-950/50 p-4 rounded-2xl text-center border border-slate-800">
+              <p className="text-xs text-slate-500 mb-1">{tUI('examQuestions')}</p>
+              <p className="text-2xl font-black text-emerald-400"><Num>{selectedExam?.questions}</Num></p>
+            </div>
+            <div className="bg-slate-950/50 p-4 rounded-2xl text-center border border-slate-800">
+              <p className="text-xs text-slate-500 mb-1">{tUI('examMarks')}</p>
+              <p className="text-2xl font-black text-emerald-400"><Num>{selectedExam?.marks}</Num></p>
+            </div>
+            <div className="bg-slate-950/50 p-4 rounded-2xl text-center border border-slate-800">
+              <p className="text-xs text-slate-500 mb-1">{tUI('examTime')}</p>
+              <p className="text-2xl font-black text-amber-400"><Num>{selectedExam?.minutes}</Num>m</p>
+            </div>
+            <div className="bg-slate-950/50 p-4 rounded-2xl text-center border border-slate-800">
+              <p className="text-xs text-slate-500 mb-1">{tUI('examPass')}</p>
+              <p className="text-2xl font-black text-emerald-400"><Num>400</Num></p>
+            </div>
+          </div>
+
+          <div className="mb-8">
             <p className="text-sm font-bold text-slate-300 mb-3">{isAr ? 'اختر الوضع:' : 'Choose mode:'}</p>
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => setMode('training')} className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${mode === 'training' ? 'border-slate-400 bg-slate-700/50' : 'border-slate-700 bg-slate-900/50 hover:bg-slate-800'}`}>
-                <BookOpen className="w-6 h-6 text-slate-300" />
-                <span className="font-bold">{isAr ? 'تدريب' : 'Training'}</span>
-                <span className="text-[10px] text-slate-400 text-center">{isAr ? 'بلا مؤقت · لا يفتح التالي' : 'No timer · no unlock'}</span>
+              <button 
+                onClick={() => setMode('training')} 
+                className={`p-4 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center gap-2 group
+                  ${mode === 'training' 
+                    ? 'border-slate-400 bg-slate-800 shadow-[0_0_20px_rgba(148,163,184,0.2)]' 
+                    : 'border-slate-800 bg-slate-900/50 hover:bg-slate-800/80'}`}
+              >
+                <BookOpen className={`w-8 h-8 ${mode === 'training' ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                <span className="font-bold text-lg">{tUI('examTraining')}</span>
+                <span className="text-[10px] text-slate-400 text-center leading-tight">{tUI('examTrainingDesc')}</span>
               </button>
-              <button onClick={() => setMode('exam')} className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${mode === 'exam' ? 'border-emerald-500 bg-emerald-900/40' : 'border-slate-700 bg-slate-900/50 hover:bg-slate-800'}`}>
-                <Timer className="w-6 h-6 text-emerald-400" />
-                <span className="font-bold text-emerald-300">{isAr ? 'امتحان' : 'Exam'}</span>
-                <span className="text-[10px] text-emerald-400/80 text-center">{isAr ? 'بمؤقت · يفتح التالي' : 'With timer · unlocks next'}</span>
+              
+              <button 
+                onClick={() => setMode('exam')} 
+                className={`p-4 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center gap-2 relative overflow-hidden group
+                  ${mode === 'exam' 
+                    ? 'border-emerald-500 bg-emerald-900/40 shadow-[0_0_25px_rgba(16,185,129,0.3)]' 
+                    : 'border-slate-800 bg-slate-900/50 hover:bg-slate-800/80'}`}
+              >
+                {mode === 'exam' && <div className="absolute inset-0 bg-emerald-500/10 animate-pulse"></div>}
+                <Timer className={`w-8 h-8 relative z-10 ${mode === 'exam' ? 'text-emerald-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                <span className={`font-bold text-lg relative z-10 ${mode === 'exam' ? 'text-emerald-300' : ''}`}>{tUI('examMode')}</span>
+                <span className={`text-[10px] text-center leading-tight relative z-10 ${mode === 'exam' ? 'text-emerald-400/80' : 'text-slate-400'}`}>{tUI('examModeDesc')}</span>
               </button>
             </div>
           </div>
 
-          <button onClick={() => setIsRunning(true)} className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-black text-xl shadow-lg flex items-center justify-center gap-2">
-            <Play className="w-6 h-6" />
-            {isAr ? 'ابدأ' : 'Start'}
+          <button 
+            onClick={() => setIsRunning(true)} 
+            className="w-full py-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xl shadow-[0_0_30px_rgba(16,185,129,0.4)] flex items-center justify-center gap-3 transition-transform active:scale-95"
+          >
+            <Play className="w-7 h-7 fill-current" />
+            {tUI('startExam')}
           </button>
         </div>
       </div>
