@@ -9,6 +9,10 @@ import { useProgressStore } from '@/store/progressStore';
 import { SkipForward, ArrowRight, Sparkles, Award, Play, Volume2, Square, Home } from 'lucide-react';
 
 import Num from '@/components/Num';
+import CosmicBackground from '@/components/cosmic/CosmicBackground';
+import WarpFlash from '@/components/cosmic/WarpFlash';
+import ChapterTitleCard from './ui/ChapterTitleCard';
+import { getTheme } from './ui/chapterThemes';
 import { parseInput } from '@/utils/numberStyle';
 import RelicKeypad from './ui/RelicKeypad';
 import TimeDial from './ui/TimeDial';
@@ -54,6 +58,14 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [sceneIndex, setSceneIndex] = useState(0);
   const currentScene = chapter.scenes[sceneIndex];
 
+  // 🎬 طبقة سينمائية: بطاقة افتتاح المستوى + وميض الثقب الدودي عند تغيّر المشهد
+  const cinematic = (
+    <>
+      <ChapterTitleCard show={showTitle && videoState === 'done' && phase === 'playing'} onDone={closeTitle} theme={theme} title={isAr ? chapter.titleAr : chapter.titleEn} isAr={isAr} />
+      <WarpFlash trigger={`${sceneIndex}-${phase}`} color={theme.accent} />
+    </>
+  );
+
   const challengeScene = chapter.scenes.find((s): s is Extract<Scene, { kind: 'challenge' }> => s.kind === 'challenge');
   const requiredCorrect = challengeScene?.requiredCorrect ?? 0;
 
@@ -62,6 +74,9 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   );
 
   const [phase, setPhase] = useState<'playing' | 'success'>('playing');
+  const theme = getTheme(chapter.id);
+  const [showTitle, setShowTitle] = useState(true);
+  const closeTitle = useCallback(() => setShowTitle(false), []);
 
   const [lineIndex, setLineIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
@@ -448,7 +463,9 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     const isWin = !challengeScene || correctCount >= requiredCorrect;
     return (
       <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-slate-950 text-white p-6" dir={dir}>
+        <CosmicBackground accent={theme.accent} accent2={theme.accent2} />
         <TopBar />
+        {cinematic}
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center z-10 max-w-lg bg-slate-900/90 border border-amber-500/40 p-8 rounded-3xl shadow-2xl backdrop-blur-md">
           <div className="text-6xl mb-4 animate-bounce">
             {isWin ? '🏛️✨' : '⏳💡'}
@@ -508,7 +525,9 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     return (
       <div className="relative flex flex-col justify-between min-h-[100dvh] bg-gradient-to-b from-stone-950 via-indigo-950 to-slate-950 text-white overflow-hidden" dir={dir}>
         <TopBar />
+        {cinematic}
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
+        <CosmicBackground accent={theme.accent} accent2={theme.accent2} />
         <AmbientGlow speaker={line.character} reduce={shouldReduceMotion} />
         
         <div className="flex-1 relative w-full max-w-5xl mx-auto flex justify-center items-end mb-4 z-10 pt-16 gap-1 sm:gap-4">
@@ -539,6 +558,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           <div className="flex items-center gap-2 mb-3">
             <span className={`font-extrabold text-lg sm:text-xl ${charData.color}`}>{charData.name}</span>
             <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">{tUI('archiveGuide')}</span>
+    <span className="text-xs text-amber-300/80">📍 {isAr ? theme.placeAr : theme.placeEn}</span>
           </div>
           
           <div className="h-24 sm:h-28 mb-6 overflow-y-auto custom-scrollbar flex items-start">
@@ -564,7 +584,9 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
 
     return (
       <div className="relative flex flex-col items-center justify-start min-h-[100dvh] bg-slate-950 text-white p-6 pt-24 overflow-y-auto" dir={dir}>
+        <CosmicBackground fixed accent={theme.accent} accent2={theme.accent2} intensity={0.8} />
         <TopBar />
+        {cinematic}
         
         <div className="max-w-2xl w-full mb-6 bg-amber-950/30 border border-amber-500/30 p-4 rounded-xl text-center z-10 shadow-lg">
           <p className="text-amber-200 font-bold text-sm sm:text-base leading-relaxed">
@@ -639,8 +661,10 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     const shownValue = revealed !== null ? String(revealed) : userInput;
     return (
       <div className="relative flex flex-col min-h-[100dvh] bg-slate-950 text-white overflow-hidden" dir={dir}>
+        <CosmicBackground accent={theme.accent} accent2={theme.accent2} />
         <AmbientGlow speaker={speaker} reduce={shouldReduceMotion} />
         <TopBar />
+        {cinematic}
         <div className="flex-1 flex flex-col items-center justify-center px-4 py-3 gap-3 z-10 w-full max-w-md mx-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <div className="w-full flex justify-between items-center text-sm font-bold text-slate-400 bg-slate-900/60 px-4 py-2 rounded-xl border border-slate-800">
             <span>{tUI('question')} <Num>{qIndex + 1} / {currentScene.questions.length}</Num></span>
