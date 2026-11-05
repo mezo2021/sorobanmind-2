@@ -39,10 +39,36 @@ export function getRecords(): LeaderRecord[] {
 export function addRecord(r: Omit<LeaderRecord, 'id' | 'at'>): void {
   try {
     const all = getRecords();
-    all.push({ ...r, id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, at: Date.now() });
+    
+    // نبحث عن سجل سابق لنفس اللاعب في نفس الامتحان
+    const existingIndex = all.findIndex(item => item.name === r.name && item.examId === r.examId);
+    
+    const newRecord = { 
+      ...r, 
+      id: existingIndex !== -1 ? all[existingIndex].id : `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, 
+      at: Date.now() 
+    };
+
+    if (existingIndex !== -1) {
+      const existing = all[existingIndex];
+      // نقوم بتحديث السجل فقط إذا كانت الدرجة الجديدة أعلى، أو نفس الدرجة بوقت أسرع
+      if (newRecord.score > existing.score || (newRecord.score === existing.score && newRecord.timeSec < existing.timeSec)) {
+        all[existingIndex] = newRecord;
+      }
+    } else {
+      all.push(newRecord);
+    }
+
+    // ترتيب السجلات: الدرجة الأعلى أولاً، ثم الوقت الأسرع
     all.sort((a, b) => b.score - a.score || a.timeSec - b.timeSec);
+    
+    // نحفظ أفضل 200 سجل فقط
     localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(all.slice(0, 200)));
   } catch { /* ignore */ }
+}
+
+export function clearLeaderboard(): void {
+  localStorage.removeItem(LEADERBOARD_KEY);
 }
 
 export function fastest(records: LeaderRecord[], n = 10): LeaderRecord[] {
