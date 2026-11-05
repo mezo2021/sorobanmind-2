@@ -69,107 +69,106 @@ export const LEVEL_3_DATA: Chapter = {
         {
           titleAr: "مِثَالٌ 3: الْكَاكِي",
           titleEn: "Example 3: Kaki",
-          problem: "2 × 41",
-          tipAr: "💡 نَضَعُ 41 عَلَى الْيَسَارِ، وَنَبْنِي النَّتِيجَةَ عَلَى الْيَمِينِ.",
-          tipEn: "💡 Place 41 on the left, build the result on the right.",
+          problem: "20 × 2",
+          tipAr: "💡 نَضَعُ 20 عَلَى الْيَسَارِ، وَنَبْنِي النَّتِيجَةَ عَلَى الْيَمِينِ.",
+          tipEn: "💡 Place 20 on the left, build the result on the right.",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 41 عَلَى يَسَارِ الْمِعْدَادِ.", textEn: "Represent: Place 41 on the left abacus." },
-            { textAr: "الْخُطْوَةُ 1: نَضْرِبُ الْعَشَرَاتِ: 2 × 4 = 8. نَضَعُ 8 فِي خَانَةِ الْعَشَرَاتِ عَلَى الْيَمِينِ.", textEn: "Step 1: Multiply tens: 2 × 4 = 8. Place 8 in the tens column on the right." },
-            { textAr: "الْخُطْوَةُ 2: نَضْرِبُ الْآحَادَ: 2 × 1 = 2. نَضَعُ 2 فِي خَانَةِ الْآحَادِ عَلَى الْيَمِينِ.", textEn: "Step 2: Multiply units: 2 × 1 = 2. Place 2 in the units column on the right." },
-            { textAr: "النَّتِيجَةُ: 82.", textEn: "Result: 82." }
+            { textAr: "التَّمْثِيلُ: نَضَعُ 20 عَلَى يَسَارِ الْمِعْدَادِ.", textEn: "Represent: Place 20 on the left abacus." },
+            { textAr: "الْخُطْوَةُ 1: نَضْرِبُ الْعَشَرَاتِ: 2 × 2 = 4. نَضَعُ 4 فِي خَانَةِ الْعَشَرَاتِ عَلَى الْيَمِينِ.", textEn: "Step 1: Multiply tens: 2 × 2 = 4. Place 4 in the tens column on the right." },
+            { textAr: "الْخُطْوَةُ 2: نَضْرِبُ الْآحَادَ: 0 × 2 = 0. نَتْرُكُ خَانَةَ الْآحَادِ فَارِغَةً.", textEn: "Step 2: Multiply units: 0 × 2 = 0. Leave the units column empty." },
+            { textAr: "النَّتِيجَةُ: 40.", textEn: "Result: 40." }
           ]
         },
         {
           titleAr: "مِثَالٌ 4: الْكَاكِي",
           titleEn: "Example 4: Kaki",
-          problem: "7 × 22",
-          tipAr: "💡 اضْرِبِ الْعَشَرَاتِ أَوَّلًا، ثُمَّ الْآحَادَ مَعَ الْحَمْلِ.",
-          tipEn: "💡 Multiply tens first, then units with carry.",
+          problem: "31 × 2",
+          tipAr: "💡 اضْرِبِ الْعَشَرَاتِ ثُمَّ الْآحَادَ.",
+          tipEn: "💡 Multiply tens then units.",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 22 عَلَى يَسَارِ الْمِعْدَادِ.", textEn: "Represent: Place 22 on the left abacus." },
-            { textAr: "الْخُطْوَةُ 1: نَضْرِبُ الْعَشَرَاتِ: 7 × 2 = 14. نَضَعُ 1 فِي الْمِئَاتِ، وَ 4 فِي الْعَشَرَاتِ عَلَى الْيَمِينِ.", textEn: "Step 1: Multiply tens: 7 × 2 = 14. Place 1 in hundreds, 4 in tens on the right." },
-            { textAr: "الْخُطْوَةُ 2: نَضْرِبُ الْآحَادَ: 7 × 2 = 14. نُضِيفُ 1 لِلْعَشَرَاتِ (فَتُصْبِحُ 5)، وَنَضَعُ 4 فِي الْآحَادِ.", textEn: "Step 2: Multiply units: 7 × 2 = 14. Add 1 to tens (becomes 5), place 4 in units." },
-            { textAr: "النَّتِيجَةُ: 154.", textEn: "Result: 154." }
+            { textAr: "التَّمْثِيلُ: نَضَعُ 31 عَلَى يَسَارِ الْمِعْدَادِ.", textEn: "Represent: Place 31 on the left abacus." },
+            { textAr: "الْخُطْوَةُ 1: نَضْرِبُ الْعَشَرَاتِ: 3 × 2 = 6. نَضَعُ 6 فِي الْعَشَرَاتِ.", textEn: "Step 1: Multiply tens: 3 × 2 = 6. Place 6 in tens." },
+            { textAr: "الْخُطْوَةُ 2: نَضْرِبُ الْآحَادَ: 1 × 2 = 2. نَضَعُ 2 فِي الْآحَادِ.", textEn: "Step 2: Multiply units: 1 × 2 = 2. Place 2 in units." },
+            { textAr: "النَّتِيجَةُ: 62.", textEn: "Result: 62." }
           ]
         },
         {
           titleAr: "مِثَالٌ 5: الْكَاكِي",
           titleEn: "Example 5: Kaki",
-          problem: "8 × 15",
-          tipAr: "💡 اِنْتَبِهْ لِلْحَمْلِ عِنْدَ جَمْعِ الْعَشَرَاتِ.",
-          tipEn: "💡 Pay attention to carry when adding tens.",
+          problem: "18 × 2",
+          tipAr: "💡 اِنْتَبِهْ لِلْحَمْلِ مِنَ الْآحَادِ لِلْعَشَرَاتِ.",
+          tipEn: "💡 Pay attention to carry from units to tens.",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 15 عَلَى يَسَارِ الْمِعْدَادِ.", textEn: "Represent: Place 15 on the left abacus." },
-            { textAr: "الْخُطْوَةُ 1: نَضْرِبُ الْعَشَرَاتِ: 8 × 1 = 8. نَضَعُ 8 فِي الْعَشَرَاتِ عَلَى الْيَمِينِ.", textEn: "Step 1: Multiply tens: 8 × 1 = 8. Place 8 in tens on the right." },
-            { textAr: "الْخُطْوَةُ 2: نَضْرِبُ الْآحَادَ: 8 × 5 = 40. نُضِيفُ 4 لِلْعَشَرَاتِ. (8 + 4 = 12). نَرْفَعُ 1 لِلْمِئَاتِ، وَنَتْرُكُ 2 فِي الْعَشَرَاتِ. الْآحَادُ صِفْرٌ.", textEn: "Step 2: Multiply units: 8 × 5 = 40. Add 4 to tens. (8 + 4 = 12). Lift 1 to hundreds, leave 2 in tens. Units are zero." },
-            { textAr: "النَّتِيجَةُ: 120.", textEn: "Result: 120." }
+            { textAr: "التَّمْثِيلُ: نَضَعُ 18 عَلَى يَسَارِ الْمِعْدَادِ.", textEn: "Represent: Place 18 on the left abacus." },
+            { textAr: "الْخُطْوَةُ 1: نَضْرِبُ الْعَشَرَاتِ: 1 × 2 = 2. نَضَعُ 2 فِي الْعَشَرَاتِ.", textEn: "Step 1: Multiply tens: 1 × 2 = 2. Place 2 in tens." },
+            { textAr: "الْخُطْوَةُ 2: نَضْرِبُ الْآحَادَ: 8 × 2 = 16. نَضَعُ 6 فِي الْآحَادِ، وَنُضِيفُ 1 لِلْعَشَرَاتِ (2 + 1 = 3).", textEn: "Step 2: Multiply units: 8 × 2 = 16. Place 6 in units, add 1 to tens (2 + 1 = 3)." },
+            { textAr: "النَّتِيجَةُ: 36.", textEn: "Result: 36." }
           ]
         },
         {
           titleAr: "مِثَالٌ 6: الْكَاكِي",
           titleEn: "Example 6: Kaki",
-          problem: "8 × 28",
-          tipAr: "💡 تَحَقَّقْ مِنَ الْحَمْلِ فِي خَانَةِ الْعَشَرَاتِ.",
-          tipEn: "💡 Check the carry in the tens column.",
+          problem: "38 × 3",
+          tipAr: "💡 اِحْمِلْ إِلَى الْمِئَاتِ عِنْدَمَا يَتَجَاوَزُ الْعَشَرَاتُ التِّسْعَةَ.",
+          tipEn: "💡 Carry to hundreds when tens exceed nine.",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 28 عَلَى يَسَارِ الْمِعْدَادِ.", textEn: "Represent: Place 28 on the left abacus." },
-            { textAr: "الْخُطْوَةُ 1: نَضْرِبُ الْعَشَرَاتِ: 8 × 2 = 16. نَضَعُ 1 فِي الْمِئَاتِ، وَ 6 فِي الْعَشَرَاتِ.", textEn: "Step 1: Multiply tens: 8 × 2 = 16. Place 1 in hundreds, 6 in tens." },
-            { textAr: "الْخُطْوَةُ 2: نَضْرِبُ الْآحَادَ: 8 × 8 = 64. نُضِيفُ 6 لِلْعَشَرَاتِ (6 + 6 = 12). نُضِيفُ 1 لِلْمِئَاتِ، وَنَتْرُكُ 2 فِي الْعَشَرَاتِ. ثُمَّ نَضَعُ 4 فِي الْآحَادِ.", textEn: "Step 2: Multiply units: 8 × 8 = 64. Add 6 to tens (6 + 6 = 12). Add 1 to hundreds, leave 2 in tens. Place 4 in units." },
-            { textAr: "النَّتِيجَةُ: 224.", textEn: "Result: 224." }
+            { textAr: "التَّمْثِيلُ: نَضَعُ 38 عَلَى يَسَارِ الْمِعْدَادِ.", textEn: "Represent: Place 38 on the left abacus." },
+            { textAr: "الْخُطْوَةُ 1: نَضْرِبُ الْعَشَرَاتِ: 3 × 3 = 9. نَضَعُ 9 فِي الْعَشَرَاتِ.", textEn: "Step 1: Multiply tens: 3 × 3 = 9. Place 9 in tens." },
+            { textAr: "الْخُطْوَةُ 2: نَضْرِبُ الْآحَادَ: 8 × 3 = 24. نَضَعُ 4 فِي الْآحَادِ. وَنُضِيفُ 2 لِلْعَشَرَاتِ. (9 + 2 = 11). نَتْرُكُ 1 فِي الْعَشَرَاتِ وَنَرْفَعُ 1 لِلْمِئَاتِ.", textEn: "Step 2: Multiply units: 8 × 3 = 24. Place 4 in units. Add 2 to tens. (9 + 2 = 11). Leave 1 in tens, lift 1 to hundreds." },
+            { textAr: "النَّتِيجَةُ: 114.", textEn: "Result: 114." }
           ]
         },
         // ═══ 3. أمثلة القسمة (الواري) ═══
         {
           titleAr: "مِثَالٌ 7: الْوَارِي",
           titleEn: "Example 7: Wari",
-          problem: "837 ÷ 3",
-          tipAr: "💡 اِقْسِمْ مِنَ الْيَسَارِ لِلْيَمِينِ، وَاطْرَحْ مِنَ الْمَقْسُومِ.",
-          tipEn: "💡 Divide left to right, subtract from dividend.",
+          problem: "93 ÷ 3",
+          tipAr: "💡 اِقْسِمِ الْعَشَرَاتِ ثُمَّ الْآحَادَ (قِسْمَةٌ مُبَاشِرَةٌ).",
+          tipEn: "💡 Divide tens then units (direct division).",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 837 عَلَى يَمِينِ الْمِعْدَادِ.", textEn: "Represent: Place 837 on the right abacus." },
-            { textAr: "الْخُطْوَةُ 1 (الْمِئَاتُ): 8 ÷ 3 = 2. نَضَعُ 2 فِي مِئَاتِ النَّاتِجِ عَلَى الْيَسَارِ. نَطْرَحُ (2 × 3 = 6) مِنَ الْـ 8. يَتَبَقَّى 237.", textEn: "Step 1 (Hundreds): 8 ÷ 3 = 2. Place 2 in hundreds of result on left. Subtract (2×3=6) from 8. Remains 237." },
-            { textAr: "الْخُطْوَةُ 2 (الْعَشَرَاتُ): نَأْخُذُ رَقْمَيْنِ (23) ÷ 3 = 7. نَضَعُ 7 فِي عَشَرَاتِ النَّاتِجِ. نَطْرَحُ (7 × 3 = 21) مِنَ الْـ 23. يَتَبَقَّى 27.", textEn: "Step 2 (Tens): Take two digits (23) ÷ 3 = 7. Place 7 in tens of result. Subtract (7×3=21) from 23. Remains 27." },
-            { textAr: "الْخُطْوَةُ 3 (الْآحَادُ): 27 ÷ 3 = 9. نَضَعُ 9 فِي آحَادِ النَّاتِجِ. نَطْرَحُ (9 × 3 = 27) مِنَ الْـ 27. يَتَبَقَّى 0.", textEn: "Step 3 (Units): 27 ÷ 3 = 9. Place 9 in units of result. Subtract (9×3=27) from 27. Remains 0." },
-            { textAr: "النَّتِيجَةُ: 279.", textEn: "Result: 279." }
+            { textAr: "التَّمْثِيلُ: نَضَعُ 93 عَلَى يَمِينِ الْمِعْدَادِ.", textEn: "Represent: Place 93 on the right abacus." },
+            { textAr: "الْخُطْوَةُ 1 (الْعَشَرَاتُ): 9 ÷ 3 = 3. نَضَعُ 3 فِي عَشَرَاتِ النَّاتِجِ. نَطْرَحُ (3 × 3 = 9). يَتَبَقَّى 3.", textEn: "Step 1 (Tens): 9 ÷ 3 = 3. Place 3 in tens of result. Subtract (3×3=9). Remains 3." },
+            { textAr: "الْخُطْوَةُ 2 (الْآحَادُ): 3 ÷ 3 = 1. نَضَعُ 1 فِي آحَادِ النَّاتِجِ. نَطْرَحُ (1 × 3 = 3). يَتَبَقَّى 0.", textEn: "Step 2 (Units): 3 ÷ 3 = 1. Place 1 in units of result. Subtract (1×3=3). Remains 0." },
+            { textAr: "النَّتِيجَةُ: 31.", textEn: "Result: 31." }
           ]
         },
         {
           titleAr: "مِثَالٌ 8: الْوَارِي",
           titleEn: "Example 8: Wari",
-          problem: "54 ÷ 3",
-          tipAr: "💡 إِذَا كَانَ الرَّقْمُ الْأَوَّلُ أَصْغَرَ، اِبْدَأْ بِالْعَشَرَاتِ.",
-          tipEn: "💡 If first digit is smaller, start with tens.",
+          problem: "92 ÷ 2",
+          tipAr: "💡 إِذَا لَمْ يَقْبَلِ الرَّقْمُ الْقِسْمَةَ، خُذْ رَقْمَيْنِ.",
+          tipEn: "💡 If the digit doesn't divide, take two digits.",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 54 عَلَى يَمِينِ الْمِعْدَادِ.", textEn: "Represent: Place 54 on the right abacus." },
-            { textAr: "الْخُطْوَةُ 1 (الْعَشَرَاتُ): 5 ÷ 3 = 1. نَضَعُ 1 فِي عَشَرَاتِ النَّاتِجِ عَلَى الْيَسَارِ. نَطْرَحُ (1 × 3 = 3) مِنَ الْـ 5. يَتَبَقَّى 24.", textEn: "Step 1 (Tens): 5 ÷ 3 = 1. Place 1 in tens of result on left. Subtract (1×3=3) from 5. Remains 24." },
-            { textAr: "الْخُطْوَةُ 2 (الْآحَادُ): 24 ÷ 3 = 8. نَضَعُ 8 فِي آحَادِ النَّاتِجِ. نَطْرَحُ (8 × 3 = 24) مِنَ الْـ 24. يَتَبَقَّى 0.", textEn: "Step 2 (Units): 24 ÷ 3 = 8. Place 8 in units of result. Subtract (8×3=24) from 24. Remains 0." },
-            { textAr: "النَّتِيجَةُ: 18.", textEn: "Result: 18." }
+            { textAr: "التَّمْثِيلُ: نَضَعُ 92 عَلَى يَمِينِ الْمِعْدَادِ.", textEn: "Represent: Place 92 on the right abacus." },
+            { textAr: "الْخُطْوَةُ 1 (الْعَشَرَاتُ): 9 ÷ 2 = 4 (وَالْبَاقِي 1). نَضَعُ 4 فِي عَشَرَاتِ النَّاتِجِ. نَطْرَحُ (4 × 2 = 8) مِنَ الْـ 9. يَتَبَقَّى 12.", textEn: "Step 1 (Tens): 9 ÷ 2 = 4 (remainder 1). Place 4 in tens of result. Subtract (4×2=8) from 9. Remains 12." },
+            { textAr: "الْخُطْوَةُ 2 (الْآحَادُ): 12 ÷ 2 = 6. نَضَعُ 6 فِي آحَادِ النَّاتِجِ. نَطْرَحُ (6 × 2 = 12). يَتَبَقَّى 0.", textEn: "Step 2 (Units): 12 ÷ 2 = 6. Place 6 in units of result. Subtract (6×2=12). Remains 0." },
+            { textAr: "النَّتِيجَةُ: 46.", textEn: "Result: 46." }
           ]
         },
         {
           titleAr: "مِثَالٌ 9: الْوَارِي",
           titleEn: "Example 9: Wari",
-          problem: "152 ÷ 8",
-          tipAr: "💡 الرَّقْمُ 1 أَصْغَرُ مِنْ 8، لِذَا نَأْخُذُ رَقْمَيْنِ (15).",
-          tipEn: "💡 1 is smaller than 8, so take two digits (15).",
+          problem: "72 ÷ 6",
+          tipAr: "💡 الرَّقْمُ 7 أَكْبَرُ مِنْ 6، لَكِنَّهُ لَا يَقْبَلُ الْقِسْمَةَ، فَنَأْخُذُ الْعَشَرَاتِ وَالْآحَادَ.",
+          tipEn: "💡 7 > 6, but doesn't divide evenly, so take tens and units.",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 152 عَلَى يَمِينِ الْمِعْدَادِ.", textEn: "Represent: Place 152 on the right abacus." },
-            { textAr: "الْخُطْوَةُ 1 (الْمِئَاتُ): 1 أَصْغَرُ مِنْ 8، لِذَا نَأْخُذُ رَقْمَيْنِ (15) ÷ 8 = 1. نَضَعُ 1 فِي عَشَرَاتِ النَّاتِجِ. نَطْرَحُ (1 × 8 = 8) مِنَ الْـ 15. يَتَبَقَّى 72.", textEn: "Step 1 (Hundreds): 1 is smaller than 8, so take two digits (15) ÷ 8 = 1. Place 1 in tens of result. Subtract (1×8=8) from 15. Remains 72." },
-            { textAr: "الْخُطْوَةُ 2 (الْآحَادُ): 72 ÷ 8 = 9. نَضَعُ 9 فِي آحَادِ النَّاتِجِ. نَطْرَحُ (9 × 8 = 72) مِنَ الْـ 72. يَتَبَقَّى 0.", textEn: "Step 2 (Units): 72 ÷ 8 = 9. Place 9 in units of result. Subtract (9×8=72) from 72. Remains 0." },
-            { textAr: "النَّتِيجَةُ: 19.", textEn: "Result: 19." }
+            { textAr: "التَّمْثِيلُ: نَضَعُ 72 عَلَى يَمِينِ الْمِعْدَادِ.", textEn: "Represent: Place 72 on the right abacus." },
+            { textAr: "الْخُطْوَةُ 1 (الْعَشَرَاتُ): 7 ÷ 6 = 1 (وَالْبَاقِي 1). نَضَعُ 1 فِي عَشَرَاتِ النَّاتِجِ. نَطْرَحُ (1 × 6 = 6) مِنَ الْـ 7. يَتَبَقَّى 12.", textEn: "Step 1 (Tens): 7 ÷ 6 = 1 (remainder 1). Place 1 in tens of result. Subtract (1×6=6) from 7. Remains 12." },
+            { textAr: "الْخُطْوَةُ 2 (الْآحَادُ): 12 ÷ 6 = 2. نَضَعُ 2 فِي آحَادِ النَّاتِجِ. نَطْرَحُ (2 × 6 = 12). يَتَبَقَّى 0.", textEn: "Step 2 (Units): 12 ÷ 6 = 2. Place 2 in units of result. Subtract (2×6=12). Remains 0." },
+            { textAr: "النَّتِيجَةُ: 12.", textEn: "Result: 12." }
           ]
         },
         {
           titleAr: "مِثَالٌ 10: الْوَارِي",
           titleEn: "Example 10: Wari",
-          problem: "216 ÷ 8",
-          tipAr: "💡 الرَّقْمُ 2 أَصْغَرُ مِنْ 8، لِذَا نَأْخُذُ رَقْمَيْنِ (21).",
-          tipEn: "💡 2 is smaller than 8, so take two digits (21).",
+          problem: "56 ÷ 4",
+          tipAr: "💡 5 لَا تَقْبَلُ الْقِسْمَةَ عَلَى 4، نَأْخُذُ رَقْمَيْنِ (56).",
+          tipEn: "💡 5 doesn't divide by 4, take two digits (56).",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 216 عَلَى يَمِينِ الْمِعْدَادِ.", textEn: "Represent: Place 216 on the right abacus." },
-            { textAr: "الْخُطْوَةُ 1 (الْمِئَاتُ): 2 أَصْغَرُ مِنْ 8، لِذَا نَأْخُذُ رَقْمَيْنِ (21) ÷ 8 = 2. نَضَعُ 2 فِي عَشَرَاتِ النَّاتِجِ. نَطْرَحُ (2 × 8 = 16) مِنَ الْـ 21. يَتَبَقَّى 56.", textEn: "Step 1 (Hundreds): 2 is smaller than 8, so take two digits (21) ÷ 8 = 2. Place 2 in tens of result. Subtract (2×8=16) from 21. Remains 56." },
-            { textAr: "الْخُطْوَةُ 2 (الْآحَادُ): 56 ÷ 8 = 7. نَضَعُ 7 فِي آحَادِ النَّاتِجِ. نَطْرَحُ (7 × 8 = 56) مِنَ الْـ 56. يَتَبَقَّى 0.", textEn: "Step 2 (Units): 56 ÷ 8 = 7. Place 7 in units of result. Subtract (7×8=56) from 56. Remains 0." },
-            { textAr: "النَّتِيجَةُ: 27.", textEn: "Result: 27." }
+            { textAr: "التَّمْثِيلُ: نَضَعُ 56 عَلَى يَمِينِ الْمِعْدَادِ.", textEn: "Represent: Place 56 on the right abacus." },
+            { textAr: "الْخُطْوَةُ 1 (الْعَشَرَاتُ): 5 ÷ 4 = 1 (وَالْبَاقِي 1). نَضَعُ 1 فِي عَشَرَاتِ النَّاتِجِ. نَطْرَحُ (1 × 4 = 4) مِنَ الْـ 5. يَتَبَقَّى 16.", textEn: "Step 1 (Tens): 5 ÷ 4 = 1 (remainder 1). Place 1 in tens of result. Subtract (1×4=4) from 5. Remains 16." },
+            { textAr: "الْخُطْوَةُ 2 (الْآحَادُ): 16 ÷ 4 = 4. نَضَعُ 4 فِي آحَادِ النَّاتِجِ. نَطْرَحُ (4 × 4 = 16). يَتَبَقَّى 0.", textEn: "Step 2 (Units): 16 ÷ 4 = 4. Place 4 in units of result. Subtract (4×4=16). Remains 0." },
+            { textAr: "النَّتِيجَةُ: 14.", textEn: "Result: 14." }
           ]
         }
       ]
@@ -182,14 +181,14 @@ export const LEVEL_3_DATA: Chapter = {
       questions: [
         { type: "mitori", numbers: [3, 2, 81, 8, 5], answer: 99, tipAr: "تَذَكَّرْ: اِبْدَأْ بِـ 81", tipEn: "Remember: start with 81" },
         { type: "mitori", numbers: [77, 3, 8, 3, 6], answer: 97, tipAr: "تَذَكَّرْ: اِبْدَأْ بِـ 77", tipEn: "Remember: start with 77" },
-        { type: "multiplication", numbers: [2, 41], answer: 82, tipAr: "اضْرِبِ الْعَشَرَاتِ ثُمَّ الْآحَادَ", tipEn: "Multiply tens then units" },
-        { type: "multiplication", numbers: [7, 22], answer: 154, tipAr: "لَا تَنْسَ الْحَمْلَ", tipEn: "Don't forget the carry" },
-        { type: "multiplication", numbers: [8, 15], answer: 120, tipAr: "اِنْتَبِهْ لِلْحَمْلِ فِي الْعَشَرَاتِ", tipEn: "Watch the carry in tens" },
-        { type: "multiplication", numbers: [8, 28], answer: 224, tipAr: "تَحَقَّقْ مِنَ الْحَمْلِ", tipEn: "Check the carry" },
-        { type: "division", numbers: [837, 3], answer: 279, tipAr: "اِقْسِمْ مِنَ الْيَسَارِ لِلْيَمِينِ", tipEn: "Divide left to right" },
-        { type: "division", numbers: [54, 3], answer: 18, tipAr: "اِبْدَأْ بِالْعَشَرَاتِ", tipEn: "Start with tens" },
-        { type: "division", numbers: [152, 8], answer: 19, tipAr: "1 أَصْغَرُ مِنْ 8، خُذْ رَقْمَيْنِ", tipEn: "1 < 8, take two digits" },
-        { type: "division", numbers: [216, 8], answer: 27, tipAr: "2 أَصْغَرُ مِنْ 8، خُذْ رَقْمَيْنِ", tipEn: "2 < 8, take two digits" }
+        { type: "multiplication", numbers: [20, 2], answer: 40, tipAr: "اضْرِبِ الْعَشَرَاتِ ثُمَّ الْآحَادَ", tipEn: "Multiply tens then units" },
+        { type: "multiplication", numbers: [31, 2], answer: 62, tipAr: "لَا تَنْسَ الْحَمْلَ", tipEn: "Don't forget the carry" },
+        { type: "multiplication", numbers: [18, 2], answer: 36, tipAr: "اِنْتَبِهْ لِلْحَمْلِ فِي الْعَشَرَاتِ", tipEn: "Watch the carry in tens" },
+        { type: "multiplication", numbers: [38, 3], answer: 114, tipAr: "تَحَقَّقْ مِنَ الْحَمْلِ", tipEn: "Check the carry" },
+        { type: "division", numbers: [93, 3], answer: 31, tipAr: "اِقْسِمِ الْعَشَرَاتِ ثُمَّ الْآحَادَ", tipEn: "Divide tens then units" },
+        { type: "division", numbers: [92, 2], answer: 46, tipAr: "خُذْ رَقْمَيْنِ إِنْ لَمْ يَقْبَلِ الرَّقْمُ الْقِسْمَةَ", tipEn: "Take two digits if needed" },
+        { type: "division", numbers: [72, 6], answer: 12, tipAr: "7 أَكْبَرُ مِنْ 6 لَكِنْ لَا يَقْبَلُ الْقِسْمَةَ", tipEn: "7 > 6 but doesn't divide" },
+        { type: "division", numbers: [56, 4], answer: 14, tipAr: "خُذْ رَقْمَيْنِ (56)", tipEn: "Take two digits (56)" }
       ]
     }
   ]
