@@ -11,6 +11,7 @@ import { EXAM_10_7 } from './data/exams/exam10_7';
 import { EXAM_6 } from './data/exams/exam6';
 import { EXAM_5 } from './data/exams/exam5';
 import { EXAM_4 } from './data/exams/exam4';
+import { EXAM_3 } from './data/exams/exam3';
 import { ChapterId } from './gameFlowTypes';
 import { tUI } from './gameUI';
 import { isPreviewMode } from '@/utils/previewMode';
@@ -32,7 +33,7 @@ const EXAMS: ExamMeta[] = [
   { id: 'exam_6',    nameAr: '6 كيو',                    nameEn: '6 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_10_7', isReady: true },
   { id: 'exam_5',    nameAr: '5 كيو',                    nameEn: '5 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_6',    isReady: true },
   { id: 'exam_4',    nameAr: '4 كيو',                    nameEn: '4 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_5',    isReady: true }, // 🆕 تم التفعيل
-  { id: 'exam_3',    nameAr: '3 كيو',                    nameEn: '3 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_4',    isReady: false },
+  { id: 'exam_3',    nameAr: '3 كيو',                    nameEn: '3 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_4',    isReady: true }, // 🆕
   { id: 'exam_2',    nameAr: '2 كيو',                    nameEn: '2 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_3',    isReady: false },
   { id: 'exam_1',    nameAr: '1 كيو',                    nameEn: '1 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_2',    isReady: false },
 ];
@@ -92,6 +93,16 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
     return (
       <MentalArchivesExamRunner 
         examData={EXAM_4} 
+        mode={mode} 
+        onExit={() => { setIsRunning(false); setSelectedExamId(null); }} 
+      />
+    );
+  }
+
+  if (isRunning && selectedExamId === 'exam_3') {
+    return (
+      <MentalArchivesExamRunner 
+        examData={EXAM_3} 
         mode={mode} 
         onExit={() => { setIsRunning(false); setSelectedExamId(null); }} 
       />
