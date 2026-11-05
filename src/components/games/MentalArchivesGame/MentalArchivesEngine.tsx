@@ -666,7 +666,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
                   <span className="w-16 text-center text-amber-100 drop-shadow-md"><Num>{num}</Num></span>
                   {i < q.numbers.length - 1 && (
                     <span className="absolute -right-4 text-amber-500/80 text-2xl font-bold">
-                      {q.type === 'multiplication' ? '×' : q.type === 'division' ? '÷' : '+'}
+                      {/* 🆕 التعديل هنا: إخفاء إشارة + إذا كان الرقم التالي سالباً */}
+                      {q.type === 'multiplication' ? '×' : q.type === 'division' ? '÷' : (q.numbers[i + 1] < 0 ? '' : '+')}
                     </span>
                   )}
                 </div>
