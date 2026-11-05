@@ -82,7 +82,7 @@ export const LEVEL_5_DATA: Chapter = {
             { textAr: "الْخُطْوَةُ 3 (لِلْآحَادِ): 9 × 6 = 54 ← نُضِيفُ 5 لِلْعَشَرَاتِ (8+5=13)، فَيَصْعَدُ 1 لِلْمِئَاتِ (4+1=5) وَيَبْقَى 3 فِي الْعَشَرَاتِ، وَنَضَعُ 4 فِي الْآحَادِ. النَّتِيجَةُ: 534.", textEn: "Step 3 (Units): 9 × 6 = 54 → Add 5 to tens (8+5=13), carry 1 to hundreds (4+1=5) and leave 3 in tens, and place 4 in units. Result: 534." }
           ]
         },
-        // ═══ 3. أمثلة القسمة (الواري) ═══
+                // ═══ 3. أمثلة القسمة (الواري) ═══
         {
           titleAr: "مِثَالٌ 5: الْوَارِي",
           titleEn: "Example 5: Wari",
@@ -91,8 +91,8 @@ export const LEVEL_5_DATA: Chapter = {
           tipEn: "💡 3 is smaller than 7, so we take two digits (39).",
           steps: [
             { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 392.", textEn: "Step 1: Represent 392." },
-            { textAr: "الْخُطْوَةُ 2 (الْعَشَرَاتُ): 39 ÷ 7 = 5 ← نَضَعُ 5 فِي خَانَةِ الْعَشَرَاتِ (لِلنَّاتِجِ). نَطْرَحُ: 39 - 35 = 4 (يَتَبَقَّى 42).", textEn: "Step 2 (Tens): 39 ÷ 7 = 5 → Place 5 in tens column (of result). Subtract: 39 - 35 = 4 (remains 42)." },
-            { textAr: "الْخُطْوَةُ 3 (الْآحَادُ): 42 ÷ 7 = 6 ← نَضَعُ 6 فِي خَانَةِ الْآحَادِ (لِلنَّاتِجِ). نَطْرَحُ: 42 - 42 = 0. النَّتِيجَةُ: 56.", textEn: "Step 3 (Units): 42 ÷ 7 = 6 → Place 6 in units column (of result). Subtract: 42 - 42 = 0. Result: 56." }
+            { textAr: "الْخُطْوَةُ 2 (الْعَشَرَاتُ): 39 ÷ 7 = 5 ← نَضَعُ 5 فِي خَانَةِ الْعَشَرَاتِ (لِلنَّاتِجِ). نَطْرَحُ: (5 × 7 = 35) ← 39 - 35 = 4 (يَتَبَقَّى 42).", textEn: "Step 2 (Tens): 39 ÷ 7 = 5 → Place 5 in tens column (of result). Subtract: (5 × 7 = 35) → 39 - 35 = 4 (remains 42)." },
+            { textAr: "الْخُطْوَةُ 3 (الْآحَادُ): 42 ÷ 7 = 6 ← نَضَعُ 6 فِي خَانَةِ الْآحَادِ (لِلنَّاتِجِ). نَطْرَحُ: (6 × 7 = 42) ← 42 - 42 = 0. النَّتِيجَةُ: 56.", textEn: "Step 3 (Units): 42 ÷ 7 = 6 → Place 6 in units column (of result). Subtract: (6 × 7 = 42) → 42 - 42 = 0. Result: 56." }
           ]
         },
         {
@@ -103,8 +103,8 @@ export const LEVEL_5_DATA: Chapter = {
           tipEn: "💡 6 is smaller than 8, so we take two digits (61).",
           steps: [
             { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 616.", textEn: "Step 1: Represent 616." },
-            { textAr: "الْخُطْوَةُ 2 (الْعَشَرَاتُ): 61 ÷ 8 = 7 ← نَضَعُ 7 فِي خَانَةِ الْعَشَرَاتِ (لِلنَّاتِجِ). نَطْرَحُ: 61 - 56 = 5 (يَتَبَقَّى 56).", textEn: "Step 2 (Tens): 61 ÷ 8 = 7 → Place 7 in tens column (of result). Subtract: 61 - 56 = 5 (remains 56)." },
-            { textAr: "الْخُطْوَةُ 3 (الْآحَادُ): 56 ÷ 8 = 7 ← نَضَعُ 7 فِي خَانَةِ الْآحَادِ (لِلنَّاتِجِ). نَطْرَحُ: 56 - 56 = 0. النَّتِيجَةُ: 77.", textEn: "Step 3 (Units): 56 ÷ 8 = 7 → Place 7 in units column (of result). Subtract: 56 - 56 = 0. Result: 77." }
+            { textAr: "الْخُطْوَةُ 2 (الْعَشَرَاتُ): 61 ÷ 8 = 7 ← نَضَعُ 7 فِي خَانَةِ الْعَشَرَاتِ (لِلنَّاتِجِ). نَطْرَحُ: (7 × 8 = 56) ← 61 - 56 = 5 (يَتَبَقَّى 56).", textEn: "Step 2 (Tens): 61 ÷ 8 = 7 → Place 7 in tens column (of result). Subtract: (7 × 8 = 56) → 61 - 56 = 5 (remains 56)." },
+            { textAr: "الْخُطْوَةُ 3 (الْآحَادُ): 56 ÷ 8 = 7 ← نَضَعُ 7 فِي خَانَةِ الْآحَادِ (لِلنَّاتِجِ). نَطْرَحُ: (7 × 8 = 56) ← 56 - 56 = 0. النَّتِيجَةُ: 77.", textEn: "Step 3 (Units): 56 ÷ 8 = 7 → Place 7 in units column (of result). Subtract: (7 × 8 = 56) → 56 - 56 = 0. Result: 77." }
           ]
         }
       ]
