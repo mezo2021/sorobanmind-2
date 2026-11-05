@@ -147,10 +147,12 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     setIsSubmitting(false);
   };
 
-  const getOperator = (type: string) => {
+  // 🆕 تعديل دالة getOperator لتجنب طباعة + قبل الرقم السالب
+  const getOperator = (type: string, nextNum?: number) => {
     if (type === 'multiplication') return '×';
     if (type === 'division') return '÷';
     if (type === 'subtraction') return '-';
+    if (nextNum !== undefined && nextNum < 0) return ''; // إخفاء الإشارة الموجبة قبل السالب
     return '+';
   };
 
@@ -295,7 +297,8 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                         {q.numbers.map((num, i) => (
                           <div key={i} className="flex items-center gap-2">
                             <span><Num>{num}</Num></span>
-                            {i < q.numbers.length - 1 && <span className="text-xs opacity-50">{getOperator(q.type)}</span>}
+                            {/* 🆕 تم تمرير الرقم التالي هنا */}
+                            {i < q.numbers.length - 1 && <span className="text-xs opacity-50">{getOperator(q.type, q.numbers[i + 1])}</span>}
                           </div>
                         ))}
                       </div>
@@ -482,7 +485,8 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                   {q.numbers.map((num, i) => (
                     <div key={i} className="flex items-center justify-center w-16 relative">
                       <span><Num>{num}</Num></span>
-                      {i < q.numbers.length - 1 && <span className="absolute -right-2 text-sm text-amber-500/70">{getOperator(q.type)}</span>}
+                      {/* 🆕 تم تمرير الرقم التالي هنا */}
+                      {i < q.numbers.length - 1 && <span className="absolute -right-2 text-sm text-amber-500/70">{getOperator(q.type, q.numbers[i + 1])}</span>}
                     </div>
                   ))}
                 </div>
