@@ -40,11 +40,11 @@ export const LEVEL_3_DATA: Chapter = {
           ruleTitleEn: "",
           ruleDescEn: "",
           steps: [
-            { textAr: "الْبِدَايَةُ (تَمْثِيلُ 81): الْعَشَرَاتُ: نُنْزِلُ الْخَرَزَةَ الْعُلْوِيَّةَ (50) وَنَرْفَعُ 3 خَرَزَاتٍ سُفْلِيَّةٍ (30). الْآحَادُ: نَرْفَعُ خَرَزَةً سُفْلِيَّةً وَاحِدَةً لِتَمْثِيلِ الرَّقْمِ 1. (الْمِعْدَادُ يَقْرَأُ 81).", textEn: "Start (Represent 81): Tens: Bring down the upper bead (50) and lift 3 lower beads (30). Units: Lift one lower bead to represent 1. (Abacus reads 81)." },
-            { textAr: "الْخُطْوَةُ 1 (+ 3): لَدَيْنَا 1 فِي الْآحَادِ. الْقَاعِدَةُ: الْجَمْعُ الْمُبَاشِرُ. الْحَرَكَةُ: نَرْفَعُ 3 خَرَزَاتٍ سُفْلِيَّةٍ إِضَافِيَّةٍ. (الْمِعْدَادُ يَقْرَأُ 84).", textEn: "Step 1 (+ 3): We have 1 in units. Rule: Direct addition. Move: Lift 3 additional lower beads. (Abacus reads 84)." },
-            { textAr: "الْخُطْوَةُ 2 (+ 2): لَدَيْنَا 4 فِي الْآحَادِ. لَا يُوجَدُ مَكَانٌ. الْقَاعِدَةُ: أَصْدِقَاءُ 5 (مُتَمِّمُ 2 هُوَ 3). الْحَرَكَةُ: نُنْزِلُ الْخَرَزَةَ الْعُلْوِيَّةَ (+5)، وَنُنْزِلُ 3 خَرَزَاتٍ سُفْلِيَّةٍ (-3). (الْمِعْدَادُ يَقْرَأُ 86).", textEn: "Step 2 (+ 2): We have 4 in units. No space. Rule: Friends of 5 (complement of 2 is 3). Move: Bring down upper bead (+5), and bring down 3 lower beads (-3). (Abacus reads 86)." },
-            { textAr: "الْخُطْوَةُ 3 (+ 8): لَدَيْنَا 6 فِي الْآحَادِ. سَيَتَجَاوَزُ التِّسْعَةَ. الْقَاعِدَةُ: أَصْدِقَاءُ 10 (مُكَمِّلُ 8 هُوَ 2). الْحَرَكَةُ: نَرْفَعُ خَرَزَةً فِي الْعَشَرَاتِ (+10)، وَنُنْزِلُ 2 مِنَ الْآحَادِ (-2). (الْمِعْدَادُ يَقْرَأُ 94).", textEn: "Step 3 (+ 8): We have 6 in units. Will exceed nine. Rule: Friends of 10 (complement of 8 is 2). Move: Lift a bead in tens (+10), and bring down 2 from units (-2). (Abacus reads 94)." },
-            { textAr: "الْخُطْوَةُ 4 (+ 5): لَدَيْنَا 4 فِي الْآحَادِ. الْقَاعِدَةُ: الْجَمْعُ الْمُبَاشِرُ. الْحَرَكَةُ: نُنْزِلُ الْخَرَزَةَ الْعُلْوِيَّةَ (قِيمَتُهَا 5). (الْمِعْدَادُ يَقْرَأُ 99). النَّتِيجَةُ: 99.", textEn: "Step 4 (+ 5): We have 4 in units. Rule: Direct addition. Move: Bring down the upper bead (value 5). (Abacus reads 99). Result: 99." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 81.", textEn: "Step 1: Represent 81." },
+            { textAr: "الْخُطْوَةُ 2 (+3): لِلْآحَادِ: نُضِيفُ 3 مُبَاشَرَةً ← 84.", textEn: "Step 2 (+3): Units: Add 3 directly → 84." },
+            { textAr: "الْخُطْوَةُ 3 (+2): لِلْآحَادِ: نُنْزِلُ 5 وَنَطْرَحُ 3 (صَدِيقُ 5) ← 86.", textEn: "Step 3 (+2): Units: Bring down 5 and subtract 3 (Friend of 5) → 86." },
+            { textAr: "الْخُطْوَةُ 4 (+8): لِلْآحَادِ: نُضِيفُ 1 لِلْعَشَرَاتِ وَنَطْرَحُ 2 مِنَ الْآحَادِ (صَدِيقُ 10) ← 94.", textEn: "Step 4 (+8): Units: Add 1 to tens and subtract 2 from units (Friend of 10) → 94." },
+            { textAr: "الْخُطْوَةُ 5 (+5): لِلْآحَادِ: نُنْزِلُ 5 مُبَاشَرَةً ← 99. النَّتِيجَةُ: 99.", textEn: "Step 5 (+5): Units: Bring down 5 directly → 99. Result: 99." }
           ]
         },
         {
@@ -58,11 +58,11 @@ export const LEVEL_3_DATA: Chapter = {
           ruleTitleEn: "",
           ruleDescEn: "",
           steps: [
-            { textAr: "الْبِدَايَةُ (تَمْثِيلُ 77): الْعَشَرَاتُ (7): نُنْزِلُ الْعُلْوِيَّةَ (50) وَنَرْفَعُ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ (20). الْآحَادُ (7): نُنْزِلُ الْعُلْوِيَّةَ (5) وَنَرْفَعُ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ (2). (الْمِعْدَادُ يَقْرَأُ 77).", textEn: "Start (Represent 77): Tens (7): Bring down upper (50) and lift 2 lower (20). Units (7): Bring down upper (5) and lift 2 lower (2). (Abacus reads 77)." },
-            { textAr: "الْخُطْوَةُ 1 (+ 3): لَدَيْنَا 7 فِي الْآحَادِ. الْقَاعِدَةُ: أَصْدِقَاءُ 10 (مُكَمِّلُ 3 هُوَ 7). الْحَرَكَةُ: نُضِيفُ خَرَزَةً فِي الْعَشَرَاتِ (تُصْبِحُ 8). نَمْلِكُ 7 فِي الْآحَادِ، نَطْرَحُ 7 مُبَاشَرَةً (نَرْفَعُ الْعُلْوِيَّةَ، وَنُنْزِلُ السُّفْلِيَّتَيْنِ). (الْمِعْدَادُ يَقْرَأُ 80).", textEn: "Step 1 (+ 3): We have 7 in units. Rule: Friends of 10 (complement of 3 is 7). Move: Add a bead in tens (becomes 8). We have 7 in units, subtract 7 directly (lift upper, lower 2 lower). (Abacus reads 80)." },
-            { textAr: "الْخُطْوَةُ 2 (+ 8): خَانَةُ الْآحَادِ فَارِغَةٌ. الْقَاعِدَةُ: الْجَمْعُ الْمُبَاشِرُ. الْحَرَكَةُ: نُنْزِلُ الْعُلْوِيَّةَ (5) وَنَرْفَعُ 3 سُفْلِيَّاتٍ. (الْمِعْدَادُ يَقْرَأُ 88).", textEn: "Step 2 (+ 8): Units column is empty. Rule: Direct addition. Move: Bring down upper (5) and lift 3 lower. (Abacus reads 88)." },
-            { textAr: "الْخُطْوَةُ 3 (+ 3): لَدَيْنَا 8 فِي الْآحَادِ. الْقَاعِدَةُ: أَصْدِقَاءُ 10 (مُكَمِّلُ 3 هُوَ 7). الْحَرَكَةُ: نُضِيفُ فِي الْعَشَرَاتِ (تُصْبِحُ 9). وَنَطْرَحُ 7 مِنَ الْآحَادِ (نَرْفَعُ الْعُلْوِيَّةَ، وَنُنْزِلُ سُفْلِيَّتَيْنِ، لِيَتَبَقَّى وَاحِدَةٌ). (الْمِعْدَادُ يَقْرَأُ 91).", textEn: "Step 3 (+ 3): We have 8 in units. Rule: Friends of 10 (complement of 3 is 7). Move: Add in tens (becomes 9). Subtract 7 from units (lift upper, lower 2 lower, leaving one). (Abacus reads 91)." },
-            { textAr: "الْخُطْوَةُ 4 (+ 6): لَدَيْنَا 1 فِي الْآحَادِ. الْقَاعِدَةُ: الْجَمْعُ الْمُبَاشِرُ! الْحَرَكَةُ: نُنْزِلُ الْعُلْوِيَّةَ (5) وَنَرْفَعُ سُفْلِيَّةً وَاحِدَةً (1). فَيُصْبِحُ لَدَيْنَا (5+2)=7. (الْمِعْدَادُ يَقْرَأُ 97). النَّتِيجَةُ: 97.", textEn: "Step 4 (+ 6): We have 1 in units. Rule: Direct addition! Move: Bring down upper (5) and lift one lower (1). Becomes (5+2)=7. (Abacus reads 97). Result: 97." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 77.", textEn: "Step 1: Represent 77." },
+            { textAr: "الْخُطْوَةُ 2 (+3): لِلْآحَادِ: نُضِيفُ 1 لِلْعَشَرَاتِ وَنَطْرَحُ 7 مِنَ الْآحَادِ (صَدِيقُ 10) ← 80.", textEn: "Step 2 (+3): Units: Add 1 to tens and subtract 7 from units (Friend of 10) → 80." },
+            { textAr: "الْخُطْوَةُ 3 (+8): لِلْآحَادِ: نُضِيفُ 8 مُبَاشَرَةً ← 88.", textEn: "Step 3 (+8): Units: Add 8 directly → 88." },
+            { textAr: "الْخُطْوَةُ 4 (+3): لِلْآحَادِ: نُضِيفُ 1 لِلْعَشَرَاتِ وَنَطْرَحُ 7 مِنَ الْآحَادِ (صَدِيقُ 10) ← 91.", textEn: "Step 4 (+3): Units: Add 1 to tens and subtract 7 from units (Friend of 10) → 91." },
+            { textAr: "الْخُطْوَةُ 5 (+6): لِلْآحَادِ: نُضِيفُ 6 مُبَاشَرَةً ← 97. النَّتِيجَةُ: 97.", textEn: "Step 5 (+6): Units: Add 6 directly → 97. Result: 97." }
           ]
         },
         // ═══ 2. أمثلة الضرب (الكاكي) ═══
@@ -70,13 +70,12 @@ export const LEVEL_3_DATA: Chapter = {
           titleAr: "مِثَالٌ 3: الْكَاكِي",
           titleEn: "Example 3: Kaki",
           problem: "20 × 2",
-          tipAr: "💡 نَضَعُ 20 عَلَى الْيَسَارِ، وَنَبْنِي النَّتِيجَةَ عَلَى الْيَمِينِ.",
-          tipEn: "💡 Place 20 on the left, build the result on the right.",
+          tipAr: "💡 نَضَعُ 20، وَنَبْنِي النَّتِيجَةَ.",
+          tipEn: "💡 Place 20, and build the result.",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 20 عَلَى يَسَارِ الْمِعْدَادِ.", textEn: "Represent: Place 20 on the left abacus." },
-            { textAr: "الْخُطْوَةُ 1: نَضْرِبُ الْعَشَرَاتِ: 2 × 2 = 4. نَضَعُ 4 فِي خَانَةِ الْعَشَرَاتِ عَلَى الْيَمِينِ.", textEn: "Step 1: Multiply tens: 2 × 2 = 4. Place 4 in the tens column on the right." },
-            { textAr: "الْخُطْوَةُ 2: نَضْرِبُ الْآحَادَ: 0 × 2 = 0. نَتْرُكُ خَانَةَ الْآحَادِ فَارِغَةً.", textEn: "Step 2: Multiply units: 0 × 2 = 0. Leave the units column empty." },
-            { textAr: "النَّتِيجَةُ: 40.", textEn: "Result: 40." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 20.", textEn: "Step 1: Represent 20." },
+            { textAr: "الْخُطْوَةُ 2 (لِلْعَشَرَاتِ): 2 × 2 = 4 ← نَضَعُ 4 فِي خَانَةِ الْعَشَرَاتِ.", textEn: "Step 2 (Tens): 2 × 2 = 4 → Place 4 in tens column." },
+            { textAr: "الْخُطْوَةُ 3 (لِلْآحَادِ): 0 × 2 = 0 ← نَتْرُكُ خَانَةَ الْآحَادِ فَارِغَةً. النَّتِيجَةُ: 40.", textEn: "Step 3 (Units): 0 × 2 = 0 → Leave units column empty. Result: 40." }
           ]
         },
         {
@@ -86,10 +85,9 @@ export const LEVEL_3_DATA: Chapter = {
           tipAr: "💡 اضْرِبِ الْعَشَرَاتِ ثُمَّ الْآحَادَ.",
           tipEn: "💡 Multiply tens then units.",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 31 عَلَى يَسَارِ الْمِعْدَادِ.", textEn: "Represent: Place 31 on the left abacus." },
-            { textAr: "الْخُطْوَةُ 1: نَضْرِبُ الْعَشَرَاتِ: 3 × 2 = 6. نَضَعُ 6 فِي الْعَشَرَاتِ.", textEn: "Step 1: Multiply tens: 3 × 2 = 6. Place 6 in tens." },
-            { textAr: "الْخُطْوَةُ 2: نَضْرِبُ الْآحَادَ: 1 × 2 = 2. نَضَعُ 2 فِي الْآحَادِ.", textEn: "Step 2: Multiply units: 1 × 2 = 2. Place 2 in units." },
-            { textAr: "النَّتِيجَةُ: 62.", textEn: "Result: 62." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 31.", textEn: "Step 1: Represent 31." },
+            { textAr: "الْخُطْوَةُ 2 (لِلْعَشَرَاتِ): 3 × 2 = 6 ← نَضَعُ 6 فِي الْعَشَرَاتِ.", textEn: "Step 2 (Tens): 3 × 2 = 6 → Place 6 in tens." },
+            { textAr: "الْخُطْوَةُ 3 (لِلْآحَادِ): 1 × 2 = 2 ← نَضَعُ 2 فِي الْآحَادِ. النَّتِيجَةُ: 62.", textEn: "Step 3 (Units): 1 × 2 = 2 → Place 2 in units. Result: 62." }
           ]
         },
         {
@@ -99,23 +97,21 @@ export const LEVEL_3_DATA: Chapter = {
           tipAr: "💡 اِنْتَبِهْ لِلْحَمْلِ مِنَ الْآحَادِ لِلْعَشَرَاتِ.",
           tipEn: "💡 Pay attention to carry from units to tens.",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 18 عَلَى يَسَارِ الْمِعْدَادِ.", textEn: "Represent: Place 18 on the left abacus." },
-            { textAr: "الْخُطْوَةُ 1: نَضْرِبُ الْعَشَرَاتِ: 1 × 2 = 2. نَضَعُ 2 فِي الْعَشَرَاتِ.", textEn: "Step 1: Multiply tens: 1 × 2 = 2. Place 2 in tens." },
-            { textAr: "الْخُطْوَةُ 2: نَضْرِبُ الْآحَادَ: 8 × 2 = 16. نَضَعُ 6 فِي الْآحَادِ، وَنُضِيفُ 1 لِلْعَشَرَاتِ (2 + 1 = 3).", textEn: "Step 2: Multiply units: 8 × 2 = 16. Place 6 in units, add 1 to tens (2 + 1 = 3)." },
-            { textAr: "النَّتِيجَةُ: 36.", textEn: "Result: 36." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 18.", textEn: "Step 1: Represent 18." },
+            { textAr: "الْخُطْوَةُ 2 (لِلْعَشَرَاتِ): 1 × 2 = 2 ← نَضَعُ 2 فِي الْعَشَرَاتِ.", textEn: "Step 2 (Tens): 1 × 2 = 2 → Place 2 in tens." },
+            { textAr: "الْخُطْوَةُ 3 (لِلْآحَادِ): 8 × 2 = 16 ← نَضَعُ 6 فِي الْآحَادِ، وَنُضِيفُ 1 لِلْعَشَرَاتِ (2+1=3). النَّتِيجَةُ: 36.", textEn: "Step 3 (Units): 8 × 2 = 16 → Place 6 in units, and add 1 to tens (2+1=3). Result: 36." }
           ]
         },
         {
           titleAr: "مِثَالٌ 6: الْكَاكِي",
           titleEn: "Example 6: Kaki",
           problem: "38 × 3",
-          tipAr: "💡 اِحْمِلْ إِلَى الْمِئَاتِ عِنْدَمَا يَتَجَاوَزُ الْعَشَرَاتُ التِّسْعَةَ.",
-          tipEn: "💡 Carry to hundreds when tens exceed nine.",
+          tipAr: "💡 الْحَمْلُ هُنَا يَصِلُ لِلْمِئَاتِ، رَكِّزْ عِنْدَ إِضَافَةِ 2 لِلْعَشَرَاتِ.",
+          tipEn: "💡 The carry here reaches hundreds, focus when adding 2 to tens.",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 38 عَلَى يَسَارِ الْمِعْدَادِ.", textEn: "Represent: Place 38 on the left abacus." },
-            { textAr: "الْخُطْوَةُ 1: نَضْرِبُ الْعَشَرَاتِ: 3 × 3 = 9. نَضَعُ 9 فِي الْعَشَرَاتِ.", textEn: "Step 1: Multiply tens: 3 × 3 = 9. Place 9 in tens." },
-            { textAr: "الْخُطْوَةُ 2: نَضْرِبُ الْآحَادَ: 8 × 3 = 24. نَضَعُ 4 فِي الْآحَادِ. وَنُضِيفُ 2 لِلْعَشَرَاتِ. (9 + 2 = 11). نَتْرُكُ 1 فِي الْعَشَرَاتِ وَنَرْفَعُ 1 لِلْمِئَاتِ.", textEn: "Step 2: Multiply units: 8 × 3 = 24. Place 4 in units. Add 2 to tens. (9 + 2 = 11). Leave 1 in tens, lift 1 to hundreds." },
-            { textAr: "النَّتِيجَةُ: 114.", textEn: "Result: 114." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 38.", textEn: "Step 1: Represent 38." },
+            { textAr: "الْخُطْوَةُ 2 (لِلْعَشَرَاتِ): 3 × 3 = 9 ← نَضَعُ 9 فِي الْعَشَرَاتِ.", textEn: "Step 2 (Tens): 3 × 3 = 9 → Place 9 in tens." },
+            { textAr: "الْخُطْوَةُ 3 (لِلْآحَادِ): 8 × 3 = 24 ← نَضَعُ 4 فِي الْآحَادِ، وَنُضِيفُ 2 لِلْعَشَرَاتِ (9+2=11)، فَيَصْعَدُ 1 لِلْمِئَاتِ وَيَبْقَى 1 فِي الْعَشَرَاتِ. النَّتِيجَةُ: 114.", textEn: "Step 3 (Units): 8 × 3 = 24 → Place 4 in units, add 2 to tens (9+2=11), carry 1 to hundreds and leave 1 in tens. Result: 114." }
           ]
         },
         // ═══ 3. أمثلة القسمة (الواري) ═══
@@ -126,10 +122,9 @@ export const LEVEL_3_DATA: Chapter = {
           tipAr: "💡 اِقْسِمِ الْعَشَرَاتِ ثُمَّ الْآحَادَ (قِسْمَةٌ مُبَاشِرَةٌ).",
           tipEn: "💡 Divide tens then units (direct division).",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 93 عَلَى يَمِينِ الْمِعْدَادِ.", textEn: "Represent: Place 93 on the right abacus." },
-            { textAr: "الْخُطْوَةُ 1 (الْعَشَرَاتُ): 9 ÷ 3 = 3. نَضَعُ 3 فِي عَشَرَاتِ النَّاتِجِ. نَطْرَحُ (3 × 3 = 9). يَتَبَقَّى 3.", textEn: "Step 1 (Tens): 9 ÷ 3 = 3. Place 3 in tens of result. Subtract (3×3=9). Remains 3." },
-            { textAr: "الْخُطْوَةُ 2 (الْآحَادُ): 3 ÷ 3 = 1. نَضَعُ 1 فِي آحَادِ النَّاتِجِ. نَطْرَحُ (1 × 3 = 3). يَتَبَقَّى 0.", textEn: "Step 2 (Units): 3 ÷ 3 = 1. Place 1 in units of result. Subtract (1×3=3). Remains 0." },
-            { textAr: "النَّتِيجَةُ: 31.", textEn: "Result: 31." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 93.", textEn: "Step 1: Represent 93." },
+            { textAr: "الْخُطْوَةُ 2 (الْعَشَرَاتُ): 9 ÷ 3 = 3 ← نَضَعُ 3 فِي خَانَةِ الْعَشَرَاتِ (لِلنَّاتِجِ). نَطْرَحُ: (3 × 3 = 9) ← 9 - 9 = 0 (يَتَبَقَّى 3).", textEn: "Step 2 (Tens): 9 ÷ 3 = 3 → Place 3 in tens column (of result). Subtract: (3 × 3 = 9) → 9 - 9 = 0 (remains 3)." },
+            { textAr: "الْخُطْوَةُ 3 (الْآحَادُ): 3 ÷ 3 = 1 ← نَضَعُ 1 فِي خَانَةِ الْآحَادِ (لِلنَّاتِجِ). نَطْرَحُ: (1 × 3 = 3) ← 3 - 3 = 0. النَّتِيجَةُ: 31.", textEn: "Step 3 (Units): 3 ÷ 3 = 1 → Place 1 in units column (of result). Subtract: (1 × 3 = 3) → 3 - 3 = 0. Result: 31." }
           ]
         },
         {
@@ -139,10 +134,9 @@ export const LEVEL_3_DATA: Chapter = {
           tipAr: "💡 إِذَا لَمْ يَقْبَلِ الرَّقْمُ الْقِسْمَةَ، خُذْ رَقْمَيْنِ.",
           tipEn: "💡 If the digit doesn't divide, take two digits.",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 92 عَلَى يَمِينِ الْمِعْدَادِ.", textEn: "Represent: Place 92 on the right abacus." },
-            { textAr: "الْخُطْوَةُ 1 (الْعَشَرَاتُ): 9 ÷ 2 = 4 (وَالْبَاقِي 1). نَضَعُ 4 فِي عَشَرَاتِ النَّاتِجِ. نَطْرَحُ (4 × 2 = 8) مِنَ الْـ 9. يَتَبَقَّى 12.", textEn: "Step 1 (Tens): 9 ÷ 2 = 4 (remainder 1). Place 4 in tens of result. Subtract (4×2=8) from 9. Remains 12." },
-            { textAr: "الْخُطْوَةُ 2 (الْآحَادُ): 12 ÷ 2 = 6. نَضَعُ 6 فِي آحَادِ النَّاتِجِ. نَطْرَحُ (6 × 2 = 12). يَتَبَقَّى 0.", textEn: "Step 2 (Units): 12 ÷ 2 = 6. Place 6 in units of result. Subtract (6×2=12). Remains 0." },
-            { textAr: "النَّتِيجَةُ: 46.", textEn: "Result: 46." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 92.", textEn: "Step 1: Represent 92." },
+            { textAr: "الْخُطْوَةُ 2 (الْعَشَرَاتُ): 9 ÷ 2 = 4 ← نَضَعُ 4 فِي خَانَةِ الْعَشَرَاتِ (لِلنَّاتِجِ). نَطْرَحُ: (4 × 2 = 8) ← 9 - 8 = 1 (يَتَبَقَّى 12).", textEn: "Step 2 (Tens): 9 ÷ 2 = 4 → Place 4 in tens column (of result). Subtract: (4 × 2 = 8) → 9 - 8 = 1 (remains 12)." },
+            { textAr: "الْخُطْوَةُ 3 (الْآحَادُ): 12 ÷ 2 = 6 ← نَضَعُ 6 فِي خَانَةِ الْآحَادِ (لِلنَّاتِجِ). نَطْرَحُ: (6 × 2 = 12) ← 12 - 12 = 0. النَّتِيجَةُ: 46.", textEn: "Step 3 (Units): 12 ÷ 2 = 6 → Place 6 in units column (of result). Subtract: (6 × 2 = 12) → 12 - 12 = 0. Result: 46." }
           ]
         },
         {
@@ -152,10 +146,9 @@ export const LEVEL_3_DATA: Chapter = {
           tipAr: "💡 الرَّقْمُ 7 أَكْبَرُ مِنْ 6، لَكِنَّهُ لَا يَقْبَلُ الْقِسْمَةَ، فَنَأْخُذُ الْعَشَرَاتِ وَالْآحَادَ.",
           tipEn: "💡 7 > 6, but doesn't divide evenly, so take tens and units.",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 72 عَلَى يَمِينِ الْمِعْدَادِ.", textEn: "Represent: Place 72 on the right abacus." },
-            { textAr: "الْخُطْوَةُ 1 (الْعَشَرَاتُ): 7 ÷ 6 = 1 (وَالْبَاقِي 1). نَضَعُ 1 فِي عَشَرَاتِ النَّاتِجِ. نَطْرَحُ (1 × 6 = 6) مِنَ الْـ 7. يَتَبَقَّى 12.", textEn: "Step 1 (Tens): 7 ÷ 6 = 1 (remainder 1). Place 1 in tens of result. Subtract (1×6=6) from 7. Remains 12." },
-            { textAr: "الْخُطْوَةُ 2 (الْآحَادُ): 12 ÷ 6 = 2. نَضَعُ 2 فِي آحَادِ النَّاتِجِ. نَطْرَحُ (2 × 6 = 12). يَتَبَقَّى 0.", textEn: "Step 2 (Units): 12 ÷ 6 = 2. Place 2 in units of result. Subtract (2×6=12). Remains 0." },
-            { textAr: "النَّتِيجَةُ: 12.", textEn: "Result: 12." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 72.", textEn: "Step 1: Represent 72." },
+            { textAr: "الْخُطْوَةُ 2 (الْعَشَرَاتُ): 7 ÷ 6 = 1 ← نَضَعُ 1 فِي خَانَةِ الْعَشَرَاتِ (لِلنَّاتِجِ). نَطْرَحُ: (1 × 6 = 6) ← 7 - 6 = 1 (يَتَبَقَّى 12).", textEn: "Step 2 (Tens): 7 ÷ 6 = 1 → Place 1 in tens column (of result). Subtract: (1 × 6 = 6) → 7 - 6 = 1 (remains 12)." },
+            { textAr: "الْخُطْوَةُ 3 (الْآحَادُ): 12 ÷ 6 = 2 ← نَضَعُ 2 فِي خَانَةِ الْآحَادِ (لِلنَّاتِجِ). نَطْرَحُ: (2 × 6 = 12) ← 12 - 12 = 0. النَّتِيجَةُ: 12.", textEn: "Step 3 (Units): 12 ÷ 6 = 2 → Place 2 in units column (of result). Subtract: (2 × 6 = 12) → 12 - 12 = 0. Result: 12." }
           ]
         },
         {
@@ -165,10 +158,9 @@ export const LEVEL_3_DATA: Chapter = {
           tipAr: "💡 5 لَا تَقْبَلُ الْقِسْمَةَ عَلَى 4، نَأْخُذُ رَقْمَيْنِ (56).",
           tipEn: "💡 5 doesn't divide by 4, take two digits (56).",
           steps: [
-            { textAr: "التَّمْثِيلُ: نَضَعُ 56 عَلَى يَمِينِ الْمِعْدَادِ.", textEn: "Represent: Place 56 on the right abacus." },
-            { textAr: "الْخُطْوَةُ 1 (الْعَشَرَاتُ): 5 ÷ 4 = 1 (وَالْبَاقِي 1). نَضَعُ 1 فِي عَشَرَاتِ النَّاتِجِ. نَطْرَحُ (1 × 4 = 4) مِنَ الْـ 5. يَتَبَقَّى 16.", textEn: "Step 1 (Tens): 5 ÷ 4 = 1 (remainder 1). Place 1 in tens of result. Subtract (1×4=4) from 5. Remains 16." },
-            { textAr: "الْخُطْوَةُ 2 (الْآحَادُ): 16 ÷ 4 = 4. نَضَعُ 4 فِي آحَادِ النَّاتِجِ. نَطْرَحُ (4 × 4 = 16). يَتَبَقَّى 0.", textEn: "Step 2 (Units): 16 ÷ 4 = 4. Place 4 in units of result. Subtract (4×4=16). Remains 0." },
-            { textAr: "النَّتِيجَةُ: 14.", textEn: "Result: 14." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 56.", textEn: "Step 1: Represent 56." },
+            { textAr: "الْخُطْوَةُ 2 (الْعَشَرَاتُ): 5 ÷ 4 = 1 ← نَضَعُ 1 فِي خَانَةِ الْعَشَرَاتِ (لِلنَّاتِجِ). نَطْرَحُ: (1 × 4 = 4) ← 5 - 4 = 1 (يَتَبَقَّى 16).", textEn: "Step 2 (Tens): 5 ÷ 4 = 1 → Place 1 in tens column (of result). Subtract: (1 × 4 = 4) → 5 - 4 = 1 (remains 16)." },
+            { textAr: "الْخُطْوَةُ 3 (الْآحَادُ): 16 ÷ 4 = 4 ← نَضَعُ 4 فِي خَانَةِ الْآحَادِ (لِلنَّاتِجِ). نَطْرَحُ: (4 × 4 = 16) ← 16 - 16 = 0. النَّتِيجَةُ: 14.", textEn: "Step 3 (Units): 16 ÷ 4 = 4 → Place 4 in units column (of result). Subtract: (4 × 4 = 16) → 16 - 16 = 0. Result: 14." }
           ]
         }
       ]
