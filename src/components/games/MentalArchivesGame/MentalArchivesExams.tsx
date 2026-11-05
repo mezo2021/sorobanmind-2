@@ -10,9 +10,10 @@ import MentalArchivesExamRunner from './MentalArchivesExamRunner';
 import { EXAM_10_7 } from './data/exams/exam10_7';
 import { EXAM_6 } from './data/exams/exam6';
 import { EXAM_5 } from './data/exams/exam5';
+import { EXAM_4 } from './data/exams/exam4';
 import { ChapterId } from './gameFlowTypes';
 import { tUI } from './gameUI';
-import { isPreviewMode } from '@/utils/previewMode'; // 🆕 استيراد أداة المعاينة
+import { isPreviewMode } from '@/utils/previewMode';
 
 interface ExamMeta {
   id: string;
@@ -30,7 +31,7 @@ const EXAMS: ExamMeta[] = [
   { id: 'exam_10_7', nameAr: '10-7 كيو (ورقة مشتركة)', nameEn: '10-7 Kyu (Combined)', questions: 50, marks: 500, minutes: 12, requiresChapter: ['level1', 'level2'], isReady: true },
   { id: 'exam_6',    nameAr: '6 كيو',                    nameEn: '6 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_10_7', isReady: true },
   { id: 'exam_5',    nameAr: '5 كيو',                    nameEn: '5 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_6',    isReady: true },
-  { id: 'exam_4',    nameAr: '4 كيو',                    nameEn: '4 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_5',    isReady: false },
+  { id: 'exam_4',    nameAr: '4 كيو',                    nameEn: '4 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_5',    isReady: true }, // 🆕 تم التفعيل
   { id: 'exam_3',    nameAr: '3 كيو',                    nameEn: '3 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_4',    isReady: false },
   { id: 'exam_2',    nameAr: '2 كيو',                    nameEn: '2 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_3',    isReady: false },
   { id: 'exam_1',    nameAr: '1 كيو',                    nameEn: '1 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_2',    isReady: false },
@@ -45,10 +46,10 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
   const progress = useProgressStore((s) => s.mentalArchivesProgress);
   const examResults = useProgressStore((s) => s.mentalArchivesExams);
 
-  const preview = isPreviewMode(); // 🆕 قراءة حالة المعاينة
+  const preview = isPreviewMode();
 
   const isExamUnlocked = (exam: ExamMeta): boolean => {
-    if (preview) return true; // 🆕 فتح جميع الأقفال في وضع المعاينة
+    if (preview) return true; // فتح جميع الأقفال في وضع المعاينة
     if (exam.requiresChapter) return exam.requiresChapter.every(ch => !!progress[ch]);
     if (exam.requiresExamPass) return examResults[exam.requiresExamPass]?.passed || false;
     return false;
@@ -80,6 +81,17 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
     return (
       <MentalArchivesExamRunner 
         examData={EXAM_5} 
+        mode={mode} 
+        onExit={() => { setIsRunning(false); setSelectedExamId(null); }} 
+      />
+    );
+  }
+
+  // 🆕 إضافة تشغيل امتحان 4 كيو
+  if (isRunning && selectedExamId === 'exam_4') {
+    return (
+      <MentalArchivesExamRunner 
+        examData={EXAM_4} 
         mode={mode} 
         onExit={() => { setIsRunning(false); setSelectedExamId(null); }} 
       />
