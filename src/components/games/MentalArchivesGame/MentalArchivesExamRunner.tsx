@@ -9,6 +9,9 @@ import { motion } from 'framer-motion';
 import { tUI } from './gameUI';
 import RelicKeypad from './ui/RelicKeypad';
 
+import ExamCertificateModal from './ExamCertificateModal';
+import { addRecord } from '@/utils/leaderboard';
+import { isPreviewMode } from '@/utils/previewMode';
 import logoImg from '@/assets/logo.webp'; 
 
 interface Props {
@@ -20,6 +23,8 @@ interface Props {
 export default function MentalArchivesExamRunner({ examData, mode, onExit }: Props) {
   const { dir, isAr } = useGameLang();
   const recordResult = useProgressStore((s) => s.recordMentalExam);
+  const childName = useProgressStore((s) => s.childName);
+  const [showCert, setShowCert] = useState(false);
 
   // 🆕 خلط الأسئلة داخل كل قسم (يحدث مرة واحدة عند فتح الامتحان)
   const [shuffledSections] = useState(() => {
@@ -142,6 +147,11 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
       mode,
       completedAt: Date.now(),
     });
+
+    // 🏆 تسجيل الرقم في لوحة الأبطال (للناجحين فقط، وليس في وضع المعاينة)
+    if (passed && childName && !isPreviewMode()) {
+      addRecord({ name: childName, examId: examData.id, score, timeSec: Math.max(1, examData.timeLimitSeconds - timeLeft) });
+    }
 
     setIsFinished(true);
     setIsSubmitting(false);
@@ -396,6 +406,11 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
           )}
 
           <div className="space-y-3 mt-6">
+            {passed && (
+              <button onClick={() => setShowCert(true)} className="w-full py-4 rounded-2xl font-black text-slate-950 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 shadow-[0_0_24px_rgba(251,191,36,0.55)] hover:scale-[1.02] transition">
+                🏆 {isAr ? 'شهادة' : 'Certificate'}
+              </button>
+            )}
             <button onClick={() => setShowReview(true)} className="w-full py-4 bg-slate-800 hover:bg-slate-700 rounded-2xl font-bold flex items-center justify-center gap-2 transition border border-slate-700">
               <CheckCircle2 className="w-5 h-5 text-amber-400" />
               {tUI('reviewAnswers')}
@@ -406,6 +421,15 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
             </button>
           </div>
         </motion.div>
+        {showCert && passed && (
+          <ExamCertificateModal
+            kyuLabelAr={examData.levelNameAr.replace(/\s*\(.*\)\s*$/, '')}
+            kyuLabelEn={examData.levelNameEn.replace(/\s*\(.*\)\s*$/, '')}
+            score={score}
+            totalMarks={examData.totalMarks}
+            onClose={() => setShowCert(false)}
+          />
+        )}
       </div>
     );
   }
