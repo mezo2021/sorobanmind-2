@@ -18,15 +18,15 @@ export default function ChapterTitleCard({ show, onDone, theme, title, isAr }: P
     <AnimatePresence>
       {show && (
         <motion.div
-  className="fixed inset-0 z-50 flex flex-col items-center justify-center text-center px-6 bg-[#04050d]"
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  exit={{ opacity: 0 }}
-  transition={{ duration: 0.5 }}
-  onClick={onDone}
->
-  <motion.div
-    className="absolute w-[70vmin] h-[70vmin] rounded-full pointer-events-none"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center text-center px-6 bg-[#04050d]/95"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, scale: reduce ? 1 : 1.08 }}
+          transition={{ duration: 0.5 }}
+          onClick={onDone}
+        >
+          <motion.div
+            className="absolute w-[70vmin] h-[70vmin] rounded-full"
             style={{ background: `radial-gradient(circle, ${theme.accent}66, transparent 65%)` }}
             initial={{ scale: 0.3, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
