@@ -9,6 +9,7 @@ import { LEVEL_3_DATA } from './data/level3Data';
 import { LEVEL_4_DATA } from './data/level4Data';
 import { LEVEL_5_DATA } from './data/level5Data';
 import { LEVEL_6_DATA } from './data/level6Data';
+import { LEVEL_7_DATA } from './data/level7Data';
 import { Chapter, ChapterId, Scene } from './gameFlowTypes';
 import { addScore } from '../highScoreStore';
 import { useProgressStore } from '@/store/progressStore';
@@ -26,6 +27,7 @@ const CHAPTERS: Partial<Record<ChapterId, Chapter>> = {
   level4: LEVEL_4_DATA,
   level5: LEVEL_5_DATA,
   level6: LEVEL_6_DATA,
+  level7: LEVEL_7_DATA,
 };
 
 const EXAM_PORTAL_PREREQ_CHAPTERS: ChapterId[] = ['level1', 'level2'];
