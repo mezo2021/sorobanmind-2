@@ -127,6 +127,12 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
       }
     });
 
+    // 🧪 TEMPORARY: فرض النجاح في وضع المعاينة لاختبار الشهادة (احذف هذا البلوك لاحقاً)
+    if (isPreviewMode()) {
+      score = 450;
+    }
+    // 🧪 END TEMPORARY
+
     let grade = undefined;
     const passed = mode === 'exam' && score >= examData.passingScore;
 
@@ -177,6 +183,12 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
       }
     });
     
+    // 🧪 TEMPORARY: لكي تعرض شاشة النتيجة نفس الرقم 450 الوهمي (احذف هذا البلوك لاحقاً)
+    if (isPreviewMode()) {
+      score = 450;
+    }
+    // 🧪 END TEMPORARY
+
     const isExamMode = mode === 'exam';
     const passed = isExamMode && score >= examData.passingScore;
     const earnedGrade = examData.gradeThresholds?.find(th => score >= th.score)?.grade;
@@ -307,7 +319,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                         {q.numbers.map((num, i) => (
                           <div key={i} className="flex items-center gap-2">
                             <span><Num>{num}</Num></span>
-                            {/* 🆕 تم تمرير الرقم التالي هنا */}
                             {i < q.numbers.length - 1 && <span className="text-xs opacity-50">{getOperator(q.type, q.numbers[i + 1])}</span>}
                           </div>
                         ))}
