@@ -58,14 +58,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const [sceneIndex, setSceneIndex] = useState(0);
   const currentScene = chapter.scenes[sceneIndex];
 
-  // 🎬 طبقة سينمائية: بطاقة افتتاح المستوى + وميض الثقب الدودي عند تغيّر المشهد
-  const cinematic = (
-    <>
-      <ChapterTitleCard show={showTitle && videoState === 'done' && phase === 'playing'} onDone={closeTitle} theme={theme} title={isAr ? chapter.titleAr : chapter.titleEn} isAr={isAr} />
-      <WarpFlash trigger={`${sceneIndex}-${phase}`} color={theme.accent} />
-    </>
-  );
-
   const challengeScene = chapter.scenes.find((s): s is Extract<Scene, { kind: 'challenge' }> => s.kind === 'challenge');
   const requiredCorrect = challengeScene?.requiredCorrect ?? 0;
 
@@ -425,6 +417,14 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     };
     playStep();
   };
+
+  // 🎬 طبقة سينمائية: بطاقة افتتاح المستوى + وميض الثقب الدودي عند تغيّر المشهد
+  const cinematic = (
+    <>
+      <ChapterTitleCard show={showTitle && videoState === 'done' && phase === 'playing'} onDone={closeTitle} theme={theme} title={isAr ? chapter.titleAr : chapter.titleEn} isAr={isAr} />
+      <WarpFlash trigger={`${sceneIndex}-${phase}`} color={theme.accent} />
+    </>
+  );
 
   const getTopBarImage = () => {
     if (currentScene?.kind === 'example') return sorobanaImg;
