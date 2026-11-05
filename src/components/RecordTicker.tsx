@@ -1,5 +1,4 @@
 // src/components/RecordTicker.tsx
-// شريط أسرع 10 أزمنة (marquee لانهائي بـ transform فقط). المصدر: sorobanmind-leaderboard-v1
 import { useMemo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useGameLang } from '@/components/games/gamesI18n';
@@ -10,7 +9,19 @@ import { examLabel, fastest, fmtTime, getRecords } from '@/utils/leaderboard';
 export default function RecordTicker() {
   const { dir, isAr } = useGameLang();
   const reduce = useReducedMotion();
-  const top = useMemo(() => fastest(getRecords(), 10), []);
+  
+  // 🆕 فلترة التكرار: نضمن ظهور كل اسم مرة واحدة لكل امتحان في الشريط
+  const top = useMemo(() => {
+    const all = fastest(getRecords(), 50); 
+    const seen = new Set();
+    return all.filter(r => {
+      const key = `${r.name}-${r.examId}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 10);
+  }, []);
+
   const cta = isAr ? 'هل يمكنك التغلب على هؤلاء الأبطال؟' : 'Can you beat these champions?';
 
   const items = (
