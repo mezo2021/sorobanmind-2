@@ -1,5 +1,4 @@
 // src/components/Leaderboard.tsx
-// لوحة الأبطال: منصة أول 3 + قائمة 4-10 + فلاتر. المصدر: sorobanmind-leaderboard-v1
 import { useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Trophy, Timer, Medal } from 'lucide-react';
@@ -9,10 +8,11 @@ import CosmicBackground from '@/components/cosmic/CosmicBackground';
 import { maskName } from '@/utils/maskName';
 import { EXAM_LABELS, LeaderRecord, examLabel, fmtTime, getRecords } from '@/utils/leaderboard';
 
+// 🆕 تم تعديل الارتفاعات (h-24, h-32, h-16) لضبط المسافة بين النص والمنصة
 const PODIUM = [
-  { rank: 2, h: 'h-28', color: '#cbd5e1', bg: 'from-slate-300/30 to-slate-500/10', icon: '🥈' },
-  { rank: 1, h: 'h-40', color: '#fbbf24', bg: 'from-amber-300/40 to-amber-600/10', icon: '🥇' },
-  { rank: 3, h: 'h-20', color: '#d97706', bg: 'from-orange-400/30 to-orange-700/10', icon: '🥉' },
+  { rank: 2, h: 'h-24', color: '#cbd5e1', bg: 'from-slate-300/30 to-slate-500/10', icon: '🥈' },
+  { rank: 1, h: 'h-32', color: '#fbbf24', bg: 'from-amber-300/40 to-amber-600/10', icon: '🥇' },
+  { rank: 3, h: 'h-16', color: '#d97706', bg: 'from-orange-400/30 to-orange-700/10', icon: '🥉' },
 ];
 
 function Sparks({ color }: { color: string }) {
