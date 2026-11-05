@@ -39,8 +39,8 @@ export const LEVEL_6_DATA: Chapter = {
             { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 125.", textEn: "Step 1: Represent 125." },
             { textAr: "الْخُطْوَةُ 2 (+346): لِلْمِئَاتِ: نُضِيفُ 3 ← 425. لِلْعَشَرَاتِ: نُضِيفُ 4 ← (النَّاتِجُ الْمُؤَقَّتُ: 465). لِلْآحَادِ: نُضِيفُ 6 ← 471.", textEn: "Step 2 (+346): Hundreds: Add 3 → 425. Tens: Add 4 → (Intermediate: 465). Units: Add 6 → 471." },
             { textAr: "الْخُطْوَةُ 3 (+782): لِلْمِئَاتِ: نُضِيفُ 1 لِلْآلَافِ (حَمْل) وَنَطْرَحُ 3 مِنَ الْمِئَاتِ ← 1171. لِلْعَشَرَاتِ: نُضِيفُ 1 لِلْمِئَاتِ (حَمْل) وَنَطْرَحُ 2 مِنَ الْعَشَرَاتِ ← (النَّاتِجُ الْمُؤَقَّتُ: 1251). لِلْآحَادِ: نُضِيفُ 2 ← 1253.", textEn: "Step 3 (+782): Hundreds: Add 1 to thousands (carry) and subtract 3 from hundreds → 1171. Tens: Add 1 to hundreds (carry) and subtract 2 from tens → (Intermediate: 1251). Units: Add 2 → 1253." },
-{ textAr: "الْخُطْوَةُ 4 (+419): لِلْمِئَاتِ: نُضِيفُ 4 ← 1653. لِلْعَشَرَاتِ: نُضِيفُ 1 ← (النَّاتِجُ الْمُؤَقَّتُ: 1663). لِلْآحَادِ: نُضِيفُ 1 لِلْعَشَرَاتِ (حَمْل) وَنَطْرَحُ 1 مِنَ الْآحَادِ ← 1672.", textEn: "Step 4 (+419): Hundreds: Add 4 → 1653. Tens: Add 1 → (Intermediate: 1663). Units: Add 1 to tens (carry) and subtract 1 from units → 1672." },
-{ textAr: "الْخُطْوَةُ 5 (+237): لِلْمِئَاتِ: نُضِيفُ 2 ← 1872. لِلْعَشَرَاتِ: نُضِيفُ 1 لِلْمِئَاتِ (حَمْل) وَنَطْرَحُ 7 مِنَ الْعَشَرَاتِ ← (النَّاتِجُ الْمُؤَقَّتُ: 1902). لِلْآحَادِ: نُضِيفُ 7 ← 1909. النَّتِيجَةُ: 1909.", textEn: "Step 5 (+237): Hundreds: Add 2 → 1872. Tens: Add 1 to hundreds (carry) and subtract 7 from tens → (Intermediate: 1902). Units: Add 7 → 1909. Result: 1909." }
+            { textAr: "الْخُطْوَةُ 4 (+419): لِلْمِئَاتِ: نُضِيفُ 4 ← 1653. لِلْعَشَرَاتِ: نُضِيفُ 1 ← (النَّاتِجُ الْمُؤَقَّتُ: 1663). لِلْآحَادِ: نُضِيفُ 1 لِلْعَشَرَاتِ (حَمْل) وَنَطْرَحُ 1 مِنَ الْآحَادِ ← 1672.", textEn: "Step 4 (+419): Hundreds: Add 4 → 1653. Tens: Add 1 → (Intermediate: 1663). Units: Add 1 to tens (carry) and subtract 1 from units → 1672." },
+            { textAr: "الْخُطْوَةُ 5 (+237): لِلْمِئَاتِ: نُضِيفُ 2 ← 1872. لِلْعَشَرَاتِ: نُضِيفُ 1 لِلْمِئَاتِ (حَمْل) وَنَطْرَحُ 7 مِنَ الْعَشَرَاتِ ← (النَّاتِجُ الْمُؤَقَّتُ: 1902). لِلْآحَادِ: نُضِيفُ 7 ← 1909. النَّتِيجَةُ: 1909.", textEn: "Step 5 (+237): Hundreds: Add 2 → 1872. Tens: Add 1 to hundreds (carry) and subtract 7 from tens → (Intermediate: 1902). Units: Add 7 → 1909. Result: 1909." }
           ]
         },
         {
@@ -93,7 +93,7 @@ export const LEVEL_6_DATA: Chapter = {
           tipEn: "💡 The zero in the middle of the result is very important.",
           steps: [
             { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 1218.", textEn: "Step 1: Represent 1218." },
-            { textAr: "الْخُطْوَةُ 2 (الْآلَافُ): 12 ÷ 3 = 4 ← نَضَعُ 4 فِي خَانَةِ الْمِئَاتِ (لِلنَّاتِجِ). نَطْرَحُ: (4 × 3 = 12) ← 12 - 12 = 0 (يَتَبَقَّى 18).", textEn: "Step 2 (Thousands): 12 ÷ 3 = 4 → Place 4 in hundreds column (of result). Subtract: (4 × 3 = 12) → 12 - 12 = 0 (remains 18)." },
+            { textAr: "الْخُطْوَةُ 2 (الْأُلُوفُ وَالْمِئَاتُ): 12 ÷ 3 = 4 ← نَضَعُ 4 فِي خَانَةِ الْمِئَاتِ (لِلنَّاتِجِ). نَطْرَحُ: (4 × 3 = 12) ← 12 - 12 = 0 (يَتَبَقَّى 18).", textEn: "Step 2 (Thousands & Hundreds): 12 ÷ 3 = 4 → Place 4 in hundreds column (of result). Subtract: (4 × 3 = 12) → 12 - 12 = 0 (remains 18)." },
             { textAr: "الْخُطْوَةُ 3 (الْعَشَرَاتُ): 1 لَا تَقْبَلُ الْقِسْمَةَ عَلَى 3 ← نَضَعُ 0 فِي خَانَةِ الْعَشَرَاتِ (لِلنَّاتِجِ). (يَتَبَقَّى 18 كَمَا هُوَ).", textEn: "Step 3 (Tens): 1 doesn't divide by 3 → Place 0 in tens column (of result). (Remains 18 as is)." },
             { textAr: "الْخُطْوَةُ 4 (الْآحَادُ): 18 ÷ 3 = 6 ← نَضَعُ 6 فِي خَانَةِ الْآحَادِ (لِلنَّاتِجِ). نَطْرَحُ: (6 × 3 = 18) ← 18 - 18 = 0. النَّتِيجَةُ: 406.", textEn: "Step 4 (Units): 18 ÷ 3 = 6 → Place 6 in units column (of result). Subtract: (6 × 3 = 18) → 18 - 18 = 0. Result: 406." }
           ]
