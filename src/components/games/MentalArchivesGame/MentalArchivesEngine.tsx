@@ -125,7 +125,16 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       finalText = finalText.replace(/؟/g, '?').replace(/،/g, ',');
     }
 
-    const utterance = new SpeechSynthesisUtterance(finalText);
+    // 🆕 مصحح النطق التلقائي (لتحويل الرموز الرياضية إلى كلمات منطوقة)
+    const ttsText = finalText
+      .replace(/←/g, '، ثُمَّ ') // يحول السهم إلى فاصل وثم
+      .replace(/\+/g, ' زَائِد ') // يحول الزائد
+      .replace(/-/g, ' نَاقِص ') // يحول الناقص
+      .replace(/×/g, ' فِي ') // يحول الضرب
+      .replace(/÷/g, ' عَلَى ') // يحول القسمة
+      .replace(/=/g, ' يُسَاوِي '); // يحول يساوي
+
+    const utterance = new SpeechSynthesisUtterance(ttsText);
     utterance.lang = isAr ? 'ar-SA' : 'en-US';
     utterance.rate = isAr ? 0.8 : 0.7;
     utterance.pitch = characterId === 'jud' ? 0.8 : characterId === 'aseel' ? 1.4 : 1.25;
