@@ -82,7 +82,7 @@ export const LEVEL_4_DATA: Chapter = {
             { textAr: "الْخُطْوَةُ 3 (لِلْآحَادِ): 5 × 9 = 45 ← نُضِيفُ 4 لِلْعَشَرَاتِ (1+4=5)، وَنَضَعُ 5 فِي الْآحَادِ. النَّتِيجَةُ: 855.", textEn: "Step 3 (Units): 5 × 9 = 45 → Add 4 to tens (1+4=5), and place 5 in units. Result: 855." }
           ]
         },
-        // ═══ 3. أمثلة القسمة (الواري) ═══
+                // ═══ 3. أمثلة القسمة (الواري) ═══
         {
           titleAr: "مِثَالٌ 5: الْوَارِي",
           titleEn: "Example 5: Wari",
@@ -91,8 +91,8 @@ export const LEVEL_4_DATA: Chapter = {
           tipEn: "💡 6 is smaller than 7, so we take two digits (67).",
           steps: [
             { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 679.", textEn: "Step 1: Represent 679." },
-            { textAr: "الْخُطْوَةُ 2 (الْعَشَرَاتُ): 67 ÷ 7 = 9 ← نَضَعُ 9 فِي خَانَةِ الْعَشَرَاتِ (لِلنَّاتِجِ). نَطْرَحُ: 67 - 63 = 4 (يَتَبَقَّى 49).", textEn: "Step 2 (Tens): 67 ÷ 7 = 9 → Place 9 in tens column (of result). Subtract: 67 - 63 = 4 (remains 49)." },
-            { textAr: "الْخُطْوَةُ 3 (الْآحَادُ): 49 ÷ 7 = 7 ← نَضَعُ 7 فِي خَانَةِ الْآحَادِ (لِلنَّاتِجِ). نَطْرَحُ: 49 - 49 = 0. النَّتِيجَةُ: 97.", textEn: "Step 3 (Units): 49 ÷ 7 = 7 → Place 7 in units column (of result). Subtract: 49 - 49 = 0. Result: 97." }
+            { textAr: "الْخُطْوَةُ 2 (الْعَشَرَاتُ): 67 ÷ 7 = 9 ← نَضَعُ 9 فِي خَانَةِ الْعَشَرَاتِ (لِلنَّاتِجِ). نَطْرَحُ: (9 × 7 = 63) ← 67 - 63 = 4 (يَتَبَقَّى 49).", textEn: "Step 2 (Tens): 67 ÷ 7 = 9 → Place 9 in tens column (of result). Subtract: (9 × 7 = 63) → 67 - 63 = 4 (remains 49)." },
+            { textAr: "الْخُطْوَةُ 3 (الْآحَادُ): 49 ÷ 7 = 7 ← نَضَعُ 7 فِي خَانَةِ الْآحَادِ (لِلنَّاتِجِ). نَطْرَحُ: (7 × 7 = 49) ← 49 - 49 = 0. النَّتِيجَةُ: 97.", textEn: "Step 3 (Units): 49 ÷ 7 = 7 → Place 7 in units column (of result). Subtract: (7 × 7 = 49) → 49 - 49 = 0. Result: 97." }
           ]
         },
         {
@@ -103,8 +103,8 @@ export const LEVEL_4_DATA: Chapter = {
           tipEn: "💡 5 is smaller than 8, so we take two digits (55).",
           steps: [
             { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 552.", textEn: "Step 1: Represent 552." },
-            { textAr: "الْخُطْوَةُ 2 (الْعَشَرَاتُ): 55 ÷ 8 = 6 ← نَضَعُ 6 فِي خَانَةِ الْعَشَرَاتِ (لِلنَّاتِجِ). نَطْرَحُ: 55 - 48 = 7 (يَتَبَقَّى 72).", textEn: "Step 2 (Tens): 55 ÷ 8 = 6 → Place 6 in tens column (of result). Subtract: 55 - 48 = 7 (remains 72)." },
-            { textAr: "الْخُطْوَةُ 3 (الْآحَادُ): 72 ÷ 8 = 9 ← نَضَعُ 9 فِي خَانَةِ الْآحَادِ (لِلنَّاتِجِ). نَطْرَحُ: 72 - 72 = 0. النَّتِيجَةُ: 69.", textEn: "Step 3 (Units): 72 ÷ 8 = 9 → Place 9 in units column (of result). Subtract: 72 - 72 = 0. Result: 69." }
+            { textAr: "الْخُطْوَةُ 2 (الْعَشَرَاتُ): 55 ÷ 8 = 6 ← نَضَعُ 6 فِي خَانَةِ الْعَشَرَاتِ (لِلنَّاتِجِ). نَطْرَحُ: (6 × 8 = 48) ← 55 - 48 = 7 (يَتَبَقَّى 72).", textEn: "Step 2 (Tens): 55 ÷ 8 = 6 → Place 6 in tens column (of result). Subtract: (6 × 8 = 48) → 55 - 48 = 7 (remains 72)." },
+            { textAr: "الْخُطْوَةُ 3 (الْآحَادُ): 72 ÷ 8 = 9 ← نَضَعُ 9 فِي خَانَةِ الْآحَادِ (لِلنَّاتِجِ). نَطْرَحُ: (9 × 8 = 72) ← 72 - 72 = 0. النَّتِيجَةُ: 69.", textEn: "Step 3 (Units): 72 ÷ 8 = 9 → Place 9 in units column (of result). Subtract: (9 × 8 = 72) → 72 - 72 = 0. Result: 69." }
           ]
         }
       ]
