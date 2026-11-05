@@ -17,7 +17,14 @@ import { useProgressStore } from '@/store/progressStore';
 import { useGameLang } from '../gamesI18n';
 import { tUI } from './gameUI';
 import { Num } from '@/components/Num';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, Trophy, Swords } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import CosmicBackground from '@/components/cosmic/CosmicBackground';
+import TiltCard from '@/components/cosmic/TiltCard';
+import RecordTicker from '@/components/RecordTicker';
+import Leaderboard from '@/components/Leaderboard';
+import CompetitionHub from './competition/CompetitionHub';
+import { getTheme } from './ui/chapterThemes';
 import { isPreviewMode } from '@/utils/previewMode';
 
 const CHAPTERS: Partial<Record<ChapterId, Chapter>> = {
@@ -38,6 +45,8 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
   const { dir, isAr } = useGameLang();
   const [activeChapterId, setActiveChapterId] = useState<ChapterId | null>(null);
   const [showExams, setShowExams] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showCompetition, setShowCompetition] = useState(false);
 
   const progress = useProgressStore((s) => s.mentalArchivesProgress);
   const completeChapter = useProgressStore((s) => s.completeMentalChapter);
@@ -73,37 +82,54 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
     setActiveChapterId(null);
   };
 
-  if (showExams) {
-    return <MentalArchivesExams onBack={() => setShowExams(false)} />;
-  }
+  const view = ((): { key: string; node: React.ReactNode } => {
+  if (showLeaderboard) return { key: 'leaderboard', node: <Leaderboard onBack={() => setShowLeaderboard(false)} /> };
+  if (showCompetition) return { key: 'competition', node: <CompetitionHub onBack={() => setShowCompetition(false)} /> };
+  if (showExams) return { key: 'exams', node: <MentalArchivesExams onBack={() => setShowExams(false)} /> };
 
   if (activeChapterId) {
     const chapter = CHAPTERS[activeChapterId];
-    if (!chapter) return null;
-    return (
-      <MentalArchivesEngine 
-        key={activeChapterId} 
-        chapter={chapter} 
-        onComplete={handleComplete} 
-        onBack={() => setActiveChapterId(null)} 
-      />
-    );
+    if (!chapter) return { key: 'none', node: null };
+    return {
+      key: `chapter-${activeChapterId}`,
+      node: (
+        <MentalArchivesEngine
+          key={activeChapterId}
+          chapter={chapter}
+          onComplete={handleComplete}
+          onBack={() => setActiveChapterId(null)}
+        />
+      ),
+    };
   }
 
   // 🆕 تفعيل المعاينة لبوابة الامتحانات
   const canAccessExams = preview || EXAM_PORTAL_PREREQ_CHAPTERS.every((id) => !!progress[id]);
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-white p-6" dir={dir}>
-      <div className="max-w-4xl mx-auto">
+  return {
+    key: 'home',
+    node: (
+    <div className="relative min-h-screen text-white overflow-hidden" dir={dir}>
+      <CosmicBackground />
+      <div className="relative z-10"><RecordTicker /></div>
+      <div className="relative z-10 max-w-4xl mx-auto p-6">
         <button onClick={onBack} className="mb-8 text-amber-400 font-bold flex items-center gap-2 hover:text-amber-300 transition">
           <span className={isAr ? 'ml-2' : 'mr-2 rotate-180'}>←</span>
           {tUI('backToGamesCity')}
         </button>
         
-        <h1 className="text-3xl font-black text-amber-400 mb-8 drop-shadow-lg">
+        <h1 className="text-3xl font-black text-amber-400 mb-6 drop-shadow-[0_0_16px_rgba(251,191,36,0.55)]">
           {tUI('gameTitle')}
         </h1>
+
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <TiltCard glow="#f59e0b" pulse onClick={() => setShowLeaderboard(true)} className="p-3">
+            <div className="flex items-center gap-2"><Trophy className="w-6 h-6 text-amber-300" /><span className="font-black text-amber-200">{isAr ? 'لوحة الأبطال' : 'Champions'}</span></div>
+          </TiltCard>
+          <TiltCard glow="#38bdf8" pulse onClick={() => setShowCompetition(true)} className="p-3">
+            <div className="flex items-center gap-2"><Swords className="w-6 h-6 text-sky-300" /><span className="font-black text-sky-200">{isAr ? 'ساحات المنافسة' : 'Arenas'}</span></div>
+          </TiltCard>
+        </div>
 
         <div className="mb-6">
           <button
@@ -144,20 +170,22 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
             const hasChallenge = !!challengeScene;
             const totalQuestions = challengeScene?.questions.length ?? 0;
 
+            const th = getTheme(chapter.id);
             return (
-              <div 
+              <TiltCard
                 key={chapter.id}
-                onClick={() => isUnlocked && setActiveChapterId(chapter.id)}
-                className={`p-6 rounded-2xl border-2 transition-all ${
-                  isUnlocked 
-                    ? 'border-amber-500/50 bg-slate-900 hover:bg-slate-800 hover:border-amber-400 cursor-pointer shadow-lg' 
-                    : 'border-slate-800 bg-slate-900/50 opacity-60 cursor-not-allowed'
-                }`}
+                glow={th.accent}
+                pulse={isUnlocked && !isCompleted}
+                disabled={!isUnlocked}
+                onClick={() => setActiveChapterId(chapter.id)}
+                className="p-6"
               >
-                <h2 className="text-xl font-bold mb-3">
-                  {isAr ? chapter.titleAr : chapter.titleEn}
-                </h2>
-                
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="text-3xl">{isUnlocked ? th.emoji : '🔒'}</span>
+                  <h2 className="text-xl font-bold">{isAr ? chapter.titleAr : chapter.titleEn}</h2>
+                </div>
+                <p className="text-[11px] text-slate-400 mb-2">📍 {isAr ? th.placeAr : th.placeEn}</p>
+
                 {isCompleted ? (
                   <span className="text-emerald-400 text-sm flex items-center gap-1">
                     ✅ {tUI('statusCompleted')}
@@ -176,11 +204,28 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
                     🔒 {tUI('statusLocked')}
                   </span>
                 )}
-              </div>
+              </TiltCard>
             );
           })}
         </div>
       </div>
     </div>
+    ),
+  };
+  })();
+
+  // 🌀 انتقال "الثقب الدودي" بين الشاشات
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={view.key}
+        initial={{ opacity: 0, scale: 0.94, rotate: -1 }}
+        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+        exit={{ opacity: 0, scale: 1.06, rotate: 1 }}
+        transition={{ duration: 0.35 }}
+      >
+        {view.node}
+      </motion.div>
+    </AnimatePresence>
   );
 }
