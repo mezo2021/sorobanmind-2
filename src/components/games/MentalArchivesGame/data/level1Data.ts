@@ -42,10 +42,9 @@ export const LEVEL_1_DATA: Chapter = {
           ruleTitleEn: "Rule 1: Direct Addition",
           ruleDescEn: "Golden Rule: If there is space, move directly.",
           steps: [
-            { textAr: "الْخُطْوَةُ 1 (الرَّقْمُ 1): نَرْفَعُ خَرَزَةً سُفْلِيَّةً وَاحِدَةً بَاتِّجَاهِ الْعَارِضَةِ.", textEn: "Step 1 (1): Lift one lower bead towards the bar." },
-            { textAr: "الْخُطْوَةُ 2 (+2): نَرْفَعُ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ بَاتِّجَاهِ الْعَارِضَةِ.", textEn: "Step 2 (+2): Lift two lower beads towards the bar." },
-            { textAr: "الْخُطْوَةُ 3 (+1): نَرْفَعُ خَرَزَةً سُفْلِيَّةً وَاحِدَةً بَاتِّجَاهِ الْعَارِضَةِ.", textEn: "Step 3 (+1): Lift one lower bead towards the bar." },
-            { textAr: "النَّتِيجَةُ النِّهَائِيَّة: 4.", textEn: "Final result: 4." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 1.", textEn: "Step 1: Represent 1." },
+            { textAr: "الْخُطْوَةُ 2 (+2): لِلْآحَادِ: نَرْفَعُ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ مُبَاشَرَةً ← 3.", textEn: "Step 2 (+2): Units: Lift two lower beads directly → 3." },
+            { textAr: "الْخُطْوَةُ 3 (+1): لِلْآحَادِ: نَرْفَعُ خَرَزَةً سُفْلِيَّةً مُبَاشَرَةً ← 4. النَّتِيجَةُ: 4.", textEn: "Step 3 (+1): Units: Lift one lower bead directly → 4. Result: 4." }
           ]
         },
         // 2️⃣ المثال 2: أصدقاء 5 (المتمم)
@@ -58,10 +57,9 @@ export const LEVEL_1_DATA: Chapter = {
           ruleTitleEn: "Rule 2: Friends of 5 (Small Friend)",
           ruleDescEn: "Golden Rule: Add 5, subtract the complement. Complements: (Complement of 1 is 4) - (Complement of 2 is 3) - (Complement of 3 is 2) - (Complement of 4 is 1).",
           steps: [
-            { textAr: "الْخُطْوَةُ 1 (الرَّقْمُ 2): نَرْفَعُ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ بَاتِّجَاهِ الْعَارِضَةِ.", textEn: "Step 1 (2): Lift two lower beads towards the bar." },
-            { textAr: "الْخُطْوَةُ 2 (+3): نُنْزِلُ الْخَرَزَةَ الْعِلْوِيَّةَ بَاتِّجَاهِ الْعَارِضَةِ (+5)، وَنُبْعِدُ 2 خَرَزَتَيْنِ سُفْلِيَّتَيْنِ عَنِ الْعَارِضَةِ (لِأَنَّ مُتَمِّمَ 3 هُوَ 2).", textEn: "Step 2 (+3): Bring down the upper bead towards the bar (+5), and move two lower beads away from the bar (Friend of 3 is 2)." },
-            { textAr: "الْخُطْوَةُ 3 (+1): نَرْفَعُ خَرَزَةً سُفْلِيَّةً وَاحِدَةً بَاتِّجَاهِ الْعَارِضَةِ.", textEn: "Step 3 (+1): Lift one lower bead towards the bar." },
-            { textAr: "النَّتِيجَةُ النِّهَائِيَّة: 6.", textEn: "Final result: 6." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 2.", textEn: "Step 1: Represent 2." },
+            { textAr: "الْخُطْوَةُ 2 (+3): لِلْآحَادِ: نُنْزِلُ 5 وَنَطْرَحُ 2 (صَدِيقُ 5) ← 5.", textEn: "Step 2 (+3): Units: Bring down 5 and subtract 2 (Friend of 5) → 5." },
+            { textAr: "الْخُطْوَةُ 3 (+1): لِلْآحَادِ: نَرْفَعُ خَرَزَةً سُفْلِيَّةً مُبَاشَرَةً ← 6. النَّتِيجَةُ: 6.", textEn: "Step 3 (+1): Units: Lift one lower bead directly → 6. Result: 6." }
           ]
         },
         // 3️⃣ المثال 3: أصدقاء 10 (المكمل)
@@ -74,10 +72,9 @@ export const LEVEL_1_DATA: Chapter = {
           ruleTitleEn: "Rule 3: Friends of 10 (Big Friend)",
           ruleDescEn: "Golden Rule: Add 10, subtract the complement. Complements: (Complement of 1 is 9) - (Complement of 2 is 8) - ... - (Complement of 9 is 1).",
           steps: [
-            { textAr: "الْخُطْوَةُ 1 (الرَّقْمُ 7): نُنْزِلُ الْعِلْوِيَّةَ بَاتِّجَاهِ الْعَارِضَةِ، وَنَرْفَعُ 2 خَرَزَتَيْنِ سُفْلِيَّتَيْنِ.", textEn: "Step 1 (7): Bring down the upper bead, and lift two lower beads." },
-            { textAr: "الْخُطْوَةُ 2 (+1): نَرْفَعُ خَرَزَةً سُفْلِيَّةً وَاحِدَةً بَاتِّجَاهِ الْعَارِضَةِ.", textEn: "Step 2 (+1): Lift one lower bead towards the bar." },
-            { textAr: "الْخُطْوَةُ 3 (+2): نَرْفَعُ خَرَزَةَ عَشَرَاتٍ بَاتِّجَاهِ الْعَارِضَةِ (+10)، وَنُبْعِدُ الْخَرَزَةَ الْعِلْوِيَّةَ وَ 3 خَرَزَاتٍ سُفْلِيَّةٍ عَنِ الْعَارِضَةِ (لِأَنَّ مُكَمِّلَ 2 هُوَ 8).", textEn: "Step 3 (+2): Lift a ten bead (+10), move the upper bead and 3 lower beads away from the bar (Friend of 2 is 8)." },
-            { textAr: "النَّتِيجَةُ النِّهَائِيَّة: 10.", textEn: "Final result: 10." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 7.", textEn: "Step 1: Represent 7." },
+            { textAr: "الْخُطْوَةُ 2 (+1): لِلْآحَادِ: نَرْفَعُ خَرَزَةً سُفْلِيَّةً مُبَاشَرَةً ← 8.", textEn: "Step 2 (+1): Units: Lift one lower bead directly → 8." },
+            { textAr: "الْخُطْوَةُ 3 (+2): لِلْآحَادِ: نُضِيفُ 1 لِلْعَشَرَاتِ وَنَطْرَحُ 8 مِنَ الْآحَادِ (صَدِيقُ 10) ← 10. النَّتِيجَةُ: 10.", textEn: "Step 3 (+2): Units: Add 1 to tens and subtract 8 from units (Friend of 10) → 10. Result: 10." }
           ]
         },
         // 4️⃣ المثال 4: الجمع المركب
@@ -90,10 +87,9 @@ export const LEVEL_1_DATA: Chapter = {
           ruleTitleEn: "Rule 4: Combined Addition (Your Special Rule)",
           ruleDescEn: "Golden Rule: +10 - 5 + Complement of the Complement. (If you can't subtract the Big Friend, use its Small Friend).",
           steps: [
-            { textAr: "الْخُطْوَةُ 1 (الرَّقْمُ 3): نَرْفَعُ 3 خَرَزَاتٍ سُفْلِيَّةٍ بَاتِّجَاهِ الْعَارِضَةِ.", textEn: "Step 1 (3): Lift three lower beads towards the bar." },
-            { textAr: "الْخُطْوَةُ 2 (+2): نُنْزِلُ الْعِلْوِيَّةَ (+5)، وَنُبْعِدُ 3 خَرَزَاتٍ سُفْلِيَّةٍ (-3) (مُتَمِّمُ 2 هُوَ 3).", textEn: "Step 2 (+2): Bring down upper bead (+5), move three lower beads away (-3) (Friend of 2 is 3)." },
-            { textAr: "الْخُطْوَةُ 3 (+7): نَرْفَعُ خَرَزَةَ عَشَرَاتٍ (+10)، نَرْفَعُ الْعِلْوِيَّةَ لِلْأَعْلَى (-5)، وَنَرْفَعُ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ (+2) (مُكَمِّلُ 7 هُوَ 3، وَمُتَمِّمُ 3 هُوَ 2).", textEn: "Step 3 (+7): Lift a ten bead (+10), move upper bead up (-5), lift two lower beads (+2) (Friend of 7 is 3, Friend of 3 is 2)." },
-            { textAr: "النَّتِيجَةُ النِّهَائِيَّة: 12.", textEn: "Final result: 12." }
+            { textAr: "الْخُطْوَةُ 1: نُمَثِّلُ 3.", textEn: "Step 1: Represent 3." },
+            { textAr: "الْخُطْوَةُ 2 (+2): لِلْآحَادِ: نُنْزِلُ 5 وَنَطْرَحُ 3 (صَدِيقُ 5) ← 5.", textEn: "Step 2 (+2): Units: Bring down 5 and subtract 3 (Friend of 5) → 5." },
+            { textAr: "الْخُطْوَةُ 3 (+7): لِلْآحَادِ: نُضِيفُ 1 لِلْعَشَرَاتِ (+10)، نَرْفَعُ الْعِلْوِيَّةَ (-5)، وَنَرْفَعُ خَرَزَتَيْنِ سُفْلِيَّتَيْنِ (+2) (الْقَاعِدَةُ الْمُرَكَّبَةُ) ← 12. النَّتِيجَةُ: 12.", textEn: "Step 3 (+7): Units: Add 1 to tens (+10), lift the upper bead (-5), and lift two lower beads (+2) (Combined Rule) → 12. Result: 12." }
           ]
         }
       ]
