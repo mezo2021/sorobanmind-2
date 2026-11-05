@@ -5,11 +5,11 @@ import { useProgressStore } from '@/store/progressStore';
 import { Num } from '@/components/Num';
 import { ArrowRight, Lock, Play, Timer, GraduationCap, BookOpen, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { isPreviewMode } from '@/utils/previewMode';
 
 import MentalArchivesExamRunner from './MentalArchivesExamRunner';
 import { EXAM_10_7 } from './data/exams/exam10_7';
-import { EXAM_6 } from './data/exams/exam6'; // 🆕 إضافة استيراد امتحان 6 كيو
+import { EXAM_6 } from './data/exams/exam6';
+import { EXAM_5 } from './data/exams/exam5'; // 🆕 استيراد امتحان 5 كيو
 import { ChapterId } from './gameFlowTypes';
 import { tUI } from './gameUI';
 
@@ -28,8 +28,8 @@ interface ExamMeta {
 // 🆕 التوسيع إلى 7 امتحانات (سلسلة خطية)
 const EXAMS: ExamMeta[] = [
   { id: 'exam_10_7', nameAr: '10-7 كيو (ورقة مشتركة)', nameEn: '10-7 Kyu (Combined)', questions: 50, marks: 500, minutes: 12, requiresChapter: ['level1', 'level2'], isReady: true },
-  { id: 'exam_6',    nameAr: '6 كيو',                    nameEn: '6 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_10_7', isReady: true }, // 🆕 تفعيل امتحان 6 كيو
-  { id: 'exam_5',    nameAr: '5 كيو',                    nameEn: '5 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_6',    isReady: false },
+  { id: 'exam_6',    nameAr: '6 كيو',                    nameEn: '6 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_10_7', isReady: true },
+  { id: 'exam_5',    nameAr: '5 كيو',                    nameEn: '5 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_6',    isReady: true }, // 🆕 تم التفعيل
   { id: 'exam_4',    nameAr: '4 كيو',                    nameEn: '4 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_5',    isReady: false },
   { id: 'exam_3',    nameAr: '3 كيو',                    nameEn: '3 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_4',    isReady: false },
   { id: 'exam_2',    nameAr: '2 كيو',                    nameEn: '2 Kyu',             questions: 80, marks: 500, minutes: 12, requiresExamPass: 'exam_3',    isReady: false },
@@ -45,11 +45,7 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
   const progress = useProgressStore((s) => s.mentalArchivesProgress);
   const examResults = useProgressStore((s) => s.mentalArchivesExams);
 
-  // 🆕 تجاوز الأقفال في وضع المعاينة
-  const preview = isPreviewMode();
-
   const isExamUnlocked = (exam: ExamMeta): boolean => {
-    if (preview) return true; // 🆕
     if (exam.requiresChapter) return exam.requiresChapter.every(ch => !!progress[ch]);
     if (exam.requiresExamPass) return examResults[exam.requiresExamPass]?.passed || false;
     return false;
@@ -67,11 +63,21 @@ export default function MentalArchivesExams({ onBack }: { onBack: () => void }) 
     );
   }
 
-  // 🆕 إضافة تشغيل امتحان 6 كيو
   if (isRunning && selectedExamId === 'exam_6') {
     return (
       <MentalArchivesExamRunner 
         examData={EXAM_6} 
+        mode={mode} 
+        onExit={() => { setIsRunning(false); setSelectedExamId(null); }} 
+      />
+    );
+  }
+
+  // 🆕 إضافة تشغيل امتحان 5 كيو
+  if (isRunning && selectedExamId === 'exam_5') {
+    return (
+      <MentalArchivesExamRunner 
+        examData={EXAM_5} 
         mode={mode} 
         onExit={() => { setIsRunning(false); setSelectedExamId(null); }} 
       />
