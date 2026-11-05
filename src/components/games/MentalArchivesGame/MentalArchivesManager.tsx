@@ -16,7 +16,6 @@ import { Num } from '@/components/Num';
 import { GraduationCap } from 'lucide-react';
 import { isPreviewMode } from '@/utils/previewMode';
 
-// 🆕 P04: Partial ليتحقق TS من الحقول الناقصة بدل cast كاذب
 const CHAPTERS: Partial<Record<ChapterId, Chapter>> = {
   intro: INTRO_DATA,
   level1: LEVEL_1_DATA,
@@ -25,7 +24,6 @@ const CHAPTERS: Partial<Record<ChapterId, Chapter>> = {
   level4: LEVEL_4_DATA,
 };
 
-// 🆕 P05: متطلب فتح قسم الامتحانات في مكان واحد (بدل hardcode)
 const EXAM_PORTAL_PREREQ_CHAPTERS: ChapterId[] = ['level1', 'level2'];
 
 export default function MentalArchivesManager({ onBack }: { onBack: () => void }) {
@@ -37,10 +35,8 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
   const completeChapter = useProgressStore((s) => s.completeMentalChapter);
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
-  // 🆕 تجاوز بوابة الامتحانات في وضع المعاينة
   const preview = isPreviewMode();
 
-  // 🆕 P04: إعادة الضبط النظيفة عند غياب الفصل (بدل setState داخل render)
   useEffect(() => {
     if (activeChapterId && !CHAPTERS[activeChapterId]) {
       setActiveChapterId(null);
@@ -51,6 +47,11 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
     if (!activeChapterId) return;
     const chapter = CHAPTERS[activeChapterId];
     if (!chapter) return;
+
+    if (preview) {
+      setActiveChapterId(null);
+      return; // 🆕 منع حفظ التقدم في المعاينة
+    }
 
     const challengeScene = chapter.scenes.find((s): s is Extract<Scene, { kind: 'challenge' }> => s.kind === 'challenge');
     const isSuccess = challengeScene ? score >= challengeScene.requiredCorrect : true;
@@ -64,15 +65,12 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
     setActiveChapterId(null);
   };
 
-  // ═══ شاشة الامتحانات ═══
   if (showExams) {
     return <MentalArchivesExams onBack={() => setShowExams(false)} />;
   }
 
-  // ═══ شاشة اللعب (المحرك) ═══
   if (activeChapterId) {
     const chapter = CHAPTERS[activeChapterId];
-    // 🆕 P04: حارس نهائي — useEffect أعلاه سيعيد الضبط تلقائياً
     if (!chapter) return null;
     return (
       <MentalArchivesEngine 
@@ -84,17 +82,13 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
     );
   }
 
-  // ═══ شاشة الخريطة ═══
-  // 🆕 P05: قراءة المتطلب من الثابت (وليس تعبيراً صلباً) + تجاوز المعاينة
+  // 🆕 تفعيل المعاينة لبوابة الامتحانات
   const canAccessExams = preview || EXAM_PORTAL_PREREQ_CHAPTERS.every((id) => !!progress[id]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-6" dir={dir}>
       <div className="max-w-4xl mx-auto">
-        <button 
-          onClick={onBack} 
-          className="mb-8 text-amber-400 font-bold flex items-center gap-2 hover:text-amber-300 transition"
-        >
+        <button onClick={onBack} className="mb-8 text-amber-400 font-bold flex items-center gap-2 hover:text-amber-300 transition">
           <span className={isAr ? 'ml-2' : 'mr-2 rotate-180'}>←</span>
           {tUI('backToGamesCity')}
         </button>
@@ -103,7 +97,6 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
           {tUI('gameTitle')}
         </h1>
 
-        {/* 👇 زر الامتحانات (تعديل 2: تم تغيير اللون إلى بنفسجي ملكي) */}
         <div className="mb-6">
           <button
             onClick={() => canAccessExams && setShowExams(true)}
@@ -127,7 +120,6 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
                 </p>
               </div>
             </div>
-            {/* تعديل 1: نص ديناميكي بدل الثابت */}
             {!canAccessExams && (
               <span className="text-xs text-slate-500 font-bold">
                 {isAr ? `أكمل ${EXAM_PORTAL_PREREQ_CHAPTERS.length} مستويات` : `Finish ${EXAM_PORTAL_PREREQ_CHAPTERS.length} levels`}
@@ -137,11 +129,9 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {/* 🆕 P04: فلترة undefined لأن Partial قد ينتج undefined */}
           {(Object.values(CHAPTERS).filter((c): c is Chapter => c !== undefined)).map((chapter) => {
             const isCompleted = !!progress[chapter.id];
-            const isUnlocked = chapter.requires.every(req => !!progress[req]);
-            // 🆕 P06: حساب عدد الأسئلة الكلي للعرض "bestScore / total"
+            const isUnlocked = preview || chapter.requires.every(req => !!progress[req]); // 🆕 تفعيل المعاينة للمستويات
             const challengeScene = chapter.scenes.find((s): s is Extract<Scene, { kind: 'challenge' }> => s.kind === 'challenge');
             const hasChallenge = !!challengeScene;
             const totalQuestions = challengeScene?.questions.length ?? 0;
