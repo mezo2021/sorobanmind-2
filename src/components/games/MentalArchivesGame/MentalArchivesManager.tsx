@@ -6,6 +6,7 @@ import { INTRO_DATA } from './data/introData';
 import { LEVEL_1_DATA } from './data/level1Data';
 import { LEVEL_2_DATA } from './data/level2Data';
 import { LEVEL_3_DATA } from './data/level3Data';
+import { LEVEL_4_DATA } from './data/level4Data';
 import { Chapter, ChapterId, Scene } from './gameFlowTypes';
 import { addScore } from '../highScoreStore';
 import { useProgressStore } from '@/store/progressStore';
@@ -21,6 +22,7 @@ const CHAPTERS: Partial<Record<ChapterId, Chapter>> = {
   level1: LEVEL_1_DATA,
   level2: LEVEL_2_DATA,
   level3: LEVEL_3_DATA,
+  level4: LEVEL_4_DATA,
 };
 
 // 🆕 P05: متطلب فتح قسم الامتحانات في مكان واحد (بدل hardcode)
