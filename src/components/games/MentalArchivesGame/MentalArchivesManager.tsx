@@ -17,9 +17,9 @@ import { useProgressStore } from '@/store/progressStore';
 import { useGameLang } from '../gamesI18n';
 import { tUI } from './gameUI';
 import { Num } from '@/components/Num';
-import { GraduationCap, Trophy, Swords } from 'lucide-react';
-import { motion } from 'framer-motion'; // 🆕 تم حذف AnimatePresence
-import CosmicBackground, { CosmicHost } from '@/components/cosmic/CosmicBackground'; // 🆕 إضافة CosmicHost
+import { GraduationCap, Trophy, Swords, Sparkles } from 'lucide-react'; // 🆕 Sparkles
+import { motion } from 'framer-motion';
+import CosmicBackground, { CosmicHost } from '@/components/cosmic/CosmicBackground';
 import TiltCard from '@/components/cosmic/TiltCard';
 import RecordTicker from '@/components/RecordTicker';
 import Leaderboard from '@/components/Leaderboard';
@@ -52,6 +52,10 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
   const completeChapter = useProgressStore((s) => s.completeMentalChapter);
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
+  // 🆕 XP من المتجر
+  const addXP = useProgressStore((s) => s.addXP);
+  const totalXP = useProgressStore((s) => s.totalXP);
+
   const preview = isPreviewMode();
 
   useEffect(() => {
@@ -67,17 +71,27 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
 
     if (preview) {
       setActiveChapterId(null);
-      return; // 🆕 منع حفظ التقدم في المعاينة
+      return; // 🆕 منع حفظ التقدم و XP في المعاينة
     }
 
     const challengeScene = chapter.scenes.find((s): s is Extract<Scene, { kind: 'challenge' }> => s.kind === 'challenge');
     const isSuccess = challengeScene ? score >= challengeScene.requiredCorrect : true;
 
     if (isSuccess) {
+      const wasCompleted = !!progress[activeChapterId];
+      const previousBest = progress[activeChapterId]?.bestScore ?? 0;
+
       completeChapter(activeChapterId, score);
       const updatedProgress = useProgressStore.getState().mentalArchivesProgress;
       const totalScore = Object.values(updatedProgress).reduce((sum, ch) => sum + (ch?.bestScore || 0), 0);
       addScore('mental-archives', childName, totalScore, 'joud');
+
+      // 🆕 منح XP: 20 لأول إكمال، 10 لتحسين نتيجة سابقة
+      if (!wasCompleted) {
+        addXP(20);
+      } else if (score > previousBest) {
+        addXP(10);
+      }
     }
     setActiveChapterId(null);
   };
@@ -118,9 +132,17 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
           {tUI('backToGamesCity')}
         </button>
         
-        <h1 className="text-3xl font-black text-amber-400 mb-6 drop-shadow-[0_0_16px_rgba(251,191,36,0.55)]">
-          {tUI('gameTitle')}
-        </h1>
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <h1 className="text-3xl font-black text-amber-400 drop-shadow-[0_0_16px_rgba(251,191,36,0.55)]">
+            {tUI('gameTitle')}
+          </h1>
+          {/* 🆕 شارة XP (عربي/إنجليزي) */}
+          <div className="flex items-center gap-1.5 bg-purple-500/15 border border-purple-500/40 rounded-full py-1.5 px-3 text-sm font-black text-purple-300 shrink-0">
+            <Sparkles className="w-4 h-4" />
+            <Num>{totalXP}</Num>
+            <span className="text-xs font-bold opacity-90">{isAr ? 'نقطة' : 'XP'}</span>
+          </div>
+        </div>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
           <TiltCard glow="#f59e0b" pulse onClick={() => setShowLeaderboard(true)} className="p-3">
@@ -165,7 +187,7 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {(Object.values(CHAPTERS).filter((c): c is Chapter => c !== undefined)).map((chapter) => {
             const isCompleted = !!progress[chapter.id];
-            const isUnlocked = preview || chapter.requires.every(req => !!progress[req]); // 🆕 تفعيل المعاينة للمستويات
+            const isUnlocked = preview || chapter.requires.every(req => !!progress[req]);
             const challengeScene = chapter.scenes.find((s): s is Extract<Scene, { kind: 'challenge' }> => s.kind === 'challenge');
             const hasChallenge = !!challengeScene;
             const totalQuestions = challengeScene?.questions.length ?? 0;
@@ -214,7 +236,6 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
   };
   })();
 
-  // 🌀 الحل الجديد: خلفية دائمة (CosmicHost) + انتقال ناعم بدون انتظار
   return (
     <CosmicHost>
       <motion.div
