@@ -1,7 +1,7 @@
 // src/components/games/MentalArchivesGame/competition/CompetitionHub.tsx
 // بوابة أنماط المنافسة الثلاثة + إعداد الأسماء والصعوبة.
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion'; // 🆕 حذف AnimatePresence
 import { ArrowRight } from 'lucide-react';
 import { useGameLang } from '../../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
@@ -79,12 +79,16 @@ export default function CompetitionHub({ onBack }: { onBack: () => void }) {
     );
   })();
 
-  // انتقال "الثقب الدودي" بين الشاشات
+  // 🌀 الحل الجديد: انتقال ناعم بدون انتظار (بدون AnimatePresence)
   return (
-    <AnimatePresence mode="wait">
-      <motion.div key={view} initial={{ opacity: 0, scale: 0.94, rotate: -1 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 1.06, rotate: 1 }} transition={{ duration: 0.35 }}>
-        {body}
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      key={view}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+      className="min-h-screen"
+    >
+      {body}
+    </motion.div>
   );
 }
