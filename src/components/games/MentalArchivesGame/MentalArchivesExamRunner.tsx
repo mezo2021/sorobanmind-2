@@ -24,7 +24,11 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
   const { dir, isAr } = useGameLang();
   const recordResult = useProgressStore((s) => s.recordMentalExam);
   const childName = useProgressStore((s) => s.childName);
+  // 🆕 XP
+  const addXP = useProgressStore((s) => s.addXP);
   const [showCert, setShowCert] = useState(false);
+  // 🆕 لحفظ XP المكتسبة وعرضها في شاشة النتيجة
+  const [earnedXP, setEarnedXP] = useState(0);
 
   // 🆕 خلط الأسئلة داخل كل قسم (يحدث مرة واحدة عند فتح الامتحان)
   const [shuffledSections] = useState(() => {
@@ -38,7 +42,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     });
   });
 
-  // نعتمد على الأقسام المخلوطة بدلاً من الأصلية
   const allQuestions = shuffledSections.flatMap((sec, sIdx) => 
     sec.questions.map((q, qIdx) => ({ ...q, sectionIndex: sIdx, points: sec.pointsPerQuestion }))
   );
@@ -51,7 +54,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
   const [isFinished, setIsFinished] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showReview, setShowReview] = useState(false);
-  // 🆕 P09: مودال تأكيد الإنهاء (بدل window.confirm)
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   
   const [celebratingId, setCelebratingId] = useState<string | null>(null);
@@ -69,7 +71,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     }
   }, [activeIndex]);
 
-  // 🆕 P20: المؤقت يقتصر على العد فقط (بدون استدعاء handleSubmit داخل updater)
+  // 🆕 P20: المؤقت يقتصر على العد فقط
   useEffect(() => {
     if (mode === 'training' || isFinished) return;
     const timer = setInterval(() => {
@@ -78,7 +80,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     return () => clearInterval(timer);
   }, [mode, isFinished]);
 
-  // 🆕 P20: استدعاء handleSubmit عند وصول المؤقت للصفر (خارج setState)
+  // 🆕 P20: استدعاء handleSubmit عند وصول المؤقت للصفر
   useEffect(() => {
     if (mode === 'exam' && timeLeft === 0 && !isFinished && !isSubmitting) {
       handleSubmit(true);
@@ -107,7 +109,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
   };
 
   const handleSubmit = (force = false) => {
-    // 🆕 P09: بدل window.confirm — نفتح المودال المخصص
     if (!force) {
       setShowFinishConfirm(true);
       return;
@@ -119,7 +120,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     let score = 0;
     const currentAnswers = answersRef.current;
 
-    // 🆕 الحساب بناءً على الأسئلة المخلوطة
     allQuestions.forEach((q) => {
       const userAnswer = currentAnswers[q.id];
       if (userAnswer && parseInt(userAnswer) === q.answer) {
@@ -127,11 +127,10 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
       }
     });
 
-    // 🧪 TEMPORARY: فرض النجاح في وضع المعاينة لاختبار الشهادة (احذف هذا البلوك لاحقاً)
+    // 🧪 TEMPORARY: فرض النجاح في وضع المعاينة لاختبار الشهادة
     if (isPreviewMode()) {
       score = 450;
     }
-    // 🧪 END TEMPORARY
 
     let grade = undefined;
     const passed = mode === 'exam' && score >= examData.passingScore;
@@ -145,6 +144,11 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
       }
     }
 
+    // 🆕 التقاط الحالة السابقة قبل الحفظ (لحساب XP)
+    const prevExamResult = useProgressStore.getState().mentalArchivesExams[examData.id];
+    const wasPassedBefore = prevExamResult?.passed ?? false;
+    const previousBest = prevExamResult?.score ?? 0;
+
     recordResult(examData.id, {
       score,
       totalMarks: examData.totalMarks,
@@ -154,7 +158,23 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
       completedAt: Date.now(),
     });
 
-    // 🏆 تسجيل الرقم في لوحة الأبطال (للناجحين فقط، وليس في وضع المعاينة)
+    // 🆕 حساب XP (فقط في وضع الامتحان الرسمي، ليس في المعاينة أو التدريب)
+    let xpToAdd = 0;
+    if (!isPreviewMode() && mode === 'exam') {
+      if (!wasPassedBefore && passed) {
+        xpToAdd = 150; // أول اجتياز
+      } else if (examData.id === 'exam_10_7' && previousBest < 250 && score >= 250 && !passed) {
+        xpToAdd = 50; // أول وصول لـ 250+ في exam_10_7
+      } else if (previousBest > 0 && score > previousBest) {
+        xpToAdd = 30; // تحسين درجة سابقة
+      }
+    }
+    if (xpToAdd > 0) {
+      addXP(xpToAdd);
+      setEarnedXP(xpToAdd);
+    }
+
+    // 🏆 تسجيل الرقم في لوحة الأبطال (للناجحين فقط، وليس في المعاينة)
     if (passed && childName && !isPreviewMode()) {
       addRecord({ name: childName, examId: examData.id, score, timeSec: Math.max(1, examData.timeLimitSeconds - timeLeft) });
     }
@@ -163,19 +183,17 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     setIsSubmitting(false);
   };
 
-  // 🆕 تعديل دالة getOperator لتجنب طباعة + قبل الرقم السالب
   const getOperator = (type: string, nextNum?: number) => {
     if (type === 'multiplication') return '×';
     if (type === 'division') return '÷';
     if (type === 'subtraction') return '-';
-    if (nextNum !== undefined && nextNum < 0) return ''; // إخفاء الإشارة الموجبة قبل السالب
+    if (nextNum !== undefined && nextNum < 0) return '';
     return '+';
   };
 
   // ═══ شاشة النتائج وسجل التصحيح ═══
   if (isFinished) {
     let score = 0;
-    // 🆕 الحساب بناءً على الأسئلة المخلوطة
     allQuestions.forEach((q) => {
       const userAnswer = answersRef.current[q.id];
       if (userAnswer && parseInt(userAnswer) === q.answer) {
@@ -183,11 +201,9 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
       }
     });
     
-    // 🧪 TEMPORARY: لكي تعرض شاشة النتيجة نفس الرقم 450 الوهمي (احذف هذا البلوك لاحقاً)
     if (isPreviewMode()) {
       score = 450;
     }
-    // 🧪 END TEMPORARY
 
     const isExamMode = mode === 'exam';
     const passed = isExamMode && score >= examData.passingScore;
@@ -195,7 +211,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
 
     let trainMessage = '';
     if (!isExamMode) {
-      // 🆕 تم تحديث المفاتيح لتتوافق مع Kyu
       if (score >= 400) trainMessage = tUI('trainReadyKyu7');
       else if (score >= 350) trainMessage = tUI('trainNeedKyu8');
       else if (score >= 300) trainMessage = tUI('trainNeedKyu9');
@@ -203,7 +218,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
       else trainMessage = tUI('trainNeedMore');
     }
 
-    // ─── رسائل وألوان وضع الامتحان بناءً على الدرجة ───
     let examMainTitle = '';
     let examSubTitle = '';
     let examBadge = null;
@@ -235,7 +249,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
           </span>
         );
       }
-      // 🆕 P21: 250-399 → إظهار المستوى + تنبيه بالحاجة لـ 7 كيو
       else if (score >= 250) {
         examBadge = (
           <span className="inline-block mt-3 bg-amber-500/20 text-amber-400 px-4 py-1.5 rounded-full text-sm font-bold border border-amber-500/30">
@@ -252,29 +265,18 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
             @media print {
               body { background: white !important; color: black !important; }
               .print-hidden { display: none !important; }
-              .print-page { 
-                padding: 0; 
-                max-width: 100%; 
-                box-shadow: none !important; 
-                border: none !important;
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact; 
-              }
+              .print-page { padding: 0; max-width: 100%; box-shadow: none !important; border: none !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               .print-card { page-break-inside: avoid; }
             }
           `}</style>
 
           <div className="max-w-4xl mx-auto print-page">
-            
-            {/* ترجمة رأس الشهادة */}
             <div className="hidden print:flex flex-col items-center justify-center mb-8 text-center border-b-2 border-amber-500 pb-6">
               <img src={logoImg} alt="Academy Logo" className="w-24 h-24 mb-2 object-contain" />
               <h1 className="text-2xl font-black text-black mb-1">
                 {isAr ? 'أكاديمية السوروبان الدولية' : 'International Soroban Academy'}
               </h1>
-              <p className="text-xs text-gray-500 mt-2">
-                {isAr ? 'ورقة تدريب' : 'Training Paper'}
-              </p>
+              <p className="text-xs text-gray-500 mt-2">{isAr ? 'ورقة تدريب' : 'Training Paper'}</p>
             </div>
 
             <div className="flex justify-between items-center mb-6 print-hidden">
@@ -290,9 +292,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
 
             <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 print:border-none print:bg-white print:text-black">
               <div className="text-center mb-8 border-b border-slate-700 print:border-black pb-6">
-                <h1 className="text-2xl font-black text-amber-400 print:text-black mb-2 print:hidden">
-                  {tUI('printTitle')}
-                </h1>
+                <h1 className="text-2xl font-black text-amber-400 print:text-black mb-2 print:hidden">{tUI('printTitle')}</h1>
                 <div className="flex justify-center gap-6 text-sm text-slate-400 print:text-gray-800 font-bold">
                   <span>{tUI('finalScore')}: <strong className="text-amber-400 print:text-black"><Num>{score}</Num> / <Num>{examData.totalMarks}</Num></strong></span>
                   <span>{isAr ? 'الوضع' : 'Mode'}: <strong className="text-amber-400 print:text-black">{isExamMode ? tUI('examMode') : tUI('examTraining')}</strong></span>
@@ -342,31 +342,21 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                 })}
               </div>
 
-              {/* ترجمة تذييل الشهادة */}
               <div className="hidden print:flex justify-between items-end mt-12 pt-8 border-t border-gray-300 text-black">
                 <div className="text-center">
-                  <p className="text-sm font-bold text-gray-600">
-                    {isAr ? 'تصميم البرنامج' : 'Program Design'}
-                  </p>
-                  <p className="font-black text-lg mt-6">
-                    {isAr ? 'مصطفى علي اكر' : 'Mustafa Ali Eker'}
-                  </p>
+                  <p className="text-sm font-bold text-gray-600">{isAr ? 'تصميم البرنامج' : 'Program Design'}</p>
+                  <p className="font-black text-lg mt-6">{isAr ? 'مصطفى علي اكر' : 'Mustafa Ali Eker'}</p>
                 </div>
-                
                 <div className="text-center">
                   <img src={logoImg} alt="Seal" className="w-16 h-16 opacity-50 mx-auto mb-2 grayscale" />
                 </div>
-
                 <div className="text-center">
-                  <p className="text-sm font-bold text-gray-600">
-                    {isAr ? 'تاريخ الإصدار' : 'Issue Date'}
-                  </p>
+                  <p className="text-sm font-bold text-gray-600">{isAr ? 'تاريخ الإصدار' : 'Issue Date'}</p>
                   <p className="font-bold mt-6 font-mono" dir="ltr">
                     {new Date().toLocaleDateString('en-GB').replace(/\//g, ' / ')}
                   </p>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
@@ -393,9 +383,7 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
           )}
           
           <h2 className="text-3xl font-black mb-2 text-white">
-            {!isExamMode 
-              ? (isAr ? 'انتهى التدريب بنجاح' : 'Training Finished') 
-              : examMainTitle}
+            {!isExamMode ? (isAr ? 'انتهى التدريب بنجاح' : 'Training Finished') : examMainTitle}
           </h2>
           <p className={`text-lg font-bold mb-4 ${isExamMode && score < 250 ? 'text-rose-400' : 'text-amber-400'}`}>
             {!isExamMode ? tUI('finalScore') : examSubTitle}
@@ -404,13 +392,19 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
           <div className="text-6xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 to-amber-500 mb-2 drop-shadow-md">
             <Num>{score}</Num>
           </div>
-          <p className="text-slate-500 mb-6 text-xl font-bold">/ <Num>{examData.totalMarks}</Num></p>
+          <p className="text-slate-500 mb-4 text-xl font-bold">/ <Num>{examData.totalMarks}</Num></p>
+
+          {/* 🆕 شارة XP المكتسبة (ثنائية اللغة) */}
+          {earnedXP > 0 && (
+            <div className="inline-flex items-center gap-1.5 bg-purple-500/15 border border-purple-500/40 rounded-full py-1.5 px-4 mb-4 text-sm font-black text-purple-300">
+              <Sparkles className="w-4 h-4" />
+              +<Num>{earnedXP}</Num> {isAr ? 'نقطة' : 'XP'}
+            </div>
+          )}
 
           {!isExamMode ? (
             <div className="bg-amber-900/20 border border-amber-500/40 rounded-2xl p-4 mb-8">
-              <p className="text-lg font-bold text-amber-300 leading-relaxed">
-                {trainMessage}
-              </p>
+              <p className="text-lg font-bold text-amber-300 leading-relaxed">{trainMessage}</p>
             </div>
           ) : (
             examBadge
@@ -451,7 +445,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
 
   return (
     <div className="min-h-screen bg-[#060a12] text-white flex flex-col relative select-none" dir={dir}>
-      
       <div className="flex items-center justify-between p-4 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 shadow-md">
         <button onClick={() => handleSubmit(false)} className="px-5 py-2.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 rounded-xl text-sm font-bold border border-rose-500/30 transition">
           {tUI('finishExam')}
@@ -520,7 +513,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
                   {q.numbers.map((num, i) => (
                     <div key={i} className="flex items-center justify-center w-16 relative">
                       <span><Num>{num}</Num></span>
-                      {/* 🆕 تم تمرير الرقم التالي هنا */}
                       {i < q.numbers.length - 1 && <span className="absolute -right-2 text-sm text-amber-500/70">{getOperator(q.type, q.numbers[i + 1])}</span>}
                     </div>
                   ))}
@@ -545,7 +537,6 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
 
       <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 p-4 pb-6 z-30 shadow-[0_-15px_50px_rgba(0,0,0,0.7)]">
         <div className="max-w-md mx-auto flex flex-col gap-3">
-          
           <div className="flex gap-2">
             <button onClick={prevQuestion} disabled={activeIndex === 0} className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 rounded-xl font-bold flex justify-center items-center gap-2 transition text-sm border border-slate-700">
               <ArrowRight className={`w-4 h-4 ${isAr ? '' : 'rotate-180'}`} />
@@ -563,11 +554,9 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
             maxLen={6}
             disabled={isFinished}
           />
-
         </div>
       </div>
 
-      {/* 🆕 P09: مودال تأكيد الإنهاء (بدل window.confirm) */}
       {showFinishConfirm && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" dir={dir}>
           <motion.div
@@ -575,12 +564,8 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
             animate={{ scale: 1, opacity: 1 }}
             className="max-w-sm w-full bg-slate-900 border-2 border-slate-700 rounded-3xl p-6 text-center"
           >
-            <h3 className="text-xl font-bold mb-3 text-white">
-              {tUI('finishExam')}
-            </h3>
-            <p className="text-slate-300 mb-6 text-sm leading-relaxed">
-              {tUI('confirmFinishMsg')}
-            </p>
+            <h3 className="text-xl font-bold mb-3 text-white">{tUI('finishExam')}</h3>
+            <p className="text-slate-300 mb-6 text-sm leading-relaxed">{tUI('confirmFinishMsg')}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowFinishConfirm(false)}
