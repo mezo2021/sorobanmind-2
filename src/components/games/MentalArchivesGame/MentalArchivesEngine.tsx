@@ -135,7 +135,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
 
   // 🆕 مصحح النطق التلقائي (لتحويل الرموز الرياضية إلى كلمات منطوقة وتصحيح الأسماء)
   const ttsText = finalText
-    .replace(/←/g, '، ثُمَّ ')
+    .replace(/←/g, '، فَيَنْتُجْ ')
     .replace(/\+/g, ' زَائِد ')
     .replace(/-/g, ' نَاقِص ')
     .replace(/×/g, ' فِي ')
