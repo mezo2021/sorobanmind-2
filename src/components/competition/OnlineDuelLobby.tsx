@@ -31,16 +31,16 @@ function Room({ session, myName, onLeave }: { session: Session; myName: string; 
   const whatsapp = () => window.open(`https://wa.me/?text=${encodeURIComponent(shareMsg)}`, '_blank', 'noopener');
 
   if (duel.phase === 'error') {
+    // 🆕 إضافة حالة 'expired' (انتهت صلاحية الغرفة)
     const msg = duel.error === 'roomNotFound' ? t('errNotFound')
       : duel.error === 'roomFull' ? t('errFull')
       : duel.error === 'roomTaken' ? t('errTaken')
-      : duel.error === 'expired' ? t('errExpired')
+      : duel.error === 'expired' ? t('errExpired')   // ← جديد
       : t('errConn');
     return (
       <div className="relative min-h-[100dvh] flex items-center justify-center p-4 text-white" dir={dir}>
         <CosmicBackground />
-        {/* تمت إزالة backdrop-blur */}
-        <div className="relative z-10 text-center bg-slate-900 border border-rose-500/40 rounded-3xl p-6 max-w-sm">
+        <div className="relative z-10 text-center bg-slate-900/80 border border-rose-500/40 rounded-3xl p-6 max-w-sm">
           <div className="text-4xl mb-2">{duel.error === 'expired' ? '⏱️' : '⚠️'}</div>
           <p className="mb-4">{msg}</p>
           <button onClick={onLeave} className="px-6 py-3 rounded-2xl bg-slate-800 border border-slate-600 font-bold">{t('back')}</button>
@@ -63,8 +63,7 @@ function Room({ session, myName, onLeave }: { session: Session; myName: string; 
       <CosmicBackground accent="#22c55e" accent2="#38bdf8" />
       <div className="relative z-10 max-w-md mx-auto p-4">
         <button onClick={onLeave} className="mb-4 text-amber-400 font-bold flex items-center gap-2"><ArrowRight className="w-5 h-5 rtl:rotate-0 ltr:rotate-180" />{t('back')}</button>
-        {/* تمت إزالة backdrop-blur واستبداله بـ bg-slate-900 */}
-        <div className="text-center bg-slate-900 border border-amber-500/40 rounded-3xl p-5 shadow-[0_0_30px_rgba(251,191,36,0.2)]">
+        <div className="text-center bg-white/5 border border-amber-500/40 rounded-3xl p-5 backdrop-blur-md shadow-[0_0_30px_rgba(251,191,36,0.2)]">
           <p className="text-xs text-slate-400">{t('roomCode')}</p>
           <div className="text-6xl font-black font-mono text-amber-300 my-2 tracking-widest" dir="ltr"><Num>{session.code}</Num></div>
           <div className="flex gap-2 justify-center">
@@ -73,8 +72,9 @@ function Room({ session, myName, onLeave }: { session: Session; myName: string; 
           </div>
         </div>
 
+        {/* 🆕 العد التنازلي لإغلاق الغرفة */}
         {duel.expiresIn !== null && duel.expiresIn > 0 && (
-          <div className="mt-3 text-center text-xs text-amber-300/90 bg-slate-900 border border-amber-500/30 rounded-xl py-2 px-3">
+          <div className="mt-3 text-center text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/30 rounded-xl py-2 px-3">
             ⏱️ {t('roomTimer')}{' '}
             <span className="font-mono font-black tabular-nums text-base text-amber-200">
               {String(Math.floor(duel.expiresIn / 60)).padStart(2, '0')}:
@@ -85,7 +85,7 @@ function Room({ session, myName, onLeave }: { session: Session; myName: string; 
 
         <div className="grid grid-cols-2 gap-3 mt-4">
           {[{ n: myName, rdy: duel.myReady, me: true }, { n: duel.opponentName, rdy: duel.oppReady, me: false }].map((p, i) => (
-            <div key={i} className={`rounded-2xl border p-3 text-center ${p.rdy ? 'border-emerald-400 bg-emerald-400/10' : 'border-slate-700 bg-slate-900'}`}>
+            <div key={i} className={`rounded-2xl border p-3 text-center ${p.rdy ? 'border-emerald-400 bg-emerald-400/10' : 'border-slate-700 bg-white/5'}`}>
               <div className="text-xs text-slate-400">{p.me ? t('you') : t('opponent')}</div>
               <div className="font-black truncate min-h-[1.5rem]">{p.n || (p.me ? '' : '…')}</div>
               <div className="text-xs mt-1">{p.rdy ? '✅' : '⏳'}</div>
@@ -138,8 +138,7 @@ export default function OnlineDuelLobby({ onBack }: { onBack: () => void }) {
         <h1 className="text-3xl font-black text-emerald-300 mb-1 drop-shadow-[0_0_14px_rgba(52,211,153,0.5)]">🌐 {t('title')}</h1>
         <p className="text-slate-400 text-sm mb-4">{t('subtitle')}</p>
 
-        {/* تمت إزالة backdrop-blur واستبداله بـ bg-slate-900 */}
-        <div className="rounded-2xl bg-slate-900 border border-slate-700/60 p-3 mb-4 flex justify-around text-center">
+        <div className="rounded-2xl bg-white/5 border border-slate-700/60 p-3 mb-4 flex justify-around text-center backdrop-blur-md">
           <div><div className="text-2xl font-black text-emerald-300"><Num>{stats.win}</Num></div><div className="text-[11px] text-slate-400">{t('wins')}</div></div>
           <div><div className="text-2xl font-black text-rose-300"><Num>{stats.lose}</Num></div><div className="text-[11px] text-slate-400">{t('losses')}</div></div>
           <div><div className="text-2xl font-black text-amber-300"><Num>{stats.draw}</Num></div><div className="text-[11px] text-slate-400">{t('draws')}</div></div>
@@ -161,10 +160,10 @@ export default function OnlineDuelLobby({ onBack }: { onBack: () => void }) {
             </TiltCard>
           </div>
         ) : (
-          <div className="rounded-3xl bg-slate-900 border border-sky-500/40 p-4">
+          <div className="rounded-3xl bg-white/5 border border-sky-500/40 p-4 backdrop-blur-md">
             <p className="text-sm text-slate-300 mb-2">{t('enterCode')}</p>
             <input value={code} onChange={(e) => setCode(normalizeRoomCode(e.target.value))} inputMode="numeric" maxLength={4} dir="ltr"
-              className="w-full text-center text-4xl font-mono font-black tracking-[0.5em] bg-slate-950 border border-sky-500/40 rounded-2xl py-3 text-sky-200" aria-label={t('roomCode')} />
+              className="w-full text-center text-4xl font-mono font-black tracking-[0.5em] bg-slate-950/80 border border-sky-500/40 rounded-2xl py-3 text-sky-200" aria-label={t('roomCode')} />
             <button disabled={!isValidRoomCode(code)} onClick={() => setSession({ role: 'guest', code, mode: 'live' })}
               className="mt-3 w-full h-12 rounded-2xl font-extrabold bg-gradient-to-r from-sky-500 to-cyan-400 text-slate-950 disabled:opacity-50">{t('joinBtn')}</button>
             <button onClick={() => setMode('menu')} className="mt-2 w-full text-sm text-slate-400">{t('back')}</button>
