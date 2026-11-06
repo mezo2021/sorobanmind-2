@@ -113,46 +113,50 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   }, [isAr]);
 
   const speakCustom = useCallback((characterId: CharacterId, text: string, onDone?: () => void) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      if (onDone) onDone();
-      return;
-    }
-    
-    const ss = window.speechSynthesis;
-    const wasBusy = ss.speaking || ss.pending;
-    if (wasBusy) ss.cancel();
-    
-    let finalText = text;
-    if (!isAr && childName) {
-      const firstName = childName.split(/\s+/)[0];
-      const nameDict: Record<string, string> = {
-        'مصطفى': 'Mustafa', 'ميمو': 'Mezo', 'محمد': 'Mohammed', 'جود': 'Joud', 'أسيل': 'Aseel', 'سوروبانا': 'Sorobana'
-      };
-      const translatedName = nameDict[firstName] || firstName;
-      finalText = finalText.replace(new RegExp(childName, 'g'), translatedName);
-      finalText = finalText.replace(/؟/g, '?').replace(/،/g, ',');
-    }
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    if (onDone) onDone();
+    return;
+  }
+  
+  const ss = window.speechSynthesis;
+  const wasBusy = ss.speaking || ss.pending;
+  if (wasBusy) ss.cancel();
+  
+  let finalText = text;
+  if (!isAr && childName) {
+    const firstName = childName.split(/\s+/)[0];
+    const nameDict: Record<string, string> = {
+      'مصطفى': 'Mustafa', 'ميمو': 'Mezo', 'محمد': 'Mohammed', 'جود': 'Joud', 'أسيل': 'Aseel', 'سوروبانا': 'Sorobana'
+    };
+    const translatedName = nameDict[firstName] || firstName;
+    finalText = finalText.replace(new RegExp(childName, 'g'), translatedName);
+    finalText = finalText.replace(/؟/g, '?').replace(/،/g, ',');
+  }
 
-    const ttsText = finalText
-      .replace(/←/g, '، ثُمَّ ')
-      .replace(/\+/g, ' زَائِد ')
-      .replace(/-/g, ' نَاقِص ')
-      .replace(/×/g, ' فِي ')
-      .replace(/÷/g, ' عَلَى ')
-      .replace(/=/g, ' يُسَاوِي ');
-      .replace(/اكر/g, 'أَكَارْ');
+  // 🆕 مصحح النطق التلقائي (لتحويل الرموز الرياضية إلى كلمات منطوقة وتصحيح الأسماء)
+  const ttsText = finalText
+    .replace(/←/g, '، ثُمَّ ')
+    .replace(/\+/g, ' زَائِد ')
+    .replace(/-/g, ' نَاقِص ')
+    .replace(/×/g, ' فِي ')
+    .replace(/÷/g, ' عَلَى ')
+    .replace(/=/g, ' يُسَاوِي ')
+    // 🆕 تصحيح نطق الاسم والكنية (يجب أن تكون بهذا الشكل وليس كمصفوفة)
+    .replace(/مصطفى علي اكر/g, 'مُصْطَفَى عَلِي أَكَارْ')
+    .replace(/مصطفى/g, 'مُصْطَفَى')
+    .replace(/اكر/g, 'أَكَارْ');
 
-    const utterance = new SpeechSynthesisUtterance(ttsText);
-    utterance.lang = isAr ? 'ar-SA' : 'en-US';
-    utterance.rate = isAr ? 0.8 : 0.7;
-    utterance.pitch = characterId === 'jud' ? 0.8 : characterId === 'aseel' ? 1.4 : 1.25;
-    
-    if (voiceRef.current) utterance.voice = voiceRef.current;
-    if (onDone) utterance.onend = onDone;
-    
-    if (wasBusy) window.setTimeout(() => ss.speak(utterance), 80);
-    else ss.speak(utterance);
-  }, [isAr, childName]);
+  const utterance = new SpeechSynthesisUtterance(ttsText);
+  utterance.lang = isAr ? 'ar-SA' : 'en-US';
+  utterance.rate = isAr ? 0.8 : 0.7;
+  utterance.pitch = characterId === 'jud' ? 0.8 : characterId === 'aseel' ? 1.4 : 1.25;
+  
+  if (voiceRef.current) utterance.voice = voiceRef.current;
+  if (onDone) utterance.onend = onDone;
+  
+  if (wasBusy) window.setTimeout(() => ss.speak(utterance), 80);
+  else ss.speak(utterance);
+}, [isAr, childName]);
 
   const stopAllAudio = () => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
