@@ -14,9 +14,10 @@ export const DUEL_CONFIGS: Record<DuelMode, DuelConfig> = {
 export const COUNTDOWN_MS = 5000;
 export const GRACE_SECONDS = 15;
 const JOIN_TIMEOUT_MS = 6000;
+export const ROOM_TIMEOUT_SECONDS = 5 * 60;
 
 export type DuelPhase = 'connecting' | 'lobby' | 'countdown' | 'playing' | 'waitingOpponent' | 'finished' | 'error';
-export type DuelError = 'roomNotFound' | 'roomFull' | 'roomTaken' | 'connection' | null;
+export type DuelError = 'roomNotFound' | 'roomFull' | 'roomTaken' | 'connection' | 'expired' | null;
 
 export interface FinalStats { score: number; totalTime: number; correct: number }
 export interface DuelResult {
@@ -42,6 +43,7 @@ export interface RealtimeDuel {
   oppWantsRematch: boolean;
   requestRematch: () => void;
   error: DuelError;
+  expiresIn: number | null;
   opponentName: string;
   opponentPresent: boolean;
   myReady: boolean;
@@ -80,6 +82,7 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
   const [matchId, setMatchId] = useState(0);
   const [myRematch, setMyRematch] = useState(false);
   const [oppRematch, setOppRematch] = useState(false);
+  const [expiresIn, setExpiresIn] = useState<number | null>(null);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const idRef = useRef(clientId());
@@ -88,7 +91,6 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
   const phaseRef = useRef<DuelPhase>('connecting');
   phaseRef.current = phase;
 
-  // تصفير حالة المباراة وبدء العدّ التنازلي (يُستعمل للبداية الأولى والإعادة، دون مغادرة القناة)
   const beginMatch = useCallback((qs: CompQuestion[], at: number) => {
     setMyFinal(null); setOppFinal(null); setResult(null);
     setOppProgress({ answered: 0, score: 0 });
@@ -106,7 +108,7 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
 
   // ── الاتصال بالقناة ──
   useEffect(() => {
-    if (channelRef.current) return; // حماية StrictMode من الاشتراك المزدوج
+    if (channelRef.current) return;
     let joinTimer: number | undefined;
     const channel = supabase.channel(`duel:${code}`, {
       config: { broadcast: { self: false }, presence: { key: idRef.current } },
@@ -139,7 +141,7 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
       if (p.type === 'ready') { setOppReady(true); if (p.name) setOpponentName(p.name); }
       else if (p.type === 'start') {
         if (p.mode && DUEL_CONFIGS[p.mode]) setConfig(DUEL_CONFIGS[p.mode]);
-        beginMatch(p.questions, Date.now() + p.startIn); // مدة نسبية لتفادي اختلاف ساعات الأجهزة
+        beginMatch(p.questions, Date.now() + p.startIn);
       } else if (p.type === 'answer') setOppProgress({ answered: p.questionIndex + 1, score: p.score });
       else if (p.type === 'rematch_request') setOppRematch(true);
       else if (p.type === 'finish') setOppFinal({ score: p.finalScore, totalTime: p.totalTime, correct: p.correct });
@@ -165,11 +167,54 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
 
     return () => {
       window.clearTimeout(joinTimer);
-      supabase.removeChannel(channel);
-      channelRef.current = null;
+      if (channelRef.current === channel) {
+        supabase.removeChannel(channel);
+        channelRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code, role]);
+
+  // 🆕 تنظيف عند إغلاق التبويب
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const ch = channelRef.current;
+      if (ch) {
+        try { ch.unsubscribe(); } catch { /* noop */ }
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  // 🆕 المهلة التلقائية: تعمل فقط في lobby إذا لم ينضم الخصم بعد
+  useEffect(() => {
+    // 🆕 المهلة تعمل فقط إذا كنا في lobby والخصم لم ينضم بعد
+    if (phase !== 'lobby' || opponentPresent) {
+      setExpiresIn(null);
+      return;
+    }
+    
+    setExpiresIn(ROOM_TIMEOUT_SECONDS);
+    const interval = window.setInterval(() => {
+      setExpiresIn(prev => {
+        if (prev === null || prev <= 1) {
+          window.clearInterval(interval);
+          const ch = channelRef.current;
+          if (ch) {
+            try { supabase.removeChannel(ch); } catch { /* noop */ }
+            channelRef.current = null;
+          }
+          setError('expired');
+          setPhase('error');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => window.clearInterval(interval);
+  }, [phase, opponentPresent]); // 🆕 إضافة opponentPresent
 
   // ── المضيف يبدأ عند جاهزية الطرفين ──
   useEffect(() => {
@@ -184,7 +229,7 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
     }
   }, [role, phase, myReady, oppReady, opponentPresent, send, mode, beginMatch]);
 
-  // ── إعادة اللعب: عند طلب الطرفين يولّد المضيف أسئلة جديدة ويبدأ العدّ للجميع ──
+  // ── إعادة اللعب ──
   useEffect(() => {
     if (role !== 'host' || phase !== 'finished' || !myRematch || !oppRematch || !opponentPresent) return;
     const cfg = DUEL_CONFIGS[mode];
@@ -205,7 +250,7 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
     return () => window.clearInterval(t);
   }, [phase, startAt]);
 
-  // ── انقطاع الخصم: مهلة 15 ث ثم فوز تلقائي ──
+  // ── انقطاع الخصم ──
   useEffect(() => {
     const live = phase === 'countdown' || phase === 'playing' || phase === 'waitingOpponent';
     if (!live || opponentPresent || oppFinal) { setGraceLeft(null); return; }
@@ -226,7 +271,7 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, opponentPresent, oppFinal]);
 
-  // ── النتيجة عند إنهاء الطرفين: الأعلى نقاطاً ثم الأسرع ثم تعادل ──
+  // ── النتيجة ──
   useEffect(() => {
     if (!myFinal || !oppFinal || result) return;
     const outcome = myFinal.score !== oppFinal.score
@@ -262,5 +307,5 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
   const rematchStatus: RematchStatus = myRematch && oppRematch ? 'accepted' : myRematch ? 'requested' : 'idle';
   const oppWantsRematch = oppRematch && !myRematch;
 
-  return { phase, matchId, rematchStatus, oppWantsRematch, requestRematch, error, opponentName, opponentPresent, myReady, oppReady, config, questions, countdownMs, oppProgress, graceLeft, result, setReady, sendAnswer, finishMine };
+  return { phase, matchId, rematchStatus, oppWantsRematch, requestRematch, error, expiresIn, opponentName, opponentPresent, myReady, oppReady, config, questions, countdownMs, oppProgress, graceLeft, result, setReady, sendAnswer, finishMine };
 }
