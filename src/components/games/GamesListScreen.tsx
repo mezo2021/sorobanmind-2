@@ -45,9 +45,15 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
   const progressPct = Math.min(100, (ticketXP / TICKET_COST) * 100);
 
   const handleOpenGame = (game: GameMeta) => {
-    if (!hasTicket) return;
+    // 🆕 استثناء بوابة الثقب الدودي من شرط التذكرة
+    const isMentalArchives = game.id === 'mental-archives';
+    
+    if (!isMentalArchives && !hasTicket) return;
     if (game.status !== 'ready') return;
-    if (!preview) consumeTicket();
+    
+    // 🆕 لا نستهلك تذكرة إذا كانت اللعبة هي بوابة الثقب الدودي
+    if (!preview && !isMentalArchives) consumeTicket();
+    
     setActive({ kind: 'game', gameId: game.id });
   };
 
@@ -158,7 +164,8 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
               key={game.id}
               game={game}
               index={idx}
-              unlocked={hasTicket}
+              // 🆕 فتح بوابة الثقب الدودي دائماً، والألعاب الأخرى تحتاج تذكرة
+              unlocked={game.id === 'mental-archives' || hasTicket}
               onOpen={() => handleOpenGame(game)}
             />
           ))}
@@ -258,7 +265,7 @@ function GameCard({
 }: {
   game: GameMeta; index: number; unlocked: boolean; onOpen: () => void;
 }) {
-  const { isAr } = useGameLang(); // 👈 إضافة 1: قراءة اللغة داخل البطاقة
+  const { isAr } = useGameLang();
   const isBuilding = game.status !== 'ready';
   const canOpen = unlocked && !isBuilding;
 
@@ -283,11 +290,9 @@ function GameCard({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm sm:text-base font-bold text-white truncate">
-            {/* 👇 إضافة 2: استخدام الترجمة الإنجليزية إذا وجدت */}
             {!isAr && game.titleEn ? game.titleEn : gt(game.title)}
           </p>
           <p className="text-xs text-white/50 mt-0.5 truncate">
-            {/* 👇 إضافة 3: استخدام الترجمة الإنجليزية إذا وجدت */}
             {!isAr && game.subtitleEn ? game.subtitleEn : gt(game.subtitle)}
           </p>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
