@@ -5,8 +5,12 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { genSet, type CompQuestion } from '@/components/games/MentalArchivesGame/competition/compMath';
 
-export const LIVE_QUESTIONS = 5;
-export const LIVE_Q_SECONDS = 20;
+export type DuelMode = 'live' | 'blitz';
+export interface DuelConfig { mode: DuelMode; questions: number; seconds: number; level: 1 | 2 | 3 }
+export const DUEL_CONFIGS: Record<DuelMode, DuelConfig> = {
+  live: { mode: 'live', questions: 5, seconds: 20, level: 1 },
+  blitz: { mode: 'blitz', questions: 5, seconds: 5, level: 1 },
+};
 export const COUNTDOWN_MS = 5000;
 export const GRACE_SECONDS = 15;
 const JOIN_TIMEOUT_MS = 6000;
@@ -24,7 +28,7 @@ export interface DuelResult {
 
 type Payload =
   | { type: 'ready'; name: string }
-  | { type: 'start'; startAt: number; startIn: number; questions: CompQuestion[] }
+  | { type: 'start'; startAt: number; startIn: number; questions: CompQuestion[]; mode?: DuelMode }
   | { type: 'answer'; questionIndex: number; correct: boolean; timeSpent: number; score: number }
   | { type: 'finish'; finalScore: number; totalTime: number; correct: number };
 
@@ -35,6 +39,7 @@ export interface RealtimeDuel {
   opponentPresent: boolean;
   myReady: boolean;
   oppReady: boolean;
+  config: DuelConfig;
   questions: CompQuestion[];
   countdownMs: number;
   oppProgress: { answered: number; score: number };
@@ -45,11 +50,12 @@ export interface RealtimeDuel {
   finishMine: (f: FinalStats) => void;
 }
 
-interface Opts { role: 'host' | 'guest'; code: string; myName: string }
+interface Opts { role: 'host' | 'guest'; code: string; myName: string; mode?: DuelMode }
 
 const clientId = () => `c-${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
 
-export function useRealtimeDuel({ role, code, myName }: Opts): RealtimeDuel {
+export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): RealtimeDuel {
+  const [config, setConfig] = useState<DuelConfig>(DUEL_CONFIGS[mode]);
   const [phase, setPhase] = useState<DuelPhase>('connecting');
   const [error, setError] = useState<DuelError>(null);
   const [opponentName, setOpponentName] = useState('');
@@ -110,6 +116,7 @@ export function useRealtimeDuel({ role, code, myName }: Opts): RealtimeDuel {
       const p = payload as Payload;
       if (p.type === 'ready') { setOppReady(true); if (p.name) setOpponentName(p.name); }
       else if (p.type === 'start') {
+        if (p.mode && DUEL_CONFIGS[p.mode]) setConfig(DUEL_CONFIGS[p.mode]);
         setQuestions(p.questions);
         setStartAt(Date.now() + p.startIn); // نعتمد المدة النسبية لتفادي اختلاف ساعات الأجهزة
         setPhase('countdown');
@@ -148,12 +155,13 @@ export function useRealtimeDuel({ role, code, myName }: Opts): RealtimeDuel {
     if (role !== 'host' || phase !== 'lobby' || startedRef.current) return;
     if (myReady && oppReady && opponentPresent) {
       startedRef.current = true;
-      const qs = genSet(LIVE_QUESTIONS, 1);
+      const cfg = DUEL_CONFIGS[mode];
+      const qs = genSet(cfg.questions, cfg.level);
       const at = Date.now() + COUNTDOWN_MS;
-      send({ type: 'start', startAt: at, startIn: COUNTDOWN_MS, questions: qs });
+      send({ type: 'start', startAt: at, startIn: COUNTDOWN_MS, questions: qs, mode });
       setQuestions(qs); setStartAt(at); setPhase('countdown');
     }
-  }, [role, phase, myReady, oppReady, opponentPresent, send]);
+  }, [role, phase, myReady, oppReady, opponentPresent, send, mode]);
 
   // ── العدّ التنازلي المتزامن ──
   useEffect(() => {
@@ -214,5 +222,5 @@ export function useRealtimeDuel({ role, code, myName }: Opts): RealtimeDuel {
     setPhase((p) => (p === 'finished' ? p : 'waitingOpponent'));
   }, [send]);
 
-  return { phase, error, opponentName, opponentPresent, myReady, oppReady, questions, countdownMs, oppProgress, graceLeft, result, setReady, sendAnswer, finishMine };
+  return { phase, error, opponentName, opponentPresent, myReady, oppReady, config, questions, countdownMs, oppProgress, graceLeft, result, setReady, sendAnswer, finishMine };
 }
