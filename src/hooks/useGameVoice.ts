@@ -1,18 +1,38 @@
 // src/hooks/useGameVoice.ts
 // 🎭 صوت شخصيات الألعاب بلغتين — استبدال مباشر لاسم الطفل (100% مضمون)
+// 🆕 [Fix Arabic Konya] — تصحيح نطق "اكر" → "أَكَارْ" في كل الألعاب (2026-11-07)
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CharacterType } from '../types';
 import { useCharacterVoice, VOICE_CONFIG } from './useCharacterVoice';
 import { useLangStore } from '@/i18n/useTranslation';
 import { sanitizeForSpeech } from './useReadAloud';
-import { useProgressStore } from '@/store/progressStore'; // <-- أضفنا هذا
+import { useProgressStore } from '@/store/progressStore';
 
-// قاموس النطق
+// 🆕 تصحيحات النطق العربي (TTS يبتلع الألف في بعض الأسماء)
+// أضف أي اسم مستقبلاً هنا بصيغة: [/كلمة/g, 'النطق_المصحح']
+export const ARABIC_PHONETIC_FIXES: Array<[RegExp, string]> = [
+  // الكنيات والأسماء التي تحتاج تشكيلاً واضحاً
+  [/اكر/g, 'أَكَارْ'],
+  [/مصطفى/g, 'مُصْطَفَى'],
+  // يمكنك إضافة المزيد:
+  // [/اسم_آخر/g, 'النطق_الصحيح'],
+];
+
+// دالة تطبيق التصحيحات العربية (تُستخدم داخلياً وقابلة للاختبار)
+export function applyArabicPhoneticFixes(text: string): string {
+  let result = text;
+  for (const [regex, replacement] of ARABIC_PHONETIC_FIXES) {
+    result = result.replace(regex, replacement);
+  }
+  return result;
+}
+
+// قاموس النطق الإنجليزي
 const NAME_PRONUNCIATIONS: Record<string, string> = {
   "محمد": "Mohammed", "أحمد": "Ahmed", "محمود": "Mahmoud", "مصطفى": "Mustafa", "عمر": "Omar", "عمرو": "Amr", "علي": "Ali", "حسن": "Hassan", "حسين": "Hussein", "حامد": "Hamed", "حمزة": "Hamza", "خالد": "Khaled", "وليد": "Waleed", "سعيد": "Saeed", "سعد": "Saad", "سلمان": "Salman", "سليمان": "Sulaiman", "يوسف": "Yusuf", "يونس": "Younes", "إبراهيم": "Ibrahim", "اسماعيل": "Ismail", "إسماعيل": "Ismail", "إسحاق": "Ishaq", "يعقوب": "Yacoub", "آدم": "Adam", "نوح": "Noah", "إدريس": "Idris", "أيوب": "Ayyub", "زكريا": "Zakariya", "يحيى": "Yahya", "داود": "Dawood", "طارق": "Tariq", "مازن": "Mazen", "رامي": "Rami", "سامر": "Samer", "سمير": "Samir", "كريم": "Karim", "نبيل": "Nabil", "جمال": "Jamal", "جلال": "Jalal", "فارس": "Fares", "فادي": "Fadi", "فؤاد": "Fuad", "زياد": "Ziad", "رياض": "Riyad", "أنس": "Anas", "أمير": "Amir", "أكرم": "Akram", "باسم": "Bassem", "باسل": "Basil", "بلال": "Bilal", "تامر": "Tamer", "ثامر": "Thamer", "جابر": "Jaber", "حازم": "Hazem", "حكيم": "Hakim", "خليل": "Khalil", "راشد": "Rashid", "رائد": "Raed", "رشيد": "Rashid", "رضا": "Reda", "عادل": "Adel", "عاصم": "Asim", "عمار": "Ammar", "عيسى": "Isa", "غسان": "Ghassan", "قاسم": "Qasim", "قصي": "Qusai", "لؤي": "Luay", "مروان": "Marwan", "منصور": "Mansour", "مهند": "Muhannad", "نادر": "Nader", "ناصر": "Nasser", "نايف": "Naif", "هاشم": "Hashem", "هاني": "Hani", "هيثم": "Haitham", "وائل": "Wael", "وسيم": "Waseem", "يزن": "Yazan", "ياسر": "Yasser", "ياسين": "Yaseen", "بدر": "Badr", "براء": "Baraa", "جواد": "Jawad", "رعد": "Raad", "شادي": "Shadi", "صالح": "Saleh", "صهيب": "Suhaib", "ضياء": "Dia", "عروة": "Urwa", "معاذ": "Muadh", "معتز": "Moataz", "منذر": "Munther", "نواف": "Nawaf",
   "سارة": "Sarah", "ساره": "Sarah", "مريم": "Mariam", "فاطمة": "Fatima", "عائشة": "Aisha", "خديجة": "Khadija", "زينب": "Zainab", "رقية": "Ruqayya", "حفصة": "Hafsa", "آمنة": "Amina", "أمينة": "Amina", "أمل": "Amal", "امل": "Amal", "نور": "Noor", "نورا": "Noura", "نورة": "Noura", "هدى": "Huda", "منى": "Mona", "مي": "Mai", "ريم": "Reem", "رنا": "Rana", "دانا": "Dana", "دينا": "Dina", "لينا": "Lina", "ليلى": "Layla", "ليلا": "Laila", "لمى": "Lama", "لارا": "Lara", "هنا": "Hana", "هناء": "Hanaa", "هبة": "Heba", "حنان": "Hanan", "حنين": "Haneen", "دعاء": "Duaa", "دلال": "Dalal", "جنى": "Jana", "جود": "Joud", "جوري": "Jouri", "جميلة": "Jamila", "حلا": "Hala", "حياة": "Hayat", "رحمة": "Rahma", "رغد": "Raghad", "روان": "Rawan", "روضة": "Rawda", "سلمى": "Salma", "سما": "Sama", "سمية": "Sumaya", "سندس": "Sundus", "شهد": "Shahd", "شذى": "Shatha", "صفاء": "Safa", "ضحى": "Duha", "عبير": "Abeer", "غادة": "Ghada", "غلا": "Ghala", "فرح": "Farah", "فريدة": "Farida", "كارما": "Karma", "لانا": "Lana", "لجين": "Lujain", "لورا": "Laura", "ميس": "Mais", "ميساء": "Maysaa", "ملك": "Malak", "مها": "Maha", "مودة": "Mawadda", "ميار": "Mayar", "نادين": "Nadine", "نادية": "Nadia", "نسرين": "Nisreen", "نسمة": "Nesma", "نهى": "Noha", "هالة": "Hala", "هديل": "Hadeel", "يارا": "Yara", "ياسمين": "Yasmin", "بيان": "Bayan", "تالا": "Tala", "تسنيم": "Tasneem", "تمارا": "Tamara", "جمانة": "Jumana", "حور": "Hoor", "ديمة": "Dima", "ريتاج": "Ritaj", "رزان": "Razan", "رفيف": "Rafeef", "سجى": "Saja", "سلسبيل": "Salsabil", "شام": "Sham", "علا": "Ola", "عهد": "Ahed", "لما": "Lama", "ميرا": "Mira", "نغم": "Nagham", "وتين": "Wateen", "يقين": "Yaqeen",
-  "إسلام": "Islam", "رضوان": "Radwan", "جهاد": "Jihad", "إحسان": "Ihsan", "ميزو": "Mezo"
+  "إسلام": "Islam", "رضوان": "Radwan", "جهاد": "Jihad", "إحسان": "Ihsan", "ميزو": "Mezo", "اكر": "Akar"
 };
 
 function normalizeArabicName(name: string): string {
@@ -137,28 +157,25 @@ export function useGameVoice(character: CharacterType) {
     (text: string, onDone?: () => void) => {
       const lang = useLangStore.getState().lang;
 
-      // المسار العربي: يبقى كما هو تماماً دون أي تغيير
+      // 🆕 المسار العربي: تطبيق تصحيحات النطق قبل التمرير
       if (lang !== 'en') {
-        arabic.speak(text, onDone);
+        const fixedText = applyArabicPhoneticFixes(text);
+        arabic.speak(fixedText, onDone);
         return;
       }
 
       let finalEn = text;
 
-      // 🎯 الخطة النووية: استبدال الاسم مباشرة من المتجر
+      // استبدال الاسم مباشرة من المتجر
       const childName = useProgressStore.getState().childName?.trim();
       if (childName) {
-        // نأخذ الاسم الأول فقط
         const firstName = childName.split(/\s+/)[0];
         const normalized = normalizeArabicName(firstName);
         const translatedName = NORMALIZED_NAME_PRONUNCIATIONS[normalized] || transliterateBlock(firstName);
-        
-        // نستبدل الاسم الثلاثي بالكامل بالاسم الأول المترجم
         const escapedName = childName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         finalEn = finalEn.replace(new RegExp(escapedName, 'g'), translatedName);
       }
 
-      // التخلص من أي بقايا عربية أخرى (مثل كلمة "يا بطل" إن وجدت)
       finalEn = extractAndTranslateFirstName(finalEn);
 
       speakEn(finalEn, onDone);
