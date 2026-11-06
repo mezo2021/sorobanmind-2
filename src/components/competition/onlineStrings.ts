@@ -46,7 +46,6 @@ const S = {
   errFull: { ar: 'الغرفة ممتلئة.', en: 'The room is full.' },
   errTaken: { ar: 'الرمز مستخدم، جرّب غرفة جديدة.', en: 'Code in use, try a new room.' },
   errConn: { ar: 'تعذّر الاتصال، تحقق من الإنترنت.', en: 'Connection failed, check your internet.' },
-  // 🆕 إضافات جديدة لحماية الغرف المهجورة
   errExpired: { ar: '⏱️ انتهت صلاحية الغرفة. أنشئ غرفة جديدة وشارك الكود بسرعة.', en: '⏱️ Room expired. Create a new room and share the code faster.' },
   roomTimer: { ar: 'الغرفة تُغلق تلقائياً في', en: 'Room closes in' },
   createLive: { ar: 'غرفة سباق (5 أسئلة × 20 ث)', en: 'Race room (5 questions × 20s)' },
@@ -72,6 +71,8 @@ const S = {
   rematchStarting: { ar: 'تبدأ الجولة...', en: 'Starting...' },
   rematchUnavailable: { ar: 'غادر الخصم', en: 'Opponent left' },
   correctShort: { ar: 'صحيحة', en: 'correct' },
+  // 🆕 مفتاح موحد لـ XP
+  xpLabel: { ar: 'نقطة', en: 'XP' },
 } as const;
 
 export type OnlineKey = keyof typeof S;
