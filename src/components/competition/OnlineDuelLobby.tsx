@@ -11,16 +11,17 @@ import { maskName } from '@/utils/maskName';
 import { generateRoomCode, isValidRoomCode, normalizeRoomCode } from '@/utils/roomCode';
 import { getStats } from '@/utils/duelHistory';
 import { isPreviewMode } from '@/utils/previewMode';
-import { useRealtimeDuel } from '@/hooks/useRealtimeDuel';
+import { useRealtimeDuel, type DuelMode } from '@/hooks/useRealtimeDuel';
+import OnlineGhostAsync from './OnlineGhostAsync';
 import OnlineDuelGame from './OnlineDuelGame';
 import OnlineDuelResult from './OnlineDuelResult';
 import { useOnlineT } from './onlineStrings';
 
-type Session = { role: 'host' | 'guest'; code: string };
+type Session = { role: 'host' | 'guest'; code: string; mode: DuelMode };
 
 function Room({ session, myName, onLeave, onAgain }: { session: Session; myName: string; onLeave: () => void; onAgain: () => void }) {
   const { t, dir } = useOnlineT();
-  const duel = useRealtimeDuel({ role: session.role, code: session.code, myName });
+  const duel = useRealtimeDuel({ role: session.role, code: session.code, myName, mode: session.mode });
   const [copied, setCopied] = useState(false);
   const startRef = useRef(Date.now());
 
@@ -45,7 +46,7 @@ function Room({ session, myName, onLeave, onAgain }: { session: Session; myName:
   }
 
   if (duel.phase === 'finished' && duel.result) {
-    return <OnlineDuelResult result={duel.result} myName={myName} oppName={duel.opponentName} durationSec={(Date.now() - startRef.current) / 1000} onAgain={onAgain} onExit={onLeave} />;
+    return <OnlineDuelResult mode={duel.config.mode} result={duel.result} myName={myName} oppName={duel.opponentName} durationSec={(Date.now() - startRef.current) / 1000} onAgain={onAgain} onExit={onLeave} />;
   }
 
   if (duel.phase === 'countdown' || duel.phase === 'playing' || duel.phase === 'waitingOpponent') {
@@ -98,11 +99,13 @@ export default function OnlineDuelLobby({ onBack }: { onBack: () => void }) {
   const childName = useProgressStore((s) => s.childName);
   const myName = useMemo(() => maskName(childName || 'Player'), [childName]);
   const [session, setSession] = useState<Session | null>(null);
-  const [mode, setMode] = useState<'menu' | 'join'>('menu');
+  const [mode, setMode] = useState<'menu' | 'join' | 'ghost'>('menu');
   const [code, setCode] = useState('');
   const [round, setRound] = useState(0);
   const stats = getStats();
   const preview = isPreviewMode();
+
+  if (mode === 'ghost') return <OnlineGhostAsync onBack={() => setMode('menu')} />;
 
   if (session) {
     return (
@@ -129,11 +132,17 @@ export default function OnlineDuelLobby({ onBack }: { onBack: () => void }) {
 
         {mode === 'menu' ? (
           <div className="space-y-3">
-            <TiltCard glow="#22c55e" pulse onClick={() => setSession({ role: 'host', code: generateRoomCode() })} className="p-4">
-              <div className="flex items-center gap-3"><span className="text-3xl">🏠</span><h3 className="font-black text-lg text-emerald-300">{t('create')}</h3></div>
+            <TiltCard glow="#22c55e" pulse onClick={() => setSession({ role: 'host', code: generateRoomCode(), mode: 'live' })} className="p-4">
+              <div className="flex items-center gap-3"><span className="text-3xl">🏠</span><h3 className="font-black text-lg text-emerald-300">{t('createLive')}</h3></div>
+            </TiltCard>
+            <TiltCard glow="#f59e0b" pulse onClick={() => setSession({ role: 'host', code: generateRoomCode(), mode: 'blitz' })} className="p-4">
+              <div className="flex items-center gap-3"><span className="text-3xl">⚡</span><h3 className="font-black text-lg text-amber-300">{t('createBlitz')}</h3></div>
             </TiltCard>
             <TiltCard glow="#38bdf8" pulse onClick={() => setMode('join')} className="p-4">
               <div className="flex items-center gap-3"><span className="text-3xl">🔑</span><h3 className="font-black text-lg text-sky-300">{t('join')}</h3></div>
+            </TiltCard>
+            <TiltCard glow="#8b5cf6" pulse onClick={() => setMode('ghost')} className="p-4">
+              <div className="flex items-center gap-3"><span className="text-3xl">👻</span><h3 className="font-black text-lg text-violet-300">{t('ghostAsync')}</h3></div>
             </TiltCard>
           </div>
         ) : (
@@ -141,7 +150,7 @@ export default function OnlineDuelLobby({ onBack }: { onBack: () => void }) {
             <p className="text-sm text-slate-300 mb-2">{t('enterCode')}</p>
             <input value={code} onChange={(e) => setCode(normalizeRoomCode(e.target.value))} inputMode="numeric" maxLength={4} dir="ltr"
               className="w-full text-center text-4xl font-mono font-black tracking-[0.5em] bg-slate-950/80 border border-sky-500/40 rounded-2xl py-3 text-sky-200" aria-label={t('roomCode')} />
-            <button disabled={!isValidRoomCode(code)} onClick={() => setSession({ role: 'guest', code })}
+            <button disabled={!isValidRoomCode(code)} onClick={() => setSession({ role: 'guest', code, mode: 'live' })}
               className="mt-3 w-full h-12 rounded-2xl font-extrabold bg-gradient-to-r from-sky-500 to-cyan-400 text-slate-950 disabled:opacity-50">{t('joinBtn')}</button>
             <button onClick={() => setMode('menu')} className="mt-2 w-full text-sm text-slate-400">{t('back')}</button>
           </div>
