@@ -201,7 +201,7 @@ export default function OnlineGhostAsync({ onBack }: { onBack: () => void }) {
               {!preview && earnedXP > 0 && (
                 <div className="inline-flex items-center gap-1.5 bg-purple-500/15 border border-purple-500/40 rounded-full py-1.5 px-4 mb-3 text-sm font-black text-purple-300">
                   <Sparkles className="w-4 h-4" />+<Num>{earnedXP}</Num>{' '}
-                  {isAr ? 'نقطة' : 'XP'}
+                  {t('xpLabel')}
                 </div>
               )}
 
