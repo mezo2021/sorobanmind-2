@@ -18,8 +18,8 @@ import { useGameLang } from '../gamesI18n';
 import { tUI } from './gameUI';
 import { Num } from '@/components/Num';
 import { GraduationCap, Trophy, Swords } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
-import CosmicBackground from '@/components/cosmic/CosmicBackground';
+import { motion } from 'framer-motion'; // 🆕 تم حذف AnimatePresence
+import CosmicBackground, { CosmicHost } from '@/components/cosmic/CosmicBackground'; // 🆕 إضافة CosmicHost
 import TiltCard from '@/components/cosmic/TiltCard';
 import RecordTicker from '@/components/RecordTicker';
 import Leaderboard from '@/components/Leaderboard';
@@ -214,18 +214,18 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
   };
   })();
 
-  // 🌀 انتقال "الثقب الدودي" بين الشاشات
+  // 🌀 الحل الجديد: خلفية دائمة (CosmicHost) + انتقال ناعم بدون انتظار
   return (
-    <AnimatePresence mode="wait">
+    <CosmicHost>
       <motion.div
         key={view.key}
-        initial={{ opacity: 0, scale: 0.94, rotate: -1 }}
-        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-        exit={{ opacity: 0, scale: 1.06, rotate: 1 }}
-        transition={{ duration: 0.35 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.22 }}
+        className="min-h-screen"
       >
         {view.node}
       </motion.div>
-    </AnimatePresence>
+    </CosmicHost>
   );
 }
