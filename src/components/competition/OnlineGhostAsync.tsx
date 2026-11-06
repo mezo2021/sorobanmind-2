@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { ArrowRight, Copy, Share2 } from 'lucide-react';
+import { ArrowRight, Copy, Share2, Sparkles } from 'lucide-react';
 import { Num } from '@/components/Num';
 import CosmicBackground from '@/components/cosmic/CosmicBackground';
 import TiltCard from '@/components/cosmic/TiltCard';
@@ -69,7 +69,6 @@ function Play({ questions, ghost, myName, onDone }: { questions: number[][]; gho
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locked, idx]);
 
-  // شبح: كم سؤالاً أنهى حتى الآن (بحسب مجموع أزمنته المسجّلة)
   let gAnswered = 0, gScore = 0, cum = 0;
   if (ghost) ghost.t.forEach((ms, i) => { cum += ms / 1000; if (cum <= elapsed) { gAnswered = i + 1; gScore += ghost.g[i]; } });
 
@@ -100,10 +99,14 @@ function Play({ questions, ghost, myName, onDone }: { questions: number[][]; gho
 }
 
 export default function OnlineGhostAsync({ onBack }: { onBack: () => void }) {
-  const { t, dir } = useOnlineT();
+  const { t, dir, isAr } = useOnlineT();
   const reduce = useReducedMotion();
   const childName = useProgressStore((s) => s.childName);
   const myName = maskName(childName || 'Player');
+  // 🆕 XP من المتجر
+  const addXP = useProgressStore((s) => s.addXP);
+  const [earnedXP, setEarnedXP] = useState(0);
+
   const [view, setView] = useState<'menu' | 'enter' | 'play' | 'record' | 'race'>('menu');
   const [ghost, setGhost] = useState<GhostData | null>(null);
   const [qs, setQs] = useState<number[][]>([]);
@@ -114,11 +117,15 @@ export default function OnlineGhostAsync({ onBack }: { onBack: () => void }) {
   const savedRef = useRef(false);
   const preview = isPreviewMode();
 
-  const startRecord = () => { setGhost(null); setQs(genSet(N, 2).map((q) => q.numbers)); setRun(null); savedRef.current = false; setView('play'); };
+  const startRecord = () => {
+    setGhost(null); setQs(genSet(N, 2).map((q) => q.numbers));
+    setRun(null); savedRef.current = false; setEarnedXP(0); setView('play');
+  };
   const startRace = () => {
     const g = decodeGhost(codeIn);
     if (!g) { setBad(true); return; }
-    setBad(false); setGhost(g); setQs(g.q); setRun(null); savedRef.current = false; setView('play');
+    setBad(false); setGhost(g); setQs(g.q);
+    setRun(null); savedRef.current = false; setEarnedXP(0); setView('play');
   };
   const finish = (r: Run) => { setRun(r); setView(ghost ? 'race' : 'record'); };
 
@@ -126,12 +133,20 @@ export default function OnlineGhostAsync({ onBack }: { onBack: () => void }) {
     ? (run.score !== ghostScore(ghost) ? (run.score > ghostScore(ghost) ? 'win' : 'lose') : run.totalSec !== ghostTotalSec(ghost) ? (run.totalSec < ghostTotalSec(ghost) ? 'win' : 'lose') : 'draw')
     : null;
 
+  // 🆕 XP: 8 نقاط عند إكمال سباق ضد شبح (لا في المعاينة ولا عند التسجيل)
   useEffect(() => {
     if (view !== 'race' || !run || !ghost || !outcome || savedRef.current) return;
     savedRef.current = true;
     addMatch({ mode: 'ghost', myScore: run.score, opponentScore: ghostScore(ghost), result: outcome, durationSec: Math.round(run.totalSec) });
+
+    if (!preview) {
+      addXP(8);
+      setEarnedXP(8);
+    }
+
     if (outcome === 'win') { try { confetti({ particleCount: reduce ? 20 : 140, spread: 90, origin: { y: 0.55 } }); } catch { /* noop */ } }
-  }, [view, run, ghost, outcome, reduce]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, run, ghost, outcome, reduce, preview]);
 
   const code = run && view === 'record' ? encodeGhost(run.data) : '';
   const shareMsg = `${t('ghostShareText')}${code}`;
@@ -180,7 +195,16 @@ export default function OnlineGhostAsync({ onBack }: { onBack: () => void }) {
 
           {view === 'race' && run && ghost && outcome && (
             <div className="rounded-3xl bg-white/5 border border-amber-500/40 p-4 backdrop-blur-md text-center">
-              <h2 className="text-2xl font-black text-amber-300 mb-3">{outcome === 'win' ? t('win') : outcome === 'lose' ? t('lose') : t('draw')}</h2>
+              <h2 className="text-2xl font-black text-amber-300 mb-2">{outcome === 'win' ? t('win') : outcome === 'lose' ? t('lose') : t('draw')}</h2>
+
+              {/* 🆕 شارة XP (ثنائية اللغة) */}
+              {!preview && earnedXP > 0 && (
+                <div className="inline-flex items-center gap-1.5 bg-purple-500/15 border border-purple-500/40 rounded-full py-1.5 px-4 mb-3 text-sm font-black text-purple-300">
+                  <Sparkles className="w-4 h-4" />+<Num>{earnedXP}</Num>{' '}
+                  {isAr ? 'نقطة' : 'XP'}
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <div className="flex-1 rounded-2xl border border-sky-400/60 p-3"><div className="font-black truncate">{myName}</div><div className="text-3xl font-mono font-black text-amber-200"><Num>{run.score}</Num></div><div className="text-[11px] text-slate-400"><Num>{run.totalSec.toFixed(1)}</Num>{t('sec')}</div></div>
                 <div className="flex-1 rounded-2xl border border-violet-400/60 p-3"><div className="font-black truncate">👻 {ghost.n}</div><div className="text-3xl font-mono font-black text-violet-200"><Num>{ghostScore(ghost)}</Num></div><div className="text-[11px] text-slate-400"><Num>{ghostTotalSec(ghost).toFixed(1)}</Num>{t('sec')}</div></div>
@@ -188,7 +212,7 @@ export default function OnlineGhostAsync({ onBack }: { onBack: () => void }) {
               {outcome === 'lose' && <p className="text-sm text-slate-300 mt-3">{t('loseMsg')}</p>}
               <p className="text-[11px] text-slate-500 mt-3">{t('trainingNote')}</p>
               <div className="flex gap-2 mt-3">
-                <button onClick={() => { setRun(null); savedRef.current = false; setQs(ghost.q); setView('play'); }} className="flex-1 py-3 rounded-2xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950">{t('raceAgain')}</button>
+                <button onClick={() => { setRun(null); savedRef.current = false; setEarnedXP(0); setQs(ghost.q); setView('play'); }} className="flex-1 py-3 rounded-2xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950">{t('raceAgain')}</button>
                 <button onClick={() => setView('menu')} className="flex-1 py-3 rounded-2xl font-bold bg-slate-800 border border-slate-600">{t('exit')}</button>
               </div>
             </div>
