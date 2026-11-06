@@ -8,12 +8,12 @@ import { Num } from '@/components/Num';
 import CosmicBackground from '@/components/cosmic/CosmicBackground';
 import { addMatch } from '@/utils/duelHistory';
 import { isPreviewMode } from '@/utils/previewMode';
-import type { DuelMode, DuelResult } from '@/hooks/useRealtimeDuel';
+import type { DuelMode, DuelResult, RematchStatus } from '@/hooks/useRealtimeDuel';
 import { useOnlineT } from './onlineStrings';
 
-type Props = { mode?: DuelMode; result: DuelResult; myName: string; oppName: string; durationSec: number; onAgain: () => void; onExit: () => void };
+type Props = { mode?: DuelMode; result: DuelResult; myName: string; oppName: string; durationSec: number; rematchStatus: RematchStatus; oppWantsRematch: boolean; opponentPresent: boolean; onRematch: () => void; onExit: () => void };
 
-export default function OnlineDuelResult({ mode = 'live', result, myName, oppName, durationSec, onAgain, onExit }: Props) {
+export default function OnlineDuelResult({ mode = 'live', result, myName, oppName, durationSec, rematchStatus, oppWantsRematch, opponentPresent, onRematch, onExit }: Props) {
   const { t, dir } = useOnlineT();
   const reduce = useReducedMotion();
   const savedRef = useRef(false);
@@ -27,6 +27,14 @@ export default function OnlineDuelResult({ mode = 'live', result, myName, oppNam
       try { confetti({ particleCount: reduce ? 20 : 150, spread: 90, origin: { y: 0.55 }, colors: ['#FBBF24', '#38bdf8', '#f472b6'] }); } catch { /* noop */ }
     }
   }, [result, durationSec, reduce, mode]);
+
+  const unavailable = !opponentPresent;
+  const rematchLabel = unavailable ? t('rematchUnavailable')
+    : rematchStatus === 'accepted' ? t('rematchStarting')
+    : rematchStatus === 'requested' ? t('rematchWaiting')
+    : oppWantsRematch ? t('rematchAccept')
+    : t('playAgain');
+  const rematchDisabled = unavailable || rematchStatus !== 'idle';
 
   const title = result.outcome === 'win' ? t('win') : result.outcome === 'lose' ? t('lose') : t('draw');
   const side = (name: string, score: number, time: number, win: boolean) => (
@@ -52,7 +60,7 @@ export default function OnlineDuelResult({ mode = 'live', result, myName, oppNam
           {side(oppName || t('opponent'), result.oppScore, result.oppTime, result.outcome === 'lose')}
         </div>
         <div className="flex gap-2">
-          <button onClick={onAgain} className="flex-1 py-3 rounded-2xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 flex items-center justify-center gap-2"><RotateCcw className="w-4 h-4" />{t('playAgain')}</button>
+          <button onClick={onRematch} disabled={rematchDisabled} className={`flex-1 py-3 rounded-2xl font-bold text-slate-950 flex items-center justify-center gap-2 text-sm disabled:opacity-60 ${oppWantsRematch && !rematchDisabled ? 'bg-gradient-to-r from-emerald-400 to-teal-400 animate-pulse' : 'bg-gradient-to-r from-amber-500 to-orange-500'}`}><RotateCcw className="w-4 h-4 shrink-0" /><span>{rematchLabel}</span></button>
           <button onClick={onExit} className="flex-1 py-3 rounded-2xl font-bold bg-slate-800 border border-slate-600 flex items-center justify-center gap-2"><Home className="w-4 h-4" />{t('exit')}</button>
         </div>
       </motion.div>
