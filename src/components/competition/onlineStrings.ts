@@ -46,6 +46,9 @@ const S = {
   errFull: { ar: 'الغرفة ممتلئة.', en: 'The room is full.' },
   errTaken: { ar: 'الرمز مستخدم، جرّب غرفة جديدة.', en: 'Code in use, try a new room.' },
   errConn: { ar: 'تعذّر الاتصال، تحقق من الإنترنت.', en: 'Connection failed, check your internet.' },
+  // 🆕 إضافات جديدة لحماية الغرف المهجورة
+  errExpired: { ar: '⏱️ انتهت صلاحية الغرفة. أنشئ غرفة جديدة وشارك الكود بسرعة.', en: '⏱️ Room expired. Create a new room and share the code faster.' },
+  roomTimer: { ar: 'الغرفة تُغلق تلقائياً في', en: 'Room closes in' },
   createLive: { ar: 'غرفة سباق (5 أسئلة × 20 ث)', en: 'Race room (5 questions × 20s)' },
   createBlitz: { ar: 'غرفة برق ⚡ (5 أسئلة × 5 ث)', en: 'Blitz room ⚡ (5 questions × 5s)' },
   ghostAsync: { ar: 'شبح غير متزامن 👻', en: 'Async Ghost 👻' },
