@@ -68,34 +68,165 @@
 ---
 
 <a name="4"></a>
-## 4. الهيكل التقني (الملفات)
+## 4.
 
-```text
-/src/components/games/MentalArchivesGame/
-│
-├── gameFlowTypes.ts            (الأنواع: Chapter, GameQuestion, tipAr/tipEn)
-├── gameUI.ts                   (ترجمة الواجهات + رسائل Kyu TTS-Safe)
-├── MentalArchivesEngine.tsx    (محرك القصة + معالجة الأرقام السالبة)
-├── MentalArchivesManager.tsx   (مدير الخريطة + تفعيل وضع المعاينة)
-├── MentalArchivesExams.tsx     (قائمة الـ 7 امتحانات + وضع المعاينة)
-├── MentalArchivesExamRunner.tsx(شاشة أداء الامتحان + خلط الأسئلة)
-│
-├── /ui                         (مكونات الإدخال)
-│   ├── speechToNumber.ts
-│   ├── SpeechCrystal.tsx
-│   ├── RelicKeypad.tsx
-│   └── TimeDial.tsx
-│
-├── /data                       (بيانات المستويات 1-8)
-│   ├── introData.ts
-│   ├── level1Data.ts ... level8Data.ts
-│
-└── /data/exams                 (بيانات الامتحانات)
-    ├── examTypes.ts
-    ├── exam10_7.ts ... exam1.ts
+```
+الهيكل التقني (الملفات المرقمة — 57 ملفاً)
 
-/src/store/progressStore.ts     (المتجر المركزي - الإصدار 14)
-/src/utils/previewMode.ts       (أداة تفعيل المعاينة)
+### 📦 مجلد اللعبة الأساسي: `src/components/games/MentalArchivesGame/`
+
+**المحرك الأساسي (6 ملفات):**
+```
+
+1. gameFlowTypes.ts             (الأنواع: Chapter, GameQuestion, tipAr/tipEn)
+2. gameUI.ts                    (ترجمة الواجهات + رسائل Kyu TTS-Safe)
+3. MentalArchivesEngine.tsx     (محرك القصة + المشاهد + التحدي + TTS)
+4. MentalArchivesManager.tsx    (مدير الخريطة + CHAPTERS + وضع المعاينة)
+5. MentalArchivesExams.tsx      (قائمة الـ 7 امتحانات + وضع المعاينة)
+6. MentalArchivesExamRunner.tsx (شاشة الامتحان + الخلط + الأرقام السالبة)
+
+```
+
+**الشهادة (1 ملف):**
+```
+
+7. ExamCertificateModal.tsx     (شهادة PDF/PNG + طباعة A4 + cqw)
+
+```
+
+**مكونات الإدخال والواجهة `/ui/` (6 ملفات):**
+```
+
+8. RelicKeypad.tsx              (لوحة الأرقام الذهبية)
+9. TimeDial.tsx                 (عجلة الأرقام)
+10. SpeechCrystal.tsx            (الميكروفون)
+11. speechToNumber.ts            (تحويل الصوت إلى رقم)
+12. chapterThemes.ts             (هوية بصرية لكل مستوى: ألوان، مكان)
+13. ChapterTitleCard.tsx         (بطاقة افتتاح سينمائية للمستوى)
+
+```
+
+**بيانات المستويات `/data/` (9 ملفات):**
+```
+
+14. introData.ts
+15. level1Data.ts                (إبلا وماري - 10-9 كيو)
+16. level2Data.ts                (أوغاريت - 8-7 كيو)
+17. level3Data.ts                (تدمر - 6 كيو)
+18. level4Data.ts                (الصين - 5 كيو)
+19. level5Data.ts                (اللاذقية - 4 كيو)
+20. level6Data.ts                (دمشق - 3 كيو)
+21. level7Data.ts                (شبكة النور - 2 كيو)
+22. level8Data.ts                (القلب - 1 كيو)
+
+```
+
+**بيانات الامتحانات `/data/exams/` (8 ملفات):**
+```
+
+23. examTypes.ts                 (KyuExamData, hasSubtraction)
+24. exam10_7.ts                  (50 سؤال)
+25. exam6.ts                     (80 سؤال)
+26. exam5.ts                     (80 سؤال)
+27. exam4.ts                     (80 سؤال)
+28. exam3.ts                     (80 سؤال)
+29. exam2.ts                     (80 سؤال)
+30. exam1.ts                     (80 سؤال)
+
+```
+
+**المنافسات `/competition/` (7 ملفات):**
+```
+
+31. CompetitionHub.tsx           (بوابة الأنماط الثلاثة)
+32. DuelMode.tsx                 (1v1 متناوب محلي)
+33. RelayMode.tsx                (تحالف 3 لاعبين)
+34. GhostMode.tsx                (تحدي الشبح)
+35. ResultModal.tsx              (شاشة نتائج موحدة)
+36. ProblemBoard.tsx             (لوح المسألة)
+37. compMath.ts                  (مولد أسئلة المنافسات)
+
+```
+
+**الأصول `Assets`:**
+```
+
+54. joud.png
+55. aseel.png
+56. sorobana.png
+57. intro.mp4
+
+```
+
+---
+
+### 🎨 مجلد الخلفية الكونية: `src/components/cosmic/`
+
+```
+
+38. CosmicBackground.tsx         (نجوم Parallax + سدم)
+39. TiltCard.tsx                 (بطاقة زجاجية 3D)
+40. WarpFlash.tsx                (وميض الثقب الدودي — معطّل مؤقتاً)
+
+```
+
+---
+
+### 🛠️ الأدوات: `src/utils/`
+
+```
+
+41. maskName.ts                  (قناع الاسم: محمد.أ.ع)
+42. leaderboard.ts               (سجل الأبطال + الأشباح)
+43. previewMode.ts               (تفعيل وضع المعاينة)
+44. numberStyle.ts               (parseInput + تحويل الأرقام)
+
+```
+
+---
+
+### 🏆 المكونات العامة: `src/components/`
+
+```
+
+45. Leaderboard.tsx              (لوحة الأبطال Top 10)
+46. RecordTicker.tsx             (شريط الأرقام القياسية)
+47. HighScoreBadge.tsx           (شارة الرقم القياسي للألعاب)
+48. GamesListScreen.tsx          (قائمة الألعاب + التذاكر)
+49. gamesData.ts                 (بيانات الألعاب)
+50. gamesI18n.ts                 (قاموس الألعاب العامة)
+51. highScoreStore.ts            (سجل الألعاب الترفيهية)
+52. Num.tsx                      (تنسيق عرض الأرقام)
+
+```
+
+---
+
+### 💾 المتجر المركزي: `src/store/`
+
+```
+
+53. progressStore.ts             (v14 — مصدر الحقيقة الوحيد)
+
+```
+
+---
+
+### 📊 ملخص سريع (للرجوع السريع):
+
+| المجلد | عدد الملفات | الفئة |
+| :--- | :--- | :--- |
+| **MentalArchivesGame/ (الجذر)** | 7 | المحرك + الشهادة |
+| **ui/** | 6 | الإدخال والهوية |
+| **data/** | 9 | المستويات |
+| **data/exams/** | 8 | الامتحانات |
+| **competition/** | 7 | المنافسات |
+| **cosmic/** | 3 | الخلفية الكونية |
+| **utils/** | 4 | الأدوات |
+| **components/** (عام) | 8 | المكونات العامة |
+| **store/** | 1 | المتجر |
+| **Assets** | 4 | الصور والفيديو |
+| **الإجمالي** | **57** | |
 ```
 
 ---
