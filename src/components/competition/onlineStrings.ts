@@ -46,7 +46,7 @@ const S = {
   errFull: { ar: 'الغرفة ممتلئة.', en: 'The room is full.' },
   errTaken: { ar: 'الرمز مستخدم، جرّب غرفة جديدة.', en: 'Code in use, try a new room.' },
   errConn: { ar: 'تعذّر الاتصال، تحقق من الإنترنت.', en: 'Connection failed, check your internet.' },
-  createLive: { ar: 'غرفة سباق (10 أسئلة × 15 ث)', en: 'Race room (10 questions × 15s)' },
+  createLive: { ar: 'غرفة سباق (5 أسئلة × 20 ث)', en: 'Race room (5 questions × 20s)' },
   createBlitz: { ar: 'غرفة برق ⚡ (5 أسئلة × 5 ث)', en: 'Blitz room ⚡ (5 questions × 5s)' },
   ghostAsync: { ar: 'شبح غير متزامن 👻', en: 'Async Ghost 👻' },
   ghostAsyncSub: { ar: 'سجّل شبحك وأرسله لصديق ليتحدّاه لاحقاً', en: 'Record your ghost and send it to a friend to race later' },
