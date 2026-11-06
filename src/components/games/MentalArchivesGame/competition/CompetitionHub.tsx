@@ -10,8 +10,9 @@ import TiltCard from '@/components/cosmic/TiltCard';
 import DuelMode from './DuelMode';
 import RelayMode from './RelayMode';
 import GhostMode, { GhostSource } from './GhostMode';
+import OnlineDuelLobby from '@/components/competition/OnlineDuelLobby';
 
-type View = 'hub' | 'duel' | 'relay' | 'ghost';
+type View = 'hub' | 'duel' | 'relay' | 'ghost' | 'online';
 
 export default function CompetitionHub({ onBack }: { onBack: () => void }) {
   const { dir, isAr } = useGameLang();
@@ -26,6 +27,7 @@ export default function CompetitionHub({ onBack }: { onBack: () => void }) {
   const body = (() => {
     if (view === 'duel') return <DuelMode names={[n[0] || '—', n[1] || '—']} level={level} onExit={back} />;
     if (view === 'relay') return <RelayMode names={[n[0] || '—', n[1] || '—', n[2] || '—']} onExit={back} />;
+    if (view === 'online') return <OnlineDuelLobby onBack={back} />;
     if (view === 'ghost') return <GhostMode source={src} level={level} onExit={back} />;
     const cards: { id: View; icon: string; glow: string; ta: string; te: string; da: string; de: string }[] = [
       { id: 'duel', icon: '⚔️', glow: '#38bdf8', ta: 'تحدي انقسام الزمكان', te: 'Spacetime Split Duel', da: 'مواجهة بين شخصين بأشرطة زخم حيّة', de: '1v1 with live momentum bars' },
@@ -56,6 +58,12 @@ export default function CompetitionHub({ onBack }: { onBack: () => void }) {
           </div>
 
           <div className="space-y-3">
+            <TiltCard glow="#22c55e" pulse onClick={() => setView('online')} className="p-4">
+              <div className="flex items-center gap-4">
+                <span className="text-4xl">🌐</span>
+                <div><h3 className="font-black text-lg text-emerald-300">{isAr ? 'تحدي أونلاين 🌐' : 'Online Duel 🌐'}</h3><p className="text-xs text-slate-300">{isAr ? 'سباق مباشر ضد صديق على جهاز آخر' : 'Live race vs a friend on another device'}</p></div>
+              </div>
+            </TiltCard>
             {cards.map((c) => (
               <TiltCard key={c.id} glow={c.glow} pulse onClick={() => setView(c.id)} className="p-4">
                 <div className="flex items-center gap-4">
