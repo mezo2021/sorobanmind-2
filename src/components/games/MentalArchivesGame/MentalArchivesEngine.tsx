@@ -140,6 +140,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       .replace(/×/g, ' فِي ')
       .replace(/÷/g, ' عَلَى ')
       .replace(/=/g, ' يُسَاوِي ');
+      .replace(/اكر/g, 'أَكَارْ');
 
     const utterance = new SpeechSynthesisUtterance(ttsText);
     utterance.lang = isAr ? 'ar-SA' : 'en-US';
