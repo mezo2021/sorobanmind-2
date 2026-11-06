@@ -1,6 +1,6 @@
 // src/components/competition/OnlineDuelLobby.tsx
 // مدخل التحدي الأونلاين: إنشاء/انضمام → غرفة الانتظار → اللعب → النتيجة.
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Copy, Share2 } from 'lucide-react';
 import { Num } from '@/components/Num';
@@ -19,11 +19,10 @@ import { useOnlineT } from './onlineStrings';
 
 type Session = { role: 'host' | 'guest'; code: string; mode: DuelMode };
 
-function Room({ session, myName, onLeave, onAgain }: { session: Session; myName: string; onLeave: () => void; onAgain: () => void }) {
+function Room({ session, myName, onLeave }: { session: Session; myName: string; onLeave: () => void }) {
   const { t, dir } = useOnlineT();
   const duel = useRealtimeDuel({ role: session.role, code: session.code, myName, mode: session.mode });
   const [copied, setCopied] = useState(false);
-  const startRef = useRef(Date.now());
 
   const shareMsg = `${t('shareText')}${session.code}`;
   const copy = async () => {
@@ -46,11 +45,11 @@ function Room({ session, myName, onLeave, onAgain }: { session: Session; myName:
   }
 
   if (duel.phase === 'finished' && duel.result) {
-    return <OnlineDuelResult mode={duel.config.mode} result={duel.result} myName={myName} oppName={duel.opponentName} durationSec={(Date.now() - startRef.current) / 1000} onAgain={onAgain} onExit={onLeave} />;
+    return <OnlineDuelResult key={duel.matchId} mode={duel.config.mode} result={duel.result} myName={myName} oppName={duel.opponentName} durationSec={duel.result.myTime} rematchStatus={duel.rematchStatus} oppWantsRematch={duel.oppWantsRematch} opponentPresent={duel.opponentPresent} onRematch={duel.requestRematch} onExit={onLeave} />;
   }
 
   if (duel.phase === 'countdown' || duel.phase === 'playing' || duel.phase === 'waitingOpponent') {
-    return <OnlineDuelGame duel={duel} myName={myName} />;
+    return <OnlineDuelGame key={duel.matchId} duel={duel} myName={myName} />;
   }
 
   // غرفة الانتظار
@@ -110,8 +109,7 @@ export default function OnlineDuelLobby({ onBack }: { onBack: () => void }) {
   if (session) {
     return (
       <Room key={`${session.code}-${round}`} session={session} myName={myName}
-        onLeave={() => { setSession(null); setMode('menu'); setCode(''); }}
-        onAgain={() => { setSession(null); setMode('menu'); setCode(''); setRound((r) => r + 1); }} />
+        onLeave={() => { setSession(null); setMode('menu'); setCode(''); setRound((r) => r + 1); }} />
     );
   }
 
