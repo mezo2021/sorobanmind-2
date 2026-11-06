@@ -91,6 +91,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const handleAnswerRef = useRef<(m: boolean) => void>(() => {});
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
   const successHandledRef = useRef(false);
+  const typingRef = useRef<number | null>(null); // 🆕 لحل مشكلة وميض الآلة الكاتبة
 
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
@@ -132,14 +133,13 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       finalText = finalText.replace(/؟/g, '?').replace(/،/g, ',');
     }
 
-    // 🆕 مصحح النطق التلقائي (لتحويل الرموز الرياضية إلى كلمات منطوقة)
     const ttsText = finalText
-      .replace(/←/g, '، ثُمَّ ') // يحول السهم إلى فاصل وثم
-      .replace(/\+/g, ' زَائِد ') // يحول الزائد
-      .replace(/-/g, ' نَاقِص ') // يحول الناقص
-      .replace(/×/g, ' فِي ') // يحول الضرب
-      .replace(/÷/g, ' عَلَى ') // يحول القسمة
-      .replace(/=/g, ' يُسَاوِي '); // يحول يساوي
+      .replace(/←/g, '، ثُمَّ ')
+      .replace(/\+/g, ' زَائِد ')
+      .replace(/-/g, ' نَاقِص ')
+      .replace(/×/g, ' فِي ')
+      .replace(/÷/g, ' عَلَى ')
+      .replace(/=/g, ' يُسَاوِي ');
 
     const utterance = new SpeechSynthesisUtterance(ttsText);
     utterance.lang = isAr ? 'ar-SA' : 'en-US';
@@ -157,6 +157,16 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
+  };
+
+  // 🆕 دالة تخطي الآلة الكاتبة
+  const skipTyping = (fullText: string) => {
+    if (typingRef.current) { 
+      clearInterval(typingRef.current); 
+      typingRef.current = null; 
+    }
+    setDisplayedText(fullText);
+    setIsTyping(false);
   };
 
   useEffect(() => {
@@ -234,7 +244,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
     const loop = { duration: 3, repeat: Infinity, repeatType: 'mirror' as const, ease: 'easeInOut' as const };
     return {
-      animate: { scale: [1.02, 1.07, 1.02], y: [0, -4, 0], opacity: 1, filter: activeFilter },
+      // 🆕 تكبير الشخصية عند التحدث
+      animate: { scale: [1.06, 1.12, 1.06], y: [0, -4, 0], opacity: 1, filter: activeFilter },
       transition: { scale: loop, y: loop, opacity: { duration: 0.25 }, filter: { duration: 0.25 } },
     };
   };
@@ -254,7 +265,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       speakCustom(line.character, fullText);
 
       let i = 0;
-      const interval = setInterval(() => {
+      // 🆕 استخدام window.setInterval وحفظه في ref لمنع الوميض
+      const interval = window.setInterval(() => {
         if (i < fullText.length) {
           setDisplayedText(fullText.slice(0, i + 1));
           i++;
@@ -263,9 +275,12 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
           clearInterval(interval);
         }
       }, 30);
+      
+      typingRef.current = interval;
 
       return () => {
         clearInterval(interval);
+        if (typingRef.current === interval) typingRef.current = null;
         stopAllAudio();
       };
     }
@@ -321,7 +336,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     });
   };
 
-  // 🆕 بنية التلميحات: (1) نصيحة السؤال المخصصة إن وُجدت، (2) تلميح الأرقام للمحاولة الثانية، (3) تلميح نوعي كاحتياط
   const buildHint = (q: GameQuestion, n: number) => {
     if (n >= 2) {
       const ans = String(Math.abs(q.answer));
@@ -418,7 +432,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     playStep();
   };
 
-  // 🎬 طبقة سينمائية: بطاقة افتتاح المستوى + وميض الثقب الدودي عند تغيّر المشهد
   const cinematic = (
     <>
       <ChapterTitleCard show={showTitle && videoState === 'done' && phase === 'playing'} onDone={closeTitle} theme={theme} title={isAr ? chapter.titleAr : chapter.titleEn} isAr={isAr} />
@@ -433,7 +446,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   };
 
   const TopBar = () => (
-    <div className="flex items-center justify-between gap-2 p-3 sm:p-4 sticky top-0 z-30 bg-slate-950 border-b border-amber-500/20 shadow-lg">
+    // 🆕 إضافة w-full لإصلاح المستطيل الأسود
+    <div className="flex items-center justify-between gap-2 p-3 sm:p-4 sticky top-0 z-30 bg-slate-950 border-b border-amber-500/20 shadow-lg w-full">
       <button onClick={() => { stopAllAudio(); onBack(); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0">
         <ArrowRight className={`w-6 h-6 text-amber-400 ${isAr ? '' : 'rotate-180'}`} />
       </button>
@@ -530,31 +544,32 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         <CosmicBackground accent={theme.accent} accent2={theme.accent2} />
         <AmbientGlow speaker={line.character} reduce={shouldReduceMotion} />
         
-        <div className="flex-1 relative w-full max-w-5xl mx-auto flex justify-center items-end mb-4 z-10 pt-16 gap-1 sm:gap-4">
+        {/* 🆕 تعديل أحجام الشخصيات لتصبح أكبر وأكثر واقعية */}
+        <div className="flex-1 min-h-0 relative w-full max-w-5xl mx-auto flex justify-center items-end mb-4 z-10 pt-16 gap-1 sm:gap-4">
           <motion.img
             src={aseelImg}
             alt={isAr ? 'أسيل' : 'Aseel'}
             initial={false}
             {...getCharacterMotion('aseel', line.character === 'aseel')}
-            className="w-24 sm:w-48 object-contain origin-bottom shrink-0"
+            className="h-[30vh] sm:h-[44vh] w-auto object-contain origin-bottom shrink-0 -mx-2"
           />
           <motion.img
             src={joudImg}
             alt={isAr ? 'جود' : 'Joud'}
             initial={false}
             {...getCharacterMotion('jud', line.character === 'jud')}
-            className="w-32 sm:w-60 object-contain origin-bottom z-20 shrink-0"
+            className="h-[38vh] sm:h-[54vh] w-auto object-contain origin-bottom z-20 shrink-0"
           />
           <motion.img
             src={sorobanaImg}
             alt={isAr ? 'سوروبانا' : 'Sorobana'}
             initial={false}
             {...getCharacterMotion('sorobana', line.character === 'sorobana')}
-            className="w-28 sm:w-56 object-contain origin-bottom shrink-0"
+            className="h-[33vh] sm:h-[48vh] w-auto object-contain origin-bottom shrink-0 -mx-2"
           />
         </div>
         
-        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={() => { if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); } }} className="relative w-full max-w-3xl mx-auto bg-slate-900/95 backdrop-blur-md p-6 sm:p-8 rounded-t-3xl border-t-2 border-amber-500/30 shadow-2xl z-20 cursor-pointer shrink-0">
+        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={() => { if (isTyping) skipTyping(isAr ? line.textAr : line.textEn); }} className="relative w-full max-w-3xl mx-auto bg-slate-900/95 backdrop-blur-md p-6 sm:p-8 rounded-t-3xl border-t-2 border-amber-500/30 shadow-2xl z-20 cursor-pointer shrink-0">
           <div className="flex items-center gap-2 mb-3">
             <span className={`font-extrabold text-lg sm:text-xl ${charData.color}`}>{charData.name}</span>
             <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">{tUI('archiveGuide')}</span>
@@ -567,7 +582,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
             </p>
           </div>
 
-          <button onClick={(e) => { e.stopPropagation(); if (isTyping) { setDisplayedText(isAr ? line.textAr : line.textEn); setIsTyping(false); return; } if (lineIndex < currentScene.lines.length - 1) setLineIndex(l => l + 1); else nextScene(); }} className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 rounded-xl font-extrabold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
+          {/* 🆕 استخدام skipTyping عند الضغط على الزر */}
+          <button onClick={(e) => { e.stopPropagation(); if (isTyping) { skipTyping(isAr ? line.textAr : line.textEn); return; } if (lineIndex < currentScene.lines.length - 1) setLineIndex(l => l + 1); else nextScene(); }} className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 rounded-xl font-extrabold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
             <span>{isTyping ? tUI('showFullText') : tUI('continueStory')}</span><Sparkles className="w-5 h-5" />
           </button>
         </motion.div>
@@ -579,13 +595,13 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     const currentExample = currentScene.examples[exampleIndex];
     if (!currentExample) return null;
 
-    // 🆕 نصيحة المسألة (تحت المسألة مباشرة)
     const exampleTip = isAr ? currentExample.tipAr : currentExample.tipEn;
 
     return (
-      <div className="relative flex flex-col items-center justify-start min-h-[100dvh] bg-slate-950 text-white p-6 pt-24 overflow-y-auto" dir={dir}>
+      // 🆕 إصلاح المسافات لتجنب المستطيل الأسود
+      <div className="relative flex flex-col items-center justify-start min-h-[100dvh] bg-slate-950 text-white px-6 pb-6 pt-0 overflow-y-auto" dir={dir}>
         <CosmicBackground fixed accent={theme.accent} accent2={theme.accent2} intensity={0.8} />
-        {TopBar()}
+        <div className="-mx-6 w-[calc(100%+3rem)] mb-4">{TopBar()}</div>
         {cinematic}
         
         <div className="max-w-2xl w-full mb-6 bg-amber-950/30 border border-amber-500/30 p-4 rounded-xl text-center z-10 shadow-lg">
@@ -629,7 +645,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
             <Num>{isAr ? currentExample.problem : currentExample.problem.replace(/؟/g, '?')}</Num>
           </div>
 
-          {/* 🆕 نصيحة تحت المسألة */}
           {exampleTip && (
             <div className="flex items-start gap-2 text-sm text-amber-200/95 bg-amber-950/30 border border-amber-500/25 p-3 rounded-xl mb-6">
               <span className="shrink-0 text-base leading-none pt-0.5">💡</span>
@@ -690,7 +705,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
                   <span className="w-16 text-center text-amber-100 drop-shadow-md"><Num>{num}</Num></span>
                   {i < q.numbers.length - 1 && (
                     <span className="absolute -right-4 text-amber-500/80 text-2xl font-bold">
-                      {/* 🆕 التعديل هنا: إخفاء إشارة + إذا كان الرقم التالي سالباً */}
                       {q.type === 'multiplication' ? '×' : q.type === 'division' ? '÷' : (q.numbers[i + 1] < 0 ? '' : '+')}
                     </span>
                   )}
