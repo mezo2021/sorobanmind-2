@@ -30,10 +30,17 @@ type Payload =
   | { type: 'ready'; name: string }
   | { type: 'start'; startAt: number; startIn: number; questions: CompQuestion[]; mode?: DuelMode }
   | { type: 'answer'; questionIndex: number; correct: boolean; timeSpent: number; score: number }
-  | { type: 'finish'; finalScore: number; totalTime: number; correct: number };
+  | { type: 'finish'; finalScore: number; totalTime: number; correct: number }
+  | { type: 'rematch_request' };
+
+export type RematchStatus = 'idle' | 'requested' | 'accepted';
 
 export interface RealtimeDuel {
   phase: DuelPhase;
+  matchId: number;
+  rematchStatus: RematchStatus;
+  oppWantsRematch: boolean;
+  requestRematch: () => void;
   error: DuelError;
   opponentName: string;
   opponentPresent: boolean;
@@ -70,6 +77,9 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
   const [myFinal, setMyFinal] = useState<FinalStats | null>(null);
   const [oppFinal, setOppFinal] = useState<FinalStats | null>(null);
   const [result, setResult] = useState<DuelResult | null>(null);
+  const [matchId, setMatchId] = useState(0);
+  const [myRematch, setMyRematch] = useState(false);
+  const [oppRematch, setOppRematch] = useState(false);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const idRef = useRef(clientId());
@@ -77,6 +87,18 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
   const hadOppRef = useRef(false);
   const phaseRef = useRef<DuelPhase>('connecting');
   phaseRef.current = phase;
+
+  // تصفير حالة المباراة وبدء العدّ التنازلي (يُستعمل للبداية الأولى والإعادة، دون مغادرة القناة)
+  const beginMatch = useCallback((qs: CompQuestion[], at: number) => {
+    setMyFinal(null); setOppFinal(null); setResult(null);
+    setOppProgress({ answered: 0, score: 0 });
+    setMyRematch(false); setOppRematch(false);
+    setGraceLeft(null);
+    setCountdownMs(Math.max(0, at - Date.now()));
+    setQuestions(qs); setStartAt(at);
+    setMatchId((m) => m + 1);
+    setPhase('countdown');
+  }, []);
 
   const send = useCallback((payload: Payload) => {
     channelRef.current?.send({ type: 'broadcast', event: 'duel', payload });
@@ -117,10 +139,9 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
       if (p.type === 'ready') { setOppReady(true); if (p.name) setOpponentName(p.name); }
       else if (p.type === 'start') {
         if (p.mode && DUEL_CONFIGS[p.mode]) setConfig(DUEL_CONFIGS[p.mode]);
-        setQuestions(p.questions);
-        setStartAt(Date.now() + p.startIn); // نعتمد المدة النسبية لتفادي اختلاف ساعات الأجهزة
-        setPhase('countdown');
+        beginMatch(p.questions, Date.now() + p.startIn); // مدة نسبية لتفادي اختلاف ساعات الأجهزة
       } else if (p.type === 'answer') setOppProgress({ answered: p.questionIndex + 1, score: p.score });
+      else if (p.type === 'rematch_request') setOppRematch(true);
       else if (p.type === 'finish') setOppFinal({ score: p.finalScore, totalTime: p.totalTime, correct: p.correct });
     });
 
@@ -159,9 +180,19 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
       const qs = genSet(cfg.questions, cfg.level);
       const at = Date.now() + COUNTDOWN_MS;
       send({ type: 'start', startAt: at, startIn: COUNTDOWN_MS, questions: qs, mode });
-      setQuestions(qs); setStartAt(at); setPhase('countdown');
+      beginMatch(qs, at);
     }
-  }, [role, phase, myReady, oppReady, opponentPresent, send, mode]);
+  }, [role, phase, myReady, oppReady, opponentPresent, send, mode, beginMatch]);
+
+  // ── إعادة اللعب: عند طلب الطرفين يولّد المضيف أسئلة جديدة ويبدأ العدّ للجميع ──
+  useEffect(() => {
+    if (role !== 'host' || phase !== 'finished' || !myRematch || !oppRematch || !opponentPresent) return;
+    const cfg = DUEL_CONFIGS[mode];
+    const qs = genSet(cfg.questions, cfg.level);
+    const at = Date.now() + COUNTDOWN_MS;
+    send({ type: 'start', startAt: at, startIn: COUNTDOWN_MS, questions: qs, mode });
+    beginMatch(qs, at);
+  }, [role, phase, myRematch, oppRematch, opponentPresent, mode, send, beginMatch]);
 
   // ── العدّ التنازلي المتزامن ──
   useEffect(() => {
@@ -212,6 +243,12 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
     send({ type: 'ready', name: myName });
   }, [send, myName]);
 
+  const requestRematch = useCallback(() => {
+    if (phaseRef.current !== 'finished') return;
+    setMyRematch(true);
+    send({ type: 'rematch_request' });
+  }, [send]);
+
   const sendAnswer = useCallback((a: { questionIndex: number; correct: boolean; timeSpent: number; score: number }) => {
     send({ type: 'answer', ...a });
   }, [send]);
@@ -222,5 +259,8 @@ export function useRealtimeDuel({ role, code, myName, mode = 'live' }: Opts): Re
     setPhase((p) => (p === 'finished' ? p : 'waitingOpponent'));
   }, [send]);
 
-  return { phase, error, opponentName, opponentPresent, myReady, oppReady, config, questions, countdownMs, oppProgress, graceLeft, result, setReady, sendAnswer, finishMine };
+  const rematchStatus: RematchStatus = myRematch && oppRematch ? 'accepted' : myRematch ? 'requested' : 'idle';
+  const oppWantsRematch = oppRematch && !myRematch;
+
+  return { phase, matchId, rematchStatus, oppWantsRematch, requestRematch, error, opponentName, opponentPresent, myReady, oppReady, config, questions, countdownMs, oppProgress, graceLeft, result, setReady, sendAnswer, finishMine };
 }
