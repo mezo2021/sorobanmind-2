@@ -5,9 +5,9 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { genSet, type CompQuestion } from '@/components/games/MentalArchivesGame/competition/compMath';
 
-export const LIVE_QUESTIONS = 10;
-export const LIVE_Q_SECONDS = 15;
-export const COUNTDOWN_MS = 3000;
+export const LIVE_QUESTIONS = 5;
+export const LIVE_Q_SECONDS = 20;
+export const COUNTDOWN_MS = 5000;
 export const GRACE_SECONDS = 15;
 const JOIN_TIMEOUT_MS = 6000;
 
@@ -148,7 +148,7 @@ export function useRealtimeDuel({ role, code, myName }: Opts): RealtimeDuel {
     if (role !== 'host' || phase !== 'lobby' || startedRef.current) return;
     if (myReady && oppReady && opponentPresent) {
       startedRef.current = true;
-      const qs = genSet(LIVE_QUESTIONS, 2);
+      const qs = genSet(LIVE_QUESTIONS, 1);
       const at = Date.now() + COUNTDOWN_MS;
       send({ type: 'start', startAt: at, startIn: COUNTDOWN_MS, questions: qs });
       setQuestions(qs); setStartAt(at); setPhase('countdown');
