@@ -1,0 +1,58 @@
+// src/components/competition/onlineStrings.ts
+// نصوص واجهة الأونلاين (ar + en). تُقرأ عبر useOnlineT() المبني على useGameLang().
+import { useGameLang } from '@/components/games/gamesI18n';
+
+const S = {
+  title: { ar: 'تحدي أونلاين', en: 'Online Duel' },
+  subtitle: { ar: 'سباق مباشر ضد صديق على جهاز آخر', en: 'Live race against a friend on another device' },
+  create: { ar: 'إنشاء غرفة', en: 'Create room' },
+  join: { ar: 'انضمام لغرفة', en: 'Join room' },
+  enterCode: { ar: 'أدخل رمز الغرفة (4 أرقام)', en: 'Enter the 4-digit room code' },
+  joinBtn: { ar: 'انضم', en: 'Join' },
+  roomCode: { ar: 'رمز الغرفة', en: 'Room code' },
+  copy: { ar: 'نسخ', en: 'Copy' },
+  copied: { ar: 'تم النسخ ✓', en: 'Copied ✓' },
+  whatsapp: { ar: 'مشاركة عبر واتساب', en: 'Share via WhatsApp' },
+  shareText: { ar: 'تعال نتحدّى في بوابة الثقب الدودي! رمز الغرفة: ', en: "Let's race in the Wormhole Gate! Room code: " },
+  connecting: { ar: 'جارٍ الاتصال…', en: 'Connecting…' },
+  waitingOpp: { ar: 'بانتظار انضمام الخصم…', en: 'Waiting for your opponent…' },
+  ready: { ar: 'جاهز!', en: 'Ready!' },
+  waitingReady: { ar: 'بانتظار جاهزية الخصم…', en: 'Waiting for opponent to be ready…' },
+  oppReady: { ar: 'الخصم جاهز ✓', en: 'Opponent ready ✓' },
+  you: { ar: 'أنت', en: 'You' },
+  opponent: { ar: 'الخصم', en: 'Opponent' },
+  getReady: { ar: 'استعد!', en: 'Get ready!' },
+  question: { ar: 'السؤال', en: 'Question' },
+  confirm: { ar: 'تأكيد', en: 'Confirm' },
+  score: { ar: 'النقاط', en: 'Score' },
+  time: { ar: 'الزمن', en: 'Time' },
+  waitFinish: { ar: 'أنهيت! بانتظار الخصم…', en: 'Done! Waiting for your opponent…' },
+  oppLeft: { ar: 'انقطع الخصم… ينتظر', en: 'Opponent disconnected… waiting' },
+  sec: { ar: 'ث', en: 's' },
+  win: { ar: 'فزت! 🏆', en: 'You won! 🏆' },
+  lose: { ar: 'خسرت هذه الجولة', en: 'You lost this round' },
+  loseMsg: { ar: 'أداء رائع! الجولة القادمة لك 💪', en: 'Great effort! Next round is yours 💪' },
+  draw: { ar: 'تعادل أسطوري!', en: 'A legendary draw!' },
+  forfeit: { ar: 'انسحب الخصم — فزت تلقائياً', en: 'Opponent left — you win automatically' },
+  playAgain: { ar: 'العب مجدداً', en: 'Play again' },
+  exit: { ar: 'خروج', en: 'Exit' },
+  back: { ar: 'رجوع', en: 'Back' },
+  preview: { ar: 'وضع المعاينة — لا يتم حفظ النتائج', en: 'Preview mode — results are not saved' },
+  stats: { ar: 'سجلّك', en: 'Your record' },
+  wins: { ar: 'فزت', en: 'Wins' },
+  losses: { ar: 'خسرت', en: 'Losses' },
+  draws: { ar: 'تعادل', en: 'Draws' },
+  errNotFound: { ar: 'لا توجد غرفة بهذا الرمز.', en: 'No room with this code.' },
+  errFull: { ar: 'الغرفة ممتلئة.', en: 'The room is full.' },
+  errTaken: { ar: 'الرمز مستخدم، جرّب غرفة جديدة.', en: 'Code in use, try a new room.' },
+  errConn: { ar: 'تعذّر الاتصال، تحقق من الإنترنت.', en: 'Connection failed, check your internet.' },
+  correctShort: { ar: 'صحيحة', en: 'correct' },
+} as const;
+
+export type OnlineKey = keyof typeof S;
+
+export function useOnlineT() {
+  const { dir, isAr } = useGameLang();
+  const t = (k: OnlineKey): string => S[k][isAr ? 'ar' : 'en'];
+  return { t, dir, isAr };
+}
