@@ -433,7 +433,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   };
 
   const TopBar = () => (
-    <div className="flex items-center justify-between gap-2 p-3 sm:p-4 sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-amber-500/20 shadow-lg">
+    <div className="flex items-center justify-between gap-2 p-3 sm:p-4 sticky top-0 z-30 bg-slate-950 border-b border-amber-500/20 shadow-lg">
       <button onClick={() => { stopAllAudio(); onBack(); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0">
         <ArrowRight className={`w-6 h-6 text-amber-400 ${isAr ? '' : 'rotate-180'}`} />
       </button>
@@ -464,7 +464,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     return (
       <div className="relative flex flex-col items-center justify-center min-h-[100dvh] bg-slate-950 text-white p-6" dir={dir}>
         <CosmicBackground accent={theme.accent} accent2={theme.accent2} />
-        <TopBar />
+        {TopBar()}
         {cinematic}
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center z-10 max-w-lg bg-slate-900/90 border border-amber-500/40 p-8 rounded-3xl shadow-2xl backdrop-blur-md">
           <div className="text-6xl mb-4 animate-bounce">
@@ -524,7 +524,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
 
     return (
       <div className="relative flex flex-col justify-between min-h-[100dvh] bg-gradient-to-b from-stone-950 via-indigo-950 to-slate-950 text-white overflow-hidden" dir={dir}>
-        <TopBar />
+        {TopBar()}
         {cinematic}
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
         <CosmicBackground accent={theme.accent} accent2={theme.accent2} />
@@ -585,7 +585,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     return (
       <div className="relative flex flex-col items-center justify-start min-h-[100dvh] bg-slate-950 text-white p-6 pt-24 overflow-y-auto" dir={dir}>
         <CosmicBackground fixed accent={theme.accent} accent2={theme.accent2} intensity={0.8} />
-        <TopBar />
+        {TopBar()}
         {cinematic}
         
         <div className="max-w-2xl w-full mb-6 bg-amber-950/30 border border-amber-500/30 p-4 rounded-xl text-center z-10 shadow-lg">
@@ -663,7 +663,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       <div className="relative flex flex-col min-h-[100dvh] bg-slate-950 text-white overflow-hidden" dir={dir}>
         <CosmicBackground accent={theme.accent} accent2={theme.accent2} />
         <AmbientGlow speaker={speaker} reduce={shouldReduceMotion} />
-        <TopBar />
+        {TopBar()}
         {cinematic}
         <div className="flex-1 flex flex-col items-center justify-center px-4 py-3 gap-3 z-10 w-full max-w-md mx-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <div className="w-full flex justify-between items-center text-sm font-bold text-slate-400 bg-slate-900/60 px-4 py-2 rounded-xl border border-slate-800">
