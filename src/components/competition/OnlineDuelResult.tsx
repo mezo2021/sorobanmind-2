@@ -8,12 +8,12 @@ import { Num } from '@/components/Num';
 import CosmicBackground from '@/components/cosmic/CosmicBackground';
 import { addMatch } from '@/utils/duelHistory';
 import { isPreviewMode } from '@/utils/previewMode';
-import type { DuelResult } from '@/hooks/useRealtimeDuel';
+import type { DuelMode, DuelResult } from '@/hooks/useRealtimeDuel';
 import { useOnlineT } from './onlineStrings';
 
-type Props = { result: DuelResult; myName: string; oppName: string; durationSec: number; onAgain: () => void; onExit: () => void };
+type Props = { mode?: DuelMode; result: DuelResult; myName: string; oppName: string; durationSec: number; onAgain: () => void; onExit: () => void };
 
-export default function OnlineDuelResult({ result, myName, oppName, durationSec, onAgain, onExit }: Props) {
+export default function OnlineDuelResult({ mode = 'live', result, myName, oppName, durationSec, onAgain, onExit }: Props) {
   const { t, dir } = useOnlineT();
   const reduce = useReducedMotion();
   const savedRef = useRef(false);
@@ -22,11 +22,11 @@ export default function OnlineDuelResult({ result, myName, oppName, durationSec,
   useEffect(() => {
     if (savedRef.current) return;
     savedRef.current = true;
-    addMatch({ mode: 'live', myScore: result.myScore, opponentScore: result.oppScore, result: result.outcome, durationSec: Math.round(durationSec) });
+    addMatch({ mode, myScore: result.myScore, opponentScore: result.oppScore, result: result.outcome, durationSec: Math.round(durationSec) });
     if (result.outcome === 'win') {
       try { confetti({ particleCount: reduce ? 20 : 150, spread: 90, origin: { y: 0.55 }, colors: ['#FBBF24', '#38bdf8', '#f472b6'] }); } catch { /* noop */ }
     }
-  }, [result, durationSec, reduce]);
+  }, [result, durationSec, reduce, mode]);
 
   const title = result.outcome === 'win' ? t('win') : result.outcome === 'lose' ? t('lose') : t('draw');
   const side = (name: string, score: number, time: number, win: boolean) => (
