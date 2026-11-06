@@ -10,7 +10,7 @@ import { SkipForward, ArrowRight, Sparkles, Award, Play, Volume2, Square, Home }
 
 import Num from '@/components/Num';
 import CosmicBackground from '@/components/cosmic/CosmicBackground';
-import WarpFlash from '@/components/cosmic/WarpFlash';
+// import WarpFlash from '@/components/cosmic/WarpFlash'; // 🆕 تم إيقاف الفلاش المزعج
 import ChapterTitleCard from './ui/ChapterTitleCard';
 import { getTheme } from './ui/chapterThemes';
 import { parseInput } from '@/utils/numberStyle';
@@ -91,7 +91,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const handleAnswerRef = useRef<(m: boolean) => void>(() => {});
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
   const successHandledRef = useRef(false);
-  const typingRef = useRef<number | null>(null); // 🆕 لحل مشكلة وميض الآلة الكاتبة
+  const typingRef = useRef<number | null>(null);
 
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
@@ -159,7 +159,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
   };
 
-  // 🆕 دالة تخطي الآلة الكاتبة
   const skipTyping = (fullText: string) => {
     if (typingRef.current) { 
       clearInterval(typingRef.current); 
@@ -244,8 +243,8 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     }
     const loop = { duration: 3, repeat: Infinity, repeatType: 'mirror' as const, ease: 'easeInOut' as const };
     return {
-      // 🆕 تكبير الشخصية عند التحدث
-      animate: { scale: [1.06, 1.12, 1.06], y: [0, -4, 0], opacity: 1, filter: activeFilter },
+      // 🆕 نبض ناعم للشخصية
+      animate: { scale: [1.02, 1.05, 1.02], y: [0, -4, 0], opacity: 1, filter: activeFilter },
       transition: { scale: loop, y: loop, opacity: { duration: 0.25 }, filter: { duration: 0.25 } },
     };
   };
@@ -265,7 +264,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
       speakCustom(line.character, fullText);
 
       let i = 0;
-      // 🆕 استخدام window.setInterval وحفظه في ref لمنع الوميض
       const interval = window.setInterval(() => {
         if (i < fullText.length) {
           setDisplayedText(fullText.slice(0, i + 1));
@@ -435,7 +433,7 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   const cinematic = (
     <>
       <ChapterTitleCard show={showTitle && videoState === 'done' && phase === 'playing'} onDone={closeTitle} theme={theme} title={isAr ? chapter.titleAr : chapter.titleEn} isAr={isAr} />
-      <WarpFlash trigger={`${sceneIndex}-${phase}`} color={theme.accent} />
+      {/* 🆕 تم إيقاف الفلاش المزعج WarpFlash */}
     </>
   );
 
@@ -446,7 +444,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
   };
 
   const TopBar = () => (
-    // 🆕 إضافة w-full لإصلاح المستطيل الأسود
     <div className="flex items-center justify-between gap-2 p-3 sm:p-4 sticky top-0 z-30 bg-slate-950 border-b border-amber-500/20 shadow-lg w-full">
       <button onClick={() => { stopAllAudio(); onBack(); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition shrink-0">
         <ArrowRight className={`w-6 h-6 text-amber-400 ${isAr ? '' : 'rotate-180'}`} />
@@ -544,28 +541,27 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
         <CosmicBackground accent={theme.accent} accent2={theme.accent2} />
         <AmbientGlow speaker={line.character} reduce={shouldReduceMotion} />
         
-        {/* 🆕 تعديل أحجام الشخصيات لتصبح أكبر وأكثر واقعية */}
         <div className="flex-1 min-h-0 relative w-full max-w-5xl mx-auto flex justify-center items-end mb-4 z-10 pt-16 gap-1 sm:gap-4">
           <motion.img
             src={aseelImg}
             alt={isAr ? 'أسيل' : 'Aseel'}
             initial={false}
             {...getCharacterMotion('aseel', line.character === 'aseel')}
-            className="h-[30vh] sm:h-[44vh] w-auto object-contain origin-bottom shrink-0 -mx-2"
+            className="w-24 sm:w-48 object-contain origin-bottom shrink-0"
           />
           <motion.img
             src={joudImg}
             alt={isAr ? 'جود' : 'Joud'}
             initial={false}
             {...getCharacterMotion('jud', line.character === 'jud')}
-            className="h-[38vh] sm:h-[54vh] w-auto object-contain origin-bottom z-20 shrink-0"
+            className="w-32 sm:w-60 object-contain origin-bottom z-20 shrink-0"
           />
           <motion.img
             src={sorobanaImg}
             alt={isAr ? 'سوروبانا' : 'Sorobana'}
             initial={false}
             {...getCharacterMotion('sorobana', line.character === 'sorobana')}
-            className="h-[33vh] sm:h-[48vh] w-auto object-contain origin-bottom shrink-0 -mx-2"
+            className="w-28 sm:w-56 object-contain origin-bottom shrink-0"
           />
         </div>
         
@@ -582,7 +578,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
             </p>
           </div>
 
-          {/* 🆕 استخدام skipTyping عند الضغط على الزر */}
           <button onClick={(e) => { e.stopPropagation(); if (isTyping) { skipTyping(isAr ? line.textAr : line.textEn); return; } if (lineIndex < currentScene.lines.length - 1) setLineIndex(l => l + 1); else nextScene(); }} className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 rounded-xl font-extrabold text-lg transition-all shadow-lg flex items-center justify-center gap-2">
             <span>{isTyping ? tUI('showFullText') : tUI('continueStory')}</span><Sparkles className="w-5 h-5" />
           </button>
@@ -598,7 +593,6 @@ export default function MentalArchivesEngine({ chapter, onComplete, onBack }: Pr
     const exampleTip = isAr ? currentExample.tipAr : currentExample.tipEn;
 
     return (
-      // 🆕 إصلاح المسافات لتجنب المستطيل الأسود
       <div className="relative flex flex-col items-center justify-start min-h-[100dvh] bg-slate-950 text-white px-6 pb-6 pt-0 overflow-y-auto" dir={dir}>
         <CosmicBackground fixed accent={theme.accent} accent2={theme.accent2} intensity={0.8} />
         <div className="-mx-6 w-[calc(100%+3rem)] mb-4">{TopBar()}</div>
