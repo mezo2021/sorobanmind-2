@@ -64,6 +64,10 @@ const S = {
   recorded: { ar: 'تم تسجيل شبحك! 🎉', en: 'Your ghost is recorded! 🎉' },
   trainingNote: { ar: 'مباريات الشبح تدريب ولا تُحتسب في فزت/خسرت.', en: "Ghost races are training and don't count in W/L." },
   raceAgain: { ar: 'سباق جديد', en: 'New race' },
+  rematchWaiting: { ar: 'بانتظار الخصم...', en: 'Waiting for opponent...' },
+  rematchAccept: { ar: 'الخصم يريد اللعب مجدداً - اضغط للقبول', en: 'Opponent wants a rematch - tap to accept' },
+  rematchStarting: { ar: 'تبدأ الجولة...', en: 'Starting...' },
+  rematchUnavailable: { ar: 'غادر الخصم', en: 'Opponent left' },
   correctShort: { ar: 'صحيحة', en: 'correct' },
 } as const;
 
