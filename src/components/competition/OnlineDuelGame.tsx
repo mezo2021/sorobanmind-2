@@ -1,5 +1,5 @@
 // src/components/competition/OnlineDuelGame.tsx
-// شاشة اللعب: عدّ تنازلي 3-2-1 متزامن، 10 أسئلة، 15 ث لكل سؤال، شريط تقدّم الخصم الحي.
+// شاشة اللعب: عدّ تنازلي 3-2-1 متزامن، عدد الأسئلة والوقت يُقرأ من الإعدادات.
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Num } from '@/components/Num';
@@ -43,6 +43,7 @@ export default function OnlineDuelGame({ duel, myName }: Props) {
     setScore(newScore); setCorrect(newCorrect); setAnswered(idx + 1);
     duel.sendAnswer({ questionIndex: idx, correct: ok, timeSpent: Math.round(spentMs), score: newScore });
 
+    // ⏱️ تأخير ثانيتين (2000 مللي ثانية) قبل الانتقال للسؤال التالي
     window.setTimeout(() => {
       if (idx + 1 >= LIVE_QUESTIONS) {
         doneRef.current = true;
@@ -51,7 +52,7 @@ export default function OnlineDuelGame({ duel, myName }: Props) {
       }
       setIdx(idx + 1); setInput(''); setLeft(LIVE_Q_SECONDS); setLocked(false);
       qStartRef.current = performance.now();
-    }, 450);
+    }, 2000); 
   };
 
   useEffect(() => {
