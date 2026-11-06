@@ -1,7 +1,7 @@
 # 🌀 بوابة الثقب الدودي: حكاية الخرز الذي حفظ الزمن
 **وثيقة تصميم اللعبة (GDD) — الجزء الأول: الأساسيات والهيكلة**
-**الإصدار:** 7.0 (متوافق مع المرجع المعماري + الكود الفعلي)
-**آخر تحديث:** 2026-11-05
+**الإصدار:** 8.0 (متوافق مع المرجع المعماري + الكود الفعلي + التحديات الأونلاين)
+**آخر تحديث:** 2026-11-06
 **الجمهور:** المطورون، مصممو الألعاب، أدوات الذكاء الاصطناعي.
 
 ---
@@ -68,14 +68,7 @@
 │   │   ├── exam1.ts
 │   │   └── examTypes.ts
 │   ├── introData.ts
-│   ├── level1Data.ts
-│   ├── level2Data.ts
-│   ├── level3Data.ts
-│   ├── level4Data.ts
-│   ├── level5Data.ts
-│   ├── level6Data.ts
-│   ├── level7Data.ts
-│   └── level8Data.ts
+│   ├── level1Data.ts ... level8Data.ts
 │
 ├── /ui                           👈 مكونات الإدخال
 │   ├── RelicKeypad.tsx
@@ -83,77 +76,89 @@
 │   ├── TimeDial.tsx
 │   └── speechToNumber.ts
 │
-├── gameFlowTypes.ts              👈 عقد البيانات (Chapter, Scene, GameQuestion, tipAr/tipEn)
-├── gameUI.ts                     👈 ترجمة الواجهة الثابتة (tUI) + رسائل Kyu
-├── MentalArchivesEngine.tsx      👈 المحرك (سرد + مثال + تحدي + دعم الأرقام السالبة)
-├── MentalArchivesManager.tsx     👈 المدير (خريطة + CHAPTERS + وضع المعاينة)
-├── MentalArchivesExams.tsx       👈 قائمة الامتحانات (EXAMS + وضع المعاينة)
-├── MentalArchivesExamRunner.tsx  👈 أداء الامتحان (خلط الأسئلة + دعم الأرقام السالبة)
+├── /competition                  👈 المنافسات (محلي + أونلاين)
+│   ├── CompetitionHub.tsx        (بوابة الأنماط)
+│   ├── DuelMode.tsx              (محلي 1v1)
+│   ├── RelayMode.tsx             (محلي 3 لاعبين)
+│   ├── GhostMode.tsx             (محلي شبح)
+│   ├── ResultModal.tsx           (نتائج المحلي)
+│   ├── ProblemBoard.tsx          (لوح المسألة)
+│   ├── compMath.ts               (مولد الأسئلة)
+│   ├── OnlineDuelLobby.tsx       🆕 (شاشة إنشاء/انضمام أونلاين)
+│   ├── OnlineDuelGame.tsx        🆕 (شاشة اللعب الأونلاين)
+│   ├── OnlineDuelResult.tsx      🆕 (شاشة نتيجة الأونلاين والإعادة)
+│   ├── OnlineGhostAsync.tsx      🆕 (واجهة الشبح غير المتزامن)
+│   └── onlineStrings.ts          🆕 (نصوص الأونلاين)
 │
-├── aseel.png                     👈 أصول اللعبة
-├── joud.png
-├── sorobana.png
-└── intro.mp4
+├── gameFlowTypes.ts              👈 عقد البيانات (Chapter, GameQuestion)
+├── gameUI.ts                     👈 ترجمة الواجهة + رسائل Kyu
+├── MentalArchivesEngine.tsx      👈 محرك القصة
+├── MentalArchivesManager.tsx     👈 مدير الخريطة + CHAPTERS
+├── MentalArchivesExams.tsx       👈 قائمة الامتحانات
+├── MentalArchivesExamRunner.tsx  👈 شاشة أداء الامتحان
+├── ExamCertificateModal.tsx      👈 الشهادة (PDF/PNG)
+│
+├── aseel.png, joud.png, sorobana.png, intro.mp4
 ```
 
-🧩 المكونات الخارجية المرتبطة (خارج مجلد اللعبة)
+🧩 المكونات الخارجية المرتبطة
 
-· /src/store/progressStore.ts: المتجر المركزي (الإصدار 14). يحتوي على mentalArchivesProgress و mentalArchivesExams. (المتاجر المحلية القديمة محذوفة نهائياً).
-· /src/utils/previewMode.ts: أداة تفعيل وضع المعاينة للمطورين.
-· /src/utils/numberStyle.ts: أدوات تحويل الأرقام + parseInput.
-· /src/components/Num.tsx: مكون عرض الأرقام.
-· /src/components/games/highScoreStore.ts: الرقم القياسي (المفتاح: soroban_high_scores_v1).
-· /src/components/games/gamesI18n.ts: قاموس الألعاب العامة (gt / useGameLang).
+· /src/store/progressStore.ts: المتجر المركزي (v14).
+· /src/hooks/useRealtimeDuel.ts: 🆕 عقل اللعبة الأونلاين (قناة Supabase، الأحداث، التزامن).
+· /src/utils/roomCode.ts: 🆕 توليد رمز الغرفة (4 أرقام).
+· /src/utils/duelHistory.ts: 🆕 سجل المباريات في sorobanmind-duels-v1.
+· /src/utils/ghostCode.ts: 🆕 تشفير/فك تشفير كود الشبح SG1-.
+· /src/utils/previewMode.ts: وضع المعاينة للمطورين.
+· /src/utils/numberStyle.ts: تحويل الأرقام.
+· /src/components/Num.tsx: عرض الأرقام.
+· /src/components/games/highScoreStore.ts: الرقم القياسي.
+· /src/components/games/gamesI18n.ts: قاموس الألعاب العامة.
 
 ---
 
 6. نظام لوحة الصدارة (Leaderboard System)
 
-⚠️ ملاحظة: النظام موثّق هنا كتصميم معتمد، لكن تنفيذه مؤجل إلى مرحلة لاحقة (بعد استكمال جميع الامتحانات السبعة).
-
-البنية المعتمدة:
+الحالة: ✅ مكتمل (Top 10 + Podium + أشباح للتحفيز).
 
 · لكل مستوى كيو (10, 9, 8, 7): أفضل 3 متصدرين في القمة، وأول 10 أسماء تحتهم.
-· عتبات التقدير في exam_10_7 هي مصدر تحديد المستوى:
-
-النتيجة المستوى حالة اللاعب
-< 250 بلا مستوى راسب — تُسجَّل له الدرجة فقط
-250–299 10 كيو يبقى في المستوى، يعيد
-300–349 9 كيو يبقى في المستوى، يعيد
-350–399 8 كيو يبقى في المستوى، يعيد
-400–500 7 كيو يجتاز → يفتح exam_6
+· عتبات التقدير في exam_10_7:
+  · < 250: بلا مستوى (راسب — تُسجَّل له الدرجة فقط).
+  · 250–299: يبقى في 10 كيو.
+  · 300–349: يبقى في 9 كيو.
+  · 350–399: يبقى في 8 كيو.
+  · 400–500: يجتاز → يفتح exam_6.
 
 ---
 
 7. المشهد الافتتاحي — مرسين، 2125
 
 (تم تنفيذه بالكامل في introData.ts).
-
 المكان: شقة صغيرة، سوروبان خشبي، جهاز لوحي.
 الشخصيات: جود، أسيل. يضيء الجهاز بوميض أزرق، وتظهر سوروبانا.
-
-مقتطف من الحوار الفعلي (النسخة الكاملة في الكود):
 
 · سوروبانا: "أهلاً بكما. أنا سوروبانا، من أرشيف سوريا الرقمي عام 2125. أصاب نظامنا خلل أسميناه (الطيف الصفري)..."
 · جود: "وهذا الطيف الصفري... هل نحاربه؟"
 · سوروبانا: "لا. الخلل يُصلح، ولا يُحارب. في كل عصر، ستتعلمان قاعدة جديدة..."
-
-✅ تم إنجاز: القصة الآن تحتوي على عام 2125، وتفاصيل المكان، ومبدأ "يُصلح لا يُحارب".
 
 ---
 
 8. دليل المطور — إضافة مستوى
 
 1. البيانات: أنشئ data/levelXData.ts متبعاً Chapter من gameFlowTypes.ts.
-   · القواعد (ruleTitleAr, ruleDescAr) تُكتب الآن داخل كائن SolvedExample (وليس على مستوى المشهد).
-   · يُفضل إضافة tipAr و tipEn لكل مثال وسؤال لتوجيه الطفل (مثل: "ابدأ بالعدد ذي الخانتين").
+   · القواعد (ruleTitleAr, ruleDescAr) تُكتب داخل كائن SolvedExample.
+   · يُفضل إضافة tipAr و tipEn لكل مثال وسؤال.
 2. التسجيل: أضف المستوى إلى CHAPTERS في MentalArchivesManager.tsx باستخدام Partial<Record<ChapterId, Chapter>>.
 3. الأرقام: استخدم <Num> في كل مكان يُعرض فيه رقم.
-4. المتطلبات: في requires، ضع فقط السلف المباشر (سلسلة خطية: level2 تحتاج ['level1']).
-5. الاختبار: امسح بيانات الموقع، العب وصولاً للمستوى الجديد، تأكد من:
-   · بطاقة القاعدة تظهر (داخل المثال).
-   · النصيحة (tip) تظهر تحت المسألة.
-   · الأرقام تتحول عند الضغط على زر ١٢٣.
-   · التلميحات تعمل بشكل صحيح عند الخطأ.
+4. المتطلبات: في requires، ضع فقط السلف المباشر.
+5. الاختبار: امسح بيانات الموقع، العب وصولاً للمستوى الجديد، تأكد من عمل النصائح (Tips) وتحويل الأرقام.
+
+---
+
+9. دليل المطور — إضافة نمط أونلاين جديد (مستقبلي)
+
+1. أضف النمط إلى DUEL_CONFIGS في useRealtimeDuel.ts.
+2. أضف النصوص في onlineStrings.ts (ar/en).
+3. أضف البطاقة في OnlineDuelLobby.tsx (تمرير mode الصحيح).
+4. ممنوع المساس بـ progressStore.ts أو خلط نتائج الأونلاين بتقدم القصة.
 
 ```
