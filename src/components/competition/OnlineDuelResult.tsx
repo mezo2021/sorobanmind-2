@@ -1,31 +1,55 @@
 // src/components/competition/OnlineDuelResult.tsx
-// شاشة نتيجة التحدي الأونلاين + حفظ المباراة في sorobanmind-duels-v1 (إلا في المعاينة).
+// شاشة نتيجة التحدي الأونلاين + حفظ المباراة + منح XP (إلا في المعاينة).
 import { useEffect, useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { RotateCcw, Home } from 'lucide-react';
+import { RotateCcw, Home, Sparkles } from 'lucide-react';
 import { Num } from '@/components/Num';
 import CosmicBackground from '@/components/cosmic/CosmicBackground';
 import { addMatch } from '@/utils/duelHistory';
 import { isPreviewMode } from '@/utils/previewMode';
+import { useProgressStore } from '@/store/progressStore';
 import type { DuelMode, DuelResult, RematchStatus } from '@/hooks/useRealtimeDuel';
 import { useOnlineT } from './onlineStrings';
 
 type Props = { mode?: DuelMode; result: DuelResult; myName: string; oppName: string; durationSec: number; rematchStatus: RematchStatus; oppWantsRematch: boolean; opponentPresent: boolean; onRematch: () => void; onExit: () => void };
+
+// 🆕 حساب XP حسب النمط والنتيجة (الحد الأقصى 20)
+function calcXP(mode: DuelMode, outcome: 'win' | 'lose' | 'draw'): number {
+  if (mode === 'live') {
+    if (outcome === 'win') return 20;
+    if (outcome === 'draw') return 10;
+    return 5;
+  }
+  // blitz
+  if (outcome === 'win') return 12;
+  if (outcome === 'draw') return 6;
+  return 3;
+}
 
 export default function OnlineDuelResult({ mode = 'live', result, myName, oppName, durationSec, rematchStatus, oppWantsRematch, opponentPresent, onRematch, onExit }: Props) {
   const { t, dir } = useOnlineT();
   const reduce = useReducedMotion();
   const savedRef = useRef(false);
   const preview = isPreviewMode();
+  const addXP = useProgressStore((s) => s.addXP);
+
+  const xpEarned = calcXP(mode, result.outcome);
 
   useEffect(() => {
     if (savedRef.current) return;
     savedRef.current = true;
     addMatch({ mode, myScore: result.myScore, opponentScore: result.oppScore, result: result.outcome, durationSec: Math.round(durationSec) });
+
+    // 🆕 منح XP (لا في المعاينة)
+    if (!preview) {
+      addXP(xpEarned);
+    }
+
     if (result.outcome === 'win') {
       try { confetti({ particleCount: reduce ? 20 : 150, spread: 90, origin: { y: 0.55 }, colors: ['#FBBF24', '#38bdf8', '#f472b6'] }); } catch { /* noop */ }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result, durationSec, reduce, mode]);
 
   const unavailable = !opponentPresent;
@@ -55,6 +79,15 @@ export default function OnlineDuelResult({ mode = 'live', result, myName, oppNam
         <h2 className="text-3xl font-black text-amber-300 mb-1">{title}</h2>
         {result.forfeit && <p className="text-sm text-emerald-300 mb-2">{t('forfeit')}</p>}
         {result.outcome === 'lose' && <p className="text-sm text-slate-300 mb-2">{t('loseMsg')}</p>}
+
+        {/* 🆕 شارة XP المكتسبة */}
+        {!preview && (
+          <div className="inline-flex items-center gap-1.5 bg-purple-500/15 border border-purple-500/40 rounded-full py-1.5 px-4 mb-3 text-sm font-black text-purple-300">
+            <Sparkles className="w-4 h-4" />
+            +<Num>{xpEarned}</Num> XP
+          </div>
+        )}
+
         <div className="flex gap-2 my-4">
           {side(myName, result.myScore, result.myTime, result.outcome === 'win')}
           {side(oppName || t('opponent'), result.oppScore, result.oppTime, result.outcome === 'lose')}
