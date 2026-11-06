@@ -31,12 +31,17 @@ function Room({ session, myName, onLeave }: { session: Session; myName: string; 
   const whatsapp = () => window.open(`https://wa.me/?text=${encodeURIComponent(shareMsg)}`, '_blank', 'noopener');
 
   if (duel.phase === 'error') {
-    const msg = duel.error === 'roomNotFound' ? t('errNotFound') : duel.error === 'roomFull' ? t('errFull') : duel.error === 'roomTaken' ? t('errTaken') : t('errConn');
+    // 🆕 إضافة حالة 'expired' (انتهت صلاحية الغرفة)
+    const msg = duel.error === 'roomNotFound' ? t('errNotFound')
+      : duel.error === 'roomFull' ? t('errFull')
+      : duel.error === 'roomTaken' ? t('errTaken')
+      : duel.error === 'expired' ? t('errExpired')   // ← جديد
+      : t('errConn');
     return (
       <div className="relative min-h-[100dvh] flex items-center justify-center p-4 text-white" dir={dir}>
         <CosmicBackground />
         <div className="relative z-10 text-center bg-slate-900/80 border border-rose-500/40 rounded-3xl p-6 max-w-sm">
-          <div className="text-4xl mb-2">⚠️</div>
+          <div className="text-4xl mb-2">{duel.error === 'expired' ? '⏱️' : '⚠️'}</div>
           <p className="mb-4">{msg}</p>
           <button onClick={onLeave} className="px-6 py-3 rounded-2xl bg-slate-800 border border-slate-600 font-bold">{t('back')}</button>
         </div>
@@ -66,6 +71,17 @@ function Room({ session, myName, onLeave }: { session: Session; myName: string; 
             <button onClick={whatsapp} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-sm font-bold"><Share2 className="w-4 h-4" />{t('whatsapp')}</button>
           </div>
         </div>
+
+        {/* 🆕 العد التنازلي لإغلاق الغرفة */}
+        {duel.expiresIn !== null && duel.expiresIn > 0 && (
+          <div className="mt-3 text-center text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/30 rounded-xl py-2 px-3">
+            ⏱️ {t('roomTimer')}{' '}
+            <span className="font-mono font-black tabular-nums text-base text-amber-200">
+              {String(Math.floor(duel.expiresIn / 60)).padStart(2, '0')}:
+              {String(duel.expiresIn % 60).padStart(2, '0')}
+            </span>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3 mt-4">
           {[{ n: myName, rdy: duel.myReady, me: true }, { n: duel.opponentName, rdy: duel.oppReady, me: false }].map((p, i) => (
