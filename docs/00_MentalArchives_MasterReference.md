@@ -228,14 +228,112 @@
 | **Assets** | 4 | الصور والفيديو |
 | **الإجمالي** | **57** | |
 ```
-## ملفات الأونلاين (Phase 1 — Live Race)
-58. src/utils/roomCode.ts
-59. src/utils/duelHistory.ts
-60. src/hooks/useRealtimeDuel.ts
-61. src/components/competition/OnlineDuelLobby.tsx
-62. src/components/competition/OnlineDuelGame.tsx
-63. src/components/competition/OnlineDuelResult.tsx
-64. src/components/competition/onlineStrings.ts
+# 🌐 بوابة الثقب الدودي: وثيقة التحديات الأونلاين (Online Multiplayer)
+**الإصدار:** 1.0 (متوافق مع التطبيق v7.6+)
+**آخر تحديث:** 2026-11-06
+**الجمهور:** المطورون، المصممون، وأدوات AI.
+
+> **الغرض من هذا الملف:** توثيق شامل لنظام المنافسات الأونلاين (Live Race, Blitz, Ghost Async) الذي تمت إضافته فوق البنية الحالية للعبة، مع تسجيل التعديلات المخصصة (Custom Tweaks) التي أجراها المالك (مصطفى).
+
+---
+
+## 1. الأنماط الثلاثة الجديدة (The 3 New Modes)
+
+تمت إضافة قسم جديد داخل `CompetitionHub.tsx` باسم **"تحدي أونلاين 🌐"**، ويحتوي على:
+
+1. **غرفة سباق (Live Race):**
+   * **الوصف:** سباق كلاسيكي متزامن بين جهازين عبر `Supabase Realtime`.
+   * **الإعدادات الحالية:** **5 أسئلة** × **20 ثانية** (تم تعديلها من 10×15 لتكون أسهل على الأطفال).
+   * **العد التنازلي:** 5 ثوانٍ (5000ms).
+   * **السرعة:** تأخير 2 ثانية بين كل سؤال لرؤية النتيجة.
+2. **غرفة برق ⚡ (Blitz):**
+   * **الوصف:** نفس بنية السباق الكلاسيكي، لكن سريع جداً.
+   * **الإعدادات:** 5 أسئلة × 5 ثوانٍ فقط.
+3. **شبح غير متزامن 👻 (Ghost Async):**
+   * **الوصف:** لاعب واحد يلعب ليسجل "شبحاً" (وقت + إجابات). يُنتج كوداً يبدأ بـ `SG1-`.
+   * **الميزة:** لا يحتاج اتصالاً متزامناً (Realtime). صديقك يلصق الكود لاحقاً ليتسابق مع شبحك.
+   * **التسجيل:** يُحفظ كـ "تدريب" ولا يُحتسب في إحصاءات الفوز/الخسارة.
+
+---
+
+## 2. الهيكلة التقنية (Files & Architecture)
+
+### 📂 الملفات الجديدة (9 ملفات)
+*   `src/utils/roomCode.ts`: توليد رمز الغرفة (4 أرقام 1000-9999).
+*   `src/utils/duelHistory.ts`: إدارة سجل المباريات في `localStorage`.
+*   `src/utils/ghostCode.ts`: تشفير وفك تشفير كود الشبح `SG1-`.
+*   `src/hooks/useRealtimeDuel.ts`: عقل اللعبة الأونلاين (يدير القناة، الأحداث، التزامن، والنتائج).
+*   `src/components/competition/OnlineDuelLobby.tsx`: شاشة إنشاء/الانضمام للغرفة.
+*   `src/components/competition/OnlineDuelGame.tsx`: شاشة اللعب ولوحة المفاتيح.
+*   `src/components/competition/OnlineDuelResult.tsx`: شاشة النتيجة النهائية.
+*   `src/components/competition/OnlineGhostAsync.tsx`: واجهة نمط الشبح.
+*   `src/components/competition/onlineStrings.ts`: نصوص الواجهة (AR/EN).
+
+### 📝 الملفات المعدلة
+*   `CompetitionHub.tsx`: إضافة بطاقة "تحدي أونلاين".
+
+---
+
+## 3. التعديلات المخصصة (Custom Tweaks) ⚠️ هامة جداً
+أثناء التطوير، تم تعديل بعض القيم الافتراضية التي أرسلها الذكاء الاصطناعي لتتناسب مع تجربة الطفل. **يجب الحفاظ على هذه القيم:**
+
+1. **في `useRealtimeDuel.ts`:**
+   ```typescript
+   export const DUEL_CONFIGS = {
+     live: { mode: 'live', questions: 5, seconds: 20, level: 1 },
+     blitz: { mode: 'blitz', questions: 5, seconds: 5, level: 1 },
+   };
+   export const COUNTDOWN_MS = 5000;
+```
+
+2. في OnlineDuelGame.tsx:
+   · سرعة الانتقال بين الأسئلة: window.setTimeout(..., 2000) (بدلاً من 450).
+3. في onlineStrings.ts:
+   · تم تحديث النص ليعكس الإعدادات الجديدة: createLive: 'غرفة سباق (5 أسئلة × 20 ث)'.
+
+---
+
+4. نظام مزامنة الوقت (Sync Strategy)
+
+· المضيف (Host): يقوم بتوليد الأسئلة ويرسل حدث start يحتوي على startAt (التوقيت المطلق) و startIn (التوقيت النسبي).
+· الضيف (Guest): يعتمد على startIn (يضيفه لوقت جهازه) لأن ساعات الأجهزة تختلف بالثواني. هذا يضمن التزامن بفرق لا يتجاوز 100-300ms (زمن الشبكة).
+
+---
+
+5. قاعدة البيانات (Data Storage)
+
+· المفتاح: sorobanmind-duels-v1 (في localStorage).
+· السعة: آخر 20 مباراة فقط.
+· الحماية:
+  · لا يتم حفظ أي شيء إذا كان isPreviewMode() مفعلاً.
+  · مباريات الشبح تُسجل بـ training: true (لا تؤثر على الإحصاءات).
+  · ممنوع تماماً ربط هذه السجلات بـ progressStore.ts أو لوحة صدارة الامتحانات.
+
+---
+
+6. متطلبات التشغيل (Supabase)
+
+· يجب تفعيل Realtime (Broadcast & Presence) في مشروع Supabase.
+· لا حاجة لإنشاء جداول (Tables).
+· يتم استخدام supabase.removeChannel() دائماً عند إغلاق الشاشة (تمت معالجتها في useRealtimeDuel).
+
+---
+
+7. القواعد الذهبية للأونلاين (Golden Rules)
+
+لأي مطور يعمل على هذا القسم مستقبلاً:
+
+1. ممنوع تعديل DUEL_CONFIGS في useRealtimeDuel.ts دون تحديث النصوص في onlineStrings.ts (حتى لا يرى الطفل معلومة مخالفة).
+2. ممنوع إضافة console.log في useRealtimeDuel.ts أو الشاشات الثلاث (لأنها تعمل في بيئة إنتاج أونلاين).
+3. ممنوع استخدام state داخل حدث broadcast مباشرة دون استخدام useRef لحماية StrictMode.
+4. يجب أن يدعم كل زر في الشاشات الجديدة اللغتين (ar/en) عبر useOnlineT().
+
+---
+
+(نهاية وثيقة الأونلاين - بوابة الثقب الدودي)
+
+```
+
 ---
 
 <a name="5"></a>
