@@ -1,6 +1,6 @@
 // src/lib/cloudSync.ts
 // ☁️ نظام المزامنة المبسط (نظام 2)
-// [تحديث] إضافة الموافقة الأبوية (COPPA/GDPR) + حفظ الاسم المقنّع + استعادة كلمة المرور
+// [تحديث] إضافة الموافقة الأبوية (COPPA/GDPR) + حفظ الاسم المقنّع + استعادة كلمة المرور + إصلاح رابط التأكيد
 
 import { supabase } from './supabase';
 import { useProgressStore, type ProgressState } from '../store/progressStore';
@@ -42,7 +42,6 @@ export const cloudSync = {
     if (!consent.agreedGuardian) throw new Error('You must confirm you are the guardian (18+).');
     if (!consent.agreedData) throw new Error('You must agree to data collection.');
     if (!consent.agreedPrivacy) throw new Error('You must agree to Privacy Policy & ToS.');
-    // تحديث: العمر يبدأ من 5 سنوات
     if (!consent.childAge || consent.childAge < 5 || consent.childAge > 18) throw new Error('Invalid child age. Must be between 5 and 18.');
 
     const trimmedParent = parentName.trim();
@@ -53,6 +52,7 @@ export const cloudSync = {
       email,
       password,
       options: {
+        emailRedirectTo: 'https://mezo2021.github.io/sorobanmind-2/', // 👈 السطر السحري لحل مشكلة الـ 404
         data: {
           parent_name: trimmedParent,
           child_name: trimmedChild,
@@ -94,6 +94,16 @@ export const cloudSync = {
     const pName = meta.parent_name || 'ولي الأمر';
     const cName = meta.child_name || 'البطل';
     
+    // 🆕 إصلاح للمستخدمين القدامى: إذا لم يكن هناك اسم مقنع، ننشئه ونحدثه
+    let maskedName = meta.child_masked_name;
+    if (!maskedName) {
+      maskedName = maskName(cName);
+      // تحديث قاعدة البيانات في الخلفية
+      await supabase.auth.updateUser({
+        data: { child_masked_name: maskedName }
+      });
+    }
+
     useProgressStore.getState().setParentName(pName);
     useProgressStore.getState().setChildName(cName);
     localStorage.setItem('soroban_child_name', cName);
