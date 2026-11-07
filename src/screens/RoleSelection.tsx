@@ -10,10 +10,10 @@ import type { Role, CharacterType } from '@/types';
 import { CharacterSelector } from '@/components/CharacterSelector';
 import { NameInputModal } from '@/components/NameInputModal';
 import { AuthModal } from '@/components/AuthModal';
-import { ResetPasswordModal } from '@/components/ResetPasswordModal'; // 🆕 استيراد شاشة إعادة التعيين
+import { ResetPasswordModal } from '@/components/ResetPasswordModal'; // استيراد شاشة إعادة التعيين
 import { useProgressStore } from '@/store/progressStore';
 import { cloudSync } from '@/lib/cloudSync';
-import { supabase } from '@/lib/supabase'; // 🆕 استيراد Supabase لمراقبة الحدث
+import { supabase } from '@/lib/supabase'; 
 
 interface RoleSelectionProps {
   onSelect: (role: Role) => void;
@@ -39,15 +39,15 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   const [devPassword, setDevPassword] = useState('');
   const [devPasswordError, setDevPasswordError] = useState(false);
   
-  // 🆕 حالة عرض شاشة إعادة تعيين كلمة المرور
+  // حالة عرض شاشة إعادة تعيين كلمة المرور
   const [showResetPassword, setShowResetPassword] = useState(false);
 
   useEffect(() => {
-    // 🆕 مراقبة حدث استعادة كلمة المرور من Supabase
+    // مراقبة حدث استعادة كلمة المرور من Supabase
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setShowResetPassword(true);
-        setShowAuth(false); // إغلاق شاشة التسجيل العادية
+        setShowAuth(false);
       }
     });
 
@@ -59,19 +59,12 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // نكتفي بقراءة الجلسة المحفوظة (تعمل بدون إنترنت)
         const session = await cloudSync.getSession();
         
         if (session) {
           setIsLoggedIn(true);
           setShowAuth(false);
-          
-          cloudSync.getCurrentUser().catch((err) => {
-            if (err?.status === 401 || err?.message?.includes('JWT')) {
-              cloudSync.logoutParent();
-              setIsLoggedIn(false);
-              setShowAuth(true);
-            }
-          });
         } else {
           setIsLoggedIn(false);
           setShowAuth(true);
@@ -330,7 +323,7 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
       </motion.div>
 
       <AnimatePresence>
-        {/* 🆕 شاشة إعادة تعيين كلمة المرور */}
+        {/* شاشة إعادة تعيين كلمة المرور */}
         {showResetPassword && (
           <ResetPasswordModal 
             onClose={() => setShowResetPassword(false)} 
