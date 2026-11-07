@@ -1,7 +1,7 @@
 // src/screens/RoleSelection.tsx
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages, Wrench, Cloud, Lock, KeyRound, X, LogOut, UserPlus, LogIn } from 'lucide-react';
+import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages, Wrench, Cloud, Lock, KeyRound, X, LogOut, LogIn } from 'lucide-react';
 
 import { useT, useLangStore } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
@@ -190,38 +190,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           {pickLang({ ar: 'أكاديمية السوروبان', en: 'Soroban Academy' }, lang)}
         </p>
       </motion.div>
-
-      {/* 🆕 بانر واضح للتسجيل (بدل الـ overlay المانع) */}
-      {!isLoggedIn && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          className="w-full max-w-2xl mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-purple-500/20 border-2 border-amber-500/40 shadow-[0_0_20px_rgba(251,191,36,0.2)]"
-        >
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Lock className="w-5 h-5 text-amber-300" />
-            <p className="text-white font-bold text-sm sm:text-base text-center">
-              {pickLang({ ar: '🔒 سجّل حساب طفلك للبدء', en: '🔒 Register your child to start' }, lang)}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 justify-center">
-            <button 
-              onClick={() => setShowAuth(true)} 
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 font-bold text-sm shadow-lg hover:shadow-amber-500/40 transition"
-            >
-              <UserPlus className="w-4 h-4" />
-              {pickLang({ ar: 'إنشاء حساب', en: 'Create Account' }, lang)}
-            </button>
-            <button 
-              onClick={() => setShowAuth(true)} 
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm border border-slate-600 transition"
-            >
-              <LogIn className="w-4 h-4" />
-              {pickLang({ ar: 'تسجيل الدخول', en: 'Login' }, lang)}
-            </button>
-          </div>
-        </motion.div>
-      )}
 
       {/* البطاقات */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-4xl">
