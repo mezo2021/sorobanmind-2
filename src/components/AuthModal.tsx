@@ -276,9 +276,9 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                 </div>
 
                 <div className="relative group">
-                  <Calendar className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-amber-400 transition-colors" />
-                  <input type="number" min="5" max="18" placeholder={pickLang({ ar: 'عمر الطفل (5-18)', en: 'Child Age (5-18)' }, lang)} value={childAge} onChange={(e) => setChildAge(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.06] transition-all text-sm shadow-inner" dir="ltr" />
-                </div>
+  <Calendar className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-amber-400 transition-colors" />
+  <input type="number" min="5" max="18" placeholder={pickLang({ ar: 'عمر الطفل (5-18)', en: 'Child Age (5-18)' }, lang)} value={childAge} onChange={(e) => setChildAge(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.06] transition-all text-sm shadow-inner" dir="ltr" />
+</div>
 
                 <div className="mt-4 space-y-3 p-4 bg-black/40 border border-white/10 rounded-2xl shadow-inner relative overflow-hidden">
                   <div className="absolute top-0 start-0 w-1 h-full bg-amber-500/50 rounded-full" />
