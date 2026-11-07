@@ -30,6 +30,7 @@ import { useConfetti } from './hooks/useConfetti';
 import type { Screen as V1Screen, Role } from './types';
 import { useProgressStore } from './store/progressStore';
 import type { LevelId } from './store/progressStore';
+import { cloudSync } from './lib/cloudSync'; // 🆕 استيراد cloudSync للتحقق من الجلسة
 // [m5-ب] استيراد SRB_LEVELS لاستنتاج مستوى الدرس بدون getLessonById
 import { SRB_LEVELS } from './data/srb/curriculum';
 
@@ -173,13 +174,29 @@ export default function App() {
     setReady(true);
   }, []);
 
+  // 🆕 التعديل: فحص الجلسة لتحديد ما إذا كان سيتم عرض الترحيب
   useEffect(() => {
     if (!ready) return;
-    if (shouldShowWelcome()) {
-      setScreen('welcome');
-    } else {
-      setScreen('role');
-    }
+
+    const decideInitialScreen = async () => {
+      try {
+        const session = await cloudSync.getSession();
+        const isLoggedIn = !!session;
+
+        // غير المسجل: ترحيب دائماً
+        // المسجل: ترحيب فقط إذا مرّت 7 أيام (أو أول زيارة)
+        if (!isLoggedIn || shouldShowWelcome()) {
+          setScreen('welcome');
+        } else {
+          setScreen('role');
+        }
+      } catch {
+        // أي خطأ (شبكة/Supabase) → اعتبره غير مسجل
+        setScreen('welcome');
+      }
+    };
+
+    decideInitialScreen();
   }, [ready]);
 
   // ═══ Sound Wrapper ═══
