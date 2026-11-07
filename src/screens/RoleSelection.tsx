@@ -10,8 +10,10 @@ import type { Role, CharacterType } from '@/types';
 import { CharacterSelector } from '@/components/CharacterSelector';
 import { NameInputModal } from '@/components/NameInputModal';
 import { AuthModal } from '@/components/AuthModal';
+import { ResetPasswordModal } from '@/components/ResetPasswordModal'; // 🆕 استيراد شاشة إعادة التعيين
 import { useProgressStore } from '@/store/progressStore';
 import { cloudSync } from '@/lib/cloudSync';
+import { supabase } from '@/lib/supabase'; // 🆕 استيراد Supabase لمراقبة الحدث
 
 interface RoleSelectionProps {
   onSelect: (role: Role) => void;
@@ -36,26 +38,39 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   const [showDevPassword, setShowDevPassword] = useState(false);
   const [devPassword, setDevPassword] = useState('');
   const [devPasswordError, setDevPasswordError] = useState(false);
+  
+  // 🆕 حالة عرض شاشة إعادة تعيين كلمة المرور
+  const [showResetPassword, setShowResetPassword] = useState(false);
+
+  useEffect(() => {
+    // 🆕 مراقبة حدث استعادة كلمة المرور من Supabase
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setShowResetPassword(true);
+        setShowAuth(false); // إغلاق شاشة التسجيل العادية
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // 1. اقرأ الجلسة محلياً (تعمل بدون إنترنت)
         const session = await cloudSync.getSession();
         
         if (session) {
           setIsLoggedIn(true);
           setShowAuth(false);
           
-          // 2. تحقق في الخلفية (لا يؤثر على الواجهة)
           cloudSync.getCurrentUser().catch((err) => {
-            // إذا كان الخطأ 401 (جلسة منتهية) → أخرج المستخدم
             if (err?.status === 401 || err?.message?.includes('JWT')) {
               cloudSync.logoutParent();
               setIsLoggedIn(false);
               setShowAuth(true);
             }
-            // إذا كان خطأ شبكة → ابقَ مفتوحاً (أوفلاين)
           });
         } else {
           setIsLoggedIn(false);
@@ -72,18 +87,16 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     checkAuth();
   }, []);
 
-  // دالة تسجيل الخروج
   const handleLogout = async () => {
     playSound('click');
     await cloudSync.logoutParent();
     
-    // مسح الأسماء من المتجر والذاكرة المحلية
     useProgressStore.getState().setChildName('');
     useProgressStore.getState().setParentName('');
     localStorage.removeItem(NAME_STORAGE_KEY);
     
     setIsLoggedIn(false);
-    setShowAuth(true); // إعادة فتح نافذة التسجيل
+    setShowAuth(true);
   };
 
   const handleSelect = (role: Role) => {
@@ -162,7 +175,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   return (
     <div dir={dir} className="relative min-h-screen flex flex-col items-center justify-center px-3 sm:px-6 py-8 sm:py-12">
       
-      {/* أزرار المطور، الحساب/الخروج، واللغة */}
       <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-50 flex items-center gap-2">
         <button
           type="button"
@@ -173,7 +185,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           <Wrench className="w-4 h-4" />
         </button>
 
-        {/* زر الحساب أو الخروج */}
         {isLoggedIn ? (
           <button
             type="button"
@@ -212,7 +223,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         </button>
       </div>
 
-      {/* العنوان */}
       <motion.div initial={{ y: -30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 20 }} className="text-center mb-8 sm:mb-14 mt-8">
         <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }} className="inline-flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-[2rem] bg-gradient-to-br from-purple-500 to-electric-500 shadow-2xl shadow-purple-500/40 mb-5">
           <Brain className="w-14 h-14 sm:w-20 sm:h-20 text-white" />
@@ -223,7 +233,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         </p>
       </motion.div>
 
-      {/* البطاقات */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8 w-full max-w-5xl relative">
         
         {!isLoggedIn && (
@@ -238,7 +247,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           </div>
         )}
 
-        {/* Hero */}
         <motion.button
           initial={{ x: -50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -279,7 +287,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           </div>
         </motion.button>
 
-        {/* Guardian */}
         <motion.button
           initial={{ x: 50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -317,14 +324,23 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         </motion.button>
       </div>
 
-      {/* Footer */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="flex items-center gap-3 mt-10 sm:mt-14 text-white/50 text-sm sm:text-base font-body text-center px-4">
         <TrendingUp className="w-5 h-5 shrink-0" />
         <span>{pickLang({ ar: 'منصة تعليمية تفاعلية للحساب الذهني بالعداد الياباني', en: 'An interactive educational platform for mental arithmetic with the Japanese abacus' }, lang)}</span>
       </motion.div>
 
-      {/* Modals */}
       <AnimatePresence>
+        {/* 🆕 شاشة إعادة تعيين كلمة المرور */}
+        {showResetPassword && (
+          <ResetPasswordModal 
+            onClose={() => setShowResetPassword(false)} 
+            onSuccess={() => { 
+              setShowResetPassword(false); 
+              setIsLoggedIn(true); 
+            }} 
+          />
+        )}
+
         {showAuth && (
           <AuthModal onClose={() => setShowAuth(false)} onSuccess={() => { setShowAuth(false); setIsLoggedIn(true); }} />
         )}
