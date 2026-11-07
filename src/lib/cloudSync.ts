@@ -41,7 +41,7 @@ export const cloudSync = {
     if (!consent.agreedGuardian) throw new Error('You must confirm you are the guardian (18+).');
     if (!consent.agreedData) throw new Error('You must agree to data collection.');
     if (!consent.agreedPrivacy) throw new Error('You must agree to Privacy Policy & ToS.');
-    if (!consent.childAge || consent.childAge < 3 || consent.childAge > 18) throw new Error('Invalid child age.');
+    if (!consent.childAge || consent.childAge < 5 || consent.childAge > 18) throw new Error('Invalid child age.');
 
     const trimmedParent = parentName.trim();
     const trimmedChild = childName.trim();
