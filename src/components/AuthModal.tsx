@@ -104,7 +104,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       if (!parentName.trim()) return pickLang({ ar: 'يرجى إدخال اسم ولي الأمر', en: 'Please enter parent name' }, lang);
       if (childName.trim().split(/\s+/).length !== 3) return pickLang({ ar: 'اسم الطفل يجب أن يكون ثلاثياً (3 كلمات)', en: 'Child name must be exactly 3 words' }, lang);
       const ageNum = parseInt(childAge, 10);
-      if (!childAge || isNaN(ageNum) || ageNum < 3 || ageNum > 18) return pickLang({ ar: 'يرجى إدخال عمر الطفل (بين 3 و 18 سنة)', en: 'Please enter a valid child age (3-18 years)' }, lang);
+      if (!childAge || isNaN(ageNum) || ageNum < 5 || ageNum > 18) return pickLang({ ar: 'يرجى إدخال عمر الطفل (بين 5 و 18 سنة)', en: 'Please enter a valid child age (3-18 years)' }, lang);
       if (!agreeGuardian || !agreeData || !agreePrivacy) return pickLang({ ar: 'يجب الموافقة على جميع الشروط للمتابعة.', en: 'You must agree to all terms to continue.' }, lang);
     }
     return null;
@@ -277,7 +277,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
 
                 <div className="relative group">
                   <Calendar className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-amber-400 transition-colors" />
-                  <input type="number" min="3" max="18" placeholder={pickLang({ ar: 'عمر الطفل (3-18)', en: 'Child Age (3-18)' }, lang)} value={childAge} onChange={(e) => setChildAge(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.06] transition-all text-sm shadow-inner" dir="ltr" />
+                  <input type="number" min="5" max="18" placeholder={pickLang({ ar: 'عمر الطفل (5-18)', en: 'Child Age (5-18)' }, lang)} value={childAge} onChange={(e) => setChildAge(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.06] transition-all text-sm shadow-inner" dir="ltr" />
                 </div>
 
                 <div className="mt-4 space-y-3 p-4 bg-black/40 border border-white/10 rounded-2xl shadow-inner relative overflow-hidden">
