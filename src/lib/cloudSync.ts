@@ -1,11 +1,12 @@
 // src/lib/cloudSync.ts
 // ☁️ نظام المزامنة المبسط (نظام 2)
-// [تحديث] إضافة الموافقة الأبوية (COPPA/GDPR) + حفظ الاسم المقنّع + التحقق من البريد
+// [تحديث] إضافة الموافقة الأبوية (COPPA/GDPR) + حفظ الاسم المقنّع + استعادة كلمة المرور
 
 import { supabase } from './supabase';
 import { useProgressStore, type ProgressState } from '../store/progressStore';
 import { maskName } from '../utils/maskName';
 
+// استخراج البيانات النقية (بدون الدوال) لحفظها في السيرفر
 function extractPureState(state: ProgressState) {
   const {
     setChildName, setParentName, setCategory, markLevelComplete, markLessonCompleted,
@@ -41,7 +42,8 @@ export const cloudSync = {
     if (!consent.agreedGuardian) throw new Error('You must confirm you are the guardian (18+).');
     if (!consent.agreedData) throw new Error('You must agree to data collection.');
     if (!consent.agreedPrivacy) throw new Error('You must agree to Privacy Policy & ToS.');
-    if (!consent.childAge || consent.childAge < 5 || consent.childAge > 18) throw new Error('Invalid child age.');
+    // تحديث: العمر يبدأ من 5 سنوات
+    if (!consent.childAge || consent.childAge < 5 || consent.childAge > 18) throw new Error('Invalid child age. Must be between 5 and 18.');
 
     const trimmedParent = parentName.trim();
     const trimmedChild = childName.trim();
@@ -78,7 +80,7 @@ export const cloudSync = {
       progress_data: {},
     }, { onConflict: 'user_id' });
 
-    // 🆕 نرجع بيانات المستخدم والجلسة (لمعرفة هل يحتاج تفعيل بريد)
+    // نرجع بيانات المستخدم والجلسة (لمعرفة هل يحتاج تفعيل بريد)
     return { user: data.user, session: data.session };
   },
 
@@ -129,7 +131,29 @@ export const cloudSync = {
     return data.user;
   },
 
-  // ═══ 6. حفظ التقدم ═══
+  // ═══ 6. طلب إعادة تعيين كلمة المرور (نسيت كلمة المرور) ═══
+  async requestPasswordReset(email: string) {
+    // نأخذ رابط الصفحة الحالي (بدون أي بارامترات إضافية) ليعود إليه المستخدم
+    const redirectUrl = window.location.href.split('?')[0].split('#')[0]; 
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl,
+    });
+    
+    if (error) throw new Error(error.message);
+    return true;
+  },
+
+  // ═══ 7. تحديث كلمة المرور بعد الضغط على الرابط ═══
+  async updatePassword(newPassword: string) {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+    if (error) throw new Error(error.message);
+    return true;
+  },
+
+  // ═══ 8. حفظ التقدم ═══
   async saveToCloud() {
     const user = await this.getCurrentUser();
     if (!user) throw new Error('Must be logged in / يجب تسجيل الدخول');
@@ -145,7 +169,7 @@ export const cloudSync = {
     return true;
   },
 
-  // ═══ 7. استعادة التقدم ═══
+  // ═══ 9. استعادة التقدم ═══
   async loadFromCloud() {
     const user = await this.getCurrentUser();
     if (!user) throw new Error('Must be logged in / يجب تسجيل الدخول');
