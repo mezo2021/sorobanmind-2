@@ -10,10 +10,8 @@ import type { Role, CharacterType } from '@/types';
 import { CharacterSelector } from '@/components/CharacterSelector';
 import { NameInputModal } from '@/components/NameInputModal';
 import { AuthModal } from '@/components/AuthModal';
-import { ResetPasswordModal } from '@/components/ResetPasswordModal'; // استيراد شاشة إعادة التعيين
 import { useProgressStore } from '@/store/progressStore';
 import { cloudSync } from '@/lib/cloudSync';
-import { supabase } from '@/lib/supabase'; 
 
 interface RoleSelectionProps {
   onSelect: (role: Role) => void;
@@ -38,28 +36,10 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   const [showDevPassword, setShowDevPassword] = useState(false);
   const [devPassword, setDevPassword] = useState('');
   const [devPasswordError, setDevPasswordError] = useState(false);
-  
-  // حالة عرض شاشة إعادة تعيين كلمة المرور
-  const [showResetPassword, setShowResetPassword] = useState(false);
-
-  useEffect(() => {
-    // مراقبة حدث استعادة كلمة المرور من Supabase
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setShowResetPassword(true);
-        setShowAuth(false);
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // نكتفي بقراءة الجلسة المحفوظة (تعمل بدون إنترنت)
         const session = await cloudSync.getSession();
         
         if (session) {
@@ -323,17 +303,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
       </motion.div>
 
       <AnimatePresence>
-        {/* شاشة إعادة تعيين كلمة المرور */}
-        {showResetPassword && (
-          <ResetPasswordModal 
-            onClose={() => setShowResetPassword(false)} 
-            onSuccess={() => { 
-              setShowResetPassword(false); 
-              setIsLoggedIn(true); 
-            }} 
-          />
-        )}
-
         {showAuth && (
           <AuthModal onClose={() => setShowAuth(false)} onSuccess={() => { setShowAuth(false); setIsLoggedIn(true); }} />
         )}
