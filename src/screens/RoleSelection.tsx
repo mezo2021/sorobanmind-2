@@ -44,14 +44,13 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         
         if (session) {
           setIsLoggedIn(true);
-          setShowAuth(false);
         } else {
           setIsLoggedIn(false);
-          setShowAuth(true);
+          // 🆕 حذفنا setShowAuth(true) — لا نفتح التسجيل تلقائياً
         }
       } catch (e) {
         setIsLoggedIn(false);
-        setShowAuth(true);
+        // 🆕 حذفنا setShowAuth(true)
       } finally {
         setCheckingAuth(false);
       }
@@ -69,10 +68,17 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     localStorage.removeItem(NAME_STORAGE_KEY);
     
     setIsLoggedIn(false);
-    setShowAuth(true);
+    // 🆕 لا نفتح AuthModal تلقائياً، بل نترك المستخدم يختار
   };
 
   const handleSelect = (role: Role) => {
+    // 🆕 إذا لم يكن مسجلاً، افتح AuthModal
+    if (!isLoggedIn) {
+      playSound('click');
+      setShowAuth(true);
+      return;
+    }
+
     if (role === 'guardian') {
       playSound('click');
       setShowDevPassword(true);
@@ -80,7 +86,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     }
 
     if (role === 'hero') {
-      if (!isLoggedIn) return;
       const savedCompanion = localStorage.getItem(COMPANION_STORAGE_KEY);
       const savedName = localStorage.getItem(NAME_STORAGE_KEY);
 
@@ -215,7 +220,7 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
               {pickLang({ ar: 'الشاشات مقفلة', en: 'Screens Locked' }, lang)}
             </p>
             <p className="text-white/50 text-xs mt-1">
-              {pickLang({ ar: 'سجّل الدخول من زر "حسابي"', en: 'Login from "Account" button' }, lang)}
+              {pickLang({ ar: 'اضغط على إحدى البطاقات للتسجيل', en: 'Click any card to register' }, lang)}
             </p>
           </div>
         )}
@@ -227,7 +232,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           whileHover={{ scale: 1.03, y: -5 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => handleSelect('hero')}
-          disabled={!isLoggedIn}
           className={`group relative glass-card p-7 sm:p-10 overflow-hidden ${lang === 'ar' ? 'text-right' : 'text-left'} ${!isLoggedIn ? 'opacity-50' : ''}`}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-transparent to-electric-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
