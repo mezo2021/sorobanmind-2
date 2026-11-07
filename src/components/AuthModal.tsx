@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   X, Mail, KeyRound, User, Baby, LogIn, UserPlus, 
   Loader2, AlertCircle, CheckCircle2, Wifi, WifiOff, Sparkles,
-  ShieldCheck, Calendar, ArrowRight // 🆕 أضفنا ArrowRight للعودة
+  ShieldCheck, Calendar, ShieldAlert, Pencil
 } from 'lucide-react';
 
 import { useT } from '../i18n/useTranslation';
@@ -12,6 +12,9 @@ import { pickLang } from '../i18n/pickLang';
 import { cloudSync } from '../lib/cloudSync';
 import { supabaseUrl, supabaseKey } from '../lib/supabase';
 import sorobanaImg from '@/assets/sorobana/sorobana-teaching-pointing.webp';
+
+// 🆕 استيراد دالة تحويل الأرقام
+import { toLatinDigits } from '@/utils/numberStyle';
 
 interface AuthModalProps {
   onClose: () => void;
@@ -26,31 +29,30 @@ export interface ParentalConsent {
   timestamp: string;
 }
 
+type AuthStep = 'form' | 'signup-otp' | 'forgot-email' | 'forgot-otp' | 'reset-password';
+
 export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
   const { lang, dir } = useT();
 
   const [isRegister, setIsRegister] = useState(true);
+  const [step, setStep] = useState<AuthStep>('form');
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [parentName, setParentName] = useState('');
   const [childName, setChildName] = useState('');
-  
   const [childAge, setChildAge] = useState('');
   const [agreeGuardian, setAgreeGuardian] = useState(false);
   const [agreeData, setAgreeData] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
 
-  const [awaitingVerification, setAwaitingVerification] = useState(false);
-  
-  // 🆕 حالات استعادة كلمة المرور
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetMsg, setResetMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [resetLoading, setResetLoading] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [isChecking, setIsChecking] = useState<boolean>(true);
 
@@ -63,16 +65,18 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
   const showMsg = (text: string, type: 'success' | 'error') => {
     if (!isMounted.current) return;
     setMsg({ text, type });
-    setTimeout(() => { if (isMounted.current) setMsg(null); }, 4000);
+    setTimeout(() => { if (isMounted.current) setMsg(null); }, 5000);
   };
 
   const getFriendlyError = (errorMsg: string): string => {
     const msg = errorMsg.toLowerCase();
     if (msg.includes('invalid login credentials')) return pickLang({ ar: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.', en: 'Invalid email or password.' }, lang);
-    if (msg.includes('user already registered')) return pickLang({ ar: 'هذا البريد الإلكتروني مسجل بالفعل. يمكنك تسجيل الدخول.', en: 'Email already registered. You can login.' }, lang);
-    if (msg.includes('password should be at least')) return pickLang({ ar: 'كلمة المرور قصيرة جداً (6 خانات على الأقل).', en: 'Password is too short (minimum 6 characters).' }, lang);
-    if (msg.includes('email not confirmed')) return pickLang({ ar: 'يرجى تأكيد بريدك الإلكتروني أولاً من خلال الرسالة المرسلة إليك.', en: 'Please confirm your email first.' }, lang);
-    if (msg.includes('failed to fetch') || msg.includes('network')) return pickLang({ ar: 'تعذر الاتصال بالخادم. يرجى التحقق من الشبكة.', en: 'Failed to connect to server. Check network.' }, lang);
+    if (msg.includes('user already registered')) return pickLang({ ar: 'هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول.', en: 'Email already registered. You can login.' }, lang);
+    if (msg.includes('password should be at least')) return pickLang({ ar: 'كلمة المرور قصيرة جداً (6 خانات على الأقل).', en: 'Password too short (min 6 characters).' }, lang);
+    if (msg.includes('email not confirmed')) return pickLang({ ar: 'يرجى تأكيد بريدك الإلكتروني أولاً.', en: 'Please confirm your email first.' }, lang);
+    if (msg.includes('invalid otp') || msg.includes('token has expired')) return pickLang({ ar: 'الرمز غير صحيح أو انتهت صلاحيته.', en: 'Invalid or expired code.' }, lang);
+    if (msg.includes('rate limit') || msg.includes('security purposes')) return pickLang({ ar: 'محاولات كثيرة، انتظر دقيقة ثم أعد المحاولة.', en: 'Too many attempts, wait a minute.' }, lang);
+    if (msg.includes('failed to fetch') || msg.includes('network')) return pickLang({ ar: 'تعذر الاتصال بالخادم. تحقق من الشبكة.', en: 'Network error. Check connection.' }, lang);
     return errorMsg;
   };
 
@@ -99,169 +103,177 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     return () => { window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline); };
   }, [checkConnection]);
 
-  const validate = (): string | null => {
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
+
+  const validateForm = (): string | null => {
     if (!email || !email.includes('@')) return pickLang({ ar: 'يرجى إدخال بريد إلكتروني صحيح', en: 'Please enter a valid email' }, lang);
+    if (step === 'forgot-email') return null;
+    
     if (!password || password.length < 6) return pickLang({ ar: 'كلمة المرور يجب أن تكون 6 خانات على الأقل', en: 'Password must be at least 6 characters' }, lang);
     if (!/^[A-Za-z0-9]+$/.test(password)) return pickLang({ ar: 'كلمة المرور بالأحرف الإنجليزية والأرقام فقط', en: 'Password must be English letters and numbers only' }, lang);
     
     if (isRegister) {
       if (!parentName.trim()) return pickLang({ ar: 'يرجى إدخال اسم ولي الأمر', en: 'Please enter parent name' }, lang);
-      if (childName.trim().split(/\s+/).length !== 3) return pickLang({ ar: 'اسم الطفل يجب أن يكون ثلاثياً (3 كلمات)', en: 'Child name must be exactly 3 words' }, lang);
+      if (childName.trim().split(/\s+/).length !== 3) return pickLang({ ar: 'اسم الطفل يجب أن يكون ثلاثياً', en: 'Child name must be exactly 3 words' }, lang);
       const ageNum = parseInt(childAge, 10);
-      // تحديث: 5-18
-      if (!childAge || isNaN(ageNum) || ageNum < 5 || ageNum > 18) return pickLang({ ar: 'يرجى إدخال عمر الطفل (بين 5 و 18 سنة)', en: 'Please enter a valid child age (5-18 years)' }, lang);
-      if (!agreeGuardian || !agreeData || !agreePrivacy) return pickLang({ ar: 'يجب الموافقة على جميع الشروط للمتابعة.', en: 'You must agree to all terms to continue.' }, lang);
+      if (!childAge || isNaN(ageNum) || ageNum < 5 || ageNum > 18) return pickLang({ ar: 'عمر الطفل يجب أن يكون بين 5 و 18', en: 'Child age must be between 5 and 18' }, lang);
+      if (!agreeGuardian || !agreeData || !agreePrivacy) return pickLang({ ar: 'يجب الموافقة على جميع الشروط', en: 'You must agree to all terms' }, lang);
     }
     return null;
   };
 
-  const handleSubmit = async () => {
-    if (loading) return;
-    const err = validate();
+  const handleRegister = async () => {
+    const err = validateForm();
     if (err) { showMsg(err, 'error'); return; }
 
-    setLoading(true);
-    if (msg) setMsg(null);
-
+    setLoading(true); setMsg(null);
     try {
-      if (isRegister) {
-        const consent: ParentalConsent = {
-          childAge: parseInt(childAge, 10),
-          agreedGuardian: agreeGuardian,
-          agreedData: agreeData,
-          agreedPrivacy: agreePrivacy,
-          timestamp: new Date().toISOString(),
-        };
-
-        const result = await cloudSync.registerParent(email, password, parentName, childName, consent);
-        if (!result.session) { setAwaitingVerification(true); setLoading(false); return; }
-        showMsg(pickLang({ ar: 'تم إنشاء الحساب بنجاح!', en: 'Account created successfully!' }, lang), 'success');
-      } else {
-        await cloudSync.loginParent(email, password);
-        showMsg(pickLang({ ar: 'تم تسجيل الدخول!', en: 'Logged in successfully!' }, lang), 'success');
-      }
+      const consent: ParentalConsent = {
+        childAge: parseInt(childAge, 10),
+        agreedGuardian: agreeGuardian,
+        agreedData: agreeData,
+        agreedPrivacy: agreePrivacy,
+        timestamp: new Date().toISOString(),
+      };
+      await cloudSync.registerParent(email, password, parentName, childName, consent);
       
-      if (isMounted.current) setIsOnline(true);
-      setTimeout(() => { if (isMounted.current) onSuccess(); }, 1200);
-
+      setStep('signup-otp');
+      setResendTimer(60);
+      showMsg(pickLang({ ar: 'تم إنشاء الحساب! يرجى إدخال الرمز المرسل لبريدك.', en: 'Account created! Please enter the code sent to your email.' }, lang), 'success');
     } catch (e: any) {
-      const friendlyMsg = getFriendlyError(e.message || 'Unknown error');
-      showMsg(friendlyMsg, 'error');
-      if (e.message?.toLowerCase().includes('fetch') || e.message?.toLowerCase().includes('network')) {
-        if (isMounted.current) setIsOnline(false);
-      }
-    } finally {
-      if (isMounted.current) setLoading(false);
-    }
+      showMsg(getFriendlyError(e.message), 'error');
+    } finally { setLoading(false); }
   };
 
-  // 🆕 دالة استعادة كلمة المرور
-  const handleForgotPassword = async () => {
-    if (!resetEmail.includes('@')) {
-      setResetMsg({ text: pickLang({ ar: 'يرجى إدخال بريد إلكتروني صحيح', en: 'Please enter a valid email' }, lang), type: 'error' });
-      return;
-    }
-    setResetLoading(true);
-    setResetMsg(null);
+  const handleVerifySignup = async () => {
+    if (otp.length < 6) { showMsg(pickLang({ ar: 'أدخل رمزاً مكوناً من 6 أرقام', en: 'Enter a 6-digit code' }, lang), 'error'); return; }
+    setLoading(true); setMsg(null);
     try {
-      await cloudSync.requestPasswordReset(resetEmail);
-      setResetMsg({ text: pickLang({ ar: 'تم إرسال رابط إعادة التعيين إلى بريدك. تحقق من صندوق الوارد أو البريد المزعج.', en: 'Reset link sent to your email. Check your inbox or spam.' }, lang), type: 'success' });
-    } catch (error: any) {
-      setResetMsg({ text: getFriendlyError(error.message), type: 'error' });
-    } finally {
-      setResetLoading(false);
-    }
+      await cloudSync.verifyOtp(email, otp, 'signup');
+      showMsg(pickLang({ ar: 'تم تفعيل الحساب بنجاح!', en: 'Account verified successfully!' }, lang), 'success');
+      setTimeout(() => onSuccess(), 1500);
+    } catch (e: any) {
+      showMsg(getFriendlyError(e.message), 'error');
+    } finally { setLoading(false); }
   };
 
-  const toggleMode = () => {
-    setIsRegister(!isRegister);
+  const handleLogin = async () => {
+    const err = validateForm();
+    if (err) { showMsg(err, 'error'); return; }
+
+    setLoading(true); setMsg(null);
+    try {
+      await cloudSync.loginParent(email, password);
+      showMsg(pickLang({ ar: 'تم تسجيل الدخول!', en: 'Logged in successfully!' }, lang), 'success');
+      setTimeout(() => onSuccess(), 1000);
+    } catch (e: any) {
+      const errMsg = e.message.toLowerCase();
+      
+      // 🆕 معالجة البريد غير المؤكد: ننقل لشاشة الرمز ونعيد الإرسال
+      if (errMsg.includes('email not confirmed')) {
+        try {
+          await cloudSync.resendOtp(email, 'signup');
+          setStep('signup-otp');
+          setResendTimer(60);
+          showMsg(pickLang({ ar: 'يرجى تأكيد بريدك. أعدنا إرسال الرمز إليك.', en: 'Please confirm your email. We resent the code.' }, lang), 'success');
+        } catch (resendErr: any) {
+          showMsg(getFriendlyError(resendErr.message), 'error');
+        }
+      } else {
+        showMsg(getFriendlyError(e.message), 'error');
+      }
+    } finally { setLoading(false); }
+  };
+
+  const handleRequestReset = async () => {
+    const err = validateForm();
+    if (err) { showMsg(err, 'error'); return; }
+
+    setLoading(true); setMsg(null);
+    try {
+      await cloudSync.requestPasswordReset(email);
+      setStep('forgot-otp');
+      setResendTimer(60);
+      showMsg(pickLang({ ar: 'تم إرسال رمز الاستعادة إلى بريدك.', en: 'Recovery code sent to your email.' }, lang), 'success');
+    } catch (e: any) {
+      showMsg(getFriendlyError(e.message), 'error');
+    } finally { setLoading(false); }
+  };
+
+  const handleVerifyRecovery = async () => {
+    if (otp.length < 6) { showMsg(pickLang({ ar: 'أدخل رمزاً مكوناً من 6 أرقام', en: 'Enter a 6-digit code' }, lang), 'error'); return; }
+    setLoading(true); setMsg(null);
+    try {
+      await cloudSync.verifyOtp(email, otp, 'recovery');
+      setStep('reset-password');
+    } catch (e: any) {
+      showMsg(getFriendlyError(e.message), 'error');
+    } finally { setLoading(false); }
+  };
+
+  const handleResetPassword = async () => {
+    if (newPassword.length < 6) { showMsg(pickLang({ ar: 'كلمة المرور يجب أن تكون 6 خانات على الأقل', en: 'Password must be at least 6 characters' }, lang), 'error'); return; }
+    if (newPassword !== confirmNewPassword) { showMsg(pickLang({ ar: 'كلمتا المرور غير متطابقتين', en: 'Passwords do not match' }, lang), 'error'); return; }
+    
+    setLoading(true); setMsg(null);
+    try {
+      await cloudSync.updatePassword(newPassword);
+      showMsg(pickLang({ ar: 'تم تحديث كلمة المرور بنجاح!', en: 'Password updated successfully!' }, lang), 'success');
+      setTimeout(() => onSuccess(), 1500);
+    } catch (e: any) {
+      showMsg(getFriendlyError(e.message), 'error');
+    } finally { setLoading(false); }
+  };
+
+  const handleResendCode = async () => {
+    if (resendTimer > 0) return;
+    setLoading(true);
+    try {
+      if (step === 'signup-otp') {
+        await cloudSync.resendOtp(email, 'signup');
+      } else {
+        await cloudSync.requestPasswordReset(email);
+      }
+      setResendTimer(60);
+      showMsg(pickLang({ ar: 'تم إعادة إرسال الرمز.', en: 'Code resent.' }, lang), 'success');
+    } catch (e: any) {
+      showMsg(getFriendlyError(e.message), 'error');
+    } finally { setLoading(false); }
+  };
+
+  const handleBack = () => {
+    setStep('form');
+    setOtp('');
+    setNewPassword('');
+    setConfirmNewPassword('');
     setMsg(null);
-    setPassword('');
-    setAwaitingVerification(false);
-    setShowForgotPassword(false); // إغلاق شاشة النسيت عند التبديل
-    setResetEmail('');
-    setResetMsg(null);
   };
 
-  // 🆕 شاشة انتظار تفعيل البريد
-  if (awaitingVerification) {
-    return (
-      <div dir={dir} className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="w-full max-w-md bg-[#0c0c0e]/95 p-8 border border-emerald-500/30 rounded-3xl text-center shadow-2xl relative">
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="w-24 h-24 mx-auto bg-emerald-500/20 rounded-full flex items-center justify-center mb-6 border border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-            <Mail className="w-12 h-12 text-emerald-400" />
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-3">{pickLang({ ar: 'تحقق من بريدك الإلكتروني', en: 'Check your email' }, lang)}</h3>
-          <p className="text-sm text-slate-300 mb-8 leading-relaxed">
-            {pickLang({ ar: `أرسلنا رابط تفعيل إلى بريدك:`, en: `We sent a verification link to:` }, lang)}
-            <br/><span className="font-bold text-amber-300 font-mono text-base mt-2 block">{email}</span>
-          </p>
-          <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 mb-8 text-xs text-slate-400">
-            {pickLang({ ar: 'يرجى الضغط على الرابط في البريد لتفعيل حساب طفلك. بعد التفعيل، يمكنك العودة هنا وتسجيل الدخول.', en: "Please click the link in the email to activate your child's account. After verification, you can return here to login." }, lang)}
-          </div>
-          <button onClick={toggleMode} className="w-full py-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold border border-slate-600 transition">
-            {pickLang({ ar: 'العودة لتسجيل الدخول', en: 'Back to Login' }, lang)}
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
+  // 🆕 تعديل البريد (من شاشة signup-otp)
+  const handleEditEmail = () => {
+    setStep('form');
+    setOtp('');
+    setMsg(null);
+    setResendTimer(0);
+  };
 
-  // 🆕 شاشة نسيت كلمة المرور
-  if (showForgotPassword) {
-    return (
-      <div dir={dir} className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="w-full max-w-md bg-[#0c0c0e]/95 p-8 border border-amber-500/30 rounded-3xl text-center shadow-2xl relative">
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="w-20 h-20 mx-auto bg-amber-500/20 rounded-full flex items-center justify-center mb-6 border border-amber-500/30">
-            <KeyRound className="w-10 h-10 text-amber-400" />
-          </div>
-          
-          <h3 className="text-2xl font-bold text-white mb-2">{pickLang({ ar: 'استعادة كلمة المرور', en: 'Reset Password' }, lang)}</h3>
-          <p className="text-sm text-slate-400 mb-6">
-            {pickLang({ ar: 'أدخل بريدك الإلكتروني المسجل وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.', en: 'Enter your registered email and we will send you a reset link.' }, lang)}
-          </p>
+  const handleMainAction = () => {
+    if (step === 'signup-otp') return handleVerifySignup();
+    if (step === 'forgot-email') return handleRequestReset();
+    if (step === 'forgot-otp') return handleVerifyRecovery();
+    if (step === 'reset-password') return handleResetPassword();
+    if (isRegister) return handleRegister();
+    return handleLogin();
+  };
 
-          <div className="space-y-4">
-            <div className="relative">
-              <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-              <input
-                type="email"
-                placeholder={pickLang({ ar: 'البريد الإلكتروني', en: 'Email' }, lang)}
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 text-sm"
-                dir="ltr"
-              />
-            </div>
-
-            {resetMsg && (
-              <div className={`p-3 rounded-xl flex items-center gap-2 text-xs text-left ${resetMsg.type === 'success' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20'}`}>
-                {resetMsg.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
-                {resetMsg.text}
-              </div>
-            )}
-
-            <button onClick={handleForgotPassword} disabled={resetLoading || resetMsg?.type === 'success'} className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-purple-600 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition">
-              {resetLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : pickLang({ ar: 'إرسال رابط الاستعادة', en: 'Send Reset Link' }, lang)}
-            </button>
-          </div>
-
-          <button onClick={() => setShowForgotPassword(false)} className="mt-6 text-sm text-slate-400 hover:text-white flex items-center justify-center gap-1 w-full transition">
-            <ArrowRight className={`w-4 h-4 ${dir === 'rtl' ? '' : 'rotate-180'}`} />
-            {pickLang({ ar: 'العودة لتسجيل الدخول', en: 'Back to Login' }, lang)}
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // الشاشة الأصلية (تسجيل / دخول)
   return (
     <div dir={dir} className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 250, damping: 25 }} className="relative w-full max-w-md my-auto">
+      <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="relative w-full max-w-md my-auto">
         <div className="bg-[#0c0c0e]/95 p-6 sm:p-8 border border-amber-500/20 rounded-3xl relative overflow-hidden shadow-2xl shadow-black/90">
           
           <div className="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -271,104 +283,187 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
             <X className="w-5 h-5" />
           </button>
 
-          <div className={`flex items-center gap-3 mb-5 mt-6 px-2 relative z-10 ${dir === 'ltr' ? 'flex-row-reverse' : 'flex-row'}`}>
-            <motion.div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-purple-500/20 border border-amber-500/30 flex items-center justify-center overflow-hidden shrink-0 shadow-lg shadow-amber-500/5" animate={{ y: [0, -3, 0] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}>
-              <img src={sorobanaImg} alt="Sorobana" className="w-12 h-16 object-cover object-top scale-125 translate-y-2 pointer-events-none" draggable={false} />
-            </motion.div>
-            <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-3.5 py-2 relative backdrop-blur-sm">
-              <p className={`text-xs text-white/90 font-body leading-relaxed ${dir === 'ltr' ? 'text-left' : 'text-right'}`}>
-                {isRegister ? pickLang({ ar: 'أهلاً بك! أنشئ حسابك لنبدأ رحلة الإبداع في السوروبان معاً.', en: 'Welcome! Create your account to start Soroban together.' }, lang) : pickLang({ ar: 'مرحباً مجدداً! جاهز لتحطيم أرقام قياسية جديدة اليوم؟', en: 'Welcome back! Ready to break new records today?' }, lang)}
-              </p>
+          {step === 'form' && (
+            <div className={`flex items-center gap-3 mb-5 mt-6 px-2 relative z-10 ${dir === 'ltr' ? 'flex-row-reverse' : 'flex-row'}`}>
+              <motion.div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-purple-500/20 border border-amber-500/30 flex items-center justify-center overflow-hidden shrink-0 shadow-lg" animate={{ y: [0, -3, 0] }} transition={{ duration: 2.5, repeat: Infinity }}>
+                <img src={sorobanaImg} alt="Sorobana" className="w-12 h-16 object-cover object-top scale-125 translate-y-2 pointer-events-none" draggable={false} />
+              </motion.div>
+              <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-3.5 py-2 relative backdrop-blur-sm">
+                <p className={`text-xs text-white/90 font-body leading-relaxed ${dir === 'ltr' ? 'text-left' : 'text-right'}`}>
+                  {isRegister ? pickLang({ ar: 'أهلاً بك! أنشئ حسابك لنبدأ رحلة الإبداع معاً.', en: 'Welcome! Create your account to start.' }, lang) : pickLang({ ar: 'مرحباً مجدداً! جاهز لتحطيم أرقام قياسية؟', en: 'Welcome back! Ready to break records?' }, lang)}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className={`group relative flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-medium mx-auto w-fit mb-5 shadow-sm transition-all duration-300 relative z-10 ${isChecking ? 'border-amber-500/30 bg-amber-950/40 text-amber-300' : isOnline ? 'border-emerald-500/30 bg-emerald-950/40 text-emerald-300' : 'border-rose-500/30 bg-rose-950/40 text-rose-300'}`}>
-            {isChecking ? <Loader2 className="w-3.5 h-3.5 animate-spin relative z-10 opacity-90" /> : isOnline ? <Wifi className="w-3.5 h-3.5 relative z-10 opacity-90" /> : <WifiOff className="w-3.5 h-3.5 relative z-10 opacity-90" />}
-            <span className="relative z-10 tracking-wide font-bold">
-              {isChecking ? pickLang({ ar: 'جاري التحقق...', en: 'Checking...' }, lang) : isOnline ? pickLang({ ar: 'متصل بخوادم التقييم', en: 'Connected to servers' }, lang) : pickLang({ ar: 'غير متصل بالإنترنت', en: 'Offline' }, lang)}
-            </span>
+          <div className={`group relative flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-medium mx-auto w-fit mb-5 relative z-10 ${isChecking ? 'border-amber-500/30 bg-amber-950/40 text-amber-300' : isOnline ? 'border-emerald-500/30 bg-emerald-950/40 text-emerald-300' : 'border-rose-500/30 bg-rose-950/40 text-rose-300'}`}>
+            {isChecking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isOnline ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+            <span className="tracking-wide font-bold">{isChecking ? pickLang({ ar: 'جاري التحقق...', en: 'Checking...' }, lang) : isOnline ? pickLang({ ar: 'متصل بخوادم التقييم', en: 'Connected to servers' }, lang) : pickLang({ ar: 'غير متصل بالإنترنت', en: 'Offline' }, lang)}</span>
           </div>
 
           <div className="text-center mb-5 relative z-10">
-            <h3 className="text-2xl font-black font-display text-white tracking-wide flex items-center justify-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-400" />
-              {isRegister ? pickLang({ ar: 'إنشاء حساب جديد', en: 'Create New Account' }, lang) : pickLang({ ar: 'تسجيل الدخول', en: 'Login' }, lang)}
+            <h3 className="text-2xl font-black font-display text-white flex items-center justify-center gap-2">
+              {step === 'form' && <Sparkles className="w-5 h-5 text-amber-400" />}
+              {step === 'signup-otp' && <Mail className="w-6 h-6 text-emerald-400" />}
+              {step === 'forgot-email' && <ShieldAlert className="w-6 h-6 text-amber-400" />}
+              {step === 'forgot-otp' && <KeyRound className="w-6 h-6 text-amber-400" />}
+              {step === 'reset-password' && <ShieldCheck className="w-6 h-6 text-emerald-400" />}
+
+              {step === 'form' && (isRegister ? pickLang({ ar: 'إنشاء حساب جديد', en: 'Create New Account' }, lang) : pickLang({ ar: 'تسجيل الدخول', en: 'Login' }, lang))}
+              {step === 'signup-otp' && pickLang({ ar: 'تأكيد البريد', en: 'Verify Email' }, lang)}
+              {step === 'forgot-email' && pickLang({ ar: 'نسيت كلمة المرور', en: 'Forgot Password' }, lang)}
+              {step === 'forgot-otp' && pickLang({ ar: 'أدخل رمز الاستعادة', en: 'Enter Recovery Code' }, lang)}
+              {step === 'reset-password' && pickLang({ ar: 'كلمة مرور جديدة', en: 'New Password' }, lang)}
             </h3>
+            
+            {step !== 'form' && (
+              <p className="text-xs text-slate-400 mt-2">
+                {pickLang({ ar: `تم الإرسال إلى: ${email}`, en: `Sent to: ${email}` }, lang)}
+              </p>
+            )}
           </div>
 
           <div className="space-y-3 relative z-10">
-            <div className="relative group">
-              <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-amber-400 transition-colors" />
-              <input type="email" placeholder={pickLang({ ar: 'البريد الإلكتروني', en: 'Email' }, lang)} value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.06] transition-all text-sm shadow-inner" dir="ltr" />
-            </div>
+            
+            {(step === 'form' || step === 'forgot-email') && (
+              <div className="relative group">
+                <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-amber-400 transition-colors" />
+                <input type="email" placeholder={pickLang({ ar: 'البريد الإلكتروني', en: 'Email' }, lang)} value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 text-sm" dir="ltr" />
+              </div>
+            )}
 
-            <div className="relative group">
-              <KeyRound className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-amber-400 transition-colors" />
-              <input type="password" placeholder={pickLang({ ar: 'كلمة المرور (6+ خانات)', en: 'Password (6+ chars)' }, lang)} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.06] transition-all text-sm shadow-inner" dir="ltr" />
-            </div>
-
-            {isRegister && (
+            {step === 'form' && (
               <>
                 <div className="relative group">
-                  <User className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-amber-400 transition-colors" />
-                  <input type="text" placeholder={pickLang({ ar: 'اسم ولي الأمر', en: 'Parent Name' }, lang)} value={parentName} onChange={(e) => setParentName(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.06] transition-all text-sm shadow-inner" />
+                  <KeyRound className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-amber-400" />
+                  <input type="password" placeholder={pickLang({ ar: 'كلمة المرور', en: 'Password' }, lang)} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 text-sm" dir="ltr" />
                 </div>
 
+                {isRegister && (
+                  <>
+                    <div className="relative group">
+                      <User className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                      <input type="text" placeholder={pickLang({ ar: 'اسم ولي الأمر', en: 'Parent Name' }, lang)} value={parentName} onChange={(e) => setParentName(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 text-sm" />
+                    </div>
+                    <div className="relative group">
+                      <Baby className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                      <input type="text" placeholder={pickLang({ ar: 'اسم الطفل الثلاثي', en: 'Child Name (3 words)' }, lang)} value={childName} onChange={(e) => setChildName(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 text-sm" />
+                    </div>
+                    <div className="relative group">
+                      <Calendar className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                      <input type="number" min="5" max="18" placeholder={pickLang({ ar: 'عمر الطفل (5-18)', en: 'Child Age (5-18)' }, lang)} value={childAge} onChange={(e) => setChildAge(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 text-sm" dir="ltr" />
+                    </div>
+
+                    <div className="mt-4 space-y-3 p-4 bg-black/40 border border-white/10 rounded-2xl shadow-inner relative overflow-hidden">
+                      <div className="absolute top-0 start-0 w-1 h-full bg-amber-500/50 rounded-full" />
+                      <label className="flex items-start gap-2.5 cursor-pointer">
+                        <input type="checkbox" checked={agreeGuardian} onChange={(e) => setAgreeGuardian(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
+                        <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أقر بأنني ولي الأمر (18+).', en: 'I am the guardian (18+).' }, lang)}</span>
+                      </label>
+                      <label className="flex items-start gap-2.5 cursor-pointer">
+                        <input type="checkbox" checked={agreeData} onChange={(e) => setAgreeData(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
+                        <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أوافق على جمع بيانات طفلي للتعليم.', en: 'I agree to collect child data for education.' }, lang)}</span>
+                      </label>
+                      <label className="flex items-start gap-2.5 cursor-pointer">
+                        <input type="checkbox" checked={agreePrivacy} onChange={(e) => setAgreePrivacy(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
+                        <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أوافق على سياسة الخصوصية.', en: 'I agree to Privacy Policy.' }, lang)}</span>
+                      </label>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
+            {(step === 'signup-otp' || step === 'forgot-otp') && (
+              <>
                 <div className="relative group">
-                  <Baby className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-amber-400 transition-colors" />
-                  <input type="text" placeholder={pickLang({ ar: 'اسم الطفل الثلاثي', en: 'Child Full Name (3 words)' }, lang)} value={childName} onChange={(e) => setChildName(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.06] transition-all text-sm shadow-inner" />
+                  <KeyRound className="absolute start-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-400" />
+                  <input 
+                    type="text" 
+                    placeholder="• • • • • •" 
+                    value={otp} 
+                    onChange={(e) => setOtp(toLatinDigits(e.target.value).replace(/\D/g, ''))} 
+                    className="w-full bg-slate-900 border-2 border-amber-500/50 rounded-2xl py-4 ps-12 pe-4 text-center tracking-[0.5em] text-2xl font-mono text-white placeholder-white/20 focus:outline-none focus:border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.1)]" 
+                    dir="ltr" 
+                    maxLength={6}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                  />
                 </div>
+                
+                <div className="flex justify-between items-center gap-2 mt-2">
+                  <button 
+                    onClick={handleResendCode} 
+                    disabled={resendTimer > 0 || loading} 
+                    className="text-xs text-amber-200/70 hover:text-amber-300 disabled:opacity-50"
+                  >
+                    {resendTimer > 0 
+                      ? pickLang({ ar: `إعادة الإرسال بعد ${resendTimer} ث`, en: `Resend in ${resendTimer}s` }, lang)
+                      : pickLang({ ar: 'إعادة إرسال الرمز', en: 'Resend Code' }, lang)}
+                  </button>
+                  
+                  {/* 🆕 زر تعديل البريد */}
+                  <button 
+                    onClick={handleEditEmail} 
+                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1"
+                  >
+                    <Pencil className="w-3 h-3" />
+                    {pickLang({ ar: 'تعديل البريد', en: 'Edit email' }, lang)}
+                  </button>
+                </div>
+              </>
+            )}
 
+            {step === 'reset-password' && (
+              <>
                 <div className="relative group">
-                  <Calendar className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-amber-400 transition-colors" />
-                  <input type="number" min="5" max="18" placeholder={pickLang({ ar: 'عمر الطفل (5-18)', en: 'Child Age (5-18)' }, lang)} value={childAge} onChange={(e) => setChildAge(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.06] transition-all text-sm shadow-inner" dir="ltr" />
+                  <KeyRound className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                  <input type="password" placeholder={pickLang({ ar: 'كلمة المرور الجديدة', en: 'New Password' }, lang)} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 text-sm" dir="ltr" />
                 </div>
-
-                <div className="mt-4 space-y-3 p-4 bg-black/40 border border-white/10 rounded-2xl shadow-inner relative overflow-hidden">
-                  <div className="absolute top-0 start-0 w-1 h-full bg-amber-500/50 rounded-full" />
-                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/10">
-                    <ShieldCheck className="w-4 h-4 text-amber-400" />
-                    <span className="text-xs font-bold text-amber-300">{pickLang({ ar: 'الموافقة الأبوية (إلزامي)', en: 'Parental Consent (Required)' }, lang)}</span>
-                  </div>
-                  <label className="flex items-start gap-2.5 cursor-pointer group">
-                    <input type="checkbox" checked={agreeGuardian} onChange={(e) => setAgreeGuardian(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded cursor-pointer" />
-                    <span className="text-[11px] text-white/70 leading-relaxed font-body group-hover:text-white/90 transition">{pickLang({ ar: 'أقر بأنني ولي أمر هذا الطفل، وعمري 18 عاماً أو أكثر.', en: 'I confirm I am the guardian of this child and I am 18 or older.' }, lang)}</span>
-                  </label>
-                  <label className="flex items-start gap-2.5 cursor-pointer group">
-                    <input type="checkbox" checked={agreeData} onChange={(e) => setAgreeData(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded cursor-pointer" />
-                    <span className="text-[11px] text-white/70 leading-relaxed font-body group-hover:text-white/90 transition">{pickLang({ ar: 'أوافق على جمع اسم طفلي ونتائجه داخل التطبيق لأغراض تعليمية بحتة.', en: "I agree to collect my child's name and results for educational purposes only." }, lang)}</span>
-                  </label>
-                  <label className="flex items-start gap-2.5 cursor-pointer group">
-                    <input type="checkbox" checked={agreePrivacy} onChange={(e) => setAgreePrivacy(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded cursor-pointer" />
-                    <span className="text-[11px] text-white/70 leading-relaxed font-body group-hover:text-white/90 transition">{pickLang({ ar: 'أوافق على سياسة الخصوصية وشروط الاستخدام.', en: 'I agree to the Privacy Policy and Terms of Service.' }, lang)}</span>
-                  </label>
+                <div className="relative group">
+                  <KeyRound className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                  <input type="password" placeholder={pickLang({ ar: 'تأكيد كلمة المرور', en: 'Confirm Password' }, lang)} value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 text-sm" dir="ltr" />
                 </div>
               </>
             )}
           </div>
 
           {msg && (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`mt-4 p-3 rounded-2xl border text-xs sm:text-sm flex items-center gap-2.5 relative z-10 backdrop-blur-md ${msg.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'}`}>
-              {msg.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" /> : <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`mt-4 p-3 rounded-2xl border text-xs sm:text-sm flex items-center gap-2.5 relative z-10 ${msg.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'}`}>
+              {msg.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
               <span className="leading-relaxed font-medium">{msg.text}</span>
             </motion.div>
           )}
 
-          <motion.button type="button" onClick={handleSubmit} disabled={loading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} className="w-full mt-6 py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-purple-600 text-white font-bold text-base shadow-xl shadow-amber-500/20 hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-2 relative z-10 disabled:opacity-50 disabled:cursor-not-allowed border border-white/10">
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : isRegister ? <UserPlus className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
-            <span>{loading ? pickLang({ ar: 'جاري المعالجة...', en: 'Processing...' }, lang) : isRegister ? pickLang({ ar: 'إنشاء حساب', en: 'Register' }, lang) : pickLang({ ar: 'تسجيل الدخول', en: 'Login' }, lang)}</span>
+          <motion.button onClick={handleMainAction} disabled={loading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} className="w-full mt-6 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-purple-600 text-white font-bold text-base shadow-xl transition-all flex items-center justify-center gap-2 relative z-10 disabled:opacity-50">
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+            <span>
+              {step === 'form' && (isRegister ? pickLang({ ar: 'إنشاء حساب', en: 'Register' }, lang) : pickLang({ ar: 'تسجيل الدخول', en: 'Login' }, lang))}
+              {(step === 'signup-otp' || step === 'forgot-otp') && pickLang({ ar: 'تأكيد الرمز', en: 'Verify Code' }, lang)}
+              {step === 'forgot-email' && pickLang({ ar: 'إرسال الرمز', en: 'Send Code' }, lang)}
+              {step === 'reset-password' && pickLang({ ar: 'حفظ كلمة المرور', en: 'Save Password' }, lang)}
+            </span>
           </motion.button>
 
-          {/* 🆕 زر نسيت كلمة المرور */}
-          {!isRegister && (
-            <button type="button" onClick={() => setShowForgotPassword(true)} className="w-full text-center text-xs text-amber-200/70 hover:text-amber-300 mt-3 transition relative z-10 font-medium py-1">
-              {pickLang({ ar: 'نسيت كلمة المرور؟', en: 'Forgot password?' }, lang)}
+          {step === 'form' && (
+            <div className="mt-4 flex flex-col gap-2 relative z-10">
+              {!isRegister && (
+                <button type="button" onClick={() => setStep('forgot-email')} className="text-xs text-amber-200/70 hover:text-amber-300 w-full text-center py-1">
+                  {pickLang({ ar: 'نسيت كلمة المرور؟', en: 'Forgot password?' }, lang)}
+                </button>
+              )}
+              <button type="button" onClick={() => { setIsRegister(!isRegister); setMsg(null); setPassword(''); setStep('form'); }} className="text-xs text-slate-400 hover:text-white w-full text-center py-1">
+                {isRegister ? pickLang({ ar: 'لديك حساب؟ سجّل الدخول', en: 'Have an account? Login' }, lang) : pickLang({ ar: 'ليس لديك حساب؟ أنشئ حساباً', en: "Don't have an account? Register" }, lang)}
+              </button>
+            </div>
+          )}
+
+          {(step === 'signup-otp' || step === 'forgot-otp' || step === 'forgot-email') && (
+            <button type="button" onClick={handleBack} className="mt-4 text-xs text-slate-500 hover:text-white w-full text-center relative z-10">
+              {pickLang({ ar: 'الرجوع', en: 'Back' }, lang)}
             </button>
           )}
 
-          <button type="button" onClick={toggleMode} className="w-full text-center text-xs text-slate-400 hover:text-slate-200 mt-2 transition relative z-10 font-medium py-1">
-            {isRegister ? pickLang({ ar: 'لديك حساب بالفعل؟ سجّل الدخول', en: 'Already have an account? Login' }, lang) : pickLang({ ar: 'ليس لديك حساب بعد؟ أنشئ حساباً جديداً', en: "Don't have an account? Register" }, lang)}
-          </button>
         </div>
       </motion.div>
     </div>
