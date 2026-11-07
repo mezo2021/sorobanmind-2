@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   X, Mail, KeyRound, User, Baby, LogIn, UserPlus, 
   Loader2, AlertCircle, CheckCircle2, Wifi, WifiOff, Sparkles,
-  ShieldCheck, Calendar
+  ShieldCheck, Calendar, ArrowRight // 🆕 أضفنا ArrowRight للعودة
 } from 'lucide-react';
 
 import { useT } from '../i18n/useTranslation';
@@ -40,7 +40,13 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
   const [agreeData, setAgreeData] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
 
-  const [awaitingVerification, setAwaitingVerification] = useState(false); // 🆕 حالة التحقق
+  const [awaitingVerification, setAwaitingVerification] = useState(false);
+  
+  // 🆕 حالات استعادة كلمة المرور
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetMsg, setResetMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -57,9 +63,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
   const showMsg = (text: string, type: 'success' | 'error') => {
     if (!isMounted.current) return;
     setMsg({ text, type });
-    setTimeout(() => {
-      if (isMounted.current) setMsg(null);
-    }, 4000);
+    setTimeout(() => { if (isMounted.current) setMsg(null); }, 4000);
   };
 
   const getFriendlyError = (errorMsg: string): string => {
@@ -104,7 +108,8 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       if (!parentName.trim()) return pickLang({ ar: 'يرجى إدخال اسم ولي الأمر', en: 'Please enter parent name' }, lang);
       if (childName.trim().split(/\s+/).length !== 3) return pickLang({ ar: 'اسم الطفل يجب أن يكون ثلاثياً (3 كلمات)', en: 'Child name must be exactly 3 words' }, lang);
       const ageNum = parseInt(childAge, 10);
-      if (!childAge || isNaN(ageNum) || ageNum < 5 || ageNum > 18) return pickLang({ ar: 'يرجى إدخال عمر الطفل (بين 5 و 18 سنة)', en: 'Please enter a valid child age (3-18 years)' }, lang);
+      // تحديث: 5-18
+      if (!childAge || isNaN(ageNum) || ageNum < 5 || ageNum > 18) return pickLang({ ar: 'يرجى إدخال عمر الطفل (بين 5 و 18 سنة)', en: 'Please enter a valid child age (5-18 years)' }, lang);
       if (!agreeGuardian || !agreeData || !agreePrivacy) return pickLang({ ar: 'يجب الموافقة على جميع الشروط للمتابعة.', en: 'You must agree to all terms to continue.' }, lang);
     }
     return null;
@@ -129,14 +134,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
         };
 
         const result = await cloudSync.registerParent(email, password, parentName, childName, consent);
-        
-        // 🆕 فحص إذا كان يحتاج لتفعيل البريد
-        if (!result.session) {
-          setAwaitingVerification(true);
-          setLoading(false);
-          return;
-        }
-        
+        if (!result.session) { setAwaitingVerification(true); setLoading(false); return; }
         showMsg(pickLang({ ar: 'تم إنشاء الحساب بنجاح!', en: 'Account created successfully!' }, lang), 'success');
       } else {
         await cloudSync.loginParent(email, password);
@@ -157,11 +155,32 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     }
   };
 
+  // 🆕 دالة استعادة كلمة المرور
+  const handleForgotPassword = async () => {
+    if (!resetEmail.includes('@')) {
+      setResetMsg({ text: pickLang({ ar: 'يرجى إدخال بريد إلكتروني صحيح', en: 'Please enter a valid email' }, lang), type: 'error' });
+      return;
+    }
+    setResetLoading(true);
+    setResetMsg(null);
+    try {
+      await cloudSync.requestPasswordReset(resetEmail);
+      setResetMsg({ text: pickLang({ ar: 'تم إرسال رابط إعادة التعيين إلى بريدك. تحقق من صندوق الوارد أو البريد المزعج.', en: 'Reset link sent to your email. Check your inbox or spam.' }, lang), type: 'success' });
+    } catch (error: any) {
+      setResetMsg({ text: getFriendlyError(error.message), type: 'error' });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const toggleMode = () => {
     setIsRegister(!isRegister);
     setMsg(null);
     setPassword('');
-    setAwaitingVerification(false); // إعادة تصفير الحالة
+    setAwaitingVerification(false);
+    setShowForgotPassword(false); // إغلاق شاشة النسيت عند التبديل
+    setResetEmail('');
+    setResetMsg(null);
   };
 
   // 🆕 شاشة انتظار تفعيل البريد
@@ -170,31 +189,17 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       <div dir={dir} className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
         <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="w-full max-w-md bg-[#0c0c0e]/95 p-8 border border-emerald-500/30 rounded-3xl text-center shadow-2xl relative">
           <div className="absolute -top-24 -right-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-          
           <div className="w-24 h-24 mx-auto bg-emerald-500/20 rounded-full flex items-center justify-center mb-6 border border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
             <Mail className="w-12 h-12 text-emerald-400" />
           </div>
-          
-          <h3 className="text-2xl font-bold text-white mb-3">
-            {pickLang({ ar: 'تحقق من بريدك الإلكتروني', en: 'Check your email' }, lang)}
-          </h3>
-          
+          <h3 className="text-2xl font-bold text-white mb-3">{pickLang({ ar: 'تحقق من بريدك الإلكتروني', en: 'Check your email' }, lang)}</h3>
           <p className="text-sm text-slate-300 mb-8 leading-relaxed">
-            {pickLang({ 
-              ar: `أرسلنا رابط تفعيل إلى بريدك:`, 
-              en: `We sent a verification link to:` 
-            }, lang)}
-            <br/>
-            <span className="font-bold text-amber-300 font-mono text-base mt-2 block">{email}</span>
+            {pickLang({ ar: `أرسلنا رابط تفعيل إلى بريدك:`, en: `We sent a verification link to:` }, lang)}
+            <br/><span className="font-bold text-amber-300 font-mono text-base mt-2 block">{email}</span>
           </p>
-          
           <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 mb-8 text-xs text-slate-400">
-            {pickLang({ 
-              ar: 'يرجى الضغط على الرابط في البريد لتفعيل حساب طفلك. بعد التفعيل، يمكنك العودة هنا وتسجيل الدخول.', 
-              en: "Please click the link in the email to activate your child's account. After verification, you can return here to login." 
-            }, lang)}
+            {pickLang({ ar: 'يرجى الضغط على الرابط في البريد لتفعيل حساب طفلك. بعد التفعيل، يمكنك العودة هنا وتسجيل الدخول.', en: "Please click the link in the email to activate your child's account. After verification, you can return here to login." }, lang)}
           </div>
-
           <button onClick={toggleMode} className="w-full py-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold border border-slate-600 transition">
             {pickLang({ ar: 'العودة لتسجيل الدخول', en: 'Back to Login' }, lang)}
           </button>
@@ -203,7 +208,57 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     );
   }
 
-  // الشاشة الأصلية
+  // 🆕 شاشة نسيت كلمة المرور
+  if (showForgotPassword) {
+    return (
+      <div dir={dir} className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="w-full max-w-md bg-[#0c0c0e]/95 p-8 border border-amber-500/30 rounded-3xl text-center shadow-2xl relative">
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="w-20 h-20 mx-auto bg-amber-500/20 rounded-full flex items-center justify-center mb-6 border border-amber-500/30">
+            <KeyRound className="w-10 h-10 text-amber-400" />
+          </div>
+          
+          <h3 className="text-2xl font-bold text-white mb-2">{pickLang({ ar: 'استعادة كلمة المرور', en: 'Reset Password' }, lang)}</h3>
+          <p className="text-sm text-slate-400 mb-6">
+            {pickLang({ ar: 'أدخل بريدك الإلكتروني المسجل وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.', en: 'Enter your registered email and we will send you a reset link.' }, lang)}
+          </p>
+
+          <div className="space-y-4">
+            <div className="relative">
+              <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              <input
+                type="email"
+                placeholder={pickLang({ ar: 'البريد الإلكتروني', en: 'Email' }, lang)}
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 text-sm"
+                dir="ltr"
+              />
+            </div>
+
+            {resetMsg && (
+              <div className={`p-3 rounded-xl flex items-center gap-2 text-xs text-left ${resetMsg.type === 'success' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20'}`}>
+                {resetMsg.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                {resetMsg.text}
+              </div>
+            )}
+
+            <button onClick={handleForgotPassword} disabled={resetLoading || resetMsg?.type === 'success'} className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-purple-600 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition">
+              {resetLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : pickLang({ ar: 'إرسال رابط الاستعادة', en: 'Send Reset Link' }, lang)}
+            </button>
+          </div>
+
+          <button onClick={() => setShowForgotPassword(false)} className="mt-6 text-sm text-slate-400 hover:text-white flex items-center justify-center gap-1 w-full transition">
+            <ArrowRight className={`w-4 h-4 ${dir === 'rtl' ? '' : 'rotate-180'}`} />
+            {pickLang({ ar: 'العودة لتسجيل الدخول', en: 'Back to Login' }, lang)}
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // الشاشة الأصلية (تسجيل / دخول)
   return (
     <div dir={dir} className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
       <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 250, damping: 25 }} className="relative w-full max-w-md my-auto">
@@ -239,18 +294,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
               <Sparkles className="w-5 h-5 text-amber-400" />
               {isRegister ? pickLang({ ar: 'إنشاء حساب جديد', en: 'Create New Account' }, lang) : pickLang({ ar: 'تسجيل الدخول', en: 'Login' }, lang)}
             </h3>
-            <p className="text-xs text-white/50 font-body mt-1.5 leading-relaxed px-2">
-              {pickLang({ ar: 'لضمان تجربة تعليمية آمنة، نحتاج اسم الطالب واسم ولي الأمر. بياناتك محمية تماماً.', en: 'To ensure a safe learning experience, we need student & parent names. Data is fully secure.' }, lang)}
-            </p>
           </div>
-
-          {!isOnline && !isChecking && (
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-3 rounded-2xl bg-amber-500/10 border border-amber-400/30 relative z-10 backdrop-blur-sm">
-              <p className="text-xs text-amber-200 font-body leading-relaxed text-center">
-                {pickLang({ ar: '📶 يبدو أنك غير متصل حالياً. يمكنك المحاولة وسيتم الفحص عند الضغط على الزر.', en: '📶 You seem offline. You can try and it will check upon clicking.' }, lang)}
-              </p>
-            </motion.div>
-          )}
 
           <div className="space-y-3 relative z-10">
             <div className="relative group">
@@ -276,9 +320,9 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                 </div>
 
                 <div className="relative group">
-  <Calendar className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-amber-400 transition-colors" />
-  <input type="number" min="5" max="18" placeholder={pickLang({ ar: 'عمر الطفل (5-18)', en: 'Child Age (5-18)' }, lang)} value={childAge} onChange={(e) => setChildAge(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.06] transition-all text-sm shadow-inner" dir="ltr" />
-</div>
+                  <Calendar className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-amber-400 transition-colors" />
+                  <input type="number" min="5" max="18" placeholder={pickLang({ ar: 'عمر الطفل (5-18)', en: 'Child Age (5-18)' }, lang)} value={childAge} onChange={(e) => setChildAge(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.06] transition-all text-sm shadow-inner" dir="ltr" />
+                </div>
 
                 <div className="mt-4 space-y-3 p-4 bg-black/40 border border-white/10 rounded-2xl shadow-inner relative overflow-hidden">
                   <div className="absolute top-0 start-0 w-1 h-full bg-amber-500/50 rounded-full" />
@@ -315,7 +359,14 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
             <span>{loading ? pickLang({ ar: 'جاري المعالجة...', en: 'Processing...' }, lang) : isRegister ? pickLang({ ar: 'إنشاء حساب', en: 'Register' }, lang) : pickLang({ ar: 'تسجيل الدخول', en: 'Login' }, lang)}</span>
           </motion.button>
 
-          <button type="button" onClick={toggleMode} className="w-full text-center text-xs text-amber-200/70 hover:text-amber-300 mt-5 transition relative z-10 font-medium py-1">
+          {/* 🆕 زر نسيت كلمة المرور */}
+          {!isRegister && (
+            <button type="button" onClick={() => setShowForgotPassword(true)} className="w-full text-center text-xs text-amber-200/70 hover:text-amber-300 mt-3 transition relative z-10 font-medium py-1">
+              {pickLang({ ar: 'نسيت كلمة المرور؟', en: 'Forgot password?' }, lang)}
+            </button>
+          )}
+
+          <button type="button" onClick={toggleMode} className="w-full text-center text-xs text-slate-400 hover:text-slate-200 mt-2 transition relative z-10 font-medium py-1">
             {isRegister ? pickLang({ ar: 'لديك حساب بالفعل؟ سجّل الدخول', en: 'Already have an account? Login' }, lang) : pickLang({ ar: 'ليس لديك حساب بعد؟ أنشئ حساباً جديداً', en: "Don't have an account? Register" }, lang)}
           </button>
         </div>
