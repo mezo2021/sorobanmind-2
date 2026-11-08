@@ -53,7 +53,15 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
 
   const handleLogout = async () => {
     playSound('click');
-    await cloudSync.logoutParent();
+    
+    const ok = await cloudSync.logoutParent();
+    
+    if (!ok) {
+      const confirmLeave = window.confirm('لم نتمكن من حفظ تقدمك في السحابة. هل تخرج على أي حال؟');
+      if (!confirmLeave) return;
+      await cloudSync.logoutParent(true);
+    }
+    
     useProgressStore.getState().setChildName('');
     useProgressStore.getState().setParentName('');
     localStorage.removeItem(NAME_STORAGE_KEY);
