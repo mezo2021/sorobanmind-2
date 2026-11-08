@@ -57,7 +57,12 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     const ok = await cloudSync.logoutParent();
     
     if (!ok) {
-      const confirmLeave = window.confirm('لم نتمكن من حفظ تقدمك في السحابة. هل تخرج على أي حال؟');
+      const confirmLeave = window.confirm(
+        pickLang({
+          ar: 'لم نتمكن من حفظ تقدمك في السحابة. هل تخرج على أي حال؟',
+          en: "We couldn't save your progress to the cloud. Sign out anyway?",
+        }, lang)
+      );
       if (!confirmLeave) return;
       await cloudSync.logoutParent(true);
     }
