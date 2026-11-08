@@ -16,6 +16,35 @@ interface PlayerScore {
   is_me: boolean;
 }
 
+// 🆕 أشباح واقعية لكل لعبة (أرقام قريبة من قدرات الأطفال الفعلية)
+const GAME_GHOSTS: Record<string, { name: string; score: number }[]> = {
+  'flying-abacus': [
+    { name: 'سارة.ع', score: 22 },
+    { name: 'عمر.م', score: 18 },
+    { name: 'ليان.ي', score: 15 },
+    { name: 'آدم.ف', score: 12 },
+    { name: 'جنى.ر', score: 10 },
+    { name: 'لمى.ج', score: 8 },
+    { name: 'يوسف.ح', score: 6 },
+    { name: 'نور.ك', score: 5 },
+  ],
+  'detective': [
+    { name: 'عمر.م', score: 15 },
+    { name: 'سارة.ع', score: 12 },
+    { name: 'آدم.ف', score: 10 },
+    { name: 'ليان.ي', score: 8 },
+    { name: 'جنى.ر', score: 6 },
+  ],
+  'default': [
+    { name: 'سارة.ع', score: 20 },
+    { name: 'عمر.م', score: 15 },
+    { name: 'ليان.ي', score: 12 },
+    { name: 'آدم.ف', score: 10 },
+    { name: 'جنى.ر', score: 8 },
+    { name: 'لمى.ج', score: 5 },
+  ]
+};
+
 export function CloudGameLeaderboard({ gameId }: Props) {
   const { isAr } = useGameLang();
   const [scores, setScores] = useState<PlayerScore[]>([]);
@@ -31,6 +60,7 @@ export function CloudGameLeaderboard({ gameId }: Props) {
       setExpanded(false);
 
       try {
+        // 1. جلب اللاعبين الحقيقيين من السحابة
         const { data, error } = await supabase.rpc('get_hall_of_fame', {
           p_game_id: gameId,
           p_period: 'all',
@@ -39,13 +69,30 @@ export function CloudGameLeaderboard({ gameId }: Props) {
 
         if (!isMounted) return;
 
-        if (error) {
-          console.error('Leaderboard error:', error);
-          setScores([]);
-          return;
+        let realPlayers: PlayerScore[] = [];
+        if (!error && data) {
+          realPlayers = data;
         }
 
-        setScores(data ?? []);
+        // 2. جلب الأشباح الخاصة بهذه اللعبة
+        const ghosts = GAME_GHOSTS[gameId] || GAME_GHOSTS['default'];
+        const ghostPlayers: PlayerScore[] = ghosts.map(g => ({
+          pos: 0, // سيتم تحديثه بعد الترتيب
+          display_name: g.name,
+          score: g.score,
+          is_me: false
+        }));
+
+        // 3. الدمج والترتيب التنازلي حسب النقاط
+        let combined = [...realPlayers, ...ghostPlayers];
+        
+        // ترتيب: الأعلى نقاطاً أولاً
+        combined.sort((a, b) => b.score - a.score);
+
+        // إعادة تعيين المراكز والأخذ بأفضل 10 فقط
+        combined = combined.map((p, idx) => ({ ...p, pos: idx + 1 })).slice(0, 10);
+
+        setScores(combined);
       } catch (err) {
         console.error('Leaderboard fetch failed:', err);
         if (isMounted) {
