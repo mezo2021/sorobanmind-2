@@ -408,17 +408,7 @@ export function LevelTestScreen({
             </div>
           </motion.div>
         </div>
-{/* 🧪 TEMPORARY: زر اختبار السحابة المباشر */}
-<button
-  onClick={async () => {
-    const cleanLevelId = levelId.replace(/^L/, '');
-    const ok = await cloudSync.submitScore(`level_${cleanLevelId}`, 100, 5000);
-    alert(ok ? `✅ تم حفظ درجة ${levelId} في السحابة!` : '❌ فشل الحفظ في السحابة');
-  }}
-  className="w-full mb-2 py-2 rounded-xl bg-amber-600 text-white font-bold text-xs"
->
-  🧪 اختبار حفظ المستوى في السحابة (مؤقت)
-</button>
+
         <button 
           onClick={() => { 
             playSound('click'); 
