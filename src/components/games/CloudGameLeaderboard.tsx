@@ -14,6 +14,7 @@ interface PlayerScore {
   display_name: string;
   score: number;
   is_me: boolean;
+  is_ghost: boolean;
 }
 
 // 🆕 أشباح واقعية لكل لعبة (أرقام قريبة من قدرات الأطفال الفعلية)
@@ -67,32 +68,47 @@ export function CloudGameLeaderboard({ gameId }: Props) {
           p_limit: 10
         });
 
+        if (error) throw error;
         if (!isMounted) return;
 
-        let realPlayers: PlayerScore[] = [];
-        if (!error && data) {
-          realPlayers = data;
-        }
+        // النتائج الحقيقية أولاً (حد أقصى 10)
+        const realPlayers: PlayerScore[] = (Array.isArray(data) ? data : [])
+          .slice(0, 10)
+          .map((p: any) => ({
+            pos: 0,
+            display_name: p.display_name,
+            score: p.score,
+            is_me: p.is_me === true,
+            is_ghost: false
+          }));
 
-        // 2. جلب الأشباح الخاصة بهذه اللعبة
+        // 2. حساب عدد الأشباح المطلوب لإكمال القائمة إلى 10
         const ghosts = GAME_GHOSTS[gameId] || GAME_GHOSTS['default'];
-        const ghostPlayers: PlayerScore[] = ghosts.map(g => ({
-          pos: 0, // سيتم تحديثه بعد الترتيب
-          display_name: g.name,
-          score: g.score,
-          is_me: false
-        }));
+        const needed = Math.max(0, 10 - realPlayers.length);
 
-        // 3. الدمج والترتيب التنازلي حسب النقاط
-        let combined = [...realPlayers, ...ghostPlayers];
-        
-        // ترتيب: الأعلى نقاطاً أولاً
-        combined.sort((a, b) => b.score - a.score);
+        const ghostPlayers: PlayerScore[] = ghosts
+          .slice(0, needed)
+          .map(g => ({
+            pos: 0,
+            display_name: g.name,
+            score: g.score,
+            is_me: false,
+            is_ghost: true
+          }));
 
-        // إعادة تعيين المراكز والأخذ بأفضل 10 فقط
-        combined = combined.map((p, idx) => ({ ...p, pos: idx + 1 })).slice(0, 10);
+        // 3. الدمج، الترتيب، والتأكد من تقدم الحقيقيين عند التساوي
+        const combined = [...realPlayers, ...ghostPlayers]
+          .sort((a, b) =>
+            b.score - a.score || // النقاط الأعلى أولاً
+            Number(a.is_ghost) - Number(b.is_ghost) // الحقيقي يتقدم على الشبح
+          )
+          .map((p, index) => ({
+            ...p,
+            pos: index + 1
+          }));
 
         setScores(combined);
+
       } catch (err) {
         console.error('Leaderboard fetch failed:', err);
         if (isMounted) {
@@ -149,8 +165,18 @@ export function CloudGameLeaderboard({ gameId }: Props) {
               <span className="text-sm font-black w-5 text-center">
                 {i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}
               </span>
-              <span className={`text-xs font-bold ${s.is_me ? 'text-amber-300' : 'text-slate-300'}`}>
-                {s.display_name} {s.is_me && `(${isAr ? 'أنت' : 'You'})`}
+              {/* 🆕 تعديل كلاود لعرض الأشباح في التوب 3 */}
+              <span className={`text-xs font-bold ${
+                s.is_me ? 'text-amber-300' :
+                s.is_ghost ? 'text-slate-500' : 'text-slate-300'
+              }`}>
+                {s.display_name}
+                {s.is_me && ` (${isAr ? 'أنت' : 'You'})`}
+                {s.is_ghost && (
+                  <span className="text-[9px] text-slate-500 font-normal ml-1">
+                    {isAr ? 'تحدٍّ افتراضي' : 'Virtual'}
+                  </span>
+                )}
               </span>
             </div>
             <span className="text-xs font-mono font-bold text-sky-300">
@@ -184,8 +210,17 @@ export function CloudGameLeaderboard({ gameId }: Props) {
                   <div key={s.pos} className={`flex justify-between items-center px-3 py-1.5 border-b border-slate-800/50 last:border-0 ${s.is_me ? 'bg-amber-500/10' : ''}`}>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-slate-500 w-4">#{s.pos}</span>
-                      <span className={`text-xs ${s.is_me ? 'text-amber-300 font-bold' : 'text-slate-400'}`}>
+                      {/* 🆕 تعديل كلاود لعرض الأشباح في بقية القائمة */}
+                      <span className={`text-xs ${
+                        s.is_me ? 'text-amber-300 font-bold' :
+                        s.is_ghost ? 'text-slate-500' : 'text-slate-400'
+                      }`}>
                         {s.display_name}
+                        {s.is_ghost && (
+                          <span className="text-[9px] ml-1">
+                            ({isAr ? 'افتراضي' : 'Virtual'})
+                          </span>
+                        )}
                       </span>
                     </div>
                     <span className="text-xs font-mono text-slate-400">
