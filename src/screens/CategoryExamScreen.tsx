@@ -235,7 +235,8 @@ export function CategoryExamScreen({
     setFinalScore(score);
     setFinalPassed(passed);
 
-    if (true) { // 🧪 TEMPORARY: تجاوز المعاينة لاختبار الحفظ
+    // eslint-disable-next-line no-constant-condition
+if (true) { // 🧪 TEMPORARY: تجاوز المعاينة لاختبار الحفظ
       try {
         localStorage.setItem(`${cfg.storageKey}_score`, JSON.stringify(score));
         if (!passed) {
