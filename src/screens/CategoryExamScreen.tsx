@@ -235,7 +235,7 @@ export function CategoryExamScreen({
     setFinalScore(score);
     setFinalPassed(passed);
 
-    if (!inPreview) {
+    if (true) { // 🧪 TEMPORARY: تجاوز المعاينة لاختبار الحفظ
       try {
         localStorage.setItem(`${cfg.storageKey}_score`, JSON.stringify(score));
         if (!passed) {
