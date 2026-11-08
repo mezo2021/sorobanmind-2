@@ -5,8 +5,9 @@ import { ArrowRight, Trophy, Timer, Medal } from 'lucide-react';
 import { useGameLang } from '@/components/games/gamesI18n';
 import { Num } from '@/components/Num';
 import CosmicBackground from '@/components/cosmic/CosmicBackground';
-import { EXAM_LABELS, LeaderRecord, examLabel, fmtTime } from '@/utils/leaderboard';
-import { supabase } from '@/lib/supabase';
+import { maskName } from '@/utils/maskName';
+import { EXAM_LABELS, LeaderRecord, examLabel, fmtTime, getRecords } from '@/utils/leaderboard';
+import { supabase } from '@/lib/supabase'; // 🆕 استيراد Supabase
 
 const PODIUM = [
   { rank: 2, h: 'h-24', color: '#cbd5e1', bg: 'from-slate-300/30 to-slate-500/10', icon: '🥈' },
@@ -37,34 +38,34 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
   const [exam, setExam] = useState<string>('all');
   const [sort, setSort] = useState<'score' | 'time'>('score');
   
-  // حالة البيانات القادمة من السحابة
-  const [list, setList] = useState<LeaderRecord[]>([]);
+  // 🆕 1. جلب اللاعبين الحقيقيين من السيرفر
+  const [cloudRecords, setCloudRecords] = useState<LeaderRecord[]>([]);
+  const localRecords = useMemo(() => getRecords(), []);
 
   useEffect(() => {
     let isMounted = true;
-
+    
     async function fetchFromCloud() {
-      // إذا اختار "كل المستويات"، نجلب افتراضياً كيو 10-7
-      const gameId = exam === 'all' ? 'exam_10_7' : exam;
+      if (exam === 'all') {
+        setCloudRecords([]); // في وضع "كل المستويات" نعتمد على الأشباح حالياً
+        return;
+      }
       
       const { data, error } = await supabase.rpc('get_hall_of_fame', {
-        p_game_id: gameId,
+        p_game_id: exam,
         p_period: 'all',
         p_limit: 10
       });
 
       if (!error && data && isMounted) {
-        // تحويل البيانات لتناسب الواجهة
         const mapped = data.map((s: any, i: number) => ({
           id: `sb-${i}`,
-          name: s.display_name, // السيرفر يرسل الاسم مقنعاً جاهزاً
+          name: s.display_name,
           score: s.score,
           timeSec: s.time_ms ? Math.round(s.time_ms / 1000) : 0,
-          examId: gameId,
+          examId: exam,
         }));
-        setList(mapped);
-      } else if (isMounted) {
-        setList([]);
+        setCloudRecords(mapped);
       }
     }
 
@@ -72,15 +73,28 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
     return () => { isMounted = false; };
   }, [exam]);
 
-  // الترتيب بناءً على اختيار المستخدم (درجة أو وقت)
-  const sortedList = useMemo(() => {
-    return [...list].sort((a, b) => 
-      sort === 'score' ? b.score - a.score || a.timeSec - b.timeSec : a.timeSec - b.timeSec || b.score - a.score
-    );
-  }, [list, sort]);
+  // 🆕 2. الدمج الذكي (السحابة + الأشباح) والترتيب بناءً على الزر المختار
+  const list: LeaderRecord[] = useMemo(() => {
+    const localFiltered = exam === 'all' ? localRecords : localRecords.filter((r) => r.examId === exam);
+    
+    // نبدأ بلاعبي السحابة الحقيقيين
+    const combined = [...cloudRecords];
+    
+    // نضيف الأشباح فقط إذا لم يكونوا موجودين في السحابة
+    localFiltered.forEach(localRec => {
+      if (!combined.some(c => c.name === localRec.name)) {
+        combined.push(localRec);
+      }
+    });
 
-  const top3 = sortedList.slice(0, 3);
-  const rest = sortedList.slice(3);
+    // الترتيب النهائي (هنا يعمل زر الدرجة/الزمن بامتياز)
+    return [...combined]
+      .sort((a, b) => (sort === 'score' ? b.score - a.score || a.timeSec - b.timeSec : a.timeSec - b.timeSec || b.score - a.score))
+      .slice(0, 10);
+  }, [localRecords, cloudRecords, exam, sort]);
+
+  const top3 = list.slice(0, 3);
+  const rest = list.slice(3);
   const order = [top3[1], top3[0], top3[2]];
 
   return (
@@ -109,7 +123,7 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
           ))}
         </div>
 
-        {sortedList.length === 0 ? (
+        {list.length === 0 ? (
           <div className="text-center py-16 bg-white/5 border border-slate-700/60 rounded-3xl backdrop-blur-md">
             <div className="text-5xl mb-3">🌌</div>
             <p className="text-slate-300 font-bold">{isAr ? 'لا أبطال بعد… كن الأول!' : 'No champions yet… be the first!'}</p>
@@ -130,7 +144,8 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
                     {r && (
                       <div className="mb-2">
                         <div className="text-3xl">{p.icon}</div>
-                        <div className="font-black text-sm truncate" style={{ color: p.color }}>{r.name}</div>
+                        {/* نستخدم maskName هنا لضمان تقنيع الأشباح أيضاً (محمد.ع سيبقى كما هو) */}
+                        <div className="font-black text-sm truncate" style={{ color: p.color }}>{maskName(r.name)}</div>
                         <div className="text-[11px] text-slate-400">{examLabel(r.examId, isAr)}</div>
                         <div className="text-xs font-mono text-amber-200"><Num>{sort === 'score' ? r.score : fmtTime(r.timeSec)}</Num></div>
                       </div>
@@ -150,7 +165,7 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
                   className="flex items-center justify-between bg-white/5 border border-slate-700/60 rounded-xl px-4 py-3 backdrop-blur-md">
                   <div className="flex items-center gap-3">
                     <span className="w-7 h-7 rounded-full bg-amber-500/15 text-amber-300 text-sm font-bold flex items-center justify-center"><Num>{i + 4}</Num></span>
-                    <span className="font-bold">{r.name}</span>
+                    <span className="font-bold">{maskName(r.name)}</span>
                   </div>
                   <div className="text-xs text-slate-300 flex gap-3">
                     <span>{examLabel(r.examId, isAr)}</span>
