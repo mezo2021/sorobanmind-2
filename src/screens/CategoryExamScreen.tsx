@@ -130,7 +130,6 @@ export function CategoryExamScreen({
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // 🆕 لحفظ الوقت في السيرفر بدقة
   const timeLeftRef = useRef(timeLeft);
   useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
 
@@ -312,7 +311,6 @@ export function CategoryExamScreen({
     }
   }, [currentQ, abacusValue, attempts, currentAttempt, feedback, playSound, questionStartTime]);
 
-  // 🆕 إصلاح: دالة الانتقال التلقائي تقرأ حالة السؤال من الخريطة
   const advanceToNext = useCallback((currentAttempts: Map<string, QuestionAttempt>) => {
     if (currentIdx + 1 >= questions.length) {
       finalizeExam(currentAttempts);
@@ -344,7 +342,6 @@ export function CategoryExamScreen({
     }
   }, [currentIdx, questions, finalizeExam]);
 
-  // 🆕 إصلاح ثغرة الغش: التنقل اليدوي يقرأ حالة السؤال ولا يعيد تصفيره
   const goToQuestion = useCallback((idx: number) => {
     if (idx < 0 || idx >= questions.length) return;
     const targetQ = questions[idx];
@@ -577,7 +574,7 @@ export function CategoryExamScreen({
                   columns={columns}
                   initialValue={abacusValue}
                   autoBeadSize={true}
-                  interactive={feedback === 'idle'} // 🆕 يُقفل عند الإجابة
+                  interactive={feedback === 'idle'}
                   showValue={true}
                   onValueChange={setAbacusValue}
                 />
@@ -588,17 +585,20 @@ export function CategoryExamScreen({
 
         <div className="space-y-2 mb-4">
           <div className="grid grid-cols-3 gap-2">
-            <button type="button" onClick={handlePrevious} disabled={isFirstQuestion || feedback !== 'idle'} className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition">
+            {/* 🛠️ التعديل 1: السماح بالتنقل في حالة reveal */}
+            <button type="button" onClick={handlePrevious} disabled={isFirstQuestion || feedback === 'wrong' || feedback === 'correct'} className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition">
               <ArrowRight className="w-4 h-4" />
               {pickLang({ ar: 'السابق', en: 'Previous' }, lang)}
             </button>
 
-            <button type="button" onClick={handleCheck} disabled={feedback !== 'idle'} className={`py-3 rounded-2xl bg-gradient-to-l ${cfg.gradient} text-white font-bold text-sm flex items-center justify-center gap-1.5 shadow-lg transition disabled:opacity-40`}>
+            {/* 🛠️ التعديل 2: منع التحقق نهائياً إذا كان السؤال مغلقاً */}
+            <button type="button" onClick={handleCheck} disabled={feedback !== 'idle' || (attempts.get(currentQ.id)?.correct ?? false) || (attempts.get(currentQ.id)?.attempts ?? 0) >= EXAM_MAX_ATTEMPTS} className={`py-3 rounded-2xl bg-gradient-to-l ${cfg.gradient} text-white font-bold text-sm flex items-center justify-center gap-1.5 shadow-lg transition disabled:opacity-40`}>
               <CheckCircle2 className="w-4 h-4" />
               {pickLang({ ar: 'تحقق', en: 'Check' }, lang)}
             </button>
 
-            <button type="button" onClick={handleNext} disabled={isLastQuestion || feedback !== 'idle'} className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition">
+            {/* 🛠️ التعديل 3: السماح بالتنقل في حالة reveal */}
+            <button type="button" onClick={handleNext} disabled={isLastQuestion || feedback === 'wrong' || feedback === 'correct'} className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition">
               {pickLang({ ar: 'التالي', en: 'Next' }, lang)}
               <ArrowLeft className="w-4 h-4" />
             </button>
