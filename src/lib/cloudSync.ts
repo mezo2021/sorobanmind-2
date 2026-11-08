@@ -284,4 +284,23 @@ export const cloudSync = {
     useProgressStore.setState({ ...useProgressStore.getState(), ...(data.progress_data as any) });
     return true;
   },
+
+  // ═══ 11. إرسال الدرجة للوحة الشرف ═══
+  async submitScore(gameId: string, score: number, timeMs: number | null = null) {
+    try {
+      const { error } = await supabase.rpc('submit_score', {
+        p_game_id: gameId,
+        p_score: score,
+        p_time_ms: timeMs,
+      });
+      if (error) {
+        console.warn('submitScore failed:', error.message);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('submitScore network error:', err);
+      return false;
+    }
+  },
 };
