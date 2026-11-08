@@ -2,8 +2,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight, ArrowLeft, Clock, Trophy, CheckCircle2, XCircle,
-  Target, Sparkles, Play, Type, LogOut, Grid3X3, AlertTriangle,
+  ArrowRight, ArrowLeft, Clock, Trophy, CheckCircle2, 
+  Sparkles, Play, Type, LogOut, Grid3X3, AlertTriangle,
 } from 'lucide-react';
 
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
@@ -126,22 +126,24 @@ export function CategoryExamScreen({
   const [finalScore, setFinalScore] = useState(0);
   const [finalPassed, setFinalPassed] = useState(false);
   const [cooldownMs, setCooldownMs] = useState<number>(0);
-  const [lastAttemptTime, setLastAttemptTime] = useState<number | null>(null);
+  
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const timeLeftRef = useRef(timeLeft);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFinalizedRef = useRef(false);
+  const attemptsRef = useRef<Map<string, QuestionAttempt>>(new Map());
+
   useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
 
-  // 🆕 المؤقت الخاص بالتنقل التلقائي بعد الإجابة
-  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-// 🧹 تنظيف المؤقتات عند الخروج من شاشة الامتحان (لمنع تسريب الذاكرة)
-useEffect(() => {
-  return () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
-  };
-}, []);
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    };
+  }, []);
+
   const currentQ = questions[currentIdx];
 
   useEffect(() => {
@@ -151,7 +153,6 @@ useEffect(() => {
       if (raw) {
         const lastTime = parseInt(raw, 10);
         if (!isNaN(lastTime)) {
-          setLastAttemptTime(lastTime);
           const elapsed = Date.now() - lastTime;
           const remaining = EXAM_COOLDOWN_MS - elapsed;
           if (remaining > 0) {
@@ -186,9 +187,13 @@ useEffect(() => {
     const qs = category === 'kids' ? buildExam1Category() : buildExam2Category();
     if (qs.length === 0) { playSound('error'); return; }
 
+    isFinalizedRef.current = false;
+    const emptyAttempts = new Map<string, QuestionAttempt>();
+    attemptsRef.current = emptyAttempts;
+    setAttempts(emptyAttempts);
+    
     setQuestions(qs);
     setCurrentIdx(0);
-    setAttempts(new Map());
     setAbacusValue(0);
     setCurrentAttempt(1);
     setFeedback('idle');
@@ -201,7 +206,7 @@ useEffect(() => {
   useEffect(() => {
     if (phase !== 'running') return;
     if (timeLeft <= 0) {
-      finalizeExam(attempts);
+      finalizeExam(attemptsRef.current);
       return;
     }
     timerRef.current = setTimeout(() => setTimeLeft((x) => x - 1), 1000);
@@ -212,7 +217,9 @@ useEffect(() => {
   }, [phase, timeLeft]);
 
   const finalizeExam = useCallback((finalAttempts: Map<string, QuestionAttempt>) => {
-    // 🛡️ إلغاء أي مؤقت تنقل متبقٍ لمنع أي تعارض
+    if (isFinalizedRef.current) return;
+    isFinalizedRef.current = true;
+
     if (feedbackTimerRef.current) {
       clearTimeout(feedbackTimerRef.current);
       feedbackTimerRef.current = null;
@@ -231,19 +238,24 @@ useEffect(() => {
     if (!inPreview) {
       try {
         localStorage.setItem(`${cfg.storageKey}_score`, JSON.stringify(score));
-        localStorage.setItem(`${cfg.storageKey}_last_attempt`, String(Date.now()));
+        if (!passed) {
+          localStorage.setItem(`${cfg.storageKey}_last_attempt`, String(Date.now()));
+        }
       } catch { /* ignore */ }
 
       const store = useProgressStore.getState();
-      if (category === 'kids') {
-        store.setExam1Passed(passed);
-      } else {
-        store.setExam2Passed(passed);
-      }
+      if (category === 'kids') store.setExam1Passed(passed);
+      else store.setExam2Passed(passed);
 
       const gameId = category === 'kids' ? 'cat_ce1' : 'cat_ce2';
       const elapsedMs = Math.max(1, (cfg.totalTimeSec - timeLeftRef.current) * 1000);
-      cloudSync.submitScore(gameId, score, elapsedMs);
+      
+      // 🛡️ تعديل GPT: فحص نجاح الإرسال بدلاً من catch
+      void cloudSync.submitScore(gameId, score, elapsedMs).then((success) => {
+        if (!success) {
+          console.warn('لم يتم إرسال النتيجة إلى لوحة الشرف');
+        }
+      });
     }
 
     setPhase('result');
@@ -276,33 +288,34 @@ useEffect(() => {
     if (isCorrect) {
       const points = currentAttempt === 1 ? 1 : 0.5;
       newAttempts.set(currentQ.id, { value: abacusValue, attempts: currentAttempt, correct: true, points });
+      
+      attemptsRef.current = newAttempts; // 🛡️ تعديل GPT: مزامنة فورية
       setAttempts(newAttempts);
       setFeedback('correct');
       playSound('success');
 
-      // 🆕 حفظ المؤقت في الـ Ref
       feedbackTimerRef.current = setTimeout(() => {
         advanceToNext(newAttempts);
       }, 1200);
     } else {
       if (currentAttempt >= EXAM_MAX_ATTEMPTS) {
         newAttempts.set(currentQ.id, { value: abacusValue, attempts: currentAttempt, correct: false, points: 0 });
+        attemptsRef.current = newAttempts; // 🛡️ مزامنة فورية
         setAttempts(newAttempts);
         setFeedback('reveal');
         playSound('error');
 
-        // 🆕 حفظ المؤقت في الـ Ref
         feedbackTimerRef.current = setTimeout(() => {
           advanceToNext(newAttempts);
         }, 2000);
       } else {
         newAttempts.set(currentQ.id, { value: abacusValue, attempts: currentAttempt, correct: false, points: 0 });
+        attemptsRef.current = newAttempts; // 🛡️ مزامنة فورية
         setAttempts(newAttempts);
         setFeedback('wrong');
         setCurrentAttempt(2);
         playSound('error');
 
-        // 🆕 حفظ المؤقت في الـ Ref
         feedbackTimerRef.current = setTimeout(() => {
           setFeedback('idle');
           setAbacusValue(0);
@@ -345,7 +358,6 @@ useEffect(() => {
   const goToQuestion = useCallback((idx: number) => {
     if (idx < 0 || idx >= questions.length) return;
     
-    // 🆕 إلغاء أي مؤقت قديم حتى لا يقفز التطبيق سؤالين
     if (feedbackTimerRef.current) {
       clearTimeout(feedbackTimerRef.current);
       feedbackTimerRef.current = null;
@@ -389,11 +401,23 @@ useEffect(() => {
     goToQuestion(currentIdx + 1);
   }, [currentIdx, questions.length, goToQuestion, playSound]);
 
+  // 🛡️ تعديل GPT: دالة موحدة لفتح نافذة الإنهاء وإلغاء أي مؤقت
+  const openEndConfirm = useCallback(() => {
+    if (feedbackTimerRef.current) {
+      clearTimeout(feedbackTimerRef.current);
+      feedbackTimerRef.current = null;
+    }
+    setShowEndConfirm(true);
+  }, []);
+
   const confirmEndExam = useCallback(() => {
     setShowEndConfirm(false);
-    finalizeExam(attempts);
-  }, [attempts, finalizeExam]);
+    finalizeExam(attemptsRef.current);
+  }, [finalizeExam]);
 
+  // ═══════════════════════════════════════════════════════
+  // الرندر (UI)
+  // ═══════════════════════════════════════════════════════
   if (phase === 'cooldown') {
     return (
       <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
@@ -592,22 +616,19 @@ useEffect(() => {
 
         <div className="space-y-2 mb-4">
           <div className="grid grid-cols-3 gap-2">
-            {/* 🛠️ التعديل 1: فتح زر السابق دائماً (عدا السؤال الأول) */}
             <button type="button" onClick={handlePrevious} disabled={isFirstQuestion} className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition">
               <ArrowRight className="w-4 h-4" />
               {pickLang({ ar: 'السابق', en: 'Previous' }, lang)}
             </button>
 
-            {/* 🛠️ زر التحقق يبقى مقفلاً إذا كانت الإجابة صحيحة أو استنفدت المحاولات */}
             <button type="button" onClick={handleCheck} disabled={feedback !== 'idle' || (attempts.get(currentQ.id)?.correct ?? false) || (attempts.get(currentQ.id)?.attempts ?? 0) >= EXAM_MAX_ATTEMPTS} className={`py-3 rounded-2xl bg-gradient-to-l ${cfg.gradient} text-white font-bold text-sm flex items-center justify-center gap-1.5 shadow-lg transition disabled:opacity-40`}>
               <CheckCircle2 className="w-4 h-4" />
               {pickLang({ ar: 'تحقق', en: 'Check' }, lang)}
             </button>
 
-            {/* 🛠️ التعديل 2 و 3: فتح زر التالي دائماً، وتغييره إلى "إنهاء" في السؤال الأخير */}
             <button type="button" 
               onClick={() => {
-                if (isLastQuestion) finalizeExam(attempts);
+                if (isLastQuestion) openEndConfirm();
                 else handleNext();
               }} 
               className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 transition">
@@ -616,7 +637,7 @@ useEffect(() => {
             </button>
           </div>
 
-          <button type="button" onClick={() => { playSound('click'); setShowEndConfirm(true); }} className="w-full py-2.5 rounded-2xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 font-bold text-xs flex items-center justify-center gap-2 transition">
+          <button type="button" onClick={() => { playSound('click'); openEndConfirm(); }} className="w-full py-2.5 rounded-2xl bg-red-500/15 hover:bg-red-500/25 border border-red-400/40 text-red-200 font-bold text-xs flex items-center justify-center gap-2 transition">
             <LogOut className="w-3.5 h-3.5" />
             {pickLang({ ar: 'إنهاء الاختبار', en: 'End Exam' }, lang)}
           </button>
