@@ -15,6 +15,7 @@ const GamesListScreen = lazy(() => import('@/components/games/GamesListScreen').
 import { useProgressStore } from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
+import { cloudSync } from '@/lib/cloudSync'; // 🧪 مؤقت — زر اختبار السحابة
 
 import { useT } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
@@ -205,6 +206,17 @@ export function HeroDashboard({
 
   return (
     <div dir={dir} className="px-3 sm:px-6 py-6 max-w-6xl mx-auto">
+      {/* 🧪 زر اختبار مؤقت */}
+      <button
+        onClick={async () => {
+          const ok = await cloudSync.submitScore('level_0', 100, 5000);
+          alert(ok ? '✅ تم حفظ مستوى 0 بنجاح في السحابة!' : '❌ فشل الحفظ');
+        }}
+        style={{ position: 'fixed', top: 10, left: 10, zIndex: 9999, background: 'red', color: 'white', padding: 10, borderRadius: 10 }}
+      >
+        اختبار السحابة L0
+      </button>
+
       {/* WELCOME HEADER */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
