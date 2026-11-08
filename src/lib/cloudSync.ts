@@ -138,8 +138,16 @@ export const cloudSync = {
   },
 
   // ═══ 4. تسجيل الخروج ═══
-  async logoutParent() {
+  async logoutParent(force = false): Promise<boolean> {
+    if (!force) {
+      try {
+        await this.saveToCloud();
+      } catch {
+        return false;
+      }
+    }
     await supabase.auth.signOut();
+    return true;
   },
 
   // ═══ 5. جلب الجلسة ═══
