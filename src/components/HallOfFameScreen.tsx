@@ -60,10 +60,10 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
           label: isAr ? `مستوى ${i}` : `Level ${i}`,
         }));
       case 'categories':
-        return [
-          { id: 'cat_ce1', label: isAr ? 'القسم الأول (جمع وطرح)' : 'Category 1 (Add/Sub)' },
-          { id: 'cat_ce2', label: isAr ? 'القسم الثاني (ضرب وقسمة)' : 'Category 2 (Mul/Div)' },
-        ];
+  return [
+    { id: 'cat_ce1', label: isAr ? 'الأبطال الصغار (٥-١٢ سنة)' : 'Young Heroes (Ages 5-12)' },
+    { id: 'cat_ce2', label: isAr ? 'الأبطال الكبار (+١٣ سنة)' : 'Champion Heroes (Ages 13+)' },
+  ];
       case 'kyu':
         return [
           { id: 'exam_10_7', label: isAr ? 'كيو 10-7' : 'Kyu 10-7' },
