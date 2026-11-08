@@ -4,7 +4,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import {
   Sparkles, Flame, Brain, Zap, Palette,
   X, Users, Trophy, Target, Grid3X3, Film,
-  Gamepad2, CheckCircle2,
+  Gamepad2, CheckCircle2, GraduationCap,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -12,10 +12,12 @@ import type { Screen, CharacterType } from '@/types';
 import { Companion } from '@/components/Companion';
 import { CharacterSelector } from '@/components/CharacterSelector';
 const GamesListScreen = lazy(() => import('@/components/games/GamesListScreen').then(m => ({ default: m.GamesListScreen })));
+// 🆕 شاشتا قاعة المشاهير وامتحانات الكيو (Lazy)
+const HallOfFamePage = lazy(() => import('@/screens/HallOfFamePage'));
+const MentalArchivesExams = lazy(() => import('@/components/games/MentalArchivesGame/MentalArchivesExams'));
 import { useProgressStore } from '@/store/progressStore';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
-import { cloudSync } from '@/lib/cloudSync'; // 🧪 مؤقت — زر اختبار السحابة
 
 import { useT } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
@@ -139,8 +141,15 @@ export function HeroDashboard({
   const numberStyle = useNumberStyleStore((s) => s.style);
   const isArabic = numberStyle === 'arabic'; // 🆕 Added here to fix the error
   const [showGames, setShowGames] = useState(false);
+  // 🆕 حالات الشاشتين الجديدتين
+  const [showHallOfFame, setShowHallOfFame] = useState(false);
+  const [showKyuExams, setShowKyuExams] = useState(false);
 
   const placementAttempts = useProgressStore((s) => s.placementAttempts);
+  // 🆕 منطق قفل بطاقة الكيو: إكمال المستويين 1 و 2
+  const mentalProgress = useProgressStore((s) => s.mentalArchivesProgress);
+  const canAccessKyu = !!mentalProgress?.level1 && !!mentalProgress?.level2;
+
   const [recommendedLevel, setRecommendedLevel] = useState<string | null>(null);
 
   useEffect(() => {
@@ -202,20 +211,46 @@ export function HeroDashboard({
     );
   }
 
+  // 🆕 شاشة قاعة المشاهير
+  if (showHallOfFame) {
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white/70 text-lg font-bold">
+          {pickLang({ ar: 'جارٍ تحميل قاعة المشاهير... 🏆', en: 'Loading Hall of Fame... 🏆' }, lang)}
+        </div>
+      }>
+        <HallOfFamePage
+          onBack={() => {
+            playSound('click');
+            setShowHallOfFame(false);
+          }}
+        />
+      </Suspense>
+    );
+  }
+
+  // 🆕 شاشة امتحانات الكيو
+  if (showKyuExams) {
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white/70 text-lg font-bold">
+          {pickLang({ ar: 'جارٍ تحميل امتحانات الكيو... 🥋', en: 'Loading Kyu Exams... 🥋' }, lang)}
+        </div>
+      }>
+        <MentalArchivesExams
+          onBack={() => {
+            playSound('click');
+            setShowKyuExams(false);
+          }}
+        />
+      </Suspense>
+    );
+  }
+
   const characterInfo = CHARACTER_INFO[companion];
 
   return (
     <div dir={dir} className="px-3 sm:px-6 py-6 max-w-6xl mx-auto">
-      {/* 🧪 زر اختبار مؤقت */}
-      <button
-        onClick={async () => {
-          const ok = await cloudSync.submitScore('level_0', 100, 5000);
-          alert(ok ? '✅ تم حفظ مستوى 0 بنجاح في السحابة!' : '❌ فشل الحفظ');
-        }}
-        style={{ position: 'fixed', top: 10, left: 10, zIndex: 9999, background: 'red', color: 'white', padding: 10, borderRadius: 10 }}
-      >
-        اختبار السحابة L0
-      </button>
 
       {/* WELCOME HEADER */}
       <motion.div
@@ -364,6 +399,57 @@ export function HeroDashboard({
         </div>
       </motion.div>
 
+      {/* 🆕 HALL OF FAME CARD */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08 }}
+        className="mb-6"
+      >
+        <motion.button
+          type="button"
+          whileHover={{ scale: 1.01, y: -3 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => { playSound('click'); setShowHallOfFame(true); }}
+          className="group relative glass-card p-5 sm:p-6 text-start overflow-hidden w-full border-2 border-amber-400/40"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
+          <div className="absolute -top-20 -right-20 w-48 h-48 bg-amber-500/30 blur-3xl" />
+
+          <div className="relative flex items-center gap-4">
+            <div className="shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-xl shadow-amber-500/50">
+              <Trophy className="w-8 h-8 text-white" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className="text-xl font-black font-display text-white">
+                  {pickLang({ ar: 'قاعة المشاهير', en: 'Hall of Fame' }, lang)}
+                </h4>
+                <span className="px-2 py-0.5 rounded-lg bg-amber-400/30 text-amber-100 text-[10px] font-bold">
+                  {pickLang({ ar: 'جديد', en: 'New' }, lang)}
+                </span>
+              </div>
+              <p className="text-[10px] text-white/40 font-body">
+                Hall of Fame
+              </p>
+              <p className="text-xs text-white/60 font-body leading-relaxed mt-1">
+                {pickLang({ ar: 'أبطال الأكاديمية — أفضل الدرجات والإنجازات', en: 'Academy champions — top scores and achievements' }, lang)}
+              </p>
+              <p className="text-xs text-amber-300 font-body mt-1">
+                {pickLang({ ar: '🏆 أسماء لامعة من كل الفئات', en: '🏆 Shining names from all categories' }, lang)}
+              </p>
+            </div>
+
+            <div className="shrink-0 self-center text-amber-300 group-hover:text-amber-100 transition-colors">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d={dir === 'rtl' ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </div>
+        </motion.button>
+      </motion.div>
+
       {/* PLACEMENT TEST CARD */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -510,6 +596,77 @@ export function HeroDashboard({
             </div>
 
             <div className="shrink-0 self-center text-purple-300 group-hover:text-purple-100 transition-colors">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d={dir === 'rtl' ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </div>
+        </motion.button>
+      </motion.div>
+
+      {/* 🆕 KYU EXAMS CARD */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.125 }}
+        className="mb-6"
+      >
+        <motion.button
+          type="button"
+          whileHover={{ scale: 1.01, y: -3 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => {
+            playSound('click');
+            if (canAccessKyu) {
+              setShowKyuExams(true);
+            } else {
+              alert(
+                pickLang({
+                  ar: '🔒 قسم امتحانات الكيو مقفل.\nيجب إكمال المستويين الأول والثاني في قصة الثقب الدودي أولاً!',
+                  en: '🔒 Kyu Exams are locked.\nComplete levels 1 and 2 in the Wormhole story first!',
+                }, lang)
+              );
+            }
+          }}
+          className="group relative glass-card p-5 sm:p-6 text-start overflow-hidden w-full border-2 border-indigo-400/40"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
+          <div className="absolute -top-20 -right-20 w-48 h-48 bg-indigo-500/30 blur-3xl" />
+
+          <div className="relative flex items-center gap-4">
+            <div className="shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/50">
+              <GraduationCap className="w-8 h-8 text-white" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <h4 className="text-xl font-black font-display text-white">
+                  {pickLang({ ar: 'امتحانات الكيو (Kyu)', en: 'Kyu Exams' }, lang)}
+                </h4>
+                {canAccessKyu ? (
+                  <span className="px-2 py-0.5 rounded-lg bg-indigo-400/30 text-indigo-100 text-[10px] font-bold">
+                    {pickLang({ ar: 'مفتوح', en: 'Open' }, lang)}
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-lg bg-slate-500/30 text-slate-200 text-[10px] font-bold">
+                    🔒 {pickLang({ ar: 'مقفل', en: 'Locked' }, lang)}
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-white/40 font-body">
+                Mental Archives · Kyu Exams
+              </p>
+              <p className="text-xs text-white/60 font-body leading-relaxed mt-1">
+                {pickLang({ ar: 'اختبر مهاراتك واحصل على الرتب اليابانية', en: 'Test your skills and earn Japanese ranks' }, lang)}
+              </p>
+              <p className={`text-xs font-body mt-1 ${canAccessKyu ? 'text-indigo-300' : 'text-slate-400'}`}>
+                {canAccessKyu
+                  ? pickLang({ ar: '🎓 من كيو ١٠ إلى كيو ١', en: '🎓 From Kyu 10 to Kyu 1' }, lang)
+                  : pickLang({ ar: '🔒 أكمل المستويين ١ و ٢ من قصة الثقب الدودي', en: '🔒 Complete levels 1 and 2 of the Wormhole story' }, lang)}
+              </p>
+            </div>
+
+            <div className={`shrink-0 self-center transition-colors ${canAccessKyu ? 'text-indigo-300 group-hover:text-indigo-100' : 'text-slate-500'}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d={dir === 'rtl' ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6"} strokeLinecap="round" strokeLinejoin="round" />
               </svg>
