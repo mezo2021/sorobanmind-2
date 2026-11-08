@@ -2,6 +2,7 @@
 import { supabase } from './supabase';
 import { useProgressStore, type ProgressState } from '../store/progressStore';
 import { maskName } from '../utils/maskName';
+import type { User } from '@supabase/supabase-js'; // 🆕 أُضيف لعزل الحسابات
 
 function extractPureState(state: ProgressState) {
   const {
@@ -30,6 +31,56 @@ const toLatinDigits = (str: string) => {
   return str.replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
             .replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
 };
+
+// ═══════════════════════════════════════════════════════════
+// 🆕 عزل الحسابات (لمنع تلوث البيانات بين الأطفال)
+// ═══════════════════════════════════════════════════════════
+const OWNER_KEY = 'soroban_progress_owner';
+const DEVICE_KEYS = [
+  'sorobanmind-v2-lang', 'soroban_number_style', 'soroban2d5-theme',
+  'soroban_welcome_seen', OWNER_KEY,
+];
+const OUR_PREFIX = /^(soroban|sorobanmind|srb|sorobania)/;
+
+function wipeLocalProgress() {
+  Object.keys(localStorage).forEach((k) => {
+    if (OUR_PREFIX.test(k) && !DEVICE_KEYS.includes(k)) localStorage.removeItem(k);
+  });
+  useProgressStore.getState().reset();
+}
+
+async function pullProgress(userId: string) {
+  const { data } = await supabase
+    .from('soroban_progress')
+    .select('progress_data')
+    .eq('user_id', userId)
+    .maybeSingle();
+  const pd = data?.progress_data as Record<string, unknown> | null | undefined;
+  if (pd && Object.keys(pd).length > 0) {
+    useProgressStore.setState({ ...useProgressStore.getState(), ...(pd as any) });
+  }
+}
+
+async function adoptUser(user: User): Promise<boolean> {
+  const meta = user.user_metadata || {};
+  const owner = localStorage.getItem(OWNER_KEY);
+  const localName = localStorage.getItem('soroban_child_name');
+  const newName: string | undefined = meta.child_name;
+
+  const different = owner
+    ? owner !== user.id
+    : !!localName && localName !== 'البطل' && !!newName && localName !== newName;
+
+  if (different) {
+    wipeLocalProgress();
+    try { await pullProgress(user.id); } catch { /* يبقى فارغاً */ }
+  }
+  localStorage.setItem(OWNER_KEY, user.id);
+
+  if (different) window.setTimeout(() => window.location.reload(), 1200);
+  return different;
+}
+// ═══════════════════════════════════════════════════════════
 
 export const cloudSync = {
   // ═══ 1. التسجيل ═══
@@ -76,7 +127,6 @@ export const cloudSync = {
       throw new Error('User already registered');
     }
 
-    // 🆕 تم نقل upsert إلى verifyOtp (لأنه يحتاج جلسة صالحة)
     return { user: data.user, session: data.session };
   },
 
@@ -93,12 +143,15 @@ export const cloudSync = {
     if (error) throw new Error(error.message);
     
     if (data.session) {
+      // 🆕 استدعاء adoptUser قبل كتابة الاسم
+      await adoptUser(data.session.user);
+
       const meta = data.session.user.user_metadata || {};
       useProgressStore.getState().setParentName(meta.parent_name || 'ولي الأمر');
       useProgressStore.getState().setChildName(meta.child_name || 'البطل');
       localStorage.setItem('soroban_child_name', meta.child_name || 'البطل');
 
-      // 🆕 إنشاء صف التقدم الآن (بعد توفر الجلسة)
+      // إنشاء صف التقدم الآن (بعد توفر الجلسة)
       if (type === 'signup') {
         try {
           await supabase.from('soroban_progress').upsert({
@@ -119,6 +172,9 @@ export const cloudSync = {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
     if (!data.user) throw new Error('Login failed');
+
+    // 🆕 استدعاء adoptUser (المقارنة تحتاج الاسم المحلي القديم قبل أن يُكتب الجديد)
+    await adoptUser(data.user);
 
     const meta = data.user.user_metadata || {};
     const pName = meta.parent_name || 'ولي الأمر';
