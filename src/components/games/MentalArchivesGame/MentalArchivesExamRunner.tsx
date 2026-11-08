@@ -8,6 +8,7 @@ import { Timer, ArrowRight, CheckCircle2, XCircle, Home, Printer, ArrowLeft, Shi
 import { motion } from 'framer-motion';
 import { tUI } from './gameUI';
 import RelicKeypad from './ui/RelicKeypad';
+import { cloudSync } from '@/lib/cloudSync'; // 🆕 استيراد الدالة
 
 import ExamCertificateModal from './ExamCertificateModal';
 import { addRecord } from '@/utils/leaderboard';
@@ -177,6 +178,10 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
     // 🏆 تسجيل الرقم في لوحة الأبطال (للناجحين فقط، وليس في المعاينة)
     if (passed && childName && !isPreviewMode()) {
       addRecord({ name: childName, examId: examData.id, score, timeSec: Math.max(1, examData.timeLimitSeconds - timeLeft) });
+      
+      // 🆕 إرسال النتيجة إلى السيرفر (Supabase) بصمت
+      const elapsedMs = Math.max(1, examData.timeLimitSeconds - timeLeft) * 1000;
+      cloudSync.submitScore(examData.id, score, elapsedMs);
     }
 
     setIsFinished(true);
