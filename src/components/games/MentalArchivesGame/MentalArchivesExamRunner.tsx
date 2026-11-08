@@ -175,8 +175,8 @@ export default function MentalArchivesExamRunner({ examData, mode, onExit }: Pro
       setEarnedXP(xpToAdd);
     }
 
-    // 🏆 تسجيل الرقم في لوحة الأبطال (للناجحين فقط، وليس في المعاينة)
-    if (passed && childName && !isPreviewMode()) {
+    // 🧪 TEMPORARY: السماح للمعاينة بالحفظ للاختبار فقط
+if (passed && childName) {
       addRecord({ name: childName, examId: examData.id, score, timeSec: Math.max(1, examData.timeLimitSeconds - timeLeft) });
       
       // 🆕 إرسال النتيجة إلى السيرفر (Supabase) بصمت
