@@ -11,7 +11,7 @@ import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { useProgressStore } from '@/store/progressStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 import { isPreviewMode } from '@/utils/previewMode';
-import { cloudSync } from '@/lib/cloudSync'; // 🆕 استيراد السحابة
+import { cloudSync } from '@/lib/cloudSync';
 
 import {
   buildExam1Category,
@@ -133,6 +133,15 @@ export function CategoryExamScreen({
   const timeLeftRef = useRef(timeLeft);
   useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
 
+  // 🆕 المؤقت الخاص بالتنقل التلقائي بعد الإجابة
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+// 🧹 تنظيف المؤقتات عند الخروج من شاشة الامتحان (لمنع تسريب الذاكرة)
+useEffect(() => {
+  return () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+  };
+}, []);
   const currentQ = questions[currentIdx];
 
   useEffect(() => {
@@ -203,6 +212,12 @@ export function CategoryExamScreen({
   }, [phase, timeLeft]);
 
   const finalizeExam = useCallback((finalAttempts: Map<string, QuestionAttempt>) => {
+    // 🛡️ إلغاء أي مؤقت تنقل متبقٍ لمنع أي تعارض
+    if (feedbackTimerRef.current) {
+      clearTimeout(feedbackTimerRef.current);
+      feedbackTimerRef.current = null;
+    }
+
     let totalPoints = 0;
     finalAttempts.forEach((rec) => {
       totalPoints += rec.points;
@@ -226,7 +241,6 @@ export function CategoryExamScreen({
         store.setExam2Passed(passed);
       }
 
-      // 🆕 إرسال النتيجة للسيرفر (cat_ce1 أو cat_ce2)
       const gameId = category === 'kids' ? 'cat_ce1' : 'cat_ce2';
       const elapsedMs = Math.max(1, (cfg.totalTimeSec - timeLeftRef.current) * 1000);
       cloudSync.submitScore(gameId, score, elapsedMs);
@@ -239,7 +253,6 @@ export function CategoryExamScreen({
   const handleCheck = useCallback(() => {
     if (!currentQ || feedback !== 'idle') return;
     
-    // 🆕 حماية إضافية لمنع الغش
     const existingAttempt = attempts.get(currentQ.id);
     if (existingAttempt && (existingAttempt.correct || existingAttempt.attempts >= EXAM_MAX_ATTEMPTS)) {
       return; 
@@ -251,59 +264,46 @@ export function CategoryExamScreen({
     const isCorrect = abacusValue === targetValue;
 
     const timeMs = Date.now() - questionStartTime;
-    const attempt = {
+    useProgressStore.getState().recordAttempt({
       skillId: `${currentQ.level}-${currentQ.section}-${currentQ.module}`,
       correct: isCorrect,
       timeMs: timeMs,
       timestamp: Date.now(),
-    };
-    useProgressStore.getState().recordAttempt(attempt);
+    });
 
     const newAttempts = new Map(attempts);
 
     if (isCorrect) {
       const points = currentAttempt === 1 ? 1 : 0.5;
-      newAttempts.set(currentQ.id, {
-        value: abacusValue,
-        attempts: currentAttempt,
-        correct: true,
-        points,
-      });
+      newAttempts.set(currentQ.id, { value: abacusValue, attempts: currentAttempt, correct: true, points });
       setAttempts(newAttempts);
       setFeedback('correct');
       playSound('success');
 
-      setTimeout(() => {
+      // 🆕 حفظ المؤقت في الـ Ref
+      feedbackTimerRef.current = setTimeout(() => {
         advanceToNext(newAttempts);
       }, 1200);
     } else {
       if (currentAttempt >= EXAM_MAX_ATTEMPTS) {
-        newAttempts.set(currentQ.id, {
-          value: abacusValue,
-          attempts: currentAttempt,
-          correct: false,
-          points: 0,
-        });
+        newAttempts.set(currentQ.id, { value: abacusValue, attempts: currentAttempt, correct: false, points: 0 });
         setAttempts(newAttempts);
         setFeedback('reveal');
         playSound('error');
 
-        setTimeout(() => {
+        // 🆕 حفظ المؤقت في الـ Ref
+        feedbackTimerRef.current = setTimeout(() => {
           advanceToNext(newAttempts);
         }, 2000);
       } else {
-        newAttempts.set(currentQ.id, {
-          value: abacusValue,
-          attempts: currentAttempt,
-          correct: false,
-          points: 0,
-        });
+        newAttempts.set(currentQ.id, { value: abacusValue, attempts: currentAttempt, correct: false, points: 0 });
         setAttempts(newAttempts);
         setFeedback('wrong');
         setCurrentAttempt(2);
         playSound('error');
 
-        setTimeout(() => {
+        // 🆕 حفظ المؤقت في الـ Ref
+        feedbackTimerRef.current = setTimeout(() => {
           setFeedback('idle');
           setAbacusValue(0);
         }, 1500);
@@ -344,6 +344,13 @@ export function CategoryExamScreen({
 
   const goToQuestion = useCallback((idx: number) => {
     if (idx < 0 || idx >= questions.length) return;
+    
+    // 🆕 إلغاء أي مؤقت قديم حتى لا يقفز التطبيق سؤالين
+    if (feedbackTimerRef.current) {
+      clearTimeout(feedbackTimerRef.current);
+      feedbackTimerRef.current = null;
+    }
+
     const targetQ = questions[idx];
     if (!targetQ) return;
 
@@ -585,21 +592,26 @@ export function CategoryExamScreen({
 
         <div className="space-y-2 mb-4">
           <div className="grid grid-cols-3 gap-2">
-            {/* 🛠️ التعديل 1: السماح بالتنقل في حالة reveal */}
-            <button type="button" onClick={handlePrevious} disabled={isFirstQuestion || feedback === 'wrong' || feedback === 'correct'} className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition">
+            {/* 🛠️ التعديل 1: فتح زر السابق دائماً (عدا السؤال الأول) */}
+            <button type="button" onClick={handlePrevious} disabled={isFirstQuestion} className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition">
               <ArrowRight className="w-4 h-4" />
               {pickLang({ ar: 'السابق', en: 'Previous' }, lang)}
             </button>
 
-            {/* 🛠️ التعديل 2: منع التحقق نهائياً إذا كان السؤال مغلقاً */}
+            {/* 🛠️ زر التحقق يبقى مقفلاً إذا كانت الإجابة صحيحة أو استنفدت المحاولات */}
             <button type="button" onClick={handleCheck} disabled={feedback !== 'idle' || (attempts.get(currentQ.id)?.correct ?? false) || (attempts.get(currentQ.id)?.attempts ?? 0) >= EXAM_MAX_ATTEMPTS} className={`py-3 rounded-2xl bg-gradient-to-l ${cfg.gradient} text-white font-bold text-sm flex items-center justify-center gap-1.5 shadow-lg transition disabled:opacity-40`}>
               <CheckCircle2 className="w-4 h-4" />
               {pickLang({ ar: 'تحقق', en: 'Check' }, lang)}
             </button>
 
-            {/* 🛠️ التعديل 3: السماح بالتنقل في حالة reveal */}
-            <button type="button" onClick={handleNext} disabled={isLastQuestion || feedback === 'wrong' || feedback === 'correct'} className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed transition">
-              {pickLang({ ar: 'التالي', en: 'Next' }, lang)}
+            {/* 🛠️ التعديل 2 و 3: فتح زر التالي دائماً، وتغييره إلى "إنهاء" في السؤال الأخير */}
+            <button type="button" 
+              onClick={() => {
+                if (isLastQuestion) finalizeExam(attempts);
+                else handleNext();
+              }} 
+              className="py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-sm flex items-center justify-center gap-1.5 transition">
+              {isLastQuestion ? pickLang({ ar: 'إنهاء', en: 'Finish' }, lang) : pickLang({ ar: 'التالي', en: 'Next' }, lang)}
               <ArrowLeft className="w-4 h-4" />
             </button>
           </div>
