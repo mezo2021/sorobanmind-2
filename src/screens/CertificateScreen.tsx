@@ -300,7 +300,7 @@ const CertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome }) => 
                   textShadow: '1px 1px 0 #FFD700, 1.5px 1.5px 2px rgba(0,0,0,0.15)',
                 }}
               >
-                {pickLang({ ar: 'شهادة إتمام دولية', en: 'International Certificate of Completion' }, certLang as any)}
+                {pickLang({ ar: 'شهادة إتمام دولية فخرية (غير رسمية)', en: 'Honorary International Certificate (Unofficial)' }, certLang as any)}
               </h1>
 
               {/* الدورة */}
