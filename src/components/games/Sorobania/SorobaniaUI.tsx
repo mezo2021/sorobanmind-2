@@ -17,6 +17,7 @@ import type {
 } from './sorobaniaData';
 import { Num } from '@/components/Num';
 import { gt, lt, useGameLang } from '../gamesI18n';
+import { T } from '../T';
 
 // ═══════════════════════════════════════════════════════════════════
 // مكوّنات الواجهة
@@ -152,15 +153,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
               <span><Num>1225</Num></span>
             </div>
             <p className="text-lg font-bold leading-8 text-white/90">
-              {lt('خذ رقم العشرات (', 'Take the tens digit (')}
-              <Num>3</Num>
-              {lt(') واضربه في الرقم الذي يليه (', ') and multiply it by the next number (')}
-              <Num>4</Num>
-              {lt(') فيكون الناتج ', ') to get ')}
-              <Num>12</Num>
-              {lt('، ثم اكتب ', ', then write ')}
-              <Num>25</Num>
-              {lt(' بجانبه.', ' next to it.')}
+              <T ar="خذ رقم العشرات (3) واضربه في الرقم الذي يليه (4) فيكون الناتج 12، ثم اكتب 25 بجانبه." en="Take the tens digit (3) and multiply it by the next number (4) to get 12, then write 25 next to it." />
             </p>
           </div>
         ),
@@ -169,15 +162,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
         title: gt('جرّب بنفسك'),
         body: (
           <p className="text-center text-lg font-bold leading-8 text-white/90">
-            {lt('العشرات في ', 'The tens digit in ')}
-            <Num>45</Num>
-            {lt(' هي ', ' is ')}
-            <Num>4</Num>
-            {lt('، والعدد الذي يليها ', ', and the next number is ')}
-            <Num>5</Num>
-            {lt('. اضربهما ثم ألصق ', '. Multiply them, then attach ')}
-            <Num>25</Num>
-            .
+            <T ar="العشرات في 45 هي 4، والعدد الذي يليها 5. اضربهما ثم ألصق 25." en="The tens digit in 45 is 4, and the next number is 5. Multiply them, then attach 25." />
           </p>
         ),
         quiz: {
@@ -191,12 +176,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
         title: gt('مرة أخرى'),
         body: (
           <p className="text-center text-lg font-bold leading-8 text-white/90">
-            {lt('العشرات في ', 'The tens digit in ')}
-            <Num>75</Num>
-            {lt(' هي ', ' is ')}
-            <Num>7</Num>
-            {lt('، والعدد الذي يليها ', ', and the next number is ')}
-            <Num>8</Num>.
+            <T ar="العشرات في 75 هي 7، والعدد الذي يليها 8." en="The tens digit in 75 is 7, and the next number is 8." />
           </p>
         ),
         quiz: {
@@ -210,9 +190,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
         title: gt('أصبحت تعرف السرّ!'),
         body: (
           <p className="text-center text-lg font-bold leading-8 text-white/90">
-            {lt('كل عدد ينتهي بـ ', 'Any number ending in ')}
-            <Num>5</Num>
-            {lt(' يمكنك تربيعه في ثانيتين. هيا إلى بوابة الخمسات!', ' can be squared in two seconds. Off to the Gate of Fives!')}
+            <T ar="كل عدد ينتهي بـ 5 يمكنك تربيعه في ثانيتين. هيا إلى بوابة الخمسات!" en="Any number ending in 5 can be squared in two seconds. Off to the Gate of Fives!" />
           </p>
         ),
       },
@@ -231,16 +209,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
             <Chip tone="gold"><Num>21</Num></Chip>
           </div>
           <p className="text-lg font-bold leading-8 text-white/90">
-            {lt('قسّم العدد إلى أزواج من اليمين. الزوج الأول (', 'Split the number into pairs from the right. The first pair (')}
-            <Num>15</Num>
-            {lt(') يعطيك عشرات الجذر: أكبر مربع لا يزيد على ', ') gives you the tens of the root: the largest square not greater than ')}
-            <Num>15</Num>
-            {lt(' هو ', ' is ')}
-            <Num>9</Num>
-            {lt('، أي ', ', i.e. ')}
-            <Num>3</Num>
-            {lt('². إذن العشرات ', '². So the tens digit is ')}
-            <Num>3</Num>.
+            <T ar="قسّم العدد إلى أزواج من اليمين. الزوج الأول (15) يعطيك عشرات الجذر: أكبر مربع لا يزيد على 15 هو 9، أي 3². إذن العشرات 3." en="Split the number into pairs from the right. The first pair (15) gives you the tens of the root: the largest square not greater than 15 is 9, i.e. 3². So the tens digit is 3." />
           </p>
         </div>
       ),
@@ -250,24 +219,15 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
       body: (
         <div className="space-y-3 text-center">
           <p className="text-lg font-bold leading-8 text-white/90">
-            {lt('آخر رقم في العدد يحدد آحاد الجذر:', 'The last digit of the number decides the units digit of the root:')}
+            <T ar="آخر رقم في العدد يحدد آحاد الجذر:" en="The last digit of the number decides the units digit of the root:" />
           </p>
           <div dir="ltr" className="mx-auto grid max-w-xs grid-cols-2 gap-2 text-xl font-black">
-            <Chip tone="gold">{lt('ينتهي بـ', 'Ends in')} <Num>1</Num> → <Num>1</Num> {lt('أو', 'or')} <Num>9</Num></Chip>
-            <Chip tone="sky">{lt('ينتهي بـ', 'Ends in')} <Num>4</Num> → <Num>2</Num> {lt('أو', 'or')} <Num>8</Num></Chip>
-            <Chip tone="jade">{lt('ينتهي بـ', 'Ends in')} <Num>6</Num> → <Num>4</Num> {lt('أو', 'or')} <Num>6</Num></Chip>
-            <Chip tone="rose">{lt('ينتهي بـ', 'Ends in')} <Num>9</Num> → <Num>3</Num> {lt('أو', 'or')} <Num>7</Num></Chip>
+            <Chip tone="gold"><T ar="ينتهي بـ 1 → 1 أو 9" en="Ends in 1 → 1 or 9" /></Chip>
+            <Chip tone="sky"><T ar="ينتهي بـ 4 → 2 أو 8" en="Ends in 4 → 2 or 8" /></Chip>
+            <Chip tone="jade"><T ar="ينتهي بـ 6 → 4 أو 6" en="Ends in 6 → 4 or 6" /></Chip>
+            <Chip tone="rose"><T ar="ينتهي بـ 9 → 3 أو 7" en="Ends in 9 → 3 or 7" /></Chip>
           </div>
-          <p className="text-base font-bold text-white/70">
-            {lt('وما ينتهي بـ ', 'And what ends in ')}
-            <Num>0</Num>
-            {lt(' أو ', ' or ')}
-            <Num>5</Num>
-            {lt(' فجذره ينتهي بـ ', ' has a root that ends in ')}
-            <Num>0</Num>
-            {lt(' أو ', ' or ')}
-            <Num>5</Num>.
-          </p>
+          <p className="text-base font-bold text-white/70"><T ar="وما ينتهي بـ 0 أو 5 فجذره ينتهي بـ 0 أو 5." en="And what ends in 0 or 5 has a root that ends in 0 or 5." /></p>
         </div>
       ),
       quiz: {
@@ -283,17 +243,11 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
         <div className="space-y-3 text-center">
           <div dir="ltr" className="flex flex-wrap items-center justify-center gap-2 text-2xl font-black text-amber-200">
             <Chip tone="gold"><Num>3</Num> × <Num>4</Num> = <Num>12</Num></Chip>
-            <span>{lt('و', 'and')}</span>
+            <span><T ar="و" en="and" /></span>
             <Chip tone="sky"><Num>15</Num></Chip>
           </div>
           <p className="text-lg font-bold leading-8 text-white/90">
-            {lt('احسب العشرات × العدد الذي يليها (', 'Work out the tens × the next number (')}
-            <Num>3</Num> × <Num>4</Num> = <Num>12</Num>
-            {lt('). إن كان الزوج الأول أكبر منه أو يساويه (', '). If the first pair is greater than or equal to it (')}
-            <Num>15</Num> ≥ <Num>12</Num>
-            {lt(') فاختر الآحاد الأكبر: ', '), pick the larger units digit: ')}
-            <Num>39</Num>
-            {lt('. وإن كان أصغر فاختر الأصغر.', '. If it is smaller, pick the smaller one.')}
+            <T ar="احسب العشرات × العدد الذي يليها (3 × 4 = 12). إن كان الزوج الأول أكبر منه أو يساويه (15 ≥ 12) فاختر الآحاد الأكبر: 39. وإن كان أصغر فاختر الأصغر." en="Work out the tens × the next number (3 × 4 = 12). If the first pair is greater than or equal to it (15 ≥ 12), pick the larger units digit: 39. If it is smaller, pick the smaller one." />
           </p>
         </div>
       ),
@@ -302,7 +256,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
       title: gt('الآن دورك'),
       body: (
         <p className="text-center text-lg font-bold leading-8 text-white/90">
-          √<Num>2916</Num> ← {lt('الأزواج', 'pairs')} <Num>29</Num> | <Num>16</Num>. {lt('العشرات', 'The tens digit is')} <Num>5</Num> ({lt('لأن', 'because')} <Num>25</Num> ≤ <Num>29</Num>). {lt('الآحاد', 'The units digit is')} <Num>4</Num> {lt('أو', 'or')} <Num>6</Num>. {lt('احسب', 'Work out')} <Num>5</Num> × <Num>6</Num> = <Num>30</Num> {lt('وقارن بـ', 'and compare it with')} <Num>29</Num>.
+          <T ar="√2916 ← الأزواج 29 | 16. العشرات 5 (لأن 25 ≤ 29). الآحاد 4 أو 6. احسب 5 × 6 = 30 وقارن بـ 29." en="√2916 ← pairs 29 | 16. The tens digit is 5 (because 25 ≤ 29). The units digit is 4 or 6. Work out 5 × 6 = 30 and compare it with 29." />
         </p>
       ),
       quiz: {
@@ -316,10 +270,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
       title: gt('فككت شفرة الجذور!'),
       body: (
         <p className="text-center text-lg font-bold leading-8 text-white/90">
-          {lt(
-            'أزواج، ثم عشرات، ثم آحاد، ثم مقارنة. هيا إلى كهف الجذور!',
-            'Pairs, then tens, then units, then comparison. Off to the Root Cave!'
-          )}
+          <T ar="أزواج، ثم عشرات، ثم آحاد، ثم مقارنة. هيا إلى كهف الجذور!" en="Pairs, then tens, then units, then comparison. Off to the Root Cave!" />
         </p>
       ),
     },
