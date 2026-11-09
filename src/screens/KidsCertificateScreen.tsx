@@ -154,7 +154,7 @@ const KidsCertificateScreen: React.FC<Props> = ({ onBack, playSound, onGoHome })
         </button>
         <div className="text-center">
           <h1 className="text-sm sm:text-lg font-bold bg-gradient-to-r from-gray-200 to-gray-400 bg-clip-text text-transparent">
-            {pickLang({ ar: 'شهادة إتمام — الأبطال الصغار', en: 'Kids Certificate of Completion' }, lang)}
+            {pickLang({ ar: 'شهادة إتمام فخرية (غير رسميّة) — الأبطال الصغار', en: 'Honorary (Unofficial) Kids Certificate of Completion' }, lang)}
           </h1>
         </div>
         <Award className="w-5 h-5 sm:w-6 sm:h-6 text-gray-300" />
