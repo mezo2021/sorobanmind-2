@@ -2,6 +2,17 @@
 // src/components/games/Sorobania/SorobaniaUI.tsx
 // 🧩 مكوّنات الواجهة المساعدة + الدروس التفاعلية
 // ═══════════════════════════════════════════════════════════════════
+// الدور: قطع واجهة صغيرة قابلة لإعادة الاستخدام:
+//   • Hud          : الشريط العلوي (رجوع · عنوان · كتم الصوت)
+//   • BanaCorner   : بانة (GameCompanion) مع فقاعة الكلام
+//   • FuseTimer    : فتيل الوقت أسفل لوحة السؤال
+//   • LessonScreen : درسا "سرّ الخمسات" و"طريقة الأزواج" (خطوات + أسئلة)
+//
+// يستورده: SorobaniaGame
+// يعتمد على: sorobaniaData · sorobaniaSfx · GameCompanion · framer-motion
+//
+// متى تعدّله؟ لتغيير نص درس أو شكل الشريط العلوي أو فقاعة بانة.
+// ═══════════════════════════════════════════════════════════════════
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -25,7 +36,7 @@ import { T } from '../T';
 
 export const Hud: React.FC<{
   title: string;
-  subtitle?: React.ReactNode;
+  subtitle?: string;
   onBack: () => void;
   muted: boolean;
   onToggleMute: () => void;
@@ -56,6 +67,7 @@ export const Hud: React.FC<{
   </div>
 );
 
+// بانة: كل ما يخص GameCompanion في مكان واحد
 export const BanaCorner: React.FC<{ excited: boolean; message: string }> = ({ excited, message }) => (
   <div className="pointer-events-none absolute bottom-1 right-1 z-10 flex flex-col items-end gap-1">
     <AnimatePresence mode="popLayout">
@@ -132,25 +144,25 @@ const Chip: React.FC<{ tone?: 'gold' | 'sky' | 'jade' | 'rose'; children: React.
 // ═══════════════════════════════════════════════════════════════════
 
 interface LessonStepData {
-  title: React.ReactNode;
+  title: string;
   body: React.ReactNode;
-  quiz?: { prompt: React.ReactNode; options: React.ReactNode[]; correct: number; why: React.ReactNode };
+  quiz?: { prompt: string; options: string[]; correct: number; why: string };
 }
 
 const buildLessonSteps = (id: LessonId): LessonStepData[] => {
   if (id === 'five') {
     return [
       {
-        title: <>{lt('سرّ الأعداد التي تنتهي بـ', 'The secret of numbers ending in')} <Num>5</Num></>,
+        title: 'سرّ الأعداد التي تنتهي بـ 5',
         body: (
           <div className="space-y-4 text-center">
             <div dir="ltr" className="flex flex-wrap items-center justify-center gap-2 text-3xl font-black text-amber-200">
-              <span><Num>35</Num>²</span>
+              <span>35²</span>
               <span>=</span>
-              <Chip tone="gold"><Num>3</Num> × <Num>4</Num> = <Num>12</Num></Chip>
-              <Chip tone="sky"><Num>25</Num></Chip>
+              <Chip tone="gold">3 × 4 = 12</Chip>
+              <Chip tone="sky">25</Chip>
               <span>=</span>
-              <span><Num>1225</Num></span>
+              <span>1225</span>
             </div>
             <p className="text-lg font-bold leading-8 text-white/90">
               <T ar="خذ رقم العشرات (3) واضربه في الرقم الذي يليه (4) فيكون الناتج 12، ثم اكتب 25 بجانبه." en="Take the tens digit (3) and multiply it by the next number (4) to get 12, then write 25 next to it." />
@@ -159,35 +171,35 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
         ),
       },
       {
-        title: gt('جرّب بنفسك'),
+        title: 'جرّب بنفسك',
         body: (
           <p className="text-center text-lg font-bold leading-8 text-white/90">
             <T ar="العشرات في 45 هي 4، والعدد الذي يليها 5. اضربهما ثم ألصق 25." en="The tens digit in 45 is 4, and the next number is 5. Multiply them, then attach 25." />
           </p>
         ),
         quiz: {
-          prompt: <>{lt('ما قيمة', 'What is')} <Num>45</Num>² {lt('؟', '?')}</>,
-          options: [<Num>1625</Num>, <Num>2025</Num>, <Num>2425</Num>],
+          prompt: 'ما قيمة 45² ؟',
+          options: ['1625', '2025', '2425'],
           correct: 1,
-          why: <><Num>4</Num> × <Num>5</Num> = <Num>20</Num>، {lt('ثم', 'then')} <Num>25</Num> {lt('فيكون', 'makes')} <Num>2025</Num></>,
+          why: '4 × 5 = 20، ثم 25 فيكون 2025',
         },
       },
       {
-        title: gt('مرة أخرى'),
+        title: 'مرة أخرى',
         body: (
           <p className="text-center text-lg font-bold leading-8 text-white/90">
             <T ar="العشرات في 75 هي 7، والعدد الذي يليها 8." en="The tens digit in 75 is 7, and the next number is 8." />
           </p>
         ),
         quiz: {
-          prompt: <>{lt('ما قيمة', 'What is')} <Num>75</Num>² {lt('؟', '?')}</>,
-          options: [<Num>4925</Num>, <Num>5625</Num>, <Num>6425</Num>],
+          prompt: 'ما قيمة 75² ؟',
+          options: ['4925', '5625', '6425'],
           correct: 1,
-          why: <><Num>7</Num> × <Num>8</Num> = <Num>56</Num>، {lt('ثم', 'then')} <Num>25</Num> {lt('فيكون', 'makes')} <Num>5625</Num></>,
+          why: '7 × 8 = 56، ثم 25 فيكون 5625',
         },
       },
       {
-        title: gt('أصبحت تعرف السرّ!'),
+        title: 'أصبحت تعرف السرّ!',
         body: (
           <p className="text-center text-lg font-bold leading-8 text-white/90">
             <T ar="كل عدد ينتهي بـ 5 يمكنك تربيعه في ثانيتين. هيا إلى بوابة الخمسات!" en="Any number ending in 5 can be squared in two seconds. Off to the Gate of Fives!" />
@@ -198,15 +210,15 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
   }
   return [
     {
-      title: <>{lt('الخطوة', 'Step')} <Num>1</Num>: {lt('قسّم إلى أزواج', 'Split into pairs')}</>,
+      title: 'الخطوة 1: قسّم إلى أزواج',
       body: (
         <div className="space-y-4 text-center">
           <div dir="ltr" className="flex items-center justify-center gap-2 text-3xl font-black text-sky-200">
-            <span>√<Num>1521</Num></span>
+            <span>√1521</span>
             <span>→</span>
-            <Chip tone="sky"><Num>15</Num></Chip>
+            <Chip tone="sky">15</Chip>
             <span>|</span>
-            <Chip tone="gold"><Num>21</Num></Chip>
+            <Chip tone="gold">21</Chip>
           </div>
           <p className="text-lg font-bold leading-8 text-white/90">
             <T ar="قسّم العدد إلى أزواج من اليمين. الزوج الأول (15) يعطيك عشرات الجذر: أكبر مربع لا يزيد على 15 هو 9، أي 3². إذن العشرات 3." en="Split the number into pairs from the right. The first pair (15) gives you the tens of the root: the largest square not greater than 15 is 9, i.e. 3². So the tens digit is 3." />
@@ -215,7 +227,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
       ),
     },
     {
-      title: <>{lt('الخطوة', 'Step')} <Num>2</Num>: {lt('انظر إلى الآحاد', 'Look at the units')}</>,
+      title: 'الخطوة 2: انظر إلى الآحاد',
       body: (
         <div className="space-y-3 text-center">
           <p className="text-lg font-bold leading-8 text-white/90">
@@ -231,20 +243,20 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
         </div>
       ),
       quiz: {
-        prompt: <>{lt('√', '√')}<Num>1521</Num> {lt('ينتهي بـ', 'ends in')} <Num>1</Num>. {lt('ما الرقم الآخر الذي مربعه ينتهي بـ', 'What other digit squared ends in')} <Num>1</Num> {lt('؟', '?')}</>,
-        options: [<Num>3</Num>, <Num>7</Num>, <Num>9</Num>],
+        prompt: '√1521 ينتهي بـ 1. ما الرقم الآخر الذي مربعه ينتهي بـ 1؟',
+        options: ['3', '7', '9'],
         correct: 2,
-        why: <><Num>9</Num> × <Num>9</Num> = <Num>81</Num> {lt('وينتهي بـ', 'and ends in')} <Num>1</Num></>,
+        why: '9 × 9 = 81 وينتهي بـ 1',
       },
     },
     {
-      title: <>{lt('الخطوة', 'Step')} <Num>3</Num>: {lt('قارن لتختار', 'Compare to choose')}</>,
+      title: 'الخطوة 3: قارن لتختار',
       body: (
         <div className="space-y-3 text-center">
           <div dir="ltr" className="flex flex-wrap items-center justify-center gap-2 text-2xl font-black text-amber-200">
-            <Chip tone="gold"><Num>3</Num> × <Num>4</Num> = <Num>12</Num></Chip>
+            <Chip tone="gold">3 × 4 = 12</Chip>
             <span><T ar="و" en="and" /></span>
-            <Chip tone="sky"><Num>15</Num></Chip>
+            <Chip tone="sky">15</Chip>
           </div>
           <p className="text-lg font-bold leading-8 text-white/90">
             <T ar="احسب العشرات × العدد الذي يليها (3 × 4 = 12). إن كان الزوج الأول أكبر منه أو يساويه (15 ≥ 12) فاختر الآحاد الأكبر: 39. وإن كان أصغر فاختر الأصغر." en="Work out the tens × the next number (3 × 4 = 12). If the first pair is greater than or equal to it (15 ≥ 12), pick the larger units digit: 39. If it is smaller, pick the smaller one." />
@@ -253,21 +265,21 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
       ),
     },
     {
-      title: gt('الآن دورك'),
+      title: 'الآن دورك',
       body: (
         <p className="text-center text-lg font-bold leading-8 text-white/90">
           <T ar="√2916 ← الأزواج 29 | 16. العشرات 5 (لأن 25 ≤ 29). الآحاد 4 أو 6. احسب 5 × 6 = 30 وقارن بـ 29." en="√2916 ← pairs 29 | 16. The tens digit is 5 (because 25 ≤ 29). The units digit is 4 or 6. Work out 5 × 6 = 30 and compare it with 29." />
         </p>
       ),
       quiz: {
-        prompt: <>{lt('ما قيمة', 'What is')} √<Num>2916</Num> {lt('؟', '?')}</>,
-        options: [<Num>54</Num>, <Num>56</Num>],
+        prompt: 'ما قيمة √2916 ؟',
+        options: ['54', '56'],
         correct: 0,
-        why: <><Num>29</Num> {lt('أصغر من', 'is smaller than')} <Num>30</Num> {lt('فنختار الآحاد الأصغر:', 'so we pick the smaller units digit:')} <Num>54</Num></>,
+        why: '29 أصغر من 30 فنختار الآحاد الأصغر: 54',
       },
     },
     {
-      title: gt('فككت شفرة الجذور!'),
+      title: 'فككت شفرة الجذور!',
       body: (
         <p className="text-center text-lg font-bold leading-8 text-white/90">
           <T ar="أزواج، ثم عشرات، ثم آحاد، ثم مقارنة. هيا إلى كهف الجذور!" en="Pairs, then tens, then units, then comparison. Off to the Root Cave!" />
@@ -321,11 +333,7 @@ export const LessonScreen: React.FC<{
     <div className="flex min-h-0 flex-1 flex-col bg-gradient-to-b from-[#1d1546] to-[#0d0926]">
       <Hud
         title={lessonId === 'five' ? gt('سرّ الخمسات') : gt('طريقة الأزواج')}
-        subtitle={
-          <span className="flex items-center justify-center gap-1">
-            {lt('الخطوة', 'Step')} <Num>{step + 1}</Num> {lt('من', 'of')} <Num>{steps.length}</Num>
-          </span>
-        }
+        subtitle={lt(`الخطوة ${step + 1} من ${steps.length}`, `Step ${step + 1} of ${steps.length}`)}
         onBack={onBack}
         muted={muted}
         onToggleMute={onToggleMute}
@@ -343,19 +351,19 @@ export const LessonScreen: React.FC<{
           animate={{ opacity: 1, y: 0 }}
           className="rounded-3xl border-2 border-amber-300/30 bg-[#241a5c]/80 p-5 shadow-xl"
         >
-          <h2 className="mb-4 text-center text-2xl font-black text-amber-300">{cur.title}</h2>
+          <h2 className="mb-4 text-center text-2xl font-black text-amber-300">{gt(cur.title)}</h2>
           {cur.body}
 
           {cur.quiz && (
             <div className="mt-5 space-y-3">
-              <div className="text-center text-xl font-black">{cur.quiz.prompt}</div>
+              <div className="text-center text-xl font-black">{gt(cur.quiz.prompt)}</div>
               <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${cur.quiz.options.length}, minmax(0, 1fr))` }}>
                 {cur.quiz.options.map((opt, i) => {
                   const isRight = solved && i === cur.quiz!.correct;
                   const isWrong = picked === i && i !== cur.quiz!.correct;
                   return (
                     <motion.button
-                      key={i}
+                      key={opt}
                       type="button"
                       onClick={() => choose(i)}
                       animate={isWrong ? { x: [0, -8, 8, -6, 6, 0] } : { x: 0 }}
@@ -376,7 +384,7 @@ export const LessonScreen: React.FC<{
                 })}
               </div>
               <div className="min-h-[2.5rem] text-center text-base font-extrabold">
-                {solved && <span className="text-emerald-300">{gt('صحيح!')} {cur.quiz.why}</span>}
+                {solved && <span className="text-emerald-300">{gt('صحيح!')} {gt(cur.quiz.why)}</span>}
                 {!solved && picked !== null && <span className="text-rose-300">{gt('ليس تماماً، فكّر وجرّب مرة أخرى')}</span>}
               </div>
             </div>
