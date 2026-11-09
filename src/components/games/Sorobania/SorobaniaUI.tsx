@@ -36,7 +36,7 @@ import { T } from '../T';
 
 export const Hud: React.FC<{
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   onBack: () => void;
   muted: boolean;
   onToggleMute: () => void;
@@ -332,12 +332,16 @@ export const LessonScreen: React.FC<{
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-gradient-to-b from-[#1d1546] to-[#0d0926]">
       <Hud
-        title={lessonId === 'five' ? gt('سرّ الخمسات') : gt('طريقة الأزواج')}
-        subtitle={lt(`الخطوة ${step + 1} من ${steps.length}`, `Step ${step + 1} of ${steps.length}`)}
-        onBack={onBack}
-        muted={muted}
-        onToggleMute={onToggleMute}
-      />
+  title={lessonId === 'five' ? gt('سرّ الخمسات') : gt('طريقة الأزواج')}
+  subtitle={
+    <span className="flex items-center justify-center gap-1">
+      {lt('الخطوة', 'Step')} <Num>{step + 1}</Num> {lt('من', 'of')} <Num>{steps.length}</Num>
+    </span>
+  }
+  onBack={onBack}
+  muted={muted}
+  onToggleMute={onToggleMute}
+/>
       <div className="flex shrink-0 justify-center gap-2 py-3" aria-hidden="true">
         {steps.map((_, i) => (
           <span key={i} className={`h-2 rounded-full transition-all ${i === step ? 'w-8 bg-amber-300' : i < step ? 'w-2 bg-amber-300/70' : 'w-2 bg-white/20'}`} />
