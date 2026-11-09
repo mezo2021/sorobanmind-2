@@ -2,17 +2,6 @@
 // src/components/games/Sorobania/SorobaniaUI.tsx
 // 🧩 مكوّنات الواجهة المساعدة + الدروس التفاعلية
 // ═══════════════════════════════════════════════════════════════════
-// الدور: قطع واجهة صغيرة قابلة لإعادة الاستخدام:
-//   • Hud          : الشريط العلوي (رجوع · عنوان · كتم الصوت)
-//   • BanaCorner   : بانة (GameCompanion) مع فقاعة الكلام
-//   • FuseTimer    : فتيل الوقت أسفل لوحة السؤال
-//   • LessonScreen : درسا "سرّ الخمسات" و"طريقة الأزواج" (خطوات + أسئلة)
-//
-// يستورده: SorobaniaGame
-// يعتمد على: sorobaniaData · sorobaniaSfx · GameCompanion · framer-motion
-//
-// متى تعدّله؟ لتغيير نص درس أو شكل الشريط العلوي أو فقاعة بانة.
-// ═══════════════════════════════════════════════════════════════════
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -66,7 +55,6 @@ export const Hud: React.FC<{
   </div>
 );
 
-// بانة: كل ما يخص GameCompanion في مكان واحد
 export const BanaCorner: React.FC<{ excited: boolean; message: string }> = ({ excited, message }) => (
   <div className="pointer-events-none absolute bottom-1 right-1 z-10 flex flex-col items-end gap-1">
     <AnimatePresence mode="popLayout">
@@ -164,10 +152,15 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
               <span><Num>1225</Num></span>
             </div>
             <p className="text-lg font-bold leading-8 text-white/90">
-              {lt(
-                <>خذ رقم العشرات (<Num>3</Num>) واضربه في الرقم الذي يليه (<Num>4</Num>) فيكون الناتج <Num>12</Num>، ثم اكتب <Num>25</Num> بجانبه.</>,
-                <>Take the tens digit (<Num>3</Num>) and multiply it by the next number (<Num>4</Num>) to get <Num>12</Num>, then write <Num>25</Num> next to it.</>
-              )}
+              {lt('خذ رقم العشرات (', 'Take the tens digit (')}
+              <Num>3</Num>
+              {lt(') واضربه في الرقم الذي يليه (', ') and multiply it by the next number (')}
+              <Num>4</Num>
+              {lt(') فيكون الناتج ', ') to get ')}
+              <Num>12</Num>
+              {lt('، ثم اكتب ', ', then write ')}
+              <Num>25</Num>
+              {lt(' بجانبه.', ' next to it.')}
             </p>
           </div>
         ),
@@ -176,10 +169,15 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
         title: gt('جرّب بنفسك'),
         body: (
           <p className="text-center text-lg font-bold leading-8 text-white/90">
-            {lt(
-              <>العشرات في <Num>45</Num> هي <Num>4</Num>، والعدد الذي يليها <Num>5</Num>. اضربهما ثم ألصق <Num>25</Num>.</>,
-              <>The tens digit in <Num>45</Num> is <Num>4</Num>, and the next number is <Num>5</Num>. Multiply them, then attach <Num>25</Num>.</>
-            )}
+            {lt('العشرات في ', 'The tens digit in ')}
+            <Num>45</Num>
+            {lt(' هي ', ' is ')}
+            <Num>4</Num>
+            {lt('، والعدد الذي يليها ', ', and the next number is ')}
+            <Num>5</Num>
+            {lt('. اضربهما ثم ألصق ', '. Multiply them, then attach ')}
+            <Num>25</Num>
+            .
           </p>
         ),
         quiz: {
@@ -193,10 +191,12 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
         title: gt('مرة أخرى'),
         body: (
           <p className="text-center text-lg font-bold leading-8 text-white/90">
-            {lt(
-              <>العشرات في <Num>75</Num> هي <Num>7</Num>، والعدد الذي يليها <Num>8</Num>.</>,
-              <>The tens digit in <Num>75</Num> is <Num>7</Num>, and the next number is <Num>8</Num>.</>
-            )}
+            {lt('العشرات في ', 'The tens digit in ')}
+            <Num>75</Num>
+            {lt(' هي ', ' is ')}
+            <Num>7</Num>
+            {lt('، والعدد الذي يليها ', ', and the next number is ')}
+            <Num>8</Num>.
           </p>
         ),
         quiz: {
@@ -210,10 +210,9 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
         title: gt('أصبحت تعرف السرّ!'),
         body: (
           <p className="text-center text-lg font-bold leading-8 text-white/90">
-            {lt(
-              <>كل عدد ينتهي بـ <Num>5</Num> يمكنك تربيعه في ثانيتين. هيا إلى بوابة الخمسات!</>,
-              <>Any number ending in <Num>5</Num> can be squared in two seconds. Off to the Gate of Fives!</>
-            )}
+            {lt('كل عدد ينتهي بـ ', 'Any number ending in ')}
+            <Num>5</Num>
+            {lt(' يمكنك تربيعه في ثانيتين. هيا إلى بوابة الخمسات!', ' can be squared in two seconds. Off to the Gate of Fives!')}
           </p>
         ),
       },
@@ -232,10 +231,16 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
             <Chip tone="gold"><Num>21</Num></Chip>
           </div>
           <p className="text-lg font-bold leading-8 text-white/90">
-            {lt(
-              <>قسّم العدد إلى أزواج من اليمين. الزوج الأول (<Num>15</Num>) يعطيك عشرات الجذر: أكبر مربع لا يزيد على <Num>15</Num> هو <Num>9</Num>، أي <Num>3</Num>². إذن العشرات <Num>3</Num>.</>,
-              <>Split the number into pairs from the right. The first pair (<Num>15</Num>) gives you the tens of the root: the largest square not greater than <Num>15</Num> is <Num>9</Num>, i.e. <Num>3</Num>². So the tens digit is <Num>3</Num>.</>
-            )}
+            {lt('قسّم العدد إلى أزواج من اليمين. الزوج الأول (', 'Split the number into pairs from the right. The first pair (')}
+            <Num>15</Num>
+            {lt(') يعطيك عشرات الجذر: أكبر مربع لا يزيد على ', ') gives you the tens of the root: the largest square not greater than ')}
+            <Num>15</Num>
+            {lt(' هو ', ' is ')}
+            <Num>9</Num>
+            {lt('، أي ', ', i.e. ')}
+            <Num>3</Num>
+            {lt('². إذن العشرات ', '². So the tens digit is ')}
+            <Num>3</Num>.
           </p>
         </div>
       ),
@@ -254,10 +259,14 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
             <Chip tone="rose">{lt('ينتهي بـ', 'Ends in')} <Num>9</Num> → <Num>3</Num> {lt('أو', 'or')} <Num>7</Num></Chip>
           </div>
           <p className="text-base font-bold text-white/70">
-            {lt(
-              <>وما ينتهي بـ <Num>0</Num> أو <Num>5</Num> فجذره ينتهي بـ <Num>0</Num> أو <Num>5</Num>.</>,
-              <>And what ends in <Num>0</Num> or <Num>5</Num> has a root that ends in <Num>0</Num> or <Num>5</Num>.</>
-            )}
+            {lt('وما ينتهي بـ ', 'And what ends in ')}
+            <Num>0</Num>
+            {lt(' أو ', ' or ')}
+            <Num>5</Num>
+            {lt(' فجذره ينتهي بـ ', ' has a root that ends in ')}
+            <Num>0</Num>
+            {lt(' أو ', ' or ')}
+            <Num>5</Num>.
           </p>
         </div>
       ),
@@ -278,10 +287,13 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
             <Chip tone="sky"><Num>15</Num></Chip>
           </div>
           <p className="text-lg font-bold leading-8 text-white/90">
-            {lt(
-              <>احسب العشرات × العدد الذي يليها (<Num>3</Num> × <Num>4</Num> = <Num>12</Num>). إن كان الزوج الأول أكبر منه أو يساويه (<Num>15</Num> ≥ <Num>12</Num>) فاختر الآحاد الأكبر: <Num>39</Num>. وإن كان أصغر فاختر الأصغر.</>,
-              <>Work out the tens × the next number (<Num>3</Num> × <Num>4</Num> = <Num>12</Num>). If the first pair is greater than or equal to it (<Num>15</Num> ≥ <Num>12</Num>), pick the larger units digit: <Num>39</Num>. If it is smaller, pick the smaller one.</>
-            )}
+            {lt('احسب العشرات × العدد الذي يليها (', 'Work out the tens × the next number (')}
+            <Num>3</Num> × <Num>4</Num> = <Num>12</Num>
+            {lt('). إن كان الزوج الأول أكبر منه أو يساويه (', '). If the first pair is greater than or equal to it (')}
+            <Num>15</Num> ≥ <Num>12</Num>
+            {lt(') فاختر الآحاد الأكبر: ', '), pick the larger units digit: ')}
+            <Num>39</Num>
+            {lt('. وإن كان أصغر فاختر الأصغر.', '. If it is smaller, pick the smaller one.')}
           </p>
         </div>
       ),
@@ -290,10 +302,7 @@ const buildLessonSteps = (id: LessonId): LessonStepData[] => {
       title: gt('الآن دورك'),
       body: (
         <p className="text-center text-lg font-bold leading-8 text-white/90">
-          {lt(
-            <>√<Num>2916</Num> ← الأزواج <Num>29</Num> | <Num>16</Num>. العشرات <Num>5</Num> (لأن <Num>25</Num> ≤ <Num>29</Num>). الآحاد <Num>4</Num> أو <Num>6</Num>. احسب <Num>5</Num> × <Num>6</Num> = <Num>30</Num> وقارن بـ <Num>29</Num>.</>,
-            <>√<Num>2916</Num> ← pairs <Num>29</Num> | <Num>16</Num>. The tens digit is <Num>5</Num> (because <Num>25</Num> ≤ <Num>29</Num>). The units digit is <Num>4</Num> or <Num>6</Num>. Work out <Num>5</Num> × <Num>6</Num> = <Num>30</Num> and compare it with <Num>29</Num>.</>
-          )}
+          √<Num>2916</Num> ← {lt('الأزواج', 'pairs')} <Num>29</Num> | <Num>16</Num>. {lt('العشرات', 'The tens digit is')} <Num>5</Num> ({lt('لأن', 'because')} <Num>25</Num> ≤ <Num>29</Num>). {lt('الآحاد', 'The units digit is')} <Num>4</Num> {lt('أو', 'or')} <Num>6</Num>. {lt('احسب', 'Work out')} <Num>5</Num> × <Num>6</Num> = <Num>30</Num> {lt('وقارن بـ', 'and compare it with')} <Num>29</Num>.
         </p>
       ),
       quiz: {
