@@ -649,12 +649,7 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
           <>
             <Hud
               title={gt(run.stage.name)}
-              subtitle={screen === 'play' ? (
-                <span className="flex items-center gap-1">
-                  {lt('سؤال', 'Question')} <Num>{run.index + 1}</Num> {lt('من', 'of')} <Num>{run.deck.length}</Num>
-                  <span className="opacity-70">{pips}</span>
-                </span>
-              ) : undefined}
+              subtitle={screen === 'play' ? lt(`سؤال ${run.index + 1} من ${run.deck.length}   ${pips}`, `Question ${run.index + 1} of ${run.deck.length}   ${pips}`) : undefined}
               onBack={handleBack}
               muted={muted}
               onToggleMute={toggleMute}
