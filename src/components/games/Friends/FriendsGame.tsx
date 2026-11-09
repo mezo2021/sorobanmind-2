@@ -11,6 +11,8 @@ import {
 import { GameCompanion, type HeroMood } from '../GameCompanion';
 import { HighScoreBadge } from '../HighScoreBadge';
 import { addScore, getHighScore, type HighScoreEntry } from '../highScoreStore';
+import { CloudGameLeaderboard } from '../CloudGameLeaderboard'; // 🆕
+import { cloudSync } from '@/lib/cloudSync'; // 🆕
 import { useGameVoice } from '@/hooks/useGameVoice';
 import { gt, lt, useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
@@ -275,6 +277,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
   const streakRef = useRef(0);
   const problemErrRef = useRef(0);
   const lockedRef = useRef(false);
+  const isFinalizedRef = useRef(false); // 🆕 حارس التكرار
   const weakRef = useRef<Record<string, number>>({});
   const usedProblemsRef = useRef<Set<string>>(new Set());
   const usedPhrasesRef = useRef<Set<string>>(new Set());
@@ -325,6 +328,9 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
 
   // ═══ إنهاء اللعبة ═══
   const endGame = useCallback(() => {
+    if (isFinalizedRef.current) return; // 🆕
+    isFinalizedRef.current = true;
+
     setIsGameOver(true);
     setIsPlaying(false);
     setLocked(true);
@@ -337,6 +343,12 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
     addXP(earned);
 
     const result = addScore(GAME_ID, childName, correct, HERO_ID);
+    
+    // 🆕 إرسال للسحابة فقط إذا كانت أكبر من صفر
+    if (correct > 0) {
+      void cloudSync.submitScore(GAME_ID, correct, null);
+    }
+
     if (result.isNewRecord) {
       setIsNewRecord(true);
       setPreviousHigh(result.previousTop);
@@ -345,8 +357,8 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
       setIsNewRecord(false);
       const pool = correct >= 10 ? END_PHRASES_HIGH : correct >= 5 ? END_PHRASES_MID : END_PHRASES_LOW;
       const msg = pool[Math.floor(Math.random() * pool.length)];
-      setHeroText(gt(msg)); // ✅ [Fix Sound AR/EN]
-      speak(gt(msg)); // ✅ [Fix Sound AR/EN]
+      setHeroText(gt(msg));
+      speak(gt(msg));
     }
     setHeroMood('celebrating');
     vibrate([0, 40, 40, 40, 40, 80]);
@@ -399,6 +411,7 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
     perfectRef.current = 0;
     streakRef.current = 0;
     problemErrRef.current = 0;
+    isFinalizedRef.current = false; // 🆕 تصفير الحارس
     weakRef.current = loadWeak();
 
     setIsPlaying(true);
@@ -448,12 +461,12 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
 
     const milestone = SHAM_MILESTONE_PHRASES[newCount];
     if (milestone) {
-      setHeroText(gt(milestone)); // ✅ [Fix Sound AR/EN]
-      speak(gt(milestone)); // ✅ [Fix Sound AR/EN]
+      setHeroText(gt(milestone));
+      speak(gt(milestone));
     } else {
       const msg = pickUniquePhrase(SHAM_CORRECT_PHRASES, usedCorrectRef.current);
-      setHeroText(gt(msg)); // ✅ [Fix Sound AR/EN]
-      if (newCount % 3 === 0) speak(gt(msg)); // ✅ [Fix Sound AR/EN]
+      setHeroText(gt(msg));
+      if (newCount % 3 === 0) speak(gt(msg));
     }
 
     addTimeout(() => { fetchNextProblem(); }, 1300);
@@ -503,8 +516,8 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
       vibrate([60, 40, 60]);
       if (errs === 1) {
         const msg = pickUniquePhrase(SHAM_ERROR_PHRASES, usedErrorRef.current);
-        setHeroText(gt(msg)); // ✅ [Fix Sound AR/EN]
-        speak(gt(msg)); // ✅ [Fix Sound AR/EN]
+        setHeroText(gt(msg));
+        speak(gt(msg));
       }
 
       // إرجاع الخرزات إلى ما قبل الخطأ (كما يفعل المعلّم)
@@ -631,6 +644,11 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
           </motion.div>
 
           <HighScoreBadge gameId={GAME_ID} variant="full" />
+          
+          {/* 🆕 لوحة الشرف السحابية */}
+          <div className="w-full max-w-sm">
+            <CloudGameLeaderboard gameId={GAME_ID} />
+          </div>
 
           <motion.button
             initial={{ opacity: 0, y: 20 }}
@@ -893,4 +911,3 @@ export function FriendsGame({ onBack }: { onBack: () => void }) {
 }
 
 export default FriendsGame;
-// ✅ [Fix Sound AR/EN] — تم فحص كل استدعاءات speak() و setBanaMsg() وإضافة gt() حيث لزم.
