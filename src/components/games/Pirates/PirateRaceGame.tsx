@@ -36,6 +36,8 @@ import { useGameVoice } from '@/hooks/useGameVoice';
 import { lt, useGameLang } from '../gamesI18n';
 import { pgt } from './piratesI18n';
 import { useProgressStore } from '@/store/progressStore';
+import { cloudSync } from '@/lib/cloudSync';
+import { CloudGameLeaderboard } from '../CloudGameLeaderboard';
 import { isPreviewMode } from '@/utils/previewMode';
 import type { CharacterType } from '@/types';
 import SolutionPlayer from './SolutionPlayer';
@@ -276,6 +278,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
 
     // الرقم القياسي (عدد الإجابات الصحيحة)
     const result = addScore(GAME_ID, childName, score, HERO_ID);
+    if (score > 0) void cloudSync.submitScore(GAME_ID, score, null);
     setIsNewRecord(result.isNewRecord);
     if (result.isNewRecord) setPreviousHigh(result.previousTop);
 
@@ -615,6 +618,10 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
           </motion.div>
 
           <HighScoreBadge gameId={GAME_ID} variant="full" />
+
+          <div className="w-full max-w-sm">
+            <CloudGameLeaderboard gameId={GAME_ID} />
+          </div>
 
           <motion.button
             initial={{ opacity: 0, y: 20 }}
