@@ -953,7 +953,7 @@ export function PirateRaceGame({ onBack }: PirateRaceGameProps) {
 
           {currentProblem ? (
             <div className="text-4xl font-black text-amber-300 text-center font-mono tabular-nums" dir="ltr">
-              {currentProblem.a} {currentProblem.symbol} {currentProblem.b} = {pgt('؟')}
+              <Num>{currentProblem.a}</Num> {currentProblem.symbol} <Num>{currentProblem.b}</Num> = {pgt('؟')}
             </div>
           ) : (
             <div className="text-2xl font-black text-sky-300 text-center py-1 animate-pulse">⛵ {pgt('اسْتَعِدّ!')}</div>
