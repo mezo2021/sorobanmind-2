@@ -26,7 +26,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
     { icon: Sparkles, text: pickLang({ ar: 'تعليم تكيفي حسب مستواك', en: 'Adaptive Learning Based on Your Level' }, lang) },
     { icon: Grid3X3, text: pickLang({ ar: 'سوروبان تفاعلي حر', en: 'Free Interactive Soroban' }, lang) },
     { icon: BookOpen, text: pickLang({ ar: 'منهج ياباني أصيل', en: 'Authentic Japanese Curriculum' }, lang) },
-    { icon: Trophy, text: pickLang({ ar: 'شهادة دولية فاخرة', en: 'Premium International Certificate' }, lang) },
+    { icon: Trophy, text: pickLang({ ar: 'شهادة دولية فاخرة (فخرية غير رسمية)', en: 'Premium International Certificate (Unofficial)' }, lang) },
     { icon: BarChart3, text: pickLang({ ar: 'لوحة متابعة لولي الأمر', en: 'Guardian Dashboard' }, lang) },
   ];
 
