@@ -17,7 +17,7 @@ import { useProgressStore } from '@/store/progressStore';
 import { useGameLang } from '../gamesI18n';
 import { tUI } from './gameUI';
 import { Num } from '@/components/Num';
-import { GraduationCap, Trophy, Swords, Sparkles } from 'lucide-react'; // 🆕 Sparkles
+import { GraduationCap, Trophy, Swords, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CosmicBackground, { CosmicHost } from '@/components/cosmic/CosmicBackground';
 import TiltCard from '@/components/cosmic/TiltCard';
@@ -26,6 +26,7 @@ import Leaderboard from '@/components/Leaderboard';
 import CompetitionHub from './competition/CompetitionHub';
 import { getTheme } from './ui/chapterThemes';
 import { isPreviewMode } from '@/utils/previewMode';
+import { cloudSync } from '@/lib/cloudSync'; // 🆕 استيراد السحابة
 
 const CHAPTERS: Partial<Record<ChapterId, Chapter>> = {
   intro: INTRO_DATA,
@@ -52,7 +53,6 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
   const completeChapter = useProgressStore((s) => s.completeMentalChapter);
   const childName = useProgressStore((s) => s.childName) || tUI('champion');
 
-  // 🆕 XP من المتجر
   const addXP = useProgressStore((s) => s.addXP);
   const totalXP = useProgressStore((s) => s.totalXP);
 
@@ -71,7 +71,7 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
 
     if (preview) {
       setActiveChapterId(null);
-      return; // 🆕 منع حفظ التقدم و XP في المعاينة
+      return; 
     }
 
     const challengeScene = chapter.scenes.find((s): s is Extract<Scene, { kind: 'challenge' }> => s.kind === 'challenge');
@@ -84,9 +84,15 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
       completeChapter(activeChapterId, score);
       const updatedProgress = useProgressStore.getState().mentalArchivesProgress;
       const totalScore = Object.values(updatedProgress).reduce((sum, ch) => sum + (ch?.bestScore || 0), 0);
+      
+      // الحفظ المحلي
       addScore('mental-archives', childName, totalScore, 'joud');
 
-      // 🆕 منح XP: 20 لأول إكمال، 10 لتحسين نتيجة سابقة
+      // 🆕 الحفظ السحابي (فقط إذا كانت النتيجة أكبر من صفر)
+      if (totalScore > 0) {
+        void cloudSync.submitScore('mental-archives', totalScore, null);
+      }
+
       if (!wasCompleted) {
         addXP(20);
       } else if (score > previousBest) {
@@ -117,7 +123,6 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
     };
   }
 
-  // 🆕 تفعيل المعاينة لبوابة الامتحانات
   const canAccessExams = preview || EXAM_PORTAL_PREREQ_CHAPTERS.every((id) => !!progress[id]);
 
   return {
@@ -136,7 +141,6 @@ export default function MentalArchivesManager({ onBack }: { onBack: () => void }
           <h1 className="text-3xl font-black text-amber-400 drop-shadow-[0_0_16px_rgba(251,191,36,0.55)]">
             {tUI('gameTitle')}
           </h1>
-          {/* 🆕 شارة XP (عربي/إنجليزي) */}
           <div className="flex items-center gap-1.5 bg-purple-500/15 border border-purple-500/40 rounded-full py-1.5 px-3 text-sm font-black text-purple-300 shrink-0">
             <Sparkles className="w-4 h-4" />
             <Num>{totalXP}</Num>
