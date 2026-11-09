@@ -319,8 +319,10 @@ export function FlyingAbacusGame({ onBack, heroId: propHero }: FlyingAbacusGameP
 
     const recordResult = addScore(GAME_ID, childName, correctCount, heroId);
     
-    // إرسال النتيجة للسحابة بصمت
-    void cloudSync.submitScore(GAME_ID, correctCount, null);
+    // إرسال النتيجة للسحابة فقط إذا كانت أكبر من صفر
+if (correctCount > 0) {
+  void cloudSync.submitScore(GAME_ID, correctCount, null);
+}
 
     if (recordResult.isNewRecord) {
       setIsNewRecord(true);
