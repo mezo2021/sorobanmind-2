@@ -649,7 +649,12 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
           <>
             <Hud
               title={gt(run.stage.name)}
-              subtitle={screen === 'play' ? lt(`سؤال ${run.index + 1} من ${run.deck.length}   ${pips}`, `Question ${run.index + 1} of ${run.deck.length}   ${pips}`) : undefined}
+              subtitle={screen === 'play' ? (
+                <span className="flex items-center gap-1">
+                  {lt('سؤال', 'Question')} <Num>{run.index + 1}</Num> {lt('من', 'of')} <Num>{run.deck.length}</Num>
+                  <span className="opacity-70">{pips}</span>
+                </span>
+              ) : undefined}
               onBack={handleBack}
               muted={muted}
               onToggleMute={toggleMute}
@@ -690,8 +695,19 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                           </span>
                         )}
                       </div>
-                      <div dir="ltr" className="text-5xl font-black leading-tight tracking-wide">
-                        {q.kind === 'squares' ? lt(`${q.num}² = ؟`, `${q.num}² = ?`) : lt(`√${q.val} = ؟`, `√${q.val} = ?`)}
+                      <div dir="ltr" className="flex items-center justify-center gap-2 text-5xl font-black leading-tight tracking-wide">
+                        {q.kind === 'squares' ? (
+                          <>
+                            <Num>{q.num}</Num>
+                            <span>² = {lt('؟', '?')}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>√</span>
+                            <Num>{q.val}</Num>
+                            <span>= {lt('؟', '?')}</span>
+                          </>
+                        )}
                       </div>
                       {q.kind === 'roots' && (
                         <div dir="ltr" className="mt-0.5 flex items-center justify-center gap-2 text-xl font-black">
