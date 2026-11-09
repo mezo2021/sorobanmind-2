@@ -294,13 +294,13 @@ async submitScore(gameId: string, score: number, timeMs: number | null = null) {
       p_time_ms: timeMs,
     });
     if (error) {
-      alert('🚨 خطأ سوباباسي: ' + error.message); // 👈 هذا هو الكاشف
+      alert('🚨 خطأ سوباباسي: ' + error.message);
       return false;
     }
-    alert('✅ تم الحفظ في السحابة بنجاح!'); // 👈 وهذا للتأكيد
+    alert('✅ تم الحفظ في السحابة بنجاح!');
     return true;
-  } catch (err: any) {
-    alert('🚨 خطأ في الشبكة: ' + (err?.message || err));
+  } catch (err) {
+    alert('🚨 خطأ في الشبكة: ' + String(err));
     return false;
   }
 },
