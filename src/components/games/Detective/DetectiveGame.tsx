@@ -1,27 +1,23 @@
 // ═══════════════════════════════════════════════════════════════════
 // 🆕 src/components/games/Detective/DetectiveGame.tsx — Production Ready
 // ═══════════════════════════════════════════════════════════════════
-// [FIX NAME] — اسم الطفل صوتياً في handleStartGame — 2026-10-13
-// ✅ [Fix Sound AR/EN] — إضافة gt() حول النصوص العربية التي تُنطق لمنع الهلوسة في الوضع الإنجليزي
-// ✅ [Fix HighScore] — إضافة endGame إلى dependency array ونقل الـ useEffect بعد الدالة لحفظ الرقم القياسي
-// ✅ [Fix GameID] — توحيد الـ ID ليكون 'detective' ليتطابق مع gamesData.ts
-// ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, RotateCcw, Home, Trophy, Crown, Search, CheckCircle2, Lightbulb, ShieldAlert } from 'lucide-react';
 import { GameCompanion, type HeroMood } from '../GameCompanion';
-import { HighScoreBadge } from '../HighScoreBadge';
+import { CloudGameLeaderboard } from '../CloudGameLeaderboard'; // 🆕 استيراد لوحة الشرف
 import { addScore, getHighScore, type HighScoreEntry } from '../highScoreStore';
 import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useGameVoice } from '@/hooks/useGameVoice';
 import { gt, useGameLang } from '../gamesI18n';
 import { useProgressStore } from '@/store/progressStore';
+import { cloudSync } from '@/lib/cloudSync'; // 🆕 استيراد السحابة
 import type { CharacterType } from '@/types';
 import { Num } from '@/components/Num';
 
 const SESSION_SECONDS = 45;
-const GAME_ID = 'detective'; // ✅ [Fix GameID]
+const GAME_ID = 'detective'; 
 const HERO_ID: CharacterType = 'joud';
 
 interface ProblemTemplate {
@@ -157,6 +153,11 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
   const [sessionTimeLeft, setSessionTimeLeft] = useState(SESSION_SECONDS);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
+  
+  // 🛡️ حارس منع التكرار (كلاود)
+  const isFinalizedRef = useRef(false); 
+  // 🛡️ حارس القيمة الحقيقية للنقاط (كلاود)
+  const solvedRef = useRef(0); 
 
   const [currentProblem, setCurrentProblem] = useState<ActiveProblem | null>(null);
   const [userAbacusValue, setUserAbacusValue] = useState<number>(0);
@@ -249,29 +250,41 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
   }, [sessionTimeLeft]);
 
   const endGame = useCallback(() => {
+    if (isFinalizedRef.current) return; // 🛡️ منع التكرار
+    isFinalizedRef.current = true;
+
     setIsGameOver(true);
     setIsPlaying(false);
     clearAllTimeouts();
 
-    const earned = getXpForDetectiveScore(solvedCasesCount);
+    // 🛡️ قراءة النتيجة الحقيقية من الـ Ref (حل كلاود)
+    const finalCount = solvedRef.current;
+
+    const earned = getXpForDetectiveScore(finalCount);
     setXpEarned(earned);
     addXP(earned);
 
-    const recordResult = addScore(GAME_ID, childName, solvedCasesCount, HERO_ID);
+    const recordResult = addScore(GAME_ID, childName, finalCount, HERO_ID);
+    
+    // 🆕 إرسال للسحابة فقط إذا كانت النتيجة أكبر من صفر
+    if (finalCount > 0) {
+      void cloudSync.submitScore(GAME_ID, finalCount, null);
+    }
+
     if (recordResult.isNewRecord) {
       setIsNewRecord(true);
       setPreviousHigh(recordResult.previousTop);
       speak(gt('رَقَمٌ قِيَاسِيٌّ جَدِيدٌ لِلْمُحَقِّقِ!'));
     } else {
       setIsNewRecord(false);
-      const endMsg = solvedCasesCount >= 8 ? gt('أَدَاءٌ تَحْلِيلِيٌّ بَاهِرٌ!') : gt('مُحَاوَلَةٌ طَيِّبَةٌ يَا شَرِيكِي!');
+      const endMsg = finalCount >= 8 ? gt('أَدَاءٌ تَحْلِيلِيٌّ بَاهِرٌ!') : gt('مُحَاوَلَةٌ طَيِّبَةٌ يَا شَرِيكِي!');
       setHeroText(endMsg);
       speak(endMsg);
     }
 
     setHeroMood('celebrating');
     vibrate([0, 40, 40, 40, 40, 80]);
-  }, [solvedCasesCount, addXP, speak, clearAllTimeouts, childName]);
+  }, [addXP, speak, clearAllTimeouts, childName]);
 
   useEffect(() => {
     if (sessionTimeLeft === 0 && isPlaying && !isGameOver) {
@@ -283,6 +296,9 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
     clearAllTimeouts();
     usedProblemsRef.current.clear();
     usedPhrasesRef.current.clear();
+    
+    isFinalizedRef.current = false;
+    solvedRef.current = 0; // 🛡️ تصفير الحارس
 
     setIsPlaying(true);
     setIsGameOver(false);
@@ -310,12 +326,13 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
     if (userAbacusValue === currentProblem.correctValue) {
       vibrate(40);
       setIsCheckSuccess(true);
-      const newCount = solvedCasesCount + 1;
-      setSolvedCasesCount(newCount);
-      setHeroMood('celebrating');
-
-      const correctMsg = pickUniquePhrase(JOUD_CORRECT_PHRASES, usedPhrasesRef.current);
       
+      const newCount = solvedCasesCount + 1;
+      solvedRef.current = newCount; // 🛡️ تحديث الحارس فوراً
+      setSolvedCasesCount(newCount);
+      
+      setHeroMood('celebrating');
+      const correctMsg = pickUniquePhrase(JOUD_CORRECT_PHRASES, usedPhrasesRef.current);
       const translatedCorrectMsg = gt(correctMsg);
       setHeroText(translatedCorrectMsg);
 
@@ -431,8 +448,6 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
             </p>
           </motion.div>
 
-          <HighScoreBadge gameId={GAME_ID} variant="full" />
-
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -443,6 +458,11 @@ export function DetectiveGame({ onBack }: { onBack: () => void }) {
           >
             ▶️ {gt('ابْدَأِ التَّحْقِيقَ')}
           </motion.button>
+
+          {/* 🆕 لوحة الشرف السحابية */}
+          <div className="w-full max-w-sm mt-4">
+            <CloudGameLeaderboard gameId={GAME_ID} />
+          </div>
         </div>
       )}
 
