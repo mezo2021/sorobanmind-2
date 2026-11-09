@@ -285,22 +285,23 @@ export const cloudSync = {
     return true;
   },
 
-  // ═══ 11. إرسال الدرجة للوحة الشرف (مؤقت للاختبار) ═══
-async submitScore(gameId: string, score: number, timeMs: number | null = null) {
-  try {
-    const { error } = await supabase.rpc('submit_score', {
-      p_game_id: gameId,
-      p_score: score,
-      p_time_ms: timeMs,
-    });
-    if (error) {
-      alert('🚨 خطأ سوباباسي: ' + error.message);
+    // ═══ 11. إرسال الدرجة للوحة الشرف (مؤقت للاختبار) ═══
+  async submitScore(gameId: string, score: number, timeMs: number | null = null) {
+    try {
+      const { error } = await supabase.rpc('submit_score', {
+        p_game_id: gameId,
+        p_score: score,
+        p_time_ms: timeMs,
+      });
+      if (error) {
+        alert('🚨 خطأ سوباباسي: ' + error.message);
+        return false;
+      }
+      alert('✅ تم الحفظ في السحابة بنجاح!');
+      return true;
+    } catch (err) {
+      alert('🚨 خطأ في الشبكة: ' + String(err));
       return false;
     }
-    alert('✅ تم الحفظ في السحابة بنجاح!');
-    return true;
-  } catch (err: unknown) {
-    alert('🚨 خطأ في الشبكة: ' + String(err));
-    return false;
-  }
-},
+  },
+}; // 👈 هذا القوس ضروري جداً لإغلاق الكائن cloudSync
