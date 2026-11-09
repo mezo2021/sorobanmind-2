@@ -13,6 +13,7 @@ import { PirateRaceGame } from './Pirates/PirateRaceGame';
 import SorobaniaGame from './Sorobania/SorobaniaGame';
 import MentalArchivesManager from './MentalArchivesGame/MentalArchivesManager';
 import { HighScoreBadge } from './HighScoreBadge';
+import { getHighScore } from './highScoreStore'; // 🆕 استيراد دالة قراءة الرقم القياسي
 import { useProgressStore, TICKET_COST } from '../../store/progressStore';
 import { isPreviewMode } from '@/utils/previewMode';
 import { Num } from '@/components/Num';
@@ -45,13 +46,11 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
   const progressPct = Math.min(100, (ticketXP / TICKET_COST) * 100);
 
   const handleOpenGame = (game: GameMeta) => {
-    // 🆕 استثناء بوابة الثقب الدودي من شرط التذكرة
     const isMentalArchives = game.id === 'mental-archives';
     
     if (!isMentalArchives && !hasTicket) return;
     if (game.status !== 'ready') return;
     
-    // 🆕 لا نستهلك تذكرة إذا كانت اللعبة هي بوابة الثقب الدودي
     if (!preview && !isMentalArchives) consumeTicket();
     
     setActive({ kind: 'game', gameId: game.id });
@@ -164,7 +163,6 @@ export function GamesListScreen({ onBack }: GamesListScreenProps) {
               key={game.id}
               game={game}
               index={idx}
-              // 🆕 فتح بوابة الثقب الدودي دائماً، والألعاب الأخرى تحتاج تذكرة
               unlocked={game.id === 'mental-archives' || hasTicket}
               onOpen={() => handleOpenGame(game)}
             />
@@ -269,6 +267,9 @@ function GameCard({
   const isBuilding = game.status !== 'ready';
   const canOpen = unlocked && !isBuilding;
 
+  // 🆕 قراءة الرقم القياسي للثقب الدودي مباشرة
+  const mentalArchivesRecord = game.id === 'mental-archives' ? getHighScore('mental-archives') : null;
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -302,6 +303,11 @@ function GameCard({
             {isBuilding ? (
               <span className="text-[10px] text-amber-300/70 font-bold">
                 🚧 {gt('قيد التطوير')}
+              </span>
+            ) : game.id === 'mental-archives' ? (
+              // 🆕 عرض رقم الثقب الدودي مباشرة
+              <span className="text-[10px] text-amber-300/80 flex items-center gap-1 font-bold">
+                🏆 <Num>{mentalArchivesRecord?.value ?? 0}</Num>
               </span>
             ) : (
               <HighScoreBadge gameId={game.id} variant="compact" />
