@@ -18,31 +18,48 @@ interface PlayerScore {
 }
 
 // 🆕 أشباح واقعية لكل لعبة (أرقام قريبة من قدرات الأطفال الفعلية)
-const GAME_GHOSTS: Record<string, { name: string; score: number }[]> = {
+const GAME_GHOSTS: Record<string, { name: string; nameAr?: string; nameEn?: string; score: number }[]> = {
   'flying-abacus': [
-    { name: 'سارة.ع', score: 22 },
-    { name: 'عمر.م', score: 18 },
-    { name: 'ليان.ي', score: 15 },
-    { name: 'آدم.ف', score: 12 },
-    { name: 'جنى.ر', score: 10 },
-    { name: 'لمى.ج', score: 8 },
-    { name: 'يوسف.ح', score: 6 },
-    { name: 'نور.ك', score: 5 },
+    { name: 'سارة.ع', nameAr: 'سارة.ع', nameEn: 'Sarah.A', score: 22 },
+    { name: 'عمر.م', nameAr: 'عمر.م', nameEn: 'Omar.M', score: 18 },
+    { name: 'ليان.ي', nameAr: 'ليان.ي', nameEn: 'Layan.Y', score: 15 },
+    { name: 'آدم.ف', nameAr: 'آدم.ف', nameEn: 'Adam.F', score: 12 },
+    { name: 'جنى.ر', nameAr: 'جنى.ر', nameEn: 'Jana.R', score: 10 },
+    { name: 'لمى.ج', nameAr: 'لمى.ج', nameEn: 'Lama.J', score: 8 },
+    { name: 'يوسف.ح', nameAr: 'يوسف.ح', nameEn: 'Yousef.H', score: 6 },
+    { name: 'نور.ك', nameAr: 'نور.ك', nameEn: 'Noor.K', score: 5 },
   ],
   'detective': [
-    { name: 'عمر.م', score: 15 },
-    { name: 'سارة.ع', score: 12 },
-    { name: 'آدم.ف', score: 10 },
-    { name: 'ليان.ي', score: 8 },
-    { name: 'جنى.ر', score: 6 },
+    { name: 'عمر.م', nameAr: 'عمر.م', nameEn: 'Omar.M', score: 15 },
+    { name: 'سارة.ع', nameAr: 'سارة.ع', nameEn: 'Sarah.A', score: 12 },
+    { name: 'آدم.ف', nameAr: 'آدم.ف', nameEn: 'Adam.F', score: 10 },
+    { name: 'ليان.ي', nameAr: 'ليان.ي', nameEn: 'Layan.Y', score: 8 },
+    { name: 'جنى.ر', nameAr: 'جنى.ر', nameEn: 'Jana.R', score: 6 },
+  ],
+  'sorobania-island': [
+    { name: 'Sami', nameAr: 'سامي', nameEn: 'Sami', score: 12 },
+    { name: 'Lina', nameAr: 'لينا', nameEn: 'Lina', score: 8 },
+    { name: 'Omar', nameAr: 'عمر', nameEn: 'Omar', score: 5 },
+    { name: 'Noor', nameAr: 'نور', nameEn: 'Noor', score: 4 },
+    { name: 'Adam', nameAr: 'آدم', nameEn: 'Adam', score: 3 },
+    { name: 'Mira', nameAr: 'ميرا', nameEn: 'Mira', score: 2 },
+  ],
+  
+  'sorobania-island-speed': [
+    { name: 'Sami', nameAr: 'سامي', nameEn: 'Sami', score: 70 },
+    { name: 'Lina', nameAr: 'لينا', nameEn: 'Lina', score: 55 },
+    { name: 'Omar', nameAr: 'عمر', nameEn: 'Omar', score: 40 },
+    { name: 'Noor', nameAr: 'نور', nameEn: 'Noor', score: 32 },
+    { name: 'Adam', nameAr: 'آدم', nameEn: 'Adam', score: 25 },
+    { name: 'Mira', nameAr: 'ميرا', nameEn: 'Mira', score: 18 },
   ],
   'default': [
-    { name: 'سارة.ع', score: 20 },
-    { name: 'عمر.م', score: 15 },
-    { name: 'ليان.ي', score: 12 },
-    { name: 'آدم.ف', score: 10 },
-    { name: 'جنى.ر', score: 8 },
-    { name: 'لمى.ج', score: 5 },
+    { name: 'سارة.ع', nameAr: 'سارة.ع', nameEn: 'Sarah.A', score: 20 },
+    { name: 'عمر.م', nameAr: 'عمر.م', nameEn: 'Omar.M', score: 15 },
+    { name: 'ليان.ي', nameAr: 'ليان.ي', nameEn: 'Layan.Y', score: 12 },
+    { name: 'آدم.ف', nameAr: 'آدم.ف', nameEn: 'Adam.F', score: 10 },
+    { name: 'جنى.ر', nameAr: 'جنى.ر', nameEn: 'Jana.R', score: 8 },
+    { name: 'لمى.ج', nameAr: 'لمى.ج', nameEn: 'Lama.J', score: 5 },
   ]
 };
 
@@ -90,7 +107,7 @@ export function CloudGameLeaderboard({ gameId }: Props) {
           .slice(0, needed)
           .map(g => ({
             pos: 0,
-            display_name: g.name,
+            display_name: isAr ? (g.nameAr ?? g.name) : (g.nameEn ?? g.name),
             score: g.score,
             is_me: false,
             is_ghost: true
