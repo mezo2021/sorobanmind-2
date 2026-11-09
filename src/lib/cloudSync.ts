@@ -285,22 +285,22 @@ export const cloudSync = {
     return true;
   },
 
-  // ═══ 11. إرسال الدرجة للوحة الشرف ═══
-  async submitScore(gameId: string, score: number, timeMs: number | null = null) {
-    try {
-      const { error } = await supabase.rpc('submit_score', {
-        p_game_id: gameId,
-        p_score: score,
-        p_time_ms: timeMs,
-      });
-      if (error) {
-        console.warn('submitScore failed:', error.message);
-        return false;
-      }
-      return true;
-    } catch (err) {
-      console.warn('submitScore network error:', err);
+  // ═══ 11. إرسال الدرجة للوحة الشرف (مؤقت للاختبار) ═══
+async submitScore(gameId: string, score: number, timeMs: number | null = null) {
+  try {
+    const { error } = await supabase.rpc('submit_score', {
+      p_game_id: gameId,
+      p_score: score,
+      p_time_ms: timeMs,
+    });
+    if (error) {
+      alert('🚨 خطأ سوباباسي: ' + error.message); // 👈 هذا هو الكاشف
       return false;
     }
-  },
-};
+    alert('✅ تم الحفظ في السحابة بنجاح!'); // 👈 وهذا للتأكيد
+    return true;
+  } catch (err: any) {
+    alert('🚨 خطأ في الشبكة: ' + (err?.message || err));
+    return false;
+  }
+},
