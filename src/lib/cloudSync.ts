@@ -299,7 +299,7 @@ async submitScore(gameId: string, score: number, timeMs: number | null = null) {
     }
     alert('✅ تم الحفظ في السحابة بنجاح!');
     return true;
-  } catch (err) {
+  } catch (err: unknown) {
     alert('🚨 خطأ في الشبكة: ' + String(err));
     return false;
   }
