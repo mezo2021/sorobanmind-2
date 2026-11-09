@@ -19,6 +19,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { Num } from '@/components/Num';
 
 import {
   MAX_TORCHES,
@@ -267,7 +268,7 @@ export const PlayScene: React.FC<PlaySceneProps> = ({ stage, pos, torches }) => 
               fontWeight="800"
               fill={done ? '#6b4a10' : '#4a3c55'}
             >
-              {i + 1}
+              <Num>{i + 1}</Num>
             </text>
           </g>
         );
