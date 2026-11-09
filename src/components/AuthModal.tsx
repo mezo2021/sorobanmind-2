@@ -26,6 +26,7 @@ export interface ParentalConsent {
   agreedGuardian: boolean;
   agreedData: boolean;
   agreedPrivacy: boolean;
+  agreedLeaderboard: boolean; // 🆕 إضافة الموافقة الرابعة
   timestamp: string;
 }
 
@@ -42,9 +43,12 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
   const [parentName, setParentName] = useState('');
   const [childName, setChildName] = useState('');
   const [childAge, setChildAge] = useState('');
+  
+  // 🆕 الموافقات الأربعة
   const [agreeGuardian, setAgreeGuardian] = useState(false);
   const [agreeData, setAgreeData] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
+  const [agreeLeaderboard, setAgreeLeaderboard] = useState(false);
 
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -122,7 +126,11 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       if (childName.trim().split(/\s+/).length !== 3) return pickLang({ ar: 'اسم الطفل يجب أن يكون ثلاثياً', en: 'Child name must be exactly 3 words' }, lang);
       const ageNum = parseInt(childAge, 10);
       if (!childAge || isNaN(ageNum) || ageNum < 5 || ageNum > 18) return pickLang({ ar: 'عمر الطفل يجب أن يكون بين 5 و 18', en: 'Child age must be between 5 and 18' }, lang);
-      if (!agreeGuardian || !agreeData || !agreePrivacy) return pickLang({ ar: 'يجب الموافقة على جميع الشروط', en: 'You must agree to all terms' }, lang);
+      
+      // 🆕 الموافقات الثلاثة إجبارية، والرابعة اختيارية
+      if (!agreeGuardian || !agreeData || !agreePrivacy) {
+        return pickLang({ ar: 'يجب الموافقة على شروط الأهلية وجمع البيانات وسياسة الخصوصية', en: 'You must agree to guardian, data collection, and privacy terms' }, lang);
+      }
     }
     return null;
   };
@@ -138,6 +146,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
         agreedGuardian: agreeGuardian,
         agreedData: agreeData,
         agreedPrivacy: agreePrivacy,
+        agreedLeaderboard: agreeLeaderboard, // 🆕 تمرير الموافقة الرابعة
         timestamp: new Date().toISOString(),
       };
       await cloudSync.registerParent(email, password, parentName, childName, consent);
@@ -174,7 +183,6 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     } catch (e: any) {
       const errMsg = e.message.toLowerCase();
       
-      // 🆕 معالجة البريد غير المؤكد: ننقل لشاشة الرمز ونعيد الإرسال
       if (errMsg.includes('email not confirmed')) {
         try {
           await cloudSync.resendOtp(email, 'signup');
@@ -254,7 +262,6 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     setMsg(null);
   };
 
-  // 🆕 تعديل البريد (من شاشة signup-otp)
   const handleEditEmail = () => {
     setStep('form');
     setOtp('');
@@ -356,18 +363,30 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
 
                     <div className="mt-4 space-y-3 p-4 bg-black/40 border border-white/10 rounded-2xl shadow-inner relative overflow-hidden">
                       <div className="absolute top-0 start-0 w-1 h-full bg-amber-500/50 rounded-full" />
+                      
                       <label className="flex items-start gap-2.5 cursor-pointer">
                         <input type="checkbox" checked={agreeGuardian} onChange={(e) => setAgreeGuardian(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
                         <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أقر بأنني ولي الأمر (18+).', en: 'I am the guardian (18+).' }, lang)}</span>
                       </label>
+                      
                       <label className="flex items-start gap-2.5 cursor-pointer">
                         <input type="checkbox" checked={agreeData} onChange={(e) => setAgreeData(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
-                        <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أوافق على جمع بيانات طفلي للتعليم.', en: 'I agree to collect child data for education.' }, lang)}</span>
+                        <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أوافق على جمع بيانات طفلي ومعالجتها للأغراض التعليمية.', en: "I agree to collect and process my child's data for educational purposes." }, lang)}</span>
                       </label>
+                      
                       <label className="flex items-start gap-2.5 cursor-pointer">
                         <input type="checkbox" checked={agreePrivacy} onChange={(e) => setAgreePrivacy(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
                         <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أوافق على سياسة الخصوصية.', en: 'I agree to Privacy Policy.' }, lang)}</span>
                       </label>
+
+                      {/* 🆕 الموافقة الرابعة (الاختيارية) للوحة الشرف */}
+                      <label className="flex items-start gap-2.5 cursor-pointer border-t border-white/10 pt-3 mt-3">
+                        <input type="checkbox" checked={agreeLeaderboard} onChange={(e) => setAgreeLeaderboard(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
+                        <span className="text-[11px] text-emerald-200/90 leading-relaxed font-medium">
+                          {pickLang({ ar: 'أوافق على عرض اسم طفلي (بصيغة مقنّعة) ودرجاته في لوحات الشرف العامة داخل التطبيق.', en: "I agree to display my child's masked name and scores on public leaderboards in the app." }, lang)}
+                        </span>
+                      </label>
+
                     </div>
                   </>
                 )}
@@ -402,7 +421,6 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                       : pickLang({ ar: 'إعادة إرسال الرمز', en: 'Resend Code' }, lang)}
                   </button>
                   
-                  {/* 🆕 زر تعديل البريد */}
                   <button 
                     onClick={handleEditEmail} 
                     className="text-xs text-slate-400 hover:text-white flex items-center gap-1"
