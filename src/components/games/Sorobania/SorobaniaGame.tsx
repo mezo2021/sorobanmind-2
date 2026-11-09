@@ -8,6 +8,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { BookOpen, Flame, Lock, RotateCcw, Trophy, X } from 'lucide-react';
 
 import { useProgressStore, selectHasTicket } from '@/store/progressStore';
+import { cloudSync } from '@/lib/cloudSync';
+import { CloudGameLeaderboard } from '../CloudGameLeaderboard';
 import { isPreviewMode } from '@/utils/previewMode';
 import { HighScoreBadge } from '../HighScoreBadge';
 import { addScore, getHighScore, type HighScoreEntry } from '../highScoreStore';
@@ -166,6 +168,10 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
     if (best <= existingValue) return false;
     const name = getLocalChildName();
     addScore(GAME_ID, name, best, HERO_ID);
+    
+    // 🏆 إرسال رقم السلسلة القياسي للسحابة
+    void cloudSync.submitScore(GAME_ID, best, null);
+    
     setStreakEntry({ name, value: best, heroId: HERO_ID, date: Date.now() });
     setScoreVersion((v) => v + 1);
     updateProgress((p) => ({ ...p, bestStreak: Math.max(p.bestStreak, best) }));
@@ -242,6 +248,10 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
         const bestSpeed = getHighScore(SPEED_GAME_ID)?.value ?? 0;
         if (speedPts > bestSpeed) {
           addScore(SPEED_GAME_ID, name, speedPts, HERO_ID);
+          
+          // ⚡ إرسال رقم السرعة القياسي للسحابة (الزمن بالميلي ثانية)
+          void cloudSync.submitScore(SPEED_GAME_ID, speedPts, Math.round(avgSec * 1000));
+          
           newSpeed = true;
           setSpeedEntry({ name, value: speedPts, heroId: HERO_ID, date: Date.now() });
         }
@@ -1021,19 +1031,38 @@ export default function SorobaniaGame({ onBack }: SorobaniaGameProps) {
                   </button>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
+                  {/* 🏆 أفضل سلسلة محلية */}
                   <div>
                     <div className="mb-1 text-sm font-extrabold text-white/70">
                       {gt('أطول سلسلة إجابات صحيحة')} {streakEntry ? `· ${streakEntry.value}` : ''}
                     </div>
                     <HighScoreBadge key={`streak-${scoreVersion}`} gameId={GAME_ID} variant="full" />
                   </div>
+
+                  {/* 🌍 أفضل سلسلة عالمية */}
+                  <div>
+                    <div className="mb-1 text-sm font-extrabold text-amber-300">
+                      {gt('أبطال أطول سلسلة — عالمياً')}
+                    </div>
+                    <CloudGameLeaderboard gameId="sorobania-island" />
+                  </div>
+
+                  {/* ⚡ أفضل سرعة محلية */}
                   <div>
                     <div className="mb-1 text-sm font-extrabold text-white/70">
                       {gt('نقاط السرعة')} {speedEntry ? `· ${speedEntry.value}` : ''}
                       {progress.bestSpeedSec !== null ? ` · ${gt('أسرع متوسط')} ${progress.bestSpeedSec}${gt('ث')}` : ''}
                     </div>
                     <HighScoreBadge key={`speed-${scoreVersion}`} gameId={SPEED_GAME_ID} variant="full" />
+                  </div>
+
+                  {/* 🌍 أفضل سرعة عالمية */}
+                  <div>
+                    <div className="mb-1 text-sm font-extrabold text-sky-300">
+                      {gt('أبطال السرعة — عالمياً')}
+                    </div>
+                    <CloudGameLeaderboard gameId="sorobania-island-speed" />
                   </div>
                 </div>
               </motion.div>
