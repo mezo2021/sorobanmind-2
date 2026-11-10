@@ -305,5 +305,3 @@ export const cloudSync = {
     }
   },
 }; // 👈 هذا القوس ضروري جداً لإغلاق الكائن cloudSync
-
-.......
