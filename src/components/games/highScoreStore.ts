@@ -11,6 +11,8 @@
 // لا يلمس أي ملف موجود.
 // ═══════════════════════════════════════════════════════════════════
 
+import { storage } from '../../utils/storage';
+
 const STORAGE_KEY = 'soroban_high_scores_v1';
 const MONTH_KEY = 'soroban_high_scores_month';
 const MAX_RECORDS_PER_GAME = 3;
@@ -37,7 +39,7 @@ function getCurrentMonthKey(): string {
 function readAll(): HighScoresMap {
   if (typeof window === 'undefined') return {};
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storage.getItem(STORAGE_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw);
     if (typeof parsed !== 'object' || parsed === null) return {};
@@ -50,9 +52,9 @@ function readAll(): HighScoresMap {
 function writeAll(map: HighScoresMap): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+    storage.setItem(STORAGE_KEY, JSON.stringify(map));
     // 🆕 سجّل الشهر الحالي بعد الكتابة
-    localStorage.setItem(MONTH_KEY, getCurrentMonthKey());
+    storage.setItem(MONTH_KEY, getCurrentMonthKey());
   } catch {
     /* ignore */
   }
@@ -66,13 +68,13 @@ function writeAll(map: HighScoresMap): void {
 function checkMonthlyReset(): void {
   if (typeof window === 'undefined') return;
   try {
-    const savedMonth = localStorage.getItem(MONTH_KEY);
+    const savedMonth = storage.getItem(MONTH_KEY);
     const currentMonth = getCurrentMonthKey();
 
     if (savedMonth !== currentMonth) {
       // شهر جديد → صفّر السجلات
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.setItem(MONTH_KEY, currentMonth);
+      storage.removeItem(STORAGE_KEY);
+      storage.setItem(MONTH_KEY, currentMonth);
     }
   } catch {
     /* ignore */
@@ -150,8 +152,8 @@ export function addScore(
 export function resetAll(): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.setItem(MONTH_KEY, getCurrentMonthKey());
+    storage.removeItem(STORAGE_KEY);
+    storage.setItem(MONTH_KEY, getCurrentMonthKey());
   } catch {
     /* ignore */
   }
