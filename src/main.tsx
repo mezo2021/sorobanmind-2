@@ -4,6 +4,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import { useProgressStore } from './store/progressStore';
+import { AppGate } from './components/AppGate'; // ✅ جديد
 
 // ═══ 🔍 Google Analytics 4 (GA4) ═══
 const GA_MEASUREMENT_ID = 'G-WCVPW40J43';
@@ -102,7 +103,9 @@ ReactDOM.createRoot(
   <React.StrictMode>
     <ErrorBoundary>
       <Suspense fallback={<div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",direction:"rtl",fontSize:"1.2rem",color:"#fbbf24"}}>🧮 جاري التحميل...</div>}>
-        <App />
+        <AppGate>
+          <App />
+        </AppGate>
       </Suspense>
     </ErrorBoundary>
   </React.StrictMode>,
