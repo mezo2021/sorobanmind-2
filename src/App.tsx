@@ -33,6 +33,7 @@ import type { LevelId } from './store/progressStore';
 import { cloudSync } from './lib/cloudSync'; // 🆕 استيراد cloudSync للتحقق من الجلسة
 // [m5-ب] استيراد SRB_LEVELS لاستنتاج مستوى الدرس بدون getLessonById
 import { SRB_LEVELS } from './data/srb/curriculum';
+import { getMode } from './utils/appMode'; // 🆕 استيراد الوضع
 
 // ═══ Screens ═══
 // [FIX N43] الأربعة الأولى: imports عادية (كانت lazy)
@@ -174,17 +175,23 @@ export default function App() {
     setReady(true);
   }, []);
 
-  // 🆕 التعديل: فحص الجلسة لتحديد ما إذا كان سيتم عرض الترحيب
+  // 🆕 التعديل: فحص الوضع — محلي يتخطى كل شاشات التسجيل
   useEffect(() => {
     if (!ready) return;
 
+    // ✅ الوضع المحلي: اذهب مباشرة للوحة البطل
+    if (getMode() === 'local') {
+      setRole('hero');
+      setScreen('hero-dashboard');
+      return;
+    }
+
+    // الوضع السحابي: فحص الجلسة كالمعتاد
     const decideInitialScreen = async () => {
       try {
         const session = await cloudSync.getSession();
         const isLoggedIn = !!session;
 
-        // غير المسجل: ترحيب دائماً
-        // المسجل: ترحيب فقط إذا مرّت 7 أيام (أو أول زيارة)
         if (!isLoggedIn || shouldShowWelcome()) {
           setScreen('welcome');
         } else {
