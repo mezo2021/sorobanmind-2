@@ -1,17 +1,19 @@
-// ═══════════════════════════════════════════════════════════════════
-// 🆕 src/components/games/highScoreStore.ts — ملف جديد
-// ═══════════════════════════════════════════════════════════════════
+// src/components/games/highScoreStore.ts
 //
-// ما يضيفه:
-//   - تخزين السجلات القياسية لكل لعبة (localStorage)
+// ما يفعله:
+//   - تخزين السجلات القياسية لكل لعبة (عبر storage adapter يدعم local:/cloud:)
 //   - تنظيف تلقائي في أول كل شهر ميلادي
 //   - أعلى 3 سجلات لكل لعبة
 //   - تصفير كلي أو لكل لعبة
 //
-// لا يلمس أي ملف موجود.
+// [2026-11-11] التعديلات:
+//   - استبدال localStorage المباشر بـ storage adapter (لعزل الوضع المحلي عن السحابي)
+//   - addScore يقرأ اسم البطل من soroban_hero_key بدلاً من name المُمرَّر من الألعاب
+//     (حتى لو نسي أي استدعٍ تمرير الاسم، يُسجَّل باسم البطل المختار)
 // ═══════════════════════════════════════════════════════════════════
 
 import { storage } from '../../utils/storage';
+import { getHeroDisplayName } from '../../data/heroNames';
 
 const STORAGE_KEY = 'soroban_high_scores_v1';
 const MONTH_KEY = 'soroban_high_scores_month';
@@ -27,7 +29,7 @@ export interface HighScoreEntry {
 
 type HighScoresMap = Record<string, HighScoreEntry[]>;
 
-// ═══ 🆕 أدوات الشهر ═══
+// ═══ أدوات الشهر ═══
 function getCurrentMonthKey(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -53,14 +55,14 @@ function writeAll(map: HighScoresMap): void {
   if (typeof window === 'undefined') return;
   try {
     storage.setItem(STORAGE_KEY, JSON.stringify(map));
-    // 🆕 سجّل الشهر الحالي بعد الكتابة
+    // سجّل الشهر الحالي بعد الكتابة
     storage.setItem(MONTH_KEY, getCurrentMonthKey());
   } catch {
     /* ignore */
   }
 }
 
-// ═══ 🆕 التنظيف الشهري ═══
+// ═══ التنظيف الشهري ═══
 /**
  * يتحقق إن كان الشهر قد تغيّر منذ آخر زيارة.
  * إذا نعم → يمسح كل السجلات تلقائياً.
@@ -86,7 +88,7 @@ export function getTopScores(
   gameId: string,
   count = MAX_RECORDS_PER_GAME,
 ): HighScoreEntry[] {
-  checkMonthlyReset();       // 🆕 فحص الشهر أولاً
+  checkMonthlyReset();
   const all = readAll();
   const entries = all[gameId] ?? [];
   return entries.slice(0, count);
@@ -109,11 +111,11 @@ export interface AddScoreResult {
 
 export function addScore(
   gameId: string,
-  name: string,
+  _name: string, // يُتجاهل عمداً — الاسم يُقرأ من hero_key
   value: number,
   heroId?: string,
 ): AddScoreResult {
-  checkMonthlyReset();       // 🆕 فحص الشهر أولاً
+  checkMonthlyReset();
 
   const previousTop = getHighScore(gameId);
 
@@ -130,8 +132,12 @@ export function addScore(
   const all = readAll();
   const entries = all[gameId] ?? [];
 
+  // اسم البطل مصدره soroban_hero_key (هوية الجهاز، بلا بادئة)
+  const heroKey = localStorage.getItem('soroban_hero_key');
+  const displayName = heroKey ? getHeroDisplayName(heroKey) : 'بطل';
+
   const newEntry: HighScoreEntry = {
-    name: name.trim() || 'بطل',
+    name: displayName,
     value,
     date: Date.now(),
     heroId,
@@ -175,7 +181,6 @@ export function formatRecordAge(timestamp: number): string {
   return `منذ ${Math.floor(days / 30)} أشهر`;
 }
 
-// 🆕
 export function getCurrentMonthLabel(): string {
   const months = [
     'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
