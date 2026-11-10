@@ -6,9 +6,7 @@ import { getHeroDisplayName } from '@/data/heroNames';
 import { getMode, setMode, type AppMode } from '@/utils/appMode';
 import { useProgressStore } from '@/store/progressStore';
 
-interface Props {
-  children: React.ReactNode;
-}
+interface Props { children: React.ReactNode; }
 
 export function AppGate({ children }: Props) {
   const [ready, setReady] = useState(false);
@@ -38,15 +36,11 @@ export function AppGate({ children }: Props) {
     window.location.reload();
   };
 
-  if (!ready) {
-    return <div className="min-h-screen bg-slate-950" />;
-  }
+  if (!ready) return <div className="min-h-screen bg-slate-950" />;
+  if (!mode) return <AppModeSelection onSelect={handleModeSelect} />;
 
-  if (!mode) {
-    return <AppModeSelection onSelect={handleModeSelect} />;
-  }
-
-  if (mode === 'local' && !hasHero) {
+  // 🆕 يعرض في الوضعين (محلي وسحابي)
+  if (!hasHero) {
     return <HeroNamePicker onSave={handleHeroSave} />;
   }
 
