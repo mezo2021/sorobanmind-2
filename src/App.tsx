@@ -244,8 +244,15 @@ export default function App() {
   };
 
   const handleBackToRole = () => {
-    setRole(null);
-    setScreen('role');
+  // 🆕 الوضع المحلي: عد للبطل مباشرة (تجاوز RoleSelection)
+  if (getMode() === 'local') {
+    setRole('hero');
+    setScreen('hero-dashboard');
+    return;
+  }
+  setRole(null);
+  setScreen('role');
+};
   };
 
   const handleBackToHero = () => {
