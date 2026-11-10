@@ -96,6 +96,39 @@ const LEVEL_ICONS: LucideIcon[] = [
 // الأنواع
 // ═══════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════
+// تصدير آمن — قائمة بيضاء (يمنع تسرب الجلسة والأسماء الحقيقية)
+// ═══════════════════════════════════════════════════════════
+const SAFE_EXPORT_PREFIXES = ['local:', 'cloud:'];
+const SAFE_EXPORT_DEVICE_KEYS = [
+  'sorobanmind-v2-lang',
+  'soroban_number_style',
+  'soroban2d5-theme',
+  'soroban_welcome_seen',
+  'soroban_hero_key',
+  'soroban_companion',
+];
+
+function isSafeToExport(key: string): boolean {
+  // حظر صريح للجلسة والمعرفات
+  if (key.startsWith('sb-')) return false;
+  if (key === 'soroban_progress_owner') return false;
+  if (key === 'soroban_mode') return false;
+  // حظر الأسماء الحقيقية المحتملة
+  if (key === 'soroban_child_name') return false;
+  if (key === 'soroban_child_full_name') return false;
+  // حظر حماية PIN
+  if (key.startsWith('soroban_guardian_')) return false;
+  if (key.startsWith('soroban_parent_pin')) return false;
+  if (key === 'soroban_guardian_lock_until') return false;
+  // سماح للبيانات المعزولة بالوضع
+  if (SAFE_EXPORT_PREFIXES.some((p) => key.startsWith(p))) return true;
+  // سماح لمفاتيح الجهاز المسموحة فقط
+  if (SAFE_EXPORT_DEVICE_KEYS.includes(key)) return true;
+  // كل ما تبقى (بما فيه الأرشيف غير المبدوء) = ممنوع
+  return false;
+}
+
 interface GuardianDashboardProps {
   onBack: () => void;
   playSound: (type: 'click' | 'whoosh') => void;
@@ -501,10 +534,21 @@ const handlePreviewToggle = () => {
   const handleBackup = () => {
     try {
       const data: Record<string, string> = {};
-      Object.keys(localStorage).forEach((key) => {
-        data[key] = localStorage.getItem(key) || '';
-      });
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !isSafeToExport(key)) continue;
+        const value = localStorage.getItem(key);
+        if (value !== null) data[key] = value;
+      }
+      
+      const payload = {
+        schemaVersion: 1,
+        exportedAt: new Date().toISOString(),
+        appVersion: '2.0',
+        data,
+      };
+      
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -520,19 +564,64 @@ const handlePreviewToggle = () => {
   const handleRestore = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // حد الحجم (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      window.alert(pickLang({ ar: 'الملف كبير جداً (الحد 2MB)', en: 'File too large (max 2MB)' }, lang));
+      event.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const data = JSON.parse(e.target?.result as string);
-        Object.keys(localStorage).forEach((key) => localStorage.removeItem(key));
-        Object.entries(data).forEach(([key, value]) => {
-          localStorage.setItem(key, value as string);
-        });
+        const parsed = JSON.parse(e.target?.result as string);
+
+        // دعم البنية الجديدة (schemaVersion + data) والقديمة (كائن مسطح)
+        let dataToImport: Record<string, unknown>;
+        if (parsed && typeof parsed === 'object' && 'schemaVersion' in parsed && 'data' in parsed) {
+          if (Number(parsed.schemaVersion) > 1) {
+            window.alert(pickLang({ ar: 'إصدار النسخة غير مدعوم', en: 'Unsupported backup version' }, lang));
+            event.target.value = '';
+            return;
+          }
+          dataToImport = (parsed.data as Record<string, unknown>) || {};
+        } else if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          dataToImport = parsed as Record<string, unknown>;
+        } else {
+          throw new Error('Invalid format');
+        }
+
+        let importedCount = 0;
+        let skippedCount = 0;
+
+        // امسح المفاتيح الآمنة القديمة أولاً (استبدال حقيقي، لا تراكم)
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && isSafeToExport(k)) localStorage.removeItem(k);
+        }
+
+        for (const [key, value] of Object.entries(dataToImport)) {
+          if (typeof value !== 'string') { skippedCount++; continue; }
+          if (!isSafeToExport(key)) { skippedCount++; continue; }
+          localStorage.setItem(key, value);
+          importedCount++;
+        }
+
         playSound('click');
-        setTimeout(() => window.location.reload(), 300);
+        setTimeout(() => {
+          window.alert(
+            pickLang({
+              ar: `تم استيراد ${importedCount} عنصر. تم تجاهل ${skippedCount} عنصر غير آمن (مثل الجلسة والأسماء الحقيقية).`,
+              en: `Imported ${importedCount} items. Skipped ${skippedCount} unsafe items (like session and real names).`,
+            }, lang)
+          );
+          window.location.reload();
+        }, 300);
       } catch (err) {
         window.alert(pickLang({ ar: 'ملف غير صالح: ', en: 'Invalid file: ' }, lang) + String(err));
       }
+      event.target.value = '';
     };
     reader.readAsText(file);
   };
