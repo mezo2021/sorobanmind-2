@@ -5,6 +5,7 @@ import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages, Wrench,
 
 import { useT, useLangStore } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
+import { getMode } from '@/utils/appMode'; // 🆕
 
 import type { Role, CharacterType } from '@/types';
 import { CharacterSelector } from '@/components/CharacterSelector';
@@ -74,8 +75,8 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   };
 
   const handleSelect = (role: Role) => {
-    // إذا لم يكن مسجلاً → افتح AuthModal
-    if (!isLoggedIn) {
+    // 🆕 في الوضع المحلي: لا حاجة لتسجيل دخول
+    if (getMode() !== 'local' && !isLoggedIn) {
       playSound('click');
       setShowAuth(true);
       return;
@@ -88,6 +89,13 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     }
 
     if (role === 'hero') {
+      // 🆕 في الوضع المحلي: ادخل مباشرة (الهوية محفوظة مسبقاً)
+      if (getMode() === 'local') {
+        playSound('whoosh');
+        onSelect(role);
+        return;
+      }
+
       const savedCompanion = localStorage.getItem(COMPANION_STORAGE_KEY);
       const savedName = localStorage.getItem(NAME_STORAGE_KEY);
 
