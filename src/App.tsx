@@ -253,7 +253,6 @@ export default function App() {
   setRole(null);
   setScreen('role');
 };
-  };
 
   const handleBackToHero = () => {
     setRole('hero');
