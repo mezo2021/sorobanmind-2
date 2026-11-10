@@ -43,9 +43,21 @@ const DEVICE_KEYS = [
 const OUR_PREFIX = /^(soroban|sorobanmind|srb|sorobania)/;
 
 function wipeLocalProgress() {
-  Object.keys(localStorage).forEach((k) => {
-    if (OUR_PREFIX.test(k) && !DEVICE_KEYS.includes(k)) localStorage.removeItem(k);
-  });
+  const keysToRemove: string[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith('cloud:')) continue;
+      if (DEVICE_KEYS.includes(key)) continue;
+      const bareKey = key.substring(6); // 'cloud:'.length === 6
+      if (OUR_PREFIX.test(bareKey)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // تجاهل أخطاء التخزين
+  }
   useProgressStore.getState().reset();
 }
 
