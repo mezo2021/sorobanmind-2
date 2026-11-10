@@ -2,9 +2,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  X, Mail, KeyRound, User, Baby, LogIn, UserPlus, 
+  X, Mail, KeyRound, LogIn, UserPlus, 
   Loader2, AlertCircle, CheckCircle2, Wifi, WifiOff, Sparkles,
-  ShieldCheck, Calendar, ShieldAlert, Pencil
+  ShieldCheck, ShieldAlert, Pencil
 } from 'lucide-react';
 
 import { useT } from '../i18n/useTranslation';
@@ -12,8 +12,6 @@ import { pickLang } from '../i18n/pickLang';
 import { cloudSync } from '../lib/cloudSync';
 import { supabaseUrl, supabaseKey } from '../lib/supabase';
 import sorobanaImg from '@/assets/sorobana/sorobana-teaching-pointing.webp';
-
-// 🆕 استيراد دالة تحويل الأرقام
 import { toLatinDigits } from '@/utils/numberStyle';
 
 interface AuthModalProps {
@@ -22,11 +20,11 @@ interface AuthModalProps {
 }
 
 export interface ParentalConsent {
-  childAge: number;
+  childAge?: number;
   agreedGuardian: boolean;
-  agreedData: boolean;
+  agreedData?: boolean;
   agreedPrivacy: boolean;
-  agreedLeaderboard: boolean; // 🆕 إضافة الموافقة الرابعة
+  agreedLeaderboard?: boolean;
   timestamp: string;
 }
 
@@ -40,11 +38,8 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [parentName, setParentName] = useState('');
-  const [childName, setChildName] = useState('');
-  const [childAge, setChildAge] = useState('');
   
-  // 🆕 الموافقات الأربعة
+  // 🆕 الموافقات
   const [agreeGuardian, setAgreeGuardian] = useState(false);
   const [agreeData, setAgreeData] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
@@ -122,12 +117,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     if (!/^[A-Za-z0-9]+$/.test(password)) return pickLang({ ar: 'كلمة المرور بالأحرف الإنجليزية والأرقام فقط', en: 'Password must be English letters and numbers only' }, lang);
     
     if (isRegister) {
-      if (!parentName.trim()) return pickLang({ ar: 'يرجى إدخال اسم ولي الأمر', en: 'Please enter parent name' }, lang);
-      if (childName.trim().split(/\s+/).length !== 3) return pickLang({ ar: 'اسم الطفل يجب أن يكون ثلاثياً', en: 'Child name must be exactly 3 words' }, lang);
-      const ageNum = parseInt(childAge, 10);
-      if (!childAge || isNaN(ageNum) || ageNum < 5 || ageNum > 18) return pickLang({ ar: 'عمر الطفل يجب أن يكون بين 5 و 18', en: 'Child age must be between 5 and 18' }, lang);
-      
-      // 🆕 الموافقات الثلاثة إجبارية، والرابعة اختيارية
+      // 🆕 الموافقات
       if (!agreeGuardian || !agreeData || !agreePrivacy) {
         return pickLang({ ar: 'يجب الموافقة على شروط الأهلية وجمع البيانات وسياسة الخصوصية', en: 'You must agree to guardian, data collection, and privacy terms' }, lang);
       }
@@ -142,14 +132,14 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     setLoading(true); setMsg(null);
     try {
       const consent: ParentalConsent = {
-        childAge: parseInt(childAge, 10),
         agreedGuardian: agreeGuardian,
         agreedData: agreeData,
         agreedPrivacy: agreePrivacy,
-        agreedLeaderboard: agreeLeaderboard, // 🆕 تمرير الموافقة الرابعة
+        agreedLeaderboard: agreeLeaderboard,
         timestamp: new Date().toISOString(),
       };
-      await cloudSync.registerParent(email, password, parentName, childName, consent);
+      // ✅ الآن 3 أرجومنتات فقط
+      await cloudSync.registerParent(email, password, consent);
       
       setStep('signup-otp');
       setResendTimer(60);
@@ -347,48 +337,31 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                 </div>
 
                 {isRegister && (
-                  <>
-                    <div className="relative group">
-                      <User className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                      <input type="text" placeholder={pickLang({ ar: 'اسم ولي الأمر', en: 'Parent Name' }, lang)} value={parentName} onChange={(e) => setParentName(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 text-sm" />
-                    </div>
-                    <div className="relative group">
-                      <Baby className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                      <input type="text" placeholder={pickLang({ ar: 'اسم الطفل الثلاثي', en: 'Child Name (3 words)' }, lang)} value={childName} onChange={(e) => setChildName(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 text-sm" />
-                    </div>
-                    <div className="relative group">
-                      <Calendar className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                      <input type="number" min="5" max="18" placeholder={pickLang({ ar: 'عمر الطفل (5-18)', en: 'Child Age (5-18)' }, lang)} value={childAge} onChange={(e) => setChildAge(e.target.value)} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-3.5 ps-11 pe-4 text-white placeholder-white/30 focus:outline-none focus:border-amber-400 text-sm" dir="ltr" />
-                    </div>
+                  <div className="mt-4 space-y-3 p-4 bg-black/40 border border-white/10 rounded-2xl shadow-inner relative overflow-hidden">
+                    <div className="absolute top-0 start-0 w-1 h-full bg-amber-500/50 rounded-full" />
+                    
+                    <label className="flex items-start gap-2.5 cursor-pointer">
+                      <input type="checkbox" checked={agreeGuardian} onChange={(e) => setAgreeGuardian(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
+                      <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أقر بأنني ولي الأمر (18+).', en: 'I am the guardian (18+).' }, lang)}</span>
+                    </label>
+                    
+                    <label className="flex items-start gap-2.5 cursor-pointer">
+                      <input type="checkbox" checked={agreeData} onChange={(e) => setAgreeData(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
+                      <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أوافق على جمع بيانات طفلي ومعالجتها للأغراض التعليمية.', en: "I agree to collect and process my child's data for educational purposes." }, lang)}</span>
+                    </label>
+                    
+                    <label className="flex items-start gap-2.5 cursor-pointer">
+                      <input type="checkbox" checked={agreePrivacy} onChange={(e) => setAgreePrivacy(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
+                      <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أوافق على سياسة الخصوصية.', en: 'I agree to Privacy Policy.' }, lang)}</span>
+                    </label>
 
-                    <div className="mt-4 space-y-3 p-4 bg-black/40 border border-white/10 rounded-2xl shadow-inner relative overflow-hidden">
-                      <div className="absolute top-0 start-0 w-1 h-full bg-amber-500/50 rounded-full" />
-                      
-                      <label className="flex items-start gap-2.5 cursor-pointer">
-                        <input type="checkbox" checked={agreeGuardian} onChange={(e) => setAgreeGuardian(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
-                        <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أقر بأنني ولي الأمر (18+).', en: 'I am the guardian (18+).' }, lang)}</span>
-                      </label>
-                      
-                      <label className="flex items-start gap-2.5 cursor-pointer">
-                        <input type="checkbox" checked={agreeData} onChange={(e) => setAgreeData(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
-                        <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أوافق على جمع بيانات طفلي ومعالجتها للأغراض التعليمية.', en: "I agree to collect and process my child's data for educational purposes." }, lang)}</span>
-                      </label>
-                      
-                      <label className="flex items-start gap-2.5 cursor-pointer">
-                        <input type="checkbox" checked={agreePrivacy} onChange={(e) => setAgreePrivacy(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
-                        <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أوافق على سياسة الخصوصية.', en: 'I agree to Privacy Policy.' }, lang)}</span>
-                      </label>
-
-                      {/* 🆕 الموافقة الرابعة (الاختيارية) للوحة الشرف */}
-                      <label className="flex items-start gap-2.5 cursor-pointer border-t border-white/10 pt-3 mt-3">
-                        <input type="checkbox" checked={agreeLeaderboard} onChange={(e) => setAgreeLeaderboard(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
-                        <span className="text-[11px] text-emerald-200/90 leading-relaxed font-medium">
-                          {pickLang({ ar: 'أوافق على عرض اسم طفلي (بصيغة مقنّعة) ودرجاته في لوحات الشرف العامة داخل التطبيق.', en: "I agree to display my child's masked name and scores on public leaderboards in the app." }, lang)}
-                        </span>
-                      </label>
-
-                    </div>
-                  </>
+                    <label className="flex items-start gap-2.5 cursor-pointer border-t border-white/10 pt-3 mt-3">
+                      <input type="checkbox" checked={agreeLeaderboard} onChange={(e) => setAgreeLeaderboard(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
+                      <span className="text-[11px] text-emerald-200/90 leading-relaxed font-medium">
+                        {pickLang({ ar: 'أوافق على عرض اسم طفلي (بصيغة مقنّعة) ودرجاته في لوحات الشرف العامة داخل التطبيق.', en: "I agree to display my child's masked name and scores on public leaderboards in the app." }, lang)}
+                      </span>
+                    </label>
+                  </div>
                 )}
               </>
             )}
