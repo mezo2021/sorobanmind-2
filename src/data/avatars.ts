@@ -106,25 +106,38 @@ export const AVATARS: AvatarData[] = [
   // ═══════════════════════════════════════════════════════
   // 20 مخلوقاً أسطورياً
   // ═══════════════════════════════════════════════════════
-  { id: 'unicorn_magic',    emoji: '🦄', nameAr: 'وحيد القرن السحري',nameEn: 'Magic Unicorn',    category: 'mythical' },
+      { id: 'unicorn_magic',    emoji: '🦄', nameAr: 'وحيد القرن السحري',nameEn: 'Magic Unicorn',    category: 'mythical' },
   { id: 'dragon_blue',      emoji: '🐲', nameAr: 'التنين الأزرق',    nameEn: 'Blue Dragon',      category: 'mythical' },
-  { id: 'mermaid_magic',    emoji: '🧜‍♀️', nameAr: 'حورية البحر',      nameEn: 'Mermaid',          category: 'mythical' },
-  { id: 'merman_sea',       emoji: '🧜‍♂️', nameAr: 'ملك البحر',        nameEn: 'Merman',           category: 'mythical' },
-  { id: 'genie_male',       emoji: '🧞‍♂️', nameAr: 'الجني السحري',     nameEn: 'Magic Genie',      category: 'mythical' },
-  { id: 'genie_female',     emoji: '🧞‍♀️', nameAr: 'الجنية السحرية',   nameEn: 'Magic Genie Woman',category: 'mythical' },
-  { id: 'fairy_male',       emoji: '🧚‍♂️', nameAr: 'الجني الطيب',      nameEn: 'Kind Fairy',       category: 'mythical' },
-  { id: 'fairy_female',     emoji: '🧚‍♀️', nameAr: 'الجنية الطيبة',    nameEn: 'Kind Fairy Woman', category: 'mythical' },
+  
+  // 👇 بدائل سابقة
+  { id: 'kraken_deep',      emoji: '🦑', nameAr: 'الكراكن العملاق',  nameEn: 'Deep Kraken',      category: 'mythical' },
+  { id: 'gnome_forest',     emoji: '🍄', nameAr: 'الجنوم الصغير',    nameEn: 'Forest Gnome',     category: 'mythical' },
+  { id: 'phoenix_fire',     emoji: '🐦‍🔥', nameAr: 'طائر الفينيق',     nameEn: 'Fire Phoenix',     category: 'mythical' },
+  { id: 'pegasus_winged',   emoji: '🐎', nameAr: 'الحصان المجنح',    nameEn: 'Winged Pegasus',   category: 'mythical' },
+  
+  // 👇 تم استبدال الجني الطيب (fairy_male) بالحارس المجنح
+  { id: 'griffin_guard',    emoji: '🦅', nameAr: 'الحارس المجنح',    nameEn: 'Griffin Guard',    category: 'mythical' },
+  
+  // 👇 تم استبدال الجنية الطيبة (fairy_female) بروح الغابة
+  { id: 'forest_spirit',    emoji: '🌿', nameAr: 'روح الغابة العتيقة', nameEn: 'Forest Spirit',  category: 'mythical' },
+  
   { id: 'elf_male',         emoji: '🧝‍♂️', nameAr: 'الفارس الخارق',    nameEn: 'Super Knight',     category: 'mythical' },
   { id: 'elf_female',       emoji: '🧝‍♀️', nameAr: 'الفارسة الخارقة',  nameEn: 'Super Knightess',  category: 'mythical' },
-  { id: 'zombie_wise',      emoji: '🧟', nameAr: 'المحارب القديم',   nameEn: 'Old Warrior',      category: 'mythical' },
-  { id: 'vampire_brave',    emoji: '🧛', nameAr: 'المصاص الشجاع',    nameEn: 'Brave Vampire',    category: 'mythical' },
+  
+  // 👇 بدائل سابقة
+  { id: 'golem_stone',      emoji: '🗿', nameAr: 'الغولم الحجري',    nameEn: 'Stone Golem',      category: 'mythical' },
+  { id: 'minotaur_strong',  emoji: '🐂', nameAr: 'المينوتور القوي',  nameEn: 'Strong Minotaur',  category: 'mythical' },
+  
   { id: 'dragon_small',     emoji: '🐉', nameAr: 'التنين الأخضر',    nameEn: 'Green Dragon',     category: 'mythical' },
   { id: 'dinosaur_brave',   emoji: '🦖', nameAr: 'الديناصور الشجاع', nameEn: 'Brave Dinosaur',   category: 'mythical' },
   { id: 'dinosaur_long',    emoji: '🦕', nameAr: 'الديناصور الطويل', nameEn: 'Long Dinosaur',    category: 'mythical' },
   { id: 'troll_strong',     emoji: '🧌', nameAr: 'العملاق القوي',    nameEn: 'Strong Troll',     category: 'mythical' },
   { id: 'ghost_friendly',   emoji: '👻', nameAr: 'الشبح الودود',     nameEn: 'Friendly Ghost',   category: 'mythical' },
-  { id: 'ogre_power',       emoji: '👹', nameAr: 'الغول القوي',      nameEn: 'Powerful Ogre',    category: 'mythical' },
-  { id: 'goblin_clever',    emoji: '👺', nameAr: 'العفريت الذكي',    nameEn: 'Clever Goblin',    category: 'mythical' },
+  
+  // 👇 بدائل سابقة
+  { id: 'yeti_snow',        emoji: '🐻‍❄️', nameAr: 'اليتي الثلجي',     nameEn: 'Snow Yeti',        category: 'mythical' },
+  { id: 'centaur_fast',     emoji: '🏇', nameAr: 'القنطور السريع',   nameEn: 'Fast Centaur',     category: 'mythical' },
+  
   { id: 'skeleton_brave',   emoji: '💀', nameAr: 'الهيكل الشجاع',    nameEn: 'Brave Skeleton',   category: 'mythical' },
 ];
 
