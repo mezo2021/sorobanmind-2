@@ -6,7 +6,8 @@
 // ✅ لا earnedBadges · لا QUESTS · لا BADGES
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { storage } from "../utils/storage";
 import type {
   Attempt,
   Category,
@@ -530,6 +531,7 @@ export const useProgressStore = create<ProgressState>()(
     }),
     {
       name: "sorobanmind-v2-progress",
+      storage: createJSONStorage(() => storage),
       // 🆕 v14: تنظيف سجلات التدريب القديمة من mentalArchivesExams
       version: 14,
       migrate: (persistedState, version) => {
