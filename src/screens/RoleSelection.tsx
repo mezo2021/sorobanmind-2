@@ -1,10 +1,11 @@
 // src/screens/RoleSelection.tsx
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages, Wrench, Cloud, Lock, KeyRound, X, LogOut, LogIn } from 'lucide-react';
+import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages, Wrench, Cloud, Lock, KeyRound, X, LogOut, LogIn, Loader2 } from 'lucide-react';
 
 import { useT, useLangStore } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
+import { supabase } from '../lib/supabase'; // 🆕 للتحقق من كلمة مرور ولي الأمر
 
 import type { Role, CharacterType } from '@/types';
 import { CharacterSelector } from '@/components/CharacterSelector';
@@ -23,6 +24,7 @@ const NAME_STORAGE_KEY = 'soroban_child_name';
 const DEV_PASSWORD = 'mowalid-m';
 
 type Step = 'idle' | 'name' | 'companion';
+type PasswordMode = 'dev' | 'guardian';
 
 export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   const { lang, dir } = useT();
@@ -37,6 +39,12 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   const [devPassword, setDevPassword] = useState('');
   const [devPasswordError, setDevPasswordError] = useState(false);
 
+  // 🆕 حالة الحماية
+  const [passwordMode, setPasswordMode] = useState<PasswordMode>('guardian');
+  const [loadingPassword, setLoadingPassword] = useState(false);
+  const [lockUntil, setLockUntil] = useState<number>(0);
+  const [now, setNow] = useState(Date.now());
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -50,6 +58,22 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     };
     checkAuth();
   }, []);
+
+  // 🆕 تحديث وقت القفل عند فتح المودال
+  useEffect(() => {
+    if (showDevPassword) {
+      const savedLock = Number(localStorage.getItem('soroban_guardian_lock_until') || 0);
+      setLockUntil(savedLock);
+      setNow(Date.now());
+    }
+  }, [showDevPassword]);
+
+  // 🆕 مؤقت لتحديث العد التنازلي أثناء القفل
+  useEffect(() => {
+    if (!showDevPassword || passwordMode !== 'guardian' || now >= lockUntil) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [showDevPassword, passwordMode, lockUntil, now]);
 
   const handleLogout = async () => {
     playSound('click');
@@ -74,7 +98,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   };
 
   const handleSelect = (role: Role) => {
-    // إذا لم يكن مسجلاً → افتح AuthModal
     if (!isLoggedIn) {
       playSound('click');
       setShowAuth(true);
@@ -83,6 +106,9 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
 
     if (role === 'guardian') {
       playSound('click');
+      setPasswordMode('guardian');
+      setDevPassword('');
+      setDevPasswordError(false);
       setShowDevPassword(true);
       return;
     }
@@ -106,16 +132,69 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     }
   };
 
-  const handleDevPasswordSubmit = () => {
-    if (devPassword === DEV_PASSWORD) {
+  // 🆕 التحقق من كلمة المرور (مطور أو ولي أمر)
+  const handleDevPasswordSubmit = async () => {
+    if (passwordMode === 'dev') {
+      if (devPassword === DEV_PASSWORD) {
+        setShowDevPassword(false);
+        setDevPassword('');
+        setDevPasswordError(false);
+        playSound('whoosh');
+        onSelect('guardian');
+      } else {
+        setDevPasswordError(true);
+        setDevPassword('');
+      }
+      return;
+    }
+
+    // Guardian Mode
+    if (Date.now() < lockUntil) {
+      return; // UI يُظهر القفل تلقائياً
+    }
+
+    setLoadingPassword(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !user.email) {
+        throw new Error('No user logged in');
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: devPassword,
+      });
+
+      if (error) throw error;
+
+      // ✅ النجاح: مسح المحاولات + استعادة الهوية
+      localStorage.removeItem('soroban_guardian_attempts');
+      localStorage.removeItem('soroban_guardian_lock_until');
+      
+      await cloudSync.getSession(); // 🆕 استعادة اسم البطل
+      
       setShowDevPassword(false);
       setDevPassword('');
       setDevPasswordError(false);
       playSound('whoosh');
       onSelect('guardian');
-    } else {
+    } catch (e) {
+      // ❌ فشل: زيادة المحاولات
+      let attempts = Number(localStorage.getItem('soroban_guardian_attempts') || 0);
+      attempts++;
+      localStorage.setItem('soroban_guardian_attempts', String(attempts));
+
+      if (attempts >= 3) {
+        const newLockUntil = Date.now() + 5 * 60 * 1000;
+        localStorage.setItem('soroban_guardian_lock_until', String(newLockUntil));
+        setLockUntil(newLockUntil);
+        setNow(Date.now());
+      }
+      
       setDevPasswordError(true);
       setDevPassword('');
+    } finally {
+      setLoadingPassword(false);
     }
   };
 
@@ -153,7 +232,7 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
       <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-50 flex items-center gap-2">
         <button
           type="button"
-          onClick={() => { playSound('click'); setShowDevPassword(true); }}
+          onClick={() => { playSound('click'); setPasswordMode('dev'); setDevPassword(''); setDevPasswordError(false); setShowDevPassword(true); }}
           className="p-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 transition"
         >
           <Wrench className="w-4 h-4" />
@@ -293,14 +372,50 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
                   <KeyRound className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-extrabold font-display text-white">
-                  {pickLang({ ar: 'وضع المطور', en: 'Developer Mode' }, lang)}
+                  {passwordMode === 'dev' 
+                    ? pickLang({ ar: 'وضع المطور', en: 'Developer Mode' }, lang)
+                    : pickLang({ ar: 'دخول ولي الأمر', en: 'Guardian Access' }, lang)}
                 </h3>
+                {passwordMode === 'guardian' && (
+                  <p className="text-xs text-white/60 mt-1">
+                    {pickLang({ ar: 'أدخل كلمة مرور حسابك السحابي', en: 'Enter your cloud account password' }, lang)}
+                  </p>
+                )}
               </div>
-              <input type="password" value={devPassword} onChange={(e) => { setDevPassword(e.target.value); setDevPasswordError(false); }} onKeyDown={(e) => e.key === 'Enter' && handleDevPasswordSubmit()} className={`w-full bg-white/5 border rounded-xl py-3 px-3 text-white text-center font-mono tracking-widest focus:outline-none transition ${devPasswordError ? 'border-red-400' : 'border-white/10 focus:border-amber-400'}`} placeholder="••••••••" dir="ltr" autoFocus />
-              {devPasswordError && <p className="text-red-400 text-xs mt-2 text-center">{pickLang({ ar: 'كلمة السر خاطئة', en: 'Wrong password' }, lang)}</p>}
-              <button onClick={handleDevPasswordSubmit} className="btn-primary w-full !py-3 mt-4">
-                {pickLang({ ar: 'دخول', en: 'Enter' }, lang)}
-              </button>
+
+              {passwordMode === 'guardian' && now < lockUntil ? (
+                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl mb-4 text-center">
+                  <p className="text-red-400 font-bold text-sm">
+                    {pickLang({ ar: 'مقفل مؤقتاً', en: 'Temporarily Locked' }, lang)}
+                  </p>
+                  <p className="text-red-300 text-xs mt-1">
+                    {pickLang({ ar: `حاول مجدداً بعد ${Math.ceil((lockUntil - now) / 60000)} دقائق`, en: `Try again in ${Math.ceil((lockUntil - now) / 60000)} minutes` }, lang)}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <input 
+                    type="password" 
+                    value={devPassword} 
+                    onChange={(e) => { setDevPassword(e.target.value); setDevPasswordError(false); }} 
+                    onKeyDown={(e) => e.key === 'Enter' && handleDevPasswordSubmit()} 
+                    className={`w-full bg-white/5 border rounded-xl py-3 px-3 text-white text-center font-mono tracking-widest focus:outline-none transition ${devPasswordError ? 'border-red-400' : 'border-white/10 focus:border-amber-400'}`} 
+                    placeholder="••••••••" 
+                    dir="ltr" 
+                    autoFocus 
+                    disabled={loadingPassword}
+                  />
+                  {devPasswordError && <p className="text-red-400 text-xs mt-2 text-center">{pickLang({ ar: 'كلمة السر خاطئة', en: 'Wrong password' }, lang)}</p>}
+                  <button 
+                    onClick={handleDevPasswordSubmit} 
+                    disabled={loadingPassword}
+                    className="btn-primary w-full !py-3 mt-4 flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {loadingPassword ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                    {pickLang({ ar: 'دخول', en: 'Enter' }, lang)}
+                  </button>
+                </>
+              )}
             </motion.div>
           </motion.div>
         )}
