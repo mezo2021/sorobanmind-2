@@ -23,11 +23,7 @@ export function AppGate({ children }: Props) {
 
   const handleModeSelect = (m: AppMode) => {
     setMode(m);
-    if (m === 'local') {
-      window.location.reload();
-    } else {
-      setModeState('cloud');
-    }
+    window.location.reload();
   };
 
   const handleHeroSave = (heroKey: string) => {
