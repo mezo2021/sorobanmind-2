@@ -451,11 +451,29 @@ export function GuardianDashboard({
   };
 
   // ═══ الأزرار الإدارية ═══
-  const handlePreviewToggle = () => {
-    togglePreviewMode();
-    playSound('click');
-    setTimeout(() => window.location.reload(), 300);
-  };
+const handlePreviewToggle = () => {
+  // 🆕 حماية وضع المعاينة بكلمة سر المطور
+  if (!inPreview) {
+    const pass = window.prompt(
+      pickLang({ 
+        ar: 'أدخل كلمة سر المطور لتفعيل وضع المعاينة:', 
+        en: 'Enter developer password to enable preview mode:' 
+      }, lang)
+    );
+    
+    if (pass !== 'mowalid-m') {
+      if (pass !== null) { // إذا لم يضغط إلغاء
+        window.alert(pickLang({ ar: 'كلمة السر خاطئة', en: 'Wrong password' }, lang));
+      }
+      return;
+    }
+  }
+  
+  // إذا كان في المعاينة بالفعل (يريد الخروج) أو أدخل كلمة السر بنجاح
+  togglePreviewMode();
+  playSound('click');
+  setTimeout(() => window.location.reload(), 300);
+};
 
   const handleReset = () => {
     const keysToKeep = [
