@@ -18,11 +18,11 @@ function extractPureState(state: ProgressState) {
   return pureData;
 }
 
+// ✅ تم تعديل الواجهة (حذف childAge و agreedData وإضافة agreedLeaderboard)
 export interface ParentalConsent {
-  childAge: number;
   agreedGuardian: boolean;
-  agreedData: boolean;
   agreedPrivacy: boolean;
+  agreedLeaderboard: boolean;
   timestamp: string;
 }
 
@@ -84,36 +84,26 @@ async function adoptUser(user: User): Promise<boolean> {
 
 export const cloudSync = {
   // ═══ 1. التسجيل ═══
+  // ✅ تم تعديل دالة registerParent بالكامل
   async registerParent(
     email: string,
     password: string,
-    parentName: string,
-    childName: string,
+    avatarId: string,
     consent: ParentalConsent,
   ) {
-    if (!consent || !consent.agreedGuardian || !consent.agreedData || !consent.agreedPrivacy) {
-      throw new Error('يجب الموافقة على جميع الشروط للمتابعة.');
+    if (!consent.agreedGuardian || !consent.agreedPrivacy) {
+      throw new Error('يجب الموافقة على الأهلية وسياسة الخصوصية.');
     }
-    if (!consent.childAge || consent.childAge < 5 || consent.childAge > 18) {
-      throw new Error('Invalid child age. Must be between 5 and 18.');
-    }
-
-    const trimmedParent = parentName.trim();
-    const trimmedChild = childName.trim();
-    const maskedChild = maskName(trimmedChild);
 
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          parent_name: trimmedParent,
-          child_name: trimmedChild,
-          child_masked_name: maskedChild,
-          child_age: consent.childAge,
+          avatar_id: avatarId,
           consent_guardian: consent.agreedGuardian,
-          consent_data: consent.agreedData,
           consent_privacy: consent.agreedPrivacy,
+          consent_leaderboard: consent.agreedLeaderboard,
           consent_timestamp: consent.timestamp,
         },
       },
@@ -121,8 +111,6 @@ export const cloudSync = {
 
     if (error) throw new Error(error.message);
     if (!data.user) throw new Error('Failed to create account');
-
-    // 🆕 فحص البريد المسجل مسبقاً (Supabase يعيد مستخدماً وهمياً بدل خطأ)
     if (data.user.identities && data.user.identities.length === 0) {
       throw new Error('User already registered');
     }
