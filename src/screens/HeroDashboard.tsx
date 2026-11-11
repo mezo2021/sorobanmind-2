@@ -336,17 +336,19 @@ export function HeroDashboard({
             <span>{pickLang({ ar: 'تغيير الرفيق', en: 'Change Companion' }, lang)}</span>
           </button>
 
-          {/* 🆕 زر الملف الشخصي */}
-          <button
-            type="button"
-            onClick={() => { playSound('click'); setShowProfile(true); }}
-            className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br from-pink-500/20 to-cyan-500/20 border border-pink-400/30 text-pink-200 hover:from-pink-500/30 hover:to-cyan-500/30 transition-all text-xs font-body"
-          >
-            <Palette className="w-4 h-4" />
-            <span>{pickLang({ ar: 'الملف الشخصي', en: 'My Profile' }, lang)}</span>
-          </button>
-        </div>
-      </motion.div>
+            {/* 🆕 زر الملف الشخصي — مجمّد مؤقتاً (محلي + سحابي) حتى توحيد قوائم الشخصيات */}
+  {false && (
+    <button
+      type="button"
+      onClick={() => { playSound('click'); setShowProfile(true); }}
+      className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br from-pink-500/20 to-cyan-500/20 border border-pink-400/30 text-pink-200 hover:from-pink-500/30 hover:to-cyan-500/30 transition-all text-xs font-body"
+    >
+      <Palette className="w-4 h-4" />
+      <span>{pickLang({ ar: 'الملف الشخصي', en: 'My Profile' }, lang)}</span>
+    </button>
+  )}
+  </div>
+</motion.div>
 
       {/* HERO COMPANION CARD */}
       <motion.div
