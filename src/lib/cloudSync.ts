@@ -1,7 +1,7 @@
 // src/lib/cloudSync.ts
 import { supabase } from './supabase';
 import { useProgressStore, type ProgressState } from '../store/progressStore';
-import { getHeroDisplayName } from '../data/heroNames';
+import { resolveDisplayName } from '../utils/resolveDisplayName';
 import type { User } from '@supabase/supabase-js';
 
 function extractPureState(state: ProgressState) {
@@ -68,7 +68,7 @@ async function pullProgress(userId: string) {
 
 function applyLocalIdentity() {
   const key = localStorage.getItem('soroban_hero_key');
-  const display = key ? getHeroDisplayName(key) : '';
+  const display = key ? resolveDisplayName(key) : '';
   if (display) {
     useProgressStore.getState().setChildName(display);
   }
@@ -76,8 +76,14 @@ function applyLocalIdentity() {
 
 async function adoptUser(user: User): Promise<boolean> {
   const owner = localStorage.getItem(OWNER_KEY);
-  const localName = localStorage.getItem('soroban_child_name');
-  const different = owner ? owner !== user.id : !!localName && localName !== 'البطل';
+  
+  // فحص آمن لوجود بيانات محلية فعلية (مع مراعاة البادئات local: و cloud:)
+  const hasLocalData = !!localStorage.getItem('local:sorobanmind-v2-progress') || 
+                       !!localStorage.getItem('cloud:sorobanmind-v2-progress') || 
+                       !!localStorage.getItem('soroban_hero_key');
+                       
+  // إذا كان هناك مالك سابق، قارنه. إذا لم يكن هناك مالك، لكن هناك بيانات محلية، اعتبره مختلفاً لحماية العزل.
+  const different = owner ? owner !== user.id : hasLocalData;
 
   if (different) {
     wipeLocalProgress();
@@ -218,11 +224,13 @@ export const cloudSync = {
       const { error } = await supabase.rpc('submit_score', {
         p_game_id: gameId, p_score: score, p_time_ms: timeMs,
       });
-      if (error) { alert('🚨 خطأ سوباباسي: ' + error.message); return false; }
-      alert('✅ تم الحفظ في السحابة بنجاح!');
+      if (error) { 
+        console.warn('🚨 خطأ سوباباسي أثناء حفظ النقاط:', error.message); 
+        return false; 
+      }
       return true;
     } catch (err) {
-      alert('🚨 خطأ في الشبكة: ' + String(err));
+      console.warn('🚨 خطأ في الشبكة أثناء حفظ النقاط:', String(err));
       return false;
     }
   },
