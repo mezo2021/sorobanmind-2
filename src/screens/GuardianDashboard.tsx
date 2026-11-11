@@ -20,6 +20,7 @@ import { useQuests } from '../hooks/useQuests';
 import { cloudSync } from '../lib/cloudSync';
 
 import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
+import { resolveDisplayName } from '@/utils/resolveDisplayName';
 
 // ═══ SRB Stores ═══
 import { useProgressStore, selectObservationAccuracy } from '../store/progressStore';
@@ -110,22 +111,34 @@ const SAFE_EXPORT_DEVICE_KEYS = [
 ];
 
 function isSafeToExport(key: string): boolean {
-  // حظر صريح للجلسة والمعرفات
-  if (key.startsWith('sb-')) return false;
-  if (key === 'soroban_progress_owner') return false;
-  if (key === 'soroban_mode') return false;
-  // حظر الأسماء الحقيقية المحتملة
-  if (key === 'soroban_child_name') return false;
-  if (key === 'soroban_child_full_name') return false;
-  // حظر حماية PIN
-  if (key.startsWith('soroban_guardian_')) return false;
-  if (key.startsWith('soroban_parent_pin')) return false;
-  if (key === 'soroban_guardian_lock_until') return false;
-  // سماح للبيانات المعزولة بالوضع
+  // استخراج المفتاح الأساسي بعد إزالة بادئة الوضع
+  let bareKey = key;
+
+  if (key.startsWith('local:')) {
+    bareKey = key.substring(6);
+  } else if (key.startsWith('cloud:')) {
+    bareKey = key.substring(6);
+  }
+
+  // منع جلسة Supabase والمعرفات
+  if (key.startsWith('sb-') || bareKey.startsWith('sb-')) return false;
+  if (bareKey === 'soroban_progress_owner') return false;
+  if (bareKey === 'soroban_mode') return false;
+
+  // منع الأسماء
+  if (bareKey === 'soroban_child_name') return false;
+  if (bareKey === 'soroban_child_full_name') return false;
+
+  // منع بيانات الحماية
+  if (bareKey.startsWith('soroban_guardian_')) return false;
+  if (bareKey.startsWith('soroban_parent_pin')) return false;
+
+  // السماح بمفاتيح التخزين المعزولة
   if (SAFE_EXPORT_PREFIXES.some((p) => key.startsWith(p))) return true;
-  // سماح لمفاتيح الجهاز المسموحة فقط
+
+  // السماح بمفاتيح الجهاز المحددة
   if (SAFE_EXPORT_DEVICE_KEYS.includes(key)) return true;
-  // كل ما تبقى (بما فيه الأرشيف غير المبدوء) = ممنوع
+
   return false;
 }
 
@@ -509,27 +522,41 @@ const handlePreviewToggle = () => {
 };
 
   const handleReset = () => {
-    const keysToKeep = [
-      'soroban_companion',
-      'soroban_child_name',
-      'soroban_child_full_name',
-      'soroban_high_scores_v1',
-      'soroban_high_scores_month',
-      'sorobanmind-v2-progress',
-      'soroban_mastery_badges',
-      'sorobanmind-v2-lang',
-      'srb_progress',
-      'soroban_number_style',
-      'sorobania_progress_v2',
-      'soroban_progress_owner',
-    ];
-    Object.keys(localStorage).forEach((key) => {
-      if (!keysToKeep.includes(key)) localStorage.removeItem(key);
-    });
-    playSound('whoosh');
-    setShowResetConfirm(false);
-    window.location.reload();
-  };
+  // مفاتيح الجهاز الثمانية المعتمدة + جلسات Supabase (sb-*)
+  const keysToKeep = [
+    'soroban_mode',
+    'soroban_guardian_lock_until',
+    'soroban_progress_owner',
+    'soroban_welcome_seen',
+    'sorobanmind-v2-lang',
+    'soroban_number_style',
+    'soroban2d5-theme',
+    'soroban_hero_key',
+  ];
+
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith('sb-')) return;
+    if (keysToKeep.includes(key)) return;
+    localStorage.removeItem(key);
+  });
+
+  // إعادة بناء اسم البطل من المفتاح المحفوظ
+  try {
+    const heroKey = localStorage.getItem('soroban_hero_key');
+    if (heroKey) {
+      const displayName = resolveDisplayName(heroKey);
+      if (displayName) {
+        localStorage.setItem('soroban_child_name', displayName);
+      }
+    }
+  } catch {
+    // تجاهل الخطأ
+  }
+
+  playSound('whoosh');
+  setShowResetConfirm(false);
+  window.location.reload();
+};
 
   const handleBackup = () => {
     try {
