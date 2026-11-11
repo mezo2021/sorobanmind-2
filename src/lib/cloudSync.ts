@@ -76,14 +76,8 @@ function applyLocalIdentity() {
 
 async function adoptUser(user: User): Promise<boolean> {
   const owner = localStorage.getItem(OWNER_KEY);
-  
-  // فحص آمن لوجود بيانات محلية فعلية (مع مراعاة البادئات local: و cloud:)
-  const hasLocalData = !!localStorage.getItem('local:sorobanmind-v2-progress') || 
-                       !!localStorage.getItem('cloud:sorobanmind-v2-progress') || 
-                       !!localStorage.getItem('soroban_hero_key');
-                       
-  // إذا كان هناك مالك سابق، قارنه. إذا لم يكن هناك مالك، لكن هناك بيانات محلية، اعتبره مختلفاً لحماية العزل.
-  const different = owner ? owner !== user.id : hasLocalData;
+  const localName = localStorage.getItem('soroban_child_name');
+  const different = owner ? owner !== user.id : !!localName && localName !== 'البطل';
 
   if (different) {
     wipeLocalProgress();
