@@ -544,7 +544,7 @@ const handlePreviewToggle = () => {
   try {
     const heroKey = localStorage.getItem('soroban_hero_key');
     if (heroKey) {
-      const displayName = resolveDisplayName(heroKey);
+      const displayName = resolveDisplayName(heroKey, lang);
       if (displayName) {
         localStorage.setItem('soroban_child_name', displayName);
       }
