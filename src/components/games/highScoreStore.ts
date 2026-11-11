@@ -13,7 +13,7 @@
 // ═══════════════════════════════════════════════════════════════════
 
 import { storage } from '../../utils/storage';
-import { getHeroDisplayName } from '../../data/heroNames';
+import { resolveDisplayName } from '../../utils/resolveDisplayName';
 
 const STORAGE_KEY = 'soroban_high_scores_v1';
 const MONTH_KEY = 'soroban_high_scores_month';
@@ -133,8 +133,8 @@ export function addScore(
   const entries = all[gameId] ?? [];
 
   // اسم البطل مصدره soroban_hero_key (هوية الجهاز، بلا بادئة)
-  const heroKey = localStorage.getItem('soroban_hero_key');
-  const displayName = heroKey ? getHeroDisplayName(heroKey) : 'بطل';
+const heroKey = localStorage.getItem('soroban_hero_key');
+const displayName = resolveDisplayName(heroKey) || 'بطل';
 
   const newEntry: HighScoreEntry = {
     name: displayName,
