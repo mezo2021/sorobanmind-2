@@ -144,13 +144,20 @@ export const AVATARS: AvatarData[] = [
 // دالة مساعدة: إرجاع اسم الشخصية مع رقمها
 export function getAvatarDisplayName(
   avatarId: string,
-  sequentialNumber: number,
+  sequentialNumber?: number | null, // تم جعل الرقم اختيارياً
   lang: 'ar' | 'en' = 'ar',
 ): string {
   const avatar = AVATARS.find((a) => a.id === avatarId);
   if (!avatar) return lang === 'ar' ? 'بطل' : 'Hero';
+  
   const name = lang === 'ar' ? avatar.nameAr : avatar.nameEn;
-  return `${name} ${sequentialNumber}`;
+  
+  // التحقق من القيمة (بما في ذلك الصفر) بدلاً من truthiness
+  if (sequentialNumber !== undefined && sequentialNumber !== null) {
+    return `${name} ${sequentialNumber}`;
+  }
+  
+  return name;
 }
 
 // دالة مساعدة: إرجاع الشخصية بالمعرّف
