@@ -141,18 +141,16 @@ export const AVATARS: AvatarData[] = [
   { id: 'skeleton_brave',   emoji: '💀', nameAr: 'الهيكل الشجاع',    nameEn: 'Brave Skeleton',   category: 'mythical' },
 ];
 
-// دالة مساعدة: إرجاع اسم الشخصية مع رقمها
+// دالة مساعدة: إرجاع اسم الشخصية مع رقمها (الرقم أصبح اختيارياً)
 export function getAvatarDisplayName(
   avatarId: string,
-  sequentialNumber?: number | null, // تم جعل الرقم اختيارياً
+  sequentialNumber?: number | null,
   lang: 'ar' | 'en' = 'ar',
 ): string {
   const avatar = AVATARS.find((a) => a.id === avatarId);
   if (!avatar) return lang === 'ar' ? 'بطل' : 'Hero';
-  
   const name = lang === 'ar' ? avatar.nameAr : avatar.nameEn;
   
-  // التحقق من القيمة (بما في ذلك الصفر) بدلاً من truthiness
   if (sequentialNumber !== undefined && sequentialNumber !== null) {
     return `${name} ${sequentialNumber}`;
   }
