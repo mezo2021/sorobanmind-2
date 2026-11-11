@@ -5,10 +5,12 @@ import { HeroNamePicker } from './HeroNamePicker';
 import { resolveDisplayName } from '@/utils/resolveDisplayName';
 import { getMode, setMode, type AppMode } from '@/utils/appMode';
 import { useProgressStore } from '@/store/progressStore';
+import { useT } from '@/i18n/useTranslation'; // ✅ إضافة اللغة
 
 interface Props { children: React.ReactNode; }
 
 export function AppGate({ children }: Props) {
+  const { lang } = useT(); // ✅ جلب اللغة الحالية
   const [ready, setReady] = useState(false);
   const [mode, setModeState] = useState<AppMode | null>(null);
   const [hasHero, setHasHero] = useState(false);
@@ -25,7 +27,8 @@ export function AppGate({ children }: Props) {
   };
 
   const handleHeroSave = (heroKey: string) => {
-    const displayName = resolveDisplayName(heroKey);
+    // ✅ تمرير اللغة للدالة
+    const displayName = resolveDisplayName(heroKey, lang);
 
     if (!displayName) {
       console.warn('Unknown hero key:', heroKey);
