@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { AppModeSelection } from './AppModeSelection';
 import { HeroNamePicker } from './HeroNamePicker';
-import { getHeroDisplayName } from '@/data/heroNames';
+import { resolveDisplayName } from '@/utils/resolveDisplayName'; // تم استبدال الاستيراد القديم
 import { getMode, setMode, type AppMode } from '@/utils/appMode';
 import { useProgressStore } from '@/store/progressStore';
 
@@ -25,7 +25,9 @@ export function AppGate({ children }: Props) {
   };
 
   const handleHeroSave = (heroKey: string) => {
-    const displayName = getHeroDisplayName(heroKey, 'ar');
+    // تم استخدام الدالة الموحدة هنا
+    const displayName = resolveDisplayName(heroKey); 
+    
     try {
       localStorage.setItem('soroban_hero_key', heroKey);
       localStorage.setItem('soroban_child_name', displayName);
