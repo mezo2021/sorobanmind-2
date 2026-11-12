@@ -6,6 +6,11 @@ import type { User } from '@supabase/supabase-js';
 
 function extractPureState(state: ProgressState) {
   const {
+    // استبعاد الأسماء الشخصية (حماية الخصوصية)
+    childName: _childName,
+    parentName: _parentName,
+    
+    // استبعاد الدوال
     setChildName, setParentName, setCategory, markLevelComplete, markLessonCompleted,
     markPracticePassed, markAnzanVisualPassed, markAnzanAudioPassed,
     setGrade, getGrades, computeFinalScore, setPendingRemediation,
@@ -62,7 +67,9 @@ async function pullProgress(userId: string) {
     .maybeSingle();
   const pd = data?.progress_data as Record<string, unknown> | null | undefined;
   if (pd && Object.keys(pd).length > 0) {
-    useProgressStore.setState({ ...useProgressStore.getState(), ...(pd as any) });
+    // تنظيف الأسماء القادمة من السحابة (حماية الخصوصية)
+    const { childName: _c, parentName: _p, ...safePd } = pd as any;
+    useProgressStore.setState({ ...useProgressStore.getState(), ...safePd });
   }
 }
 
@@ -211,7 +218,12 @@ export const cloudSync = {
     const { data, error } = await supabase.from('soroban_progress').select('progress_data').eq('user_id', user.id).single();
     if (error) throw new Error(error.message);
     if (!data || !data.progress_data) throw new Error('No backup found');
-    useProgressStore.setState({ ...useProgressStore.getState(), ...(data.progress_data as any) });
+    
+    // تنظيف الأسماء القادمة من السحابة (حماية الخصوصية)
+    const pd = data.progress_data as any;
+    const { childName: _c, parentName: _p, ...safePd } = pd;
+    
+    useProgressStore.setState({ ...useProgressStore.getState(), ...safePd });
     return true;
   },
 
