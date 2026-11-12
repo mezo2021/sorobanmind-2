@@ -2,18 +2,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  ArrowRight, 
-  ArrowLeft, 
-  Globe, 
-  Check, 
-  Sparkles, 
-  Palette, 
-  Smile, 
-  Type, 
-  Zap,
+  ArrowRight, ArrowLeft, Globe, Check, Sparkles, Palette, Smile, Type, Zap,
 } from 'lucide-react';
 
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+
 import { AVATARS } from '@/data/avatars';
+import { resolveDisplayName } from '@/utils/resolveDisplayName';
 
 export const COLOR_PALETTE = [
   { id: 'c1', hex: '#EC4899' }, { id: 'c2', hex: '#8B5CF6' }, { id: 'c3', hex: '#3B82F6' },
@@ -50,11 +46,14 @@ interface ProfileScreenProps {
 }
 
 export default function ProfileScreen({ onBack, onSave, initialData }: ProfileScreenProps) {
-  const [lang, setLang] = useState<'ar' | 'en'>('ar');
+  const { lang, dir } = useT(); // ✅ القراءة من النظام العالمي
   const isRTL = lang === 'ar';
 
-  // 🔧 استخدام الحقول الصحيحة: id / emoji
-  const [selectedAvatarId, setSelectedAvatarId] = useState(initialData?.avatar_key || AVATARS[0]?.id || 'rabbit_fast');
+  // ✅ قراءة الشخصية الحالية من soroban_hero_key
+  const [selectedAvatarId, setSelectedAvatarId] = useState(() => {
+    return localStorage.getItem('soroban_hero_key') || AVATARS[0]?.id || 'rabbit_fast';
+  });
+
   const [selectedColor, setSelectedColor] = useState(initialData?.avatar_color || '#EC4899');
   const [selectedCompanion, setSelectedCompanion] = useState(initialData?.companion_key || 'rayan');
   const [selectedTheme, setSelectedTheme] = useState(initialData?.theme_key || 'theme_cosmic');
@@ -75,13 +74,12 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
     { id: 'all', nameAr: 'الكل', nameEn: 'All' },
     { id: 'animals', nameAr: 'حيوانات', nameEn: 'Animals' },
     { id: 'heroes', nameAr: 'أبطال', nameEn: 'Heroes' },
-    { id: 'space', nameAr: 'فضاء', nameEn: 'Space' },  // ✅ space وليس aliens
+    { id: 'space', nameAr: 'فضاء', nameEn: 'Space' },
     { id: 'mythical', nameAr: 'أسطوري', nameEn: 'Mythical' },
   ];
 
   const handleSave = () => {
     const payload = {
-      avatar_key: selectedAvatarId,
       avatar_color: selectedColor,
       companion_key: selectedCompanion,
       theme_key: selectedTheme,
@@ -91,15 +89,27 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
       streak_emoji: streakEmoji,
       lucky_charm: luckyCharm,
     };
+
+    // 1. حفظ المظهر والتفضيلات
+    Object.entries(payload).forEach(([k, v]) => {
+      localStorage.setItem(`soroban_${k}`, v);
+    });
+
+    // 2. حفظ معرف الشخصية (المفتاح الموحد soroban_hero_key)
+    localStorage.setItem('soroban_hero_key', selectedAvatarId);
+
+    // 3. تحديث اسم العرض بناءً على اللغة (ar/en)
+    const displayName = resolveDisplayName(selectedAvatarId, lang);
+    if (displayName) {
+      localStorage.setItem('soroban_child_name', displayName);
+    }
+
     if (onSave) {
       onSave(payload);
-    } else {
-      // Fallback: حفظ محلي
-      Object.entries(payload).forEach(([k, v]) => {
-        localStorage.setItem(`soroban_${k}`, v);
-      });
-      alert(isRTL ? 'تم حفظ التغييرات!' : 'Changes saved!');
     }
+    
+    alert(lang === 'ar' ? 'تم حفظ التغييرات بنجاح!' : 'Changes saved successfully!');
+    if (onBack) onBack();
   };
 
   return (
@@ -122,13 +132,10 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
           {isRTL ? 'الملف الشخصي' : 'Profile'}
         </h1>
 
-        <button
-          onClick={() => setLang(prev => (prev === 'ar' ? 'en' : 'ar'))}
-          className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-2xl text-xs font-bold border border-white/15 transition shadow-sm"
-        >
+        <div className="flex items-center gap-1.5 bg-white/10 px-3 py-2 rounded-2xl text-xs font-bold border border-white/15 shadow-sm">
           <Globe className="w-4 h-4 text-cyan-400" />
-          <span>{lang === 'ar' ? 'English' : 'عربي'}</span>
-        </button>
+          <span>{lang === 'ar' ? 'عربي' : 'English'}</span>
+        </div>
       </header>
 
       <main className="max-w-xl mx-auto px-4 pt-6 flex flex-col gap-6">
@@ -142,7 +149,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
             </h2>
           </div>
 
-          {/* معاينة */}
           <div className="flex flex-col items-center justify-center bg-slate-900/40 rounded-2xl p-6 border border-white/10 mb-5">
             <motion.div 
               key={selectedAvatarId + selectedColor}
@@ -159,7 +165,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
             </span>
           </div>
 
-          {/* الألوان */}
           <div className="mb-5">
             <label className="text-xs font-medium text-white/70 mb-2.5 flex items-center gap-1.5">
               <Palette className="w-3.5 h-3.5 text-pink-400" />
@@ -182,7 +187,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
             </div>
           </div>
 
-          {/* فلاتر */}
           <div className="flex gap-1.5 overflow-x-auto pb-2 mb-3 scrollbar-none">
             {categoriesList.map((cat) => (
               <button
@@ -199,7 +203,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
             ))}
           </div>
 
-          {/* شبكة الشخصيات */}
           <div className="grid grid-cols-5 sm:grid-cols-8 gap-2.5 max-h-60 overflow-y-auto p-2 bg-slate-950/40 rounded-2xl border border-white/10">
             {filteredAvatars.map((item) => {
               const isSelected = selectedAvatarId === item.id;
@@ -233,7 +236,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
               {isRTL ? 'الرفيق' : 'Companion'}
             </h2>
           </div>
-
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {COMPANIONS.map((comp) => {
               const isSelected = selectedCompanion === comp.key;
@@ -318,7 +320,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
             </h2>
           </div>
 
-          {/* الهدف اليومي */}
           <div className="mb-5">
             <label className="text-xs font-medium text-white/70 mb-2 block">
               {isRTL ? 'الهدف اليومي:' : 'Daily Goal:'}
@@ -344,7 +345,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
             </div>
           </div>
 
-          {/* الصعوبة */}
           <div className="mb-5">
             <label className="text-xs font-medium text-white/70 mb-2 block">
               {isRTL ? 'الصعوبة:' : 'Difficulty:'}
@@ -370,7 +370,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
             </div>
           </div>
 
-          {/* السلسلة */}
           <div className="mb-5">
             <label className="text-xs font-medium text-white/70 mb-2 block">
               {isRTL ? 'فاصل السلسلة:' : 'Streak Emoji:'}
@@ -392,7 +391,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
             </div>
           </div>
 
-          {/* الحظ */}
           <div>
             <label className="text-xs font-medium text-white/70 mb-2 block">
               {isRTL ? 'رمز الحظ:' : 'Lucky Charm:'}
@@ -416,7 +414,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
         </section>
       </main>
 
-      {/* زر الحفظ */}
       <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-slate-950/80 backdrop-blur-2xl border-t border-white/10 shadow-2xl">
         <div className="max-w-xl mx-auto">
           <motion.button
