@@ -41,6 +41,7 @@ import WelcomeScreen from './screens/WelcomeScreen';
 import RoleSelection from './screens/RoleSelection';
 import HeroDashboard from './screens/HeroDashboard';
 import GuardianDashboard from './screens/GuardianDashboard';
+import LocalPinGuard from './components/LocalPinGuard';
 import Header from './screens/Header';
 
 // ═══ Category + Level ═══
@@ -163,6 +164,7 @@ function getComingSoonTitle(screen: string): string {
 export default function App() {
   const [screen, setScreen] = useState<AppScreen>('loading');
   const [role, setRole] = useState<Role>(null);
+  const [localGuardianUnlocked, setLocalGuardianUnlocked] = useState(false);
   const [, setActiveLevelId] = useState<LevelId | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -253,6 +255,21 @@ export default function App() {
   setRole(null);
   setScreen('role');
 };
+
+  const handleGuardianBack = () => {
+    // إعادة قفل لوحة ولي الأمر دائماً عند الخروج
+    setLocalGuardianUnlocked(false);
+
+    // الوضع المحلي: العودة مباشرة إلى لوحة البطل
+    if (getMode() === 'local') {
+      setRole('hero');
+      setScreen('hero-dashboard');
+      return;
+    }
+
+    // الوضع السحابي: الحفاظ على مسار الرجوع الحالي
+    handleBackToRole();
+  };
 
   const handleBackToHero = () => {
     setRole('hero');
@@ -499,6 +516,12 @@ export default function App() {
             />
             <HeroDashboard
               onNavigate={(target) => handleNavigate(target as AppScreen)}
+              onParentClick={() => {
+                if (getMode() === 'local') {
+                  setLocalGuardianUnlocked(false);
+                  setScreen('guardian-dashboard');
+                }
+              }}
               playSound={handleSound}
               xp={stats.xp}
               streak={stats.streak}
@@ -515,18 +538,29 @@ export default function App() {
               level={stats.level}
               soundEnabled={stats.soundEnabled}
               onToggleSound={toggleSound}
-              onHome={handleBackToRole}
+              onHome={handleGuardianBack}
             />
-            <GuardianDashboard
-              onBack={handleBackToRole}
-              playSound={handleSound}
-              childName={localStorage.getItem('soroban_child_name') || 'البطل'}
-              childXP={stats.xp}
-              childStreak={stats.streak}
-              childLevel={stats.level}
-              onSwitchToHero={handleSwitchToHero}
-              onShowWelcome={handleShowWelcome}
-            />
+
+            {getMode() === 'local' && !localGuardianUnlocked ? (
+              <LocalPinGuard
+                onUnlock={() => setLocalGuardianUnlocked(true)}
+                onCancel={handleGuardianBack}
+              />
+            ) : (
+              <GuardianDashboard
+                onBack={handleGuardianBack}
+                playSound={handleSound}
+                childName={localStorage.getItem('soroban_child_name') || 'البطل'}
+                childXP={stats.xp}
+                childStreak={stats.streak}
+                childLevel={stats.level}
+                onSwitchToHero={() => {
+                  setLocalGuardianUnlocked(false);
+                  handleSwitchToHero();
+                }}
+                onShowWelcome={handleShowWelcome}
+              />
+            )}
           </>
         );
 
