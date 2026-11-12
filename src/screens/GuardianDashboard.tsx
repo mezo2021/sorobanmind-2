@@ -111,33 +111,79 @@ const SAFE_EXPORT_DEVICE_KEYS = [
   'soroban_companion',
 ];
 
-function isSafeToExport(key: string): boolean {
-  // استخراج المفتاح الأساسي بعد إزالة بادئة الوضع
-  let bareKey = key;
-
-  if (key.startsWith('local:')) {
-    bareKey = key.substring(6);
-  } else if (key.startsWith('cloud:')) {
-    bareKey = key.substring(6);
+/**
+ * ينظف قيمة مفتاح تقدم Zustand من الأسماء الشخصية قبل التصدير أو الاستيراد.
+ * يرفض التنسيقات غير المعروفة بدلاً من تمريرها دون تنظيف.
+ */
+function sanitizeProgressSnapshot(key: string, value: string): string {
+  if (
+    key !== 'local:sorobanmind-v2-progress' &&
+    key !== 'cloud:sorobanmind-v2-progress'
+  ) {
+    return value;
   }
 
-  // منع جلسة Supabase والمعرفات
+  const parsed: unknown = JSON.parse(value);
+
+  if (
+    !parsed ||
+    typeof parsed !== 'object' ||
+    !('state' in parsed) ||
+    !parsed.state ||
+    typeof parsed.state !== 'object' ||
+    Array.isArray(parsed.state)
+  ) {
+    throw new Error('Invalid progress snapshot format');
+  }
+
+  const snapshot = parsed as {
+    state: Record<string, unknown>;
+    [key: string]: unknown;
+  };
+
+  const {
+    childName: _childName,
+    parentName: _parentName,
+    ...safeState
+  } = snapshot.state;
+
+  return JSON.stringify({
+    ...snapshot,
+    state: safeState,
+  });
+}
+
+function isSafeToExport(key: string): boolean {
+  let bareKey = key;
+  if (key.startsWith('local:')) bareKey = key.substring(6);
+  else if (key.startsWith('cloud:')) bareKey = key.substring(6);
+
+  // حماية صريحة للجلسة والمعرفات
   if (key.startsWith('sb-') || bareKey.startsWith('sb-')) return false;
   if (bareKey === 'soroban_progress_owner') return false;
   if (bareKey === 'soroban_mode') return false;
 
-  // منع الأسماء
+  // حماية الأسماء الحقيقية
   if (bareKey === 'soroban_child_name') return false;
   if (bareKey === 'soroban_child_full_name') return false;
 
-  // منع بيانات الحماية
+  // حماية بيانات الحماية (PIN والاسترداد)
   if (bareKey.startsWith('soroban_guardian_')) return false;
-  if (bareKey.startsWith('soroban_parent_pin')) return false;
+  if (bareKey.startsWith('soroban_parent_')) return false;
 
-  // السماح بمفاتيح التخزين المعزولة
+  // حماية دفاعية: أي مفتاح يحتوي كلمات حساسة (حتى لو أضيف مستقبلاً)
+  const normalized = bareKey.toLowerCase();
+  if (
+    normalized.includes('auth-token') ||
+    normalized.includes('password') ||
+    normalized.includes('secret') ||
+    normalized.includes('recovery')
+  ) {
+    return false;
+  }
+
+  // السماح للمفاتيح المعزولة ومفاتيح الجهاز
   if (SAFE_EXPORT_PREFIXES.some((p) => key.startsWith(p))) return true;
-
-  // السماح بمفاتيح الجهاز المحددة
   if (SAFE_EXPORT_DEVICE_KEYS.includes(key)) return true;
 
   return false;
@@ -579,99 +625,196 @@ const handlePreviewToggle = () => {
 };
 
   const handleBackup = () => {
+  try {
+    const mode = getMode();
+    const data: Record<string, string> = {};
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !isSafeToExport(key)) continue;
+
+      // احترام الوضع الحالي فقط (لا نصدّر بيانات الوضع الآخر)
+      if (key.startsWith('local:') && mode !== 'local') continue;
+      if (key.startsWith('cloud:') && mode !== 'cloud') continue;
+
+      const value = localStorage.getItem(key);
+      if (value !== null) {
+        data[key] = sanitizeProgressSnapshot(key, value);
+      }
+    }
+
+    const payload = {
+      schemaVersion: 1,
+      exportedAt: new Date().toISOString(),
+      appVersion: '2.0',
+      mode,
+      data,
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sorobanmind-backup-${mode}-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    playSound('click');
+  } catch (err) {
+    window.alert(pickLang({ ar: 'خطأ أثناء النسخ الاحتياطي: ', en: 'Backup error: ' }, lang) + String(err));
+  }
+};
+
+  const handleRestore = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    window.alert(pickLang({ ar: 'الملف كبير جداً (الحد 2MB)', en: 'File too large (max 2MB)' }, lang));
+    event.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
     try {
-      const data: Record<string, string> = {};
+      const parsed = JSON.parse(e.target?.result as string);
+
+      let dataToImport: Record<string, unknown>;
+      let backupMode: string | null = null;
+
+      if (parsed && typeof parsed === 'object' && 'schemaVersion' in parsed && 'data' in parsed) {
+        if (Number(parsed.schemaVersion) > 1) {
+          window.alert(pickLang({ ar: 'إصدار النسخة غير مدعوم', en: 'Unsupported backup version' }, lang));
+          event.target.value = '';
+          return;
+        }
+        dataToImport = (parsed.data as Record<string, unknown>) || {};
+        backupMode = (parsed as any).mode ?? null;
+      } else if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        dataToImport = parsed as Record<string, unknown>;
+      } else {
+        throw new Error('Invalid format');
+      }
+
+      const mode = getMode();
+
+      // ═══ التحقق من وضع النسخة ═══
+      if (backupMode && backupMode !== mode) {
+        window.alert(
+          pickLang({
+            ar: `هذه النسخة تخص الوضع "${backupMode}"، لكنك في الوضع "${mode}". لا يمكن الاستيراد عبر الأوضاع.`,
+            en: `This backup belongs to "${backupMode}" but you are in "${mode}". Cross-mode import is not allowed.`,
+          }, lang)
+        );
+        event.target.value = '';
+        return;
+      }
+
+      let skippedCount = 0;
+
+      // ═══ المرحلة 1: التحقق والتنظيف ═══
+      const sanitizedEntries: Array<[string, string]> = [];
+      for (const [key, value] of Object.entries(dataToImport)) {
+        if (typeof value !== 'string') { skippedCount++; continue; }
+        if (!isSafeToExport(key)) { skippedCount++; continue; }
+        if (key.startsWith('local:') && mode !== 'local') { skippedCount++; continue; }
+        if (key.startsWith('cloud:') && mode !== 'cloud') { skippedCount++; continue; }
+
+        const safeValue = sanitizeProgressSnapshot(key, value);
+        sanitizedEntries.push([key, safeValue]);
+      }
+
+      // ═══ منع الاستعادة الفارغة ═══
+      if (sanitizedEntries.length === 0) {
+        throw new Error(
+          lang === 'ar'
+            ? 'النسخة لا تحتوي بيانات صالحة للوضع الحالي. لم يتم حذف أي شيء.'
+            : 'Backup contains no valid data for current mode. Nothing was changed.'
+        );
+      }
+
+      // ═══ المرحلة 2: تحديد ما سيُحذف (مع الحفاظ على إعدادات الجهاز) ═══
+      const backupKeys = new Set(sanitizedEntries.map(([k]) => k));
+      const keysToDelete: string[] = [];
+
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (!key || !isSafeToExport(key)) continue;
-        const value = localStorage.getItem(key);
-        if (value !== null) data[key] = value;
+        if (key.startsWith('local:') && mode !== 'local') continue;
+        if (key.startsWith('cloud:') && mode !== 'cloud') continue;
+
+        // إعدادات الجهاز: احتفظ بها إن لم تكن في النسخة
+        if (SAFE_EXPORT_DEVICE_KEYS.includes(key) && !backupKeys.has(key)) continue;
+
+        // بيانات التقدم: احذفها إن لم تكن في النسخة
+        if (!backupKeys.has(key)) keysToDelete.push(key);
       }
-      
-      const payload = {
-        schemaVersion: 1,
-        exportedAt: new Date().toISOString(),
-        appVersion: '2.0',
-        data,
-      };
-      
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `sorobanmind-backup-${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      playSound('click');
-    } catch (err) {
-      window.alert(pickLang({ ar: 'خطأ: ', en: 'Error: ' }, lang) + String(err));
-    }
-  };
 
-  const handleRestore = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+      // ═══ المرحلة 3: حفظ اللقطة السابقة للتراجع ═══
+      const previousData: Record<string, string> = {};
+      // احفظ المفاتيح التي ستُحذف
+      for (const key of keysToDelete) {
+        const value = localStorage.getItem(key);
+        if (value !== null) previousData[key] = value;
+      }
+      // احفظ المفاتيح التي ستُستبدل (لتغطية الفشل بعد الكتابة)
+      for (const [key] of sanitizedEntries) {
+        if (!(key in previousData)) {
+          const value = localStorage.getItem(key);
+          if (value !== null) previousData[key] = value;
+        }
+      }
 
-    // حد الحجم (2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      window.alert(pickLang({ ar: 'الملف كبير جداً (الحد 2MB)', en: 'File too large (max 2MB)' }, lang));
-      event.target.value = '';
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
+      // ═══ المرحلة 4: التنفيذ ═══
+      let importedCount = 0;
       try {
-        const parsed = JSON.parse(e.target?.result as string);
-
-        // دعم البنية الجديدة (schemaVersion + data) والقديمة (كائن مسطح)
-        let dataToImport: Record<string, unknown>;
-        if (parsed && typeof parsed === 'object' && 'schemaVersion' in parsed && 'data' in parsed) {
-          if (Number(parsed.schemaVersion) > 1) {
-            window.alert(pickLang({ ar: 'إصدار النسخة غير مدعوم', en: 'Unsupported backup version' }, lang));
-            event.target.value = '';
-            return;
-          }
-          dataToImport = (parsed.data as Record<string, unknown>) || {};
-        } else if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-          dataToImport = parsed as Record<string, unknown>;
-        } else {
-          throw new Error('Invalid format');
-        }
-
-        let importedCount = 0;
-        let skippedCount = 0;
-
-        // امسح المفاتيح الآمنة القديمة أولاً (استبدال حقيقي، لا تراكم)
-        for (let i = localStorage.length - 1; i >= 0; i--) {
-          const k = localStorage.key(i);
-          if (k && isSafeToExport(k)) localStorage.removeItem(k);
-        }
-
-        for (const [key, value] of Object.entries(dataToImport)) {
-          if (typeof value !== 'string') { skippedCount++; continue; }
-          if (!isSafeToExport(key)) { skippedCount++; continue; }
+        for (const key of keysToDelete) localStorage.removeItem(key);
+        for (const [key, value] of sanitizedEntries) {
           localStorage.setItem(key, value);
           importedCount++;
         }
+      } catch (restoreError) {
+        // ═══ محاولة تراجع ═══
+        let rollbackOk = false;
+        try {
+          for (const [key] of sanitizedEntries) localStorage.removeItem(key);
+          for (const key of Object.keys(previousData)) {
+            if (keysToDelete.includes(key)) localStorage.removeItem(key);
+            localStorage.setItem(key, previousData[key]);
+          }
+          rollbackOk = true;
+        } catch (rollbackError) {
+          console.error('Rollback failed:', rollbackError);
+        }
 
-        playSound('click');
-        setTimeout(() => {
-          window.alert(
-            pickLang({
-              ar: `تم استيراد ${importedCount} عنصر. تم تجاهل ${skippedCount} عنصر غير آمن (مثل الجلسة والأسماء الحقيقية).`,
-              en: `Imported ${importedCount} items. Skipped ${skippedCount} unsafe items (like session and real names).`,
-            }, lang)
-          );
-          window.location.reload();
-        }, 300);
-      } catch (err) {
-        window.alert(pickLang({ ar: 'ملف غير صالح: ', en: 'Invalid file: ' }, lang) + String(err));
+        throw new Error(
+          lang === 'ar'
+            ? (rollbackOk
+                ? 'فشل الاستيراد، وتمت استعادة البيانات السابقة.'
+                : 'فشل الاستيراد وتعذر التراجع. البيانات الحالية قد تكون غير مكتملة.')
+            : (rollbackOk
+                ? 'Import failed. Previous data was restored.'
+                : 'Import failed and rollback also failed. Current data may be incomplete.')
+        );
       }
-      event.target.value = '';
-    };
-    reader.readAsText(file);
+
+      playSound('click');
+      setTimeout(() => {
+        window.alert(
+          pickLang({
+            ar: `تم استيراد ${importedCount} عنصر. تم تجاهل ${skippedCount} عنصر.`,
+            en: `Imported ${importedCount} items. Skipped ${skippedCount}.`,
+          }, lang)
+        );
+        window.location.reload();
+      }, 300);
+    } catch (err) {
+      window.alert(pickLang({ ar: 'استعادة فاشلة: ', en: 'Restore failed: ' }, lang) + String(err));
+    }
+    event.target.value = '';
   };
+  reader.readAsText(file);
+};
 
   // ═══════════════════════════════════════════════════════════
   // JSX
