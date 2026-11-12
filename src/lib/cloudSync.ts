@@ -2,6 +2,7 @@
 import { supabase } from './supabase';
 import { useProgressStore, type ProgressState } from '../store/progressStore';
 import { resolveDisplayName } from '../utils/resolveDisplayName';
+import { getMode } from '../utils/appMode';
 import type { User } from '@supabase/supabase-js';
 
 function extractPureState(state: ProgressState) {
@@ -18,7 +19,9 @@ function extractPureState(state: ProgressState) {
     setExam2Passed, recordPlacementAttempt, setAnzanBadge, setAnzanAudioBadge,
     completeEnrichment, recordAttempt, completeLevel, addXP, updateStreak,
     setLanguage, toggleSound, toggleVoice, toggleHaptics, reset,
-    buyTicket, consumeTicket, ...pureData
+    buyTicket, consumeTicket,
+    completeMentalChapter, recordMentalExam,
+    ...pureData
   } = state;
   return pureData;
 }
@@ -44,7 +47,20 @@ const DEVICE_KEYS = [
 ];
 const OUR_PREFIX = /^(soroban|sorobanmind|srb|sorobania)/;
 
+// 🔒 حماية عمليات المزامنة: لا تعمل إلا في وضع Cloud
+function requireCloudMode(): void {
+  if (getMode() !== 'cloud') {
+    throw new Error('Cloud operation blocked: app is not in Cloud mode.');
+  }
+}
+
 function wipeLocalProgress() {
+  // 🔒 لا تسمح بمسح التقدم إلا عند العمل في وضع Cloud
+  if (getMode() !== 'cloud') {
+    console.warn('wipeLocalProgress blocked: app is not in Cloud mode.');
+    return;
+  }
+
   const keysToRemove: string[] = [];
   try {
     for (let i = 0; i < localStorage.length; i++) {
@@ -106,6 +122,8 @@ export const cloudSync = {
     password: string,
     consent: ParentalConsent,
   ) {
+    requireCloudMode();
+
     if (!consent || !consent.agreedGuardian || !consent.agreedPrivacy) {
       throw new Error('يجب الموافقة على الأهلية وسياسة الخصوصية.');
     }
@@ -133,6 +151,8 @@ export const cloudSync = {
   },
 
   async verifyOtp(email: string, token: string, type: 'signup' | 'recovery') {
+    requireCloudMode();
+
     const cleanToken = toLatinDigits(token.trim());
     const { data, error } = await supabase.auth.verifyOtp({
       email, token: cleanToken, type,
@@ -153,6 +173,8 @@ export const cloudSync = {
   },
 
   async loginParent(email: string, password: string) {
+    requireCloudMode();
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
     if (!data.user) throw new Error('Login failed');
@@ -161,6 +183,8 @@ export const cloudSync = {
   },
 
   async logoutParent(force = false): Promise<boolean> {
+    requireCloudMode();
+
     if (!force) { try { await this.saveToCloud(); } catch { return false; } }
     await supabase.auth.signOut();
     return true;
@@ -203,6 +227,8 @@ export const cloudSync = {
   },
 
   async saveToCloud() {
+    requireCloudMode();
+
     const user = await this.getCurrentUser();
     if (!user) throw new Error('Must be logged in');
     const pureData = extractPureState(useProgressStore.getState());
@@ -214,6 +240,8 @@ export const cloudSync = {
   },
 
   async loadFromCloud() {
+    requireCloudMode();
+
     const user = await this.getCurrentUser();
     if (!user) throw new Error('Must be logged in');
     const { data, error } = await supabase.from('soroban_progress').select('progress_data').eq('user_id', user.id).single();
@@ -234,6 +262,8 @@ export const cloudSync = {
 
   async submitScore(gameId: string, score: number, timeMs: number | null = null) {
     try {
+      requireCloudMode();
+
       const { error } = await supabase.rpc('submit_score', {
         p_game_id: gameId, p_score: score, p_time_ms: timeMs,
       });
