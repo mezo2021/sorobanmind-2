@@ -101,6 +101,8 @@ function applyLocalIdentity() {
 }
 
 async function adoptUser(user: User): Promise<boolean> {
+  requireCloudMode();
+
   const owner = localStorage.getItem(OWNER_KEY);
   const localName = localStorage.getItem('soroban_child_name');
   const different = owner ? owner !== user.id : !!localName && localName !== 'البطل';
@@ -183,10 +185,24 @@ export const cloudSync = {
   },
 
   async logoutParent(force = false): Promise<boolean> {
-    requireCloudMode();
+    // في الوضع السحابي: حاول حفظ التقدم قبل الخروج (إلا إذا force=true)
+    if (!force && getMode() === 'cloud') {
+      try {
+        await this.saveToCloud();
+      } catch (error) {
+        console.error('[cloudSync] Save before logout failed:', error);
+        return false;
+      }
+    }
 
-    if (!force) { try { await this.saveToCloud(); } catch { return false; } }
-    await supabase.auth.signOut();
+    // تنظيف جلسة Supabase (يُسمح به حتى في الوضع المحلي لتنظيف جلسات قديمة)
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error('[cloudSync] Logout failed:', error);
+      return false;
+    }
+
     return true;
   },
 
