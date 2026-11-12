@@ -31,6 +31,7 @@ import ProfileScreen from '@/screens/ProfileScreen';
 
 interface HeroDashboardProps {
   onNavigate: (screen: Screen) => void;
+  onParentClick?: () => void;
   playSound: (type: 'click' | 'whoosh') => void;
   xp: number;
   streak: number;
@@ -139,6 +140,7 @@ const LEGACY_CHARACTER_MAP: Record<string, CharacterType> = {
 
 export function HeroDashboard({
   onNavigate,
+  onParentClick,
   playSound,
   xp,
   streak,
@@ -368,8 +370,8 @@ export function HeroDashboard({
               playSound('click');
               if (getMode() === 'cloud') {
                 onNavigate('role' as Screen);
-              } else {
-                console.log('Local PIN Guard — Commit B pending');
+              } else if (getMode() === 'local') {
+                onParentClick?.();
               }
             }}
             className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-400/30 text-amber-200 hover:from-amber-500/30 hover:to-orange-500/30 transition-all text-xs font-body"
