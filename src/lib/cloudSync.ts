@@ -70,6 +70,7 @@ async function pullProgress(userId: string) {
     // تنظيف الأسماء القادمة من السحابة (حماية الخصوصية)
     const { childName: _c, parentName: _p, ...safePd } = pd as any;
     useProgressStore.setState({ ...useProgressStore.getState(), ...safePd });
+    applyLocalIdentity(); // إعادة تطبيق هوية البطل
   }
 }
 
@@ -224,6 +225,10 @@ export const cloudSync = {
     const { childName: _c, parentName: _p, ...safePd } = pd;
     
     useProgressStore.setState({ ...useProgressStore.getState(), ...safePd });
+    
+    // إعادة تطبيق هوية البطل بعد الدمج (لمنع اختفاء الاسم)
+    applyLocalIdentity();
+    
     return true;
   },
 
