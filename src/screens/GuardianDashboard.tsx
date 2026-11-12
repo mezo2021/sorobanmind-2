@@ -523,35 +523,54 @@ const handlePreviewToggle = () => {
 };
 
   const handleReset = () => {
-  // مفاتيح الجهاز الثمانية المعتمدة + جلسات Supabase (sb-*)
-  const keysToKeep = [
-    'soroban_mode',
-    'soroban_guardian_lock_until',
-    'soroban_progress_owner',
-    'soroban_welcome_seen',
-    'sorobanmind-v2-lang',
-    'soroban_number_style',
-    'soroban2d5-theme',
-    'soroban_hero_key',
+  const mode = getMode();
+
+  // تصفير السحابي مؤجل حتى مرحلة SQL (يحتاج عملية خادمية حقيقية)
+  if (mode === 'cloud') {
+    window.alert(
+      lang === 'ar'
+        ? 'تصفير التقدم السحابي غير متاح حالياً. بياناتك محفوظة في حسابك.'
+        : 'Cloud progress reset is not available yet. Your account data is preserved.'
+    );
+    return;
+  }
+
+  // حماية مطلقة إذا لم يُحدد الوضع
+  if (mode !== 'local') {
+    window.alert(
+      lang === 'ar'
+        ? 'تعذر تحديد وضع التطبيق. لم يتم حذف أي بيانات.'
+        : 'Unable to determine app mode. No data was deleted.'
+    );
+    return;
+  }
+
+  // المفاتيح المحلية المؤكدة (كل تقدم Zustand محفوظ في المفتاح الأول)
+  const localProgressKeys = [
+    'local:sorobanmind-v2-progress',
+    'local:soroban_high_scores_v1',
+    'local:soroban_high_scores_month',
   ];
 
-  Object.keys(localStorage).forEach((key) => {
-    if (key.startsWith('sb-')) return;
-    if (keysToKeep.includes(key)) return;
+  localProgressKeys.forEach((key) => {
     localStorage.removeItem(key);
   });
 
-  // إعادة بناء اسم البطل من المفتاح المحفوظ
+  // إعادة بناء اسم البطل من هويته
   try {
     const heroKey = localStorage.getItem('soroban_hero_key');
     if (heroKey) {
       const displayName = resolveDisplayName(heroKey, lang);
       if (displayName) {
         localStorage.setItem('soroban_child_name', displayName);
+      } else {
+        localStorage.removeItem('soroban_child_name');
       }
+    } else {
+      localStorage.removeItem('soroban_child_name');
     }
   } catch {
-    // تجاهل الخطأ
+    // لا نوقف التصفير بسبب مشكلة في الاسم
   }
 
   playSound('whoosh');
