@@ -68,7 +68,9 @@ async function pullProgress(userId: string) {
 
 function applyLocalIdentity() {
   const key = localStorage.getItem('soroban_hero_key');
-  const display = key ? resolveDisplayName(key) : '';
+  // قراءة اللغة من التخزين المحلي (لأننا خارج مكونات React)
+  const lang = (localStorage.getItem('sorobanmind-v2-lang') as 'ar' | 'en') || 'ar';
+  const display = key ? resolveDisplayName(key, lang) : '';
   if (display) {
     useProgressStore.getState().setChildName(display);
   }
