@@ -714,11 +714,20 @@ const handlePreviewToggle = () => {
           <span>{pickLang({ ar: 'استعادة', en: 'Restore' }, lang)}</span>
         </button>
 
-        <button type="button" onClick={handleCloudSave}
-          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-purple-500/20 border border-purple-400/40 text-purple-100 text-xs font-body">
-          <Cloud className="w-4 h-4" />
-          <span>{pickLang({ ar: 'حفظ في السحابة', en: 'Save to Cloud' }, lang)}</span>
-        </button>
+        {getMode() === 'cloud' && (
+  <>
+    <button type="button" onClick={handleCloudSave}
+      className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-purple-500/20 border border-purple-400/40 text-purple-100 text-xs font-body">
+      <Cloud className="w-4 h-4" />
+      <span>{pickLang({ ar: 'حفظ في السحابة', en: 'Save to Cloud' }, lang)}</span>
+    </button>
+    <button type="button" onClick={handleCloudLoad}
+      className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 text-indigo-100 text-xs font-body">
+      <Cloud className="w-4 h-4" />
+      <span>{pickLang({ ar: 'استعادة من السحابة', en: 'Load from Cloud' }, lang)}</span>
+    </button>
+  </>
+)}
         <button type="button" onClick={handleCloudLoad}
           className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 text-indigo-100 text-xs font-body">
           <Cloud className="w-4 h-4" />
