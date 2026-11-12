@@ -134,7 +134,9 @@ export function addScore(
 
   // اسم البطل مصدره soroban_hero_key (هوية الجهاز، بلا بادئة)
 const heroKey = localStorage.getItem('soroban_hero_key');
-const displayName = resolveDisplayName(heroKey) || 'بطل';
+const lang = (localStorage.getItem('sorobanmind-v2-lang') as 'ar' | 'en') || 'ar';
+const fallbackName = lang === 'ar' ? 'بطل' : 'Hero';
+const displayName = heroKey ? (resolveDisplayName(heroKey, lang) || fallbackName) : fallbackName;
 
   const newEntry: HighScoreEntry = {
     name: displayName,
