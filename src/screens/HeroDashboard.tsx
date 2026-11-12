@@ -23,6 +23,8 @@ import { useT } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
 import { translateDynamic } from '@/utils/translateDynamic';
 
+import { AVATARS } from '@/data/avatars';
+
 // 🆕 شاشة الملف الشخصي
 import ProfileScreen from '@/screens/ProfileScreen';
 
@@ -170,6 +172,14 @@ export function HeroDashboard({
   const [showSelector, setShowSelector] = useState(false);
   const [childName, setChildName] = useState<string>('');
 
+  // 🆕 جلب الشخصية الجديدة (من الـ 100)
+  const [heroKey, setHeroKey] = useState<string>('');
+  const currentAvatar = AVATARS.find(a => a.id === heroKey);
+
+  useEffect(() => {
+    setHeroKey(localStorage.getItem('soroban_hero_key') || '');
+  }, []);
+
   useEffect(() => {
     const saved = localStorage.getItem('soroban_companion');
     if (saved === 'sham' || saved === 'rayan' || saved === 'bana' || saved === 'joud') {
@@ -291,11 +301,15 @@ export function HeroDashboard({
                 {pickLang({ ar: 'أكاديمية الأبطال الصغار', en: 'Young Heroes Academy' }, lang)}
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white">
-              {pickLang({ ar: 'مرحباً يا', en: 'Welcome,' }, lang)}{' '}
-              {childName 
-                ? translateDynamic({ value: childName }, lang, 'value') 
-                : pickLang({ ar: 'أيها البطل', en: 'Hero' }, lang)}!
+            <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white flex items-center gap-2">
+              <span>{pickLang({ ar: 'مرحباً يا', en: 'Welcome,' }, lang)}</span>
+              {/* 🆕 عرض إيموجي الشخصية الجديدة */}
+              {currentAvatar && <span className="text-4xl">{currentAvatar.emoji}</span>}
+              <span>
+                {childName 
+                  ? translateDynamic({ value: childName }, lang, 'value') 
+                  : pickLang({ ar: 'أيها البطل', en: 'Hero' }, lang)}!
+              </span>
             </h2>
             <p className="text-white/60 font-body text-sm mt-1">
               {pickLang({ ar: 'واصل رحلتك في إتقان الحساب الذهني بالسوروبان', en: 'Continue your journey to master mental math with the soroban' }, lang)}
@@ -336,8 +350,6 @@ export function HeroDashboard({
             <span>{pickLang({ ar: 'تغيير الرفيق', en: 'Change Companion' }, lang)}</span>
           </button>
 
-            {/* 🆕 زر الملف الشخصي — مجمّد مؤقتاً (محلي + سحابي) حتى توحيد قوائم الشخصيات */}
-  {false && (
     <button
       type="button"
       onClick={() => { playSound('click'); setShowProfile(true); }}
@@ -346,7 +358,6 @@ export function HeroDashboard({
       <Palette className="w-4 h-4" />
       <span>{pickLang({ ar: 'الملف الشخصي', en: 'My Profile' }, lang)}</span>
     </button>
-  )}
   </div>
 </motion.div>
 
