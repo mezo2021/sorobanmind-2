@@ -6,44 +6,29 @@ import {
 import { useT } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
 
-// ======================================================
-// Local Parent PIN Guard
-// Local mode only — no Supabase / no Zustand
-// ======================================================
-
 const KEYS = {
   pinHash: 'soroban_parent_pin_hash',
   pinSalt: 'soroban_parent_pin_salt',
   recoveryHash: 'soroban_parent_pin_recovery_hash',
   recoverySalt: 'soroban_parent_pin_recovery_salt',
-  attempts: 'soroban_parent_pin_attempts',
-  lockUntil: 'soroban_parent_pin_lock_until',
+  
+  pinAttempts: 'soroban_parent_pin_attempts',
+  pinLockUntil: 'soroban_parent_pin_lock_until',
+  
+  recAttempts: 'soroban_parent_recovery_attempts',
+  recLockUntil: 'soroban_parent_recovery_lock_until',
 } as const;
 
-// Developer emergency code. Intentionally a client-side recovery fallback,
-// NOT a secure secret. It only resets the PIN and never touches child data.
 const EMERGENCY_CODE = '19871987';
-
 const MAX_ATTEMPTS = 3;
 const LOCK_DURATION = 5 * 60 * 1000;
 
-type GuardMode =
-  | 'setup'
-  | 'confirm'
-  | 'verify'
-  | 'recovery'
-  | 'newPin'
-  | 'confirmNewPin'
-  | 'showRecovery';
+type GuardMode = 'setup' | 'confirm' | 'verify' | 'recovery' | 'newPin' | 'confirmNewPin' | 'showRecovery';
 
 interface LocalPinGuardProps {
   onUnlock: () => void;
   onCancel?: () => void;
 }
-
-// ======================================================
-// Cryptographic helpers
-// ======================================================
 
 function randomSalt(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
@@ -51,9 +36,7 @@ function randomSalt(): string {
 }
 
 async function hashValue(value: string, salt: string): Promise<string> {
-  if (!globalThis.crypto?.subtle) {
-    throw new Error('Web Crypto is unavailable');
-  }
+  if (!globalThis.crypto?.subtle) throw new Error('Web Crypto is unavailable');
   const data = new TextEncoder().encode(`${salt}:${value}`);
   const digest = await crypto.subtle.digest('SHA-256', data);
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -75,17 +58,11 @@ function isValidPin(value: string): boolean {
   return /^\d{4}$/.test(value);
 }
 
-// ======================================================
-// Component
-// ======================================================
-
 export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps) {
   const { lang, dir } = useT();
 
   const [mode, setMode] = useState<GuardMode>(() =>
-    localStorage.getItem(KEYS.pinHash) && localStorage.getItem(KEYS.pinSalt)
-      ? 'verify'
-      : 'setup'
+    localStorage.getItem(KEYS.pinHash) && localStorage.getItem(KEYS.pinSalt) ? 'verify' : 'setup'
   );
 
   const [pin, setPin] = useState('');
@@ -93,65 +70,103 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
   const [recoveryInput, setRecoveryInput] = useState('');
   const [recoveryCode, setRecoveryCode] = useState('');
   const [showCode, setShowCode] = useState(false);
-  const [attempts, setAttempts] = useState(() => Number(localStorage.getItem(KEYS.attempts) || 0));
-  const [lockUntil, setLockUntil] = useState(() => Number(localStorage.getItem(KEYS.lockUntil) || 0));
+  
+  const [pinAttempts, setPinAttempts] = useState(() => Number(localStorage.getItem(KEYS.pinAttempts) || 0));
+  const [pinLockUntil, setPinLockUntil] = useState(() => Number(localStorage.getItem(KEYS.pinLockUntil) || 0));
+  
+  const [recAttempts, setRecAttempts] = useState(() => Number(localStorage.getItem(KEYS.recAttempts) || 0));
+  const [recLockUntil, setRecLockUntil] = useState(() => Number(localStorage.getItem(KEYS.recLockUntil) || 0));
+
   const [remaining, setRemaining] = useState(0);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   const t = (ar: string, en: string) => pickLang({ ar, en }, lang);
 
-  // Lock timer
   useEffect(() => {
     const update = () => {
-      const left = Math.max(0, lockUntil - Date.now());
+      const now = Date.now();
+      const targetLock = mode === 'recovery' ? recLockUntil : pinLockUntil;
+      const left = Math.max(0, targetLock - now);
       setRemaining(Math.ceil(left / 1000));
-      if (left === 0 && lockUntil > 0) {
-        localStorage.removeItem(KEYS.lockUntil);
-        localStorage.removeItem(KEYS.attempts);
-        setLockUntil(0);
-        setAttempts(0);
+
+      if (left === 0 && targetLock > 0) {
+        if (mode === 'recovery') {
+          localStorage.removeItem(KEYS.recLockUntil);
+          localStorage.removeItem(KEYS.recAttempts);
+          setRecLockUntil(0);
+          setRecAttempts(0);
+        } else {
+          localStorage.removeItem(KEYS.pinLockUntil);
+          localStorage.removeItem(KEYS.pinAttempts);
+          setPinLockUntil(0);
+          setPinAttempts(0);
+        }
       }
     };
     update();
-    if (!lockUntil) return;
     const timer = window.setInterval(update, 1000);
     return () => window.clearInterval(timer);
-  }, [lockUntil]);
+  }, [mode, pinLockUntil, recLockUntil]);
 
   function isLocked(): boolean {
-    if (Date.now() < lockUntil) {
+    if (mode === 'recovery' && Date.now() < recLockUntil) {
+      setError(t('الاسترداد مقفل مؤقتاً', 'Recovery temporarily locked'));
+      return true;
+    }
+    if (mode !== 'recovery' && Date.now() < pinLockUntil) {
       setError(t('الحارس مقفل مؤقتاً', 'Guard temporarily locked'));
       return true;
     }
     return false;
   }
 
-  function clearFailures() {
-    localStorage.removeItem(KEYS.attempts);
-    localStorage.removeItem(KEYS.lockUntil);
-    setAttempts(0);
-    setLockUntil(0);
+  function clearPinFailures() {
+    localStorage.removeItem(KEYS.pinAttempts);
+    localStorage.removeItem(KEYS.pinLockUntil);
+    setPinAttempts(0);
+    setPinLockUntil(0);
     setError('');
   }
 
-  function registerFailure() {
-    const next = attempts + 1;
-    setAttempts(next);
-    localStorage.setItem(KEYS.attempts, String(next));
+  function clearRecFailures() {
+    localStorage.removeItem(KEYS.recAttempts);
+    localStorage.removeItem(KEYS.recLockUntil);
+    setRecAttempts(0);
+    setRecLockUntil(0);
+    setError('');
+  }
+
+  function clearAllFailures() {
+    clearPinFailures();
+    clearRecFailures();
+  }
+
+  function registerPinFailure() {
+    const next = pinAttempts + 1;
+    setPinAttempts(next);
+    localStorage.setItem(KEYS.pinAttempts, String(next));
     if (next >= MAX_ATTEMPTS) {
       const until = Date.now() + LOCK_DURATION;
-      localStorage.setItem(KEYS.lockUntil, String(until));
-      setLockUntil(until);
-      setError(t(
-        'ثلاث محاولات خاطئة. تم قفل الحارس لمدة 5 دقائق.',
-        'Three failed attempts. Guard locked for 5 minutes.'
-      ));
+      localStorage.setItem(KEYS.pinLockUntil, String(until));
+      setPinLockUntil(until);
+      setError(t('ثلاث محاولات خاطئة. تم قفل الحارس لمدة 5 دقائق.', 'Three failed attempts. Guard locked for 5 minutes.'));
     } else {
-      setError(t(
-        `رمز غير صحيح. المحاولات المتبقية: ${MAX_ATTEMPTS - next}`,
-        `Incorrect code. Attempts remaining: ${MAX_ATTEMPTS - next}`
-      ));
+      setError(t(`رمز غير صحيح. المحاولات المتبقية: ${MAX_ATTEMPTS - next}`, `Incorrect code. Attempts remaining: ${MAX_ATTEMPTS - next}`));
+    }
+  }
+
+  function registerRecFailure() {
+    const next = recAttempts + 1;
+    setRecAttempts(next);
+    localStorage.setItem(KEYS.recAttempts, String(next));
+    if (next >= MAX_ATTEMPTS) {
+      const until = Date.now() + LOCK_DURATION;
+      localStorage.setItem(KEYS.recLockUntil, String(until));
+      setRecLockUntil(until);
+      setError(t('ثلاث محاولات خاطئة. تم قفل الاسترداد لمدة 5 دقائق.', 'Three failed attempts. Recovery locked for 5 minutes.'));
+    } else {
+      setError(t(`رمز استرداد غير صحيح. المحاولات المتبقية: ${MAX_ATTEMPTS - next}`, `Incorrect recovery code. Attempts remaining: ${MAX_ATTEMPTS - next}`));
     }
   }
 
@@ -166,7 +181,7 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
     setRecoveryCode(newRecovery);
     setPin('');
     setFirstPin('');
-    clearFailures();
+    clearAllFailures();
     setMode('showRecovery');
   }
 
@@ -222,11 +237,11 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
       }
       const candidate = await hashValue(pin, salt);
       if (candidate === savedHash) {
-        clearFailures();
+        clearAllFailures();
         onUnlock();
       } else {
         setPin('');
-        registerFailure();
+        registerPinFailure();
       }
     } catch {
       setError(t('حدث خطأ أثناء التحقق.', 'Verification failed.'));
@@ -254,7 +269,7 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
         }
       }
       if (authorized) {
-        clearFailures();
+        clearAllFailures();
         setRecoveryInput('');
         setPin('');
         setFirstPin('');
@@ -262,7 +277,7 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
         setMode('newPin');
       } else {
         setRecoveryInput('');
-        registerFailure();
+        registerRecFailure();
       }
     } catch {
       setError(t('تعذر التحقق من رمز الاسترداد.', 'Recovery verification failed.'));
