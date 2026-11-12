@@ -21,7 +21,7 @@ export const COLOR_PALETTE = [
 export const COMPANIONS = [
   { key: 'rayan', nameAr: 'ريان', nameEn: 'Rayan', avatar: '👦', descAr: 'المكتشف الذكي', descEn: 'Smart Explorer' },
   { key: 'joud', nameAr: 'جود', nameEn: 'Joud', avatar: '👧', descAr: 'المفكرة المبدعة', descEn: 'Creative Thinker' },
-  { key: 'sham', nameAr: 'شام', nameEn: 'Sham', avatar: '👧‍🦱', descAr: 'البطلة السريعة', descEn: 'Speed Champion' },
+  { key: 'sham', nameAr: 'شام', nameEn: 'Sham', avatar: '👧‍', descAr: 'البطلة السريعة', descEn: 'Speed Champion' },
   { key: 'bana', nameAr: 'بانة', nameEn: 'Bana', avatar: '🧒', descAr: 'صديقة الأرقام', descEn: 'Numbers Friend' },
 ];
 
