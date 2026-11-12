@@ -21,6 +21,7 @@ import { cloudSync } from '../lib/cloudSync';
 
 import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
 import { resolveDisplayName } from '@/utils/resolveDisplayName';
+import { getMode } from '@/utils/appMode';
 
 // ═══ SRB Stores ═══
 import { useProgressStore, selectObservationAccuracy } from '../store/progressStore';
@@ -670,7 +671,7 @@ const handlePreviewToggle = () => {
           <span>{pickLang({ ar: 'تحديث الصفحة', en: 'Refresh Page' }, lang)}</span>
         </button>
 
-        {onShowWelcome && (
+        {onShowWelcome && getMode() === 'cloud' && (
           <button onClick={() => { playSound('click'); onShowWelcome(); }} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-200 hover:bg-amber-500/25 transition-all text-sm font-body">
             <PlayCircle className="w-4 h-4" />
             <span>{pickLang({ ar: 'شاشة الترحيب', en: 'Welcome Screen' }, lang)}</span>
