@@ -4,7 +4,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import {
   Sparkles, Flame, Brain, Zap, Palette,
   X, Users, Trophy, Target, Grid3X3, Film,
-  Gamepad2, CheckCircle2, GraduationCap,
+  Gamepad2, CheckCircle2, GraduationCap, Shield,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -24,6 +24,7 @@ import { pickLang } from '@/i18n/pickLang';
 import { translateDynamic } from '@/utils/translateDynamic';
 
 import { AVATARS } from '@/data/avatars';
+import { getMode } from '@/utils/appMode';
 
 // 🆕 شاشة الملف الشخصي
 import ProfileScreen from '@/screens/ProfileScreen';
@@ -270,9 +271,10 @@ export function HeroDashboard({
           playSound('click');
           setShowProfile(false);
         }}
-        onSave={(data) => {
-          // هنا يمكنك حفظ البيانات في localStorage أو progressStore
-          console.log('Saved Profile:', data);
+        onSave={() => {
+          // تحديث الحالة فوراً بعد الحفظ بدل إعادة تحميل الصفحة
+          setHeroKey(localStorage.getItem('soroban_hero_key') || '');
+          setChildName(localStorage.getItem('soroban_child_name') || '');
           setShowProfile(false);
         }}
       />
@@ -350,16 +352,33 @@ export function HeroDashboard({
             <span>{pickLang({ ar: 'تغيير الرفيق', en: 'Change Companion' }, lang)}</span>
           </button>
 
-    <button
-      type="button"
-      onClick={() => { playSound('click'); setShowProfile(true); }}
-      className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br from-pink-500/20 to-cyan-500/20 border border-pink-400/30 text-pink-200 hover:from-pink-500/30 hover:to-cyan-500/30 transition-all text-xs font-body"
-    >
-      <Palette className="w-4 h-4" />
-      <span>{pickLang({ ar: 'الملف الشخصي', en: 'My Profile' }, lang)}</span>
-    </button>
-  </div>
-</motion.div>
+          <button
+            type="button"
+            onClick={() => { playSound('click'); setShowProfile(true); }}
+            className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br from-pink-500/20 to-cyan-500/20 border border-pink-400/30 text-pink-200 hover:from-pink-500/30 hover:to-cyan-500/30 transition-all text-xs font-body"
+          >
+            <Palette className="w-4 h-4" />
+            <span>{pickLang({ ar: 'الملف الشخصي', en: 'My Profile' }, lang)}</span>
+          </button>
+
+          {/* 🆕 زر لوحة ولي الأمر (Commit A) */}
+          <button
+            type="button"
+            onClick={() => {
+              playSound('click');
+              if (getMode() === 'cloud') {
+                onNavigate('role' as Screen);
+              } else {
+                console.log('Local PIN Guard — Commit B pending');
+              }
+            }}
+            className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-400/30 text-amber-200 hover:from-amber-500/30 hover:to-orange-500/30 transition-all text-xs font-body"
+          >
+            <Shield className="w-4 h-4" />
+            <span>{pickLang({ ar: 'لوحة ولي الأمر', en: 'Parent Dashboard' }, lang)}</span>
+          </button>
+        </div>
+      </motion.div>
 
       {/* HERO COMPANION CARD */}
       <motion.div
