@@ -2,7 +2,8 @@
 // متجر شارات الإتقان — Zustand + persist
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { storage } from "../utils/storage";
 
 // ═══════════════════════════════════════════════════════════
 // الأنواع
@@ -115,9 +116,10 @@ export const useMasteryBadgesStore = create<MasteryBadgesState>()(
       reset: () => set({ badges: {} }),
     }),
     {
-      name: "soroban_mastery_badges",
-      version: 1,
-    },
+  name: "soroban_mastery_badges",
+  version: 1,
+  storage: createJSONStorage(() => storage),
+},
   ),
 );
 
