@@ -10,6 +10,61 @@ import { useGameLang } from '@/components/games/gamesI18n';
 import { pickLang } from '@/i18n/pickLang';
 import { AVATARS } from '@/data/avatars';
 
+interface GhostScore {
+  score: number;
+  time_ms: number | null;
+}
+
+type RankedPlayer = LeaderboardUser & {
+  isGhost: boolean;
+  timeMs: number | null;
+};
+
+// نقاط الأشباح الأصلية من CloudGameLeaderboard
+const GAME_GHOSTS: Record<string, GhostScore[]> = {
+  'flying-abacus': [
+    { score: 22, time_ms: null },
+    { score: 18, time_ms: null },
+    { score: 15, time_ms: null },
+    { score: 12, time_ms: null },
+    { score: 10, time_ms: null },
+    { score: 8, time_ms: null },
+    { score: 6, time_ms: null },
+    { score: 5, time_ms: null },
+  ],
+  detective: [
+    { score: 15, time_ms: null },
+    { score: 12, time_ms: null },
+    { score: 10, time_ms: null },
+    { score: 8, time_ms: null },
+    { score: 6, time_ms: null },
+  ],
+  'sorobania-island': [
+    { score: 12, time_ms: null },
+    { score: 8, time_ms: null },
+    { score: 5, time_ms: null },
+    { score: 4, time_ms: null },
+    { score: 3, time_ms: null },
+    { score: 2, time_ms: null },
+  ],
+  'sorobania-island-speed': [
+    { score: 70, time_ms: null },
+    { score: 55, time_ms: null },
+    { score: 40, time_ms: null },
+    { score: 32, time_ms: null },
+    { score: 25, time_ms: null },
+    { score: 18, time_ms: null },
+  ],
+  default: [
+    { score: 20, time_ms: null },
+    { score: 15, time_ms: null },
+    { score: 12, time_ms: null },
+    { score: 10, time_ms: null },
+    { score: 8, time_ms: null },
+    { score: 5, time_ms: null },
+  ],
+};
+
 function formatTime(timeMs: number | null): string {
   if (timeMs == null) return '--:--';
 
@@ -74,27 +129,80 @@ export default function HallOfFamePage({
 
         if (!isMounted) return;
 
-        // قائمة المتصدرين
+        // قائمة المتصدرين: لاعبون حقيقيون + أشباح افتراضية
         if (topResult.success) {
-          const mapped: LeaderboardUser[] = topResult.entries.map((entry) => {
-            const identity = getPlayerIdentity(
-              entry.avatar_id,
-              entry.sequential_number,
-              isAr
-            );
+          // 1. اللاعبون الحقيقيون
+          const realPlayers: RankedPlayer[] = topResult.entries
+            .slice(0, 10)
+            .map((entry) => {
+              const identity = getPlayerIdentity(
+                entry.avatar_id,
+                entry.sequential_number,
+                isAr
+              );
 
-            return {
-              id: `player-${entry.pos}`,
-              rank: entry.pos,
-              name: identity.name,
-              avatar: identity.avatar,
-              score: entry.score,
-              time: formatTime(entry.time_ms),
-              accuracy: 100,
-            };
-          });
+              return {
+                id: `player-${entry.pos}`,
+                rank: entry.pos,
+                name: identity.name,
+                avatar: identity.avatar,
+                score: entry.score,
+                time: formatTime(entry.time_ms),
+                accuracy: 100,
+                isGhost: false,
+                timeMs: entry.time_ms,
+              };
+            });
 
-          setPlayers(mapped);
+          // 2. إكمال القائمة بالأشباح حتى 10
+          const ghosts = GAME_GHOSTS[subFilter] ?? GAME_GHOSTS.default;
+          const needed = Math.max(0, 10 - realPlayers.length);
+
+          const ghostPlayers: RankedPlayer[] = ghosts
+            .slice(0, needed)
+            .map((ghost, index) => {
+              const avatar = AVATARS.length
+                ? AVATARS[index % AVATARS.length]
+                : undefined;
+
+              const identity = getPlayerIdentity(
+                avatar?.id ?? null,
+                9000 + index,
+                isAr
+              );
+
+              return {
+                id: `ghost-${subFilter}-${index}`,
+                rank: 0,
+                name: identity.name,
+                avatar: identity.avatar,
+                score: ghost.score,
+                time: formatTime(ghost.time_ms),
+                accuracy: 100,
+                isGhost: true,
+                timeMs: ghost.time_ms,
+              };
+            });
+
+          // 3. الدمج والترتيب: الحقيقي يسبق الشبح عند التعادل
+          const combined = [...realPlayers, ...ghostPlayers]
+            .sort(
+              (a, b) =>
+                b.score - a.score ||
+                Number(a.isGhost) - Number(b.isGhost) ||
+                (a.timeMs ?? Infinity) - (b.timeMs ?? Infinity)
+            )
+            .map((player, index) => ({
+              id: player.id,
+              rank: index + 1,
+              name: player.name,
+              avatar: player.avatar,
+              score: player.score,
+              time: player.time,
+              accuracy: player.accuracy,
+            }));
+
+          setPlayers(combined);
         } else {
           console.error('Hall of Fame list error:', topResult.error);
           setPlayers([]);
