@@ -25,6 +25,7 @@ import { translateDynamic } from '@/utils/translateDynamic';
 
 import { AVATARS } from '@/data/avatars';
 import { getMode } from '@/utils/appMode';
+import { storage } from '@/utils/storage';
 
 // 🆕 شاشة الملف الشخصي
 import ProfileScreen from '@/screens/ProfileScreen';
@@ -163,11 +164,11 @@ export function HeroDashboard({
   const [recommendedLevel, setRecommendedLevel] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('soroban_placement_recommended');
-      if (raw) setRecommendedLevel(raw);
-    } catch { /* ignore */ }
-  }, []);
+  try {
+    const raw = storage.getItem('soroban_placement_recommended');
+    if (raw) setRecommendedLevel(raw);
+  } catch { /* ignore */ }
+}, []);
 
   const hasTakenPlacement = placementAttempts > 0 || recommendedLevel !== null;
 
