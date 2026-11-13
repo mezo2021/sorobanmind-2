@@ -30,7 +30,22 @@ function getCloudPlayerName(
   return `${emoji} ${characterName} #${sequentialNumber ?? '—'}`;
 }
 
-function getRecordDisplayName(record: LeaderRecord): string {
+function getRecordDisplayName(record: LeaderRecord, isAr: boolean): string {
+  if (record.id.startsWith('sb-')) {
+    return record.name;
+  }
+
+  if (record.id.startsWith('ghost-')) {
+    const ghostId = Number(record.id.replace('ghost-', ''));
+    if (Number.isFinite(ghostId) && AVATARS.length > 0) {
+      const avatar = AVATARS[ghostId % AVATARS.length];
+      const characterName = isAr ? avatar.nameAr : avatar.nameEn;
+      const virtualNumber = 9000 + ghostId - 101;
+      return `${avatar.emoji} ${characterName} #${virtualNumber}`;
+    }
+    return isAr ? '🏅 بطل افتراضي' : '🏅 Virtual Champion';
+  }
+
   return record.name;
 }
 
@@ -82,15 +97,9 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
 
         const mapped: LeaderRecord[] = result.entries.map((entry) => ({
           id: `sb-${entry.sequential_number ?? entry.pos}`,
-          name: getCloudPlayerName(
-            entry.avatar_id,
-            entry.sequential_number,
-            isAr
-          ),
+          name: getCloudPlayerName(entry.avatar_id, entry.sequential_number, isAr),
           score: entry.score,
-          timeSec: entry.time_ms == null
-            ? 0
-            : Math.round(entry.time_ms / 1000),
+          timeSec: entry.time_ms == null ? 0 : Math.round(entry.time_ms / 1000),
           examId: exam,
           at: 0, // 👈 تم إضافة الحقل هنا لحل مشكلة البناء
         }));
@@ -111,9 +120,7 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
 
   const list: LeaderRecord[] = useMemo(() => {
     const localFiltered = exam === 'all' ? localRecords : localRecords.filter((r) => r.examId === exam);
-    
     const combined = [...cloudRecords];
-    
     localFiltered.forEach(localRec => {
       if (!combined.some(c => c.name === localRec.name)) {
         combined.push(localRec);
@@ -176,7 +183,7 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
                     {r && (
                       <div className="mb-2">
                         <div className="text-3xl">{p.icon}</div>
-                        <div className="font-black text-sm truncate" style={{ color: p.color }}>{getRecordDisplayName(r)}</div>
+                        <div className="font-black text-sm truncate" style={{ color: p.color }}>{getRecordDisplayName(r, isAr)}</div>
                         <div className="text-[11px] text-slate-400">{examLabel(r.examId, isAr)}</div>
                         <div className="text-xs font-mono text-amber-200"><Num>{sort === 'score' ? r.score : fmtTime(r.timeSec)}</Num></div>
                       </div>
@@ -196,7 +203,7 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
                   className="flex items-center justify-between bg-white/5 border border-slate-700/60 rounded-xl px-4 py-3 backdrop-blur-md">
                   <div className="flex items-center gap-3">
                     <span className="w-7 h-7 rounded-full bg-amber-500/15 text-amber-300 text-sm font-bold flex items-center justify-center"><Num>{i + 4}</Num></span>
-                    <span className="font-bold">{getRecordDisplayName(r)}</span>
+                    <span className="font-bold">{getRecordDisplayName(r, isAr)}</span>
                   </div>
                   <div className="text-xs text-slate-300 flex gap-3">
                     <span>{examLabel(r.examId, isAr)}</span>
