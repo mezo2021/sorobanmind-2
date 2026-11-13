@@ -1,5 +1,5 @@
 // src/screens/ProfileScreen.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ArrowRight, ArrowLeft, Globe, Check, Sparkles, Palette
@@ -8,6 +8,8 @@ import {
 import { useT } from '@/i18n/useTranslation';
 import { resolveDisplayName } from '@/utils/resolveDisplayName';
 import { AVATARS } from '@/data/avatars';
+import { cloudSync } from '@/lib/cloudSync';
+import { getMode } from '@/utils/appMode';
 
 // الألوان التي تبقى للخلفية فقط
 export const APP_GRADIENTS = [
@@ -31,6 +33,13 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
   const { lang, dir } = useT();
   const isRTL = lang === 'ar';
 
+  // وضع السحابة + حالة موافقة الظهور
+  const isCloudMode = getMode() === 'cloud';
+  const [showOnLeaderboard, setShowOnLeaderboard] = useState(false);
+  const [visibilityLoading, setVisibilityLoading] = useState(isCloudMode);
+  const [visibilitySaving, setVisibilitySaving] = useState(false);
+  const [visibilityError, setVisibilityError] = useState('');
+
   // قراءة الشخصية الحالية من soroban_hero_key
   const [selectedAvatarId, setSelectedAvatarId] = useState(() => {
     return localStorage.getItem('soroban_hero_key') || AVATARS[0]?.id || 'rabbit_fast';
@@ -53,14 +62,79 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
     { id: 'mythical', nameAr: 'أسطوري', nameEn: 'Mythical' },
   ];
 
-  const handleSave = () => {
-    // 1. حفظ المظهر فقط (الخلفية)
-    localStorage.setItem('soroban_theme_key', selectedTheme);
+  // قراءة موافقة الظهور من السحابة
+  useEffect(() => {
+    if (!isCloudMode) return;
 
-    // 2. حفظ معرف الشخصية (المفتاح الموحد soroban_hero_key)
+    let cancelled = false;
+
+    const loadVisibility = async () => {
+      setVisibilityLoading(true);
+      setVisibilityError('');
+
+      try {
+        const visible = await cloudSync.getLeaderboardVisibility();
+
+        if (!cancelled) {
+          setShowOnLeaderboard(visible);
+        }
+      } catch (error) {
+        console.error('Failed to load leaderboard visibility:', error);
+
+        if (!cancelled) {
+          setVisibilityError(
+            isRTL
+              ? 'تعذرت قراءة إعداد الظهور من السحابة.'
+              : 'Could not load leaderboard visibility from the cloud.'
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setVisibilityLoading(false);
+        }
+      }
+    };
+
+    loadVisibility();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isCloudMode, isRTL]);
+
+  const handleLeaderboardVisibilityChange = async () => {
+    if (!isCloudMode || visibilityLoading || visibilitySaving) return;
+
+    const newValue = !showOnLeaderboard;
+
+    setVisibilitySaving(true);
+    setVisibilityError('');
+
+    try {
+      const success = await cloudSync.setLeaderboardVisibility(newValue);
+
+      if (!success) {
+        throw new Error('Failed to update leaderboard visibility');
+      }
+
+      setShowOnLeaderboard(newValue);
+    } catch (error) {
+      console.error('Failed to update leaderboard visibility:', error);
+
+      setVisibilityError(
+        isRTL
+          ? 'تعذر حفظ التغيير. تحقق من الاتصال وحاول مجدداً.'
+          : 'Could not save the change. Check your connection and try again.'
+      );
+    } finally {
+      setVisibilitySaving(false);
+    }
+  };
+
+  const handleSave = () => {
+    localStorage.setItem('soroban_theme_key', selectedTheme);
     localStorage.setItem('soroban_hero_key', selectedAvatarId);
 
-    // 3. تحديث اسم العرض بناءً على اللغة (ar/en)
     const displayName = resolveDisplayName(selectedAvatarId, lang);
     if (displayName) {
       localStorage.setItem('soroban_child_name', displayName);
@@ -111,7 +185,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
             </h2>
           </div>
 
-          {/* معاينة الشخصية الحالية */}
           <div className="flex flex-col items-center justify-center bg-slate-900/40 rounded-2xl p-6 border border-white/10 mb-5">
             <motion.div 
               key={selectedAvatarId}
@@ -127,7 +200,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
             </span>
           </div>
 
-          {/* فلاتر التصنيفات */}
           <div className="flex gap-1.5 overflow-x-auto pb-2 mb-3 scrollbar-none">
             {categoriesList.map((cat) => (
               <button
@@ -144,7 +216,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
             ))}
           </div>
 
-          {/* شبكة الشخصيات الـ 100 */}
           <div className="grid grid-cols-5 sm:grid-cols-8 gap-2.5 max-h-60 overflow-y-auto p-2 bg-slate-950/40 rounded-2xl border border-white/10">
             {filteredAvatars.map((item) => {
               const isSelected = selectedAvatarId === item.id;
@@ -197,6 +268,68 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
             ))}
           </div>
         </section>
+
+        {/* موافقة الظهور في لوحة الشرف — Cloud فقط */}
+        {isCloudMode && (
+          <section className="bg-white/10 backdrop-blur-2xl border border-white/15 rounded-3xl p-5 shadow-2xl">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <h2 className="text-base font-bold text-white">
+                  {isRTL ? 'الظهور في لوحة الشرف' : 'Hall of Fame Visibility'}
+                </h2>
+                <p className="text-xs text-white/70 mt-2">
+                  {isRTL
+                    ? 'اسم البطل وشخصيته ونتائجه ستظهر للاعبين الآخرين عند التفعيل.'
+                    : 'Your hero identity and scores will be visible to other players when enabled.'}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                role="switch"
+                aria-checked={showOnLeaderboard}
+                aria-label={isRTL ? 'السماح بالظهور في لوحة الشرف' : 'Allow Hall of Fame visibility'}
+                disabled={visibilityLoading || visibilitySaving}
+                onClick={() => void handleLeaderboardVisibilityChange()}
+                className={`relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                  showOnLeaderboard ? 'bg-emerald-500' : 'bg-gray-500'
+                }`}
+              >
+                <span
+                  className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${
+                    showOnLeaderboard ? 'left-6' : 'left-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {visibilityLoading && (
+              <p className="mt-3 text-sm text-white/60">
+                {isRTL ? 'جارٍ تحميل الإعداد...' : 'Loading setting...'}
+              </p>
+            )}
+
+            {visibilitySaving && (
+              <p className="mt-3 text-sm text-white/60">
+                {isRTL ? 'جارٍ حفظ التغيير...' : 'Saving change...'}
+              </p>
+            )}
+
+            {visibilityError && (
+              <p role="alert" className="mt-3 text-sm text-red-400">
+                {visibilityError}
+              </p>
+            )}
+
+            {!visibilityLoading && !visibilityError && (
+              <p className="mt-3 text-xs text-white/50">
+                {showOnLeaderboard
+                  ? (isRTL ? 'الظهور مفعّل.' : 'Visibility is enabled.')
+                  : (isRTL ? 'الظهور متوقف.' : 'Visibility is disabled.')}
+              </p>
+            )}
+          </section>
+        )}
 
       </main>
 
