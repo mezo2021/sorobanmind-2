@@ -12,6 +12,7 @@ import { useProgressStore } from '@/store/progressStore';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 import { isPreviewMode } from '@/utils/previewMode';
 import { cloudSync } from '@/lib/cloudSync';
+import { storage } from '@/utils/storage'; // ✅ جديد
 
 import {
   buildExam1Category,
@@ -149,7 +150,7 @@ export function CategoryExamScreen({
   useEffect(() => {
     if (inPreview) { setPhase('intro'); return; }
     try {
-      const raw = localStorage.getItem(`${cfg.storageKey}_last_attempt`);
+      const raw = storage.getItem(`${cfg.storageKey}_last_attempt`); // ✅ storage
       if (raw) {
         const lastTime = parseInt(raw, 10);
         if (!isNaN(lastTime)) {
@@ -237,9 +238,9 @@ export function CategoryExamScreen({
 
     if (!inPreview) {
       try {
-        localStorage.setItem(`${cfg.storageKey}_score`, JSON.stringify(score));
+        storage.setItem(`${cfg.storageKey}_score`, JSON.stringify(score)); // ✅ storage
         if (!passed) {
-          localStorage.setItem(`${cfg.storageKey}_last_attempt`, String(Date.now()));
+          storage.setItem(`${cfg.storageKey}_last_attempt`, String(Date.now())); // ✅ storage
         }
       } catch { /* ignore */ }
 
@@ -250,7 +251,6 @@ export function CategoryExamScreen({
       const gameId = category === 'kids' ? 'cat_ce1' : 'cat_ce2';
       const elapsedMs = Math.max(1, (cfg.totalTimeSec - timeLeftRef.current) * 1000);
       
-      // 🛡️ تعديل GPT: فحص نجاح الإرسال بدلاً من catch
       void cloudSync.submitScore(gameId, score, elapsedMs).then((success) => {
         if (!success) {
           console.warn('لم يتم إرسال النتيجة إلى لوحة الشرف');
@@ -289,7 +289,7 @@ export function CategoryExamScreen({
       const points = currentAttempt === 1 ? 1 : 0.5;
       newAttempts.set(currentQ.id, { value: abacusValue, attempts: currentAttempt, correct: true, points });
       
-      attemptsRef.current = newAttempts; // 🛡️ تعديل GPT: مزامنة فورية
+      attemptsRef.current = newAttempts;
       setAttempts(newAttempts);
       setFeedback('correct');
       playSound('success');
@@ -300,7 +300,7 @@ export function CategoryExamScreen({
     } else {
       if (currentAttempt >= EXAM_MAX_ATTEMPTS) {
         newAttempts.set(currentQ.id, { value: abacusValue, attempts: currentAttempt, correct: false, points: 0 });
-        attemptsRef.current = newAttempts; // 🛡️ مزامنة فورية
+        attemptsRef.current = newAttempts;
         setAttempts(newAttempts);
         setFeedback('reveal');
         playSound('error');
@@ -310,7 +310,7 @@ export function CategoryExamScreen({
         }, 2000);
       } else {
         newAttempts.set(currentQ.id, { value: abacusValue, attempts: currentAttempt, correct: false, points: 0 });
-        attemptsRef.current = newAttempts; // 🛡️ مزامنة فورية
+        attemptsRef.current = newAttempts;
         setAttempts(newAttempts);
         setFeedback('wrong');
         setCurrentAttempt(2);
@@ -401,7 +401,6 @@ export function CategoryExamScreen({
     goToQuestion(currentIdx + 1);
   }, [currentIdx, questions.length, goToQuestion, playSound]);
 
-  // 🛡️ تعديل GPT: دالة موحدة لفتح نافذة الإنهاء وإلغاء أي مؤقت
   const openEndConfirm = useCallback(() => {
     if (feedbackTimerRef.current) {
       clearTimeout(feedbackTimerRef.current);
@@ -415,9 +414,6 @@ export function CategoryExamScreen({
     finalizeExam(attemptsRef.current);
   }, [finalizeExam]);
 
-  // ═══════════════════════════════════════════════════════
-  // الرندر (UI)
-  // ═══════════════════════════════════════════════════════
   if (phase === 'cooldown') {
     return (
       <div dir={dir} className="px-3 sm:px-6 py-6 max-w-2xl mx-auto">
