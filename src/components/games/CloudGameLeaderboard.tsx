@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useGameLang } from './gamesI18n';
+import { useT } from '@/i18n/useTranslation';
+import { pickLang } from '@/i18n/pickLang';
+import { AVATARS } from '@/data/avatars';
+import { cloudSync } from '@/lib/cloudSync';
 import { Trophy, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Num } from '@/components/Num';
@@ -11,63 +13,70 @@ interface Props {
 
 interface PlayerScore {
   pos: number;
-  display_name: string;
+  avatar_id: string | null;
+  sequential_number: number | null;
   score: number;
+  time_ms: number | null;
   is_me: boolean;
   is_ghost: boolean;
 }
 
-// 🆕 أشباح واقعية لكل لعبة (أرقام قريبة من قدرات الأطفال الفعلية)
-const GAME_GHOSTS: Record<string, { name: string; nameAr?: string; nameEn?: string; score: number }[]> = {
+interface GhostScore {
+  score: number;
+  time_ms: number | null;
+}
+
+// نقاط الأشباح الأصلية محفوظة كما هي
+const GAME_GHOSTS: Record<string, GhostScore[]> = {
   'flying-abacus': [
-    { name: 'سارة.ع', nameAr: 'سارة.ع', nameEn: 'Sarah.A', score: 22 },
-    { name: 'عمر.م', nameAr: 'عمر.م', nameEn: 'Omar.M', score: 18 },
-    { name: 'ليان.ي', nameAr: 'ليان.ي', nameEn: 'Layan.Y', score: 15 },
-    { name: 'آدم.ف', nameAr: 'آدم.ف', nameEn: 'Adam.F', score: 12 },
-    { name: 'جنى.ر', nameAr: 'جنى.ر', nameEn: 'Jana.R', score: 10 },
-    { name: 'لمى.ج', nameAr: 'لمى.ج', nameEn: 'Lama.J', score: 8 },
-    { name: 'يوسف.ح', nameAr: 'يوسف.ح', nameEn: 'Yousef.H', score: 6 },
-    { name: 'نور.ك', nameAr: 'نور.ك', nameEn: 'Noor.K', score: 5 },
+    { score: 22, time_ms: null },
+    { score: 18, time_ms: null },
+    { score: 15, time_ms: null },
+    { score: 12, time_ms: null },
+    { score: 10, time_ms: null },
+    { score: 8, time_ms: null },
+    { score: 6, time_ms: null },
+    { score: 5, time_ms: null },
   ],
-  'detective': [
-    { name: 'عمر.م', nameAr: 'عمر.م', nameEn: 'Omar.M', score: 15 },
-    { name: 'سارة.ع', nameAr: 'سارة.ع', nameEn: 'Sarah.A', score: 12 },
-    { name: 'آدم.ف', nameAr: 'آدم.ف', nameEn: 'Adam.F', score: 10 },
-    { name: 'ليان.ي', nameAr: 'ليان.ي', nameEn: 'Layan.Y', score: 8 },
-    { name: 'جنى.ر', nameAr: 'جنى.ر', nameEn: 'Jana.R', score: 6 },
+  detective: [
+    { score: 15, time_ms: null },
+    { score: 12, time_ms: null },
+    { score: 10, time_ms: null },
+    { score: 8, time_ms: null },
+    { score: 6, time_ms: null },
   ],
   'sorobania-island': [
-    { name: 'Sami', nameAr: 'سامي', nameEn: 'Sami', score: 12 },
-    { name: 'Lina', nameAr: 'لينا', nameEn: 'Lina', score: 8 },
-    { name: 'Omar', nameAr: 'عمر', nameEn: 'Omar', score: 5 },
-    { name: 'Noor', nameAr: 'نور', nameEn: 'Noor', score: 4 },
-    { name: 'Adam', nameAr: 'آدم', nameEn: 'Adam', score: 3 },
-    { name: 'Mira', nameAr: 'ميرا', nameEn: 'Mira', score: 2 },
+    { score: 12, time_ms: null },
+    { score: 8, time_ms: null },
+    { score: 5, time_ms: null },
+    { score: 4, time_ms: null },
+    { score: 3, time_ms: null },
+    { score: 2, time_ms: null },
   ],
-  
   'sorobania-island-speed': [
-    { name: 'Sami', nameAr: 'سامي', nameEn: 'Sami', score: 70 },
-    { name: 'Lina', nameAr: 'لينا', nameEn: 'Lina', score: 55 },
-    { name: 'Omar', nameAr: 'عمر', nameEn: 'Omar', score: 40 },
-    { name: 'Noor', nameAr: 'نور', nameEn: 'Noor', score: 32 },
-    { name: 'Adam', nameAr: 'آدم', nameEn: 'Adam', score: 25 },
-    { name: 'Mira', nameAr: 'ميرا', nameEn: 'Mira', score: 18 },
+    { score: 70, time_ms: null },
+    { score: 55, time_ms: null },
+    { score: 40, time_ms: null },
+    { score: 32, time_ms: null },
+    { score: 25, time_ms: null },
+    { score: 18, time_ms: null },
   ],
-  'default': [
-    { name: 'سارة.ع', nameAr: 'سارة.ع', nameEn: 'Sarah.A', score: 20 },
-    { name: 'عمر.م', nameAr: 'عمر.م', nameEn: 'Omar.M', score: 15 },
-    { name: 'ليان.ي', nameAr: 'ليان.ي', nameEn: 'Layan.Y', score: 12 },
-    { name: 'آدم.ف', nameAr: 'آدم.ف', nameEn: 'Adam.F', score: 10 },
-    { name: 'جنى.ر', nameAr: 'جنى.ر', nameEn: 'Jana.R', score: 8 },
-    { name: 'لمى.ج', nameAr: 'لمى.ج', nameEn: 'Lama.J', score: 5 },
-  ]
+  default: [
+    { score: 20, time_ms: null },
+    { score: 15, time_ms: null },
+    { score: 12, time_ms: null },
+    { score: 10, time_ms: null },
+    { score: 8, time_ms: null },
+    { score: 5, time_ms: null },
+  ],
 };
 
 export function CloudGameLeaderboard({ gameId }: Props) {
-  const { isAr } = useGameLang();
+  const { lang } = useT();
   const [scores, setScores] = useState<PlayerScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -76,59 +85,77 @@ export function CloudGameLeaderboard({ gameId }: Props) {
       setLoading(true);
       setScores([]);
       setExpanded(false);
+      setLoadError(false);
 
       try {
-        // 1. جلب اللاعبين الحقيقيين من السحابة
-        const { data, error } = await supabase.rpc('get_hall_of_fame', {
-          p_game_id: gameId,
-          p_period: 'all',
-          p_limit: 10
-        });
+        // 1. جلب نتيجة لوحة الشرف V2
+        const result = await cloudSync.getHallOfFame(
+          gameId,
+          'all',
+          10
+        );
 
-        if (error) throw error;
         if (!isMounted) return;
 
-        // النتائج الحقيقية أولاً (حد أقصى 10)
-        const realPlayers: PlayerScore[] = (Array.isArray(data) ? data : [])
+        // 2. فشل الاتصال: لا نعرض الأشباح
+        if (!result.success) {
+          setLoadError(true);
+          console.warn('Leaderboard unavailable:', result.error);
+          return;
+        }
+
+        // 3. نجاح الاتصال: استخراج اللاعبين الحقيقيين
+        const realPlayers: PlayerScore[] = result.entries
           .slice(0, 10)
-          .map((p: any) => ({
-            pos: 0,
-            display_name: p.display_name,
+          .map((p) => ({
+            pos: p.pos,
+            avatar_id: p.avatar_id,
+            sequential_number: p.sequential_number,
             score: p.score,
+            time_ms: p.time_ms,
             is_me: p.is_me === true,
-            is_ghost: false
+            is_ghost: false,
           }));
 
-        // 2. حساب عدد الأشباح المطلوب لإكمال القائمة إلى 10
-        const ghosts = GAME_GHOSTS[gameId] || GAME_GHOSTS['default'];
+        // 4. إكمال القائمة بالأشباح حتى 10
+        const ghosts = GAME_GHOSTS[gameId] ?? GAME_GHOSTS.default;
         const needed = Math.max(0, 10 - realPlayers.length);
 
         const ghostPlayers: PlayerScore[] = ghosts
           .slice(0, needed)
-          .map(g => ({
-            pos: 0,
-            display_name: isAr ? (g.nameAr ?? g.name) : (g.nameEn ?? g.name),
-            score: g.score,
-            is_me: false,
-            is_ghost: true
-          }));
+          .map((g, index) => {
+            const avatar = AVATARS[index % AVATARS.length];
 
-        // 3. الدمج، الترتيب، والتأكد من تقدم الحقيقيين عند التساوي
+            return {
+              pos: 0,
+              avatar_id: avatar.id,
+              sequential_number: 9000 + index,
+              score: g.score,
+              time_ms: g.time_ms,
+              is_me: false,
+              is_ghost: true,
+            };
+          });
+
+        // 5. الدمج والترتيب
         const combined = [...realPlayers, ...ghostPlayers]
           .sort((a, b) =>
-            b.score - a.score || // النقاط الأعلى أولاً
-            Number(a.is_ghost) - Number(b.is_ghost) // الحقيقي يتقدم على الشبح
+            b.score - a.score ||
+            Number(a.is_ghost) - Number(b.is_ghost) ||
+            (a.time_ms ?? Infinity) - (b.time_ms ?? Infinity)
           )
           .map((p, index) => ({
             ...p,
-            pos: index + 1
+            pos: index + 1,
           }));
 
         setScores(combined);
 
       } catch (err) {
         console.error('Leaderboard fetch failed:', err);
+
         if (isMounted) {
+          setLoadError(true);
           setScores([]);
         }
       } finally {
@@ -145,6 +172,9 @@ export function CloudGameLeaderboard({ gameId }: Props) {
     };
   }, [gameId]);
 
+  const getAvatar = (avatarId: string | null) =>
+    AVATARS.find((avatar) => avatar.id === avatarId);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-4 text-sky-400">
@@ -153,11 +183,27 @@ export function CloudGameLeaderboard({ gameId }: Props) {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="text-center py-3 bg-slate-800/30 rounded-xl border border-red-500/30">
+        <p className="text-slate-400 text-xs">
+          {pickLang(
+            {
+              ar: 'تعذر تحميل لوحة الشرف. تحقق من اتصال الإنترنت وحاول مجدداً.',
+              en: 'Could not load the leaderboard. Check your internet connection and try again.',
+            },
+            lang
+          )}
+        </p>
+      </div>
+    );
+  }
+
   if (scores.length === 0) {
     return (
       <div className="text-center py-3 bg-slate-800/30 rounded-xl border border-slate-700/50">
         <p className="text-slate-400 text-xs">
-          {isAr ? '🏆 كن الأول! لا يوجد رقم قياسي بعد.' : '🏆 Be the first! No records yet.'}
+          {pickLang({ ar: '🏆 كن الأول! لا يوجد رقم قياسي بعد.', en: '🏆 Be the first! No records yet.' }, lang)}
         </p>
       </div>
     );
@@ -171,7 +217,7 @@ export function CloudGameLeaderboard({ gameId }: Props) {
       <div className="bg-sky-500/10 p-2 text-center border-b border-sky-500/20 flex justify-center items-center gap-2">
         <Trophy className="w-4 h-4 text-amber-400" />
         <h3 className="text-sm font-bold text-sky-200">
-          {isAr ? 'أبطال هذه اللعبة' : 'Game Champions'}
+          {pickLang({ ar: 'أبطال هذه اللعبة', en: 'Game Champions' }, lang)}
         </h3>
       </div>
 
@@ -182,16 +228,30 @@ export function CloudGameLeaderboard({ gameId }: Props) {
               <span className="text-sm font-black w-5 text-center">
                 {i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}
               </span>
-              {/* 🆕 تعديل كلاود لعرض الأشباح في التوب 3 */}
               <span className={`text-xs font-bold ${
                 s.is_me ? 'text-amber-300' :
                 s.is_ghost ? 'text-slate-500' : 'text-slate-300'
               }`}>
-                {s.display_name}
-                {s.is_me && ` (${isAr ? 'أنت' : 'You'})`}
+                {(() => {
+                  const avatar = getAvatar(s.avatar_id);
+                  return (
+                    <span className="inline-flex items-center gap-1">
+                      <span className="text-base">{avatar?.emoji ?? '🏅'}</span>
+                      <span>
+                        {avatar
+                          ? pickLang({ ar: avatar.nameAr, en: avatar.nameEn }, lang)
+                          : pickLang({ ar: 'بطل', en: 'Champion' }, lang)}
+                      </span>
+                      {s.sequential_number !== null && (
+                        <span className="text-[10px] opacity-70">#{s.sequential_number}</span>
+                      )}
+                    </span>
+                  );
+                })()}
+                {s.is_me && ` (${pickLang({ ar: 'أنت', en: 'You' }, lang)})`}
                 {s.is_ghost && (
                   <span className="text-[9px] text-slate-500 font-normal ml-1">
-                    {isAr ? 'تحدٍّ افتراضي' : 'Virtual'}
+                    {pickLang({ ar: 'تحدٍّ افتراضي', en: 'Virtual challenge' }, lang)}
                   </span>
                 )}
               </span>
@@ -211,8 +271,8 @@ export function CloudGameLeaderboard({ gameId }: Props) {
           >
             {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             {expanded 
-              ? (isAr ? 'إخفاء القائمة' : 'Hide List') 
-              : (isAr ? 'عرض المراكز 4 - 10' : 'Show Ranks 4 - 10')}
+              ? pickLang({ ar: 'إخفاء القائمة', en: 'Hide List' }, lang)
+              : pickLang({ ar: 'عرض المراكز 4 - 10', en: 'Show Ranks 4 - 10' }, lang)}
           </button>
           
           <AnimatePresence>
@@ -227,15 +287,30 @@ export function CloudGameLeaderboard({ gameId }: Props) {
                   <div key={s.pos} className={`flex justify-between items-center px-3 py-1.5 border-b border-slate-800/50 last:border-0 ${s.is_me ? 'bg-amber-500/10' : ''}`}>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-slate-500 w-4">#{s.pos}</span>
-                      {/* 🆕 تعديل كلاود لعرض الأشباح في بقية القائمة */}
                       <span className={`text-xs ${
                         s.is_me ? 'text-amber-300 font-bold' :
                         s.is_ghost ? 'text-slate-500' : 'text-slate-400'
                       }`}>
-                        {s.display_name}
+                        {(() => {
+                          const avatar = getAvatar(s.avatar_id);
+                          return (
+                            <span className="inline-flex items-center gap-1">
+                              <span className="text-base">{avatar?.emoji ?? '🏅'}</span>
+                              <span>
+                                {avatar
+                                  ? pickLang({ ar: avatar.nameAr, en: avatar.nameEn }, lang)
+                                  : pickLang({ ar: 'بطل', en: 'Champion' }, lang)}
+                              </span>
+                              {s.sequential_number !== null && (
+                                <span className="text-[10px] opacity-70">#{s.sequential_number}</span>
+                              )}
+                            </span>
+                          );
+                        })()}
+                        {s.is_me && ` (${pickLang({ ar: 'أنت', en: 'You' }, lang)})`}
                         {s.is_ghost && (
                           <span className="text-[9px] ml-1">
-                            ({isAr ? 'افتراضي' : 'Virtual'})
+                            ({pickLang({ ar: 'افتراضي', en: 'Virtual' }, lang)})
                           </span>
                         )}
                       </span>
