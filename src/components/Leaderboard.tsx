@@ -5,7 +5,6 @@ import { ArrowRight, Trophy, Timer, Medal } from 'lucide-react';
 import { useGameLang } from '@/components/games/gamesI18n';
 import { Num } from '@/components/Num';
 import CosmicBackground from '@/components/cosmic/CosmicBackground';
-import { maskName } from '@/utils/maskName';
 import { EXAM_LABELS, LeaderRecord, examLabel, fmtTime, getRecords } from '@/utils/leaderboard';
 import { cloudSync } from '@/lib/cloudSync';
 import { AVATARS } from '@/data/avatars';
@@ -32,9 +31,7 @@ function getCloudPlayerName(
 }
 
 function getRecordDisplayName(record: LeaderRecord): string {
-  return record.id.startsWith('sb-')
-    ? record.name
-    : maskName(record.name);
+  return record.name;
 }
 
 function Sparks({ color }: { color: string }) {
@@ -60,7 +57,6 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
   const [exam, setExam] = useState<string>('all');
   const [sort, setSort] = useState<'score' | 'time'>('score');
   
-  // جلب اللاعبين الحقيقيين من السحابة
   const [cloudRecords, setCloudRecords] = useState<LeaderRecord[]>([]);
   const localRecords = useMemo(() => getRecords(), []);
 
@@ -85,19 +81,19 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
         }
 
         const mapped: LeaderRecord[] = result.entries.map((entry) => ({
-  id: `sb-${entry.sequential_number ?? entry.pos}`,
-  name: getCloudPlayerName(
-    entry.avatar_id,
-    entry.sequential_number,
-    isAr
-  ),
-  score: entry.score,
-  timeSec: entry.time_ms == null
-    ? 0
-    : Math.round(entry.time_ms / 1000),
-  examId: exam,
-  at: 0,
-}));
+          id: `sb-${entry.sequential_number ?? entry.pos}`,
+          name: getCloudPlayerName(
+            entry.avatar_id,
+            entry.sequential_number,
+            isAr
+          ),
+          score: entry.score,
+          timeSec: entry.time_ms == null
+            ? 0
+            : Math.round(entry.time_ms / 1000),
+          examId: exam,
+          at: 0, // 👈 تم إضافة الحقل هنا لحل مشكلة البناء
+        }));
 
         setCloudRecords(mapped);
       } catch (error) {
@@ -113,21 +109,17 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
     };
   }, [exam, isAr]);
 
-  // الدمج الذكي (السحابة + الأشباح) والترتيب بناءً على الزر المختار
   const list: LeaderRecord[] = useMemo(() => {
     const localFiltered = exam === 'all' ? localRecords : localRecords.filter((r) => r.examId === exam);
     
-    // نبدأ بلاعبي السحابة الحقيقيين
     const combined = [...cloudRecords];
     
-    // نضيف الأشباح فقط إذا لم يكونوا موجودين في السحابة
     localFiltered.forEach(localRec => {
       if (!combined.some(c => c.name === localRec.name)) {
         combined.push(localRec);
       }
     });
 
-    // الترتيب النهائي
     return [...combined]
       .sort((a, b) => (sort === 'score' ? b.score - a.score || a.timeSec - b.timeSec : a.timeSec - b.timeSec || b.score - a.score))
       .slice(0, 10);
