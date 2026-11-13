@@ -312,6 +312,32 @@ export const cloudSync = {
     }
   },
 
+  async getLeaderboardVisibility(): Promise<boolean> {
+    requireCloudMode();
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+
+    if (userError) {
+      throw new Error(userError.message);
+    }
+
+    if (!userData.user) {
+      throw new Error('يجب تسجيل الدخول أولاً.');
+    }
+
+    const { data, error } = await supabase
+      .from('public_profiles')
+      .select('show_on_leaderboard')
+      .eq('user_id', userData.user.id)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data?.show_on_leaderboard === true;
+  },
+
   async setLeaderboardVisibility(isVisible: boolean): Promise<boolean> {
     try {
       requireCloudMode();
