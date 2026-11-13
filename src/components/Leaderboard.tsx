@@ -85,18 +85,19 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
         }
 
         const mapped: LeaderRecord[] = result.entries.map((entry) => ({
-          id: `sb-${entry.sequential_number ?? entry.pos}`,
-          name: getCloudPlayerName(
-            entry.avatar_id,
-            entry.sequential_number,
-            isAr
-          ),
-          score: entry.score,
-          timeSec: entry.time_ms == null
-            ? 0
-            : Math.round(entry.time_ms / 1000),
-          examId: exam,
-        }));
+  id: `sb-${entry.sequential_number ?? entry.pos}`,
+  name: getCloudPlayerName(
+    entry.avatar_id,
+    entry.sequential_number,
+    isAr
+  ),
+  score: entry.score,
+  timeSec: entry.time_ms == null
+    ? 0
+    : Math.round(entry.time_ms / 1000),
+  examId: exam,
+  at: 0,
+}));
 
         setCloudRecords(mapped);
       } catch (error) {
