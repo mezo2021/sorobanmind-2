@@ -113,6 +113,22 @@ async function adoptUser(user: User): Promise<boolean> {
   }
   localStorage.setItem(OWNER_KEY, user.id);
   applyLocalIdentity();
+
+  // 🆕 مزامنة شخصية البطل بعد نجاح المصادقة (best-effort، لا تفشل الدخول)
+  const heroKey = localStorage.getItem('soroban_hero_key');
+  if (heroKey) {
+    try {
+      const { error: avatarError } = await supabase.rpc('set_my_avatar', {
+        p_avatar_id: heroKey,
+      });
+      if (avatarError) {
+        console.warn('تعذرت مزامنة شخصية البطل:', avatarError.message);
+      }
+    } catch (err) {
+      console.warn('خطأ في مزامنة شخصية البطل:', err);
+    }
+  }
+
   if (different) window.setTimeout(() => window.location.reload(), 1200);
   return different;
 }
