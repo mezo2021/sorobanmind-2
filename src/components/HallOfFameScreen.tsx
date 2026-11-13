@@ -11,7 +11,6 @@ import {
   Calendar, 
   Globe, 
   Sparkles,
-  UserCheck,
   Loader2
 } from 'lucide-react';
 
@@ -25,8 +24,8 @@ export interface LeaderboardUser {
   name: string;
   avatar?: string;
   score: number;
-  time: string; // e.g. "01:12"
-  accuracy: number; // percentage
+  time: string;
+  accuracy: number;
   badge?: string;
 }
 
@@ -37,6 +36,10 @@ export interface HallOfFameProps {
   loading: boolean;
   onTabChange: (tab: TabType, subFilter: string) => void;
   onTimeChange: (time: TimeFilter) => void;
+}
+
+function getPlayerDisplayName(player: LeaderboardUser): string {
+  return player.name.replace(/^\S+\s+/, '');
 }
 
 export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
@@ -51,7 +54,6 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
   const [subFilter, setSubFilter] = useState<string>('level_0');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
 
-  // --- Sub-filters mapping matching DB standards ---
   const getSubFilters = (tab: TabType) => {
     switch (tab) {
       case 'levels':
@@ -60,10 +62,10 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
           label: isAr ? `مستوى ${i}` : `Level ${i}`,
         }));
       case 'categories':
-  return [
-    { id: 'cat_ce1', label: isAr ? 'الأبطال الصغار (٥-١٢ سنة)' : 'Young Heroes (Ages 5-12)' },
-    { id: 'cat_ce2', label: isAr ? 'الأبطال الكبار (+١٣ سنة)' : 'Champion Heroes (Ages 13+)' },
-  ];
+        return [
+          { id: 'cat_ce1', label: isAr ? 'الأبطال الصغار (٥-١٢ سنة)' : 'Young Heroes (Ages 5-12)' },
+          { id: 'cat_ce2', label: isAr ? 'الأبطال الكبار (+١٣ سنة)' : 'Champion Heroes (Ages 13+)' },
+        ];
       case 'kyu':
         return [
           { id: 'exam_10_7', label: isAr ? 'كيو 10-7' : 'Kyu 10-7' },
@@ -94,7 +96,6 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
     onTimeChange(time);
   };
 
-  // Split Top 3 vs Rest
   const top1 = players.find(p => p.rank === 1);
   const top2 = players.find(p => p.rank === 2);
   const top3 = players.find(p => p.rank === 3);
@@ -105,10 +106,8 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
       className={`min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 text-slate-100 p-4 md:p-8 font-sans pb-28 ${isAr ? 'rtl' : 'ltr'}`}
       dir={isAr ? 'rtl' : 'ltr'}
     >
-      {/* Background Japanese Dojo Mesh Effect */}
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none" />
 
-      {/* --- HEADER --- */}
       <header className="max-w-4xl mx-auto mb-6 text-center relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -129,7 +128,6 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
         </p>
       </header>
 
-      {/* --- MAIN NAVIGATION TABS --- */}
       <div className="max-w-4xl mx-auto mb-6 relative z-10">
         <div className="flex bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800 backdrop-blur-xl shadow-2xl">
           {[
@@ -162,7 +160,6 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
         </div>
       </div>
 
-      {/* --- SUB-FILTERS & TIME TOGGLE --- */}
       <div className="max-w-4xl mx-auto mb-8 flex flex-wrap items-center justify-between gap-4 relative z-10">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none max-w-full">
           {getSubFilters(activeTab).map((sf) => (
@@ -180,7 +177,6 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
           ))}
         </div>
 
-        {/* Time Switcher */}
         <div className="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 self-end md:self-auto">
           <button
             onClick={() => handleTimeSwitch('all')}
@@ -207,7 +203,6 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
         </div>
       </div>
 
-      {/* --- LOADING & EMPTY STATES --- */}
       {loading ? (
         <div className="max-w-4xl mx-auto py-24 flex flex-col items-center justify-center space-y-4">
           <Loader2 className="w-10 h-10 text-amber-400 animate-spin" />
@@ -224,11 +219,9 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
         </div>
       ) : (
         <>
-          {/* --- PODIUM SECTION (TOP 3) --- */}
           <div className="max-w-4xl mx-auto mb-10 relative z-10">
             <div className="grid grid-cols-3 gap-3 md:gap-6 items-end justify-center pt-8 px-2">
               
-              {/* RANK 2 (Silver) */}
               {top2 && (
                 <motion.div
                   initial={{ opacity: 0, y: 40 }}
@@ -238,8 +231,8 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                 >
                   <div className="relative mb-2">
                     <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-slate-400 to-slate-100 p-0.5 shadow-lg shadow-slate-400/20">
-                      <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center font-bold text-slate-200 text-lg md:text-xl">
-                        {top2.name.substring(0, 2)}
+                      <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center text-3xl md:text-4xl">
+                        {top2.avatar ?? '🏅'}
                       </div>
                     </div>
                     <div className="absolute -bottom-2 inset-x-0 flex justify-center">
@@ -251,7 +244,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
 
                   <div className="text-center my-2">
                     <h3 className="font-bold text-xs md:text-sm text-slate-200 truncate max-w-[90px] md:max-w-[130px]">
-                      {top2.name}
+                      {getPlayerDisplayName(top2)}
                     </h3>
                     <p className="text-slate-400 text-[11px] font-mono mt-0.5">{top2.score} pts</p>
                     <div className="flex items-center justify-center gap-1 text-[10px] text-amber-400/80">
@@ -269,7 +262,6 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                 </motion.div>
               )}
 
-              {/* RANK 1 (Gold - Center) */}
               {top1 && (
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
@@ -287,8 +279,8 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
 
                   <div className="relative mb-2 mt-4">
                     <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-gradient-to-tr from-amber-600 via-amber-300 to-yellow-100 p-1 shadow-xl shadow-amber-500/30 ring-4 ring-amber-500/20">
-                      <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center font-black text-amber-400 text-xl md:text-3xl border border-amber-400/30">
-                        {top1.name.substring(0, 2)}
+                      <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center text-4xl md:text-5xl border border-amber-400/30">
+                        {top1.avatar ?? '🏅'}
                       </div>
                     </div>
                     <div className="absolute -bottom-2 inset-x-0 flex justify-center">
@@ -300,7 +292,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
 
                   <div className="text-center my-2">
                     <h3 className="font-extrabold text-sm md:text-lg text-amber-300 truncate max-w-[100px] md:max-w-[150px]">
-                      {top1.name}
+                      {getPlayerDisplayName(top1)}
                     </h3>
                     {top1.badge && (
                       <span className="inline-block bg-amber-500/10 text-amber-400 text-[10px] px-2 py-0.5 rounded border border-amber-500/30 mb-1">
@@ -323,7 +315,6 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                 </motion.div>
               )}
 
-              {/* RANK 3 (Bronze) */}
               {top3 && (
                 <motion.div
                   initial={{ opacity: 0, y: 40 }}
@@ -333,8 +324,8 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                 >
                   <div className="relative mb-2">
                     <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-amber-800 to-amber-600 p-0.5 shadow-lg shadow-amber-900/30">
-                      <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center font-bold text-amber-600 text-lg md:text-xl">
-                        {top3.name.substring(0, 2)}
+                      <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center text-3xl md:text-4xl">
+                        {top3.avatar ?? '🏅'}
                       </div>
                     </div>
                     <div className="absolute -bottom-2 inset-x-0 flex justify-center">
@@ -346,7 +337,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
 
                   <div className="text-center my-2">
                     <h3 className="font-bold text-xs md:text-sm text-slate-200 truncate max-w-[90px] md:max-w-[130px]">
-                      {top3.name}
+                      {getPlayerDisplayName(top3)}
                     </h3>
                     <p className="text-slate-400 text-[11px] font-mono mt-0.5">{top3.score} pts</p>
                     <div className="flex items-center justify-center gap-1 text-[10px] text-amber-400/80">
@@ -367,7 +358,6 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
             </div>
           </div>
 
-          {/* --- LEADERBOARD LIST (RANKS 4 - 10) --- */}
           {restPlayers.length > 0 && (
             <div className="max-w-4xl mx-auto space-y-2.5 relative z-10 pb-6">
               <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-1">
@@ -388,13 +378,13 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                         #{player.rank}
                       </span>
 
-                      <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-slate-300 text-xs md:text-sm">
-                        {player.name.substring(0, 2)}
+                      <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xl md:text-2xl">
+                        {player.avatar ?? '🏅'}
                       </div>
 
                       <div>
                         <h4 className="font-semibold text-xs md:text-sm text-slate-200 group-hover:text-white transition-colors">
-                          {player.name}
+                          {getPlayerDisplayName(player)}
                         </h4>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
@@ -423,20 +413,19 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
         </>
       )}
 
-      {/* --- CURRENT USER STICKY FOOTER --- */}
       {currentUser && (
         <div className="fixed bottom-0 inset-x-0 bg-slate-950/95 border-t border-slate-800 p-3 md:p-4 backdrop-blur-xl z-20 shadow-2xl">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-300">
-                <UserCheck className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-full bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-xl">
+                {currentUser.avatar ?? '🏅'}
               </div>
               <div>
                 <span className="text-[10px] text-indigo-300 font-semibold uppercase tracking-wider block">
                   {isAr ? 'مركزك الحالي' : 'Your Rank'}
                 </span>
                 <h5 className="text-xs md:text-sm font-bold text-white">
-                  {currentUser.name}
+                  {getPlayerDisplayName(currentUser)}
                 </h5>
               </div>
             </div>
