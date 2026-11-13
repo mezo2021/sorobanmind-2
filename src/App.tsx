@@ -34,6 +34,7 @@ import { cloudSync } from './lib/cloudSync'; // 🆕 استيراد cloudSync ل
 // [m5-ب] استيراد SRB_LEVELS لاستنتاج مستوى الدرس بدون getLessonById
 import { SRB_LEVELS } from './data/srb/curriculum';
 import { getMode } from './utils/appMode'; // 🆕 استيراد الوضع
+import { storage } from './utils/storage'; // 🆕 استيراد storage للعزل بين Local و Cloud
 
 // ═══ Screens ═══
 // [FIX N43] الأربعة الأولى: imports عادية (كانت lazy)
@@ -286,11 +287,11 @@ export default function App() {
     weakSkills: string[],
   ) => {
     try {
-      localStorage.setItem(
+      storage.setItem(
         'soroban_placement_weak_skills',
         JSON.stringify(weakSkills),
       );
-      localStorage.setItem(
+      storage.setItem(
         'soroban_placement_recommended',
         recommendedLevel,
       );
