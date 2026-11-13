@@ -568,10 +568,11 @@ const handlePreviewToggle = () => {
   setTimeout(() => window.location.reload(), 300);
 };
 
-  const handleReset = () => {
+  
+const handleReset = () => {
   const mode = getMode();
 
-  // تصفير السحابي مؤجل حتى مرحلة SQL (يحتاج عملية خادمية حقيقية)
+  // تصفير السحابي مؤجل حتى مرحلة SQL
   if (mode === 'cloud') {
     window.alert(
       lang === 'ar'
@@ -581,7 +582,7 @@ const handlePreviewToggle = () => {
     return;
   }
 
-  // حماية مطلقة إذا لم يُحدد الوضع
+  // حماية إذا لم يُحدد الوضع
   if (mode !== 'local') {
     window.alert(
       lang === 'ar'
@@ -591,22 +592,53 @@ const handlePreviewToggle = () => {
     return;
   }
 
-  // المفاتيح المحلية المؤكدة (كل تقدم Zustand محفوظ في المفتاح الأول)
+  // TODO (Commit C): عزل مفاتيح CE1/CE2 وPlacement والشهادات
+  // حسب الوضع قبل إضافتها إلى النسخ الاحتياطي والاستعادة.
+
   const localProgressKeys = [
     'local:sorobanmind-v2-progress',
     'local:soroban_high_scores_v1',
     'local:soroban_high_scores_month',
+
+    // امتحانات الأقسام
+    'cat_ce1_score',
+    'cat_ce1_last_attempt',
+    'cat_ce2_score',
+    'cat_ce2_last_attempt',
+
+    // اختبار تحديد المستوى
+    'soroban_placement_attempts',
+    'soroban_placement_recommended',
+    'soroban_placement_result',
+    'soroban_placement_last_attempt',
+    'soroban_placement_weak_skills',
+
+    // الشهادات
+    'soroban_kids_certificate_ready',
+    'soroban_certificates_history',
   ];
 
-  localProgressKeys.forEach((key) => {
-    localStorage.removeItem(key);
-  });
+  try {
+    localProgressKeys.forEach((key) => {
+      localStorage.removeItem(key);
+    });
+  } catch (error) {
+    console.error('[GuardianDashboard] Local reset failed:', error);
+    window.alert(
+      lang === 'ar'
+        ? 'حدث خطأ أثناء تصفير التقدم. يرجى المحاولة مرة أخرى.'
+        : 'An error occurred while resetting progress. Please try again.'
+    );
+    return;
+  }
 
-  // إعادة بناء اسم البطل من هويته
+  // إعادة بناء اسم البطل مع الحفاظ على هويته
   try {
     const heroKey = localStorage.getItem('soroban_hero_key');
+
     if (heroKey) {
       const displayName = resolveDisplayName(heroKey, lang);
+
       if (displayName) {
         localStorage.setItem('soroban_child_name', displayName);
       } else {
