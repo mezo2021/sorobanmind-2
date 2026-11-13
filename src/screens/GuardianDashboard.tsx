@@ -601,23 +601,17 @@ const handleReset = () => {
     'local:soroban_high_scores_month',
 
     // امتحانات الأقسام
-    // المفاتيح القديمة: تنظيف بيانات ما قبل العزل
-'cat_ce1_score',
-'cat_ce1_last_attempt',
-'cat_ce2_score',
-'cat_ce2_last_attempt',
+    // مفاتيح قديمة: لتنظيف البيانات السابقة للعزل
+'soroban_exam1_score',
+'soroban_exam1_last_attempt',
+'soroban_exam2_score',
+'soroban_exam2_last_attempt',
 
-// المفاتيح الجديدة: Local
-'local:cat_ce1_score',
-'local:cat_ce1_last_attempt',
-'local:cat_ce2_score',
-'local:cat_ce2_last_attempt',
-
-    // المفاتيح الجديدة: Cloud
-    'cloud:cat_ce1_score',
-    'cloud:cat_ce1_last_attempt',
-    'cloud:cat_ce2_score',
-    'cloud:cat_ce2_last_attempt',
+// مفاتيح Local الجديدة
+'local:soroban_exam1_score',
+'local:soroban_exam1_last_attempt',
+'local:soroban_exam2_score',
+'local:soroban_exam2_last_attempt',
 
     // اختبار تحديد المستوى
     'soroban_placement_attempts',
