@@ -761,19 +761,7 @@ if (
 } else {
   throw new Error('Invalid format');
 }
-        if (Number(parsed.schemaVersion) > 1) {
-          window.alert(pickLang({ ar: 'إصدار النسخة غير مدعوم', en: 'Unsupported backup version' }, lang));
-          event.target.value = '';
-          return;
-        }
-        dataToImport = (parsed.data as Record<string, unknown>) || {};
-        backupMode = (parsed as any).mode ?? null;
-      } else if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        dataToImport = parsed as Record<string, unknown>;
-      } else {
-        throw new Error('Invalid format');
-      }
-
+        
       const mode = getMode();
 
       // ═══ التحقق من وضع النسخة ═══
