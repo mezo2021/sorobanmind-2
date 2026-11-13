@@ -596,43 +596,38 @@ const handleReset = () => {
   // حسب الوضع قبل إضافتها إلى النسخ الاحتياطي والاستعادة.
 
   const localProgressKeys = [
-    'local:sorobanmind-v2-progress',
-    'local:soroban_high_scores_v1',
-    'local:soroban_high_scores_month',
+  'local:sorobanmind-v2-progress',
+  'local:soroban_high_scores_v1',
+  'local:soroban_high_scores_month',
 
-    // امتحانات الأقسام
-    // امتحانات الأقسام (قديمة - تنظيف)
-'cat_ce1_score',
-'cat_ce1_last_attempt',
-'cat_ce2_score',
-'cat_ce2_last_attempt',
-// امتحانات الأقسام (جديدة - فعلية)
-'soroban_exam1_score',
-'soroban_exam1_last_attempt',
-'soroban_exam2_score',
-'soroban_exam2_last_attempt',
-'local:soroban_exam1_score',
-'local:soroban_exam1_last_attempt',
-'local:soroban_exam2_score',
-'local:soroban_exam2_last_attempt',
+  // امتحانات الأقسام القديمة — تنظيف
+  'cat_ce1_score',
+  'cat_ce1_last_attempt',
+  'cat_ce2_score',
+  'cat_ce2_last_attempt',
 
-// اختبار تحديد المستوى (قديمة)
-'soroban_placement_attempts',
-'soroban_placement_recommended',
-'soroban_placement_result',
-'soroban_placement_last_attempt',
-'soroban_placement_weak_skills',
-// اختبار تحديد المستوى (جديدة - local)
-'local:soroban_placement_attempts',
-'local:soroban_placement_recommended',
-'local:soroban_placement_result',
-'local:soroban_placement_last_attempt',
-'local:soroban_placement_weak_skills',
+  // امتحانات الأقسام القديمة قبل العزل
+  'soroban_exam1_score',
+  'soroban_exam1_last_attempt',
+  'soroban_exam2_score',
+  'soroban_exam2_last_attempt',
 
-    // الشهادات
-    'soroban_kids_certificate_ready',
-    'soroban_certificates_history',
-  ];
+  // امتحانات الأقسام الجديدة — Local فقط
+  'local:soroban_exam1_score',
+  'local:soroban_exam1_last_attempt',
+  'local:soroban_exam2_score',
+  'local:soroban_exam2_last_attempt',
+
+  // Placement — المفاتيح المثبتة فقط
+  'soroban_placement_recommended',
+  'soroban_placement_weak_skills',
+  'local:soroban_placement_recommended',
+  'local:soroban_placement_weak_skills',
+
+  // الشهادات القديمة — تنظيف
+  'soroban_kids_certificate_ready',
+  'soroban_certificates_history',
+];
 
   try {
     localProgressKeys.forEach((key) => {
