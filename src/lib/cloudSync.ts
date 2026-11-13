@@ -14,6 +14,17 @@ export interface HallOfFameEntry {
   is_me: boolean;
 }
 
+export type HallOfFameResult =
+  | {
+      success: true;
+      entries: HallOfFameEntry[];
+    }
+  | {
+      success: false;
+      entries: [];
+      error: string;
+    };
+
 function extractPureState(state: ProgressState) {
   const {
     // استبعاد الأسماء الشخصية (حماية الخصوصية)
@@ -363,7 +374,7 @@ export const cloudSync = {
     gameId: string,
     period: string = 'all',
     limit: number = 10,
-  ): Promise<HallOfFameEntry[]> {
+  ): Promise<HallOfFameResult> {
     try {
       requireCloudMode();
 
@@ -374,19 +385,26 @@ export const cloudSync = {
       });
 
       if (error) {
-        console.warn(
-          'تعذر جلب لوحة الشرف V2:',
-          error.message
-        );
-        return [];
+        console.warn('تعذر جلب لوحة الشرف V2:', error.message);
+        return {
+          success: false,
+          entries: [],
+          error: error.message,
+        };
       }
 
-      return Array.isArray(data)
-        ? data as HallOfFameEntry[]
-        : [];
+      return {
+        success: true,
+        entries: Array.isArray(data) ? (data as HallOfFameEntry[]) : [],
+      };
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
       console.warn('خطأ أثناء جلب لوحة الشرف:', err);
-      return [];
+      return {
+        success: false,
+        entries: [],
+        error: message,
+      };
     }
   },
 };
