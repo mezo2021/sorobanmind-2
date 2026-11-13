@@ -718,7 +718,49 @@ setTimeout(() => {
       let dataToImport: Record<string, unknown>;
       let backupMode: string | null = null;
 
-      if (parsed && typeof parsed === 'object' && 'schemaVersion' in parsed && 'data' in parsed) {
+      
+if (
+  parsed &&
+  typeof parsed === 'object' &&
+  !Array.isArray(parsed) &&
+  'schemaVersion' in parsed &&
+  'data' in parsed
+) {
+  if (parsed.schemaVersion !== 1) {
+    window.alert(
+      pickLang({
+        ar: 'إصدار النسخة غير مدعوم أو غير صالح.',
+        en: 'Unsupported or invalid backup version.',
+      }, lang)
+    );
+    event.target.value = '';
+    return;
+  }
+
+  if (parsed.mode !== 'local' && parsed.mode !== 'cloud') {
+    throw new Error('Invalid backup mode');
+  }
+
+  if (
+    !parsed.data ||
+    typeof parsed.data !== 'object' ||
+    Array.isArray(parsed.data)
+  ) {
+    throw new Error('Invalid backup data');
+  }
+
+  dataToImport = parsed.data as Record<string, unknown>;
+  backupMode = parsed.mode;
+} else if (
+  parsed &&
+  typeof parsed === 'object' &&
+  !Array.isArray(parsed)
+) {
+  // دعم النسخ القديمة ذات التنسيق المباشر
+  dataToImport = parsed as Record<string, unknown>;
+} else {
+  throw new Error('Invalid format');
+}
         if (Number(parsed.schemaVersion) > 1) {
           window.alert(pickLang({ ar: 'إصدار النسخة غير مدعوم', en: 'Unsupported backup version' }, lang));
           event.target.value = '';
