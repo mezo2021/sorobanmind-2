@@ -601,24 +601,33 @@ const handleReset = () => {
     'local:soroban_high_scores_month',
 
     // امتحانات الأقسام
-    // مفاتيح قديمة: لتنظيف البيانات السابقة للعزل
+    // امتحانات الأقسام (قديمة - تنظيف)
+'cat_ce1_score',
+'cat_ce1_last_attempt',
+'cat_ce2_score',
+'cat_ce2_last_attempt',
+// امتحانات الأقسام (جديدة - فعلية)
 'soroban_exam1_score',
 'soroban_exam1_last_attempt',
 'soroban_exam2_score',
 'soroban_exam2_last_attempt',
-
-// مفاتيح Local الجديدة
 'local:soroban_exam1_score',
 'local:soroban_exam1_last_attempt',
 'local:soroban_exam2_score',
 'local:soroban_exam2_last_attempt',
 
-    // اختبار تحديد المستوى
-    'soroban_placement_attempts',
-    'soroban_placement_recommended',
-    'soroban_placement_result',
-    'soroban_placement_last_attempt',
-    'soroban_placement_weak_skills',
+// اختبار تحديد المستوى (قديمة)
+'soroban_placement_attempts',
+'soroban_placement_recommended',
+'soroban_placement_result',
+'soroban_placement_last_attempt',
+'soroban_placement_weak_skills',
+// اختبار تحديد المستوى (جديدة - local)
+'local:soroban_placement_attempts',
+'local:soroban_placement_recommended',
+'local:soroban_placement_result',
+'local:soroban_placement_last_attempt',
+'local:soroban_placement_weak_skills',
 
     // الشهادات
     'soroban_kids_certificate_ready',
