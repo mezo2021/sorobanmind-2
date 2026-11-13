@@ -5,6 +5,15 @@ import { resolveDisplayName } from '../utils/resolveDisplayName';
 import { getMode } from '../utils/appMode';
 import type { User } from '@supabase/supabase-js';
 
+export interface HallOfFameEntry {
+  pos: number;
+  avatar_id: string | null;
+  sequential_number: number | null;
+  score: number;
+  time_ms: number | null;
+  is_me: boolean;
+}
+
 function extractPureState(state: ProgressState) {
   const {
     // استبعاد الأسماء الشخصية (حماية الخصوصية)
@@ -347,6 +356,37 @@ export const cloudSync = {
     } catch (err) {
       console.warn('🚨 خطأ في الشبكة أثناء تحديث الموافقة:', String(err));
       return false;
+    }
+  },
+
+  async getHallOfFame(
+    gameId: string,
+    period: string = 'all',
+    limit: number = 10,
+  ): Promise<HallOfFameEntry[]> {
+    try {
+      requireCloudMode();
+
+      const { data, error } = await supabase.rpc('get_hall_of_fame_v2', {
+        p_game_id: gameId,
+        p_period: period,
+        p_limit: limit,
+      });
+
+      if (error) {
+        console.warn(
+          'تعذر جلب لوحة الشرف V2:',
+          error.message
+        );
+        return [];
+      }
+
+      return Array.isArray(data)
+        ? data as HallOfFameEntry[]
+        : [];
+    } catch (err) {
+      console.warn('خطأ أثناء جلب لوحة الشرف:', err);
+      return [];
     }
   },
 };
