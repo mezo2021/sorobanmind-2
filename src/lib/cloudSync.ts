@@ -293,4 +293,44 @@ export const cloudSync = {
       return false;
     }
   },
+
+  async setMyAvatar(avatarId: string): Promise<boolean> {
+    try {
+      requireCloudMode();
+      
+      const { error } = await supabase.rpc('set_my_avatar', {
+        p_avatar_id: avatarId,
+      });
+      
+      if (error) { 
+        console.warn('🚨 خطأ في حفظ الشخصية السحابية:', error.message); 
+        return false; 
+      }
+      
+      return true;
+    } catch (err) {
+      console.warn('🚨 خطأ في الشبكة أثناء حفظ الشخصية:', String(err));
+      return false;
+    }
+  },
+
+  async setLeaderboardVisibility(isVisible: boolean): Promise<boolean> {
+    try {
+      requireCloudMode();
+      
+      const { error } = await supabase.rpc('set_my_leaderboard_visibility', {
+        p_visible: isVisible,
+      });
+      
+      if (error) { 
+        console.warn('🚨 خطأ في تحديث موافقة الظهور:', error.message); 
+        return false; 
+      }
+      
+      return true;
+    } catch (err) {
+      console.warn('🚨 خطأ في الشبكة أثناء تحديث الموافقة:', String(err));
+      return false;
+    }
+  },
 };
