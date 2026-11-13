@@ -7,13 +7,35 @@ import { Num } from '@/components/Num';
 import CosmicBackground from '@/components/cosmic/CosmicBackground';
 import { maskName } from '@/utils/maskName';
 import { EXAM_LABELS, LeaderRecord, examLabel, fmtTime, getRecords } from '@/utils/leaderboard';
-import { supabase } from '@/lib/supabase'; // 🆕 استيراد Supabase
+import { cloudSync } from '@/lib/cloudSync';
+import { AVATARS } from '@/data/avatars';
 
 const PODIUM = [
   { rank: 2, h: 'h-24', color: '#cbd5e1', bg: 'from-slate-300/30 to-slate-500/10', icon: '🥈' },
   { rank: 1, h: 'h-32', color: '#fbbf24', bg: 'from-amber-300/40 to-amber-600/10', icon: '🥇' },
   { rank: 3, h: 'h-16', color: '#d97706', bg: 'from-orange-400/30 to-orange-700/10', icon: '🥉' },
 ];
+
+function getCloudPlayerName(
+  avatarId: string | null,
+  sequentialNumber: number | null,
+  isAr: boolean
+): string {
+  const avatar = AVATARS.find((item) => item.id === avatarId);
+  const emoji = avatar?.emoji ?? '🏅';
+
+  const characterName = avatar
+    ? (isAr ? avatar.nameAr : avatar.nameEn)
+    : isAr ? 'بطل' : 'Champion';
+
+  return `${emoji} ${characterName} #${sequentialNumber ?? '—'}`;
+}
+
+function getRecordDisplayName(record: LeaderRecord): string {
+  return record.id.startsWith('sb-')
+    ? record.name
+    : maskName(record.name);
+}
 
 function Sparks({ color }: { color: string }) {
   const reduce = useReducedMotion();
@@ -38,42 +60,59 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
   const [exam, setExam] = useState<string>('all');
   const [sort, setSort] = useState<'score' | 'time'>('score');
   
-  // 🆕 1. جلب اللاعبين الحقيقيين من السيرفر
+  // جلب اللاعبين الحقيقيين من السحابة
   const [cloudRecords, setCloudRecords] = useState<LeaderRecord[]>([]);
   const localRecords = useMemo(() => getRecords(), []);
 
   useEffect(() => {
     let isMounted = true;
-    
+
     async function fetchFromCloud() {
       if (exam === 'all') {
-        setCloudRecords([]); // في وضع "كل المستويات" نعتمد على الأشباح حالياً
+        setCloudRecords([]);
         return;
       }
-      
-      const { data, error } = await supabase.rpc('get_hall_of_fame', {
-        p_game_id: exam,
-        p_period: 'all',
-        p_limit: 10
-      });
 
-      if (!error && data && isMounted) {
-        const mapped = data.map((s: any, i: number) => ({
-          id: `sb-${i}`,
-          name: s.display_name,
-          score: s.score,
-          timeSec: s.time_ms ? Math.round(s.time_ms / 1000) : 0,
+      try {
+        const result = await cloudSync.getHallOfFame(exam, 'all', 10);
+
+        if (!isMounted) return;
+
+        if (!result.success) {
+          console.error('Wormhole leaderboard error:', result.error);
+          setCloudRecords([]);
+          return;
+        }
+
+        const mapped: LeaderRecord[] = result.entries.map((entry) => ({
+          id: `sb-${entry.sequential_number ?? entry.pos}`,
+          name: getCloudPlayerName(
+            entry.avatar_id,
+            entry.sequential_number,
+            isAr
+          ),
+          score: entry.score,
+          timeSec: entry.time_ms == null
+            ? 0
+            : Math.round(entry.time_ms / 1000),
           examId: exam,
         }));
+
         setCloudRecords(mapped);
+      } catch (error) {
+        console.error('Wormhole leaderboard fetch error:', error);
+        if (isMounted) setCloudRecords([]);
       }
     }
 
     fetchFromCloud();
-    return () => { isMounted = false; };
-  }, [exam]);
 
-  // 🆕 2. الدمج الذكي (السحابة + الأشباح) والترتيب بناءً على الزر المختار
+    return () => {
+      isMounted = false;
+    };
+  }, [exam, isAr]);
+
+  // الدمج الذكي (السحابة + الأشباح) والترتيب بناءً على الزر المختار
   const list: LeaderRecord[] = useMemo(() => {
     const localFiltered = exam === 'all' ? localRecords : localRecords.filter((r) => r.examId === exam);
     
@@ -87,7 +126,7 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
       }
     });
 
-    // الترتيب النهائي (هنا يعمل زر الدرجة/الزمن بامتياز)
+    // الترتيب النهائي
     return [...combined]
       .sort((a, b) => (sort === 'score' ? b.score - a.score || a.timeSec - b.timeSec : a.timeSec - b.timeSec || b.score - a.score))
       .slice(0, 10);
@@ -144,8 +183,7 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
                     {r && (
                       <div className="mb-2">
                         <div className="text-3xl">{p.icon}</div>
-                        {/* نستخدم maskName هنا لضمان تقنيع الأشباح أيضاً (محمد.ع سيبقى كما هو) */}
-                        <div className="font-black text-sm truncate" style={{ color: p.color }}>{maskName(r.name)}</div>
+                        <div className="font-black text-sm truncate" style={{ color: p.color }}>{getRecordDisplayName(r)}</div>
                         <div className="text-[11px] text-slate-400">{examLabel(r.examId, isAr)}</div>
                         <div className="text-xs font-mono text-amber-200"><Num>{sort === 'score' ? r.score : fmtTime(r.timeSec)}</Num></div>
                       </div>
@@ -165,7 +203,7 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
                   className="flex items-center justify-between bg-white/5 border border-slate-700/60 rounded-xl px-4 py-3 backdrop-blur-md">
                   <div className="flex items-center gap-3">
                     <span className="w-7 h-7 rounded-full bg-amber-500/15 text-amber-300 text-sm font-bold flex items-center justify-center"><Num>{i + 4}</Num></span>
-                    <span className="font-bold">{maskName(r.name)}</span>
+                    <span className="font-bold">{getRecordDisplayName(r)}</span>
                   </div>
                   <div className="text-xs text-slate-300 flex gap-3">
                     <span>{examLabel(r.examId, isAr)}</span>
