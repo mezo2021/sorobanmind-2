@@ -689,7 +689,11 @@ const handleReset = () => {
     a.href = url;
     a.download = `sorobanmind-backup-${mode}-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
-    URL.revokeObjectURL(url);
+
+// منح المتصفح وقتاً لبدء تنزيل الملف قبل تحرير الرابط
+setTimeout(() => {
+  URL.revokeObjectURL(url);
+}, 1000);
     playSound('click');
   } catch (err) {
     window.alert(pickLang({ ar: 'خطأ أثناء النسخ الاحتياطي: ', en: 'Backup error: ' }, lang) + String(err));
