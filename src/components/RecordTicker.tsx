@@ -4,18 +4,31 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useGameLang } from '@/components/games/gamesI18n';
 import { Num } from '@/components/Num';
 import { maskName } from '@/utils/maskName';
-import { examLabel, fastest, fmtTime, getRecords } from '@/utils/leaderboard';
+import { examLabel, fastest, fmtTime, getRecords, type LeaderRecord } from '@/utils/leaderboard';
+import { AVATARS } from '@/data/avatars';
+
+function getRecordDisplayName(record: LeaderRecord, isAr: boolean): string {
+  if (record.avatar_id) {
+    const avatar = AVATARS.find((item) => item.id === record.avatar_id);
+    if (avatar) {
+      const characterName = isAr ? avatar.nameAr : avatar.nameEn;
+      const number = record.sequential_number;
+      return `${avatar.emoji} ${characterName}${number ? ` #${number}` : ''}`;
+    }
+  }
+  return record.name ? maskName(record.name) : (isAr ? '🏅 بطل' : '🏅 Champion');
+}
 
 export default function RecordTicker() {
   const { dir, isAr } = useGameLang();
   const reduce = useReducedMotion();
   
-  // 🆕 فلترة التكرار: نضمن ظهور كل اسم مرة واحدة لكل امتحان في الشريط
+  // فلترة التكرار: نضمن ظهور كل لاعب مرة واحدة لكل امتحان في الشريط
   const top = useMemo(() => {
     const all = fastest(getRecords(), 50); 
-    const seen = new Set();
+    const seen = new Set<string>();
     return all.filter(r => {
-      const key = `${r.name}-${r.examId}`;
+      const key = `${r.playerId}-${r.examId}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -29,7 +42,7 @@ export default function RecordTicker() {
       {top.map((r) => (
         <span key={r.id} className="inline-flex items-center gap-2 px-5 text-sm whitespace-nowrap">
           <span className="text-amber-300">🏆</span>
-          <span className="font-bold text-white">{maskName(r.name)}</span>
+          <span className="font-bold text-white">{getRecordDisplayName(r, isAr)}</span>
           <span className="text-slate-500">·</span>
           <span className="text-cyan-300">{examLabel(r.examId, isAr)}</span>
           <span className="text-slate-500">·</span>
