@@ -22,6 +22,7 @@ import { getLessonsByLevel } from '@/curriculum/lessons';
 import { isPreviewMode } from '@/utils/previewMode';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { formatNumber } from '@/utils/numberStyle';
+import { storage } from '@/utils/storage'; // ✅ جديد
 
 // 🌍 i18n
 import { useT } from '@/i18n/useTranslation';
@@ -185,8 +186,8 @@ function toArabicNumber(value: number | string): string {
 
 function loadPlacementData() {
   try {
-    const weakSkillsRaw = localStorage.getItem('soroban_placement_weak_skills');
-    const recommendedRaw = localStorage.getItem('soroban_placement_recommended');
+    const weakSkillsRaw = storage.getItem('soroban_placement_weak_skills'); // ✅ storage
+    const recommendedRaw = storage.getItem('soroban_placement_recommended'); // ✅ storage
     
     // Read pass state from the store (single source of truth)
     const store = useProgressStore.getState();
@@ -222,7 +223,7 @@ export function CategoryScreen({ category, onNavigate, playSound }: CategoryScre
   const grades = useProgressStore((s) => s.grades);
   const pendingRemediation = useProgressStore((s) => s.pendingRemediation);
 
-  // ─── placement / exams (localStorage temporarily) ───
+  // ─── placement / exams (storage adapter) ───
   const placement = loadPlacementData();
 
   const handleNav = (screen: Screen) => {
