@@ -30,23 +30,19 @@ function getCloudPlayerName(
   return `${emoji} ${characterName} #${sequentialNumber ?? '—'}`;
 }
 
-function getRecordDisplayName(record: LeaderRecord, isAr: boolean): string {
-  if (record.id.startsWith('sb-')) {
-    return record.name;
-  }
-
-  if (record.id.startsWith('ghost-')) {
-    const ghostId = Number(record.id.replace('ghost-', ''));
-    if (Number.isFinite(ghostId) && AVATARS.length > 0) {
-      const avatar = AVATARS[ghostId % AVATARS.length];
+function getRecordDisplayName(
+  record: LeaderRecord,
+  isAr: boolean
+): string {
+  if (record.avatar_id) {
+    const avatar = AVATARS.find((item) => item.id === record.avatar_id);
+    if (avatar) {
       const characterName = isAr ? avatar.nameAr : avatar.nameEn;
-      const virtualNumber = 9000 + ghostId - 101;
-      return `${avatar.emoji} ${characterName} #${virtualNumber}`;
+      const number = record.sequential_number;
+      return `${avatar.emoji} ${characterName}${number ? ` #${number}` : ''}`;
     }
-    return isAr ? '🏅 بطل افتراضي' : '🏅 Virtual Champion';
   }
-
-  return record.name;
+  return record.name ?? (isAr ? '🏅 بطل' : '🏅 Champion');
 }
 
 function Sparks({ color }: { color: string }) {
@@ -97,11 +93,14 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
 
         const mapped: LeaderRecord[] = result.entries.map((entry) => ({
           id: `sb-${entry.sequential_number ?? entry.pos}`,
+          playerId: `sb-${entry.sequential_number ?? entry.pos}`,
           name: getCloudPlayerName(entry.avatar_id, entry.sequential_number, isAr),
+          avatar_id: entry.avatar_id,
+          sequential_number: entry.sequential_number,
           score: entry.score,
           timeSec: entry.time_ms == null ? 0 : Math.round(entry.time_ms / 1000),
           examId: exam,
-          at: 0, // 👈 تم إضافة الحقل هنا لحل مشكلة البناء
+          at: 0,
         }));
 
         setCloudRecords(mapped);
@@ -122,7 +121,7 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
     const localFiltered = exam === 'all' ? localRecords : localRecords.filter((r) => r.examId === exam);
     const combined = [...cloudRecords];
     localFiltered.forEach(localRec => {
-      if (!combined.some(c => c.name === localRec.name)) {
+      if (!combined.some((c) => c.playerId === localRec.playerId)) {
         combined.push(localRec);
       }
     });
