@@ -101,6 +101,9 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
   const top3 = players.find(p => p.rank === 3);
   const restPlayers = players.filter(p => p.rank > 3);
 
+  // 🆕 استخدام "درجة" بدلاً من "pts"
+  const scoreUnit = isAr ? 'درجة' : 'pts';
+
   return (
     <div 
       className={`min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 text-slate-100 p-4 md:p-8 font-sans pb-28 ${isAr ? 'rtl' : 'ltr'}`}
@@ -246,7 +249,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                     <h3 className="font-bold text-xs md:text-sm text-slate-200 truncate max-w-[90px] md:max-w-[130px]">
                       {getPlayerDisplayName(top2)}
                     </h3>
-                    <p className="text-slate-400 text-[11px] font-mono mt-0.5">{top2.score} pts</p>
+                    <p className="text-slate-400 text-[11px] font-mono mt-0.5">{top2.score} {scoreUnit}</p>
                     <div className="flex items-center justify-center gap-1 text-[10px] text-amber-400/80">
                       <Timer className="w-3 h-3" />
                       <span>{top2.time}</span>
@@ -299,7 +302,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                         {top1.badge}
                       </span>
                     )}
-                    <p className="text-amber-200/90 font-mono font-bold text-xs md:text-sm">{top1.score} pts</p>
+                    <p className="text-amber-200/90 font-mono font-bold text-xs md:text-sm">{top1.score} {scoreUnit}</p>
                     <div className="flex items-center justify-center gap-1 text-xs text-slate-300">
                       <Timer className="w-3.5 h-3.5 text-amber-400" />
                       <span>{top1.time}</span>
@@ -339,7 +342,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                     <h3 className="font-bold text-xs md:text-sm text-slate-200 truncate max-w-[90px] md:max-w-[130px]">
                       {getPlayerDisplayName(top3)}
                     </h3>
-                    <p className="text-slate-400 text-[11px] font-mono mt-0.5">{top3.score} pts</p>
+                    <p className="text-slate-400 text-[11px] font-mono mt-0.5">{top3.score} {scoreUnit}</p>
                     <div className="flex items-center justify-center gap-1 text-[10px] text-amber-400/80">
                       <Timer className="w-3 h-3" />
                       <span>{top3.time}</span>
@@ -397,7 +400,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                     <div className="text-left rtl:text-right flex items-center gap-4">
                       <div className="text-right rtl:text-left">
                         <div className="font-mono font-bold text-xs md:text-sm text-slate-100">
-                          {player.score.toLocaleString()} <span className="text-[10px] text-slate-400">pts</span>
+                          {player.score.toLocaleString()} <span className="text-[10px] text-slate-400">{scoreUnit}</span>
                         </div>
                         <div className="flex items-center gap-1 text-[11px] text-slate-400 justify-end rtl:justify-start">
                           <Timer className="w-3 h-3 text-slate-500" />
@@ -433,7 +436,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
             <div className="flex items-center gap-4">
               <div className="text-right rtl:text-left">
                 <span className="text-xs font-mono font-bold text-amber-400 block">#{currentUser.rank}</span>
-                <span className="text-[10px] text-slate-400">{currentUser.score.toLocaleString()} pts</span>
+                <span className="text-[10px] text-slate-400">{currentUser.score.toLocaleString()} {scoreUnit}</span>
               </div>
             </div>
           </div>
