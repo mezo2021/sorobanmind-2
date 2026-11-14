@@ -358,7 +358,10 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                     <label className="flex items-start gap-2.5 cursor-pointer border-t border-white/10 pt-3 mt-3">
                       <input type="checkbox" checked={agreeLeaderboard} onChange={(e) => setAgreeLeaderboard(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
                       <span className="text-[11px] text-emerald-200/90 leading-relaxed font-medium">
-                        {pickLang({ ar: 'أوافق على عرض اسم طفلي (بصيغة مقنّعة) ودرجاته في لوحات الشرف العامة داخل التطبيق.', en: "I agree to display my child's masked name and scores on public leaderboards in the app." }, lang)}
+                        {pickLang({
+  ar: 'أوافق على عرض شخصية طفلي ورقمه التسلسلي ودرجاته في لوحات الشرف العامة داخل التطبيق. يمكنك تغيير ذلك لاحقاً من الملف الشخصي.',
+  en: "I agree to display my child's chosen character, sequential number, and scores on the app's public leaderboards. You can change this later from the Profile screen.",
+}, lang)}
                       </span>
                     </label>
                   </div>
