@@ -132,6 +132,27 @@ function applyLocalIdentity() {
   }
 }
 
+let retryingAvatar = false;
+
+async function retryPendingAvatar() {
+  if (retryingAvatar) return;
+  if (getMode() !== 'cloud') return;
+  if (localStorage.getItem('soroban_avatar_pending_upload') !== '1') return;
+
+  const key = localStorage.getItem('soroban_hero_key');
+  if (!key) return;
+
+  retryingAvatar = true;
+  try {
+    const { error } = await supabase.rpc('set_my_avatar', { p_avatar_id: key });
+    if (!error) localStorage.removeItem('soroban_avatar_pending_upload');
+  } catch {
+    // يُعاد المحاولة لاحقاً
+  } finally {
+    retryingAvatar = false;
+  }
+}
+
 async function adoptUser(user: User): Promise<boolean> {
   requireCloudMode();
 
@@ -286,7 +307,10 @@ export const cloudSync = {
 
   async getSession() {
     const { data } = await supabase.auth.getSession();
-    if (data.session) applyLocalIdentity();
+    if (data.session) {
+      applyLocalIdentity();
+      void retryPendingAvatar();
+    }
     return data.session;
   },
 
@@ -333,50 +357,48 @@ export const cloudSync = {
   },
 
   async loadFromCloud() {
-  requireCloudMode();
+    requireCloudMode();
 
-  const user = await this.getCurrentUser();
-  if (!user) throw new Error('Must be logged in');
+    const user = await this.getCurrentUser();
+    if (!user) throw new Error('Must be logged in');
 
-  const { data, error } = await supabase
-    .from('soroban_progress')
-    .select('progress_data')
-    .eq('user_id', user.id)
-    .single();
+    const { data, error } = await supabase
+      .from('soroban_progress')
+      .select('progress_data')
+      .eq('user_id', user.id)
+      .single();
 
-  if (error) throw new Error(error.message);
-  if (!data || !data.progress_data) {
-    throw new Error('No backup found');
-  }
+    if (error) throw new Error(error.message);
+    if (!data || !data.progress_data) {
+      throw new Error('No backup found');
+    }
 
-  // قراءة شخصية البطل من ملف الحساب السحابي.
-  const { data: profile, error: profileError } = await supabase
-    .from('public_profiles')
-    .select('avatar_id')
-    .eq('user_id', user.id)
-    .maybeSingle();
+    const { data: profile, error: profileError } = await supabase
+      .from('public_profiles')
+      .select('avatar_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-  if (profileError) {
-    throw new Error(profileError.message);
-  }
+    if (profileError) {
+      throw new Error(profileError.message);
+    }
 
-  const pd = data.progress_data as any;
-  const { childName: _c, parentName: _p, ...safePd } = pd;
+    const pd = data.progress_data as any;
+    const { childName: _c, parentName: _p, ...safePd } = pd;
 
-  useProgressStore.setState({
-    ...useProgressStore.getState(),
-    ...safePd,
-  });
+    useProgressStore.setState({
+      ...useProgressStore.getState(),
+      ...safePd,
+    });
 
-  // تطبيق الشخصية السحابية إذا كانت موجودة.
-  if (profile?.avatar_id) {
-    localStorage.setItem('soroban_hero_key', profile.avatar_id);
-  }
+    if (profile?.avatar_id) {
+      localStorage.setItem('soroban_hero_key', profile.avatar_id);
+    }
 
-  applyLocalIdentity();
+    applyLocalIdentity();
 
-  return true;
-},
+    return true;
+  },
 
   async submitScore(gameId: string, score: number, timeMs: number | null = null) {
     try {
