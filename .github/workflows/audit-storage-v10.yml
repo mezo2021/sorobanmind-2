@@ -1,0 +1,47 @@
+name: SorobanMind Storage Audit v10
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/audit-storage-v10.cjs'
+      - '.github/workflows/audit-storage-v10.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig*.json'
+
+permissions:
+  contents: read
+
+jobs:
+  storage-audit:
+    name: Read-only storage lifecycle audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run Storage Audit v10
+        run: node scripts/audit-storage-v10.cjs
+
+      - name: Upload v10 reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sorobanmind-storage-audit-v10
+          path: audit-storage-v10/
+          if-no-files-found: warn
+          retention-days: 30
