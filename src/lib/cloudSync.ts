@@ -125,6 +125,9 @@ function applyLocalIdentity() {
   const lang = (localStorage.getItem('sorobanmind-v2-lang') as 'ar' | 'en') || 'ar';
   const display = key ? resolveDisplayName(key, lang) : '';
   if (display) {
+    try {
+      localStorage.setItem('soroban_child_name', display);
+    } catch { /* ignore */ }
     useProgressStore.getState().setChildName(display);
   }
 }
