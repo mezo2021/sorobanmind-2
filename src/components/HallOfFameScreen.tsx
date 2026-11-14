@@ -13,6 +13,7 @@ import {
   Sparkles,
   Loader2
 } from 'lucide-react';
+import { formatNumber, formatText } from '@/utils/numberStyle';
 
 // --- Types ---
 export type TabType = 'levels' | 'categories' | 'kyu';
@@ -37,8 +38,14 @@ export interface HallOfFameProps {
   onTimeChange: (time: TimeFilter) => void;
 }
 
-function getPlayerDisplayName(player: LeaderboardUser): string {
-  return player.name.replace(/^\S+\s+/, '');
+function getPlayerDisplayName(
+  player: LeaderboardUser,
+  numberStyle: 'arabic' | 'latin',
+): string {
+  return formatText(
+    player.name.replace(/^\S+\s+/, ''),
+    numberStyle,
+  );
 }
 
 export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
@@ -52,6 +59,8 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
   const [activeTab, setActiveTab] = useState<TabType>('levels');
   const [subFilter, setSubFilter] = useState<string>('level_0');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+
+  const numberStyle = isAr ? 'arabic' : 'latin';
 
   const getSubFilters = (tab: TabType) => {
     switch (tab) {
@@ -100,7 +109,6 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
   const top3 = players.find(p => p.rank === 3);
   const restPlayers = players.filter(p => p.rank > 3);
 
-  // توحيد وحدة القياس بناءً على اللغة
   const scoreUnit = isAr ? 'درجة' : 'pts';
 
   return (
@@ -155,7 +163,9 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                   />
                 )}
                 <Icon className={`w-4 h-4 ${isActive ? 'text-amber-400' : 'text-slate-400'}`} />
-                <span className="relative z-10">{tab.label}</span>
+                <span className="relative z-10">
+                  {formatText(tab.label, numberStyle)}
+                </span>
               </button>
             );
           })}
@@ -174,7 +184,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                   : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
               }`}
             >
-              {sf.label}
+              {formatText(sf.label, numberStyle)}
             </button>
           ))}
         </div>
@@ -239,19 +249,21 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                     </div>
                     <div className="absolute -bottom-2 inset-x-0 flex justify-center">
                       <span className="bg-slate-300 text-slate-950 font-black text-xs px-2 py-0.5 rounded-full shadow border border-white">
-                        #2
+                        #{formatNumber(2, numberStyle)}
                       </span>
                     </div>
                   </div>
 
                   <div className="text-center my-2 w-full px-1">
                     <h3 className="font-bold text-[10px] md:text-xs text-slate-200 leading-tight break-words line-clamp-2">
-                      {getPlayerDisplayName(top2)}
+                      {getPlayerDisplayName(top2, numberStyle)}
                     </h3>
-                    <p className="text-slate-400 text-[10px] md:text-[11px] font-mono mt-1">{top2.score} {scoreUnit}</p>
+                    <p className="text-slate-400 text-[10px] md:text-[11px] font-mono mt-1">
+                      {formatNumber(top2.score, numberStyle)} {scoreUnit}
+                    </p>
                     <div className="flex items-center justify-center gap-1 text-[9px] md:text-[10px] text-amber-400/80 mt-0.5">
                       <Timer className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                      <span>{top2.time}</span>
+                      <span>{formatText(top2.time, numberStyle)}</span>
                     </div>
                   </div>
 
@@ -287,24 +299,26 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                     </div>
                     <div className="absolute -bottom-2 inset-x-0 flex justify-center">
                       <span className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black text-xs md:text-sm px-3 py-0.5 rounded-full shadow-lg border border-amber-200">
-                        #1
+                        #{formatNumber(1, numberStyle)}
                       </span>
                     </div>
                   </div>
 
                   <div className="text-center my-2 w-full px-1">
                     <h3 className="font-extrabold text-[11px] md:text-sm text-amber-300 leading-tight break-words line-clamp-2">
-                      {getPlayerDisplayName(top1)}
+                      {getPlayerDisplayName(top1, numberStyle)}
                     </h3>
                     {top1.badge && (
                       <span className="inline-block bg-amber-500/10 text-amber-400 text-[9px] px-1.5 py-0.5 rounded border border-amber-500/30 mb-1 mt-1">
                         {top1.badge}
                       </span>
                     )}
-                    <p className="text-amber-200/90 font-mono font-bold text-[11px] md:text-xs mt-1">{top1.score} {scoreUnit}</p>
+                    <p className="text-amber-200/90 font-mono font-bold text-[11px] md:text-xs mt-1">
+                      {formatNumber(top1.score, numberStyle)} {scoreUnit}
+                    </p>
                     <div className="flex items-center justify-center gap-1 text-[9px] md:text-[10px] text-slate-300 mt-0.5">
                       <Timer className="w-2.5 h-2.5 md:w-3 md:h-3 text-amber-400" />
-                      <span>{top1.time}</span>
+                      <span>{formatText(top1.time, numberStyle)}</span>
                     </div>
                   </div>
 
@@ -332,19 +346,21 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                     </div>
                     <div className="absolute -bottom-2 inset-x-0 flex justify-center">
                       <span className="bg-amber-700 text-amber-100 font-black text-xs px-2 py-0.5 rounded-full shadow border border-amber-500">
-                        #3
+                        #{formatNumber(3, numberStyle)}
                       </span>
                     </div>
                   </div>
 
                   <div className="text-center my-2 w-full px-1">
                     <h3 className="font-bold text-[10px] md:text-xs text-slate-200 leading-tight break-words line-clamp-2">
-                      {getPlayerDisplayName(top3)}
+                      {getPlayerDisplayName(top3, numberStyle)}
                     </h3>
-                    <p className="text-slate-400 text-[10px] md:text-[11px] font-mono mt-1">{top3.score} {scoreUnit}</p>
+                    <p className="text-slate-400 text-[10px] md:text-[11px] font-mono mt-1">
+                      {formatNumber(top3.score, numberStyle)} {scoreUnit}
+                    </p>
                     <div className="flex items-center justify-center gap-1 text-[9px] md:text-[10px] text-amber-400/80 mt-0.5">
                       <Timer className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                      <span>{top3.time}</span>
+                      <span>{formatText(top3.time, numberStyle)}</span>
                     </div>
                   </div>
 
@@ -363,7 +379,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
           {restPlayers.length > 0 && (
             <div className="max-w-4xl mx-auto space-y-2.5 relative z-10 pb-6">
               <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-1">
-                {isAr ? 'بقية قائمة المتصدرين (4 - 10)' : 'Top Contenders (4 - 10)'}
+                {formatText(isAr ? 'بقية قائمة المتصدرين (4 - 10)' : 'Top Contenders (4 - 10)', numberStyle)}
               </h2>
 
               <AnimatePresence mode="wait">
@@ -377,7 +393,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                   >
                     <div className="flex items-center gap-3 md:gap-4">
                       <span className="w-7 text-center font-mono font-bold text-slate-400 text-sm md:text-base group-hover:text-amber-400 transition-colors">
-                        #{player.rank}
+                        #{formatNumber(player.rank, numberStyle)}
                       </span>
 
                       <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xl md:text-2xl">
@@ -386,7 +402,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
 
                       <div>
                         <h4 className="font-semibold text-xs md:text-sm text-slate-200 group-hover:text-white transition-colors">
-                          {getPlayerDisplayName(player)}
+                          {getPlayerDisplayName(player, numberStyle)}
                         </h4>
                       </div>
                     </div>
@@ -394,11 +410,11 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                     <div className="text-left rtl:text-right flex items-center gap-4">
                       <div className="text-right rtl:text-left">
                         <div className="font-mono font-bold text-xs md:text-sm text-slate-100">
-                          {player.score.toLocaleString()} <span className="text-[10px] text-slate-400">{scoreUnit}</span>
+                          {formatNumber(player.score.toLocaleString(), numberStyle)} <span className="text-[10px] text-slate-400">{scoreUnit}</span>
                         </div>
                         <div className="flex items-center gap-1 text-[11px] text-slate-400 justify-end rtl:justify-start">
                           <Timer className="w-3 h-3 text-slate-500" />
-                          <span>{player.time}</span>
+                          <span>{formatText(player.time, numberStyle)}</span>
                         </div>
                       </div>
                     </div>
@@ -422,15 +438,19 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                   {isAr ? 'مركزك الحالي' : 'Your Rank'}
                 </span>
                 <h5 className="text-xs md:text-sm font-bold text-white">
-                  {getPlayerDisplayName(currentUser)}
+                  {getPlayerDisplayName(currentUser, numberStyle)}
                 </h5>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
               <div className="text-right rtl:text-left">
-                <span className="text-xs font-mono font-bold text-amber-400 block">#{currentUser.rank}</span>
-                <span className="text-[10px] text-slate-400">{currentUser.score.toLocaleString()} {scoreUnit}</span>
+                <span className="text-xs font-mono font-bold text-amber-400 block">
+                  #{formatNumber(currentUser.rank, numberStyle)}
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  {formatNumber(currentUser.score.toLocaleString(), numberStyle)} {scoreUnit}
+                </span>
               </div>
             </div>
           </div>
