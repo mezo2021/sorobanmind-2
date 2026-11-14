@@ -20,50 +20,61 @@ type RankedPlayer = LeaderboardUser & {
   timeMs: number | null;
 };
 
-// نقاط الأشباح الأصلية من CloudGameLeaderboard
-const GAME_GHOSTS: Record<string, GhostScore[]> = {
-  'flying-abacus': [
-    { score: 22, time_ms: null },
-    { score: 18, time_ms: null },
-    { score: 15, time_ms: null },
-    { score: 12, time_ms: null },
-    { score: 10, time_ms: null },
-    { score: 8, time_ms: null },
-    { score: 6, time_ms: null },
-    { score: 5, time_ms: null },
-  ],
-  detective: [
-    { score: 15, time_ms: null },
-    { score: 12, time_ms: null },
-    { score: 10, time_ms: null },
-    { score: 8, time_ms: null },
-    { score: 6, time_ms: null },
-  ],
-  'sorobania-island': [
-    { score: 12, time_ms: null },
-    { score: 8, time_ms: null },
-    { score: 5, time_ms: null },
-    { score: 4, time_ms: null },
-    { score: 3, time_ms: null },
-    { score: 2, time_ms: null },
-  ],
-  'sorobania-island-speed': [
-    { score: 70, time_ms: null },
-    { score: 55, time_ms: null },
-    { score: 40, time_ms: null },
-    { score: 32, time_ms: null },
-    { score: 25, time_ms: null },
-    { score: 18, time_ms: null },
-  ],
-  default: [
-    { score: 20, time_ms: null },
-    { score: 15, time_ms: null },
-    { score: 12, time_ms: null },
-    { score: 10, time_ms: null },
-    { score: 8, time_ms: null },
-    { score: 5, time_ms: null },
-  ],
-};
+// 🆕 دالة ذكية لتوليد درجات وأزمنة الأشباح بناءً على نوع الامتحان
+function getGhostsForFilter(filter: string): GhostScore[] {
+  // مستويات (L0-L7): نجاح 80، زمن 10 دقائق
+  if (filter.startsWith('level_')) {
+    return [
+      { score: 96, time_ms: 450000 }, // 07:30
+      { score: 92, time_ms: 480000 }, // 08:00
+      { score: 88, time_ms: 510000 }, // 08:30
+      { score: 84, time_ms: 540000 }, // 09:00
+      { score: 81, time_ms: 570000 }, // 09:30
+    ];
+  }
+
+  // القسم الأول (صغار): نجاح 80، زمن 10 دقائق
+  if (filter === 'cat_ce1') {
+    return [
+      { score: 96, time_ms: 450000 }, // 07:30
+      { score: 92, time_ms: 480000 }, // 08:00
+      { score: 88, time_ms: 510000 }, // 08:30
+      { score: 84, time_ms: 540000 }, // 09:00
+      { score: 81, time_ms: 570000 }, // 09:30
+    ];
+  }
+
+  // القسم الثاني (كبار): نجاح 80، زمن 20 دقيقة
+  if (filter === 'cat_ce2') {
+    return [
+      { score: 96, time_ms: 900000 }, // 15:00
+      { score: 92, time_ms: 960000 }, // 16:00
+      { score: 88, time_ms: 1020000 }, // 17:00
+      { score: 84, time_ms: 1080000 }, // 18:00
+      { score: 81, time_ms: 1140000 }, // 19:00
+    ];
+  }
+
+  // الكيو: نجاح 400 (من 500)، زمن 12 دقيقة
+  if (filter.startsWith('exam_')) {
+    return [
+      { score: 480, time_ms: 540000 }, // 09:00
+      { score: 460, time_ms: 600000 }, // 10:00
+      { score: 440, time_ms: 630000 }, // 10:30
+      { score: 420, time_ms: 660000 }, // 11:00
+      { score: 405, time_ms: 690000 }, // 11:30
+    ];
+  }
+
+  // احتياطي في حال عدم التطابق
+  return [
+    { score: 90, time_ms: 600000 },
+    { score: 80, time_ms: 660000 },
+    { score: 70, time_ms: 720000 },
+    { score: 60, time_ms: 780000 },
+    { score: 50, time_ms: 840000 },
+  ];
+}
 
 function formatTime(timeMs: number | null): string {
   if (timeMs == null) return '--:--';
@@ -154,8 +165,8 @@ export default function HallOfFamePage({
               };
             });
 
-          // 2. إكمال القائمة بالأشباح حتى 10
-          const ghosts = GAME_GHOSTS[subFilter] ?? GAME_GHOSTS.default;
+          // 2. إكمال القائمة بالأشباح حسب النوع
+          const ghosts = getGhostsForFilter(subFilter);
           const needed = Math.max(0, 10 - realPlayers.length);
 
           const ghostPlayers: RankedPlayer[] = ghosts
