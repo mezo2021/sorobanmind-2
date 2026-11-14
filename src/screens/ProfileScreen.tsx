@@ -33,20 +33,19 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
   const { lang, dir } = useT();
   const isRTL = lang === 'ar';
 
-  // وضع السحابة + حالة موافقة الظهور
   const isCloudMode = getMode() === 'cloud';
   const [showOnLeaderboard, setShowOnLeaderboard] = useState(false);
   const [visibilityLoading, setVisibilityLoading] = useState(isCloudMode);
   const [visibilitySaving, setVisibilitySaving] = useState(false);
   const [visibilityError, setVisibilityError] = useState('');
 
-  // قراءة الشخصية الحالية من soroban_hero_key
   const [selectedAvatarId, setSelectedAvatarId] = useState(() => {
     return localStorage.getItem('soroban_hero_key') || AVATARS[0]?.id || 'rabbit_fast';
   });
 
   const [selectedTheme, setSelectedTheme] = useState(initialData?.theme_key || 'theme_cosmic');
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [isSaving, setIsSaving] = useState(false);
 
   const currentAvatar = AVATARS.find(a => a.id === selectedAvatarId) || AVATARS[0];
 
@@ -62,7 +61,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
     { id: 'mythical', nameAr: 'أسطوري', nameEn: 'Mythical' },
   ];
 
-  // قراءة موافقة الظهور من السحابة
   useEffect(() => {
     if (!isCloudMode) return;
 
@@ -131,21 +129,45 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
     }
   };
 
-  const handleSave = () => {
-    localStorage.setItem('soroban_theme_key', selectedTheme);
-    localStorage.setItem('soroban_hero_key', selectedAvatarId);
+  const handleSave = async () => {
+    if (isSaving) return;
 
-    const displayName = resolveDisplayName(selectedAvatarId, lang);
-    if (displayName) {
-      localStorage.setItem('soroban_child_name', displayName);
-    }
+    setIsSaving(true);
 
-    if (onSave) {
-      onSave({ theme_key: selectedTheme });
+    try {
+      // 1. الحفظ المحلي (دائماً)
+      localStorage.setItem('soroban_theme_key', selectedTheme);
+      localStorage.setItem('soroban_hero_key', selectedAvatarId);
+
+      const displayName = resolveDisplayName(selectedAvatarId, lang);
+      if (displayName) {
+        localStorage.setItem('soroban_child_name', displayName);
+      }
+
+      if (onSave) {
+        onSave({ theme_key: selectedTheme });
+      }
+
+      // 2. المزامنة السحابية (فقط في وضع Cloud)
+      if (isCloudMode) {
+        const synced = await cloudSync.setMyAvatar(selectedAvatarId);
+
+        if (!synced) {
+          alert(
+            lang === 'ar'
+              ? 'تعذر حفظ الشخصية في السحابة. تم الاحتفاظ بالحفظ المحلي. تحقق من الاتصال وحاول مجدداً.'
+              : 'Failed to sync your avatar to the cloud. Your local changes were preserved. Check your connection and try again.'
+          );
+          return;
+        }
+      }
+
+      // 3. رسالة النجاح (فقط بعد نجاح كلا الحفظين)
+      alert(lang === 'ar' ? 'تم حفظ التغييرات بنجاح!' : 'Changes saved successfully!');
+      if (onBack) onBack();
+    } finally {
+      setIsSaving(false);
     }
-    
-    alert(lang === 'ar' ? 'تم حفظ التغييرات بنجاح!' : 'Changes saved successfully!');
-    if (onBack) onBack();
   };
 
   return (
@@ -176,7 +198,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
 
       <main className="max-w-xl mx-auto px-4 pt-6 flex flex-col gap-6">
 
-        {/* بطاقة الرمز (Avatar) */}
         <section className="bg-white/10 backdrop-blur-2xl border border-white/15 rounded-3xl p-5 shadow-2xl">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="w-5 h-5 text-yellow-400" />
@@ -241,7 +262,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
           </div>
         </section>
 
-        {/* المظهر (الخلفية فقط) */}
         <section className="bg-white/10 backdrop-blur-2xl border border-white/15 rounded-3xl p-5 shadow-2xl">
           <div className="flex items-center gap-2 mb-4">
             <Palette className="w-5 h-5 text-pink-400" />
@@ -269,7 +289,6 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
           </div>
         </section>
 
-        {/* موافقة الظهور في لوحة الشرف — Cloud فقط */}
         {isCloudMode && (
           <section className="bg-white/10 backdrop-blur-2xl border border-white/15 rounded-3xl p-5 shadow-2xl">
             <div className="flex items-center justify-between gap-4">
@@ -333,17 +352,21 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
 
       </main>
 
-      {/* زر الحفظ */}
       <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-slate-950/80 backdrop-blur-2xl border-t border-white/10 shadow-2xl">
         <div className="max-w-xl mx-auto">
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={isSaving ? undefined : { scale: 1.02 }}
+            whileTap={isSaving ? undefined : { scale: 0.98 }}
             onClick={handleSave}
-            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 via-pink-500 to-purple-500 text-slate-950 font-black text-base shadow-xl flex items-center justify-center gap-2.5 tracking-wide"
+            disabled={isSaving}
+            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 via-pink-500 to-purple-500 text-slate-950 font-black text-base shadow-xl flex items-center justify-center gap-2.5 tracking-wide disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Sparkles className="w-5 h-5 fill-slate-950" />
-            <span>{isRTL ? 'حفظ التغييرات' : 'Save Changes'}</span>
+            <span>
+              {isSaving
+                ? (isRTL ? 'جارٍ الحفظ...' : 'Saving...')
+                : (isRTL ? 'حفظ التغييرات' : 'Save Changes')}
+            </span>
           </motion.button>
         </div>
       </div>
