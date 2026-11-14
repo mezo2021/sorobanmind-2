@@ -1,3 +1,4 @@
+
 name: SorobanMind Storage Audit v10
 
 on:
@@ -29,12 +30,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      - name: Install locked dependencies
-        run: npm ci
+      - name: Install isolated TypeScript dependency
+        run: |
+          mkdir -p "$RUNNER_TEMP/soroban-v10-deps"
+          npm install --prefix "$RUNNER_TEMP/soroban-v10-deps" --no-save --no-package-lock --ignore-scripts --no-audit --no-fund typescript@5.9.3
 
       - name: Run Storage Audit v10
+        env:
+          NODE_PATH: ${{ runner.temp }}/soroban-v10-deps/node_modules
         run: node scripts/audit-storage-v10.cjs
 
       - name: Upload v10 reports
