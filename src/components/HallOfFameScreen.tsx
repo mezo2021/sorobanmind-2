@@ -25,7 +25,6 @@ export interface LeaderboardUser {
   avatar?: string;
   score: number;
   time: string;
-  accuracy: number;
   badge?: string;
 }
 
@@ -101,7 +100,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
   const top3 = players.find(p => p.rank === 3);
   const restPlayers = players.filter(p => p.rank > 3);
 
-  // 🆕 استخدام "درجة" بدلاً من "pts"
+  // توحيد وحدة القياس بناءً على اللغة
   const scoreUnit = isAr ? 'درجة' : 'pts';
 
   return (
@@ -223,8 +222,9 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
       ) : (
         <>
           <div className="max-w-4xl mx-auto mb-10 relative z-10">
-            <div className="grid grid-cols-3 gap-3 md:gap-6 items-end justify-center pt-8 px-2">
+            <div className="grid grid-cols-3 gap-2 md:gap-6 items-end justify-center pt-8 px-1">
               
+              {/* RANK 2 (Silver) */}
               {top2 && (
                 <motion.div
                   initial={{ opacity: 0, y: 40 }}
@@ -245,26 +245,28 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-center my-2">
-                    <h3 className="font-bold text-xs md:text-sm text-slate-200 truncate max-w-[90px] md:max-w-[130px]">
+                  <div className="text-center my-2 w-full px-1">
+                    {/* تصغير الخط والسماح بالتفاف النص ليظهر كاملاً */}
+                    <h3 className="font-bold text-[10px] md:text-xs text-slate-200 leading-tight break-words line-clamp-2">
                       {getPlayerDisplayName(top2)}
                     </h3>
-                    <p className="text-slate-400 text-[11px] font-mono mt-0.5">{top2.score} {scoreUnit}</p>
-                    <div className="flex items-center justify-center gap-1 text-[10px] text-amber-400/80">
-                      <Timer className="w-3 h-3" />
+                    <p className="text-slate-400 text-[10px] md:text-[11px] font-mono mt-1">{top2.score} {scoreUnit}</p>
+                    <div className="flex items-center justify-center gap-1 text-[9px] md:text-[10px] text-amber-400/80 mt-0.5">
+                      <Timer className="w-2.5 h-2.5 md:w-3 md:h-3" />
                       <span>{top2.time}</span>
                     </div>
                   </div>
 
                   <div className="w-full h-32 md:h-40 rounded-t-2xl bg-gradient-to-b from-slate-400/20 via-slate-800/80 to-slate-950/90 border-t-2 border-slate-300/40 p-3 flex flex-col justify-between items-center shadow-xl backdrop-blur-md">
                     <Medal className="w-6 h-6 md:w-8 md:h-8 text-slate-300 mt-2" />
-                    <span className="text-slate-400 font-serif text-xs tracking-widest uppercase">
+                    <span className="text-slate-400 font-serif text-[10px] md:text-xs tracking-widest uppercase">
                       {isAr ? 'فضي' : 'Silver'}
                     </span>
                   </div>
                 </motion.div>
               )}
 
+              {/* RANK 1 (Gold - Center) */}
               {top1 && (
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
@@ -293,31 +295,33 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-center my-2">
-                    <h3 className="font-extrabold text-sm md:text-lg text-amber-300 truncate max-w-[100px] md:max-w-[150px]">
+                  <div className="text-center my-2 w-full px-1">
+                    {/* تصغير الخط والسماح بالتفاف النص */}
+                    <h3 className="font-extrabold text-[11px] md:text-sm text-amber-300 leading-tight break-words line-clamp-2">
                       {getPlayerDisplayName(top1)}
                     </h3>
                     {top1.badge && (
-                      <span className="inline-block bg-amber-500/10 text-amber-400 text-[10px] px-2 py-0.5 rounded border border-amber-500/30 mb-1">
+                      <span className="inline-block bg-amber-500/10 text-amber-400 text-[9px] px-1.5 py-0.5 rounded border border-amber-500/30 mb-1 mt-1">
                         {top1.badge}
                       </span>
                     )}
-                    <p className="text-amber-200/90 font-mono font-bold text-xs md:text-sm">{top1.score} {scoreUnit}</p>
-                    <div className="flex items-center justify-center gap-1 text-xs text-slate-300">
-                      <Timer className="w-3.5 h-3.5 text-amber-400" />
+                    <p className="text-amber-200/90 font-mono font-bold text-[11px] md:text-xs mt-1">{top1.score} {scoreUnit}</p>
+                    <div className="flex items-center justify-center gap-1 text-[9px] md:text-[10px] text-slate-300 mt-0.5">
+                      <Timer className="w-2.5 h-2.5 md:w-3 md:h-3 text-amber-400" />
                       <span>{top1.time}</span>
                     </div>
                   </div>
 
                   <div className="w-full h-44 md:h-56 rounded-t-2xl bg-gradient-to-b from-amber-500/30 via-slate-800/90 to-slate-950/95 border-t-4 border-amber-400 p-3 flex flex-col justify-between items-center shadow-2xl shadow-amber-500/10 backdrop-blur-md">
                     <Trophy className="w-8 h-8 md:w-12 md:h-12 text-amber-400 mt-2 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
-                    <span className="text-amber-400/80 font-serif text-xs md:text-sm tracking-widest font-bold uppercase">
+                    <span className="text-amber-400/80 font-serif text-[10px] md:text-sm tracking-widest font-bold uppercase">
                       {isAr ? 'البطل' : 'Champion'}
                     </span>
                   </div>
                 </motion.div>
               )}
 
+              {/* RANK 3 (Bronze) */}
               {top3 && (
                 <motion.div
                   initial={{ opacity: 0, y: 40 }}
@@ -338,20 +342,21 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-center my-2">
-                    <h3 className="font-bold text-xs md:text-sm text-slate-200 truncate max-w-[90px] md:max-w-[130px]">
+                  <div className="text-center my-2 w-full px-1">
+                    {/* تصغير الخط والسماح بالتفاف النص */}
+                    <h3 className="font-bold text-[10px] md:text-xs text-slate-200 leading-tight break-words line-clamp-2">
                       {getPlayerDisplayName(top3)}
                     </h3>
-                    <p className="text-slate-400 text-[11px] font-mono mt-0.5">{top3.score} {scoreUnit}</p>
-                    <div className="flex items-center justify-center gap-1 text-[10px] text-amber-400/80">
-                      <Timer className="w-3 h-3" />
+                    <p className="text-slate-400 text-[10px] md:text-[11px] font-mono mt-1">{top3.score} {scoreUnit}</p>
+                    <div className="flex items-center justify-center gap-1 text-[9px] md:text-[10px] text-amber-400/80 mt-0.5">
+                      <Timer className="w-2.5 h-2.5 md:w-3 md:h-3" />
                       <span>{top3.time}</span>
                     </div>
                   </div>
 
                   <div className="w-full h-24 md:h-32 rounded-t-2xl bg-gradient-to-b from-amber-900/30 via-slate-800/80 to-slate-950/90 border-t-2 border-amber-700/60 p-3 flex flex-col justify-between items-center shadow-xl backdrop-blur-md">
                     <Medal className="w-6 h-6 md:w-8 md:h-8 text-amber-600 mt-2" />
-                    <span className="text-amber-700/80 font-serif text-xs tracking-widest uppercase">
+                    <span className="text-amber-700/80 font-serif text-[10px] md:text-xs tracking-widest uppercase">
                       {isAr ? 'برونزي' : 'Bronze'}
                     </span>
                   </div>
@@ -389,11 +394,7 @@ export const HallOfFameScreen: React.FC<HallOfFameProps> = ({
                         <h4 className="font-semibold text-xs md:text-sm text-slate-200 group-hover:text-white transition-colors">
                           {getPlayerDisplayName(player)}
                         </h4>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
-                            {player.accuracy}% {isAr ? 'دقة' : 'acc'}
-                          </span>
-                        </div>
+                        {/* تم حذف شارة الدقة */}
                       </div>
                     </div>
 
