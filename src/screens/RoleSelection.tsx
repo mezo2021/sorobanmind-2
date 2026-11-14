@@ -5,14 +5,16 @@ import { Swords, Shield, Star, TrendingUp, Brain, ArrowRight, Languages, Wrench,
 
 import { useT, useLangStore } from '@/i18n/useTranslation';
 import { pickLang } from '@/i18n/pickLang';
-import { supabase } from '../lib/supabase'; // 🆕 للتحقق من كلمة مرور ولي الأمر
+import { supabase } from '../lib/supabase';
 
 import type { Role, CharacterType } from '@/types';
 import { CharacterSelector } from '@/components/CharacterSelector';
 import { NameInputModal } from '@/components/NameInputModal';
+import { HeroNamePicker } from '@/components/HeroNamePicker';
 import { AuthModal } from '@/components/AuthModal';
 import { useProgressStore } from '@/store/progressStore';
 import { cloudSync } from '@/lib/cloudSync';
+import { resolveDisplayName } from '@/utils/resolveDisplayName';
 
 interface RoleSelectionProps {
   onSelect: (role: Role) => void;
@@ -23,7 +25,7 @@ const COMPANION_STORAGE_KEY = 'soroban_companion';
 const NAME_STORAGE_KEY = 'soroban_child_name';
 const DEV_PASSWORD = 'mowalid-m';
 
-type Step = 'idle' | 'name' | 'companion';
+type Step = 'idle' | 'name' | 'companion' | 'avatar';
 type PasswordMode = 'dev' | 'guardian';
 
 export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
@@ -39,7 +41,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
   const [devPassword, setDevPassword] = useState('');
   const [devPasswordError, setDevPasswordError] = useState(false);
 
-  // 🆕 حالة الحماية
   const [passwordMode, setPasswordMode] = useState<PasswordMode>('guardian');
   const [loadingPassword, setLoadingPassword] = useState(false);
   const [lockUntil, setLockUntil] = useState<number>(0);
@@ -59,7 +60,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     checkAuth();
   }, []);
 
-  // 🆕 تحديث وقت القفل عند فتح المودال
   useEffect(() => {
     if (showDevPassword) {
       const savedLock = Number(localStorage.getItem('soroban_guardian_lock_until') || 0);
@@ -68,7 +68,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     }
   }, [showDevPassword]);
 
-  // 🆕 مؤقت لتحديث العد التنازلي أثناء القفل
   useEffect(() => {
     if (!showDevPassword || passwordMode !== 'guardian' || now >= lockUntil) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -97,6 +96,55 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     setIsLoggedIn(false);
   };
 
+  const resolveCloudHero = async (role: Role) => {
+    try {
+      const session = await cloudSync.getSession();
+      if (session) {
+        const { data } = await supabase
+          .from('public_profiles')
+          .select('avatar_id')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+
+        if (data?.avatar_id) {
+          localStorage.setItem('soroban_hero_key', data.avatar_id);
+          await cloudSync.getSession(); // يستدعي applyLocalIdentity (الاسم + store)
+          
+          if (localStorage.getItem(COMPANION_STORAGE_KEY)) {
+            playSound('whoosh');
+            onSelect(role);
+          } else {
+            playSound('click');
+            setStep('companion');
+          }
+          return;
+        }
+      }
+    } catch {
+      // خطأ شبكة: نعرض الاختيار
+    }
+    setStep('avatar');
+  };
+
+  const handleAvatarSaved = async (heroKey: string) => {
+    const displayName = resolveDisplayName(heroKey, lang);
+    if (!displayName) return;
+
+    localStorage.setItem('soroban_hero_key', heroKey);
+    localStorage.setItem('soroban_child_name', displayName);
+    useProgressStore.getState().setChildName(displayName);
+
+    const ok = await cloudSync.setMyAvatar(heroKey);
+    if (!ok) localStorage.setItem('soroban_avatar_pending_upload', '1');
+
+    if (localStorage.getItem(COMPANION_STORAGE_KEY)) {
+      setStep('idle');
+      if (pendingRole) { playSound('whoosh'); onSelect(pendingRole); }
+    } else {
+      setStep('companion');
+    }
+  };
+
   const handleSelect = (role: Role) => {
     if (!isLoggedIn) {
       playSound('click');
@@ -114,26 +162,27 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     }
 
     if (role === 'hero') {
-  const savedCompanion = localStorage.getItem(COMPANION_STORAGE_KEY);
-  const savedHeroKey = localStorage.getItem('soroban_hero_key'); // الاعتماد على مفتاح الشخصية
+      const savedCompanion = localStorage.getItem(COMPANION_STORAGE_KEY);
+      const savedHeroKey = localStorage.getItem('soroban_hero_key');
 
-  if (savedCompanion && savedHeroKey) {
-    playSound('whoosh');
-    onSelect(role);
-  } else if (!savedHeroKey) {
-    // إذا لم تكن هناك شخصية مختارة، نطلب الاسم كاحتياط (نادراً ما يحدث)
-    playSound('click');
-    setPendingRole(role);
-    setStep('name');
-  } else {
-    playSound('click');
-    setPendingRole(role);
-    setStep('companion');
-  }
-}
+      if (savedHeroKey) {
+        if (savedCompanion) {
+          playSound('whoosh');
+          onSelect(role);
+        } else {
+          playSound('click');
+          setPendingRole(role);
+          setStep('companion');
+        }
+        return;
+      }
+
+      playSound('click');
+      setPendingRole(role);
+      void resolveCloudHero(role);
+    }
   };
 
-  // 🆕 التحقق من كلمة المرور (مطور أو ولي أمر)
   const handleDevPasswordSubmit = async () => {
     if (passwordMode === 'dev') {
       if (devPassword === DEV_PASSWORD) {
@@ -149,9 +198,8 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
       return;
     }
 
-    // Guardian Mode
     if (Date.now() < lockUntil) {
-      return; // UI يُظهر القفل تلقائياً
+      return;
     }
 
     setLoadingPassword(true);
@@ -168,11 +216,10 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
 
       if (error) throw error;
 
-      // ✅ النجاح: مسح المحاولات + استعادة الهوية
       localStorage.removeItem('soroban_guardian_attempts');
       localStorage.removeItem('soroban_guardian_lock_until');
       
-      await cloudSync.getSession(); // 🆕 استعادة اسم البطل
+      await cloudSync.getSession();
       
       setShowDevPassword(false);
       setDevPassword('');
@@ -180,7 +227,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
       playSound('whoosh');
       onSelect('guardian');
     } catch (e) {
-      // ❌ فشل: زيادة المحاولات
       let attempts = Number(localStorage.getItem('soroban_guardian_attempts') || 0);
       attempts++;
       localStorage.setItem('soroban_guardian_attempts', String(attempts));
@@ -226,10 +272,13 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     );
   }
 
+  if (step === 'avatar') {
+    return <HeroNamePicker onSave={handleAvatarSaved} />;
+  }
+
   return (
     <div dir={dir} className="relative min-h-screen flex flex-col items-center justify-center px-3 sm:px-6 py-8 sm:py-12">
       
-      {/* شريط الأدوات العلوي */}
       <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-50 flex items-center gap-2">
         <button
           type="button"
@@ -273,7 +322,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         </button>
       </div>
 
-      {/* العنوان */}
       <motion.div initial={{ y: -30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-center mb-6 mt-8">
         <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 200, damping: 15 }} className="inline-flex items-center justify-center w-20 h-20 sm:w-28 sm:h-28 rounded-[2rem] bg-gradient-to-br from-purple-500 to-electric-500 shadow-2xl shadow-purple-500/40 mb-4">
           <Brain className="w-12 h-12 sm:w-16 sm:h-16 text-white" />
@@ -284,10 +332,8 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         </p>
       </motion.div>
 
-      {/* البطاقات */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-4xl">
         
-        {/* البطل */}
         <motion.button
           initial={{ x: -50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -320,7 +366,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
           </div>
         </motion.button>
 
-        {/* ولي الأمر */}
         <motion.button
           initial={{ x: 50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -356,7 +401,6 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
         <span>{pickLang({ ar: 'منصة تعليمية للحساب الذهني بالعداد الياباني', en: 'Educational platform for mental arithmetic' }, lang)}</span>
       </motion.div>
 
-      {/* Modals */}
       <AnimatePresence>
         {showAuth && (
           <AuthModal onClose={() => setShowAuth(false)} onSuccess={() => { setShowAuth(false); setIsLoggedIn(true); }} />
