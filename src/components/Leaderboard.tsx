@@ -5,7 +5,7 @@ import { ArrowRight, Trophy, Timer, Medal } from 'lucide-react';
 import { useGameLang } from '@/components/games/gamesI18n';
 import { Num } from '@/components/Num';
 import CosmicBackground from '@/components/cosmic/CosmicBackground';
-import { EXAM_LABELS, LeaderRecord, examLabel, fmtTime, getRecords } from '@/utils/leaderboard';
+import { EXAM_LABELS, LeaderRecord, examLabel, fmtTime, getRecords, isExamPassed } from '@/utils/leaderboard';
 import { cloudSync } from '@/lib/cloudSync';
 import { AVATARS } from '@/data/avatars';
 
@@ -86,7 +86,7 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
         if (!isMounted) return;
 
         if (!result.success) {
-          console.error('Wormhole leaderboard error:', result.error);
+          console.error('Exam leaderboard error:', result.error);
           setCloudRecords([]);
           return;
         }
@@ -105,7 +105,7 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
 
         setCloudRecords(mapped);
       } catch (error) {
-        console.error('Wormhole leaderboard fetch error:', error);
+        console.error('Exam leaderboard fetch error:', error);
         if (isMounted) setCloudRecords([]);
       }
     }
@@ -127,6 +127,7 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
     });
 
     return [...combined]
+      .filter((r) => isExamPassed(r.examId, r.score)) // 🆕 فلترة الراسبين
       .sort((a, b) => (sort === 'score' ? b.score - a.score || a.timeSec - b.timeSec : a.timeSec - b.timeSec || b.score - a.score))
       .slice(0, 10);
   }, [localRecords, cloudRecords, exam, sort]);
@@ -146,7 +147,9 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
         <h1 className="text-3xl font-black text-amber-300 mb-1 flex items-center gap-2 drop-shadow-[0_0_14px_rgba(251,191,36,0.6)]">
           <Trophy className="w-8 h-8" /> {isAr ? 'لوحة الأبطال' : 'Hall of Champions'}
         </h1>
-        <p className="text-slate-400 text-sm mb-4">{isAr ? 'أبطال عبروا الثقب الدودي بأسرع الأزمنة' : 'Heroes who crossed the wormhole fastest'}</p>
+        <p className="text-slate-400 text-sm mb-4">
+          {isAr ? 'أبطال الامتحانات بأفضل النتائج' : 'Exam champions with the best results'}
+        </p>
 
         <div className="flex flex-wrap gap-2 mb-5 text-xs">
           <select value={exam} onChange={(e) => setExam(e.target.value)} className="bg-slate-900/80 border border-amber-500/40 rounded-xl px-3 py-2 text-amber-200">
@@ -168,7 +171,8 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
           </div>
         ) : (
           <>
-            <div className="flex items-end justify-center gap-2 mb-6" dir="ltr">
+            {/* 🆕 إزالة dir="ltr" ليعود الترتيب صحيحاً في العربية */}
+            <div className="flex items-end justify-center gap-2 mb-6">
               {PODIUM.map((p, i) => {
                 const r = order[i];
                 return (
@@ -177,14 +181,19 @@ export default function Leaderboard({ onBack }: { onBack: () => void }) {
                     initial={{ y: 40, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.15 * i, type: 'spring', stiffness: 120, damping: 14 }}
-                    className="flex-1 max-w-[9.5rem] text-center"
+                    className="flex-1 min-w-0 max-w-[9.5rem] text-center w-full"
                   >
                     {r && (
-                      <div className="mb-2">
+                      <div className="mb-2 px-1">
                         <div className="text-3xl">{p.icon}</div>
-                        <div className="font-black text-sm truncate" style={{ color: p.color }}>{getRecordDisplayName(r, isAr)}</div>
-                        <div className="text-[11px] text-slate-400">{examLabel(r.examId, isAr)}</div>
-                        <div className="text-xs font-mono text-amber-200"><Num>{sort === 'score' ? r.score : fmtTime(r.timeSec)}</Num></div>
+                        {/* 🆕 استخدام line-clamp-2 وتصغير الخط لمنع القطع */}
+                        <div className="font-black text-[10px] md:text-xs leading-tight break-words line-clamp-2" style={{ color: p.color }}>
+                          {getRecordDisplayName(r, isAr)}
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-1">{examLabel(r.examId, isAr)}</div>
+                        <div className="text-xs font-mono text-amber-200 mt-0.5">
+                          <Num>{sort === 'score' ? r.score : fmtTime(r.timeSec)}</Num>
+                        </div>
                       </div>
                     )}
                     <div className={`relative ${p.h} rounded-t-2xl bg-gradient-to-b ${p.bg} border-t-2 overflow-hidden backdrop-blur-md`} style={{ borderColor: p.color, boxShadow: `0 0 24px ${p.color}55` }}>
