@@ -133,27 +133,88 @@ async function adoptUser(user: User): Promise<boolean> {
   requireCloudMode();
 
   const owner = localStorage.getItem(OWNER_KEY);
-  const localName = localStorage.getItem('soroban_child_name');
-  const different = owner ? owner !== user.id : !!localName && localName !== 'البطل';
+  const different = !owner || owner !== user.id;
+
+  // نحفظ الاختيار الجديد قبل أي تنظيف لهوية الحساب السابق.
+  const pendingAvatar =
+    localStorage.getItem('soroban_avatar_pending_upload') === '1';
+  const pendingHeroKey = pendingAvatar
+    ? localStorage.getItem('soroban_hero_key')
+    : null;
+
+  // يجب التأكد من قراءة ملف الحساب قبل لمس الهوية المحلية.
+  const { data: profile, error: profileError } = await supabase
+    .from('public_profiles')
+    .select('avatar_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (profileError) {
+    console.warn('تعذرت قراءة شخصية الحساب من السحابة:', profileError.message);
+    return false;
+  }
+
+  const cloudAvatarId: string | null = profile?.avatar_id ?? null;
 
   if (different) {
     wipeLocalProgress();
-    try { await pullProgress(user.id); } catch { /* ignore */ }
-  }
-  localStorage.setItem(OWNER_KEY, user.id);
-  applyLocalIdentity();
 
-  const heroKey = localStorage.getItem('soroban_hero_key');
-  if (heroKey) {
+    // إزالة هوية الحساب السابق وعلامة الانتظار القديمة.
+    localStorage.removeItem('soroban_avatar_pending_upload');
+    localStorage.removeItem('soroban_hero_key');
+    localStorage.removeItem('soroban_child_name');
+
     try {
-      const { error: avatarError } = await supabase.rpc('set_my_avatar', { p_avatar_id: heroKey });
-      if (avatarError) console.warn('تعذرت مزامنة شخصية البطل:', avatarError.message);
-    } catch (err) {
-      console.warn('خطأ في مزامنة شخصية البطل:', err);
+      await pullProgress(user.id);
+    } catch {
+      // لا نوقف اعتماد الحساب بسبب فشل استعادة التقدم.
     }
   }
 
-  if (different) window.setTimeout(() => window.location.reload(), 1200);
+  localStorage.setItem(OWNER_KEY, user.id);
+
+  // إذا كانت السحابة تملك شخصية، فهي المصدر المعتمد.
+  if (cloudAvatarId) {
+    localStorage.setItem('soroban_hero_key', cloudAvatarId);
+    localStorage.removeItem('soroban_avatar_pending_upload');
+    applyLocalIdentity();
+  } else if (pendingAvatar && pendingHeroKey) {
+    // السحابة فارغة: نعيد الاختيار الجديد الذي حفظناه قبل التنظيف.
+    localStorage.setItem('soroban_hero_key', pendingHeroKey);
+
+    const displayName = resolveDisplayName(pendingHeroKey);
+    if (displayName) {
+      localStorage.setItem('soroban_child_name', displayName);
+    }
+
+    applyLocalIdentity();
+
+    // لا نمسح العلامة إلا بعد نجاح الرفع.
+    try {
+      const { error: avatarError } = await supabase.rpc('set_my_avatar', {
+        p_avatar_id: pendingHeroKey,
+      });
+
+      if (avatarError) {
+        console.warn('تعذرت مزامنة شخصية البطل:', avatarError.message);
+      } else {
+        localStorage.removeItem('soroban_avatar_pending_upload');
+      }
+    } catch (err) {
+      console.warn('خطأ في مزامنة شخصية البطل:', err);
+    }
+  } else {
+    // لا توجد شخصية سحابية ولا اختيار جديد معلّق.
+    if (pendingAvatar) {
+      localStorage.removeItem('soroban_avatar_pending_upload');
+    }
+    applyLocalIdentity();
+  }
+
+  if (different) {
+    window.setTimeout(() => window.location.reload(), 1200);
+  }
+
   return different;
 }
 
