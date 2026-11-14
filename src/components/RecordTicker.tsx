@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useGameLang } from '@/components/games/gamesI18n';
 import { Num } from '@/components/Num';
 import { maskName } from '@/utils/maskName';
-import { examLabel, fastest, fmtTime, getRecords, type LeaderRecord } from '@/utils/leaderboard';
+import { examLabel, fmtTime, getRecords, isExamPassed, type LeaderRecord } from '@/utils/leaderboard';
 import { AVATARS } from '@/data/avatars';
 
 function getRecordDisplayName(record: LeaderRecord, isAr: boolean): string {
@@ -23,11 +23,13 @@ export default function RecordTicker() {
   const { dir, isAr } = useGameLang();
   const reduce = useReducedMotion();
   
-  // فلترة التكرار: نضمن ظهور كل لاعب مرة واحدة لكل امتحان في الشريط
   const top = useMemo(() => {
-    const all = fastest(getRecords(), 50); 
+    const all = getRecords();
+    const passedOnly = all.filter((r) => isExamPassed(r.examId, r.score));
+    const sorted = [...passedOnly].sort((a, b) => b.score - a.score || a.timeSec - b.timeSec);
+
     const seen = new Set<string>();
-    return all.filter(r => {
+    return sorted.filter(r => {
       const key = `${r.playerId}-${r.examId}`;
       if (seen.has(key)) return false;
       seen.add(key);
@@ -35,7 +37,7 @@ export default function RecordTicker() {
     }).slice(0, 10);
   }, []);
 
-  const cta = isAr ? 'هل يمكنك التغلب على هؤلاء الأبطال؟' : 'Can you beat these champions?';
+  const cta = isAr ? 'هل يمكنك التفوق على هؤلاء الأبطال؟' : 'Can you beat these champions?';
 
   const items = (
     <>
@@ -46,7 +48,11 @@ export default function RecordTicker() {
           <span className="text-slate-500">·</span>
           <span className="text-cyan-300">{examLabel(r.examId, isAr)}</span>
           <span className="text-slate-500">·</span>
-          <span className="font-mono text-amber-200"><Num>{fmtTime(r.timeSec)}</Num></span>
+          <span className="font-mono text-amber-200">
+            <Num>{r.score}</Num> {isAr ? 'درجة' : 'pts'}
+          </span>
+          <span className="text-slate-500">·</span>
+          <span className="font-mono text-slate-400"><Num>{fmtTime(r.timeSec)}</Num></span>
         </span>
       ))}
       <span className="px-6 text-sm font-black text-fuchsia-300 whitespace-nowrap">⚡ {cta}</span>
@@ -61,7 +67,12 @@ export default function RecordTicker() {
       <motion.div
         className="flex w-max"
         animate={reduce ? undefined : { x: ['0%', '-50%'] }}
-        transition={{ duration: Math.max(18, top.length * 5), repeat: Infinity, ease: 'linear' }}
+        transition={{ 
+          // 🆕 تم زيادة الحد الأدنى إلى 30 ثانية، ومعامل الضرب إلى 8 (بدلاً من 5)
+          duration: Math.max(30, top.length * 8), 
+          repeat: Infinity, 
+          ease: 'linear' 
+        }}
       >
         <div className="flex">{items}</div>
         <div className="flex" aria-hidden>{items}</div>
