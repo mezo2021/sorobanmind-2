@@ -5,12 +5,12 @@ import { HeroNamePicker } from './HeroNamePicker';
 import { resolveDisplayName } from '@/utils/resolveDisplayName';
 import { getMode, setMode, type AppMode } from '@/utils/appMode';
 import { useProgressStore } from '@/store/progressStore';
-import { useT } from '@/i18n/useTranslation'; // ✅ إضافة اللغة
+import { useT } from '@/i18n/useTranslation';
 
 interface Props { children: React.ReactNode; }
 
 export function AppGate({ children }: Props) {
-  const { lang } = useT(); // ✅ جلب اللغة الحالية
+  const { lang } = useT();
   const [ready, setReady] = useState(false);
   const [mode, setModeState] = useState<AppMode | null>(null);
   const [hasHero, setHasHero] = useState(false);
@@ -27,7 +27,6 @@ export function AppGate({ children }: Props) {
   };
 
   const handleHeroSave = (heroKey: string) => {
-    // ✅ تمرير اللغة للدالة
     const displayName = resolveDisplayName(heroKey, lang);
 
     if (!displayName) {
@@ -37,6 +36,7 @@ export function AppGate({ children }: Props) {
 
     try {
       localStorage.setItem('soroban_hero_key', heroKey);
+      localStorage.setItem('soroban_avatar_pending_upload', '1');
       localStorage.setItem('soroban_child_name', displayName);
     } catch {
       return;
