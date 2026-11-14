@@ -269,18 +269,50 @@ export const cloudSync = {
   },
 
   async loadFromCloud() {
-    requireCloudMode();
-    const user = await this.getCurrentUser();
-    if (!user) throw new Error('Must be logged in');
-    const { data, error } = await supabase.from('soroban_progress').select('progress_data').eq('user_id', user.id).single();
-    if (error) throw new Error(error.message);
-    if (!data || !data.progress_data) throw new Error('No backup found');
-    const pd = data.progress_data as any;
-    const { childName: _c, parentName: _p, ...safePd } = pd;
-    useProgressStore.setState({ ...useProgressStore.getState(), ...safePd });
-    applyLocalIdentity();
-    return true;
-  },
+  requireCloudMode();
+
+  const user = await this.getCurrentUser();
+  if (!user) throw new Error('Must be logged in');
+
+  const { data, error } = await supabase
+    .from('soroban_progress')
+    .select('progress_data')
+    .eq('user_id', user.id)
+    .single();
+
+  if (error) throw new Error(error.message);
+  if (!data || !data.progress_data) {
+    throw new Error('No backup found');
+  }
+
+  // قراءة شخصية البطل من ملف الحساب السحابي.
+  const { data: profile, error: profileError } = await supabase
+    .from('public_profiles')
+    .select('avatar_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (profileError) {
+    throw new Error(profileError.message);
+  }
+
+  const pd = data.progress_data as any;
+  const { childName: _c, parentName: _p, ...safePd } = pd;
+
+  useProgressStore.setState({
+    ...useProgressStore.getState(),
+    ...safePd,
+  });
+
+  // تطبيق الشخصية السحابية إذا كانت موجودة.
+  if (profile?.avatar_id) {
+    localStorage.setItem('soroban_hero_key', profile.avatar_id);
+  }
+
+  applyLocalIdentity();
+
+  return true;
+},
 
   async submitScore(gameId: string, score: number, timeMs: number | null = null) {
     try {
