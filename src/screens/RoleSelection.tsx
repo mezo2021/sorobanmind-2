@@ -114,22 +114,23 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     }
 
     if (role === 'hero') {
-      const savedCompanion = localStorage.getItem(COMPANION_STORAGE_KEY);
-      const savedName = localStorage.getItem(NAME_STORAGE_KEY);
+  const savedCompanion = localStorage.getItem(COMPANION_STORAGE_KEY);
+  const savedHeroKey = localStorage.getItem('soroban_hero_key'); // الاعتماد على مفتاح الشخصية
 
-      if (savedCompanion && savedName) {
-        playSound('whoosh');
-        onSelect(role);
-      } else if (!savedName) {
-        playSound('click');
-        setPendingRole(role);
-        setStep('name');
-      } else {
-        playSound('click');
-        setPendingRole(role);
-        setStep('companion');
-      }
-    }
+  if (savedCompanion && savedHeroKey) {
+    playSound('whoosh');
+    onSelect(role);
+  } else if (!savedHeroKey) {
+    // إذا لم تكن هناك شخصية مختارة، نطلب الاسم كاحتياط (نادراً ما يحدث)
+    playSound('click');
+    setPendingRole(role);
+    setStep('name');
+  } else {
+    playSound('click');
+    setPendingRole(role);
+    setStep('companion');
+  }
+}
   };
 
   // 🆕 التحقق من كلمة المرور (مطور أو ولي أمر)
