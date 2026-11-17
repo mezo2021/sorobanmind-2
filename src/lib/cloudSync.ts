@@ -44,12 +44,12 @@ async function withAuthLock<T>(
     );
   }
 
-  if (authFlowInProgress || adoptionInProgress) {
-    throw new CloudSyncError(
-      'Authentication flow already in progress',
-      'AUTH_FLOW_BUSY',
-    );
-  }
+  if (authFlowInProgress) {
+  throw new CloudSyncError(
+    'Authentication flow already in progress',
+    'AUTH_FLOW_BUSY',
+  );
+}
 
   authFlowInProgress = true;
 
