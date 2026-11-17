@@ -45,11 +45,11 @@ async function withAuthLock<T>(
   }
 
   if (authFlowInProgress) {
-  throw new CloudSyncError(
-    'Authentication flow already in progress',
-    'AUTH_FLOW_BUSY',
-  );
-}
+    throw new CloudSyncError(
+      'Authentication flow already in progress',
+      'AUTH_FLOW_BUSY',
+    );
+  }
 
   authFlowInProgress = true;
 
@@ -470,84 +470,106 @@ export const cloudSync = {
   },
 
   async verifyOtp(
-  email: string,
-  token: string,
-  type: 'signup' | 'recovery',
-) {
-  requireCloudMode();
+    email: string,
+    token: string,
+    type: 'signup' | 'recovery',
+  ) {
+    requireCloudMode();
 
-  const { data: sessionData } = await supabase.auth.getSession();
-  const previousSession = sessionData.session
-    ? {
-        access_token: sessionData.session.access_token,
-        refresh_token: sessionData.session.refresh_token,
+    return withAuthLock(async () => {
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+
+      if (sessionError) {
+        throw new CloudSyncError(
+          'Failed to read previous session',
+          'SESSION_RESTORE_FAILED',
+        );
       }
-    : null;
 
-  try {
-    const cleanToken = toLatinDigits(token.trim());
+      const previousSession = sessionData.session
+        ? {
+            access_token: sessionData.session.access_token,
+            refresh_token: sessionData.session.refresh_token,
+          }
+        : null;
 
-    const { data, error } = await supabase.auth.verifyOtp({
-      email,
-      token: cleanToken,
-      type,
-    });
+      try {
+        const cleanToken = toLatinDigits(token.trim());
 
-    if (error) throw new Error(error.message);
+        const { data, error } = await supabase.auth.verifyOtp({
+          email,
+          token: cleanToken,
+          type,
+        });
 
-    if (data.session) {
-      await adoptUser(data.session.user);
+        if (error) throw new Error(error.message);
 
-      if (type === 'signup') {
-        try {
-          await supabase.from('soroban_progress').upsert(
-            {
-              user_id: data.session.user.id,
-              progress_data: {},
-            },
-            { onConflict: 'user_id' },
-          );
-        } catch {
-          // ignore
+        if (data.session) {
+          await adoptUser(data.session.user);
+
+          if (type === 'signup') {
+            try {
+              await supabase.from('soroban_progress').upsert(
+                {
+                  user_id: data.session.user.id,
+                  progress_data: {},
+                },
+                { onConflict: 'user_id' },
+              );
+            } catch {
+              // ignore
+            }
+          }
         }
-      }
-    }
 
-    return data;
-  } catch (error) {
-    await restorePreviousSession(previousSession);
-    throw error;
-  }
-},
+        return data;
+      } catch (error) {
+        await restorePreviousSession(previousSession);
+        throw error;
+      }
+    });
+  },
 
   async loginParent(email: string, password: string) {
-  requireCloudMode();
+    requireCloudMode();
 
-  const { data: sessionData } = await supabase.auth.getSession();
-  const previousSession = sessionData.session
-    ? {
-        access_token: sessionData.session.access_token,
-        refresh_token: sessionData.session.refresh_token,
+    return withAuthLock(async () => {
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+
+      if (sessionError) {
+        throw new CloudSyncError(
+          'Failed to read previous session',
+          'SESSION_RESTORE_FAILED',
+        );
       }
-    : null;
 
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      const previousSession = sessionData.session
+        ? {
+            access_token: sessionData.session.access_token,
+            refresh_token: sessionData.session.refresh_token,
+          }
+        : null;
+
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw new Error(error.message);
+        if (!data.user) throw new Error('Login failed');
+
+        await adoptUser(data.user);
+
+        return data.user;
+      } catch (error) {
+        await restorePreviousSession(previousSession);
+        throw error;
+      }
     });
-
-    if (error) throw new Error(error.message);
-    if (!data.user) throw new Error('Login failed');
-
-    await adoptUser(data.user);
-
-    return data.user;
-  } catch (error) {
-    await restorePreviousSession(previousSession);
-    throw error;
-  }
-},
+  },
 
   async logoutParent(force = false): Promise<boolean> {
     if (!force && getMode() === 'cloud') {
