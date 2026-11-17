@@ -314,20 +314,23 @@ async function retryPendingAvatar() {
   }
 }
 
+
 async function adoptUser(user: User): Promise<boolean> {
   requireCloudMode();
 
   const owner = localStorage.getItem(OWNER_KEY);
   const different = !owner || owner !== user.id;
 
-  // نحفظ الاختيار الجديد قبل أي تنظيف لهوية الحساب السابق.
+  // لا ننقل اختياراً معلّقاً من حساب سحابي سابق إلى حساب آخر.
   const pendingAvatar =
-    localStorage.getItem('soroban_avatar_pending_upload') === '1';
+    localStorage.getItem('soroban_avatar_pending_upload') === '1' &&
+    (!owner || owner === user.id);
+
   const pendingHeroKey = pendingAvatar
     ? localStorage.getItem('soroban_hero_key')
     : null;
 
-  // يجب التأكد من قراءة ملف الحساب قبل لمس الهوية المحلية.
+  // جلب بيانات الحساب قبل لمس الحالة المحلية.
   const { data: profile, error: profileError } = await supabase
     .from('public_profiles')
     .select('avatar_id')
@@ -335,8 +338,10 @@ async function adoptUser(user: User): Promise<boolean> {
     .maybeSingle();
 
   if (profileError) {
-    console.warn('تعذرت قراءة شخصية الحساب من السحابة:', profileError.message);
-    return false;
+    throw new CloudSyncError(
+      'Failed to fetch account profile',
+      'PROFILE_FETCH_FAILED',
+    );
   }
 
   const cloudProgress = different
@@ -345,57 +350,64 @@ async function adoptUser(user: User): Promise<boolean> {
 
   const cloudAvatarId: string | null = profile?.avatar_id ?? null;
 
-  if (different) {
-    wipeLocalProgress();
+  // Snapshot قبل أول تغيير محلي.
+  const snapshot = createLocalStateSnapshot();
 
-    // إزالة هوية الحساب السابق وعلامة الانتظار القديمة.
-    localStorage.removeItem('soroban_avatar_pending_upload');
-    localStorage.removeItem('soroban_hero_key');
-    localStorage.removeItem('soroban_child_name');
+  try {
+    if (different) {
+      wipeLocalProgress();
 
-    if (cloudProgress) {
-      useProgressStore.setState(cloudProgress);
-    }
-  }
-
-  localStorage.setItem(OWNER_KEY, user.id);
-
-  // إذا كانت السحابة تملك شخصية، فهي المصدر المعتمد.
-  if (cloudAvatarId) {
-    localStorage.setItem('soroban_hero_key', cloudAvatarId);
-    localStorage.removeItem('soroban_avatar_pending_upload');
-    applyLocalIdentity();
-  } else if (pendingAvatar && pendingHeroKey) {
-    // السحابة فارغة: نعيد الاختيار الجديد الذي حفظناه قبل التنظيف.
-    localStorage.setItem('soroban_hero_key', pendingHeroKey);
-
-    const displayName = resolveDisplayName(pendingHeroKey);
-    if (displayName) {
-      localStorage.setItem('soroban_child_name', displayName);
-    }
-
-    applyLocalIdentity();
-
-    // لا نمسح العلامة إلا بعد نجاح الرفع.
-    try {
-      const { error: avatarError } = await supabase.rpc('set_my_avatar', {
-        p_avatar_id: pendingHeroKey,
-      });
-
-      if (avatarError) {
-        console.warn('تعذرت مزامنة شخصية البطل:', avatarError.message);
-      } else {
-        localStorage.removeItem('soroban_avatar_pending_upload');
-      }
-    } catch (err) {
-      console.warn('خطأ في مزامنة شخصية البطل:', err);
-    }
-  } else {
-    // لا توجد شخصية سحابية ولا اختيار جديد معلّق.
-    if (pendingAvatar) {
       localStorage.removeItem('soroban_avatar_pending_upload');
+      localStorage.removeItem('soroban_hero_key');
+      localStorage.removeItem('soroban_child_name');
+
+      if (cloudProgress) {
+        useProgressStore.setState(cloudProgress);
+      }
     }
-    applyLocalIdentity();
+
+    if (cloudAvatarId) {
+      localStorage.setItem('soroban_hero_key', cloudAvatarId);
+      localStorage.removeItem('soroban_avatar_pending_upload');
+      applyLocalIdentity();
+    } else if (pendingAvatar && pendingHeroKey) {
+      localStorage.setItem('soroban_hero_key', pendingHeroKey);
+      applyLocalIdentity();
+
+      try {
+        const { error: avatarError } = await supabase.rpc('set_my_avatar', {
+          p_avatar_id: pendingHeroKey,
+        });
+
+        if (avatarError) {
+          console.warn('تعذرت مزامنة شخصية البطل:', avatarError.message);
+        } else {
+          localStorage.removeItem('soroban_avatar_pending_upload');
+        }
+      } catch (err) {
+        console.warn('خطأ في مزامنة شخصية البطل:', err);
+      }
+    } else {
+      localStorage.removeItem('soroban_avatar_pending_upload');
+      applyLocalIdentity();
+    }
+
+    // OWNER_KEY آخر خطوة بعد نجاح التغييرات المحلية.
+    localStorage.setItem(OWNER_KEY, user.id);
+  } catch (error) {
+    try {
+      restoreLocalStateSnapshot(snapshot);
+    } catch {
+      throw new CloudSyncError(
+        'Failed to restore previous local state',
+        'SESSION_RESTORE_FAILED',
+      );
+    }
+
+    throw new CloudSyncError(
+      'Account adoption failed',
+      'ADOPTION_FAILED',
+    );
   }
 
   if (different) {
@@ -404,6 +416,7 @@ async function adoptUser(user: User): Promise<boolean> {
 
   return different;
 }
+
 
 export const cloudSync = {
   async registerParent(email: string, password: string, consent: ParentalConsent) {
