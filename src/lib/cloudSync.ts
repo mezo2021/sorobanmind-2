@@ -410,11 +410,8 @@ async function adoptUser(user: User): Promise<void> {
   }
 
   if (different) {
-    window.setTimeout(() => window.location.reload(), 1200);
-  }
-
-  if (different) {
   window.setTimeout(() => window.location.reload(), 1200);
+}
 }
 
 async function restorePreviousSession(
