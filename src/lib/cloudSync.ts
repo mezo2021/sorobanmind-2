@@ -30,7 +30,6 @@ export class CloudSyncError extends Error {
 const AUTH_LOCK_NAME = 'soroban-auth-adoption';
 
 let authFlowInProgress = false;
-let adoptionInProgress = false;
 
 async function withAuthLock<T>(
   task: () => Promise<T>,
