@@ -247,18 +247,38 @@ function wipeLocalProgress() {
   useProgressStore.getState().reset();
 }
 
-async function pullProgress(userId: string) {
-  const { data } = await supabase
+async function pullProgress(
+  userId: string,
+): Promise<Record<string, unknown> | null> {
+  const { data, error } = await supabase
     .from('soroban_progress')
     .select('progress_data')
     .eq('user_id', userId)
     .maybeSingle();
-  const pd = data?.progress_data as Record<string, unknown> | null | undefined;
-  if (pd && Object.keys(pd).length > 0) {
-    const { childName: _c, parentName: _p, ...safePd } = pd as any;
-    useProgressStore.setState({ ...useProgressStore.getState(), ...safePd });
-    applyLocalIdentity();
+
+  if (error) {
+    throw new CloudSyncError(
+      'Failed to fetch cloud progress',
+      'PROGRESS_FETCH_FAILED',
+    );
   }
+
+  const pd = data?.progress_data as
+    | Record<string, unknown>
+    | null
+    | undefined;
+
+  if (!pd || Object.keys(pd).length === 0) {
+    return null;
+  }
+
+  const {
+    childName: _childName,
+    parentName: _parentName,
+    ...safePd
+  } = pd;
+
+  return safePd;
 }
 
 function applyLocalIdentity() {
