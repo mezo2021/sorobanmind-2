@@ -339,6 +339,10 @@ async function adoptUser(user: User): Promise<boolean> {
     return false;
   }
 
+  const cloudProgress = different
+    ? await pullProgress(user.id)
+    : null;
+
   const cloudAvatarId: string | null = profile?.avatar_id ?? null;
 
   if (different) {
@@ -349,10 +353,8 @@ async function adoptUser(user: User): Promise<boolean> {
     localStorage.removeItem('soroban_hero_key');
     localStorage.removeItem('soroban_child_name');
 
-    try {
-      await pullProgress(user.id);
-    } catch {
-      // لا نوقف اعتماد الحساب بسبب فشل استعادة التقدم.
+    if (cloudProgress) {
+      useProgressStore.setState(cloudProgress);
     }
   }
 
