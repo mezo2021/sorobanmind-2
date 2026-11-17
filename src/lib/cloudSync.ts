@@ -16,6 +16,7 @@ export type CloudSyncErrorCode =
   | 'SESSION_RESTORE_FAILED'
   | 'AVATAR_SYNC_FAILED';
 
+
 export class CloudSyncError extends Error {
   constructor(
     message: string,
