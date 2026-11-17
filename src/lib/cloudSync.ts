@@ -469,30 +469,85 @@ export const cloudSync = {
     return { user: data.user, session: data.session };
   },
 
-  async verifyOtp(email: string, token: string, type: 'signup' | 'recovery') {
-    requireCloudMode();
+  async function verifyOtp(
+  email: string,
+  token: string,
+  type: 'signup' | 'recovery',
+) {
+  requireCloudMode();
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  const previousSession = sessionData.session
+    ? {
+        access_token: sessionData.session.access_token,
+        refresh_token: sessionData.session.refresh_token,
+      }
+    : null;
+
+  try {
     const cleanToken = toLatinDigits(token.trim());
-    const { data, error } = await supabase.auth.verifyOtp({ email, token: cleanToken, type });
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token: cleanToken,
+      type,
+    });
+
     if (error) throw new Error(error.message);
+
     if (data.session) {
       await adoptUser(data.session.user);
+
       if (type === 'signup') {
         try {
-          await supabase.from('soroban_progress').upsert({ user_id: data.session.user.id, progress_data: {} }, { onConflict: 'user_id' });
-        } catch { /* ignore */ }
+          await supabase.from('soroban_progress').upsert(
+            {
+              user_id: data.session.user.id,
+              progress_data: {},
+            },
+            { onConflict: 'user_id' },
+          );
+        } catch {
+          // ignore
+        }
       }
     }
+
     return data;
-  },
+  } catch (error) {
+    await restorePreviousSession(previousSession);
+    throw error;
+  }
+},
 
   async loginParent(email: string, password: string) {
-    requireCloudMode();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  requireCloudMode();
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  const previousSession = sessionData.session
+    ? {
+        access_token: sessionData.session.access_token,
+        refresh_token: sessionData.session.refresh_token,
+      }
+    : null;
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
     if (error) throw new Error(error.message);
     if (!data.user) throw new Error('Login failed');
+
     await adoptUser(data.user);
+
     return data.user;
-  },
+  } catch (error) {
+    await restorePreviousSession(previousSession);
+    throw error;
+  }
+},
 
   async logoutParent(force = false): Promise<boolean> {
     if (!force && getMode() === 'cloud') {
