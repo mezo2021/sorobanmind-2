@@ -5,7 +5,6 @@ import { resolveDisplayName } from '../utils/resolveDisplayName';
 import { getMode } from '../utils/appMode';
 import type { User } from '@supabase/supabase-js';
 
-
 export type CloudSyncErrorCode =
   | 'AUTH_FLOW_BUSY'
   | 'AUTH_REQUIRED'
