@@ -54,6 +54,31 @@
 
 ---
 
+ حالة التقدم — P1-01
+
+✅ ما تم إنجازه حتى الآن
+
+الخطوة الوصف الحالة
+A-1 إضافة CloudSyncErrorCode وCloudSyncError ✅
+A-2 إضافة أقفال authFlowInProgress وAUTH_LOCK_NAME وwithAuthLock ✅
+A-3 إضافة createLocalStateSnapshot وrestoreLocalStateSnapshot (Snapshot & Rollback) ✅
+A-4 تحويل pullProgress() إلى Fetch-only (لا تعديل على Zustand) ✅
+A-5 إعادة تنظيم adoptUser(): جلب → تحقق → Snapshot → تطبيق → Commit، مع OWNER_KEY آخر خطوة ✅
+A-6 ربط loginParent() وverifyOtp() بـwithAuthLock + استعادة الجلسة السابقة عند الفشل ✅
+A-7-1 تحويل adoptUser() إلى Promise<void> وتوحيد عقد الإرجاع ✅
+
+🔜 الخطوة التالية
+
+A-7-2 — مراجعة wipeLocalProgress: الدالة تبتلع أخطاء الحذف حالياً (catch { /* ignore */ })، وهذا قد يسمح باعتماد حساب جديد رغم عدم اكتمال تنظيف بيانات الحساب السابق. يجب أن تفشل بوضوح عند تعذّر التنظيف.
+
+📋 المتبقي من P1-01
+
+· B — فصل الجلب عن التطبيق (منجز جزئياً عبر A-4 و A-5).
+· C — إعادة بناء اعتماد الحساب (منجز جزئياً؛ بانتظار Rollback كامل عند فشل التنظيف).
+· D — ربط تسجيل الدخول وOTP (منجز عبر A-6؛ بانتظار مراجعة معالجة الأخطاء النهائية).
+· E — حماية الشخصية (retryPendingAvatar + الأقفال) ورسائل الأخطاء في AuthModal.tsx.
+· اختبارات الإغلاق C1–C20 لم تُنفّذ بعد.
+
 ## 2. استراتيجية Commits
 
 لا نعتمد قاعدة أن كل ملف يأخذ Commit مستقلاً دائماً، ولا قاعدة أن كل مشكلة تأخذ Commit مهما كان عدد الملفات.
