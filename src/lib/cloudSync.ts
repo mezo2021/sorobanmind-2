@@ -27,10 +27,6 @@ export class CloudSyncError extends Error {
   }
 }
 
-
-let authFlowInProgress = false;
-let adoptionInProgress = false;
-
 const AUTH_LOCK_NAME = 'soroban-auth-adoption';
 
 export interface HallOfFameEntry {
