@@ -469,7 +469,7 @@ export const cloudSync = {
     return { user: data.user, session: data.session };
   },
 
-  async function verifyOtp(
+  async verifyOtp(
   email: string,
   token: string,
   type: 'signup' | 'recovery',
