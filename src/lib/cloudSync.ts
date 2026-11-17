@@ -5,6 +5,28 @@ import { resolveDisplayName } from '../utils/resolveDisplayName';
 import { getMode } from '../utils/appMode';
 import type { User } from '@supabase/supabase-js';
 
+
+export type CloudSyncErrorCode =
+  | 'AUTH_FLOW_BUSY'
+  | 'AUTH_REQUIRED'
+  | 'PROFILE_FETCH_FAILED'
+  | 'PROGRESS_FETCH_FAILED'
+  | 'LOCAL_STATE_SNAPSHOT_FAILED'
+  | 'LOCAL_STATE_COMMIT_FAILED'
+  | 'ADOPTION_FAILED'
+  | 'SESSION_RESTORE_FAILED'
+  | 'AVATAR_SYNC_FAILED';
+
+export class CloudSyncError extends Error {
+  constructor(
+    message: string,
+    public readonly code: CloudSyncErrorCode,
+  ) {
+    super(message);
+    this.name = 'CloudSyncError';
+  }
+}
+
 export interface HallOfFameEntry {
   pos: number;
   avatar_id: string | null;
