@@ -29,6 +29,41 @@ export class CloudSyncError extends Error {
 
 const AUTH_LOCK_NAME = 'soroban-auth-adoption';
 
+let authFlowInProgress = false;
+let adoptionInProgress = false;
+
+async function withAuthLock<T>(
+  task: () => Promise<T>,
+): Promise<T> {
+  if (
+    typeof navigator === 'undefined' ||
+    !navigator.locks
+  ) {
+    throw new CloudSyncError(
+      'Authentication lock unavailable',
+      'AUTH_FLOW_BUSY',
+    );
+  }
+
+  if (authFlowInProgress || adoptionInProgress) {
+    throw new CloudSyncError(
+      'Authentication flow already in progress',
+      'AUTH_FLOW_BUSY',
+    );
+  }
+
+  authFlowInProgress = true;
+
+  try {
+    return await navigator.locks.request(
+      AUTH_LOCK_NAME,
+      async () => task(),
+    );
+  } finally {
+    authFlowInProgress = false;
+  }
+}
+
 export interface HallOfFameEntry {
   pos: number;
   avatar_id: string | null;
