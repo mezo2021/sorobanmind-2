@@ -106,6 +106,51 @@ function extractPureState(state: ProgressState) {
   return pureData;
 }
 
+interface LocalStateSnapshot {
+  progressState: Record<string, unknown>;
+  storageEntries: Array<[string, string]>;
+}
+
+function createLocalStateSnapshot(): LocalStateSnapshot {
+  try {
+    // نسخة مستقلة من حالة Zustand
+    const progressState = JSON.parse(
+      JSON.stringify(extractPureState(useProgressStore.getState()))
+    );
+
+    // حفظ مفاتيح التطبيق والهوية، دون مفاتيح جلسة Supabase
+    const storageEntries: Array<[string, string]> = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+
+      const bareKey = key.startsWith('cloud:')
+        ? key.substring(6)
+        : key;
+
+      if (
+        OUR_PREFIX.test(bareKey) ||
+        key === 'soroban_hero_key' ||
+        key === 'soroban_child_name' ||
+        key === 'soroban_avatar_pending_upload'
+      ) {
+        const value = localStorage.getItem(key);
+        if (value !== null) {
+          storageEntries.push([key, value]);
+        }
+      }
+    }
+
+    return { progressState, storageEntries };
+  } catch (error) {
+    throw new CloudSyncError(
+      'Failed to snapshot local state',
+      'LOCAL_STATE_SNAPSHOT_FAILED',
+    );
+  }
+}
+
 export interface ParentalConsent {
   childAge?: number;
   agreedGuardian: boolean;
