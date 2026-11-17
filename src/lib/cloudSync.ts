@@ -315,7 +315,7 @@ async function retryPendingAvatar() {
 }
 
 
-async function adoptUser(user: User): Promise<boolean> {
+async function adoptUser(user: User): Promise<void> {
   requireCloudMode();
 
   const owner = localStorage.getItem(OWNER_KEY);
@@ -414,7 +414,8 @@ async function adoptUser(user: User): Promise<boolean> {
     window.setTimeout(() => window.location.reload(), 1200);
   }
 
-  return different;
+  if (different) {
+  window.setTimeout(() => window.location.reload(), 1200);
 }
 
 async function restorePreviousSession(
