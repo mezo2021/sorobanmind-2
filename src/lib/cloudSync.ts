@@ -416,6 +416,34 @@ async function adoptUser(user: User): Promise<boolean> {
   return different;
 }
 
+async function restorePreviousSession(
+  previousSession: {
+    access_token: string;
+    refresh_token: string;
+  } | null,
+): Promise<void> {
+  try {
+    if (previousSession) {
+      const { error } = await supabase.auth.setSession({
+        access_token: previousSession.access_token,
+        refresh_token: previousSession.refresh_token,
+      });
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.auth.signOut({
+        scope: 'local',
+      });
+
+      if (error) throw error;
+    }
+  } catch {
+    throw new CloudSyncError(
+      'Failed to restore previous session',
+      'SESSION_RESTORE_FAILED',
+    );
+  }
+}
 
 export const cloudSync = {
   async registerParent(email: string, password: string, consent: ParentalConsent) {
