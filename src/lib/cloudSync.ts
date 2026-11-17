@@ -150,6 +150,44 @@ function createLocalStateSnapshot(): LocalStateSnapshot {
     );
   }
 }
+function restoreLocalStateSnapshot(snapshot: LocalStateSnapshot): void {
+  try {
+    const savedKeys = new Set(
+      snapshot.storageEntries.map(([key]) => key)
+    );
+
+    // حذف مفاتيح التطبيق التي ظهرت بعد أخذ Snapshot
+    const keysToRemove: string[] = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+
+      const bareKey = key.startsWith('cloud:')
+        ? key.substring(6)
+        : key;
+
+      if (OUR_PREFIX.test(bareKey) && !savedKeys.has(key)) {
+        keysToRemove.push(key);
+      }
+    }
+
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+
+    // استعادة المفاتيح وقيمها السابقة
+    snapshot.storageEntries.forEach(([key, value]) => {
+      localStorage.setItem(key, value);
+    });
+
+    // استعادة حالة Zustand
+    useProgressStore.setState(snapshot.progressState);
+  } catch {
+    throw new CloudSyncError(
+      'Failed to restore local state',
+      'LOCAL_STATE_COMMIT_FAILED',
+    );
+  }
+}
 
 export interface ParentalConsent {
   childAge?: number;
