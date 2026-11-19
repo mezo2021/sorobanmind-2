@@ -316,22 +316,63 @@ function applyLocalIdentity() {
   }
 }
 
+
 let retryingAvatar = false;
 
 async function retryPendingAvatar() {
   if (retryingAvatar) return;
   if (getMode() !== 'cloud') return;
-  if (localStorage.getItem('soroban_avatar_pending_upload') !== '1') return;
-
-  const key = localStorage.getItem('soroban_hero_key');
-  if (!key) return;
 
   retryingAvatar = true;
+
   try {
-    const { error } = await supabase.rpc('set_my_avatar', { p_avatar_id: key });
-    if (!error) localStorage.removeItem('soroban_avatar_pending_upload');
-  } catch {
-    // يُعاد المحاولة لاحقاً
+    await withAuthLock(async () => {
+      const ownerAtStart = localStorage.getItem(OWNER_KEY);
+      const keyAtStart = localStorage.getItem('soroban_hero_key');
+      const pendingAtStart = localStorage.getItem(
+        'soroban_avatar_pending_upload'
+      );
+
+      if (
+        !ownerAtStart ||
+        !keyAtStart ||
+        pendingAtStart !== '1'
+      ) {
+        return;
+      }
+
+      // التأكد من أن الهوية المخزنة تخص حساب Supabase الحالي.
+      const { data: { user }, error: userError } =
+        await supabase.auth.getUser();
+
+      if (userError || !user || user.id !== ownerAtStart) {
+        return;
+      }
+
+      const { error } = await supabase.rpc('set_my_avatar', {
+        p_avatar_id: keyAtStart,
+      });
+
+      if (error) return;
+
+      // التحقق من ثبات الهوية والطلب بعد انتهاء RPC.
+      if (
+        localStorage.getItem(OWNER_KEY) === ownerAtStart &&
+        localStorage.getItem('soroban_hero_key') === keyAtStart &&
+        localStorage.getItem('soroban_avatar_pending_upload') === pendingAtStart
+      ) {
+        localStorage.removeItem('soroban_avatar_pending_upload');
+      }
+    });
+  } catch (error) {
+    if (
+      error instanceof CloudSyncError &&
+      error.code === 'AUTH_FLOW_BUSY'
+    ) {
+      return;
+    }
+
+    // أي فشل آخر: نحتفظ بعلم الانتظار لإعادة المحاولة لاحقاً.
   } finally {
     retryingAvatar = false;
   }
