@@ -179,8 +179,11 @@ function restoreLocalStateSnapshot(snapshot: LocalStateSnapshot): void {
       localStorage.setItem(key, value);
     });
 
-    // استعادة حالة Zustand
+        // استعادة حالة Zustand
     useProgressStore.setState(snapshot.progressState);
+
+    // إعادة بناء هوية البطل من المفتاح المستعاد
+    applyLocalIdentity();
   } catch {
     throw new CloudSyncError(
       'Failed to restore local state',
