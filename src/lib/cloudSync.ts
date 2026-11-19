@@ -456,7 +456,7 @@ async function adoptUser(user: User): Promise<void> {
       applyLocalIdentity();
     }
 
-    // OWNER_KEY آخر خطوة بعد نجاح التغييرات المحلية.
+        // OWNER_KEY آخر خطوة بعد نجاح التغييرات المحلية.
     localStorage.setItem(OWNER_KEY, user.id);
   } catch (error) {
     try {
@@ -466,6 +466,10 @@ async function adoptUser(user: User): Promise<void> {
         'Failed to restore previous local state',
         'SESSION_RESTORE_FAILED',
       );
+    }
+
+    if (error instanceof CloudSyncError) {
+      throw error;
     }
 
     throw new CloudSyncError(
@@ -577,7 +581,7 @@ export const cloudSync = {
                   user_id: data.session.user.id,
                   progress_data: {},
                 },
-                { onConflict: 'user_id' },
+                { onConflict: 'user_id', ignoreDuplicates: true },
               );
             } catch {
               // ignore
