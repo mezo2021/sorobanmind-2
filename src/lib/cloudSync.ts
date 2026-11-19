@@ -12,6 +12,7 @@ export type CloudSyncErrorCode =
   | 'PROGRESS_FETCH_FAILED'
   | 'LOCAL_STATE_SNAPSHOT_FAILED'
   | 'LOCAL_STATE_COMMIT_FAILED'
+  | 'LOCAL_STATE_WIPE_FAILED'
   | 'ADOPTION_FAILED'
   | 'SESSION_RESTORE_FAILED'
   | 'AVATAR_SYNC_FAILED';
@@ -227,23 +228,43 @@ function requireCloudMode(): void {
   }
 }
 
-function wipeLocalProgress() {
-  if (getMode() !== 'cloud') {
-    console.warn('wipeLocalProgress blocked: app is not in Cloud mode.');
-    return;
-  }
-  const keysToRemove: string[] = [];
+function wipeLocalProgress(): void {
+  requireCloudMode();
+
   try {
+    const keysToRemove: string[] = [];
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
+
       if (!key || !key.startsWith('cloud:')) continue;
-      if (DEVICE_KEYS.includes(key)) continue;
+
       const bareKey = key.substring(6);
-      if (OUR_PREFIX.test(bareKey)) keysToRemove.push(key);
+
+      if (OUR_PREFIX.test(bareKey)) {
+        keysToRemove.push(key);
+      }
     }
-    keysToRemove.forEach((key) => localStorage.removeItem(key));
-  } catch { /* ignore */ }
-  useProgressStore.getState().reset();
+
+    for (const key of keysToRemove) {
+      localStorage.removeItem(key);
+
+      if (localStorage.getItem(key) !== null) {
+        throw new Error(`Failed to remove key: ${key}`);
+      }
+    }
+
+    useProgressStore.getState().reset();
+  } catch (error) {
+    if (error instanceof CloudSyncError) {
+      throw error;
+    }
+
+    throw new CloudSyncError(
+      'Failed to clear previous cloud progress',
+      'LOCAL_STATE_WIPE_FAILED',
+    );
+  }
 }
 
 async function pullProgress(
