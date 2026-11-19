@@ -9,7 +9,7 @@ import {
 
 import { useT } from '../i18n/useTranslation';
 import { pickLang } from '../i18n/pickLang';
-import { cloudSync } from '../lib/cloudSync';
+import { cloudSync, CloudSyncError, type CloudSyncErrorCode } from '../lib/cloudSync';
 import { supabaseUrl, supabaseKey } from '../lib/supabase';
 import sorobanaImg from '@/assets/sorobana/sorobana-teaching-pointing.webp';
 import { toLatinDigits } from '@/utils/numberStyle';
@@ -22,7 +22,6 @@ interface AuthModalProps {
 export interface ParentalConsent {
   childAge?: number;
   agreedGuardian: boolean;
-  agreedData?: boolean;
   agreedPrivacy: boolean;
   agreedLeaderboard?: boolean;
   timestamp: string;
@@ -41,7 +40,6 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
   
   // 🆕 الموافقات
   const [agreeGuardian, setAgreeGuardian] = useState(false);
-  const [agreeData, setAgreeData] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [agreeLeaderboard, setAgreeLeaderboard] = useState(false);
 
@@ -77,6 +75,58 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     if (msg.includes('rate limit') || msg.includes('security purposes')) return pickLang({ ar: 'محاولات كثيرة، انتظر دقيقة ثم أعد المحاولة.', en: 'Too many attempts, wait a minute.' }, lang);
     if (msg.includes('failed to fetch') || msg.includes('network')) return pickLang({ ar: 'تعذر الاتصال بالخادم. تحقق من الشبكة.', en: 'Network error. Check connection.' }, lang);
     return errorMsg;
+  };
+
+  const CLOUD_SYNC_ERROR_MESSAGES: Record<CloudSyncErrorCode, { ar: string; en: string }> = {
+    AUTH_FLOW_BUSY: {
+      ar: 'عملية تسجيل أخرى قيد التنفيذ. يرجى المحاولة بعد لحظة.',
+      en: 'Another authentication flow is in progress. Please try again in a moment.',
+    },
+    AUTH_REQUIRED: {
+      ar: 'يرجى تسجيل الدخول أولاً.',
+      en: 'Please log in first.',
+    },
+    PROFILE_FETCH_FAILED: {
+      ar: 'تعذر تحميل بيانات الحساب.',
+      en: 'Failed to load account data.',
+    },
+    PROGRESS_FETCH_FAILED: {
+      ar: 'تعذر تحميل تقدم الحساب من السحابة.',
+      en: 'Failed to load account progress from the cloud.',
+    },
+    LOCAL_STATE_SNAPSHOT_FAILED: {
+      ar: 'تعذر حفظ الحالة المحلية السابقة بأمان.',
+      en: 'Failed to safely snapshot the previous local state.',
+    },
+    LOCAL_STATE_COMMIT_FAILED: {
+      ar: 'تعذرت استعادة البيانات المحلية السابقة.',
+      en: 'Failed to restore the previous local data.',
+    },
+    LOCAL_STATE_WIPE_FAILED: {
+      ar: 'تعذر تنظيف بيانات الحساب السابق.',
+      en: 'Failed to clear the previous account data.',
+    },
+    ADOPTION_FAILED: {
+      ar: 'تعذر تجهيز بيانات الحساب.',
+      en: 'Failed to prepare account data.',
+    },
+    SESSION_RESTORE_FAILED: {
+      ar: 'تعذرت استعادة جلسة الحساب السابقة.',
+      en: 'Failed to restore the previous account session.',
+    },
+    AVATAR_SYNC_FAILED: {
+      ar: 'تعذرت مزامنة شخصية البطل.',
+      en: 'Failed to sync hero avatar.',
+    },
+  };
+
+  const resolveAuthErrorMessage = (error: unknown): string => {
+    if (error instanceof CloudSyncError) {
+      const entry = CLOUD_SYNC_ERROR_MESSAGES[error.code];
+      if (entry) return pickLang(entry, lang);
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    return getFriendlyError(message);
   };
 
   const checkConnection = useCallback(async (): Promise<boolean> => {
@@ -118,8 +168,8 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     
     if (isRegister) {
       // 🆕 الموافقات
-      if (!agreeGuardian || !agreeData || !agreePrivacy) {
-        return pickLang({ ar: 'يجب الموافقة على شروط الأهلية وجمع البيانات وسياسة الخصوصية', en: 'You must agree to guardian, data collection, and privacy terms' }, lang);
+      if (!agreeGuardian || !agreePrivacy) {
+        return pickLang({ ar: 'يجب الموافقة على شروط الأهلية وسياسة الخصوصية', en: 'You must agree to guardian and privacy terms' }, lang);
       }
     }
     return null;
@@ -133,7 +183,6 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     try {
       const consent: ParentalConsent = {
         agreedGuardian: agreeGuardian,
-        agreedData: agreeData,
         agreedPrivacy: agreePrivacy,
         agreedLeaderboard: agreeLeaderboard,
         timestamp: new Date().toISOString(),
@@ -145,7 +194,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       setResendTimer(60);
       showMsg(pickLang({ ar: 'تم إنشاء الحساب! يرجى إدخال الرمز المرسل لبريدك.', en: 'Account created! Please enter the code sent to your email.' }, lang), 'success');
     } catch (e: any) {
-      showMsg(getFriendlyError(e.message), 'error');
+      showMsg(resolveAuthErrorMessage(e), 'error');
     } finally { setLoading(false); }
   };
 
@@ -157,7 +206,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       showMsg(pickLang({ ar: 'تم تفعيل الحساب بنجاح!', en: 'Account verified successfully!' }, lang), 'success');
       setTimeout(() => onSuccess(), 1500);
     } catch (e: any) {
-      showMsg(getFriendlyError(e.message), 'error');
+      showMsg(resolveAuthErrorMessage(e), 'error');
     } finally { setLoading(false); }
   };
 
@@ -180,10 +229,10 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
           setResendTimer(60);
           showMsg(pickLang({ ar: 'يرجى تأكيد بريدك. أعدنا إرسال الرمز إليك.', en: 'Please confirm your email. We resent the code.' }, lang), 'success');
         } catch (resendErr: any) {
-          showMsg(getFriendlyError(resendErr.message), 'error');
+          showMsg(resolveAuthErrorMessage(resendErr), 'error');
         }
       } else {
-        showMsg(getFriendlyError(e.message), 'error');
+        showMsg(resolveAuthErrorMessage(e), 'error');
       }
     } finally { setLoading(false); }
   };
@@ -199,7 +248,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       setResendTimer(60);
       showMsg(pickLang({ ar: 'تم إرسال رمز الاستعادة إلى بريدك.', en: 'Recovery code sent to your email.' }, lang), 'success');
     } catch (e: any) {
-      showMsg(getFriendlyError(e.message), 'error');
+      showMsg(resolveAuthErrorMessage(e), 'error');
     } finally { setLoading(false); }
   };
 
@@ -210,7 +259,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       await cloudSync.verifyOtp(email, otp, 'recovery');
       setStep('reset-password');
     } catch (e: any) {
-      showMsg(getFriendlyError(e.message), 'error');
+      showMsg(resolveAuthErrorMessage(e), 'error');
     } finally { setLoading(false); }
   };
 
@@ -224,7 +273,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       showMsg(pickLang({ ar: 'تم تحديث كلمة المرور بنجاح!', en: 'Password updated successfully!' }, lang), 'success');
       setTimeout(() => onSuccess(), 1500);
     } catch (e: any) {
-      showMsg(getFriendlyError(e.message), 'error');
+      showMsg(resolveAuthErrorMessage(e), 'error');
     } finally { setLoading(false); }
   };
 
@@ -240,7 +289,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       setResendTimer(60);
       showMsg(pickLang({ ar: 'تم إعادة إرسال الرمز.', en: 'Code resent.' }, lang), 'success');
     } catch (e: any) {
-      showMsg(getFriendlyError(e.message), 'error');
+      showMsg(resolveAuthErrorMessage(e), 'error');
     } finally { setLoading(false); }
   };
 
@@ -343,11 +392,6 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                     <label className="flex items-start gap-2.5 cursor-pointer">
                       <input type="checkbox" checked={agreeGuardian} onChange={(e) => setAgreeGuardian(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
                       <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أقر بأنني ولي الأمر (18+).', en: 'I am the guardian (18+).' }, lang)}</span>
-                    </label>
-                    
-                    <label className="flex items-start gap-2.5 cursor-pointer">
-                      <input type="checkbox" checked={agreeData} onChange={(e) => setAgreeData(e.target.checked)} className="mt-1 w-4 h-4 accent-amber-500 rounded" />
-                      <span className="text-[11px] text-white/70 leading-relaxed">{pickLang({ ar: 'أوافق على جمع بيانات طفلي ومعالجتها للأغراض التعليمية.', en: "I agree to collect and process my child's data for educational purposes." }, lang)}</span>
                     </label>
                     
                     <label className="flex items-start gap-2.5 cursor-pointer">
