@@ -92,3 +92,112 @@ describe('withAuthLock via loginParent', () => {
 ## Commit والإغلاق
 - لا Commit كود. Commit واحد للوثائق: `docs(P1-01): align C3 and adoptionInProgress decision`.
 - بعد التنفيذ: حدّث `TEST_PLAN.md` §5. لا PASS لأي من C1–C20 قبل تنفيذه فعلياً. بوابة الانتقال: انظر `PHASE_1_EXECUTION.md` §5.
+
+....
+
+---
+
+# ملحق C — إغلاق ورقة العمل (تحديث 2026-11-20)
+
+**حالة الملحق:** إضافة فقط. لا يُلغي أي نص سابق. يُقرأ مع الخطوات 1–4 والقرارات D1–D4 أعلاه.
+
+---
+
+## C.1 — إغلاق الخطوة 1 (المطابقة)
+
+**النتيجة:** ✅ **مكتملة**. الفحص الكامل لـ`src/lib/cloudSync.ts` على نسخة GitHub الحالية أكد كل البنود المطلوبة:
+
+| بند المطابقة | النتيجة | الموضع |
+|---|---|---|
+| `AUTH_LOCK_NAME='soroban-auth-adoption'` | ✅ موجود | L32 |
+| `authFlowInProgress` + `withAuthLock` | ✅ موجود | L34, L36–64 |
+| `wipeLocalProgress` يرمي `LOCAL_STATE_WIPE_FAILED` | ✅ موجود | L234–269 |
+| `retryPendingAvatar` داخل `withAuthLock` | ✅ موجود | L322–380 |
+| `OWNER_KEY` آخر خطوة في `adoptUser` | ✅ موجود داخل `try` | L458–459 |
+| `ignoreDuplicates: true` في `verifyOtp` | ✅ موجود | L606–609 |
+| `adoptionInProgress` | ✅ غائب (هذا هو الصحيح) | — |
+| استدعاءات `adoptUser(` | ✅ 3 مواضع (تعريف + `verifyOtp` + `loginParent`) | L382, L576, L622 |
+
+**لم يظهر أي اختلاف يستدعي التوقف.**
+
+---
+
+## C.2 — إغلاق الخطوة 2 (الأكواد: دون تغيير)
+
+**النتيجة:** ✅ **مكتملة كما هو مطلوب**.
+
+| البند | الإجراء | الحالة |
+|---|---|---|
+| `withAuthLock` | أُبقي دون تغيير | ✅ |
+| `adoptUser` (Snapshot ← تطبيق ← `OWNER_KEY` ← Rollback) | أُبقي | ✅ |
+| `wipeLocalProgress` (يرمي `LOCAL_STATE_WIPE_FAILED`) | أُبقي | ✅ |
+| `retryPendingAvatar` (تحقق المالك قبل/بعد RPC) | أُبقي | ✅ |
+| `loginParent`/`verifyOtp` (حفظ/استعادة الجلسة) | أُبقي | ✅ |
+| `AuthModal.tsx` (10 رسائل + `resolveAuthErrorMessage`) | أُبقي | ✅ |
+| `adoptionInProgress` | لم يُضَف (لا حاجة — `authFlowInProgress` + Web Lock يكفيان) | ✅ |
+
+**لم يُعدَّل أي سطر إنتاجي.**
+
+---
+
+## C.3 — إغلاق الخطوة 3 (تصحيح الوثائق)
+
+**النتيجة:** ✅ **مكتملة**.
+
+| الملف | التصحيح | الحالة |
+|---|---|---|
+| `TEST_PLAN.md` | C3 مُصحح (Commit `45c8865`) + ملحق A كامل | ✅ |
+| `UNIFIED_REFERENCE.md` | §2.1 و§3.1 مُصححان (Commit `b987b36`) + ملحق إضافي | ✅ |
+| `MASTER_REMEDIATION_PLAN.md` | 7 تحديثات موثقة في ملحق | ✅ |
+| `PROJECT_CONTROL.md` | §11 مضاف (سجل الفحص الكامل) | ✅ |
+| `PHASE_1_EXECUTION.md` | ملحق B كامل | ✅ |
+| `PHASE_1_CODE_STEPS.md` | هذا الملحق C | ✅ |
+
+**ملاحظة:** إن لم تكن Commits `45c8865` و`b987b36` موجودة في المستودع، استبدل المرجع بـ«تصحيحات وثائقية في هذه الجولة».
+
+---
+
+## C.4 — الخطوة 4 (الاختبار الآلي): لم تُنفَّذ
+
+**الحالة:** ⏸ **لم تُنفَّذ**. لا موافقة صريحة على إنشاء `tests/cloudSync.auth.test.ts`.
+
+**القرار المؤجل:**
+- الملف `tests/cloudSync.auth.test.ts` **لم يُنشأ**.
+- إمكانية تنفيذه لاحقاً (عبر Codespaces أو GitHub Actions) مسجّلة في `TEST_PLAN.md` ملحق A §A.3 كـ`NOT RUN`.
+- C2/C3/C4/C5/C6 قابلة للتحقق عبر هذا الملف عند الموافقة والتنفيذ.
+
+**لا أثر على إغلاق P1-01:** الكود مدعوم للمنطق، والاختبار الآلي اختياري.
+
+---
+
+## C.5 — حسم قرارات D1–D4
+
+| # | القرار النهائي | حالة التنفيذ |
+|---|---|---|
+| D1 | **إبقاء** — انتظار القفل بلا `ifAvailable` | ✅ لا تغيير في الكود |
+| D2 | **إبقاء** — رفض الدخول عند غياب Web Locks بـ`AUTH_FLOW_BUSY` | ✅ لا تغيير في الكود |
+| D3 | **تسجيل فقط** — `logoutParent` خارج `withAuthLock` | ✅ مسجّل في `TEST_PLAN.md` ملحق A §A.4 (ثغرة #5) |
+| D4 | **يُؤجل إلى P2-03** — `srb_progress` بدون بادئة | ✅ مسجّل في `TEST_PLAN.md` ملحق A §A.4 (ثغرة #6) |
+
+**لا قرارات معلّقة.**
+
+---
+
+## C.6 — الثغرات الست المؤجلة
+
+موثقة بالكامل في `TEST_PLAN.md` ملحق A §A.4. لا تُصلح ضمن P1-01:
+
+1. `retryPendingAvatar` يبتلع `AUTH_FLOW_BUSY` بلا إعادة جدولة → P2
+2. `restorePreviousSession` عند فشلها يُخفي الخطأ الأصلي → P2
+3. رمز خطأ خاطئ في Rollback داخل `adoptUser` (`SESSION_RESTORE_FAILED` بدل `LOCAL_STATE_COMMIT_FAILED`)
+4. `AUTH_REQUIRED` و`AVATAR_SYNC_FAILED` رموز غير مستخدمة → تنظيف P2
+5. `resendOtp` بلا `withAuthLock` → P2
+6. `srb_progress` لا يُمسح عند تبديل الحساب (D4) → P2-03
+
+---
+
+## C.7 — Commit والإغلاق
+
+**الحالة الفعلية:** لا Commit كود (لم يُعدَّل أي كود). Commit توثيقي واحد مطلوب.
+
+**الرسالة المقترحة:**
