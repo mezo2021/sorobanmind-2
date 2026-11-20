@@ -121,16 +121,17 @@ Commit: `P2-07: replace shallow merge in loadFromCloud`. تراجع `git revert`
 
 ## بوابة الإغلاق Phase 2 → 3
 C21–C99 كلها PASS أو BLOCKED موثقة، Build ناجح بعد كل Commit، لا فقدان بيانات محلية، لا خلط Local/Cloud، وتحديث `TEST_PLAN.md` §5. غير ذلك لا تبدأ Phase 3.
+.....
+## ملحق — Phase 2
+- شرط البدء: إغلاق بوابة Phase 1 (الحالة الفعلية في `TEST_PLAN.md` §5 و`PROJECT_CONTROL.md`).
+- قرارات محسومة: الترتيب `P2-03 ← P2-04 ← P2-05 ← P2-07`؛ عزل التخزين حسب الوضع (`local:` / `cloud:`)؛ الإبقاء على المفاتيح القديمة دون حذف؛ `progress_data = {}` يعيد التقدم إلى Defaults بعد `reset()` بينما غياب الصف أو `progress_data === null` يرفض الاستعادة دون مساس بالبيانات المحلية.
+- قرارات معلّقة (تتطلب موافقة): تصدير `createLocalStateSnapshot` و`restoreLocalStateSnapshot` من `cloudSync.ts` في `P2-07`؛ الإبقاء على `main.tsx` دون تعديل في `P2-03` ما لم يثبت خطأ render غير مُلتقَط؛ توحيد ترقيم اختبارات Phase 2 وفق `TEST_PLAN.md`.
+- بيئة الاختبار: تشغيل `vitest` (`npm run test:run`) عبر GitHub Codespaces أو GitHub Actions لاختبارات محاكاة `localStorage`؛ ما لم يُنفَّذ فعلياً = `NOT RUN` أو `BLOCKED` ببديل «مراجعة كود» ولا يُسجَّل `PASS`.
+- Commit/تراجع: Commit مستقل لكل بند؛ التراجع عبر `git revert` فقط.
 
-## ملحق توثيقي — حالة البدء والبيئة والاختبارات
-- **حالة البدء:** Phase 2 في حالة **توثيق وتخطيط فقط (لم تبدأ)**؛ لا يبدأ تنفيذ `P2-03` قبل إغلاق بوابة `Phase 1` (`C1–C20`) وفق الضوابط المعتمدة.
-- **حسم `progress_data` في `P2-07`:** `progress_data = {}` كائن صالح ويعيد نطاق التقدم إلى Defaults بعد `reset()`، أما عدم وجود صف أو كون `progress_data === null` فيُرفض ولا يُعدّل البيانات المحلية.
-- **بيئة الهاتف:** أي اختبار يعتمد على `vitest` ولم يُنفّذ فعلياً على هاتف Android يُسجَّل `NOT RUN` أو `BLOCKED` (مع السبب)، ولا يُسجَّل `PASS`.
-
-| البند | الملفات الأساسية | نطاق الاختبارات (`TEST_PLAN.md`) | الحالة الحالية |
-|---|---|---|---|
-| P2-03 | `src/data/srb/progress.ts` | C21–C40 | لم يبدأ / NOT RUN |
-| P2-04 | `src/screens/LessonScreen.tsx` | C41–C60 | لم يبدأ / NOT RUN |
-| P2-05 | `src/screens/MagicSecretsScreen.tsx` | C61–C81 | لم يبدأ / NOT RUN |
-| P2-07 | `src/lib/cloudSync.ts`، `src/screens/GuardianDashboard.tsx` | C82–C99 | لم يبدأ / NOT RUN |
-
+| البند | الملفات | الاختبارات (انظر `TEST_PLAN.md`) |
+|---|---|---|
+| P2-03 | `src/data/srb/progress.ts` | C21–C40 |
+| P2-04 | `src/screens/LessonScreen.tsx` | C41–C60 |
+| P2-05 | `src/screens/MagicSecretsScreen.tsx` | C61–C81 |
+| P2-07 | `src/lib/cloudSync.ts`، `src/screens/GuardianDashboard.tsx` | C82–C99 |
