@@ -1,149 +1,271 @@
-# PHASE_1_EXECUTION.md — بطاقات P1-01 (الأخطر أولاً)
+# PHASE_1_EXECUTION.md — بطاقات Phase 1 (P1-01)
 
-قواعد: لا تعديل على `src/App.tsx` ولا `src/utils/storage.ts` ولا SQL. CI = `npm run test:run` ثم `npm run build` (من `ci-build.yml`).
-المسار الفعلي: `src/lib/cloudSync.ts`. مبني على أرشيف ٢٠ت٢ — البطاقة 1 تتحقق أنه يطابق GitHub.
+مرتبة حسب الخطر الفعلي على المستخدم (الأخطر أولاً). كل تعديل: فرع ← PR ← CI أخضر ← دمج.
 
 ---
 
-## البطاقة 1 — بوابة المطابقة (لا Commit)
-**التغيير:** لا شيء. افتح `src/lib/cloudSync.ts` في GitHub وابحث عن العناصر أدناه.
-| ابحث عن | المتوقع |
-|---|---|
-| `AUTH_LOCK_NAME` | `'soroban-auth-adoption'` |
-| `withAuthLock` | يُستخدم في `loginParent` و`verifyOtp` و`retryPendingAvatar` |
-| `localStorage.setItem(OWNER_KEY` | داخل `adoptUser`، **آخر خطوة** |
-| `Failed to remove` | داخل `wipeLocalProgress` (يرمي ولا يبتلع) |
-| `adoptionInProgress` | **لا نتائج** (صحيح) |
+## بطاقة 1 — تأكيد وجود `src/lib/supabase.ts`
 
-**الاختبار من الهاتف:** نعم (قراءة فقط)
+**التغيير:** لا تغيير. افتح GitHub ← `src/lib/` ← تأكد أن `supabase.ts` موجود. (الأرشيف يحوي فقط `.trashed-…-supabase.ts.txt`، أي نسخة محذوفة من الهاتف؛ والملف مستورد في `cloudSync.ts` و`AuthModal.tsx` و`RoleSelection.tsx` و`useRealtimeDuel.ts`.)
+**إن كان موجوداً:** انتهت البطاقة.
+**إن كان غائباً:** أنشئ `src/lib/supabase.ts` بمحتوى الملف المحذوف نفسه (3 أسطر: `createClient` + تصدير `supabaseUrl` و`supabaseKey` و`supabase`).
+**الاختبار من الهاتف:** نعم (متصفح GitHub فقط)
+**Commit message:** `fix(supabase): restore src/lib/supabase.ts` (فقط إن كان غائباً)
+**الوقت المتوقع:** 2 دقيقة
+**مخاطر:** إن غاب الملف يفشل `tsc` وكل البناء. المفتاح publishable (عام بطبيعته).
+**الحالة:** `[x] مغلقة (N/A — الملف موجود في GitHub)`
+
+---
+
+## بطاقة 2 — CI لا يعمل عند الـ push
+
+**التغيير:** لا تغيير كود. `ci-build.yml` يعمل على `pull_request` و`workflow_dispatch` فقط. لذا لا تُحرّر `main` مباشرة. في GitHub Web Editor اختر **Create a new branch + Propose changes**، ثم افتح PR، وانتظر ✅ في تبويب Checks، ثم ادمج. (`deploy.yml` يعمل عند الـ push إلى `main`، فالدمج هو الذي ينشر.)
+**الاختبار من الهاتف:** نعم
 **Commit message:** — (لا Commit)
-**الوقت المتوقع:** 5 دقائق
-**مخاطر:** إن اختلف أي بند → أوقف Phase 1 وأرسل الفرق.
+**الوقت المتوقع:** 1 دقيقة (مرة واحدة)
+**مخاطر:** Commit مباشر على `main` ينشر دون أن يمر بأي اختبار.
 **الحالة:** `[ ] لم تُنفَّذ  |  [ ] CI أخضر  |  [ ] مغلقة`
 
 ---
 
-## البطاقة 2 — اختبار آلي للقفل (C3–C5) في CI
-**التغيير:** أنشئ ملفاً جديداً `tests/cloudSync.auth.test.ts` (خارج `src`، لا يمس الإنتاج). **يحتاج موافقتك.**
+## بطاقة 3 — اختبار آلي لقفل المصادقة (C2–C6)
+
+**التغيير:** **أنشئ** ملفاً جديداً `tests/cloudSync.auth.test.ts` بالمحتوى التالي كاملاً (لا تعدّل `src`). البيئة `node` (لا `localStorage`)، لذا نحاكي `appMode` و`supabase` و`navigator`:
+
 ```ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mem = new Map<string, string>();
-vi.stubGlobal('localStorage', {
-  getItem: (k: string) => mem.get(k) ?? null,
-  setItem: (k: string, v: string) => { mem.set(k, v); },
-  removeItem: (k: string) => { mem.delete(k); },
-  key: (i: number) => [...mem.keys()][i] ?? null,
-  get length() { return mem.size; },
-});
+const { getSession } = vi.hoisted(() => ({ getSession: vi.fn() }));
 
 vi.mock('../src/lib/supabase', () => ({
-  supabase: { auth: {
-    getSession: vi.fn(async () => ({ data: { session: null }, error: null })),
-    signInWithPassword: vi.fn(() => new Promise(() => {})), // لا يكتمل أبداً
-    signOut: vi.fn(async () => ({ error: null })),
-  } },
+  supabase: { auth: { getSession, signOut: vi.fn(async () => ({ error: null })) } },
 }));
 vi.mock('../src/utils/appMode', () => ({ getMode: () => 'cloud' }));
-vi.mock('../src/store/progressStore', () => ({
-  useProgressStore: { getState: () => ({ reset() {} }), setState() {} },
-}));
 
-describe('auth lock', () => {
-  beforeEach(() => { vi.resetModules(); });
+async function load() {
+  vi.resetModules();
+  return (await import('../src/lib/cloudSync')).cloudSync;
+}
 
-  it('C3/C4: second concurrent login → AUTH_FLOW_BUSY', async () => {
-    vi.stubGlobal('navigator', { locks: { request: (_n: string, cb: () => unknown) => cb() } });
-    const { cloudSync } = await import('../src/lib/cloudSync');
-    void cloudSync.loginParent('a@b.c', 'x').catch(() => {});
-    await new Promise((r) => setTimeout(r, 0));
-    await expect(cloudSync.loginParent('a@b.c', 'x')).rejects.toMatchObject({ code: 'AUTH_FLOW_BUSY' });
+describe('withAuthLock عبر loginParent', () => {
+  beforeEach(() => {
+    getSession.mockReset();
+    vi.stubGlobal('navigator', {
+      locks: { request: (_n: string, cb: () => unknown) => cb() },
+    });
   });
 
-  it('C5: no Web Locks → AUTH_FLOW_BUSY', async () => {
+  it('C2/C3/C4: عملية ثانية متزامنة ← AUTH_FLOW_BUSY', async () => {
+    getSession.mockReturnValue(new Promise(() => {})); // الأولى لا تنتهي
+    const sync = await load();
+    void sync.loginParent('a@b.c', 'x').catch(() => {});
+    await expect(sync.loginParent('a@b.c', 'x')).rejects.toMatchObject({
+      code: 'AUTH_FLOW_BUSY',
+    });
+    expect(getSession).toHaveBeenCalledTimes(1);
+  });
+
+  it('C5: لا Web Locks ← AUTH_FLOW_BUSY وبلا اعتماد', async () => {
     vi.stubGlobal('navigator', {});
-    const { cloudSync } = await import('../src/lib/cloudSync');
-    await expect(cloudSync.loginParent('a@b.c', 'x')).rejects.toMatchObject({ code: 'AUTH_FLOW_BUSY' });
+    const sync = await load();
+    await expect(sync.loginParent('a@b.c', 'x')).rejects.toMatchObject({
+      code: 'AUTH_FLOW_BUSY',
+    });
+    expect(getSession).not.toHaveBeenCalled();
+  });
+
+  it('C6: فشل الحصول على القفل ← لا متابعة', async () => {
+    vi.stubGlobal('navigator', {
+      locks: { request: () => Promise.reject(new Error('lock failed')) },
+    });
+    const sync = await load();
+    await expect(sync.loginParent('a@b.c', 'x')).rejects.toThrow('lock failed');
+    expect(getSession).not.toHaveBeenCalled();
   });
 });
 ```
-**الاختبار من الهاتف:** لا (BLOCKED على الهاتف؛ **يُنفَّذ في CI** ويظهر أخضر/أحمر في المتصفح)
-**Commit message:** `test(auth): add lock tests for loginParent (C3-C5)`
-**الوقت المتوقع:** 15 دقيقة + إعادة محاولة CI
-**مخاطر:** الكود **غير مجرَّب**؛ قد يفشل CI بسبب الـ mock (بيئة الاختبار `node`). إن احمرّ: أرسل رسالة الخطأ كما هي ولا تغيّر `src`، ولا تعدّل الاختبار ليمرّ دون فهم السبب.
-**الحالة:** `[ ] لم تُنفَّذ  |  [ ] CI أخضر  |  [ ] مغلقة`
 
----
-
-## البطاقة 3 — تحقق: لا نجاح وهمي بعد فشل الاعتماد (لا Commit)
-**التغيير:** لا شيء. في `src/components/AuthModal.tsx` تأكد أن `onSuccess()` يأتي بعد `await` داخل `try`:
-- ~L205: `await cloudSync.verifyOtp(email, otp, 'signup');` ثم `setTimeout(() => onSuccess(), 1500);`
-- ~L219: `await cloudSync.loginParent(email, password);` ثم `setTimeout(() => onSuccess(), 1000);`
-
-وأن `adoptUser` في `cloudSync.ts` من النوع `Promise<void>` وترمي عند الفشل (فينتقل التنفيذ إلى `catch`).
-**الاختبار من الهاتف:** نعم (قراءة)
-**Commit message:** — (لا Commit)
-**الوقت المتوقع:** 5 دقائق
-**مخاطر:** لا شيء (ثغرة قديمة موثقة: `loginParent` كانت تتجاهل القيمة المرجعة؛ أُصلحت في هذا الإصدار).
-**الحالة:** `[ ] لم تُنفَّذ  |  [ ] CI أخضر  |  [ ] مغلقة`
-
----
-
-## البطاقة 4 — اختبار آلي: استعادة الجلسة وعدم تعيين OWNER_KEY عند الفشل (C8, C9, C16)
-**التغيير:** **مؤجلة حتى تخضر البطاقة 2.** تحتاج محاكاة سلسلة `supabase.from().select()` و`setSession`؛ تُكتب بعد أن تثبت بيئة الاختبار. أبلغني "تابع بطاقة 4" عندها.
-**الاختبار من الهاتف:** لا (BLOCKED؛ CI فقط)
-**Commit message:** `test(auth): rollback keeps previous session and OWNER_KEY (C8,C9,C16)`
-**الوقت المتوقع:** 30 دقيقة
-**مخاطر:** محاكاة معقدة؛ إن طالت فأبقِ C8/C9/C16 بحالة BLOCKED بدل اختبار هش.
-**الحالة:** `[ ] لم تُنفَّذ  |  [ ] CI أخضر  |  [ ] مغلقة`
-
----
-
-## البطاقة 5 — تصحيح وثيقة C3 (نص فقط)
-**التغيير:** في `docs/md/00_Foundation/TEST_PLAN.md` استبدل:
-`| C3 | وجود adoptionInProgress | رفض العملية المتزامنة |`
-بـ: `| C3 | استدعاء ثانٍ لدخول/اعتماد أثناء الأول في نفس التبويب | رفضه برمز AUTH_FLOW_BUSY (authFlowInProgress) |`
-**الاختبار من الهاتف:** نعم
-**Commit message:** `docs(tests): align C3 with authFlowInProgress`
-**الوقت المتوقع:** 3 دقائق
-**مخاطر:** لا شيء.
-**الحالة:** `[ ] لم تُنفَّذ  |  [ ] CI أخضر  |  [ ] مغلقة`
-
----
-
-## البطاقة 6 — اختبار يدوي بحساب اختبار فقط (C1, C14)
-**التغيير:** لا كود. بحساب **اختبار** (ليس من الحسابات الخمسة الحقيقية):
-1. C1: دخول بحساب جديد → الشاشة الرئيسية.
-2. C14: خروج ثم دخول بالحساب نفسه → التقدم المحلي كما هو.
-3. C15 (لا تقدم محلي مع OWNER_KEY): لا وسيلة آمنة من الهاتف → BLOCKED.
-
-**الاختبار من الهاتف:** نعم (C1، C14)؛ لا (C15 → BLOCKED)
-**Commit message:** — (لا Commit)
+**تنبيه للمنفّذ:** الاختبار غير مجرَّب. إن فشل CI فأصلح **الاختبار** فقط، ولا تُعدِّل `cloudSync.ts` لإنجاحه.
+**الاختبار من الهاتف:** نعم عبر CI (خطوة `Tests` في `ci-build.yml`)
+**Commit message:** `test(auth): cover AUTH_FLOW_BUSY and lock failure paths`
 **الوقت المتوقع:** 10 دقائق
-**مخاطر:** لا تبدّل حسابات عشوائياً ولا بحسابات حقيقية؛ إن ظهرت بيانات حساب آخر → أوقف فوراً وأبلغ.
+**مخاطر:** لا شيء (ملف اختبار جديد فقط). فشله يُسجَّل FAIL ويُفحص، ولا يُخفى.
 **الحالة:** `[ ] لم تُنفَّذ  |  [ ] CI أخضر  |  [ ] مغلقة`
 
 ---
 
-## البطاقة 7 — حالات تبقى BLOCKED (لا Commit)
-**التغيير:** لا شيء. سجّلها BLOCKED بأسبابها ولا تسجّل PASS:
-- C6: `locks.request` ينتظر ولا يفشل طبيعياً؛ يحتاج محاكاة.
-- C10–C11: مراجعة كود فقط.
-- C12–C13، C18–C19: تحتاج محاكاة supabase (بعد البطاقة 4 إن لزم).
-- C20: اختبار فعلي لكل رمز من العشرة غير ممكن من الهاتف.
+## بطاقة 4 — تصحيح نص الوثائق (C3/C5 و`adoptionInProgress`)
 
-**الاختبار من الهاتف:** لا (BLOCKED)
-**Commit message:** — (لا Commit)
-**الوقت المتوقع:** 2 دقيقة
-**مخاطر:** لا شيء.
+**التغيير:** تعديل نصوص فقط في `docs/md/هام/`:
+- `TEST_PLAN.md`: **استبدل** `| C3 | وجود adoptionInProgress | رفض العملية المتزامنة |` **بـ** `| C3 | عملية اعتماد ثانية أثناء الأولى (authFlowInProgress) | رفضها برمز AUTH_FLOW_BUSY |`
+- `TEST_PLAN.md`: **استبدل** نتيجة C5 `عدم حدوث اعتماد متزامن غير آمن` **بـ** `رفض الدخول برمز AUTH_FLOW_BUSY`
+- `UNIFIED_REFERENCE.md` §2.1: **احذف** سطر ``- `adoptionInProgress`: …`` وعدّل «ثلاث آليات» إلى «آليتين (`authFlowInProgress` + Web Locks)».
+- `UNIFIED_REFERENCE.md` §3.1: **استبدل** ``استخدام `authFlowInProgress` و`adoptionInProgress`.`` **بـ** ``استخدام `authFlowInProgress` مع Web Lock (أُلغي `adoptionInProgress`).``
+**الاختبار من الهاتف:** نعم (قراءة)
+**Commit message:** `docs(p1): align C3/C5 and drop adoptionInProgress`
+**الوقت المتوقع:** 5 دقائق
+**مخاطر:** لا شيء
 **الحالة:** `[ ] لم تُنفَّذ  |  [ ] CI أخضر  |  [ ] مغلقة`
 
 ---
 
-## البطاقة 8 — بوابة إغلاق Phase 1
-**التغيير:** لا كود. تُغلق Phase 1 عند: البطاقات 1 و3 و5 منفذة، البطاقة 2 خضراء في CI، C1/C14 نجحا يدوياً، الباقي BLOCKED بأسبابه، وCI أخضر (test + build).
-**الاختبار من الهاتف:** نعم (رؤية CI)
-**Commit message:** — (لا Commit)
-**الوقت المتوقع:** 2 دقيقة
-**مخاطر:** لا تبدأ Phase 2 قبل ذلك.
+## بطاقة 5 — حذف مفاتيح التخزين غير المعزولة عند تبديل الحساب (P1-01: Identity Contamination)
+
+**التغيير:** عند `different === true` في `adoptUser`، وعند Reset، تُحذف 5 مفاتيح بلا بادئة وضع تخص الطفل السابق. قائمة واحدة مُصدَّرة من `cloudSync.ts` ويستوردها `GuardianDashboard.tsx`. **حذف لا عزل.** عند `different === false` لا تُمس (LOCAL WINS).
+
+**أرقام الأسطر الفعلية (الأرشيف ٢١ت٢، طابقها مع GitHub):**
+- `cloudSync.ts` L221 `const OWNER_KEY = 'soroban_progress_owner';` ← نضيف القائمة تحته.
+- L226 `OUR_PREFIX` يطابق المفاتيح الخمسة كلها، وL124–135 (إنشاء Snapshot) وL162–170 (استعادته) يغطيانها ← فشل الاعتماد يُرجعها (Rollback).
+- L234 `wipeLocalProgress` يحذف مفاتيح `cloud:` فقط (L243 `startsWith('cloud:')`) ← **لا يمس المفاتيح الخمسة** (هذا هو سبب التلوث).
+- L382 `adoptUser`، L386 `const different = !owner || owner !== user.id;`، **L421–426** كتلة الحذف (L421 `if (different) {`، L422 `wipeLocalProgress();`، L424–426 ثلاث `removeItem`).
+- `GuardianDashboard.tsx` L20 الاستيراد، L598 `const localProgressKeys = [`، L629 `'soroban_certificates_history',` ثم `];`، L634 حلقة `removeItem`.
+
+### أ) `src/lib/cloudSync.ts`
+
+**كود قديم (L221):**
+```ts
+const OWNER_KEY = 'soroban_progress_owner';
+```
+**كود جديد (أبقِ السطر وأضف تحته):**
+```ts
+const OWNER_KEY = 'soroban_progress_owner';
+
+// مفاتيح بلا بادئة وضع تخص الطفل السابق: تُحذف عند تبديل الحساب وعند Reset
+export const UNSCOPED_CHILD_KEYS = [
+  'sorobania_progress_v2',
+  'sorobania_progress_v1',
+  'soroban_friends_weak_v1',
+  'sorobanmind-ghost-v1',
+  'soroban_companion',
+] as const;
+```
+
+**كود قديم (L424–426 داخل `if (different) {`):**
+```ts
+      localStorage.removeItem('soroban_avatar_pending_upload');
+      localStorage.removeItem('soroban_hero_key');
+      localStorage.removeItem('soroban_child_name');
+```
+**كود جديد (أبقِ الثلاثة وأضف بعدها، قبل `if (cloudProgress) {`):**
+```ts
+      for (const k of UNSCOPED_CHILD_KEYS) {
+        localStorage.removeItem(k);
+        if (localStorage.getItem(k) !== null) {
+          throw new CloudSyncError(
+            'Failed to clear previous account data',
+            'LOCAL_STATE_WIPE_FAILED',
+          );
+        }
+      }
+```
+(الرمي داخل `try` ← `restoreLocalStateSnapshot` ← خطأ ظاهر بالرمز نفسه. لا تضف شيئاً في فرع `different === false`.)
+
+### ب) `src/screens/GuardianDashboard.tsx`
+
+**كود قديم (L20):**
+```ts
+import { cloudSync } from '../lib/cloudSync';
+```
+**كود جديد:**
+```ts
+import { cloudSync, UNSCOPED_CHILD_KEYS } from '../lib/cloudSync';
+```
+**كود قديم (L629–630):**
+```ts
+  'soroban_certificates_history',
+];
+```
+**كود جديد:**
+```ts
+  'soroban_certificates_history',
+
+  // مفاتيح الطفل غير المعزولة (قائمة موحّدة من cloudSync)
+  ...UNSCOPED_CHILD_KEYS,
+];
+```
+
+### ج) الاختبار — ملف جديد `tests/adoptUser.cleanup.test.ts`
+
+```ts
+import { describe, it, expect, vi } from 'vitest';
+
+const { auth } = vi.hoisted(() => ({
+  auth: {
+    getSession: vi.fn(),
+    signInWithPassword: vi.fn(),
+    setSession: vi.fn(async () => ({ error: null })),
+    signOut: vi.fn(async () => ({ error: null })),
+  },
+}));
+
+vi.mock('../src/lib/supabase', () => {
+  const chain: any = {};
+  chain.select = () => chain;
+  chain.eq = () => chain;
+  chain.maybeSingle = async () => ({ data: null, error: null });
+  return { supabase: { auth, from: () => chain, rpc: async () => ({ error: null }) } };
+});
+vi.mock('../src/utils/appMode', () => ({ getMode: () => 'cloud' }));
+
+const KEYS = [
+  'sorobania_progress_v2', 'sorobania_progress_v1',
+  'soroban_friends_weak_v1', 'sorobanmind-ghost-v1', 'soroban_companion',
+];
+
+function fakeStorage(initial: Record<string, string>) {
+  const m = new Map(Object.entries(initial));
+  return {
+    get length() { return m.size; },
+    key: (i: number) => Array.from(m.keys())[i] ?? null,
+    getItem: (k: string) => (m.has(k) ? (m.get(k) as string) : null),
+    setItem: (k: string, v: string) => { m.set(k, String(v)); },
+    removeItem: (k: string) => { m.delete(k); },
+  };
+}
+
+const seed = (owner: string) => ({
+  soroban_progress_owner: owner,
+  soroban_welcome_seen: '1',
+  ...Object.fromEntries(KEYS.map((k) => [k, 'x'])),
+});
+
+async function loginAs(userId: string, initial: Record<string, string>) {
+  const ls = fakeStorage(initial);
+  vi.stubGlobal('localStorage', ls);
+  vi.stubGlobal('window', { setTimeout: vi.fn(), location: { reload: vi.fn() } });
+  vi.stubGlobal('navigator', { locks: { request: (_n: string, cb: () => unknown) => cb() } });
+  auth.getSession.mockResolvedValue({ data: { session: null }, error: null });
+  auth.signInWithPassword.mockResolvedValue({ data: { user: { id: userId } }, error: null });
+  vi.resetModules();
+  const { cloudSync } = await import('../src/lib/cloudSync');
+  await cloudSync.loginParent('a@b.c', 'x');
+  return ls;
+}
+
+describe('adoptUser: مفاتيح الطفل غير المعزولة', () => {
+  it('different=true ← تُحذف الخمسة وتبقى المفاتيح الأخرى', async () => {
+    const ls = await loginAs('B', seed('A'));
+    for (const k of KEYS) expect(ls.getItem(k)).toBeNull();
+    expect(ls.getItem('soroban_welcome_seen')).toBe('1');
+    expect(ls.getItem('soroban_progress_owner')).toBe('B');
+  });
+
+  it('different=false ← لا حذف (LOCAL WINS)', async () => {
+    const ls = await loginAs('B', seed('B'));
+    for (const k of KEYS) expect(ls.getItem(k)).toBe('x');
+  });
+});
+```
+**تنبيه للمنفّذ:** الاختبار غير مجرَّب (محاكاة `localStorage` و`window` لأن البيئة `node`). إن فشل CI فأصلح **الاختبار** فقط (المحاكاة)، لا منطق `adoptUser`.
+
+**الاختبار من الهاتف:** جزء `adoptUser` عبر CI (خطوة `Tests`). جزء Reset (واجهة): **لا (BLOCKED)** — يبقى `NOT RUN`، ويُتحقق منه بالمراجعة: الاستيراد + `...UNSCOPED_CHILD_KEYS` فقط.
+**Commit message:** `fix(auth): clear unscoped child keys on account switch and reset`
+**الوقت المتوقع:** 15 دقيقة
+**مخاطر:**
+- ⚠️ `different` يكون `true` أيضاً عند `owner === null` (أول دخول على جهاز بلا مالك). حينها يُحذف تقدم ألعاب لعبها الطفل قبل التسجيل. تنفيذ طلبك حرفياً (`different`). **بديل أحمى للبيانات:** غيّر شرط الحلقة إلى `if (owner && owner !== user.id) {` (حساب سابق فعلي فقط). أخبرني إن أردته.
+- بعد حذف `soroban_companion` يظهر اختيار الشخصية لهذا الطفل (سلوك `HeroDashboard` الحالي للقيمة الغائبة) — مقبول.
 **الحالة:** `[ ] لم تُنفَّذ  |  [ ] CI أخضر  |  [ ] مغلقة`
+
+---
+
+**بوابة Phase 1 → 2:** بطاقات 1–5 مغلقة؛ `AuthModal.tsx` **دون تغيير**، و`cloudSync.ts` يتغير فقط بالبطاقة 5. C2–C6 وتنظيف المفاتيح (بطاقة 5) تُغلق بنجاح CI؛ بقية C1–C20 (تتطلب حسابات على الهاتف) تبقى **BLOCKED** ولا تُسجَّل PASS.
