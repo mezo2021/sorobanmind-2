@@ -86,3 +86,15 @@
 - إن عُدّل كود: Commit مستقل `P1-01: <وصف>` ← `npm run build` (= `tsc && vite build`) ← الاختبارات.
 - التراجع: `git revert <hash>` فقط. لا مسح لـ localStorage أو بيانات المستخدمين.
 - **بوابة الإغلاق (Phase 1 → 2):** C1–C20 كلها PASS (أو BLOCKED موثقة بالسبب والبديل)، Build ناجح، تحديث سجل النتائج في `TEST_PLAN.md` §5. لا تبدأ Phase 2 قبل ذلك.
+
+
+## ملحق — Phase 1
+- شرط البدء: مطابقة `src/lib/cloudSync.ts` و`AuthModal.tsx` مع نسخة GitHub الحالية (الحالة الفعلية في `TEST_PLAN.md` §5 و`PROJECT_CONTROL.md`).
+- قرارات محسومة: عدم إعادة `adoptionInProgress`؛ الاكتفاء بـ `authFlowInProgress` + `withAuthLock` (`soroban-auth-adoption`)؛ `retryPendingAvatar()` محمية بالقفل والتحقق من المالك والهوية؛ عدم لمس `loadFromCloud()` أو `logoutParent()` ضمن `P1-01`.
+- قرارات معلّقة (تتطلب موافقة): حسم سلوك `D1` (انتظار القفل عبر التبويبات بدون `ifAvailable`) و`D2` (رفض الدخول عند غياب `navigator.locks`) في `TEST_PLAN.md`.
+- بيئة الاختبار: تشغيل `vitest` (`npm run test:run`) عبر GitHub Codespaces أو GitHub Actions من المتصفح لاختبارات التزامن والمحاكاة؛ ما لم يُنفَّذ فعلياً = `NOT RUN` أو `BLOCKED` ببديل «مراجعة كود» ولا يُسجَّل `PASS`.
+- Commit/تراجع: Commit مستقل للوثائق أو الكود عند الحاجة؛ التراجع عبر `git revert` فقط دون مساس بـ `localStorage` أو بيانات المستخدمين.
+
+| البند | الملفات | الاختبارات (انظر `TEST_PLAN.md`) |
+|---|---|---|
+| P1-01 | `src/lib/cloudSync.ts`، `src/components/AuthModal.tsx` | C1–C20 |
