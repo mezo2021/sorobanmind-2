@@ -121,3 +121,16 @@ Commit: `P2-07: replace shallow merge in loadFromCloud`. تراجع `git revert`
 
 ## بوابة الإغلاق Phase 2 → 3
 C21–C99 كلها PASS أو BLOCKED موثقة، Build ناجح بعد كل Commit، لا فقدان بيانات محلية، لا خلط Local/Cloud، وتحديث `TEST_PLAN.md` §5. غير ذلك لا تبدأ Phase 3.
+
+## ملحق توثيقي — حالة البدء والبيئة والاختبارات
+- **حالة البدء:** Phase 2 في حالة **توثيق وتخطيط فقط (لم تبدأ)**؛ لا يبدأ تنفيذ `P2-03` قبل إغلاق بوابة `Phase 1` (`C1–C20`) وفق الضوابط المعتمدة.
+- **حسم `progress_data` في `P2-07`:** `progress_data = {}` كائن صالح ويعيد نطاق التقدم إلى Defaults بعد `reset()`، أما عدم وجود صف أو كون `progress_data === null` فيُرفض ولا يُعدّل البيانات المحلية.
+- **بيئة الهاتف:** أي اختبار يعتمد على `vitest` ولم يُنفّذ فعلياً على هاتف Android يُسجَّل `NOT RUN` أو `BLOCKED` (مع السبب)، ولا يُسجَّل `PASS`.
+
+| البند | الملفات الأساسية | نطاق الاختبارات (`TEST_PLAN.md`) | الحالة الحالية |
+|---|---|---|---|
+| P2-03 | `src/data/srb/progress.ts` | C21–C40 | لم يبدأ / NOT RUN |
+| P2-04 | `src/screens/LessonScreen.tsx` | C41–C60 | لم يبدأ / NOT RUN |
+| P2-05 | `src/screens/MagicSecretsScreen.tsx` | C61–C81 | لم يبدأ / NOT RUN |
+| P2-07 | `src/lib/cloudSync.ts`، `src/screens/GuardianDashboard.tsx` | C82–C99 | لم يبدأ / NOT RUN |
+
