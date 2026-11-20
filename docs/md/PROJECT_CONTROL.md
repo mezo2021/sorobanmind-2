@@ -277,3 +277,51 @@ Phase 1 مغلقة لمجرد نجاح Build أو نجاح اختبارات وا
 
 ## 3. الخطوة التالية
 - مراجعة اختبارات `C1–C20` على مجموعات صغيرة وتوثيق ما هو مدعوم بالكود مقابل ما يحتاج تحققاً عملياً.
+
+للتوثيق :
+## 11. تحديث 2026-11-20 — فحص كامل لـPhase 1 (P1-01)
+
+### نتيجة الفحص
+فحص كامل لـ:
+- src/lib/cloudSync.ts (كامل)
+- src/components/AuthModal.tsx (كامل)
+
+**النتيجة: الكود سليم وظيفياً. لا تعديل برمجي مطلوب لـP1-01.**
+
+### الأدلة (بأرقام الأسطر)
+| البند | الموضع | الحكم |
+|---|---|---|
+| AUTH_LOCK_NAME='soroban-auth-adoption' | cloudSync L32 | ✅ |
+| authFlowInProgress + حارس | L34, L45-50 | ✅ |
+| غياب Web Locks → AUTH_FLOW_BUSY | L38-43 | ✅ (D2) |
+| انتظار القفل (بلا ifAvailable) | L60-63 | ✅ (D1) |
+| pullProgress: fetch-only | L273-307 | ✅ |
+| wipeLocalProgress يرمي | L234-269 | ✅ |
+| retryPendingAvatar: withAuthLock + تحقق | L322-380 | ✅ |
+| adoptUser: OWNER_KEY آخراً | L382-480 | ✅ |
+| Rollback يحافظ على CloudSyncError الأصلي | L460-470 | ✅ |
+| verifyOtp ignoreDuplicates:true | L600-612 | ✅ |
+| loginParent حفظ/استعادة | L545-598 | ✅ |
+| signOut({scope:'local'}) فقط | L488 | ✅ |
+| adoptionInProgress | كامل الملف | ✅ غير موجود |
+| CLOUD_SYNC_ERROR_MESSAGES (10) | AuthModal L83-125 | ✅ |
+| resolveAuthErrorMessage | L127-133 | ✅ |
+| guardian+privacy إلزاميتان | L155-158 | ✅ |
+| leaderboard اختيارية | L158, L268 | ✅ |
+
+### الثغرات المؤجلة (مسجّلة، لا تُصلح في P1-01)
+1. retryPendingAvatar يبتلع AUTH_FLOW_BUSY بلا إعادة جدولة → P2
+2. restorePreviousSession عند فشلها يُخفي الخطأ الأصلي → P2
+3. Rollback في adoptUser يرمي SESSION_RESTORE_FAILED بدل LOCAL_STATE_COMMIT_FAILED → إصلاح صغير، يُؤجل
+4. AUTH_REQUIRED وAVATAR_SYNC_FAILED رموز ميتة → P2
+5. resendOtp بلا withAuthLock → P2
+6. srb_progress لا يُمسح عند تبديل الحساب (D4) → P2-03
+
+### حالة C1–C20
+مدعومة بالكود (مراجعة منطق). لم تُنفّذ فعلياً.
+الحالة: BLOCKED (بيئة هاتف) / NOT RUN. لا PASS قبل التنفيذ.
+
+### الوثائق التي تحتاج تصحيحاً (متبقٍ)
+- TEST_PLAN.md — C3/C4/C5 + §5 جديد
+- UNIFIED_REFERENCE.md — §1.1 + §3.1
+- PROJECT_CONTROL.md — هذا القسم نفسه
