@@ -253,24 +253,35 @@ describe('accountVault', () => {
         // Expected simulated interruption.
       }
 
-      const recovery = recoverInterruptedSwitch(inner);
+      
+const hadPendingTxn = inner.getItem('vault:txn') !== null;
 
-      expect(inner.getItem('vault:txn')).toBeNull();
-      expect(activeSnapshot(inner)).toEqual(ACCOUNT_A);
+const recovery = recoverInterruptedSwitch(inner);
 
-      if (getActiveAccount(inner) === null) {
-        // The first login was rolled back.
-        expect(recovery).toBe('rolled-back');
+expect(inner.getItem('vault:txn')).toBeNull();
+expect(activeSnapshot(inner)).toEqual(ACCOUNT_A);
 
-        // No orphan destination vault may block a retry.
-        expect(
-          inner.getItem(`vault:account:${A}`),
-        ).toBeNull();
-      } else {
-        // The slot was written: first login was committed.
-        expect(getActiveAccount(inner)).toBe(A);
-        expect(recovery).toBe('completed');
-      }
+if (!hadPendingTxn) {
+  // Interruption happened before the journal was written.
+  expect(recovery).toBe('none');
+  expect(getActiveAccount(inner)).toBeNull();
+
+  expect(
+    inner.getItem(`vault:account:${A}`),
+  ).toBeNull();
+} else if (getActiveAccount(inner) === null) {
+  // The first login was rolled back.
+  expect(recovery).toBe('rolled-back');
+
+  // No orphan destination vault may block a retry.
+  expect(
+    inner.getItem(`vault:account:${A}`),
+  ).toBeNull();
+} else {
+  // The slot was written: first login was committed.
+  expect(getActiveAccount(inner)).toBe(A);
+  expect(recovery).toBe('completed');
+}
 
       // Either state must allow a clean attempt to log in again.
       switchAccount(inner, A);
