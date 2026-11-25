@@ -4,6 +4,13 @@ import { useProgressStore, type ProgressState } from '../store/progressStore';
 import { resolveDisplayName } from '../utils/resolveDisplayName';
 import { getMode } from '../utils/appMode';
 import type { User } from '@supabase/supabase-js';
+import {
+  switchAccount,
+  recoverInterruptedSwitch,
+  needsAdoption,
+  getActiveAccount,
+  getVaultStatus,
+} from '../utils/accountVault';
 
 export type CloudSyncErrorCode =
   | 'AUTH_FLOW_BUSY'
@@ -219,6 +226,19 @@ function normalizeLeaderboardPeriod(period: string = 'all'): string {
 }
 
 const OWNER_KEY = 'soroban_progress_owner';
+
+const MAIN_PROGRESS_KEY = 'cloud:sorobanmind-v2-progress';
+
+function accountNeedsAdoption(userId: string): boolean {
+  try {
+    const owner = localStorage.getItem(OWNER_KEY);
+    return owner !== userId ||
+      needsAdoption(localStorage, userId, owner);
+  } catch {
+    return true;
+  }
+}
+
 const DEVICE_KEYS = [
   'sorobanmind-v2-lang', 'soroban_number_style', 'soroban2d5-theme',
   'soroban_welcome_seen', OWNER_KEY,
@@ -228,45 +248,6 @@ const OUR_PREFIX = /^(soroban|sorobanmind|srb|sorobania)/;
 function requireCloudMode(): void {
   if (getMode() !== 'cloud') {
     throw new Error('Cloud operation blocked: app is not in Cloud mode.');
-  }
-}
-
-function wipeLocalProgress(): void {
-  requireCloudMode();
-
-  try {
-    const keysToRemove: string[] = [];
-
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-
-      if (!key || !key.startsWith('cloud:')) continue;
-
-      const bareKey = key.substring(6);
-
-      if (OUR_PREFIX.test(bareKey)) {
-        keysToRemove.push(key);
-      }
-    }
-
-    for (const key of keysToRemove) {
-      localStorage.removeItem(key);
-
-      if (localStorage.getItem(key) !== null) {
-        throw new Error(`Failed to remove key: ${key}`);
-      }
-    }
-
-    useProgressStore.getState().reset();
-  } catch (error) {
-    if (error instanceof CloudSyncError) {
-      throw error;
-    }
-
-    throw new CloudSyncError(
-      'Failed to clear previous cloud progress',
-      'LOCAL_STATE_WIPE_FAILED',
-    );
   }
 }
 
@@ -385,7 +366,6 @@ async function adoptUser(user: User): Promise<void> {
   const owner = localStorage.getItem(OWNER_KEY);
   const different = !owner || owner !== user.id;
 
-  // لا ننقل اختياراً معلّقاً من حساب سحابي سابق إلى حساب آخر.
   const pendingAvatar =
     localStorage.getItem('soroban_avatar_pending_upload') === '1' &&
     (!owner || owner === user.id);
@@ -394,7 +374,6 @@ async function adoptUser(user: User): Promise<void> {
     ? localStorage.getItem('soroban_hero_key')
     : null;
 
-  // جلب بيانات الحساب قبل لمس الحالة المحلية.
   const { data: profile, error: profileError } = await supabase
     .from('public_profiles')
     .select('avatar_id')
@@ -413,21 +392,65 @@ async function adoptUser(user: User): Promise<void> {
     : null;
 
   const cloudAvatarId: string | null = profile?.avatar_id ?? null;
-
-  // Snapshot قبل أول تغيير محلي.
   const snapshot = createLocalStateSnapshot();
 
-  try {
-    if (different) {
-      wipeLocalProgress();
+  let previousSlot: string | null = null;
+  let switched = false;
 
+  try {
+    // تحديد وجود خزنة الحساب الهدف قبل التبديل.
+    const hadVault = getVaultStatus(localStorage).vaults.includes(user.id);
+
+    // توافق مع الأجهزة القديمة التي لا تملك vault:slot.
+    if (getActiveAccount(localStorage) === null && owner) {
+      switchAccount(localStorage, owner);
+    }
+
+    previousSlot = getActiveAccount(localStorage);
+    switched = switchAccount(localStorage, user.id) === 'swapped';
+
+    if (different || switched) {
+      // قراءة تقدم الحساب الهدف قبل reset لأن persist قد يكتب الافتراضيات.
+      let restored: Record<string, unknown> | null = null;
+
+      try {
+        const raw = localStorage.getItem(MAIN_PROGRESS_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+
+        if (
+          parsed &&
+          typeof parsed.state === 'object' &&
+          parsed.state !== null
+        ) {
+          const {
+            childName: _childName,
+            parentName: _parentName,
+            ...rest
+          } = parsed.state as Record<string, unknown>;
+
+          restored = rest;
+        }
+      } catch {
+        restored = null;
+      }
+
+      useProgressStore.getState().reset();
+
+      // الحساب العائد: الخزنة المحلية لها الأولوية.
+      // الحساب الذي لا يملك خزنة: بيانات السحابة هي المصدر.
+      const source = (
+        hadVault ? (restored ?? cloudProgress) : cloudProgress
+      ) as typeof cloudProgress;
+
+      if (source) {
+        useProgressStore.setState(source);
+      }
+    }
+
+    if (different) {
       localStorage.removeItem('soroban_avatar_pending_upload');
       localStorage.removeItem('soroban_hero_key');
       localStorage.removeItem('soroban_child_name');
-
-      if (cloudProgress) {
-        useProgressStore.setState(cloudProgress);
-      }
     }
 
     if (cloudAvatarId) {
@@ -456,10 +479,16 @@ async function adoptUser(user: User): Promise<void> {
       applyLocalIdentity();
     }
 
-        // OWNER_KEY آخر خطوة بعد نجاح التغييرات المحلية.
+    // OWNER_KEY آخر كتابة محلية في مسار الاعتماد.
     localStorage.setItem(OWNER_KEY, user.id);
   } catch (error) {
     try {
+      recoverInterruptedSwitch(localStorage);
+
+      if (switched && previousSlot) {
+        switchAccount(localStorage, previousSlot);
+      }
+
       restoreLocalStateSnapshot(snapshot);
     } catch {
       throw new CloudSyncError(
@@ -478,9 +507,9 @@ async function adoptUser(user: User): Promise<void> {
     );
   }
 
-  if (different) {
-  window.setTimeout(() => window.location.reload(), 1200);
-}
+  if (different || switched) {
+    window.location.reload();
+  }
 }
 
 async function restorePreviousSession(
@@ -654,10 +683,38 @@ export const cloudSync = {
 
   async getSession() {
     const { data } = await supabase.auth.getSession();
+
     if (data.session) {
+      const sessionUser = data.session.user;
+
+      if (
+        getMode() === 'cloud' &&
+        accountNeedsAdoption(sessionUser.id)
+      ) {
+        // لا نعرض جلسة غير معتمدة أثناء عملية دخول جارية.
+        if (authFlowInProgress) {
+          return null;
+        }
+
+        try {
+          await withAuthLock(async () => {
+            await adoptUser(sessionUser);
+          });
+        } catch {
+          try {
+            await supabase.auth.signOut({ scope: 'local' });
+          } catch {
+            // فشل الخروج المحلي لا يسمح بإرجاع الجلسة.
+          }
+
+          return null;
+        }
+      }
+
       applyLocalIdentity();
       void retryPendingAvatar();
     }
+
     return data.session;
   },
 
