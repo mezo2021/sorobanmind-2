@@ -39,7 +39,17 @@ const DATA_A: Record<string, string> = {
   sorobania_progress_v2: '{"lv":3}',
   soroban_completed_enrichment: '["x"]',
   'sorobanmind-duels-v1': '{"matches":[]}',
-  'cloud:sorobanmind-v2-progress': '{"state":{"score":11,"childName":"A"}}',
+  'cloud:sorobanmind-v2-progress': JSON.stringify({
+    state: {
+      score: 11,
+      childName: 'A',
+      grades: { L1: { marker: 'A' } },
+      completedLevels: ['L1'],
+      anzanBadges: { marker: 'A' },
+      anzanAudioBadges: { marker: 'A' },
+      mentalArchivesExams: { marker: 'A' },
+    },
+  }),
   'cloud:soroban_mastery_badges': '{"badges":["A-gold"]}',
   'cloud:soroban_high_scores_v1': '{"best":99}',
 };
@@ -53,6 +63,16 @@ function persistedProgressScore(storage: TestStorage): unknown {
   if (!raw) return undefined;
   try {
     return JSON.parse(raw)?.state?.score;
+  } catch {
+    return undefined;
+  }
+}
+
+function persistedProgressState(storage: TestStorage): unknown {
+  const raw = storage.getItem('cloud:sorobanmind-v2-progress');
+  if (!raw) return undefined;
+  try {
+    return JSON.parse(raw)?.state;
   } catch {
     return undefined;
   }
@@ -156,13 +176,33 @@ describe('cloudSync Account Vault integration', () => {
 
     await loginAs(storage, B);
     expect(watched(storage)).toEqual({});
-    storage.setItem('cloud:sorobanmind-v2-progress', '{"state":{"score":22}}');
+    storage.setItem('cloud:sorobanmind-v2-progress', JSON.stringify({
+      state: {
+        score: 22,
+        childName: 'B',
+        grades: { L2: { marker: 'B' } },
+        completedLevels: ['L2'],
+        anzanBadges: { marker: 'B' },
+        anzanAudioBadges: { marker: 'B' },
+        mentalArchivesExams: { marker: 'B' },
+      },
+    }));
     storage.setItem('srb_progress', '{"b":1}');
     storage.setItem('cloud:soroban_mastery_badges', '{"badges":["B"]}');
 
     await loginAs(storage, C);
     expect(storage.getItem('srb_progress')).toBeNull();
-    storage.setItem('cloud:sorobanmind-v2-progress', '{"state":{"score":33}}');
+    storage.setItem('cloud:sorobanmind-v2-progress', JSON.stringify({
+      state: {
+        score: 33,
+        childName: 'C',
+        grades: { L3: { marker: 'C' } },
+        completedLevels: ['L3'],
+        anzanBadges: { marker: 'C' },
+        anzanAudioBadges: { marker: 'C' },
+        mentalArchivesExams: { marker: 'C' },
+      },
+    }));
     storage.setItem('srb_progress', '{"c":1}');
     storage.setItem('cloud:soroban_mastery_badges', '{"badges":["C"]}');
 
@@ -173,14 +213,35 @@ describe('cloudSync Account Vault integration', () => {
       ),
     );
     expect(persistedProgressScore(storage)).toBe(11);
+    expect(persistedProgressState(storage)).toMatchObject({
+      grades: { L1: { marker: 'A' } },
+      completedLevels: ['L1'],
+      anzanBadges: { marker: 'A' },
+      anzanAudioBadges: { marker: 'A' },
+      mentalArchivesExams: { marker: 'A' },
+    });
 
     await loginAs(storage, B);
     expect(persistedProgressScore(storage)).toBe(22);
+    expect(persistedProgressState(storage)).toMatchObject({
+      grades: { L2: { marker: 'B' } },
+      completedLevels: ['L2'],
+      anzanBadges: { marker: 'B' },
+      anzanAudioBadges: { marker: 'B' },
+      mentalArchivesExams: { marker: 'B' },
+    });
     expect(storage.getItem('srb_progress')).toBe('{"b":1}');
     expect(storage.getItem('cloud:soroban_mastery_badges')).toBe('{"badges":["B"]}');
 
     await loginAs(storage, C);
     expect(persistedProgressScore(storage)).toBe(33);
+    expect(persistedProgressState(storage)).toMatchObject({
+      grades: { L3: { marker: 'C' } },
+      completedLevels: ['L3'],
+      anzanBadges: { marker: 'C' },
+      anzanAudioBadges: { marker: 'C' },
+      mentalArchivesExams: { marker: 'C' },
+    });
     expect(storage.getItem('srb_progress')).toBe('{"c":1}');
     expect(storage.getItem('cloud:soroban_mastery_badges')).toBe('{"badges":["C"]}');
 
