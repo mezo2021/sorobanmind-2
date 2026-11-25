@@ -21,6 +21,7 @@ import { cloudSync } from '../lib/cloudSync';
 
 import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
 import { resolveDisplayName } from '@/utils/resolveDisplayName';
+import { isVaultKey } from '../utils/accountVault';
 import { getMode } from '@/utils/appMode';
 
 // ═══ SRB Stores ═══
@@ -154,6 +155,8 @@ function sanitizeProgressSnapshot(key: string, value: string): string {
 }
 
 function isSafeToExport(key: string): boolean {
+  if (isVaultKey(key)) return false;
+
   let bareKey = key;
   if (key.startsWith('local:')) bareKey = key.substring(6);
   else if (key.startsWith('cloud:')) bareKey = key.substring(6);
