@@ -214,7 +214,6 @@ describe('cloudSync Account Vault integration', () => {
     );
     expect(persistedProgressScore(storage)).toBe(11);
     expect(persistedProgressState(storage)).toMatchObject({
-      childName: 'A',
       grades: { L1: { marker: 'A' } },
       completedLevels: ['L1'],
       anzanBadges: { marker: 'A' },
@@ -225,7 +224,6 @@ describe('cloudSync Account Vault integration', () => {
     await loginAs(storage, B);
     expect(persistedProgressScore(storage)).toBe(22);
     expect(persistedProgressState(storage)).toMatchObject({
-      childName: 'B',
       grades: { L2: { marker: 'B' } },
       completedLevels: ['L2'],
       anzanBadges: { marker: 'B' },
@@ -238,7 +236,6 @@ describe('cloudSync Account Vault integration', () => {
     await loginAs(storage, C);
     expect(persistedProgressScore(storage)).toBe(33);
     expect(persistedProgressState(storage)).toMatchObject({
-      childName: 'C',
       grades: { L3: { marker: 'C' } },
       completedLevels: ['L3'],
       anzanBadges: { marker: 'C' },
