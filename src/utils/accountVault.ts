@@ -1,4 +1,3 @@
-
 /**
  * Account Vault — isolated account storage engine
  *
@@ -46,6 +45,8 @@ export const ACCOUNT_BOUND_DIRECT_KEYS = [
   'sorobanmind-ghost-v1',
   'soroban_companion',
   'soroban_secrets_best_scores',
+  'soroban_completed_enrichment',
+  'sorobanmind-duels-v1',
 ] as const;
 
 /**

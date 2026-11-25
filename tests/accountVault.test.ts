@@ -1,4 +1,3 @@
-
 import { describe, it, expect } from 'vitest';
 
 import {
@@ -417,5 +416,22 @@ if (!hadPendingTxn) {
 
     expect(s.getItem(`vault:account:${A}`))
       .toBe(existingVault);
+  });
+
+  it('treats reconciled direct child-data keys as account data', () => {
+    for (const k of [
+      'soroban_completed_enrichment',
+      'sorobanmind-duels-v1',
+    ]) {
+      expect(isAccountBoundKey(k)).toBe(true);
+    }
+
+    for (const k of [
+      'soroban_laser_theme_v1',
+      'sorobania_muted',
+      'soroban_local_player_id',
+    ]) {
+      expect(isAccountBoundKey(k)).toBe(false);
+    }
   });
 });
