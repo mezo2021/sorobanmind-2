@@ -1,5 +1,5 @@
 // src/screens/ProfileScreen.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ArrowRight, ArrowLeft, Globe, Check, Sparkles, Palette
@@ -46,6 +46,7 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
   const [selectedTheme, setSelectedTheme] = useState(initialData?.theme_key || 'theme_cosmic');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [isSaving, setIsSaving] = useState(false);
+  const savingRef = useRef(false);
 
   const currentAvatar = AVATARS.find(a => a.id === selectedAvatarId) || AVATARS[0];
 
@@ -130,8 +131,9 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
   };
 
   const handleSave = async () => {
-    if (isSaving) return;
+    if (savingRef.current) return;
 
+    savingRef.current = true;
     setIsSaving(true);
 
     try {
@@ -150,6 +152,13 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
 
       // 2. المزامنة السحابية (فقط في وضع Cloud)
       if (isCloudMode) {
+        // تسجيل طلب الرفع قبل الاتصال بالسحابة لضمان إمكانية إعادة المحاولة.
+        try {
+          localStorage.setItem('soroban_avatar_pending_upload', '1');
+        } catch (error) {
+          console.warn('[ProfileScreen] Could not persist pending avatar flag:', error);
+        }
+
         const synced = await cloudSync.setMyAvatar(selectedAvatarId);
 
         if (!synced) {
@@ -160,12 +169,33 @@ export default function ProfileScreen({ onBack, onSave, initialData }: ProfileSc
           );
           return;
         }
+
+        // حذف العلم فقط إذا كانت الشخصية الحالية ما زالت هي التي رُفعت.
+        // إذا اختيرت شخصية أحدث أثناء انتظار الطلب، يبقى العلم لإعادة المحاولة.
+        try {
+          if (
+            localStorage.getItem('soroban_hero_key') === selectedAvatarId &&
+            localStorage.getItem('soroban_avatar_pending_upload') === '1'
+          ) {
+            localStorage.removeItem('soroban_avatar_pending_upload');
+          }
+        } catch (error) {
+          console.warn('[ProfileScreen] Could not clear pending avatar flag:', error);
+        }
       }
 
       // 3. رسالة النجاح (فقط بعد نجاح كلا الحفظين)
       alert(lang === 'ar' ? 'تم حفظ التغييرات بنجاح!' : 'Changes saved successfully!');
       if (onBack) onBack();
+    } catch (error) {
+      console.error('[ProfileScreen] Failed to save profile:', error);
+      alert(
+        lang === 'ar'
+          ? 'تعذر حفظ التغييرات محلياً. يرجى المحاولة مجدداً.'
+          : 'Failed to save your changes locally. Please try again.'
+      );
     } finally {
+      savingRef.current = false;
       setIsSaving(false);
     }
   };
