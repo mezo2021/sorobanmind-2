@@ -451,6 +451,9 @@ async function adoptUser(user: User): Promise<void> {
       localStorage.removeItem('soroban_avatar_pending_upload');
       localStorage.removeItem('soroban_hero_key');
       localStorage.removeItem('soroban_child_name');
+      if (owner && owner !== user.id) {
+  localStorage.removeItem('soroban_child_full_name');
+      }
     }
 
     if (cloudAvatarId) {

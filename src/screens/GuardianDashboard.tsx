@@ -739,6 +739,7 @@ const handleReset = () => {
   // الشهادات القديمة — تنظيف
   'soroban_kids_certificate_ready',
   'soroban_certificates_history',
+    'soroban_child_full_name',
 ];
 
   try {
