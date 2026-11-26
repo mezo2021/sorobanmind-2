@@ -93,6 +93,11 @@ export function RoleSelection({ onSelect, playSound }: RoleSelectionProps) {
     useProgressStore.getState().setChildName('');
     useProgressStore.getState().setParentName('');
     localStorage.removeItem(NAME_STORAGE_KEY);
+    try {
+  localStorage.removeItem('soroban_child_full_name');
+} catch {
+  // تجاهل خطأ تنظيف الاسم الكامل
+    }
     setIsLoggedIn(false);
   };
 
