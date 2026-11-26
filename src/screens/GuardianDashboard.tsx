@@ -1068,7 +1068,16 @@ if (
     </button>
   </>
 )}
-
+{(() => {
+  let v: string | null = null;
+  try { v = localStorage.getItem('soroban_emergency_used_at'); } catch { /* ignore */ }
+  const text = v === null
+    ? pickLang({ ar: 'لا يوجد استخدام مسجل لرمز الطوارئ', en: 'No recorded emergency code use' }, lang)
+    : Number.isNaN(Date.parse(v))
+      ? pickLang({ ar: 'قيمة تسجيل غير صالحة', en: 'Invalid recorded value' }, lang)
+      : pickLang({ ar: 'آخر استخدام لرمز الطوارئ: ', en: 'Last emergency code use: ' }, lang) + new Date(v).toLocaleString(lang === 'ar' ? 'ar' : 'en-US');
+  return <p className="text-xs text-white/60 mt-2 mb-2">{text}</p>;
+})()}
         <input type="file" accept=".json" ref={fileInputRef} onChange={handleRestore} style={{ display: 'none' }} />
 
         <button type="button" onClick={handlePreviewToggle} className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/30 transition-all text-xs font-bold font-body">

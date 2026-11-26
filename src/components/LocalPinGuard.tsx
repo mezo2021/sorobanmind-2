@@ -1,5 +1,5 @@
 // src/components/LocalPinGuard.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   LockKeyhole, ShieldCheck, KeyRound, Eye, EyeOff, RefreshCw, AlertTriangle, Copy,
 } from 'lucide-react';
@@ -11,6 +11,7 @@ const KEYS = {
   pinSalt: 'soroban_parent_pin_salt',
   recoveryHash: 'soroban_parent_pin_recovery_hash',
   recoverySalt: 'soroban_parent_pin_recovery_salt',
+  emergencyUsedAt: 'soroban_emergency_used_at',
   
   pinAttempts: 'soroban_parent_pin_attempts',
   pinLockUntil: 'soroban_parent_pin_lock_until',
@@ -80,6 +81,7 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
   const [remaining, setRemaining] = useState(0);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const recoveringRef = useRef(false);
 
   const t = (ar: string, en: string) => pickLang({ ar, en }, lang);
 
@@ -251,15 +253,17 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
   }
 
   async function handleRecovery() {
-    if (busy || isLocked()) return;
+    if (busy || isLocked() || recoveringRef.current) return;
     const value = recoveryInput.trim();
     if (!/^\d{8}$/.test(value)) {
       setError(t('أدخل رمزًا مكونًا من 8 أرقام.', 'Enter an 8-digit code.'));
       return;
     }
+    recoveringRef.current = true;
     setBusy(true);
     try {
-      let authorized = value === EMERGENCY_CODE;
+      const viaEmergency = value === EMERGENCY_CODE;
+      let authorized = viaEmergency;
       if (!authorized) {
         const salt = localStorage.getItem(KEYS.recoverySalt);
         const savedHash = localStorage.getItem(KEYS.recoveryHash);
@@ -268,20 +272,42 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
           authorized = candidate === savedHash;
         }
       }
-      if (authorized) {
-        clearAllFailures();
-        setRecoveryInput('');
-        setPin('');
-        setFirstPin('');
-        setError('');
-        setMode('newPin');
-      } else {
+      if (!authorized) {
         setRecoveryInput('');
         registerRecFailure();
+        return;
       }
+
+      let warning = '';
+      if (viaEmergency) {
+        try {
+          localStorage.setItem(KEYS.emergencyUsedAt, new Date().toISOString());
+        } catch {
+          warning = t('تعذر تسجيل وقت استخدام رمز الطوارئ.', 'Could not record the emergency code usage time.');
+        }
+      } else {
+        try {
+          localStorage.removeItem(KEYS.recoveryHash);
+          localStorage.removeItem(KEYS.recoverySalt);
+          if (localStorage.getItem(KEYS.recoveryHash) !== null || localStorage.getItem(KEYS.recoverySalt) !== null) {
+            throw new Error('Verify failed');
+          }
+        } catch {
+          setError(t('تعذر إبطال رمز الاسترداد. لم يتم تغيير PIN.', 'Could not invalidate the recovery code. PIN was not changed.'));
+          return;
+        }
+      }
+
+      clearAllFailures();
+      setRecoveryInput('');
+      setPin('');
+      setFirstPin('');
+      setError(warning);
+      setMode('newPin');
     } catch {
       setError(t('تعذر التحقق من رمز الاسترداد.', 'Recovery verification failed.'));
     } finally {
+      recoveringRef.current = false;
       setBusy(false);
     }
   }
