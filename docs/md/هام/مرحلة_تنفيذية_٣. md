@@ -1,0 +1,1861 @@
+### الخطة التنفيذية النهائية للمرحلة الثالثة – SorobanMind-2
+
+### 0\. ضوابط التنفيذ الملزمة
+
+هذه الخطة مبنية على فحص نسخة المشروع الموجودة في الأرشيف `مراجع التطبيق ٢٦ت٢.zip`، وتحديداً مجلد التطبيق `التطبيق الحالي/sorobanmind-2-main`، وعلى الملفات الفعلية التي أمكن فحصها داخله.
+
+هناك حدّان يجب عدم تجاوزهما:
+
+* ملف `src/lib/supabase.ts` غير موجود في نسخة ZIP التي فُحصت، رغم وجود استيرادات له. لذلك لا تتضمن الخطة افتراضات عن محتواه أو مفاتيحه. أي خطوة تتطلب فحصه تُنفّذ بعد فتح النسخة الموجودة في GitHub، وتُسجّل منفصلة عن تعديلات التطبيق.
+
+* لم أعثر على ملف `P3-00-Auto-Sync.patch` ضمن الأرشيف أو ملفات المكتبة التي أمكن الوصول إليها؛ لذلك لا أعتبره مرجعاً مفحوصاً ولا أنسب إليه أي تعديل.
+
+### الملفات المحمية في جميع البطاقات
+
+| الملف                        | القيد                                                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| src/utils/accountVault.ts    | ممنوع تعديله. لا تغيير switchAccount أو recoverInterruptedSwitch أو needsAdoption أو آلية ملكية الحساب. |
+| src/store/progressStore.ts   | ممنوع تعديله. لا تغيير الحقول أو الحالة أو Persist أو طرق التخزين.                                      |
+| مخطط Supabase وSQL وRLS وRPC | لا تعديل ضمن هذه المرحلة.                                                                               |
+| مفاتيح الهوية وملكية الحساب  | لا إعادة تسمية أو تغيير.                                                                                |
+| مراحل 1 و2 والبطاقات المغلقة | لا إعادة فتح ولا إعادة تصميم ولا إعادة تنفيذ.                                                           |
+
+ويُحافظ على بيانات Payload الحالية، بما فيها `language` و`soundEnabled` و`voiceEnabled` و`hapticsEnabled`؛ استبعادها من محفزات Auto-Sync لا يعني حذفها من البيانات المرفوعة.
+
+### ترتيب البطاقات
+
+التنفيذ وفق الترتيب الآتي، مع إبقاء P3-08 مستقلة كما هو محدد:
+
+* 3.1 – P3-00: Auto-Sync.
+
+* 3.2 – P3-02: إصلاح خريطة Aya القديمة.
+
+* 3.3 – P3-01: مراجعة Theme Key فقط.
+
+* 3.4 – P3-04: الاختبارات ضمن النشر.
+
+* 3.5 – P3-05: فحوص Supabase.
+
+* 3.8 – P3-08: إصلاح اسم البطل حسب اللغة.
+
+* 3.6 – P3-06: الاختبار الشامل.
+
+* 3.7 – P3-07: الإغلاق الوثائقي.
+
+كل بطاقة لها فرع وCommit وPR مستقل. لا تُدمج بطاقة قبل اجتياز معايير قبولها.
+
+### 3.1 – P3-00: Auto-Sync
+
+حرجة – أولوية التنفيذ الأولى
+
+### الهدف
+
+إضافة رفع تلقائي آمن لتغييرات التقدم في Cloud Mode، مع إبقاء الحفظ اليدوي والاستعادة وتبديل الحسابات كما هي، ومنع تسرب بيانات حساب إلى حساب آخر.
+
+### الملفات المسموح تعديلها
+
+* `src/lib/cloudSync.ts`
+
+* `src/main.tsx`
+
+* `src/screens/RoleSelection.tsx`
+
+* `src/screens/GuardianDashboard.tsx` — إضافة ضرورية لحماية فترة الاستعادة والـRollback.
+
+* ملف اختبار جديد: `src/lib/cloudSync.autoSync.test.ts` أو المسار المتوافق مع تنظيم الاختبارات الحالي.
+
+### الملفات الممنوع تعديلها
+
+* `src/utils/accountVault.ts`
+
+* `src/store/progressStore.ts`
+
+* `src/lib/supabase.ts` في هذه البطاقة.
+
+* أي SQL أو Schema أو RLS أو RPC.
+
+* ملفات المرحلة الأولى والثانية التي لا تحتاجها هذه البطاقة.
+
+### أ. تعديلات `src/lib/cloudSync.ts`
+
+### 1\. نقطة القفل الحالية
+
+المقطع الفعلي:
+
+```ts
+const AUTH_LOCK_NAME = 'soroban-auth-adoption';
+let authFlowInProgress = false;
+
+async function withAuthLock<T>(
+  task: () => Promise<T>,
+): Promise<T> {
+  if (
+    typeof navigator === 'undefined' ||
+    !navigator.locks
+  ) {
+    throw new CloudSyncError(
+      'Authentication lock unavailable',
+      'AUTH_FLOW_BUSY',
+    );
+  }
+
+  if (authFlowInProgress) {
+    throw new CloudSyncError(
+      'Authentication flow already in progress',
+      'AUTH_FLOW_BUSY',
+    );
+  }
+
+  authFlowInProgress = true;
+
+  try {
+    return await navigator.locks.request(
+      AUTH_LOCK_NAME,
+      async () => task(),
+    );
+  } finally {
+    authFlowInProgress = false;
+  }
+}
+```
+
+التعديل المطلوب:
+
+* أبقِ اسم القفل `soroban-auth-adoption` كما هو.
+
+* لا تنشئ قفلاً جديداً باسم آخر لعمليات المصادقة.
+
+* أضف نظام تعليق Auto-Sync قبل دخول أي تدفق مصادقة، ثم أزل تعليق هذا التدفق فقط بعد انتهائه.
+
+* احتفظ بسلوك `authFlowInProgress`، ولا تجعل فحصه أو تحريره يسمحان بتشغيل رفع أثناء انتقال المصادقة.
+
+* لا تستدعِ `withAuthLock` من داخل دالة تعمل أصلاً داخل القفل؛ هذا يؤدي إلى قفل متداخل أو انتظار ذاتي.
+
+أضف قبل `withAuthLock` نظام تعليق متعدد الأسباب. المطلوب أن يكون لكل استدعاء رمز مستقل، لا مجرد `Set` لأسماء الأسباب، حتى لا يؤدي تحرير تعليق واحد إلى تحرير تعليق آخر يحمل الاسم نفسه.
+
+شكل الواجهة المطلوبة:
+
+```ts
+type AutoSyncRelease = () => void;
+
+function suspendAutoSync(reason: string): AutoSyncRelease {
+  // أضف تعليقاً مستقلاً ذا معرّف فريد.
+  // ألغِ المؤقت المجدول.
+  // أعد دالة تحرير idempotent تحرر هذا التعليق وحده.
+}
+```
+
+ويجب أن يكون التحرير آمناً عند استدعائه أكثر من مرة.
+
+### 2\. التحقق من ملكية Vault قبل الرفع
+
+يوجد في الملف:
+
+```ts
+const OWNER_KEY = 'soroban_progress_owner';
+const MAIN_PROGRESS_KEY = 'cloud:sorobanmind-v2-progress';
+```
+
+وتوجد الدالة:
+
+```ts
+function accountNeedsAdoption(userId: string) {
+  const owner = localStorage.getItem(OWNER_KEY);
+  return needsAdoption(localStorage, userId, owner);
+}
+```
+
+أضف دالة تحقق داخل `cloudSync.ts` فقط، مستفيدة من واجهات `accountVault.ts` الحالية دون تعديلها.
+
+شروط السماح بالرفع:
+
+* الحصول على UID من جلسة Supabase الحالية.
+
+* التحقق من أن `supabase.auth.getUser()` يعيد UID نفسه.
+
+* قراءة `OWNER_KEY` ومطابقته مع UID.
+
+* قراءة `getVaultStatus(localStorage)` والتأكد من عدم وجود معاملة معلقة.
+
+* قراءة `getActiveAccount(localStorage)` والتأكد من أن الحساب النشط هو UID نفسه.
+
+* رفض الرفع إذا كانت ملكية الحساب غير محسومة، أو كان هناك تعارض بين UID و`OWNER_KEY` وVault.
+
+* رفض الرفع إذا كانت هناك عملية adoption أو تبديل حساب أو تسجيل خروج جارية.
+
+قاعدة حاسمة: لا تعتبر `active === null` دليلاً كافياً على أن البيانات تخص المستخدم الحالي. إذا لم يكن بالإمكان إثبات ملكية الحالة المحلية بصورة قاطعة، يُمنع الرفع وتُترك البيانات المحلية كما هي إلى أن تتم تسوية الحساب عبر التدفق الموجود.
+
+لا تستخدم `session` وحدها لإثبات ملكية البيانات.
+
+### 3\. فصل التحقق عن تدفق adoption
+
+توجد الدالة `adoptUser(user)`، وتستخدم حالياً `switchAccount` و`recoverInterruptedSwitch` وتتعامل مع Snapshot وRollback.
+
+* لا تعِد كتابة `adoptUser`.
+
+* لا تغيّر ترتيب Snapshot أو تبديل Vault أو كتابة `OWNER_KEY`.
+
+* لا تنقل عمليات adoption إلى Auto-Sync.
+
+* لا تجعل Auto-Sync يستدعي `getSession()` إذا كان ذلك قد يدخل مسار adoption ويطلب القفل مرة أخرى.
+
+* عند الحاجة للتحقق من الجلسة داخل Auto-Sync، استخدم استدعاءات Supabase المباشرة للتحقق من الجلسة والمستخدم، ثم تحقق من Vault، دون استدعاء مسار adoption.
+
+### 4\. إنشاء Queue واحدة وDebounce
+
+أضف حالة داخلية في `cloudSync.ts` لإدارة:
+
+* مؤقت Debounce واحد.
+
+* وعد رفع جارٍ واحد فقط.
+
+* رقم إصدار للتغييرات المحلية `dirtyVersion`.
+
+* رقم إصدار آخر رفع ناجح `uploadedVersion`.
+
+* جيل للمصادقة أو المزامنة لإبطال الأعمال القديمة.
+
+* حالة التهيئة `initialized`.
+
+* حالة التحقق من ملكية الحساب.
+
+المطلوب:
+
+* `Debounce = 1500ms` بالضبط.
+
+* لا توجد أكثر من Queue واحدة.
+
+* لا يبدأ رفع تلقائي لمجرد فتح التطبيق.
+
+* لا يبدأ رفع تلقائي عند أول تهيئة.
+
+* لا يبدأ رفع عند أول اختيار Cloud Mode من دون تغيير لاحق في التقدم.
+
+* إذا تغير التقدم أثناء الرفع، يجب أن تنتهي العملية برفع أحدث Snapshot بعد انتهاء الرفع الجاري.
+
+* لا تبدأ عمليتي Upsert متوازيتين.
+
+* لا تفقد أحدث تغيير بسبب وصول تغيير جديد أثناء رفع سابق.
+
+### 5\. تحديد التغييرات التي تُشغّل الرفع
+
+استخدم:
+
+```ts
+useProgressStore.subscribe(...)
+```
+
+ولا تعدّل `progressStore.ts`.
+
+أنشئ Snapshot مخصصاً للمقارنة بين التغييرات، ويستثني فقط الإعدادات التي لا ينبغي أن تشغّل الرفع:
+
+* `language`
+
+* `soundEnabled`
+
+* `voiceEnabled`
+
+* `hapticsEnabled`
+
+لكن عند تنفيذ `saveToCloud` يجب أن تبقى هذه القيم ضمن Payload الناتج من `extractPureState`.
+
+لا تحذف هذه الحقول من `extractPureState`، ولا تعدّل بنية Payload.
+
+### 6\. تنفيذ الرفع التلقائي
+
+أنشئ دالة داخلية مستقلة تنفذ الرفع التلقائي، وتلتزم بالتالي:
+
+* التحقق من Cloud Mode.
+
+* التأكد من عدم وجود تعليق Auto-Sync لأي سبب.
+
+* التأكد من عدم وجود انتقال مصادقة.
+
+* التحقق من UID الحالي.
+
+* التحقق من `OWNER_KEY`.
+
+* التحقق من Vault النشط وعدم وجود معاملة معلقة.
+
+* التحقق من جيل المصادقة وجيل المزامنة قبل إرسال الطلب.
+
+* أخذ Snapshot حديث من `useProgressStore`.
+
+* تنفيذ Upsert باستخدام الجدول والحقول الموجودة حالياً في `saveToCloud`.
+
+* عدم اعتبار الرفع ناجحاً إلا بعد عودة Supabase بنجاح.
+
+* إذا تغيرت البيانات أثناء الرفع، جدولة رفع أحدث Snapshot بعد انتهاء العملية الحالية.
+
+لا ترفع Snapshot تم التقاطه قبل adoption أو تبديل الحساب ثم تستخدمه بعد انتقال UID.
+
+### 7\. حماية `saveToCloud`
+
+المقطع الفعلي الحالي:
+
+```ts
+async saveToCloud() {
+  requireCloudMode();
+  const user = await this.getCurrentUser();
+  const pureData = extractPureState(useProgressStore.getState());
+
+  // تنفيذ upsert على soroban_progress
+}
+```
+
+المطلوب:
+
+* احتفظ بدالة الحفظ اليدوي.
+
+* اجعل الحفظ اليدوي يستخدم نفس قواعد إثبات الملكية.
+
+* اجعل عمليات الحفظ اليدوي والرفع التلقائي متسلسلة باستخدام القفل الحالي نفسه.
+
+* لا تسمح لرفع تلقائي أن يتجاوز حفظاً يدوياً جارياً.
+
+* لا تجعل الحفظ اليدوي يعتمد على مؤقت Debounce.
+
+* لا تغيّر الجدول أو أسماء الأعمدة أو شكل البيانات.
+
+إذا كانت الدالة تُستدعى داخل قفل قائم، استخدم دالة داخلية لا تطلب القفل مرة أخرى.
+
+### 8\. حماية `loadFromCloud`
+
+المقطع الفعلي الحالي:
+
+```ts
+async loadFromCloud(beforeApply?: () => void) {
+  requireCloudMode();
+
+  const user = await this.getCurrentUser();
+
+  // قراءة بيانات soroban_progress
+  // beforeApply()
+  // reset / setState
+  // تطبيق بيانات الحساب
+}
+```
+
+المطلوب:
+
+* تعليق Auto-Sync قبل بدء الاستعادة.
+
+* تعليق الرفع التلقائي طوال عملية القراءة والتطبيق.
+
+* استخدام القفل المشترك لمنع التداخل مع رفع أو انتقال حساب.
+
+* عدم استدعاء `withAuthLock` بشكل متداخل.
+
+* إبقاء Snapshot وRollback الموجودين في `GuardianDashboard.tsx`.
+
+* عند فشل الاستعادة، لا تسمح برفع الحالة الجزئية قبل اكتمال Rollback في الواجهة.
+
+ولهذا السبب لا يكفي تعليق داخلي داخل `loadFromCloud` وحده؛ إذ إن Rollback الحالي يحدث في `GuardianDashboard` بعد رفض Promise الاستعادة.
+
+### ب. تعديل `src/screens/GuardianDashboard.tsx`
+
+السبب: الدالة الحالية `handleCloudLoad` تحتفظ بنسخة محلية ثم تستدعي `cloudSync.loadFromCloud`، وتعيد الحالة عند الفشل. يجب أن يظل Auto-Sync معلقاً حتى ينتهي هذا الـRollback.
+
+المطلوب:
+
+* قبل استدعاء `cloudSync.loadFromCloud`، استدعِ واجهة التعليق التي أضيفت إلى `cloudSync`.
+
+* احتفظ بدالة التحرير في متغير محلي.
+
+* نفّذ الاستعادة الحالية كما هي عند الفشل.
+
+* في `finally`، حرر تعليق الواجهة بعد اكتمال الاستعادة أو نجاح التحميل.
+
+* لا تحذف `createLocalStateSnapshot` أو `restoreLocalStateSnapshot`.
+
+* لا تحذف استعادة `heroKey` أو `childName` أو `parentName`.
+
+* لا تحذف منطق `rollbackFailed` أو إعادة التحميل الحالية.
+
+صيغة الاستخدام المطلوبة:
+
+```ts
+const releaseAutoSync =
+  cloudSync.suspendAutoSync('cloud-restore-ui');
+
+try {
+  // استدعاء loadFromCloud الحالي
+  // مع الإبقاء على Snapshot وbeforeApply
+} catch (error) {
+  // أبقِ Rollback الحالي كاملاً
+  throw error;
+} finally {
+  releaseAutoSync();
+}
+```
+
+يجب أن يتعايش هذا التعليق مع تعليق `loadFromCloud` الداخلي؛ تحرير أحدهما لا يحرر الآخر.
+
+### ج. تعديل `logoutParent`
+
+المقطع الفعلي الحالي:
+
+```ts
+async logoutParent(force = false): Promise<boolean> {
+  if (!force && getMode() === 'cloud') {
+    try {
+      await this.saveToCloud();
+    } catch (error) {
+      console.error('[cloudSync] Save before logout failed:', error);
+      return false;
+    }
+  }
+
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    // معالجة الخطأ الحالية
+  }
+
+  return true;
+}
+```
+
+التعديل:
+
+* أبقِ الحفظ اليدوي قبل تسجيل الخروج كما هو من حيث السلوك.
+
+* إذا فشل الحفظ، أوقف تسجيل الخروج وأعد `false`.
+
+* بعد نجاح الحفظ، علّق Auto-Sync.
+
+* نفّذ `signOut` داخل `withAuthLock`.
+
+* لا تسمح لأي رفع جديد بالبدء بين الحفظ وتسجيل الخروج.
+
+* لا تغيّر معنى `force` أو سلوك الحفظ الحالي دون اختبار مستقل.
+
+* لا تحذف بيانات الحساب المحلية عند فشل تسجيل الخروج.
+
+### د. تغطية جميع انتقالات المصادقة
+
+داخل `cloudSync.ts`:
+
+* `loginParent` و`verifyOtp` يستخدمان `withAuthLock` حالياً؛ حافظ على ذلك وأضف تعليق Auto-Sync طوال الانتقال.
+
+* `retryPendingAvatar` يستخدم القفل الحالي؛ لا تنشئ له قفلاً آخر.
+
+* `registerParent` ينفذ `signUp` حالياً خارج القفل؛ اجعله متسلسلاً مع تدفقات المصادقة، لأن التسجيل قد ينتج عنه انتقال جلسة.
+
+* `restorePreviousSession` يعمل ضمن مسارات مقفلة حالياً؛ لا تضف له قفلاً متداخلاً.
+
+* لا تضف عمليات Supabase غير متزامنة داخل `onAuthStateChange`.
+
+### هـ. تعديل `RoleSelection.tsx`
+
+المقطع الفعلي الحالي في `handleDevPasswordSubmit`:
+
+```ts
+const { data: { user } } = await supabase.auth.getUser();
+if (!user || !user.email) throw new Error('No user logged in');
+
+const { error } = await supabase.auth.signInWithPassword({
+  email: user.email,
+  password: devPassword,
+});
+if (error) throw error;
+
+await cloudSync.getSession();
+```
+
+هذا المسار يتجاوز `withAuthLock`، ولا يجوز استبداله باستدعاء `loginParent`؛ لأن `loginParent` مسار تسجيل دخول واعتماد حساب وقد يؤدي إلى `adoptUser`.
+
+التعديل المطلوب:
+
+1\. أضف إلى `cloudSync.ts` دالة مخصصة مثل:
+
+```ts
+verifyCurrentParentPassword(password: string)
+```
+
+* تنفذ الدالة داخل `withAuthLock`:
+
+    * قراءة المستخدم والجلسة الحالية.
+
+    * حفظ UID الحالي.
+
+    * التأكد من وجود البريد الإلكتروني.
+
+    * تنفيذ `signInWithPassword` لنفس البريد.
+
+    * التأكد أن UID الناتج هو UID نفسه الذي بدأ به التحقق.
+
+    * عند الفشل أو اختلاف UID، استعادة الجلسة السابقة بالطريقة الموجودة.
+
+    * عدم استدعاء `adoptUser`.
+
+    * عدم تبديل Vault أو `OWNER_KEY`.
+
+* في `RoleSelection.tsx` استبدل الاستدعاء المباشر لـ `supabase.auth.signInWithPassword` باستدعاء الدالة الجديدة.
+
+* احذف الاستدعاء اللاحق إلى `cloudSync.getSession()` فقط إذا أصبح غير مطلوب بعد التحقق، ولا تحذفه قبل مراجعة ما يعتمد عليه بقية `handleDevPasswordSubmit`.
+
+### و. تهيئة Auto-Sync في `src/main.tsx`
+
+الملف الحالي يحتوي على تهيئة React و`createRoot(...).render(...)`، ولا توجد فيه تهيئة Auto-Sync حالياً.
+
+أضف استيراد دالة التهيئة من `cloudSync.ts`، ثم استدعها مرة واحدة قبل `createRoot(...).render(...)`.
+
+المطلوب:
+
+* تهيئة idempotent؛ الاستدعاء الثاني لا ينشئ Subscription آخر.
+
+* التحقق من Cloud Mode قبل تشغيل المزامنة.
+
+* لا ترفع البيانات عند التهيئة.
+
+* لا تبدأ مزامنة Local Mode.
+
+* لا تنشئ مستمعات مكررة عند إعادة تحميل التطبيق.
+
+* لا تغيّر `AppGate` أو سلوك اختيار الوضع.
+
+### ز. التعامل مع `onAuthStateChange`
+
+أضف مستمعاً واحداً فقط ضمن تهيئة Auto-Sync.
+
+داخل Callback:
+
+* حدّث علامات حالة المصادقة فقط.
+
+* ألغِ المؤقتات القديمة.
+
+* ارفع جيل المصادقة لإبطال الأعمال السابقة.
+
+* لا تنفذ `getSession` أو `getUser` أو أي طلب Supabase غير متزامن داخل Callback.
+
+* لا تعتبر `SIGNED_IN` دليلاً على ملكية بيانات Vault.
+
+* جدولة التحقق غير المتزامن خارج Callback.
+
+* لا تستأنف الرفع إلا بعد التحقق من UID وVault و`OWNER_KEY`.
+
+### ح. شروط الإيقاف وإعادة المحاولة
+
+علّق Auto-Sync عند:
+
+* adoption.
+
+* `loadFromCloud`.
+
+* تبديل الحساب.
+
+* تسجيل الخروج.
+
+* أي انتقال مصادقة.
+
+* وجود معاملة Vault معلقة.
+
+* عدم تطابق UID مع `OWNER_KEY`.
+
+* عدم تطابق UID مع الحساب النشط.
+
+* عدم توفر الجلسة أو فشل التحقق منها.
+
+عند انقطاع الشبكة:
+
+* لا تحذف البيانات المحلية.
+
+* لا تمسح `dirtyVersion`.
+
+* لا تعتبر العملية مرفوعة.
+
+* أعد المحاولة عند حدث `online` أو بعد فشل مؤقت وفق سياسة إعادة المحاولة.
+
+* لا تنشئ Queue ثانية.
+
+### الاختبارات المطلوبة لـ P3-00
+
+أنشئ `cloudSync.autoSync.test.ts` واستخدم Vitest وFake Timers وSupabase mocks وZustand mocks، مع اختبار واجهة Vault الحقيقية قدر الإمكان.
+
+| الرمز | الاختبار                        | معيار النجاح                        |
+| ----- | ------------------------------- | ----------------------------------- |
+| AS-01 | بدء التطبيق في Cloud Mode       | لا يحدث رفع ابتدائي                 |
+| AS-02 | بدء التطبيق في Local Mode       | لا يحدث أي رفع إلى Supabase         |
+| AS-03 | تغيير التقدم                    | يبدأ الرفع بعد 1500ms               |
+| AS-04 | عدة تغييرات ضمن 1500ms          | رفع واحد فقط                        |
+| AS-05 | تغيير أثناء الرفع               | رفع أحدث Snapshot بعد انتهاء الحالي |
+| AS-06 | وجود Queue نشطة                 | لا يحدث Upsert متوازٍ               |
+| AS-07 | UID لا يطابق OWNER_KEY          | رفض الرفع                           |
+| AS-08 | UID لا يطابق Vault النشط        | رفض الرفع                           |
+| AS-09 | وجود vault:txn                  | رفض الرفع                           |
+| AS-10 | active slot غير محسوم           | رفض الرفع                           |
+| AS-11 | adoption جارٍ                   | تعليق الرفع                         |
+| AS-12 | loadFromCloud جارٍ              | تعليق الرفع                         |
+| AS-13 | فشل الاستعادة وبدء Rollback     | لا يُرفع Snapshot جزئي              |
+| AS-14 | تبديل الحساب                    | إبطال المؤقتات والعمليات القديمة    |
+| AS-15 | تسجيل الخروج                    | لا يحدث رفع بعده                    |
+| AS-16 | انقطاع الشبكة                   | الاحتفاظ بالتغيير وإعادة المحاولة   |
+| AS-17 | فشل رفع Supabase                | لا تُمسح الحالة المحلية             |
+| AS-18 | تكرار التهيئة                   | Subscription واحد فقط               |
+| AS-19 | حفظ يدوي بالتزامن مع Auto-Sync  | تسلسل آمن دون تداخل                 |
+| AS-20 | SIGNED_IN من مستمع المصادقة     | لا رفع قبل تحقق UID وVault          |
+| AS-21 | إعادة تحقق كلمة مرور الأب       | لا يحدث adoption أو تبديل حساب      |
+| AS-22 | تحرير تعليق واحد من عدة تعليقات | تبقى التعليقات الأخرى فعالة         |
+
+### معايير قبول البطاقة
+
+* نجاح جميع اختبارات AS-01 إلى AS-22.
+
+* عدم تعديل `accountVault.ts` أو `progressStore.ts`.
+
+* عدم تغيير Payload أو Schema.
+
+* لا رفع ابتدائي.
+
+* لا رفع في Local Mode.
+
+* لا رفع لحساب لم تثبت ملكيته.
+
+* الحفظ اليدوي قبل logout ما زال يعمل.
+
+* Rollback الحالي في GuardianDashboard محفوظ.
+
+* لا عمليات Supabase غير متزامنة داخل `onAuthStateChange`.
+
+### بيانات Git
+
+* Branch: `phase-3/p3-00-auto-sync`
+
+* Commit: `feat(p3-00): add ownership-safe cloud auto sync`
+
+* PR: `P3-00: Add ownership-safe Cloud Auto-Sync`
+
+### 3.2 – P3-02: إصلاح خريطة Aya القديمة
+
+### الهدف
+
+ضمان تحويل قيمة `aya` القديمة إلى الشخصية الصحيحة `joud` باستخدام خريطة التوافق المشتركة، دون إنشاء خريطة ثانية متعارضة.
+
+### الملفات المسموح تعديلها
+
+* `src/screens/HeroDashboard.tsx`
+
+* ملف اختبار جديد إذا لزم.
+
+### الملفات الممنوع تعديلها
+
+* `src/types.ts` — خريطة التوافق المشتركة موجودة فيه بالفعل.
+
+* `src/components/CharacterSelector.tsx` أو أي مكون آخر يستخدم الخريطة المشتركة.
+
+* `accountVault.ts`
+
+* `progressStore.ts`
+
+* ملفات المرحلة الأولى والثانية.
+
+### موضع التعديل الفعلي
+
+في `src/types.ts` توجد الخريطة المشتركة:
+
+```ts
+export const LEGACY_CHARACTER_MAP: Partial<Record<string, CharacterType>> = {
+  fox: 'sham',
+  owl: 'bana',
+  rabbit: 'rayan',
+  panda: 'joud',
+  aya: 'joud',
+};
+```
+
+وفي `src/screens/HeroDashboard.tsx` يوجد استيراد:
+
+```ts
+import type { Screen, CharacterType } from '@/types';
+```
+
+وتوجد خريطة محلية لا تحتوي `aya`:
+
+```ts
+const LEGACY_CHARACTER_MAP: Record<string, CharacterType> = {
+  fox: 'sham',
+  owl: 'bana',
+  panda: 'joud',
+  rabbit: 'rayan',
+};
+```
+
+ثم يستخدمها `useEffect`:
+
+```ts
+const saved = localStorage.getItem('soroban_companion');
+
+if (saved === 'sham' || saved === 'rayan' || saved === 'bana' || saved === 'joud') {
+  setCompanion(saved as CharacterType);
+} else if (saved && LEGACY_CHARACTER_MAP[saved]) {
+  const migrated = LEGACY_CHARACTER_MAP[saved];
+  localStorage.setItem('soroban_companion', migrated);
+  setCompanion(migrated);
+} else {
+  localStorage.setItem('soroban_companion', 'sham');
+  setCompanion('sham');
+  setShowSelector(true);
+}
+```
+
+### التعديلات المطلوبة
+
+1\. في `HeroDashboard.tsx`، استبدل الاستيراد الحالي:
+
+```ts
+import type { Screen, CharacterType } from '@/types';
+```
+
+بالاستيراد الذي يجلب `LEGACY_CHARACTER_MAP` كقيمة، مع إبقاء الأنواع:
+
+```ts
+import {
+  LEGACY_CHARACTER_MAP,
+  type Screen,
+  type CharacterType,
+} from '@/types';
+```
+
+إذا كان ترتيب الاستيرادات أو إعداد TypeScript في المشروع يتطلب فصل استيراد الأنواع، حافظ على النمط المتبع في بقية الملف.
+
+2\. احذف الخريطة المحلية كاملة:
+
+```ts
+const LEGACY_CHARACTER_MAP: Record<string, CharacterType> = {
+  fox: 'sham',
+  owl: 'bana',
+  panda: 'joud',
+  rabbit: 'rayan',
+};
+```
+
+3\. في `useEffect`، احتفظ بالمنطق الحالي، لكن عالج كون الخريطة المشتركة من النوع `Partial<Record<...>>`؛ أي تحقق من وجود القيمة قبل استخدامها:
+
+```ts
+} else if (saved) {
+  const migrated = LEGACY_CHARACTER_MAP[saved];
+
+  if (migrated) {
+    localStorage.setItem('soroban_companion', migrated);
+    setCompanion(migrated);
+  } else {
+    localStorage.setItem('soroban_companion', 'sham');
+    setCompanion('sham');
+    setShowSelector(true);
+  }
+}
+```
+
+لا تكرر فرع fallback إذا كان بالإمكان الحفاظ على الفرع الحالي بصيغة مكافئة. الأهم ألا يُمرر `undefined` إلى `setCompanion`.
+
+### الاختبارات المطلوبة
+
+* `soroban_companion = "aya"`:
+
+    * يتم تحويل القيمة المخزنة إلى `joud`.
+
+    * يتم عرض `joud`.
+
+* `soroban_companion = "fox"`:
+
+    * تتحول إلى `sham`.
+
+* `soroban_companion = "owl"`:
+
+    * تتحول إلى `bana`.
+
+* `soroban_companion = "rabbit"`:
+
+    * تتحول إلى `rayan`.
+
+* `soroban_companion = "panda"`:
+
+    * تتحول إلى `joud`.
+
+* قيمة غير معروفة:
+
+    * يتم تطبيق fallback الحالي إلى `sham`.
+
+    * يظهر Selector كما هو حالياً.
+
+* قيمة حديثة مثل `joud`:
+
+    * لا يعاد ترحيلها ولا تتغير.
+
+اختبار يدوي إلزامي: ضبط `soroban_companion` إلى `aya` في Local Storage ثم فتح HeroDashboard والتحقق من التخزين والعرض.
+
+### معايير القبول
+
+* لا توجد خريطة محلية ثانية في `HeroDashboard.tsx`.
+
+* يتم استخدام الخريطة المشتركة في `types.ts`.
+
+* `aya` تتحول إلى `joud`.
+
+* لا تغيير في شخصيات المستخدمين الحديثة.
+
+* لا تعديل في `types.ts` أو `CharacterSelector`.
+
+### بيانات Git
+
+* Branch: `phase-3/p3-02-aya-legacy-map`
+
+* Commit: `fix(p3-02): reuse shared legacy character map`
+
+* PR: `P3-02: Fix Aya legacy character migration`
+
+### 3.3 – P3-01: مراجعة Theme Key فقط
+
+مراجعة وتوثيق – لا تعديل سلوكي
+
+### الهدف
+
+تحديد استخدام مفاتيح الثيم الحالية وتوثيق اختلافها، دون توحيدها أو تغيير طريقة تخزينها.
+
+### الملفات المسموح تعديلها
+
+\- ملف توثيق جديد فقط ضمن `docs/md/هام/`.
+
+### الملفات الممنوع تعديلها
+
+* `src/screens/ProfileScreen.tsx`
+
+* `src/screens/HeroDashboard.tsx`
+
+* `src/components/...` الخاصة بالثيم
+
+* `src/utils/accountVault.ts`
+
+* `src/lib/cloudSync.ts`
+
+* `src/store/progressStore.ts`
+
+* أي SQL أو إعداد Supabase.
+
+### مواضع الفحص الفعلية
+
+### `src/screens/ProfileScreen.tsx`
+
+يوجد استخدام لمفتاح:
+
+```ts
+soroban_theme_key
+```
+
+ويُكتب ضمن حفظ الملف الشخصي:
+
+```ts
+onSave({ theme_key: selectedTheme })
+```
+
+يجب تتبع المستهلك الذي يستقبل `theme_key` وتوثيق ما إذا كان يطبقه فعلياً أو يحتفظ به فقط.
+
+### `src/components/.../Soroban2D5.tsx`
+
+يوجد تعريف:
+
+```ts
+const THEME_STORAGE_KEY = 'soroban2d5-theme';
+```
+
+وهذا مفتاح مختلف عن `soroban_theme_key`.
+
+### `src/utils/accountVault.ts`
+
+يحتوي `DEVICE_KEYS` على مفاتيح الثيم ذات الصلة. لا يُعدّل هذا الملف.
+
+### `src/lib/cloudSync.ts`
+
+قائمة `DEVICE_KEYS` تتضمن:
+
+```ts
+'soroban2d5-theme'
+```
+
+ويجب توثيق هل `soroban_theme_key` يدخل في مسار المزامنة أو لا.
+
+### التعديلات المطلوبة
+
+لا تعدّل أي كود في هذه البطاقة.
+
+أنشئ ملفاً:
+
+`docs/md/هام/P3-01_THEME_KEY_AUDIT.md`
+
+ويحتوي:
+
+* اسم كل Theme Key.
+
+* الملف الذي يكتبه.
+
+* الملف أو المكون الذي يقرأه.
+
+* هل هو محلي فقط أم يدخل ضمن مفاتيح الجهاز أو النسخ السحابي.
+
+* هل يوجد مستهلك فعلي لـ `theme_key` القادم من `ProfileScreen`.
+
+* هل يوجد دليل على أن المفتاحين يمثلان إعداداً واحداً أم إعدادين مختلفين.
+
+* قرار صريح: لا توحيد ولا إعادة تسمية في P3-01.
+
+ممنوع استنتاج أن المفتاحين يجب دمجهما لمجرد أن اسميهما يحتويان كلمة theme.
+
+### الاختبارات المطلوبة
+
+* مراجعة بحث شامل لكل ظهور لـ:
+
+    * `soroban_theme_key`
+
+    * `soroban2d5-theme`
+
+    * `theme_key`
+
+    * `THEME_STORAGE_KEY`
+
+* مراجعة القراءة والكتابة، وليس تعريف المفتاح وحده.
+
+* `git diff -- src` يجب ألا يعرض أي تعديل برمجي لهذه البطاقة.
+
+### معايير القبول
+
+* تقرير يثبت مصدر كل مفتاح ومستهلكه.
+
+* لا تغيير في أي Theme Key.
+
+* لا تغيير في Vault أو Cloud Payload.
+
+* لا تعديل برمجي.
+
+### بيانات Git
+
+* Branch: `phase-3/p3-01-theme-key-audit`
+
+* Commit: `docs(p3-01): document theme key usage`
+
+* PR: `P3-01: Audit Theme Key usage without behavior changes`
+
+### 3.4 – P3-04: الاختبارات ضمن النشر
+
+### الهدف
+
+منع نشر GitHub Pages إذا فشلت الاختبارات، وإزالة السماح بمرور Test Run فارغ دون فشل.
+
+### الملفات المسموح تعديلها
+
+* `package.json`
+
+* `.github/workflows/deploy.yml`
+
+### الملفات الممنوع تعديلها
+
+* `.github/workflows/ci-build.yml` — يحتوي بالفعل خطوة Tests.
+
+* إعدادات التطبيق ومكونات الواجهة.
+
+* ملفات Supabase.
+
+* `progressStore.ts` و`accountVault.ts`.
+
+### أ. تعديل `package.json`
+
+المقطع الفعلي:
+
+```json
+"test:run": "vitest run --passWithNoTests"
+```
+
+استبدله بـ:
+
+```json
+"test:run": "vitest run"
+```
+
+السبب: `--passWithNoTests` يسمح بالنجاح عند عدم العثور على اختبارات، وهذا لا يناسب بوابة النشر النهائية.
+
+لا تعدّل Dependencies أو إصدارات الحزم في هذه البطاقة.
+
+### ب. تعديل `.github/workflows/deploy.yml`
+
+الملف يحتوي حالياً على خطوة تثبيت ثم بناء، والمقطع:
+
+```yaml
+- name: Install dependencies
+  run: npm install --no-audit --no-fund
+
+- name: Build
+  run: npm run build
+```
+
+أضف خطوة الاختبارات بينهما:
+
+```yaml
+- name: Tests
+  run: npm run test:run
+
+- name: Build
+  run: npm run build
+```
+
+أي أن ترتيب النشر يصبح:
+
+* Install dependencies.
+
+* Tests.
+
+* Build.
+
+* خطوات النشر الحالية دون تغيير.
+
+لا تعدّل شروط `push` أو `workflow_dispatch` أو إعدادات Pages.
+
+### الاختبارات المطلوبة
+
+* `npm run test:run` محلياً.
+
+* `npm run build` محلياً.
+
+* تشغيل GitHub Actions على الفرع.
+
+* التأكد أن فشل اختبار يؤدي إلى فشل Workflow قبل Build/Deploy.
+
+* التأكد أن غياب الاختبارات لا يعطي نجاحاً زائفاً.
+
+الاختبارات الموجودة في الأرشيف تشمل:
+
+* `accountVault.test.ts`
+
+* `cloudSync.auth.test.ts`
+
+* `cloudSync.vault.test.ts`
+
+* `masteryBadges.test.ts`
+
+* `progressStore.test.ts`
+
+وتضاف اختبارات P3-00 وP3-08 في بطاقاتها.
+
+### معايير القبول
+
+* لا يوجد `--passWithNoTests` في `test:run`.
+
+* Workflow النشر يشغّل الاختبارات قبل البناء.
+
+* لا تعديل على Workflow CI الموجود.
+
+* فشل الاختبارات يمنع النشر.
+
+### بيانات Git
+
+* Branch: `phase-3/p3-04-deploy-tests`
+
+* Commit: `ci(p3-04): run tests before pages deployment`
+
+* PR: `P3-04: Gate GitHub Pages deployment on tests`
+
+### 3.5 – P3-05: فحوص Supabase
+
+يعتمد على GitHub ولوحة Supabase – منفصل عن تعديل التطبيق
+
+### الهدف
+
+فحص إعدادات المصادقة والجداول والسياسات والوظائف الحالية، دون تغيير Schema أو RLS أو SQL أو بيانات المستخدمين.
+
+### الملفات المسموح تعديلها
+
+\- ملف توثيق جديد فقط، مثل: `docs/md/هام/P3-05_SUPABASE_PREFLIGHT.md`
+
+لا تعديل برمجي في هذه البطاقة.
+
+### الملفات الممنوع تعديلها
+
+* `src/lib/supabase.ts` ضمن هذه البطاقة.
+
+* أي ملف SQL.
+
+* Schema.
+
+* RLS Policies.
+
+* RPC Functions.
+
+* بيانات المستخدمين.
+
+* أسماء الأطفال أو بياناتهم.
+
+### أ. فصل ما يمكن فحصه من ZIP عما يتطلب GitHub
+
+ما أمكن التحقق منه في نسخة ZIP:
+
+توجد استدعاءات إلى الجداول والوظائف التالية في التطبيق:
+
+الجداول:
+
+* `soroban_progress`
+
+* `public_profiles`
+
+RPC:
+
+* `set_my_avatar`
+
+* `submit_score`
+
+* `set_my_leaderboard_visibility`
+
+* `get_hall_of_fame_v2`
+
+* `get_my_rank_details_v2`
+
+لكن ملف `src/lib/supabase.ts` غير موجود في الأرشيف؛ لذلك لا يمكن تأكيد عنوان المشروع أو طريقة إنشاء العميل أو نوع المفتاح المستخدم من هذه النسخة.
+
+ما يجب فحصه من GitHub:
+
+* فتح `src/lib/supabase.ts` من المستودع.
+
+* التحقق أن المفتاح المستخدم Client-side هو anon/publishable key وليس `service_role`.
+
+* عدم نسخ المفتاح إلى التقرير أو نشره.
+
+* التحقق من إعدادات البيئة وطريقة التعامل مع غياب متغيراتها.
+
+* التحقق من عدم وجود أسرار إدارية ضمن Bundle المتصفح.
+
+إذا لم يتوفر الملف أو لم تتوفر صلاحية المستودع، تسجّل هذه النقاط `BLOCKED` ولا تُستنتج.
+
+### ب. فحوص لوحة Supabase
+
+### 1\. RLS للجداول
+
+افحص تفعيل RLS على:
+
+* `soroban_progress`
+
+* `public_profiles`
+
+استعلام قراءة فقط:
+
+```sql
+select
+  n.nspname as schema_name,
+  c.relname as table_name,
+  c.relrowsecurity as rls_enabled,
+  c.relforcerowsecurity as force_rls
+from pg_class c
+join pg_namespace n on n.oid = c.relnamespace
+where n.nspname = 'public'
+  and c.relname in ('soroban_progress', 'public_profiles');
+```
+
+### 2\. السياسات
+
+```sql
+select
+  schemaname,
+  tablename,
+  policyname,
+  permissive,
+  roles,
+  cmd,
+  qual,
+  with_check
+from pg_policies
+where schemaname = 'public'
+  and tablename in ('soroban_progress', 'public_profiles')
+order by tablename, policyname;
+```
+
+راجع:
+
+* `soroban_progress`: لا يمكن لمستخدم قراءة أو تعديل صف مستخدم آخر.
+
+* شروط `USING` و`WITH CHECK` مرتبطة بملكية `user_id` وفق تصميم التطبيق.
+
+* `public_profiles`: القراءة العامة لا تُقبل إلا بالقدر الذي تتطلبه وظائف الملف العام ولوحة المتصدرين؛ أما الكتابة فيجب أن تكون مقيدة بالمالك.
+
+لا تفرض سياسة جديدة أو تعدّل سياسة موجودة ضمن هذه البطاقة.
+
+### 3\. وظائف RPC
+
+```sql
+select
+  n.nspname as schema_name,
+  p.proname as function_name,
+  pg_get_function_identity_arguments(p.oid) as arguments,
+  p.prosecdef as security_definer,
+  p.proconfig as function_config,
+  has_function_privilege('anon', p.oid, 'EXECUTE') as anon_can_execute,
+  has_function_privilege('authenticated', p.oid, 'EXECUTE') as authenticated_can_execute
+from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public'
+  and p.proname in (
+    'set_my_avatar',
+    'submit_score',
+    'set_my_leaderboard_visibility',
+    'get_hall_of_fame_v2',
+    'get_my_rank_details_v2'
+  )
+order by p.proname;
+```
+
+لا يكفي التحقق من وجود أسماء الوظائف؛ يجب مراجعة جسم كل وظيفة وصلاحياتها والتحقق من:
+
+* هل `SECURITY DEFINER` مستخدم؟
+
+* هل `search_path` محدد وآمن عند الحاجة؟
+
+* هل تتحقق الوظيفة من هوية المستخدم؟
+
+* هل تمنع الكتابة باسم UID آخر؟
+
+* هل صلاحيات `EXECUTE` ملائمة لكل وظيفة؟
+
+* هل الوظائف العامة لا تكشف بيانات خاصة؟
+
+لا تعدّل الوظائف أو صلاحياتها.
+
+### 4\. إعدادات Auth
+
+تحقق من:
+
+* Site URL.
+
+* Redirect URLs.
+
+* رابط Pages الحالي:
+
+```text
+https://mezo2021.github.io/sorobanmind-2/
+```
+
+* تدفق OTP.
+
+* روابط إعادة التوجيه بعد التسجيل والتحقق.
+
+* عدم وجود Redirect قديم أو عنوان محلي غير مناسب للإنتاج.
+
+### الاختبارات المطلوبة
+
+* مراجعة RLS للجداول المحددة.
+
+* مراجعة سياسات القراءة والكتابة.
+
+* مراجعة أجسام RPC الخمسة وصلاحياتها.
+
+* مراجعة إعدادات Auth وRedirect URLs.
+
+* فحص `supabase.ts` من GitHub، إذا أمكن.
+
+* تسجيل نتيجة كل فحص `PASS` أو `FAIL` أو `BLOCKED` أو `NOT RUN`.
+
+### معايير القبول
+
+* تقرير موثق لكل فحص.
+
+* لا تعديل SQL أو RLS أو RPC.
+
+* لا تغيير بيانات أو أسماء مستخدمين.
+
+* أي عنصر لا يمكن الوصول إليه يظل `BLOCKED`، ولا يسجل `PASS` افتراضياً.
+
+### بيانات Git
+
+* Branch: `phase-3/p3-05-supabase-preflight`
+
+* Commit: `docs(p3-05): record Supabase preflight results`
+
+* PR: `P3-05: Verify Supabase deployment configuration`
+
+### 3.8 – P3-08: إصلاح اسم البطل حسب اللغة
+
+بطاقة مستقلة
+
+### الهدف
+
+إصلاح قراءة اللغة المستخدمة في عرض اسم البطل، لأن قيمة اللغة محفوظة بواسطة Zustand Persist كـ JSON envelope، وليست نصاً خاماً `ar` أو `en`.
+
+### الملفات المسموح تعديلها
+
+* `src/lib/cloudSync.ts`
+
+* `src/components/games/highScoreStore.ts`
+
+* اختبارات جديدة مرتبطة باللغة والاسم.
+
+### الملفات الممنوع تعديلها
+
+* `src/i18n/useTranslation.ts` — مصدر اللغة الحالي لا يحتاج تغييراً.
+
+* `src/utils/resolveDisplayName.ts` — لا تغيير لخوارزمية الأسماء.
+
+* `src/store/progressStore.ts`.
+
+* `src/utils/accountVault.ts`.
+
+* مفاتيح `hero_key` و`childName` و`OWNER_KEY`.
+
+* بنية بيانات Supabase.
+
+### أ. تعديل `src/lib/cloudSync.ts`
+
+المقطع الفعلي داخل `applyLocalIdentity()`:
+
+```ts
+function applyLocalIdentity() {
+  const key = localStorage.getItem('soroban_hero_key');
+  const lang = (localStorage.getItem('sorobanmind-v2-lang') as 'ar' | 'en') || 'ar';
+  const display = key ? resolveDisplayName(key, lang) : '';
+
+  if (display) {
+    try {
+      localStorage.setItem('soroban_child_name', display);
+    } catch { /* ignore */ }
+
+    useProgressStore.getState().setChildName(display);
+  }
+}
+```
+
+المشكلة: `sorobanmind-v2-lang` هو مفتاح Zustand Persist في `useTranslation.ts`:
+
+```ts
+export const useLangStore = create<LangState>()(
+  persist(
+    (set) => ({
+      lang: "ar",
+      setLang: (lang) => set({ lang }),
+    }),
+    { name: "sorobanmind-v2-lang" },
+  ),
+);
+```
+
+لذلك لا يصح تحويل القيمة الخام من `localStorage` مباشرة إلى `'ar' | 'en'`.
+
+### التعديل المطلوب
+
+1\. أضف استيراد `useLangStore` في `cloudSync.ts` من:
+
+```ts
+@/i18n/useTranslation
+```
+
+أو المسار النسبي الصحيح وفق إعدادات الملف.
+
+2\. داخل `applyLocalIdentity()` استبدل قراءة `localStorage` للغة بقراءة Zustand:
+
+```ts
+const lang = useLangStore.getState().lang;
+```
+
+* أبقِ قراءة `soroban_hero_key` كما هي.
+
+* أبقِ `resolveDisplayName` كما هي.
+
+* أبقِ تخزين `soroban_child_name` و`setChildName` كما هما.
+
+### ب. تعديل `src/components/games/highScoreStore.ts`
+
+الاستيرادات الحالية:
+
+```ts
+import { storage } from '../../utils/storage';
+import { resolveDisplayName } from '../../utils/resolveDisplayName';
+```
+
+أضف:
+
+```ts
+import { useLangStore } from '../../i18n/useTranslation';
+```
+
+المقطع الفعلي داخل `addScore`:
+
+```ts
+const heroKey = localStorage.getItem('soroban_hero_key');
+const lang = (localStorage.getItem('sorobanmind-v2-lang') as 'ar' | 'en') || 'ar';
+const fallbackName = lang === 'ar' ? 'بطل' : 'Hero';
+const displayName = heroKey ? (resolveDisplayName(heroKey, lang) || fallbackName) : fallbackName;
+```
+
+استبدل سطر قراءة اللغة فقط:
+
+```ts
+const lang = useLangStore.getState().lang;
+```
+
+ولا تغيّر:
+
+* `heroKey`.
+
+* `fallbackName`.
+
+* `resolveDisplayName`.
+
+* صيغة سجل النتيجة.
+
+* بنية التخزين.
+
+* ترتيب الحقول.
+
+### الاختبارات المطلوبة
+
+* عندما تكون اللغة `ar`:
+
+    * `applyLocalIdentity` ينتج الاسم العربي الصحيح.
+
+    * سجل النتيجة يستخدم الاسم العربي.
+
+* عندما تكون اللغة `en`:
+
+    * `applyLocalIdentity` ينتج الاسم الإنجليزي الصحيح.
+
+    * سجل النتيجة يستخدم الاسم الإنجليزي.
+
+* تغيير اللغة من Zustand:
+
+    * القراءة التالية تستخدم اللغة الجديدة.
+
+* عدم وجود `hero_key`:
+
+    * يستمر السلوك الحالي للاسم الاحتياطي.
+
+* اسم البطل المخزن:
+
+    * لا يتم تغيير `soroban_hero_key`.
+
+* التحقق من أن قيمة `sorobanmind-v2-lang` في Local Storage ليست المصدر المباشر للغة في هذين الموضعين.
+
+اختبار تكاملي يدوي: تسجيل الخروج والدخول ثم إعادة تحميل التطبيق واستعادة Cloud Data، مع التحقق من الاسم بالعربية والإنجليزية، ومن بقاء `hero_key` كما هو.
+
+### معايير القبول
+
+* لا توجد قراءة خام للغة من `localStorage` في الموضعين المحددين.
+
+* المصدر هو `useLangStore.getState().lang`.
+
+* لا تغيير لمفاتيح الهوية أو مخطط التخزين.
+
+* لا تغيير في `progressStore.ts` أو `accountVault.ts`.
+
+### بيانات Git
+
+* Branch: `phase-3/p3-08-language-hero-name`
+
+* Commit: `fix(p3-08): read hero display language from lang store`
+
+* PR: `P3-08: Fix hero display name language resolution`
+
+### 3.6 – P3-06: الاختبار الشامل النهائي
+
+### الهدف
+
+التحقق من تكامل المرحلتين 1 و2 مع المرحلة الثالثة بعد دمج البطاقات السابقة، مع اختبار عزل الحسابات والحفظ والاستعادة والـPIN واللغة وAuto-Sync، دون إعادة تنفيذ أي بطاقة مغلقة.
+
+### الملفات المسموح تعديلها
+
+* ملف نتائج جديد: `docs/md/هام/P3-06_FINAL_ACCEPTANCE_RESULTS.md`
+
+* ملفات الاختبارات الآلية الجديدة فقط إذا ظهرت مشكلة اختبارية في تغطية P3-00 أو P3-08، وبعد موافقة مستقلة على نطاق التعديل.
+
+### الملفات الممنوع تعديلها
+
+* `src/utils/accountVault.ts`
+
+* `src/store/progressStore.ts`
+
+* ملفات تنفيذ المراحل 1 و2.
+
+* ملفات SQL وSupabase.
+
+* ملفات التطبيق الإنتاجية لإصلاح عيوب جديدة ضمن هذه البطاقة.
+
+هذه بطاقة تحقق وقبول، وليست بطاقة إصلاح. أي عيب يظهر يُسجل كتذكرة مستقلة، ولا يُعالج بإدخال تعديل غير مخطط في P3-06.
+
+### بيئة الاختبار
+
+استخدم حسابات اختبار منفصلة:
+
+* A: الحساب الأول.
+
+* B: الحساب الثاني.
+
+* C: الحساب الثالث.
+
+لا تستخدم بيانات مستخدمين حقيقيين، ولا تنفذ حذفاً جماعياً أو Reset لبيانات الإنتاج. لا تغيّر ملكية حسابات الاختبار يدوياً أثناء الاختبار.
+
+سجل لكل حالة:
+
+* رقم الاختبار.
+
+* الحساب المستخدم.
+
+* الحالة السابقة.
+
+* الإجراء المنفذ.
+
+* النتيجة المتوقعة.
+
+* النتيجة الفعلية.
+
+* `PASS` أو `FAIL` أو `BLOCKED` أو `NOT RUN`.
+
+* دليل مختصر، مثل سجل اختبار أو Screenshot منزوع البيانات الحساسة.
+
+### أ. اختبار عزل الحسابات
+
+| الرمز | السيناريو                         | معيار النجاح                   |
+| ----- | --------------------------------- | ------------------------------ |
+| M1-01 | A ثم B ثم C ثم العودة إلى A       | بيانات كل حساب مستقلة          |
+| M1-02 | الانتقال B ثم C ثم B              | لا تظهر بيانات C داخل B        |
+| M1-03 | إعادة تحميل التطبيق بعد كل انتقال | استعادة بيانات الحساب الصحيح   |
+| M1-04 | فشل adoption أثناء الانتقال       | استعادة الحالة السابقة دون خلط |
+| M1-05 | وجود معاملة Vault معلقة           | لا يبدأ Auto-Sync              |
+| M1-06 | اختلاف OWNER_KEY عن UID           | لا يحدث رفع                    |
+
+### ب. اختبار الدروس والجلسات
+
+نفّذ اختبارات الجلسات وفق تصميم المرحلة الثانية P2-04 الموجود في أرشيف المشروع.
+
+تحقق من:
+
+* إنشاء جلسة الدرس.
+
+* استمرار بيانات الجلسة عند إعادة التحميل.
+
+* عدم اختلاط جلسات حساب A مع B أو C.
+
+* صحة الربط بين بيانات الدرس والحساب.
+
+* عدم تغيير بنية التخزين التي نفذتها المرحلة الثانية.
+
+لا تُعد تصميم P2-04 ولا تغيّر ملفاتها لمجرد اختلاف شكل الاختبار.
+
+### ج. اختبار PIN والاسترداد
+
+اختبر المسارات التالية وفق تنفيذ المرحلة الثانية:
+
+* PIN صحيح.
+
+* PIN خاطئ.
+
+* مسار الاسترداد.
+
+* صلاحية رمز الاسترداد.
+
+* استخدام الرمز مرة واحدة فقط.
+
+* صلاحية الطابع الزمني لحالة الطوارئ.
+
+* فشل حفظ PIN جديد.
+
+* التأكد من بقاء PIN القديم فعالاً عند فشل الحفظ.
+
+* التأكد من عدم فقد تقدم الطفل بسبب فشل حفظ PIN أو الاسترداد.
+
+لا تنفذ أي تعديل على آلية PIN ضمن هذه البطاقة.
+
+### د. اختبار الاستعادة من Cloud وRollback
+
+| الرمز | السيناريو                       | معيار النجاح                 |
+| ----- | ------------------------------- | ---------------------------- |
+| M4-01 | تحميل بيانات Cloud بنجاح        | تطبيق البيانات الصحيحة       |
+| M4-02 | فشل قراءة Cloud                 | بقاء البيانات المحلية        |
+| M4-03 | فشل أثناء تطبيق البيانات        | استعادة Snapshot السابق      |
+| M4-04 | فشل جزئي في التطبيق ثم Rollback | لا يتم رفع الحالة الجزئية    |
+| M4-05 | نجاح الاستعادة                  | لا يحدث رفع عكسي غير مطلوب   |
+| M4-06 | تبديل الحساب أثناء الاستعادة    | لا يحدث تداخل أو تسرب بيانات |
+
+يجب التحقق خصوصاً من أن تعليق Auto-Sync في `GuardianDashboard` يظل فعالاً حتى انتهاء Rollback، وليس حتى رفض `loadFromCloud` فقط.
+
+### هـ. اختبار Auto-Sync
+
+نفّذ جميع حالات AS-01 إلى AS-22 المحددة في بطاقة P3-00، مع فصل النتائج إلى:
+
+* اختبارات آلية محلية.
+
+* اختبارات تكامل مع Supabase.
+
+* اختبارات متصفح يدوية.
+
+لا تسجل اختباراً يدوياً على أنه اختبار آلي، ولا تسجل Mock Supabase على أنه تحقق من RLS أو من سلوك الخادم الحقيقي.
+
+### و. اختبار Local Mode
+
+* تشغيل التطبيق في Local Mode.
+
+* تعديل تقدم الطفل.
+
+* إغلاق التطبيق وإعادة فتحه.
+
+* التأكد من بقاء التقدم المحلي.
+
+* التأكد من عدم تنفيذ أي طلب رفع إلى Supabase.
+
+* التأكد من عدم إنشاء Subscription Auto-Sync نشط.
+
+### ز. اختبار اللغة واسم البطل
+
+اختبر:
+
+* العربية.
+
+* الإنجليزية.
+
+* إعادة تحميل التطبيق.
+
+* تسجيل الخروج والدخول.
+
+* استعادة بيانات Cloud.
+
+* تسجيل نتيجة لعبة جديدة.
+
+تحقق من:
+
+* اسم البطل باللغة الحالية.
+
+* عدم تغيير `hero_key`.
+
+* عدم استبدال اسم البطل باسم افتراضي بسبب قراءة اللغة من Persist بصورة خاطئة.
+
+* بقاء Payload كما هو.
+
+### الاختبارات المطلوبة
+
+* `npm run test:run`
+
+* `npm run build`
+
+* تشغيل اختبارات P3-00.
+
+* تشغيل اختبارات P3-08.
+
+* تنفيذ مصفوفة الاختبار اليدوي أعلاه.
+
+* حفظ الأدلة والنتائج في التقرير.
+
+### معايير القبول
+
+* جميع الحالات الحرجة لعزل الحسابات والرفع والاستعادة: `PASS`.
+
+* لا توجد حالة `FAIL` غير معالجة.
+
+* لا تُخفى الحالات غير المنفذة؛ تسجل `NOT RUN`.
+
+* أي اختبار يحتاج لوحة Supabase أو اتصالاً حقيقياً ولا يمكن تنفيذه يسجل `BLOCKED` مع السبب.
+
+* لا تعديل إنتاجي غير مصرح به ضمن بطاقة الاختبار.
+
+### بيانات Git
+
+* Branch: `phase-3/p3-06-final-acceptance`
+
+* Commit: `test(p3-06): record final end-to-end acceptance results`
+
+* PR: `P3-06: Complete final end-to-end acceptance testing`
+
+### 3.7 – P3-07: الإغلاق الوثائقي النهائي
+
+### الهدف
+
+تثبيت الحالة النهائية للمرحلة الثالثة في الوثائق النشطة، مع التمييز بين المنفذ والمؤجل والملغى، وعدم إعادة فتح أي بطاقة مغلقة من المراحل السابقة.
+
+### الملفات المسموح تعديلها
+
+الوثائق النشطة التالية داخل `docs/md/هام/`:
+
+* `المرجع_التنفيذي_الموحد.md`
+
+* `PHASE_3_EXECUTION.md`
+
+* `مرحلة_٣_معدلة.md`
+
+* `المرحلة_٣.md` — إذا كان يحتوي على حالة أو تعليمات متعارضة مع الخطة النهائية، وبعد مقارنة محتواه بالنسخة المعدلة.
+
+ويمكن إضافة:
+
+5\. `docs/md/هام/PHASE_3_FINAL_CLOSEOUT.md`
+
+تنبيه مسارات: توجد وثائق قديمة داخل `docs/md/ارشيف/`، منها `PHASE_3_EXECUTION.md` و`PHASE_3_CODE_STEPS.md` وملفات تصميم المرحلة الثانية. لا تستبدلها ولا تنقلها لمجرد تشابه الاسم مع وثائق `docs/md/هام/`. المجلدان مختلفان في الغرض.
+
+### الملفات الممنوع تعديلها
+
+* ملفات المصدر البرمجية.
+
+* `accountVault.ts`.
+
+* `progressStore.ts`.
+
+* ملفات SQL وSupabase.
+
+* وثائق تصميم وتنفيذ البطاقات المغلقة في المرحلة الأولى والثانية.
+
+* ملفات `docs/md/ارشيف/`، إلا إذا ثبت وجود رابط معطل محدد يتطلب تصحيحاً توثيقياً منفصلاً ومصرحاً به.
+
+### أ. تثبيت الحالة النهائية للمرحلة الثالثة
+
+في وثيقة الإغلاق أضف جدول حالة البطاقات:
+
+| البطاقة | الوصف                  | الحالة التي يسمح بتسجيلها          |
+| ------- | ---------------------- | ---------------------------------- |
+| P3-00   | Auto-Sync              | بعد دمج PR واجتياز AS-01 إلى AS-22 |
+| P3-02   | Aya legacy map         | بعد دمج PR واجتياز الاختبارات      |
+| P3-01   | Theme Key audit        | بعد تسليم تقرير المراجعة           |
+| P3-04   | Tests in deployment    | بعد نجاح Workflow                  |
+| P3-05   | Supabase preflight     | حسب الأدلة الفعلية، لا افتراضياً   |
+| P3-08   | Language hero name     | بعد دمج PR واجتياز الاختبارات      |
+| P3-06   | Final acceptance       | بعد اكتمال مصفوفة القبول           |
+| P3-07   | Documentation closeout | بعد دمج PR الإغلاق                 |
+
+لا تسجل أي بطاقة `DONE` لمجرد وجود PR مفتوح أو Commit محلي.
+
+### ب. توثيق ما هو خارج النطاق
+
+أضف قسماً صريحاً يثبت:
+
+* `P2-03` ملغاة.
+
+* `P2-05` ملغاة.
+
+* `P3-03` مؤجلة.
+
+* لا Guest Mode.
+
+* لا إعادة فتح البطاقات المغلقة في المرحلتين 1 و2.
+
+* `accountVault.ts` و`progressStore.ts` خارج التعديل.
+
+* لا تغيير في Schema أو Payload أو RLS أو RPC.
+
+* ملف `supabase.ts` يحتاج تحققاً من نسخة GitHub لأنه غير موجود في ZIP المرجعي الذي فُحص.
+
+### ج. توثيق الملفات المحمية
+
+أضف جدولاً للملفات المحمية، مع سبب الحماية، وبالأخص:
+
+* `src/utils/accountVault.ts`: ملكية الحسابات، تبديل الحساب، واسترداد المعاملة.
+
+* `src/store/progressStore.ts`: مصدر حالة التقدم وPersist.
+
+* ملفات تصميم المرحلة الثانية: مرجع التنفيذ السابق، لا يعاد تصميمه في الإغلاق.
+
+* ملفات SQL وSupabase: فحص P3-05 لا يعني تعديلها.
+
+### د. مراجعة الوثائق القديمة
+
+قبل نقل أي ملف أو إعادة تسميته:
+
+* ابحث عن روابطه في ملفات Markdown.
+
+* افحص هل هو مرجع تاريخي أو تعليمات تنفيذ نشطة.
+
+* لا تنقل الملفات الموجودة بالفعل في `docs/md/ارشيف/`.
+
+* لا تحذف وثيقة لمجرد أن لها نسخة أحدث.
+
+* إذا كانت `docs/md/هام/PHASE_3_EXECUTION.md` تحتوي تعليمات قديمة متعارضة، حدّثها أو أضف تنبيهاً واضحاً إلى الخطة النهائية بدلاً من حذف تاريخ التنفيذ.
+
+### الاختبارات المطلوبة
+
+* البحث عن جميع روابط الوثائق المشار إليها.
+
+* التحقق من صحة المسارات النسبية.
+
+* التحقق من عدم وجود تعليمات نشطة تعيد تنفيذ P2-03 أو P2-05 أو P3-03.
+
+* التحقق من تطابق حالة البطاقات مع PRs المدمجة فعلياً.
+
+* مراجعة `git diff` للتأكد من عدم تعديل ملفات المصدر في هذه البطاقة.
+
+### معايير القبول
+
+* وثيقة إغلاق نهائية واحدة واضحة.
+
+* جدول حالة البطاقات الثماني يعكس الأدلة الفعلية.
+
+* لا ادعاء بإكمال بطاقة غير مدمجة أو غير مختبرة.
+
+* لا حذف للتاريخ أو إعادة فتح للمراحل السابقة.
+
+* جميع الروابط الداخلية صحيحة.
+
+### بيانات Git
+
+* Branch: `phase-3/p3-07-documentation-closeout`
+
+* Commit: `docs(p3-07): finalize phase 3 status and archive legacy plans`
+
+* PR: `P3-07: Close Phase 3 documentation and archive legacy plans`
+
+### 4\. ترتيب الدمج والاعتماد النهائي
+
+لا يعني ترتيب البطاقات أن DeepSeek يستطيع دمجها جميعاً في فرع واحد. المطلوب فرع مستقل وPR مستقل لكل بطاقة، مع ترتيب الدمج التالي:
+
+| الترتيب | البطاقة                | شرط السماح بالانتقال                           |
+| ------- | ---------------------- | ---------------------------------------------- |
+| 1       | P3-00 Auto-Sync        | نجاح AS-01 إلى AS-22                           |
+| 2       | P3-02 Aya              | نجاح ترحيل aya إلى joud                        |
+| 3       | P3-01 Theme Key        | تسليم تقرير التدقيق دون تعديل سلوكي            |
+| 4       | P3-04 Deploy Tests     | نجاح الاختبارات قبل Build في Workflow          |
+| 5       | P3-05 Supabase         | اكتمال الفحوص المتاحة وتوثيق المحجوب منها      |
+| 6       | P3-08 Language         | نجاح اختبارات العربية والإنجليزية              |
+| 7       | P3-06 Final Acceptance | نجاح اختبارات التكامل والقبول                  |
+| 8       | P3-07 Closeout         | تحديث الوثائق وفق حالة الدمج والاختبار الفعلية |
+
+### تعليمات موحدة تُرفق مع كل مهمة إلى DeepSeek
+
+نفّذ البطاقة المحددة فقط من خطة المرحلة الثالثة لمشروع SorobanMind-2.
+
+قواعد إلزامية:
+
+1. افحص الملف الفعلي في الفرع الحالي قبل تعديله. لا تعتمد على أرقام أسطر قد تتغير؛ استخدم مقاطع الكود المحددة في الخطة للعثور على موضع التعديل.
+2. لا تخمّن أسماء الدوال أو الملفات أو واجهات المكتبات. إذا اختلف الملف الفعلي عن المقطع المرجعي، توقف وسجّل الاختلاف قبل اختيار بديل.
+3. لا تعدّل `src/utils/accountVault.ts` أو `src/store/progressStore.ts` مطلقاً.
+4. لا تغيّر Payload أو Schema أو SQL أو RLS أو RPC أو مفاتيح الهوية.
+5. لا تعِد فتح البطاقات المغلقة في المرحلتين 1 و2، ولا تنفذ P2-03 أو P2-05 أو P3-03، ولا تضف Guest Mode.
+6. لا تخلط تعديلات بطاقتين في الفرع نفسه. استخدم Branch وCommit وPR المحددة للبطاقة.
+7. لا تنفذ أوامر حذف بيانات أو Reset لقواعد البيانات أو حسابات المستخدمين.
+8. لا تعتبر الاختبار ناجحاً إذا لم يُنفذ. استخدم PASS أو FAIL أو BLOCKED أو NOT RUN مع سبب واضح.
+9. لا تعدّل GitHub أو Supabase أو تدمج PR دون إذن صريح من صاحب المشروع.
+10. قبل التسليم، اعرض:
+   - الملفات المعدلة.
+   - ملخص كل إضافة أو استبدال أو حذف.
+   - الاختبارات وأوامر تشغيلها ونتائجها.
+   - ناتج `git diff --check`.
+   - تأكيد عدم تعديل الملفات المحمية.
+   - Commit المقترح ورابط PR بعد إنشائه من صاحب المشروع.
+
+إذا احتاجت المهمة ملفاً غير موجود في نسخة العمل، أو صلاحية خارجية غير متاحة، أو ظهرت حاجة لتعديل خارج النطاق، فتوقف ولا تستبدل المعلومة بالتخمين.
+
+### قائمة التحقق النهائية قبل إعلان اكتمال المرحلة الثالثة
+
+* جميع PRs الثمانية منفصلة ومراجعة.
+
+* P3-00 لا يرفع بيانات حساب قبل التحقق من UID و`OWNER_KEY` وVault.
+
+* Auto-Sync لا يبدأ رفعاً ابتدائياً ولا يعمل في Local Mode.
+
+* لا توجد عمليات Supabase غير متزامنة داخل `onAuthStateChange`.
+
+* لا يوجد رفع متوازٍ، ولا فقد لأحدث تغيير أثناء رفع سابق.
+
+* Rollback الخاص بـ `GuardianDashboard` محفوظ ومحمي من Auto-Sync.
+
+* P3-02 يستخدم خريطة `LEGACY_CHARACTER_MAP` المشتركة.
+
+* P3-01 تدقيق فقط، ولا تغيير لمفاتيح الثيم.
+
+* Workflow النشر يشغّل الاختبارات قبل البناء.
+
+* P3-05 موثق بالأدلة الفعلية، وما تعذر الوصول إليه مسجل `BLOCKED`.
+
+* P3-08 يقرأ اللغة من `useLangStore` في الموضعين المحددين.
+
+* اختبارات P3-06 مكتملة، والاختبارات غير المنفذة معلنة.
+
+* P3-07 يوثق حالة التنفيذ الحقيقية ولا يعلن اكتمال بطاقة قبل دمجها.
+
+* `src/utils/accountVault.ts` و`src/store/progressStore.ts` بلا أي تعديل في جميع PRs.
+
+تعريف الإغلاق: لا تُعتبر المرحلة الثالثة مكتملة لمجرد دمج آخر PR؛ تكتمل فقط بعد نجاح الاختبارات، وتوثيق فحوص Supabase المتاحة، وإغلاق مصفوفة القبول، وتحديث وثيقة الإغلاق بالحالة الحقيقية لكل بطاقة.
