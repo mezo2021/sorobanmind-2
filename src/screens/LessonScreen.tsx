@@ -34,6 +34,7 @@ import { Soroban2D5 } from '@/components/soroban2d5/Soroban2D5';
 import { useSorobanaVoice } from '@/hooks/useSorobanaVoice';
 import { useNumberStyleStore } from '@/store/numberStyleStore';
 import { useProgressStore } from '@/store/progressStore';
+import { getMode } from '@/utils/appMode';
 import { formatText, formatNumber } from '@/utils/numberStyle';
 import { useT } from '@/i18n/useTranslation';
 import { pickLang, type Localized } from '@/i18n/pickLang';
@@ -138,9 +139,19 @@ function IntroText({ text, dir }: { text: string; dir: 'rtl' | 'ltr' }) {
 // أدوات مساعدة
 // ═══════════════════════════════════════════════════════════
 
+function getSessionKey(lessonId: string): string | null {
+  const mode = getMode();
+  if (!mode) return null;
+
+  return `${LESSON_SESSION_PREFIX}${mode}_${lessonId}`;
+}
+
 function loadSession(lessonId: string): SessionData {
   try {
-    const raw = localStorage.getItem(LESSON_SESSION_PREFIX + lessonId);
+    const key = getSessionKey(lessonId);
+    if (!key) return {};
+
+    const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
@@ -149,13 +160,19 @@ function loadSession(lessonId: string): SessionData {
 
 function saveSession(lessonId: string, data: SessionData): void {
   try {
-    localStorage.setItem(LESSON_SESSION_PREFIX + lessonId, JSON.stringify(data));
+    const key = getSessionKey(lessonId);
+    if (!key) return;
+
+    localStorage.setItem(key, JSON.stringify(data));
   } catch { /* ignore */ }
 }
 
 function clearSession(lessonId: string): void {
   try {
-    localStorage.removeItem(LESSON_SESSION_PREFIX + lessonId);
+    const key = getSessionKey(lessonId);
+    if (!key) return;
+
+    localStorage.removeItem(key);
   } catch { /* ignore */ }
 }
 
@@ -293,6 +310,7 @@ export function LessonScreen({
 
   // ─── جلسة محفوظة مسبقًا ───
   const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [loadedLessonId, setLoadedLessonId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('watch');
   const [exampleIdx, setExampleIdx] = useState(0);
   const [tryIdx, setTryIdx] = useState(0);
@@ -344,6 +362,7 @@ export function LessonScreen({
     setFeedback('idle');
     setAbacusValue(0);
     setSessionLoaded(true);
+    setLoadedLessonId(lessonId);
 
     sorobana.stop();
     setIsReadingStory(false);
@@ -368,7 +387,7 @@ export function LessonScreen({
 
   // ═══ حفظ الجلسة عند كل تغيير ═══
   useEffect(() => {
-    if (!sessionLoaded || !lesson) return;
+    if (!sessionLoaded || !lesson || loadedLessonId !== lessonId) return;
     saveSession(lessonId, {
       solved: Array.from(solved),
       attempts,
@@ -378,7 +397,7 @@ export function LessonScreen({
       exampleIdx,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lessonId, solved, attempts, activeModuleId, tryIdx, tab, exampleIdx, sessionLoaded]);
+  }, [lessonId, solved, attempts, activeModuleId, tryIdx, tab, exampleIdx, sessionLoaded, loadedLessonId]);
 
   useEffect(() => {
     return () => {
