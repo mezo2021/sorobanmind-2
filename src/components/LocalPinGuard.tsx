@@ -247,9 +247,7 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
         }
       }
     } catch {
-      // محاولة استعادة Snapshot السابق بالكامل.
-      let rollbackFailed = false;
-
+      // 1. محاولة استعادة Snapshot السابق بالكامل.
       for (const key of storageKeys) {
         try {
           const previousValue = snapshot[key];
@@ -260,11 +258,14 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
             localStorage.setItem(key, previousValue);
           }
         } catch {
-          rollbackFailed = true;
+          // لا نحكم على نتيجة Rollback من فشل محاولة الكتابة.
+          // التحقق النهائي هو مصدر الحقيقة.
         }
       }
 
-      // تحقق مستقل من كل قيمة بعد محاولة الاستعادة.
+      // 2. التحقق النهائي المستقل من المفاتيح الأربعة.
+      let rollbackFailed = false;
+
       for (const key of storageKeys) {
         try {
           if (localStorage.getItem(key) !== snapshot[key]) {
@@ -282,11 +283,20 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
       );
     }
 
-    // لا تحدّث حالة الواجهة إلا بعد نجاح الكتابة والتحقق.
+    // لا نصل إلى هذه المرحلة إلا بعد نجاح حفظ المفاتيح الأربعة والتحقق منها.
     setRecoveryCode(newRecovery);
     setPin('');
     setFirstPin('');
-    clearAllFailures();
+
+    // مسح المحاولات عملية منفصلة عن نجاح حفظ PIN.
+    // فشلها لا يجوز أن يحوّل نجاح الحفظ إلى رسالة فشل زائفة.
+    try {
+      clearAllFailures();
+    } catch {
+      // قد تبقى بعض عدادات المحاولات القديمة،
+      // لكن بيانات PIN الجديدة حُفظت وتحققنا منها بالفعل.
+    }
+
     setMode('showRecovery');
   }
 
@@ -628,4 +638,4 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
       </div>
     </div>
   );
-        }
+      }
