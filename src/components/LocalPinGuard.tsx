@@ -172,18 +172,131 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
     }
   }
 
+  function getPinSaveErrorMessage(error: unknown): string {
+    const code = error instanceof Error ? error.message : '';
+
+    if (code === 'PIN_SAVE_FAILED_UNCERTAIN') {
+      return t(
+        'تعذر التأكد من استعادة بيانات PIN السابقة. حالة التخزين غير مؤكدة؛ لا تفترض نجاح تغيير PIN.',
+        'Could not verify restoration of the previous PIN data. Storage state is uncertain; do not assume the PIN change succeeded.'
+      );
+    }
+
+    return t(
+      'فشل حفظ PIN. لم يتم اعتماد التغيير.',
+      'PIN save failed. The change was not committed.'
+    );
+  }
+
   async function saveNewPin(value: string) {
-    const pinData = await createHash(value);
-    const newRecovery = generateRecoveryCode();
-    const recoveryData = await createHash(newRecovery);
-    localStorage.setItem(KEYS.pinHash, pinData.hash);
-    localStorage.setItem(KEYS.pinSalt, pinData.salt);
-    localStorage.setItem(KEYS.recoveryHash, recoveryData.hash);
-    localStorage.setItem(KEYS.recoverySalt, recoveryData.salt);
+    // جهّز القيم الجديدة قبل لمس التخزين.
+    let pinData: { salt: string; hash: string };
+    let recoveryData: { salt: string; hash: string };
+    let newRecovery: string;
+
+    try {
+      pinData = await createHash(value);
+      newRecovery = generateRecoveryCode();
+      recoveryData = await createHash(newRecovery);
+    } catch {
+      throw new Error('PIN_SAVE_FAILED');
+    }
+
+    // المفاتيح الأربعة التي تدخل في عملية الحفظ الذرّية.
+    const storageKeys = [
+      KEYS.pinSalt,
+      KEYS.pinHash,
+      KEYS.recoverySalt,
+      KEYS.recoveryHash,
+    ] as const;
+
+    type PinStorageKey = (typeof storageKeys)[number];
+
+    // Snapshot للقيم السابقة، مع الحفاظ على الفرق بين null والقيمة الموجودة.
+    let snapshot: Record<PinStorageKey, string | null>;
+
+    try {
+      snapshot = {
+        [KEYS.pinSalt]: localStorage.getItem(KEYS.pinSalt),
+        [KEYS.pinHash]: localStorage.getItem(KEYS.pinHash),
+        [KEYS.recoverySalt]: localStorage.getItem(KEYS.recoverySalt),
+        [KEYS.recoveryHash]: localStorage.getItem(KEYS.recoveryHash),
+      };
+    } catch {
+      throw new Error('PIN_SAVE_FAILED');
+    }
+
+    const expected: Record<PinStorageKey, string> = {
+      [KEYS.pinSalt]: pinData.salt,
+      [KEYS.pinHash]: pinData.hash,
+      [KEYS.recoverySalt]: recoveryData.salt,
+      [KEYS.recoveryHash]: recoveryData.hash,
+    };
+
+    try {
+      // الكتابة بالترتيب المحدد.
+      localStorage.setItem(KEYS.pinSalt, pinData.salt);
+      localStorage.setItem(KEYS.pinHash, pinData.hash);
+      localStorage.setItem(KEYS.recoverySalt, recoveryData.salt);
+      localStorage.setItem(KEYS.recoveryHash, recoveryData.hash);
+
+      // لا نعتبر الحفظ ناجحاً قبل التحقق من المفاتيح الأربعة.
+      for (const key of storageKeys) {
+        if (localStorage.getItem(key) !== expected[key]) {
+          throw new Error('PIN_SAVE_VERIFY_FAILED');
+        }
+      }
+    } catch {
+      // 1. محاولة استعادة Snapshot السابق بالكامل.
+      for (const key of storageKeys) {
+        try {
+          const previousValue = snapshot[key];
+
+          if (previousValue === null) {
+            localStorage.removeItem(key);
+          } else {
+            localStorage.setItem(key, previousValue);
+          }
+        } catch {
+          // لا نحكم على نتيجة Rollback من فشل محاولة الكتابة.
+          // التحقق النهائي هو مصدر الحقيقة.
+        }
+      }
+
+      // 2. التحقق النهائي المستقل من المفاتيح الأربعة.
+      let rollbackFailed = false;
+
+      for (const key of storageKeys) {
+        try {
+          if (localStorage.getItem(key) !== snapshot[key]) {
+            rollbackFailed = true;
+          }
+        } catch {
+          rollbackFailed = true;
+        }
+      }
+
+      throw new Error(
+        rollbackFailed
+          ? 'PIN_SAVE_FAILED_UNCERTAIN'
+          : 'PIN_SAVE_FAILED'
+      );
+    }
+
+    // لا نصل إلى هذه المرحلة إلا بعد نجاح حفظ المفاتيح الأربعة والتحقق منها.
     setRecoveryCode(newRecovery);
     setPin('');
     setFirstPin('');
-    clearAllFailures();
+
+    // مسح المحاولات عملية منفصلة عن نجاح حفظ PIN.
+    // فشلها لا يجوز أن يحوّل نجاح الحفظ إلى رسالة فشل زائفة.
+    try {
+      clearAllFailures();
+    } catch {
+      // قد تبقى بعض عدادات المحاولات القديمة،
+      // لكن بيانات PIN الجديدة حُفظت وتحققنا منها بالفعل.
+    }
+
     setMode('showRecovery');
   }
 
@@ -215,8 +328,8 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
     setBusy(true);
     try {
       await saveNewPin(pin);
-    } catch {
-      setError(t('تعذر إنشاء الحماية. تحقق من المتصفح.', 'Could not create protection. Check your browser.'));
+    } catch (error) {
+      setError(getPinSaveErrorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -340,8 +453,8 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
     setBusy(true);
     try {
       await saveNewPin(pin);
-    } catch {
-      setError(t('تعذر حفظ PIN الجديد.', 'Could not save the new PIN.'));
+    } catch (error) {
+      setError(getPinSaveErrorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -525,4 +638,4 @@ export default function LocalPinGuard({ onUnlock, onCancel }: LocalPinGuardProps
       </div>
     </div>
   );
-}
+      }
