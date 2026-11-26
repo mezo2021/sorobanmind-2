@@ -17,7 +17,11 @@ import {
 } from 'lucide-react';
 
 import { useQuests } from '../hooks/useQuests';
-import { cloudSync } from '../lib/cloudSync';
+import {
+  cloudSync,
+  createLocalStateSnapshot,
+  restoreLocalStateSnapshot,
+} from '../lib/cloudSync';
 
 import { isPreviewMode, togglePreviewMode } from '@/utils/previewMode';
 import { resolveDisplayName } from '@/utils/resolveDisplayName';
@@ -303,6 +307,8 @@ export function GuardianDashboard({
   // ═══ الأزرار الإدارية ═══
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [cloudMsg, setCloudMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const isRestoringRef = useRef(false);
 
   const handleCloudSave = async () => {
     try {
@@ -315,13 +321,116 @@ export function GuardianDashboard({
   };
 
   const handleCloudLoad = async () => {
+    if (isRestoringRef.current) return;
+
+    const confirmed = window.confirm(
+      pickLang({
+        ar: 'هل تريد استعادة التقدم من السحابة؟ سيحل التقدم السحابي محل التقدم الحالي في هذا الوضع.',
+        en: 'Restore progress from Cloud? Cloud progress will replace the current progress in this mode.',
+      }, lang)
+    );
+
+    if (!confirmed) return;
+
+    // قفل متزامن يمنع النقر المزدوج قبل إعادة التصيير
+    isRestoringRef.current = true;
+    setIsRestoring(true);
+
+    let snapshot: ReturnType<typeof createLocalStateSnapshot> | null = null;
+
+    // extractPureState يستبعد الاسمين؛ نحفظهما هنا دون تغيير الدوال المشتركة
+    let namesSnapshot: {
+      childName: string;
+      parentName: string;
+    } | null = null;
+
+    let heroKeySnapshot: string | null = null;
+    let childNameSnapshot: string | null = null;
+
+    let reloadScheduled = false;
+
     try {
-      await cloudSync.loadFromCloud();
-      setCloudMsg({ text: pickLang({ ar: 'تم الاستعادة ☁️ جاري التحديث...', en: 'Restored ☁️ Reloading...' }, lang), type: 'success' });
-      setTimeout(() => window.location.reload(), 1200);
-    } catch (e: any) {
-      setCloudMsg({ text: e.message, type: 'error' });
-      setTimeout(() => setCloudMsg(null), 3000);
+      await cloudSync.loadFromCloud(() => {
+        const current = useProgressStore.getState();
+
+        const heroKey = localStorage.getItem('soroban_hero_key');
+        const childNameKey = localStorage.getItem('soroban_child_name');
+
+        const localSnapshot = createLocalStateSnapshot();
+
+        snapshot = localSnapshot;
+        namesSnapshot = {
+          childName: current.childName,
+          parentName: current.parentName,
+        };
+
+        heroKeySnapshot = heroKey;
+        childNameSnapshot = childNameKey;
+      });
+
+      setCloudMsg({
+        text: pickLang({
+          ar: 'تم الاستعادة ☁️ جاري التحديث...',
+          en: 'Restored ☁️ Reloading...',
+        }, lang),
+        type: 'success',
+      });
+
+      reloadScheduled = true;
+      window.setTimeout(() => window.location.reload(), 1200);
+
+    } catch (e: unknown) {
+      let rollbackFailed = false;
+
+      if (snapshot) {
+        try {
+          restoreLocalStateSnapshot(snapshot);
+
+          // استعادة مفاتيح الهوية حرفياً بعد applyLocalIdentity
+          if (heroKeySnapshot === null) {
+            localStorage.removeItem('soroban_hero_key');
+          } else {
+            localStorage.setItem('soroban_hero_key', heroKeySnapshot);
+          }
+
+          if (childNameSnapshot === null) {
+            localStorage.removeItem('soroban_child_name');
+          } else {
+            localStorage.setItem('soroban_child_name', childNameSnapshot);
+          }
+
+          // استعادة الاسمين اللذين يستبعدهما extractPureState
+          if (namesSnapshot) {
+            useProgressStore.setState(namesSnapshot);
+          }
+
+        } catch {
+          rollbackFailed = true;
+        }
+      }
+
+      const errorMessage = rollbackFailed
+        ? pickLang({
+            ar: 'فشلت الاستعادة وفشل التراجع عن التغييرات. أعد تحميل التطبيق قبل المتابعة.',
+            en: 'Restore failed and rollback also failed. Reload the app before continuing.',
+          }, lang)
+        : e instanceof Error
+          ? e.message
+          : String(e);
+
+      setCloudMsg({
+        text: errorMessage,
+        type: 'error',
+      });
+
+      window.setTimeout(() => setCloudMsg(null), 5000);
+
+    } finally {
+      // عند النجاح يبقى القفل حتى إعادة تحميل الصفحة
+      if (!reloadScheduled) {
+        isRestoringRef.current = false;
+        setIsRestoring(false);
+      }
     }
   };
 
@@ -944,18 +1053,21 @@ if (
       <Cloud className="w-4 h-4" />
       <span>{pickLang({ ar: 'حفظ في السحابة', en: 'Save to Cloud' }, lang)}</span>
     </button>
-    <button type="button" onClick={handleCloudLoad}
-      className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 text-indigo-100 text-xs font-body">
+    <button
+      type="button"
+      onClick={handleCloudLoad}
+      disabled={isRestoring}
+      className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 text-indigo-100 text-xs font-body disabled:opacity-50 disabled:cursor-not-allowed"
+    >
       <Cloud className="w-4 h-4" />
-      <span>{pickLang({ ar: 'استعادة من السحابة', en: 'Load from Cloud' }, lang)}</span>
+      <span>
+        {isRestoring
+          ? pickLang({ ar: 'جارٍ الاستعادة...', en: 'Restoring...' }, lang)
+          : pickLang({ ar: 'استعادة من السحابة', en: 'Load from Cloud' }, lang)}
+      </span>
     </button>
   </>
 )}
-        <button type="button" onClick={handleCloudLoad}
-          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 text-indigo-100 text-xs font-body">
-          <Cloud className="w-4 h-4" />
-          <span>{pickLang({ ar: 'استعادة من السحابة', en: 'Load from Cloud' }, lang)}</span>
-        </button>
 
         <input type="file" accept=".json" ref={fileInputRef} onChange={handleRestore} style={{ display: 'none' }} />
 

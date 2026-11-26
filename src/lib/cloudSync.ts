@@ -113,12 +113,12 @@ function extractPureState(state: ProgressState) {
   return pureData;
 }
 
-interface LocalStateSnapshot {
+export interface LocalStateSnapshot {
   progressState: Record<string, unknown>;
   storageEntries: Array<[string, string]>;
 }
 
-function createLocalStateSnapshot(): LocalStateSnapshot {
+export function createLocalStateSnapshot(): LocalStateSnapshot {
   try {
     // نسخة مستقلة من حالة Zustand
     const progressState = JSON.parse(
@@ -157,7 +157,7 @@ function createLocalStateSnapshot(): LocalStateSnapshot {
     );
   }
 }
-function restoreLocalStateSnapshot(snapshot: LocalStateSnapshot): void {
+export function restoreLocalStateSnapshot(snapshot: LocalStateSnapshot): void {
   try {
     const savedKeys = new Set(
       snapshot.storageEntries.map(([key]) => key)
@@ -760,12 +760,13 @@ export const cloudSync = {
     return true;
   },
 
-  async loadFromCloud() {
+  async loadFromCloud(beforeApply?: () => void) {
     requireCloudMode();
 
     const user = await this.getCurrentUser();
     if (!user) throw new Error('Must be logged in');
 
+    // 1. جلب التقدم السحابي
     const { data, error } = await supabase
       .from('soroban_progress')
       .select('progress_data')
@@ -773,10 +774,20 @@ export const cloudSync = {
       .single();
 
     if (error) throw new Error(error.message);
-    if (!data || !data.progress_data) {
-      throw new Error('No backup found');
+    if (!data) throw new Error('No backup found');
+
+    const pd: unknown = data.progress_data;
+
+    // {} صالح، أما null والمصفوفات والقيم البدائية فمرفوضة
+    if (
+      typeof pd !== 'object' ||
+      pd === null ||
+      Array.isArray(pd)
+    ) {
+      throw new Error('Invalid cloud backup');
     }
 
+    // 2. جلب الشخصية قبل أي تعديل محلي
     const { data: profile, error: profileError } = await supabase
       .from('public_profiles')
       .select('avatar_id')
@@ -787,19 +798,70 @@ export const cloudSync = {
       throw new Error(profileError.message);
     }
 
-    const pd = data.progress_data as any;
-    const { childName: _c, parentName: _p, ...safePd } = pd;
+    // 3. أخذ Snapshot من المنسق قبل أول تغيير
+    beforeApply?.();
 
-    useProgressStore.setState({
-      ...useProgressStore.getState(),
-      ...safePd,
-    });
+    // 4. Reset ثم تطبيق بيانات السحابة
+    const {
+      childName: _childName,
+      parentName: _parentName,
+      ...safePd
+    } = pd as Record<string, unknown>;
 
+    useProgressStore.getState().reset();
+
+    useProgressStore.setState(
+      safePd as Partial<ProgressState>
+    );
+
+    // 5. تحديث هوية الشخصية، وعدم الاحتفاظ بهوية قديمة
     if (profile?.avatar_id) {
-      localStorage.setItem('soroban_hero_key', profile.avatar_id);
+      localStorage.setItem(
+        'soroban_hero_key',
+        profile.avatar_id
+      );
+    } else {
+      localStorage.removeItem('soroban_hero_key');
+      localStorage.removeItem('soroban_child_name');
     }
 
     applyLocalIdentity();
+
+    // 6. التحقق من نجاح حفظ Zustand في مفتاح Cloud
+    const rawProgress = localStorage.getItem(
+      'cloud:sorobanmind-v2-progress'
+    );
+
+    if (!rawProgress) {
+      throw new Error('Failed to persist restored progress');
+    }
+
+    const persisted = JSON.parse(rawProgress) as {
+      state?: unknown;
+    };
+
+    const currentState = JSON.parse(
+      JSON.stringify(useProgressStore.getState())
+    );
+
+    if (
+      !persisted.state ||
+      JSON.stringify(persisted.state) !==
+        JSON.stringify(currentState)
+    ) {
+      throw new Error('Restored progress persistence mismatch');
+    }
+
+    // 7. التحقق من حفظ هوية الشخصية
+    const storedChildName =
+      localStorage.getItem('soroban_child_name') ?? '';
+
+    if (
+      storedChildName !==
+      useProgressStore.getState().childName
+    ) {
+      throw new Error('Failed to persist restored identity');
+    }
 
     return true;
   },
